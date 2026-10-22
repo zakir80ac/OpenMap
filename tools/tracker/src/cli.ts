@@ -255,7 +255,8 @@ function* walk(dir: string): Generator<string> {
     const full = join(dir, entry);
     if (entry === 'node_modules' || entry === 'dist' || entry === '.next' || entry === '.turbo') continue;
     if (statSync(full).isDirectory()) yield* walk(full);
-    else yield full;
+    // next-env.d.ts is written by every Next.js build and git-ignored; it is generated, never authored.
+    else if (entry !== 'next-env.d.ts') yield full;
   }
 }
 

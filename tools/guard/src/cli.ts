@@ -8,6 +8,8 @@ import { runRules, type Finding } from './rules.js';
 const repoRoot = resolve(process.cwd(), '..', '..');
 const SCAN_DIRS = ['apps', 'packages'];
 const SKIP = new Set(['node_modules', 'dist', '.next', '.turbo', 'coverage', 'schemas']);
+/** Files a toolchain generates and git ignores (Next.js writes next-env.d.ts on every build); never hand-written. */
+const SKIP_FILES = new Set(['next-env.d.ts']);
 const PERF_RESULTS = join(repoRoot, 'tools', 'perf', 'results');
 
 function* walk(dir: string): Generator<string> {
@@ -16,7 +18,7 @@ function* walk(dir: string): Generator<string> {
     if (SKIP.has(entry)) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) yield* walk(full);
-    else yield full;
+    else if (!SKIP_FILES.has(entry)) yield full;
   }
 }
 
