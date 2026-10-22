@@ -39,7 +39,10 @@ export function AnalyticsView({ locale, embed = embedDashboard }: AnalyticsViewI
     let dashboard: EmbeddedDashboard | null = null;
     let cancelled = false;
     setEmbedError(null);
-    embed({
+    // The shell paints first; Superset's bundle starts in the browser's next idle slot so the console stays responsive.
+    const start = (): void => {
+      if (cancelled) return;
+      embed({
       id: data.dashboardId,
       supersetDomain: data.supersetUrl,
       mountPoint: node,
@@ -59,8 +62,12 @@ export function AnalyticsView({ locale, embed = embedDashboard }: AnalyticsViewI
       .catch((err: unknown) => {
         if (!cancelled) setEmbedError(err instanceof Error ? err.message : String(err));
       });
+    };
+    const idle = typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(start) : window.setTimeout(start, 0);
     return () => {
       cancelled = true;
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
       dashboard?.unmount();
       setMounted(false);
     };

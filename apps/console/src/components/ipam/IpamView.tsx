@@ -50,7 +50,7 @@ export function IpamView({ locale }: IpamViewProps): ReactNode {
         eyebrow={t('app.name')}
         description={t('ipam.subtitle')}
         action={
-          <div className="flex gap-om-6" role="tablist" aria-label={t('ipam.title')}>
+          <div className="flex gap-om-6" role="group" aria-label={t('ipam.title')}>
             {TABS.map((x) => (
               <Pill
                 key={x}
@@ -155,7 +155,7 @@ function SubnetsTab({ locale }: IpamViewProps): ReactNode {
                     {node.vrf !== null ? <Tag>{node.vrf}</Tag> : null}
                     {hasChildren ? <span className="text-om-2xs text-om-muted">{t('ipam.tree.children', { count: format.integer(node.children.length) })}</span> : null}
                     <span className="ms-auto flex w-40 items-center gap-om-8">
-                      <Bar value={node.utilisationPercent} accent={utilisationAccent(node.utilisationPercent)} />
+                      <Bar value={node.utilisationPercent} accent={utilisationAccent(node.utilisationPercent)} label={t('ipam.subnet.utilisation') + ' ' + node.cidr + ' ' + format.number(node.utilisationPercent) + '%'} />
                       <span className="w-12 text-end font-om-mono text-om-2xs text-om-secondary">{format.number(node.utilisationPercent) + '%'}</span>
                     </span>
                   </li>

@@ -19,6 +19,10 @@ describe('cypher extraction and validation', () => {
   it('strips fences and prose', () => {
     expect(extractCypher('Here you go:\n```cypher\nMATCH (n:Ci) WHERE n.tenantId = $tenantId RETURN n.name;\n```')).toBe('MATCH (n:Ci) WHERE n.tenantId = $tenantId RETURN n.name');
   });
+  it('rejects an invented parameter', () => {
+    expect(() => validateCypher('MATCH (n:Ci) WHERE n.tenantId = $tenantId AND n.name = $name RETURN n')).toThrow(/unknown parameter \$name/);
+  });
+
   it('rejects writes, missing tenant scope and missing RETURN', () => {
     expect(() => validateCypher('MATCH (n) WHERE n.tenantId = $tenantId DETACH DELETE n')).toThrow();
     expect(() => validateCypher('MATCH (n) RETURN n')).toThrow(/tenant/);
@@ -41,6 +45,23 @@ describe('ask', () => {
     expect(a.rows).toHaveLength(1);
     expect(a.text).toContain('Online banking');
   });
+  it('repairs a query the engine rejects by feeding the error back to the model', async () => {
+    const turns: string[] = [];
+    const flaky: LlmClient = {
+      complete: async (messages) => {
+        turns.push(messages[messages.length - 1]?.content ?? '');
+        const repaired = messages.some((m) => m.role === 'user' && m.content.includes('rejected'));
+        return { text: repaired ? 'MATCH (s:BusinessService) WHERE s.tenantId = $tenantId RETURN s.name AS name' : 'MATCH (s:BusinessService) WHERE s.tenantId = $tenantId RETURN count(s), s.name', promptTokens: 1, completionTokens: 1 };
+      },
+    };
+    let calls = 0;
+    const engine = { readOnly: async <T,>(cypher: string): Promise<T[]> => { calls++; if (cypher.includes('count(s), s.name')) throw new Error('Aggregation functions are only allowed in WITH and RETURN.'); return [{ name: 'Payments' }] as T[]; } } as unknown as GraphRepository;
+    const a = await ask('which services?', 't-1', flaky, engine);
+    expect(calls).toBe(2);
+    expect(turns[1]).toContain('Aggregation functions');
+    expect(a.rows).toEqual([{ name: 'Payments' }]);
+  });
+
   it('refuses when the model emits a write', async () => {
     const bad: LlmClient = { complete: async () => ({ text: 'MATCH (n) WHERE n.tenantId = $tenantId SET n.health = "down" RETURN n', promptTokens: 1, completionTokens: 1 }) };
     await expect(ask('break things', 't-1', bad, repo)).rejects.toThrow();

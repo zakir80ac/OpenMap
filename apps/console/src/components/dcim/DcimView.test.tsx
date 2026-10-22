@@ -71,7 +71,7 @@ describe.each(LOCALES)('DcimView (%s)', (locale) => {
     fireEvent.click(screen.getByRole('button', { name: 'RYD-DH01' }));
     const ryd = await screen.findByRole('listbox', { name: translate(locale, 'dcim.heatmap.title') });
     expect(within(ryd).getAllByRole('option')).toHaveLength(2);
-    fireEvent.click(within(ryd).getByRole('option', { name: 'RYD-DH01-A-01' }));
+    fireEvent.click(within(ryd).getByRole('option', { name: /RYD-DH01-A-01$/ }));
     const elevation = await screen.findByRole('img', { name: translate(locale, 'dcim.elevation.aria', { name: 'RYD-DH01-A-01', units: '42' }) });
     expect(elevation.querySelectorAll('rect').length).toBeGreaterThanOrEqual(3);
     expect(screen.getByText('esx-01', { selector: 'a' })).toBeTruthy();

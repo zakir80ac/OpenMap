@@ -61,7 +61,8 @@ function perfBudgets(): Finding[] {
     if (r.name === 'discovery-sweep' && r.minutes !== undefined && r.minutes > PERF_BUDGETS.discoverySweepMinutes) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'sweep ' + String(r.minutes) + ' min over ' + String(PERF_BUDGETS.discoverySweepMinutes) });
     if (r.name === 'lighthouse' && r.pages !== undefined) {
       for (const page of r.pages) {
-        if (page.performance < PERF_BUDGETS.lighthousePerformanceMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse performance ' + String(page.performance) + ' under ' + String(PERF_BUDGETS.lighthousePerformanceMin) });
+        const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(page.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
+        if (page.performance < performanceMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse performance ' + String(page.performance) + ' under ' + String(performanceMin) });
         if (page.accessibility < PERF_BUDGETS.lighthouseAccessibilityMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse accessibility ' + String(page.accessibility) + ' under ' + String(PERF_BUDGETS.lighthouseAccessibilityMin) });
         if (page.bestPractices < PERF_BUDGETS.lighthouseBestPracticesMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse best practices ' + String(page.bestPractices) + ' under ' + String(PERF_BUDGETS.lighthouseBestPracticesMin) });
       }

@@ -35,7 +35,13 @@ export function validateCypher(cypher: string): void {
   assertReadOnly(cypher);
   if (!/\$tenantId/.test(cypher)) throw new AssistantError('generated query does not scope by tenant', cypher);
   if (!/\bRETURN\b/i.test(cypher)) throw new AssistantError('generated query returns nothing', cypher);
+  // Only the parameters the engine is given may appear; an invented one would fail at run time with a worse message.
+  const unknown = [...cypher.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)].map((m) => m[1] ?? '').filter((name) => !ALLOWED_PARAMETERS.has(name));
+  if (unknown.length > 0) throw new AssistantError('generated query uses unknown parameter $' + String(unknown[0]) + '; only $tenantId and $now exist, write literal values inline', cypher);
 }
+
+/** Parameters `ask` passes to the engine; the grounding prompt names exactly these. */
+export const ALLOWED_PARAMETERS: ReadonlySet<string> = new Set(['tenantId', 'now']);
 
 /** Adds a LIMIT when the model forgot one, so a broad question cannot flood the console. */
 export function enforceLimit(cypher: string): string {
@@ -54,12 +60,16 @@ function summarise(question: string, rows: Array<Record<string, unknown>>): stri
   return String(rows.length) + ' row' + (rows.length === 1 ? '' : 's') + ' with columns ' + columns.join(', ') + '.';
 }
 
+const REPAIR_RULES = 'Rewrite it following the rules (read-only, every node variable filtered by tenantId = $tenantId, no parameters other than $tenantId and $now, aggregations only in WITH or RETURN, a RETURN clause). Reply with only the Cypher query.';
+
 /**
- * Asks the model for a query and, when the validator rejects it, sends the rejection back as the next turn so the
- * model can repair its own output (missing $tenantId scope, a write, no RETURN). Small models need this; large ones
- * rarely use it. The last rejection is what the user sees when every attempt fails.
+ * Asks the model for a query, validates it and runs it. When the validator or the graph engine rejects the query,
+ * the rejection goes back to the model as the next turn so it can repair its own output (missing $tenantId scope,
+ * an invented parameter, a write, a misplaced aggregation); small models need this, large ones rarely use it. The
+ * last rejection is what the user sees when every attempt fails.
  */
-export async function generateCypher(question: string, llm: LlmClient): Promise<string> {
+export async function ask(question: string, tenantId: string, llm: LlmClient, repo: GraphRepository, now: () => string = () => new Date().toISOString()): Promise<AssistantAnswer> {
+  if (question.trim().length === 0 || question.length > ASSISTANT.maxQuestionLength) throw new AssistantError('question is empty or too long', null);
   const messages: ChatMessage[] = [
     { role: 'system', content: systemPrompt() },
     { role: 'user', content: question },
@@ -70,21 +80,15 @@ export async function generateCypher(question: string, llm: LlmClient): Promise<
     const cypher = enforceLimit(extractCypher(completion.text));
     try {
       validateCypher(cypher);
-      return cypher;
+      const rows = await repo.readOnly<Record<string, unknown>>(cypher, { tenantId, now: now() });
+      const truncated = rows.length >= ASSISTANT.maxRowsReturned;
+      return { question, cypher, rows, text: summarise(question, rows), truncated };
     } catch (err) {
-      if (!(err instanceof AssistantError)) throw err;
-      lastError = err;
+      const message = err instanceof Error ? err.message : String(err);
+      lastError = err instanceof AssistantError ? err : new AssistantError('the query failed to run: ' + message, cypher);
       messages.push({ role: 'assistant', content: completion.text });
-      messages.push({ role: 'user', content: 'That query was rejected: ' + err.message + '. Rewrite it following the rules (read-only, every node variable filtered by tenantId = $tenantId, a RETURN clause). Reply with only the Cypher query.' });
+      messages.push({ role: 'user', content: 'That query was rejected: ' + message + '. ' + REPAIR_RULES });
     }
   }
   throw lastError ?? new AssistantError('the model returned no query', null);
-}
-
-export async function ask(question: string, tenantId: string, llm: LlmClient, repo: GraphRepository, now: () => string = () => new Date().toISOString()): Promise<AssistantAnswer> {
-  if (question.trim().length === 0 || question.length > ASSISTANT.maxQuestionLength) throw new AssistantError('question is empty or too long', null);
-  const cypher = await generateCypher(question, llm);
-  const rows = await repo.readOnly<Record<string, unknown>>(cypher, { tenantId, now: now() });
-  const truncated = rows.length >= ASSISTANT.maxRowsReturned;
-  return { question, cypher, rows, text: summarise(question, rows), truncated };
 }

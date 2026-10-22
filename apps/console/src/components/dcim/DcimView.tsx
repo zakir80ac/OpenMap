@@ -106,7 +106,7 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
               size="sm"
               description={t('dcim.heatmap.subtitle')}
               action={
-                <div className="flex flex-wrap gap-om-6" role="tablist" aria-label={t('dcim.kpi.rooms')}>
+                <div className="flex flex-wrap gap-om-6" role="group" aria-label={t('dcim.kpi.rooms')}>
                   {rooms.map((r) => (
                     <Pill
                       key={r.id}
@@ -138,13 +138,15 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
                     const powerPercent = percentOf(power.currentWatts, power.ratedWatts);
                     const occupancy = percentOf(r.occupiedUnits, r.units);
                     const selected = rack?.ci.id === r.ci.id;
+                    const short = r.ci.name.split('-').slice(-DCIM.tileNameSegments).join('-');
+                    const percentLabel = format.integer(powerPercent) + '%';
                     return (
                       <button
                         key={r.ci.id}
                         type="button"
                         role="option"
                         aria-selected={selected}
-                        aria-label={r.ci.displayName}
+                        aria-label={short + ' ' + percentLabel + ' · ' + r.ci.displayName}
                         title={r.ci.displayName + ' · ' + format.number(powerPercent) + '% · ' + format.number(occupancy) + '%'}
                         onClick={() => {
                           setRackId(r.ci.id);
@@ -152,8 +154,8 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
                         className={cx('flex aspect-square flex-col items-center justify-center rounded-om-control border text-om-2xs font-om-mono transition-transform duration-om-base ease-om-standard hover:scale-105', selected ? 'border-om-cyan' : 'border-om-border-glass')}
                         style={{ background: heatAccent(powerPercent, occupancy) + '33', color: heatAccent(powerPercent, occupancy) }}
                       >
-                        <span className="truncate px-om-4">{r.ci.name.split('-').slice(-DCIM.tileNameSegments).join('-')}</span>
-                        <span>{format.integer(powerPercent) + '%'}</span>
+                        <span className="truncate px-om-4">{short}</span>
+                        <span>{percentLabel}</span>
                       </button>
                     );
                   })}
@@ -182,9 +184,9 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
         <RackElevation rack={rack} />
         <div className="flex flex-col gap-om-6 text-om-xs text-om-secondary">
           <span>{t('dcim.rack.units', { occupied: format.integer(rack.occupiedUnits), total: format.integer(rack.units) })}</span>
-          <Bar value={rack.occupiedUnits} max={rack.units || 1} accent={accents.violet} />
+          <Bar value={rack.occupiedUnits} max={rack.units || 1} accent={accents.violet} label={t('dcim.rack.units', { occupied: format.integer(rack.occupiedUnits), total: format.integer(rack.units) })} />
           <span>{t('dcim.rack.power', { current: format.number(power.currentWatts / POWER.wattsPerKilowatt), rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt) })}</span>
-          <Bar value={power.currentWatts} max={power.ratedWatts || 1} accent={heatAccent(percentOf(power.currentWatts, power.ratedWatts), 0)} />
+          <Bar value={power.currentWatts} max={power.ratedWatts || 1} accent={heatAccent(percentOf(power.currentWatts, power.ratedWatts), 0)} label={t('dcim.rack.power', { current: format.number(power.currentWatts / POWER.wattsPerKilowatt), rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt) })} />
           <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(rack.ci.id))} className="text-om-cyan hover:underline">
             {t('dcim.rack.openCi')}
           </Link>
@@ -260,7 +262,7 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
                         <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.number(f.currentWatts / POWER.wattsPerKilowatt) + ' ' + t('dcim.unit.kw')}</td>
                         <td className={tdClass}>
                           <span className="flex w-32 items-center gap-om-6">
-                            <Bar value={load} accent={heatAccent(load, 0)} />
+                            <Bar value={load} accent={heatAccent(load, 0)} label={f.ci.displayName + ' ' + t('dcim.power.load') + ' ' + format.integer(load) + '%'} />
                             <span className="font-om-mono text-om-2xs text-om-secondary">{format.integer(load) + '%'}</span>
                           </span>
                         </td>
