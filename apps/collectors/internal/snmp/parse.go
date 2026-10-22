@@ -105,17 +105,17 @@ type Device struct {
 }
 
 type Interface struct {
-	IfIndex     int64
-	Name        string
-	Descr       string
-	Alias       string
-	Type        int64
-	Mtu         int64
-	SpeedBps    uint64
-	Mac         string
-	AdminUp     bool
-	OperUp      bool
-	Pvid        int64
+	IfIndex  int64
+	Name     string
+	Descr    string
+	Alias    string
+	Type     int64
+	Mtu      int64
+	SpeedBps uint64
+	Mac      string
+	AdminUp  bool
+	OperUp   bool
+	Pvid     int64
 }
 
 type Vlan struct {

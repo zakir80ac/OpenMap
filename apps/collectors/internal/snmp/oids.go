@@ -24,8 +24,8 @@ const (
 	oidIfAlias       = ".1.3.6.1.2.1.31.1.1.1.18"
 
 	// IP-MIB ipAddrTable (legacy but universal) and ipNetToMedia (ARP)
-	oidIpAdEntIfIndex = ".1.3.6.1.2.1.4.20.1.2"
-	oidIpAdEntNetMask = ".1.3.6.1.2.1.4.20.1.3"
+	oidIpAdEntIfIndex   = ".1.3.6.1.2.1.4.20.1.2"
+	oidIpAdEntNetMask   = ".1.3.6.1.2.1.4.20.1.3"
 	oidIpNetToMediaPhys = ".1.3.6.1.2.1.4.22.1.2"
 
 	// ENTITY-MIB entPhysicalTable
@@ -40,16 +40,16 @@ const (
 	oidEntPhysicalModelName = ".1.3.6.1.2.1.47.1.1.1.1.13"
 
 	// LLDP-MIB lldpRemTable and local port table
-	oidLldpLocChassisID   = ".1.0.8802.1.1.2.1.3.2.0"
-	oidLldpLocPortID      = ".1.0.8802.1.1.2.1.3.7.1.3"
-	oidLldpRemChassisID   = ".1.0.8802.1.1.2.1.4.1.1.5"
-	oidLldpRemPortID      = ".1.0.8802.1.1.2.1.4.1.1.7"
-	oidLldpRemPortDesc    = ".1.0.8802.1.1.2.1.4.1.1.8"
-	oidLldpRemSysName     = ".1.0.8802.1.1.2.1.4.1.1.9"
-	oidLldpRemSysDesc     = ".1.0.8802.1.1.2.1.4.1.1.10"
+	oidLldpLocChassisID = ".1.0.8802.1.1.2.1.3.2.0"
+	oidLldpLocPortID    = ".1.0.8802.1.1.2.1.3.7.1.3"
+	oidLldpRemChassisID = ".1.0.8802.1.1.2.1.4.1.1.5"
+	oidLldpRemPortID    = ".1.0.8802.1.1.2.1.4.1.1.7"
+	oidLldpRemPortDesc  = ".1.0.8802.1.1.2.1.4.1.1.8"
+	oidLldpRemSysName   = ".1.0.8802.1.1.2.1.4.1.1.9"
+	oidLldpRemSysDesc   = ".1.0.8802.1.1.2.1.4.1.1.10"
 
 	// Q-BRIDGE-MIB VLAN names and the bridge port → ifIndex map
-	oidDot1qVlanStaticName = ".1.3.6.1.2.1.17.7.1.4.3.1.1"
+	oidDot1qVlanStaticName  = ".1.3.6.1.2.1.17.7.1.4.3.1.1"
 	oidDot1dBasePortIfIndex = ".1.3.6.1.2.1.17.1.4.1.2"
 	oidDot1qPvid            = ".1.3.6.1.2.1.17.7.1.4.5.1.1"
 )

@@ -20,19 +20,19 @@ import (
 )
 
 const (
-	collectorID     = "ssh_agentless"
-	version         = "0.1.0"
-	defaultPort     = 22
-	dialTimeout     = 10 * time.Second
-	sessionTimeout  = 120 * time.Second
-	optionPort      = "port"
-	optionHostKeys  = "hostKeyFingerprints" // map[target]fingerprint, SHA256:base64
-	optionTOFU      = "trustOnFirstUse"
-	credUser        = "username"
-	credPassword    = "password"
-	credPrivateKey  = "privateKey"
-	credPassphrase  = "passphrase"
-	attrHostKey     = "sshHostKeySha256"
+	collectorID    = "ssh_agentless"
+	version        = "0.1.0"
+	defaultPort    = 22
+	dialTimeout    = 10 * time.Second
+	sessionTimeout = 120 * time.Second
+	optionPort     = "port"
+	optionHostKeys = "hostKeyFingerprints" // map[target]fingerprint, SHA256:base64
+	optionTOFU     = "trustOnFirstUse"
+	credUser       = "username"
+	credPassword   = "password"
+	credPrivateKey = "privateKey"
+	credPassphrase = "passphrase"
+	attrHostKey    = "sshHostKeySha256"
 )
 
 type Collector struct{}

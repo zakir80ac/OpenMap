@@ -299,6 +299,16 @@ export const externalIdSchema = z.object({
   id: z.string().min(1),
 });
 
+/**
+ * Identity keys that are unique on their own across the whole estate. Any other identity key
+ * (ifIndex, name, vlanId, port…) only identifies a CI together with the rest of its tuple.
+ */
+export const GLOBAL_IDENTITY_KEYS: ReadonlySet<string> = new Set([
+  'serialNumber', 'systemUuid', 'fqdn', 'primaryMac', 'instanceUuid', 'chassisId', 'clusterUid', 'uid', 'containerId',
+  'managementIp', 'wwn', 'wwnn', 'fabricWwn', 'fingerprintSha256', 'cveId', 'licenceKeyDigest', 'resourceId', 'url',
+  'principalName', 'contractNumber', 'circuitId', 'address', 'cidr', 'moRef', 'clusterId', 'accountId', 'tenantId',
+]);
+
 /** Identity keys per type: the attribute names reconciliation matches on, in precedence order. */
 export const CI_IDENTITY_KEYS: Record<CiType, readonly string[]> = {
   host: ['serialNumber', 'systemUuid', 'fqdn', 'primaryMac'],
