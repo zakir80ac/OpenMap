@@ -101,6 +101,16 @@ Event types emitted here: `openmap.ci.labelled`, `openmap.ci.updated`,
 `openmap.integration.delivery.succeeded|failed`, `openmap.impact.simulation.completed`,
 `openmap.discovery.job.scheduled`, `openmap.assistant.query.answered`, `openmap.audit.action`.
 
+## Audit log (REQ-SEC-005, ADR-010)
+
+A global interceptor records every successful mutation: the field name is the action, the returned object's `id` and
+type are the subject, the (redacted) arguments are the details. `AuditService.record` emits `openmap.audit.action`
+first and then writes the `audit_logs` row once, trace id included, inside the same outbox transaction — the table is
+append-only (migration 0007 forbids UPDATE and DELETE), so a later update would abort the transaction. Auditors read
+it through `auditLog` (newest first, cursor on `(at, id)`); the reconciler copies each event into ClickHouse
+`audit_log`, whose TTL follows the tenant setting `auditRetentionDays` (default seven years). Metric:
+`openmap_audit_entries_total{action}`.
+
 ## Data conventions the resolvers rely on
 
 - Health lives on graph nodes (set by the BSM engine); `Ci.health` and `ServiceHealth.state` are

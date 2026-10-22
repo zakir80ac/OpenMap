@@ -54,15 +54,25 @@ receives `ca.crt` out of band instead and leaves that variable unset. The schedu
 `PUBLIC_SCHEDULER_URL`'s host plus every name in `SCHEDULER_TLS_EXTRA_SANS` (the compose service name
 `scheduler` and `localhost` by default), so in-network and external Nodes both verify it.
 
-## Air-gapped
+## Air-gapped (REQ-INT-002, REQ-SEC-003)
 
-Build or mirror the images on a connected machine, export them with `docker save`, carry the
-bundle across, `docker load`, then start with the air-gap overlay, which pins `pull_policy: never`
-and disables every optional egress (LLM model download, analytics):
+On a connected machine, `deploy/airgap-bundle/build-bundle.sh <version> <out dir>` builds the six application images,
+pulls the pinned datastore images and writes one directory: `openmap-images-<version>.tar.gz` (17 images), the three
+compose files, the realm, init scripts, `.env.example`, `load-bundle.sh` and `SHA256SUMS`. Carry that directory across.
+
+On the air-gapped host (Docker Engine with the compose plugin; BusyBox or GNU userland), create `.env` from
+`.env.example`, set the three origins browsers will use — `PUBLIC_CONSOLE_URL`, `PUBLIC_API_URL`,
+`PUBLIC_KEYCLOAK_URL` — and run:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml up -d
+./load-bundle.sh <version>
 ```
+
+It verifies the checksums, `docker load`s the images and starts the stack with the air-gap overlay, which pins
+`pull_policy: never` and disables every optional egress (LLM model download, Memgraph and Meilisearch telemetry). The
+realm import takes the console's redirect URIs from `PUBLIC_CONSOLE_URL`, so sign-in works at the host's real name
+without touching Keycloak. `docs/evidence/airgap/load-airgap.md` records a full load on a host whose new outbound
+connections are dropped by iptables.
 
 ## Kubernetes
 

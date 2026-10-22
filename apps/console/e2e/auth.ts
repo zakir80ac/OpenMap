@@ -20,15 +20,22 @@ export interface SeededUser {
   roles: string[];
 }
 
+/** Every password user the realm export seeds, in file order (the administrator first). */
+export function seededUsers(): SeededUser[] {
+  const realm = JSON.parse(readFileSync(realmFile, 'utf8')) as { users?: RealmUser[] };
+  const users: SeededUser[] = [];
+  for (const user of realm.users ?? []) {
+    const credential = user.credentials?.find((c) => c.type === 'password');
+    if (credential !== undefined) users.push({ username: user.username, password: credential.value, roles: user.realmRoles ?? [] });
+  }
+  return users;
+}
+
 /** A password user from the realm the compose stack imports (default: the first one, the administrator). */
 export function seededUser(username?: string): SeededUser {
-  const realm = JSON.parse(readFileSync(realmFile, 'utf8')) as { users?: RealmUser[] };
-  for (const user of realm.users ?? []) {
-    if (username !== undefined && user.username !== username) continue;
-    const credential = user.credentials?.find((c) => c.type === 'password');
-    if (credential !== undefined) return { username: user.username, password: credential.value, roles: user.realmRoles ?? [] };
-  }
-  throw new Error('realm export has no password user' + (username === undefined ? '' : ' named ' + username));
+  const user = seededUsers().find((u) => username === undefined || u.username === username);
+  if (user === undefined) throw new Error('realm export has no password user' + (username === undefined ? '' : ' named ' + username));
+  return user;
 }
 
 /** From the sign-in screen through Keycloak and back to the console; resolves once the primary navigation is visible. */

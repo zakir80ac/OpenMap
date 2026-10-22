@@ -28,6 +28,9 @@ ENV PUBLIC_API_URL=http://openmap-public-api.invalid \
     KEYCLOAK_CLIENT_ID=openmap-client-set-at-start \
     DEFAULT_LOCALE=en
 RUN pnpm exec turbo run build --filter="@openmap/console..."
+# The client bundle must carry the sentinels, not loadEnv() defaults: turbo.json declares these variables for the
+# build task (strict env mode hides undeclared ones). Fail the image rather than ship a console bound to localhost.
+RUN grep -rq "http://openmap-public-api.invalid" apps/console/.next/static     && grep -rq "http://openmap-public-keycloak.invalid" apps/console/.next/static     || (echo "console build did not receive PUBLIC_API_URL / PUBLIC_KEYCLOAK_URL (see turbo.json build.env)" && exit 1)
 # Next's standalone tracer keeps only the files the server needs; static assets and public files are copied beside it.
 RUN cp -R apps/console/.next/static apps/console/.next/standalone/apps/console/.next/static \
     && if [ -d apps/console/public ]; then cp -R apps/console/public apps/console/.next/standalone/apps/console/public; fi

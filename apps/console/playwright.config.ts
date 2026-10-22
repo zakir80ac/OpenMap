@@ -13,8 +13,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'en', use: { ...devices['Desktop Chrome'], locale: 'en-GB' } },
-    { name: 'ar', use: { ...devices['Desktop Chrome'], locale: 'ar' } },
+    { name: 'setup', testMatch: /setup\.ts$/, use: { ...devices['Desktop Chrome'], locale: 'en-GB' } },
+    { name: 'en', use: { ...devices['Desktop Chrome'], locale: 'en-GB' }, dependencies: ['setup'] },
+    { name: 'ar', use: { ...devices['Desktop Chrome'], locale: 'ar' }, dependencies: ['setup'] },
   ],
   webServer: {
     command: 'pnpm start',
