@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "console",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@openmap/console", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "api-compose",
+      "url": "http://localhost:4000"
+    }
+  ]
+}
