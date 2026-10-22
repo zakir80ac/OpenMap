@@ -26,6 +26,12 @@ RUN pnpm --filter @openmap/db exec prisma generate
 # Turbo builds the dependency closure in graph order (dependsOn ^build), the same pipeline as CI.
 RUN pnpm exec turbo run build --filter="@openmap/${APP}..."
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm --filter "@openmap/${APP}" deploy --prod --legacy --ignore-scripts /out
+# pnpm deploy copies packages from the store, so the Prisma client generated into the workspace's
+# virtual store is carried over by hand into the deployed virtual store (same versioned folder).
+RUN set -e; for d in /out/node_modules/.pnpm/@prisma+client@*/node_modules; do \
+      src="/repo/node_modules/.pnpm/$(basename "$(dirname "$d")")/node_modules/.prisma"; \
+      test -d "$src" && cp -R "$src" "$d/"; \
+    done; test -d /out/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ARG APP

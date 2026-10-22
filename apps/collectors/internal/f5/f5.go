@@ -178,7 +178,7 @@ func SplitDestination(dest string) (string, int) {
 	if i := strings.LastIndex(d, "/"); i >= 0 {
 		d = d[i+1:]
 	}
-	if i := strings.LastIndex(d, "%"); i >= 0 { // route domain suffix: 10.1.1.10%2:443
+	if i := strings.LastIndex(d, "%"); i >= 0 { // route domain suffix (address%rd:port)
 		rest := d[i:]
 		if j := strings.Index(rest, ":"); j >= 0 {
 			d = d[:i] + rest[j:]
