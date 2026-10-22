@@ -1,0 +1,13 @@
+{
+  "name": "@openmap/guard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "guard": "tsx src/cli.ts"
+  },
+  "dependencies": { "@openmap/constants": "workspace:*" },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0", "vitest": "^4.0.0" }
+}

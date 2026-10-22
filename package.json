@@ -1,0 +1,36 @@
+{
+  "name": "openmap",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenMap: sovereign open-source discovery, dependency mapping, CMDB, IPAM, DCIM, BSM and analytics platform",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "tracker": "pnpm --filter @openmap/tracker exec tsx src/cli.ts",
+    "guard": "pnpm --filter @openmap/guard exec tsx src/cli.ts",
+    "i18n:check": "pnpm --filter @openmap/i18n run check",
+    "contracts:build": "pnpm --filter @openmap/contracts run build",
+    "graph:update": "graphify update .",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^24.10.0",
+    "eslint": "^9.39.0",
+    "lefthook": "^2.1.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.0",
+    "turbo": "^2.6.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^4.0.0"
+  }
+}

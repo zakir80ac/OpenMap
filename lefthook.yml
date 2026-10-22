@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: false
+  commands:
+    guard:
+      run: pnpm guard
+    tracker-verify:
+      run: pnpm tracker verify
+    i18n:
+      run: pnpm i18n:check
+    graphify:
+      run: graphify update . --no-cluster || true
+      stage_fixed: true
+      glob: "graphify-out/*"

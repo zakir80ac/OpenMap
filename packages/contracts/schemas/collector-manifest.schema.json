@@ -1,0 +1,124 @@
+{
+  "$id": "https://openmap.dev/contracts/collector-manifest/0.1.0",
+  "title": "collector-manifest",
+  "version": "0.1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "family": {
+      "type": "string",
+      "enum": [
+        "snmp",
+        "ssh_cli",
+        "wmi",
+        "winrm",
+        "ssh_agentless",
+        "vmware",
+        "hyperv",
+        "kvm_libvirt",
+        "nutanix_ahv",
+        "oracle_vm",
+        "kubernetes",
+        "cloud_aws",
+        "cloud_azure",
+        "cloud_gcp",
+        "netflow",
+        "port_scan",
+        "ipmi_redfish",
+        "fc_fabric",
+        "nas",
+        "object_storage",
+        "dns",
+        "dhcp",
+        "ldap",
+        "database",
+        "storage",
+        "pdu",
+        "agent",
+        "load_balancer",
+        "certificate",
+        "vulnerability_feed",
+        "saas",
+        "os_patch"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "go",
+        "python"
+      ]
+    },
+    "protocols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "credentialTypes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "none",
+          "snmp_v2c",
+          "snmp_v3",
+          "password",
+          "ssh_key",
+          "api_token",
+          "oauth_client",
+          "certificate",
+          "kubeconfig",
+          "cloud_role"
+        ]
+      }
+    },
+    "targetKinds": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "host",
+          "cidr",
+          "url",
+          "cluster",
+          "account",
+          "zone",
+          "flow_source"
+        ]
+      }
+    },
+    "emits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "contractVersion": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "id",
+    "family",
+    "version",
+    "language",
+    "protocols",
+    "credentialTypes",
+    "targetKinds",
+    "emits",
+    "contractVersion"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "realm": "openmap",
+  "enabled": true,
+  "displayName": "OpenMap",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "ar"],
+  "defaultLocale": "en",
+  "accessTokenLifespan": 900,
+  "roles": {
+    "realm": [
+      { "name": "openmap-admin", "description": "Tenant administrator: settings, users, integrations" },
+      { "name": "openmap-operator", "description": "Runs discovery, labels CIs, manages assets and plans" },
+      { "name": "openmap-analyst", "description": "Read-only across CMDB, maps, analytics and impact modeling" },
+      { "name": "openmap-auditor", "description": "Read-only plus audit log and compliance exports" },
+      { "name": "openmap-node", "description": "Discovery Node service identity" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "openmap-console",
+      "name": "OpenMap console",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        { "name": "tenant", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-attribute-mapper", "config": { "user.attribute": "tenant", "claim.name": "tenant", "jsonType.label": "String", "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true" } },
+        { "name": "realm roles", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-realm-role-mapper", "config": { "claim.name": "roles", "jsonType.label": "String", "multivalued": "true", "access.token.claim": "true", "id.token.claim": "true" } }
+      ]
+    },
+    {
+      "clientId": "openmap-api",
+      "name": "OpenMap API",
+      "bearerOnly": true
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@openmap.local",
+      "firstName": "OpenMap",
+      "lastName": "Admin",
+      "credentials": [{ "type": "password", "value": "admin", "temporary": true }],
+      "realmRoles": ["openmap-admin"],
+      "attributes": { "tenant": ["default"] }
+    }
+  ]
+}

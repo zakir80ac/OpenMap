@@ -1,0 +1,18 @@
+# REQ-CORE-014 — OpenTelemetry collector: receives OTLP from every service, exports metrics to Prometheus
+# and keeps traces in-process (debug exporter) in the single-node profile. No outbound egress.
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+processors:
+  batch: {}
+  memory_limiter: { check_interval: 5s, limit_mib: 512 }
+exporters:
+  prometheus: { endpoint: 0.0.0.0:8889, namespace: openmap }
+  debug: { verbosity: basic }
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [memory_limiter, batch], exporters: [debug] }
+    metrics: { receivers: [otlp], processors: [memory_limiter, batch], exporters: [prometheus] }
+    logs: { receivers: [otlp], processors: [memory_limiter, batch], exporters: [debug] }

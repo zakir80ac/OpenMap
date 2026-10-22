@@ -1,0 +1,44 @@
+# REQ-CORE-008 — CI: guard, tracker verify, typecheck, unit tests, contracts, i18n; integration and e2e on the compose stack.
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions: { contents: read }
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.23" }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm i18n:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm guard
+      - run: pnpm tracker verify
+      - run: pnpm tracker report
+      - uses: actions/upload-artifact@v4
+        with: { name: tracker, path: "tracker/OpenMap-Tracker.xlsx" }
+  integration:
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: cp deploy/compose/.env.example deploy/compose/.env
+      - run: docker compose -f deploy/compose/docker-compose.yml up -d --wait postgres memgraph clickhouse valkey meilisearch openbao
+      - run: pnpm build
+      - run: pnpm -r --filter './packages/*' --filter './apps/*' run test:integration --if-present
+      - run: docker compose -f deploy/compose/docker-compose.yml down -v
+        if: always()

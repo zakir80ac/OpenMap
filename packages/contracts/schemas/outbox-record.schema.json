@@ -1,0 +1,162 @@
+{
+  "$id": "https://openmap.dev/contracts/outbox-record/0.1.0",
+  "title": "outbox-record",
+  "version": "0.1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "sequence": {
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991
+    },
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "specversion": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "openmap.ci.created",
+            "openmap.ci.updated",
+            "openmap.ci.retired",
+            "openmap.relationship.created",
+            "openmap.relationship.retired",
+            "openmap.discovery.job.scheduled",
+            "openmap.discovery.job.started",
+            "openmap.discovery.job.completed",
+            "openmap.discovery.job.failed",
+            "openmap.discovery.node.registered",
+            "openmap.discovery.node.heartbeat",
+            "openmap.reconciliation.conflict",
+            "openmap.bsm.health.changed",
+            "openmap.bsm.sla.breached",
+            "openmap.bsm.incident.correlated",
+            "openmap.ipam.subnet.utilisation",
+            "openmap.ipam.address.conflict",
+            "openmap.dcim.power.threshold",
+            "openmap.vulnerability.correlated",
+            "openmap.licence.compliance.changed",
+            "openmap.timetravel.snapshot.created",
+            "openmap.assistant.query.answered",
+            "openmap.audit.action",
+            "openmap.incident.opened",
+            "openmap.incident.updated",
+            "openmap.incident.resolved",
+            "openmap.impact.simulation.completed",
+            "openmap.impact.validation.recorded",
+            "openmap.integration.delivery.succeeded",
+            "openmap.integration.delivery.failed",
+            "openmap.integration.credential.expiring",
+            "openmap.security.alert.received",
+            "openmap.security.response.executed",
+            "openmap.asset.stage.changed",
+            "openmap.asset.warranty.expiring",
+            "openmap.asset.eos.approaching",
+            "openmap.plan.status.changed",
+            "openmap.ci.labelled"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "datacontenttype": {
+          "type": "string",
+          "const": "application/json"
+        },
+        "dataschema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tenantid": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "traceparent": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "specversion",
+        "id",
+        "source",
+        "type",
+        "subject",
+        "time",
+        "datacontenttype",
+        "dataschema",
+        "tenantid",
+        "data"
+      ]
+    },
+    "pending": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "memgraph",
+          "clickhouse",
+          "meilisearch",
+          "websocket",
+          "bsm"
+        ]
+      }
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "deliveredAt": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "sequence",
+    "envelope",
+    "pending",
+    "attempts",
+    "createdAt",
+    "deliveredAt"
+  ]
+}

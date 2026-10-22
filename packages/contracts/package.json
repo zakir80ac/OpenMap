@@ -1,0 +1,20 @@
+{
+  "name": "@openmap/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./schemas/*": "./schemas/*",
+    "./graphql/schema.graphql": "./graphql/schema.graphql"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsx src/emit-json-schema.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": { "@openmap/constants": "workspace:*", "graphql": "^16.11.0", "zod": "^4.1.0" },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0", "vitest": "^4.0.0" }
+}

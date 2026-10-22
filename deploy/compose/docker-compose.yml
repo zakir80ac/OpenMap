@@ -1,0 +1,184 @@
+# REQ-INT-001 — single-node stack. Profiles: default (dev), airgap (pull_policy never, no optional egress),
+# gpu (vLLM) and cpu (llama.cpp server). Every value here mirrors the documented defaults in packages/config.
+name: openmap
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-openmap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
+      POSTGRES_DB: ${POSTGRES_DB:-openmap}
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openmap}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  memgraph:
+    <<: *restart
+    image: memgraph/memgraph-mage:3.4
+    command: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60"]
+    ports: ["${MEMGRAPH_PORT:-7687}:7687"]
+    volumes: [memgraph-data:/var/lib/memgraph]
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole --host 127.0.0.1 --port 7687 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  clickhouse:
+    <<: *restart
+    image: clickhouse/clickhouse-server:25.3
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports: ["${CLICKHOUSE_PORT:-8123}:8123", "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"]
+    volumes: [clickhouse-data:/var/lib/clickhouse]
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8123/ping | grep -q Ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  valkey:
+    <<: *restart
+    image: valkey/valkey:8
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "yes"]
+    ports: ["${VALKEY_PORT:-6379}:6379"]
+    volumes: [valkey-data:/data]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  meilisearch:
+    <<: *restart
+    image: getmeili/meilisearch:v1.15
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-openmap-dev-master-key}
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_ENV: ${MEILI_ENV:-development}
+    ports: ["${MEILI_PORT:-7700}:7700"]
+    volumes: [meili-data:/meili_data]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health | grep -q available"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  keycloak:
+    <<: *restart
+    image: quay.io/keycloak/keycloak:26.2
+    command: ["start-dev", "--import-realm", "--http-port=8080"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-openmap}
+      KC_DB_USERNAME: ${POSTGRES_USER:-openmap}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
+      KC_DB_SCHEMA: keycloak
+      KC_HEALTH_ENABLED: "true"
+    ports: ["${KEYCLOAK_PORT:-8080}:8080"]
+    volumes: ["./keycloak/realm-openmap.json:/opt/keycloak/data/import/realm-openmap.json:ro"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  openbao:
+    <<: *restart
+    image: openbao/openbao:2.3
+    command: ["server", "-dev", "-dev-root-token-id=${OPENBAO_TOKEN:-openmap-dev-root}", "-dev-listen-address=0.0.0.0:8200"]
+    cap_add: [IPC_LOCK]
+    environment:
+      BAO_ADDR: http://127.0.0.1:8200
+    ports: ["${OPENBAO_PORT:-8200}:8200"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8200/v1/sys/health | grep -q initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  superset:
+    <<: *restart
+    image: apache/superset:4.1.2
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-openmap-dev-superset-secret}
+      SUPERSET_LOAD_EXAMPLES: "no"
+      DATABASE_DIALECT: postgresql
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_DB: ${POSTGRES_DB:-openmap}
+      DATABASE_USER: ${POSTGRES_USER:-openmap}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
+      ADMIN_USERNAME: ${SUPERSET_ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
+    ports: ["${SUPERSET_PORT:-8088}:8088"]
+    volumes: ["./superset/superset_config.py:/app/pythonpath/superset_config.py:ro", "./superset/bootstrap.sh:/app/bootstrap.sh:ro"]
+    entrypoint: ["/bin/bash", "/app/bootstrap.sh"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      clickhouse: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://127.0.0.1:8088/health | grep -q OK"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  llm-gpu:
+    <<: *restart
+    profiles: [gpu]
+    image: vllm/vllm-openai:v0.9.2
+    command: ["--model", "${LLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}", "--port", "8000", "--max-model-len", "8192"]
+    ports: ["${LLM_PORT:-8000}:8000"]
+    volumes: [model-cache:/root/.cache/huggingface]
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+
+  llm-cpu:
+    <<: *restart
+    profiles: [cpu]
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command: ["-m", "/models/${LLM_GGUF:-qwen2.5-7b-instruct-q4_k_m.gguf}", "--port", "8000", "--host", "0.0.0.0", "-c", "8192", "--alias", "${LLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}"]
+    ports: ["${LLM_PORT:-8000}:8000"]
+    volumes: ["${LLM_MODELS_DIR:-./models}:/models:ro"]
+
+  otel-collector:
+    <<: *restart
+    image: otel/opentelemetry-collector-contrib:0.128.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: ["./otel/collector.yaml:/etc/otelcol/config.yaml:ro"]
+    ports: ["${OTEL_GRPC_PORT:-4317}:4317", "${OTEL_HTTP_PORT:-4318}:4318"]
+
+  prometheus:
+    <<: *restart
+    image: prom/prometheus:v3.4.1
+    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro", prom-data:/prometheus]
+    ports: ["${PROMETHEUS_PORT:-9090}:9090"]
+
+volumes:
+  postgres-data:
+  memgraph-data:
+  clickhouse-data:
+  valkey-data:
+  meili-data:
+  model-cache:
+  prom-data:

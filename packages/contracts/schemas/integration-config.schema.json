@@ -1,0 +1,209 @@
+{
+  "$id": "https://openmap.dev/contracts/integration-config/0.1.0",
+  "title": "integration-config",
+  "version": "0.1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "itsm",
+        "siem",
+        "soar",
+        "monitoring",
+        "notification",
+        "automation",
+        "warranty",
+        "identity",
+        "finance",
+        "iac"
+      ]
+    },
+    "vendor": {
+      "type": "string",
+      "enum": [
+        "servicenow",
+        "jira_service_management",
+        "bmc_helix",
+        "freshservice",
+        "zendesk",
+        "splunk",
+        "microsoft_sentinel",
+        "ibm_qradar",
+        "elastic_security",
+        "wazuh",
+        "cortex_xsoar",
+        "zabbix",
+        "prometheus_alertmanager",
+        "datadog",
+        "solarwinds",
+        "nagios",
+        "pagerduty",
+        "opsgenie",
+        "slack",
+        "microsoft_teams",
+        "email_smtp",
+        "webhook",
+        "ansible_awx",
+        "puppet",
+        "saltstack",
+        "terraform",
+        "dell_techdirect",
+        "hpe_warranty",
+        "lenovo_warranty",
+        "cisco_sntc",
+        "ibm_support",
+        "endoflife_date",
+        "entra_id",
+        "okta",
+        "active_directory",
+        "sap",
+        "coupa",
+        "oracle_erp"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound",
+        "bidirectional"
+      ]
+    },
+    "endpoint": {
+      "type": "string",
+      "format": "uri"
+    },
+    "credentialRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "settings": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "fieldMappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "out",
+              "in"
+            ]
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "direction"
+        ]
+      }
+    },
+    "classMappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ciType": {
+            "type": "string",
+            "minLength": 1
+          },
+          "remoteClass": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "ciType",
+          "remoteClass"
+        ]
+      }
+    },
+    "subscribedEvents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "schedule": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cron": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "cron"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    }
+  },
+  "required": [
+    "id",
+    "tenantId",
+    "category",
+    "vendor",
+    "name",
+    "enabled",
+    "direction",
+    "endpoint",
+    "credentialRef",
+    "settings",
+    "fieldMappings",
+    "classMappings",
+    "subscribedEvents",
+    "schedule",
+    "createdAt",
+    "updatedAt"
+  ]
+}

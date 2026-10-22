@@ -1,0 +1,392 @@
+{
+  "$id": "https://openmap.dev/contracts/ci/0.1.0",
+  "title": "ci",
+  "version": "0.1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "host",
+        "chassis",
+        "blade",
+        "bmc",
+        "hypervisor",
+        "vm_cluster",
+        "vm",
+        "operating_system",
+        "container",
+        "k8s_cluster",
+        "k8s_namespace",
+        "k8s_workload",
+        "k8s_service",
+        "container_registry",
+        "network_device",
+        "interface",
+        "port",
+        "vlan",
+        "vrf",
+        "ip_address",
+        "subnet",
+        "dns_zone",
+        "dns_record",
+        "dhcp_scope",
+        "dhcp_lease",
+        "load_balancer",
+        "firewall_rule",
+        "site_link",
+        "storage_array",
+        "lun",
+        "fc_switch",
+        "fc_fabric",
+        "fc_zone",
+        "nas_share",
+        "object_bucket",
+        "database",
+        "database_cluster",
+        "certificate",
+        "application",
+        "application_component",
+        "listening_service",
+        "business_service",
+        "software",
+        "software_instance",
+        "licence",
+        "vulnerability",
+        "site",
+        "building",
+        "room",
+        "row",
+        "rack",
+        "pdu",
+        "power_feed",
+        "power_circuit",
+        "ups",
+        "cooling_unit",
+        "cable",
+        "patch_panel",
+        "cloud_account",
+        "cloud_resource",
+        "saas_application",
+        "saas_tenant",
+        "user_account",
+        "service_account",
+        "vendor",
+        "contract",
+        "cost_centre",
+        "unknown"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attributes": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "externalIds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "source",
+          "id"
+        ]
+      }
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "dc",
+        "network_security",
+        "hardware",
+        "storage",
+        "virtualization",
+        "cloud",
+        "os",
+        "containers",
+        "databases",
+        "applications",
+        "saas",
+        "unknown"
+      ]
+    },
+    "userLabel": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": {
+              "type": "string"
+            },
+            "layer": {
+              "type": "string",
+              "enum": [
+                "dc",
+                "network_security",
+                "hardware",
+                "storage",
+                "virtualization",
+                "cloud",
+                "os",
+                "containers",
+                "databases",
+                "applications",
+                "saas",
+                "unknown"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "host",
+                "chassis",
+                "blade",
+                "bmc",
+                "hypervisor",
+                "vm_cluster",
+                "vm",
+                "operating_system",
+                "container",
+                "k8s_cluster",
+                "k8s_namespace",
+                "k8s_workload",
+                "k8s_service",
+                "container_registry",
+                "network_device",
+                "interface",
+                "port",
+                "vlan",
+                "vrf",
+                "ip_address",
+                "subnet",
+                "dns_zone",
+                "dns_record",
+                "dhcp_scope",
+                "dhcp_lease",
+                "load_balancer",
+                "firewall_rule",
+                "site_link",
+                "storage_array",
+                "lun",
+                "fc_switch",
+                "fc_fabric",
+                "fc_zone",
+                "nas_share",
+                "object_bucket",
+                "database",
+                "database_cluster",
+                "certificate",
+                "application",
+                "application_component",
+                "listening_service",
+                "business_service",
+                "software",
+                "software_instance",
+                "licence",
+                "vulnerability",
+                "site",
+                "building",
+                "room",
+                "row",
+                "rack",
+                "pdu",
+                "power_feed",
+                "power_circuit",
+                "ups",
+                "cooling_unit",
+                "cable",
+                "patch_panel",
+                "cloud_account",
+                "cloud_resource",
+                "saas_application",
+                "saas_tenant",
+                "user_account",
+                "service_account",
+                "vendor",
+                "contract",
+                "cost_centre",
+                "unknown"
+              ]
+            },
+            "labelledBy": {
+              "type": "string",
+              "minLength": 1
+            },
+            "labelledAt": {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+            }
+          },
+          "required": [
+            "title",
+            "description",
+            "layer",
+            "labelledBy",
+            "labelledAt"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": [
+        "discovered",
+        "managed",
+        "planned",
+        "retired"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "collectorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "collectorId",
+        "nodeId",
+        "runId",
+        "confidence"
+      ]
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "validTo": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "type",
+    "identity",
+    "name",
+    "attributes",
+    "tags",
+    "externalIds",
+    "observedAt",
+    "id",
+    "tenantId",
+    "displayName",
+    "layer",
+    "userLabel",
+    "lifecycle",
+    "source",
+    "validFrom",
+    "validTo",
+    "checksum"
+  ]
+}

@@ -1,0 +1,206 @@
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.1.0 (see docs/CONTRACTS.md).
+# Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
+
+scalar DateTime
+scalar JSON
+scalar UUID
+
+enum CiLayer { dc network_security hardware storage virtualization cloud os containers databases applications saas unknown }
+enum Lifecycle { discovered managed planned retired }
+enum HealthState { healthy degraded down unknown }
+enum PredictedState { down degraded at_risk unaffected }
+enum AssetStage { planned in_stock deployed spare rma retired disposed }
+enum PlanStatus { draft approved building live cancelled }
+enum IntegrationHealth { healthy warning failing disabled }
+enum Direction { upstream downstream both }
+
+type Provenance { collectorId: String! nodeId: String! runId: String! confidence: Float! }
+type ExternalId { source: String! id: String! }
+type UserLabel { title: String! description: String! layer: CiLayer! type: String labelledBy: String! labelledAt: DateTime! }
+
+type Ci {
+  id: UUID!
+  tenantId: UUID!
+  type: String!
+  layer: CiLayer!
+  name: String!
+  displayName: String!
+  identity: JSON!
+  attributes: JSON!
+  tags: [String!]!
+  externalIds: [ExternalId!]!
+  lifecycle: Lifecycle!
+  userLabel: UserLabel
+  source: Provenance!
+  observedAt: DateTime!
+  validFrom: DateTime!
+  validTo: DateTime
+  health: HealthState!
+  relationships(direction: Direction = both, types: [String!], first: Int = 50, after: String): RelationshipConnection!
+  asset: AssetRecord
+  vulnerabilities: [Vulnerability!]!
+  history(from: DateTime, to: DateTime): [CiVersion!]!
+}
+
+type CiVersion { validFrom: DateTime! validTo: DateTime attributes: JSON! lifecycle: Lifecycle! source: Provenance! }
+
+type Relationship {
+  id: UUID!
+  type: String!
+  from: Ci!
+  to: Ci!
+  attributes: JSON!
+  source: Provenance!
+  validFrom: DateTime!
+  validTo: DateTime
+}
+
+type PageInfo { endCursor: String hasNextPage: Boolean! }
+type CiEdge { cursor: String! node: Ci! }
+type CiConnection { edges: [CiEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type RelationshipEdge { cursor: String! node: Relationship! }
+type RelationshipConnection { edges: [RelationshipEdge!]! pageInfo: PageInfo! totalCount: Int! }
+
+input CiFilter {
+  types: [String!]
+  layers: [CiLayer!]
+  lifecycle: [Lifecycle!]
+  tags: [String!]
+  siteId: UUID
+  text: String
+  attributeEquals: JSON
+  health: [HealthState!]
+  asOf: DateTime
+}
+
+type ImpactNode { ci: Ci! depth: Int! predicted: PredictedState! path: [UUID!]! }
+type ImpactResult {
+  root: Ci!
+  nodes: [ImpactNode!]!
+  services: [AffectedService!]!
+  durationMs: Int!
+}
+type AffectedService {
+  service: Ci!
+  tier: Int!
+  predicted: PredictedState!
+  path: [UUID!]!
+  usersAffected: Int
+  revenueAtRiskPerHour: Money
+  slaBudgetRemainingMinutes: Float
+  recovery: Recovery
+}
+type Recovery { description: String! estimatedMinutes: Int! }
+type Money { amount: Float! currency: String! }
+
+type ImpactScenario { id: UUID! name: String! kind: String! failedCis: [Ci!]! options: JSON! createdBy: String! createdAt: DateTime! }
+type ImpactSimulation {
+  id: UUID!
+  scenario: ImpactScenario!
+  ranAt: DateTime!
+  durationMs: Int!
+  failedCis: [Ci!]!
+  affectedApplications: [Ci!]!
+  services: [AffectedService!]!
+  totals: ImpactTotals!
+  recommendations: [Recommendation!]!
+}
+type ImpactTotals { servicesDown: Int! servicesDegraded: Int! usersAffected: Int! revenueAtRiskPerHour: Money }
+type Recommendation { title: String! rationale: String! estimatedMinutes: Int }
+
+type ServiceHealth { service: Ci! state: HealthState! since: DateTime! rootCauses: [Ci!]! slaTarget: Float! errorBudgetRemainingMinutes: Float! }
+type Incident { id: UUID! service: Ci! openedAt: DateTime! resolvedAt: DateTime rootCause: Ci alerts: Int! links: [IncidentLink!]! }
+type IncidentLink { integration: Integration! remoteId: String! remoteUrl: String remoteState: String! syncedAt: DateTime! }
+
+type Subnet { ci: Ci! cidr: String! vrf: String utilisationPercent: Float! addresses(first: Int = 100, after: String): CiConnection! children: [Subnet!]! }
+type Rack { ci: Ci! units: Int! occupiedUnits: Int! devices: [RackDevice!]! powerFeeds: [PowerFeed!]! }
+type RackDevice { ci: Ci! startUnit: Int! heightUnits: Int! face: String! }
+type PowerFeed { ci: Ci! ratedWatts: Int! currentWatts: Int! }
+
+type AssetRecord {
+  id: UUID!
+  ci: Ci
+  assetTag: String!
+  serialNumber: String
+  manufacturer: String!
+  model: String!
+  stage: AssetStage!
+  warrantyEndsAt: DateTime
+  supportContract: SupportContract
+  endOfSupport: DateTime
+  plan: InfraPlan
+  purchaseCost: Money
+}
+type SupportContract { id: UUID! vendor: Ci! contractNumber: String! level: String! endsAt: DateTime! primaryContact: VendorContact }
+type VendorContact { id: UUID! name: String! role: String! email: String phone: String portalUrl: String }
+type InfraPlan { id: UUID! number: String! name: String! kind: String! status: PlanStatus! bom: [BomLine!]! estimatedCost: Money targetSite: Ci targetRacks: [Ci!]! plannedLiveAt: DateTime assets: [AssetRecord!]! }
+type BomLine { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! received: Int! unitCost: Money }
+
+type Vulnerability { ci: Ci! cveId: String! cvss: Float! severity: String! fixedIn: String exploited: Boolean! internetFacing: Boolean! }
+
+type Integration { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! }
+
+type DiscoveryNode { id: String! site: Ci status: String! lastHeartbeat: DateTime! activeJobs: Int! certificateExpiresAt: DateTime! }
+type DiscoveryJob { id: UUID! collectorId: String! node: DiscoveryNode! status: String! targets: Int! scheduledAt: DateTime! startedAt: DateTime finishedAt: DateTime cisEmitted: Int! errors: Int! }
+type Sweep { id: UUID! startedAt: DateTime! finishedAt: DateTime targetsTotal: Int! targetsDone: Int! devicesDiscovered: Int! budgetMinutes: Int! }
+
+type LayerSummary { layer: CiLayer! count: Int! healthy: Int! degraded: Int! down: Int! visible: Boolean! }
+
+type SearchHit { ci: Ci! score: Float! highlight: String }
+
+type AssistantAnswer { text: String! cypher: String! rows: JSON! cis: [Ci!]! }
+
+type Query {
+  ci(id: UUID!, asOf: DateTime): Ci
+  cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
+  search(text: String!, layers: [CiLayer!], first: Int = 20): [SearchHit!]!
+  impact(ciId: UUID!, direction: Direction = upstream, maxDepth: Int = 0, asOf: DateTime): ImpactResult!
+  path(fromCiId: UUID!, toCiId: UUID!): [Relationship!]!
+  impactScenarios: [ImpactScenario!]!
+  impactSimulation(id: UUID!): ImpactSimulation
+  services(health: [HealthState!]): [ServiceHealth!]!
+  incidents(open: Boolean = true): [Incident!]!
+  subnets(parentId: UUID): [Subnet!]!
+  nextFreeIp(subnetId: UUID!): String
+  racks(roomId: UUID): [Rack!]!
+  assets(stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
+  plans(status: [PlanStatus!]): [InfraPlan!]!
+  vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
+  integrations(category: String): [Integration!]!
+  discoveryNodes: [DiscoveryNode!]!
+  discoveryJobs(status: String, first: Int = 50): [DiscoveryJob!]!
+  currentSweep: Sweep
+  layers: [LayerSummary!]!
+  unknownCis(first: Int = 50, after: String): CiConnection!
+}
+
+input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLayer! type: String }
+input ScenarioInput { name: String! kind: String! failedCiIds: [UUID!]! maxDepth: Int = 0 honourRedundancy: Boolean = true includeSharedServices: Boolean = true at: DateTime }
+input PlanInput { name: String! description: String! kind: String! targetSiteId: UUID targetRackIds: [UUID!] bom: [BomLineInput!]! plannedLiveAt: DateTime }
+input BomLineInput { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! unitCostAmount: Float unitCostCurrency: String }
+input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }
+
+type Mutation {
+  labelCi(input: LabelCiInput!): Ci!
+  updateCiAttributes(ciId: UUID!, attributes: JSON!): Ci!
+  createRelationship(type: String!, fromCiId: UUID!, toCiId: UUID!, attributes: JSON): Relationship!
+  retireRelationship(id: UUID!): Relationship!
+  setLayerVisibility(layer: CiLayer!, visible: Boolean!): [LayerSummary!]!
+  runDiscovery(collectorIds: [String!], siteId: UUID): Sweep!
+  saveScenario(input: ScenarioInput!): ImpactScenario!
+  runSimulation(scenarioId: UUID!): ImpactSimulation!
+  createPlan(input: PlanInput!): InfraPlan!
+  setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
+  setAssetStage(assetId: UUID!, stage: AssetStage!, note: String): AssetRecord!
+  upsertIntegration(id: UUID, input: IntegrationInput!): Integration!
+  testIntegration(id: UUID!): Integration!
+  reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!
+  acknowledgeIncident(incidentId: UUID!): Incident!
+  askAssistant(question: String!): AssistantAnswer!
+}
+
+type Subscription {
+  events(types: [String!]): JSON!
+  serviceHealthChanged: ServiceHealth!
+  sweepProgress: Sweep!
+}

@@ -1,0 +1,719 @@
+{
+  "$id": "https://openmap.dev/contracts/collector-result/0.1.0",
+  "title": "collector-result",
+  "version": "0.1.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "jobId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "runId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "tenantId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "collectorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodeId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "partial",
+        "failed"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "finishedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "cis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "host",
+              "chassis",
+              "blade",
+              "bmc",
+              "hypervisor",
+              "vm_cluster",
+              "vm",
+              "operating_system",
+              "container",
+              "k8s_cluster",
+              "k8s_namespace",
+              "k8s_workload",
+              "k8s_service",
+              "container_registry",
+              "network_device",
+              "interface",
+              "port",
+              "vlan",
+              "vrf",
+              "ip_address",
+              "subnet",
+              "dns_zone",
+              "dns_record",
+              "dhcp_scope",
+              "dhcp_lease",
+              "load_balancer",
+              "firewall_rule",
+              "site_link",
+              "storage_array",
+              "lun",
+              "fc_switch",
+              "fc_fabric",
+              "fc_zone",
+              "nas_share",
+              "object_bucket",
+              "database",
+              "database_cluster",
+              "certificate",
+              "application",
+              "application_component",
+              "listening_service",
+              "business_service",
+              "software",
+              "software_instance",
+              "licence",
+              "vulnerability",
+              "site",
+              "building",
+              "room",
+              "row",
+              "rack",
+              "pdu",
+              "power_feed",
+              "power_circuit",
+              "ups",
+              "cooling_unit",
+              "cable",
+              "patch_panel",
+              "cloud_account",
+              "cloud_resource",
+              "saas_application",
+              "saas_tenant",
+              "user_account",
+              "service_account",
+              "vendor",
+              "contract",
+              "cost_centre",
+              "unknown"
+            ]
+          },
+          "identity": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "attributes": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "externalIds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "source",
+                "id"
+              ]
+            }
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "type",
+          "identity",
+          "name",
+          "attributes",
+          "tags",
+          "externalIds",
+          "observedAt"
+        ]
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "depends_on",
+              "runs_on",
+              "hosted_on",
+              "contains",
+              "member_of",
+              "connected_to",
+              "cabled_to",
+              "located_in",
+              "powered_by",
+              "cooled_by",
+              "uses_ip",
+              "in_subnet",
+              "in_vlan",
+              "resolves_to",
+              "leased_to",
+              "installed_on",
+              "licensed_by",
+              "affected_by",
+              "part_of_service",
+              "communicates_with",
+              "mounted_on",
+              "backed_by",
+              "owns",
+              "manages",
+              "billed_to",
+              "secured_by",
+              "covered_by",
+              "supported_by",
+              "assigned_to",
+              "spare_for",
+              "zoned_with",
+              "presented_to",
+              "replicates_to"
+            ]
+          },
+          "from": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "host",
+                      "chassis",
+                      "blade",
+                      "bmc",
+                      "hypervisor",
+                      "vm_cluster",
+                      "vm",
+                      "operating_system",
+                      "container",
+                      "k8s_cluster",
+                      "k8s_namespace",
+                      "k8s_workload",
+                      "k8s_service",
+                      "container_registry",
+                      "network_device",
+                      "interface",
+                      "port",
+                      "vlan",
+                      "vrf",
+                      "ip_address",
+                      "subnet",
+                      "dns_zone",
+                      "dns_record",
+                      "dhcp_scope",
+                      "dhcp_lease",
+                      "load_balancer",
+                      "firewall_rule",
+                      "site_link",
+                      "storage_array",
+                      "lun",
+                      "fc_switch",
+                      "fc_fabric",
+                      "fc_zone",
+                      "nas_share",
+                      "object_bucket",
+                      "database",
+                      "database_cluster",
+                      "certificate",
+                      "application",
+                      "application_component",
+                      "listening_service",
+                      "business_service",
+                      "software",
+                      "software_instance",
+                      "licence",
+                      "vulnerability",
+                      "site",
+                      "building",
+                      "room",
+                      "row",
+                      "rack",
+                      "pdu",
+                      "power_feed",
+                      "power_circuit",
+                      "ups",
+                      "cooling_unit",
+                      "cable",
+                      "patch_panel",
+                      "cloud_account",
+                      "cloud_resource",
+                      "saas_application",
+                      "saas_tenant",
+                      "user_account",
+                      "service_account",
+                      "vendor",
+                      "contract",
+                      "cost_centre",
+                      "unknown"
+                    ]
+                  },
+                  "identity": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "identity"
+                ]
+              }
+            ]
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "id"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "host",
+                      "chassis",
+                      "blade",
+                      "bmc",
+                      "hypervisor",
+                      "vm_cluster",
+                      "vm",
+                      "operating_system",
+                      "container",
+                      "k8s_cluster",
+                      "k8s_namespace",
+                      "k8s_workload",
+                      "k8s_service",
+                      "container_registry",
+                      "network_device",
+                      "interface",
+                      "port",
+                      "vlan",
+                      "vrf",
+                      "ip_address",
+                      "subnet",
+                      "dns_zone",
+                      "dns_record",
+                      "dhcp_scope",
+                      "dhcp_lease",
+                      "load_balancer",
+                      "firewall_rule",
+                      "site_link",
+                      "storage_array",
+                      "lun",
+                      "fc_switch",
+                      "fc_fabric",
+                      "fc_zone",
+                      "nas_share",
+                      "object_bucket",
+                      "database",
+                      "database_cluster",
+                      "certificate",
+                      "application",
+                      "application_component",
+                      "listening_service",
+                      "business_service",
+                      "software",
+                      "software_instance",
+                      "licence",
+                      "vulnerability",
+                      "site",
+                      "building",
+                      "room",
+                      "row",
+                      "rack",
+                      "pdu",
+                      "power_feed",
+                      "power_circuit",
+                      "ups",
+                      "cooling_unit",
+                      "cable",
+                      "patch_panel",
+                      "cloud_account",
+                      "cloud_resource",
+                      "saas_application",
+                      "saas_tenant",
+                      "user_account",
+                      "service_account",
+                      "vendor",
+                      "contract",
+                      "cost_centre",
+                      "unknown"
+                    ]
+                  },
+                  "identity": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "identity"
+                ]
+              }
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "type",
+          "from",
+          "to",
+          "attributes",
+          "observedAt"
+        ]
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "snmp_walk",
+              "cli_output",
+              "api_response",
+              "flow_sample",
+              "scan_output",
+              "agent_report"
+            ]
+          },
+          "target": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "host",
+                  "cidr",
+                  "url",
+                  "cluster",
+                  "account",
+                  "zone",
+                  "flow_source"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "kind",
+          "target",
+          "digest",
+          "sizeBytes",
+          "capturedAt"
+        ]
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "host",
+                      "cidr",
+                      "url",
+                      "cluster",
+                      "account",
+                      "zone",
+                      "flow_source"
+                    ]
+                  },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "value"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "unreachable",
+              "auth_failed",
+              "timeout",
+              "unsupported_device",
+              "parse_error",
+              "rate_limited",
+              "permission_denied",
+              "internal"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "code",
+          "message",
+          "retryable"
+        ]
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "targetsAttempted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "targetsReached": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cisEmitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "relationshipsEmitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "targetsAttempted",
+        "targetsReached",
+        "cisEmitted",
+        "relationshipsEmitted",
+        "durationMs"
+      ]
+    },
+    "contractVersion": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "jobId",
+    "runId",
+    "tenantId",
+    "collectorId",
+    "nodeId",
+    "status",
+    "startedAt",
+    "finishedAt",
+    "cis",
+    "relationships",
+    "evidence",
+    "errors",
+    "metrics",
+    "contractVersion"
+  ]
+}
