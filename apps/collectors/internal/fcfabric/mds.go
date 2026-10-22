@@ -119,11 +119,20 @@ func parseMdsFlogi(text string, sw *Switch) {
 	}
 }
 
+var mdsFcnsDetailHead = regexp.MustCompile(`^VSAN:\s*(\d+)\s+FCID:\s*0x([0-9a-f]{6})`)
+
 func parseMdsFcns(text string, sw *Switch) {
 	var cur *NameServerEntry
 	vsan := ""
 	for _, line := range strings.Split(text, "\n") {
 		t := strings.TrimSpace(line)
+		if m := mdsFcnsDetailHead.FindStringSubmatch(t); m != nil {
+			// `show fcns database detail`: one block per login, headed by VSAN and FCID.
+			vsan = m[1]
+			cur = &NameServerEntry{Type: "N", FCID: m[2], Vsan: vsan}
+			sw.NameServer = append(sw.NameServer, cur)
+			continue
+		}
 		if m := mdsVsanHeader.FindStringSubmatch(t); m != nil {
 			vsan = m[1]
 			continue

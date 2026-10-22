@@ -183,7 +183,7 @@ func TestMds(t *testing.T) {
 		t.Fatalf("ports wrong: %+v", sw.Ports["fc1/2"])
 	}
 	if len(sw.NameServer) != 2 || sw.NameServer[0].DeviceType != "Physical Target" || sw.NameServer[1].DeviceType != "Physical Initiator" || sw.NameServer[0].Vendor != "Pure" {
-		t.Fatalf("fcns wrong: %+v %+v", sw.NameServer[0], sw.NameServer[1])
+		t.Fatalf("fcns wrong: %+v", sw.NameServer)
 	}
 	if len(sw.Zones) != 1 || sw.Zones[0].Vsan != "10" || len(sw.Zones[0].MemberWWNs) != 2 || sw.Aliases["pgcore01_hba1"][0] != "10:00:00:90:fa:aa:bb:02" {
 		t.Fatalf("zones wrong: %+v", sw.Zones[0])

@@ -137,9 +137,9 @@ func parseNsshow(text string, sw *Switch) {
 		}
 		switch {
 		case strings.HasPrefix(t, "PortSymb:"):
-			cur.PortSymbol = strings.Trim(strings.TrimSpace(strings.TrimPrefix(t, "PortSymb:")), "[]\" ")
+			cur.PortSymbol = symbol(strings.TrimPrefix(t, "PortSymb:"))
 		case strings.HasPrefix(t, "NodeSymb:"):
-			cur.NodeSymbol = strings.Trim(strings.TrimSpace(strings.TrimPrefix(t, "NodeSymb:")), "[]\" ")
+			cur.NodeSymbol = symbol(strings.TrimPrefix(t, "NodeSymb:"))
 		case strings.HasPrefix(t, "Device type:"):
 			cur.DeviceType = strings.TrimSpace(strings.TrimPrefix(t, "Device type:"))
 		case strings.HasPrefix(t, "Port Index:"):
@@ -226,6 +226,13 @@ func parseZoneshow(text string, sw *Switch) {
 			}
 		}
 	}
+}
+
+var symbolPrefix = regexp.MustCompile(`^\s*\[\d+\]\s*`)
+
+// symbol strips the FOS `[length] "text"` wrapper around symbolic names.
+func symbol(s string) string {
+	return strings.Trim(strings.TrimSpace(symbolPrefix.ReplaceAllString(s, "")), `"`)
 }
 
 func atoi(s string) int {
