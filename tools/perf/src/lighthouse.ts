@@ -157,7 +157,9 @@ async function main(): Promise<void> {
 
   let failed = false;
   for (const p of pages) {
-    const ok = p.performance >= PERF_BUDGETS.lighthousePerformanceMin && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
+    // Same floors as tools/guard: screens that host a third-party application have their own performance floor.
+    const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(p.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
+    const ok = p.performance >= performanceMin && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
     if (!ok) failed = true;
     console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);

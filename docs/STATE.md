@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-10-22 (marathon, checkpoint 6)
+## Last session · 2026-10-22 (marathon, checkpoint 7)
 
 **What exists and runs**
 
@@ -27,6 +27,7 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 - **Offline bundle (REQ-INT-002)**: `build-bundle.sh` produced a 2.7 GB bundle with 17 images and checksums (`docs/evidence/airgap/bundle-build.md`); the realm import now takes the console's public URL from `CONSOLE_PUBLIC_URL`, so an air-gapped host at any hostname can sign in; the loader's checksum step works on BusyBox.
 - **Three deployment defects found by the air-gap test and fixed**: the bundle loader's `sha256sum --quiet` (absent on BusyBox); the realm import pinned the console client to `localhost:3000` (now `${CONSOLE_PUBLIC_URL:…}`, substituted by Keycloak from the environment — `${env.NAME}` is rejected); and the console image carried `localhost:4000`/`localhost:8080` baked into the client bundle because Turborepo's strict env mode hid the sentinel variables from the build — `turbo.json` now declares them and the Dockerfile fails without the sentinels. Every non-default-origin deployment (Helm with real hostnames included) was affected.
 - **Tenant settings editor (REQ-UI-019)**: GraphQL 0.3.0 (ADR-011) adds `tenantSettings` and `updateTenantSettings` (admin only, partial input validated by the config package's zod schema, audited); the Settings screen gained the editor (read-only for other roles) with en/ar strings, unit tests (T-098) and an integration test (T-097).
+- **Every sidebar entry resolves to a working screen (REQ-UI-009/010/011/014/017/018 Done)**: Assets (attention table, register with stage changes, plans with BOM), IPAM (subnet tree with utilisation, addresses, next free IP, DNS, DHCP), DCIM (room heat map, isometric SVG rack elevation, devices, PDUs), Integrations (catalogue, configured list, detail with mappings and deliveries, probe, admin editor), Analytics (Superset embedded SDK, dashboard provisioned by the API, tenant RLS guest tokens), Assistant (conversation over `askAssistant` with the Cypher shown). GraphQL 0.4.0 (ADR-012). Building them fixed IPAM (cidr from identity) and DCIM (heightU/uPosition, PDUs in rack, row/room) against the real estate, found the compose LLM variable mismatch (`LLM_URL` was never read) and gave the NL→Cypher pipeline a self-correction loop. Evidence: `docs/evidence/console/screens.md`.
 - **Release packaging**: `deploy/install/build-release.sh` produces per-target tarballs (linux/amd64, windows/amd64, darwin/arm64 built; `docs/evidence/release`).
 - **CI**: `verify` (guard, tracker, typecheck, unit, contracts check, i18n), `integration` (compose datastores), `e2e` (full compose stack, Playwright en+ar) and `kind` (helm install smoke) jobs — the last two await their first GitHub Actions run (REQ-QA-002/004 in review).
 - Design: 13 screens on the Obsidian Pro canvas: https://claude.ai/artifact/VcFmJuAaHCmrvgpPMmTzrf.
@@ -59,10 +60,10 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 ## Next three
 
 1. Push so the new CI jobs run (REQ-QA-002/004 → Done, REQ-INT-003 → Done); exercise the CPU LLM profile offline (REQ-INT-004, REQ-INT-008).
-2. Release packaging for the Node and the agent (REQ-DISC-031/004 → Done): tarballs per OS with `bin/`, `collectors/`, `install/`, checksums; the SaaS layer screen (REQ-CMDB-011).
+2. Release packaging signed and published (REQ-DISC-031/004 → Done); the SaaS layer screen (REQ-CMDB-011); Helm values for Superset and the LLM (the chart does not deploy either yet, so Analytics and the Assistant on Kubernetes need external `SUPERSET_URL`/`LLM_BASE_URL`); cross-check the Superset chart figures against the API.
 3. Scale-1 replay for the 15-minute budget; then the remaining collector families and the Device42 agent import.
 
-**Dev-stack notes (also in project memory):** the Keycloak realm import runs with IGNORE_EXISTING, so realm-file edits reach an existing realm only through the admin REST API (user profile first, then user attributes); the local `admin` user's `tenant` attribute points at the synthetic tenant so the console shows the estate, while a fresh install keeps `default` (migration 0005). The browser console error buffer in the desktop app accumulates across navigations; the Next dev-server log is the clean signal.
+**Dev-stack notes (also in project memory):** the `cpu` LLM profile runs `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` from `deploy/compose/models` (gitignored); `.env.example` names the 7B model for deployments. Superset's guest role and dashboard are created by the API on first `analyticsEmbed`. the Keycloak realm import runs with IGNORE_EXISTING, so realm-file edits reach an existing realm only through the admin REST API (user profile first, then user attributes); the local `admin` user's `tenant` attribute points at the synthetic tenant so the console shows the estate, while a fresh install keeps `default` (migration 0005). The browser console error buffer in the desktop app accumulates across navigations; the Next dev-server log is the clean signal.
 
 ## Questions for Syed
 

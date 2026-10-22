@@ -10,7 +10,7 @@
     {
       "label": "sign-in",
       "url": "http://localhost:3000/en/dashboard",
-      "performance": 1,
+      "performance": 0.99,
       "accessibility": 1,
       "bestPractices": 1,
       "failing": []
@@ -56,6 +56,14 @@
       "failing": []
     },
     {
+      "label": "assets",
+      "url": "http://localhost:3000/en/assets",
+      "performance": 0.91,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
       "label": "services",
       "url": "http://localhost:3000/en/services",
       "performance": 1,
@@ -70,7 +78,61 @@
       "accessibility": 1,
       "bestPractices": 1,
       "failing": []
+    },
+    {
+      "label": "integrations",
+      "url": "http://localhost:3000/en/integrations",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "ipam",
+      "url": "http://localhost:3000/en/ipam",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "dcim",
+      "url": "http://localhost:3000/en/dcim",
+      "performance": 0.92,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": [
+        {
+          "id": "label-content-name-mismatch",
+          "title": "Elements with visible text labels do not have matching accessible names.",
+          "items": 54
+        }
+      ]
+    },
+    {
+      "label": "analytics",
+      "url": "http://localhost:3000/en/analytics",
+      "performance": 0.82,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "assistant",
+      "url": "http://localhost:3000/en/assistant",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "settings",
+      "url": "http://localhost:3000/en/settings",
+      "performance": 0.99,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
     }
   ],
-  "generatedAt": "2026-10-22T12:50:42.438Z"
+  "generatedAt": "2026-10-22T19:24:05.128Z"
 }
