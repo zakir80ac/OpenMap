@@ -6,6 +6,27 @@ import { z } from 'zod';
 export const SCENARIO_KINDS = ['component', 'power', 'rack', 'site', 'network', 'storage', 'cloud_region', 'shared_service', 'maintenance'] as const;
 export const scenarioKindSchema = z.enum(SCENARIO_KINDS);
 
+/** A runbook: numbered steps with an optional automation hook (SOAR playbook or Ansible job) per step. */
+export const runbookSchema = z.object({
+  code: z.string().min(1),
+  title: z.string().min(1),
+  steps: z
+    .array(
+      z.object({
+        order: z.number().int().positive(),
+        instruction: z.string().min(1),
+        /** Integration id and playbook/job name that performs this step automatically, if any. */
+        automation: z.object({ integrationId: z.uuid(), action: z.string().min(1) }).nullable(),
+        /** Expected completion time for the step, used to estimate total recovery. */
+        estimatedMinutes: z.number().int().min(0).nullable(),
+      }),
+    )
+    .min(1),
+  ownerTeam: z.string().min(1),
+  lastReviewedAt: z.iso.date().nullable(),
+});
+export type Runbook = z.infer<typeof runbookSchema>;
+
 export const impactScenarioSchema = z.object({
   id: z.uuid(),
   tenantId: z.uuid(),
@@ -25,6 +46,8 @@ export const impactScenarioSchema = z.object({
   createdAt: z.iso.datetime(),
   /** Optional link to a planned change in the ITSM so the simulation attaches to it. */
   changeRef: z.object({ source: z.string().min(1), id: z.string().min(1) }).nullable(),
+  /** Standard operating procedure to follow if this scenario happens for real. */
+  runbook: runbookSchema.nullable(),
 });
 export type ImpactScenario = z.infer<typeof impactScenarioSchema>;
 

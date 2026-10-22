@@ -636,6 +636,8 @@ model Ci {
   identityKey       String
   name              String
   displayName       String
+  /// Short code shown on cards, e.g. NET-SW-CORE-1 (ciCode()); unique per tenant among current rows.
+  code              String?   @db.VarChar(64)
   layer             CiLayer
   /// userLabelSchema or null.
   userLabel         Json?
@@ -662,6 +664,7 @@ model Ci {
   assetRecords      AssetRecord[]
 
   @@index([tenantId, type])
+  @@index([tenantId, code])
   @@index([tenantId, layer])
   @@index([tenantId, validTo])
   @@index([tenantId, lifecycle])

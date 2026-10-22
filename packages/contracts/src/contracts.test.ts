@@ -9,6 +9,7 @@ import {
   CI_TYPES,
   CI_TYPE_LAYER,
   CI_IDENTITY_KEYS,
+  ciCode,
   collectorResultSchema,
   eventEnvelopeSchema,
   observedCiSchema,
@@ -22,6 +23,12 @@ const uuid = '9b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e';
 const now = '2026-10-22T09:00:00.000Z';
 
 describe('CI contract', () => {
+  it('generates short codes per layer and business services', () => {
+    expect(ciCode('network_security', 'network_device', 'sw-core-1')).toBe('NET-SW-CORE-1');
+    expect(ciCode('applications', 'business_service', 'Online banking')).toBe('BS-ONLINE-BANKING');
+    expect(ciCode('hardware', 'host', 'db-ryd-pg-core-01.bank.local')).toBe('SRV-DB-RYD-PG-CORE-01');
+    expect(ciCode('unknown', 'unknown', '***')).toBe('UNK-UNNAMED');
+  });
   it('maps every CI type to a layer and identity keys', () => {
     for (const t of CI_TYPES) {
       expect(CI_LAYERS).toContain(CI_TYPE_LAYER[t]);
@@ -56,7 +63,7 @@ describe('event contract', () => {
 
 describe('asset, impact and integration contracts', () => {
   it('validate representative records', () => {
-    expect(impactScenarioSchema.safeParse({ id: uuid, tenantId: uuid, name: 'R12 power', kind: 'power', failedCiIds: [uuid], options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null }, createdBy: 'syed', createdAt: now, changeRef: null }).success).toBe(true);
+    expect(impactScenarioSchema.safeParse({ id: uuid, tenantId: uuid, name: 'R12 power', kind: 'power', failedCiIds: [uuid], options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null }, createdBy: 'syed', createdAt: now, changeRef: null, runbook: { code: 'RB-FAC-04', title: 'STS transfer', steps: [{ order: 1, instruction: 'Verify STS engaged', automation: null, estimatedMinutes: 1 }], ownerTeam: 'Facilities', lastReviewedAt: null } }).success).toBe(true);
     expect(integrationConfigSchema.safeParse({ id: uuid, tenantId: uuid, category: 'itsm', vendor: 'servicenow', name: 'SN', enabled: true, direction: 'bidirectional', endpoint: 'https://example.invalid', credentialRef: 'openmap/itsm/snow', settings: {}, fieldMappings: [], classMappings: [], subscribedEvents: ['openmap.incident.opened'], schedule: null, createdAt: now, updatedAt: now }).success).toBe(true);
     expect(assetRecordSchema.safeParse({ id: uuid, tenantId: uuid, ciId: null, assetTag: 'AST-1', serialNumber: null, manufacturer: 'Dell', model: 'R760', partNumber: null, stage: 'planned', stageChangedAt: now, locationCiId: null, custodian: null, ownerCostCentreCiId: null, planId: uuid, purchasedAt: null, purchaseCost: null, depreciation: { method: 'straight_line', usefulLifeMonths: 60, residualValue: { amount: 0, currency: 'SAR' } }, warranty: null, supportContractId: null, endOfLife: null, stock: null, tags: [], customFields: {}, createdAt: now, updatedAt: now }).success).toBe(true);
   });

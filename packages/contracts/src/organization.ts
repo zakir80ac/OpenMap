@@ -39,6 +39,15 @@ export const siteSchema = z.object({
   cloud: z.object({ provider: z.enum(['azure', 'aws', 'gcp', 'oci', 'other']), region: z.string().min(1) }).nullable(),
   /** Branch bundles: number of locations represented by this one site record. */
   locationCount: z.number().int().positive(),
+  /** Facility capacity facts shown on the site card; null for cloud regions. */
+  facility: z
+    .object({
+      powerCapacityKw: z.number().min(0),
+      rackCount: z.number().int().min(0),
+      /** Design power usage effectiveness; measured PUE comes from DCIM telemetry. */
+      designPue: z.number().min(1).nullable(),
+    })
+    .nullable(),
   /** The site CI created in the CMDB once the twin is generated. */
   ciId: z.uuid().nullable(),
 });
@@ -60,6 +69,20 @@ export const siteLinkSchema = z.object({
   role: z.enum(['primary', 'backup', 'overlay']),
   latencyMs: z.number().min(0).nullable(),
   ciId: z.uuid().nullable(),
+  /** Carrier contract reference so a circuit outage can be raised with the right provider. */
+  carrierContractRef: z.string().nullable(),
+  /** Last known line telemetry from flow and SNMP collectors; the history lives in ClickHouse. */
+  telemetry: z
+    .object({
+      latencyMs: z.number().min(0),
+      jitterMs: z.number().min(0).nullable(),
+      throughputMbps: z.number().min(0),
+      lossPercent: z.number().min(0).max(100),
+      /** active_active, active_standby or degraded (a diverse path is down). */
+      redundancyState: z.enum(['active_active', 'active_standby', 'degraded', 'down']),
+      observedAt: z.iso.datetime(),
+    })
+    .nullable(),
 });
 export type SiteLink = z.infer<typeof siteLinkSchema>;
 

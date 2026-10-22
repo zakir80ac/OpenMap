@@ -25,7 +25,7 @@ function lookupWith(cis: Ci[], rels: Relationship[] = []): StoredLookup {
 }
 
 const storedHost: Ci = {
-  id: 'host-1', tenantId, type: 'host', layer: 'hardware', identity: { serialNumber: '7KQ2M93' }, name: 'db-ryd-pg-core-01', displayName: 'db-ryd-pg-core-01',
+  id: 'host-1', tenantId, type: 'host', layer: 'hardware', identity: { serialNumber: '7KQ2M93' }, name: 'db-ryd-pg-core-01', displayName: 'db-ryd-pg-core-01', code: 'SRV-DB-RYD-PG-CORE-01',
   attributes: { os: 'Ubuntu 22.04', memoryGb: 512 }, tags: [], externalIds: [], observedAt: t0, lifecycle: 'managed', userLabel: null,
   source: { collectorId: 'ssh_agentless', nodeId: 'node-ryd-01', runId: uuid, confidence: 0.9 }, validFrom: t0, validTo: null,
   checksum: checksum('host', { serialNumber: '7KQ2M93' }, { os: 'Ubuntu 22.04', memoryGb: 512 }),
@@ -66,6 +66,7 @@ describe('reconcile', () => {
     const out = reconcile(result({ cis: [{ type: 'network_device', identity: { serialNumber: 'FOC1' }, name: 'sw1', attributes: {}, tags: [], externalIds: [], observedAt: t1 }] }), lookupWith([]));
     expect(out.created).toHaveLength(1);
     expect(out.created[0]?.layer).toBe('network_security');
+    expect(out.created[0]?.code).toBe('NET-SW1');
     expect(out.events.map((e) => e.type)).toEqual(['openmap.ci.created']);
   });
   it('updates an existing CI only when the checksum changes', () => {

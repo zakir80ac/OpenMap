@@ -169,6 +169,10 @@
       "type": "string",
       "minLength": 1
     },
+    "code": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]+-[A-Z0-9-]+$"
+    },
     "layer": {
       "type": "string",
       "enum": [
@@ -381,6 +385,7 @@
     "id",
     "tenantId",
     "displayName",
+    "code",
     "layer",
     "userLabel",
     "lifecycle",

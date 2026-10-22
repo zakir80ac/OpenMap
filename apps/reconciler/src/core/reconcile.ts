@@ -2,7 +2,7 @@
 // writes and outbox events the stores apply. Pure: the caller supplies lookups and persists outputs.
 import { randomUUID } from 'node:crypto';
 import { RECONCILIATION } from '@openmap/constants';
-import { CI_TYPE_LAYER, type Ci, type CollectorResult, type EventEnvelope, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
+import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelope, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
 import { identityKeysOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { envelope } from './events.js';
@@ -51,12 +51,14 @@ export function reconcile(result: CollectorResult, lookup: StoredLookup): Reconc
     }
     if (resolution.kind === 'new') {
       const id = randomUUID();
+      const layer = CI_TYPE_LAYER[observed.type];
       const ci: Ci = {
         ...observed,
         id,
         tenantId: result.tenantId,
         displayName: observed.name,
-        layer: CI_TYPE_LAYER[observed.type],
+        code: ciCode(layer, observed.type, observed.name),
+        layer,
         userLabel: null,
         lifecycle: 'discovered',
         source,
