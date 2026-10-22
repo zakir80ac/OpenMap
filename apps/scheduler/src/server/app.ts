@@ -6,7 +6,7 @@ import type { PeerCertificate, TLSSocket } from 'node:tls';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { CONTRACT_VERSIONS, DISCOVERY, HTTP, PKI } from '@openmap/constants';
-import { collectorResultSchema, observedCiSchema, observedRelationshipSchema } from '@openmap/contracts';
+import { collectorResultSchema, evidenceSchema, observedCiSchema, observedRelationshipSchema } from '@openmap/contracts';
 import type { Env } from '@openmap/config';
 import type { PrismaClient } from '@openmap/db';
 import { JobNodeMismatch, JobNotFound, type JobStore } from './jobs.js';
@@ -50,7 +50,7 @@ const agentReportSchema = z.object({
   finishedAt: z.string(),
   cis: z.array(observedCiSchema),
   relationships: z.array(observedRelationshipSchema),
-  evidence: z.array(z.object({ kind: z.string(), digest: z.string(), sizeBytes: z.number().int().min(0) })),
+  evidence: z.array(evidenceSchema),
 });
 /** Collector id the agent's reports are filed under; the standing job per agent carries it. */
 export const AGENT_COLLECTOR_ID = 'agent';
@@ -196,12 +196,14 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       });
       jobId = job.id;
     }
-    const result = collectorResultSchema.parse({
+    const parsedResult = collectorResultSchema.safeParse({
       jobId, runId: randomUUID(), tenantId: node.tenantId, collectorId: AGENT_COLLECTOR_ID, nodeId: node.id, status: 'success',
       startedAt: body.data.startedAt, finishedAt: body.data.finishedAt, cis: body.data.cis, relationships: body.data.relationships, evidence: body.data.evidence, errors: [],
       metrics: { targetsAttempted: 1, targetsReached: 1, cisEmitted: body.data.cis.length, relationshipsEmitted: body.data.relationships.length, durationMs: Math.max(0, new Date(body.data.finishedAt).getTime() - new Date(body.data.startedAt).getTime()) },
       contractVersion: CONTRACT_VERSIONS.collector,
     });
+    if (!parsedResult.success) return reply.code(HTTP.status.badRequest).send({ error: parsedResult.error.message });
+    const result = parsedResult.data;
     const { runId } = await deps.jobs.complete(result);
     await deps.results.publish(result);
     await deps.prisma.agent.update({ where: { id: agent.id }, data: { jobId, lastReportAt: new Date(), version: body.data.agentVersion } });
