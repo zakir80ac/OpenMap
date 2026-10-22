@@ -3,10 +3,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PACKAGE_ROOT } from './files.js';
+import { listPostgresMigrations } from './migrate-postgres.js';
 
 const prismaDir = join(PACKAGE_ROOT, 'prisma');
 const schema = readFileSync(join(prismaDir, 'schema.prisma'), 'utf8');
 const migration = readFileSync(join(prismaDir, 'migrations', '0001_init', 'migration.sql'), 'utf8');
+/** Every migration in order: later migrations add models and indexes the init migration predates. */
+const allMigrations = listPostgresMigrations().map((m) => m.sql).join('\n');
 const lock = readFileSync(join(prismaDir, 'migrations', 'migration_lock.toml'), 'utf8');
 
 function mappedTables(): string[] {
@@ -30,14 +33,14 @@ describe('prisma/migrations/0001_init', () => {
   it('creates a table for every model', () => {
     const tables = mappedTables();
     expect(tables.length).toBeGreaterThanOrEqual(34);
-    for (const t of tables) expect(migration).toContain('CREATE TABLE "' + t + '" (');
-    expect((migration.match(/CREATE TABLE "/g) ?? []).length).toBe(tables.length);
+    for (const t of tables) expect(allMigrations).toContain('CREATE TABLE "' + t + '" (');
+    expect((allMigrations.match(/CREATE TABLE "/g) ?? []).length).toBe(tables.length);
   });
 
   it('creates a type for every enum', () => {
     const enums = enumNames();
-    for (const e of enums) expect(migration).toContain('CREATE TYPE "' + e + '" AS ENUM (');
-    expect((migration.match(/CREATE TYPE "/g) ?? []).length).toBe(enums.length);
+    for (const e of enums) expect(allMigrations).toContain('CREATE TYPE "' + e + '" AS ENUM (');
+    expect((allMigrations.match(/CREATE TYPE "/g) ?? []).length).toBe(enums.length);
   });
 
   it('creates the bitemporal and GIN indexes and the outbox bigserial', () => {

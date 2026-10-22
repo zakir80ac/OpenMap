@@ -19,8 +19,8 @@ async function main(): Promise<void> {
   }
   const env = loadEnv();
   if (target === 'postgres' || target === 'all') {
-    migratePostgres(env);
-    console.log('postgres: migrations deployed');
+    const r = await migratePostgres(env);
+    console.log('postgres: applied [' + r.applied.join(', ') + '] skipped [' + r.skipped.join(', ') + ']' + (r.checksumMismatches.length ? ' checksum mismatches [' + r.checksumMismatches.join(', ') + ']' : ''));
   }
   if (target === 'clickhouse' || target === 'all') {
     const r = await migrateClickHouse(env);
