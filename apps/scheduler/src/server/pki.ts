@@ -69,8 +69,9 @@ export async function fingerprintSha256(certPem: string): Promise<string> {
 }
 
 /**
- * Signs a Node CSR. The subject CN must equal the node id and the OU the site code; the issued
- * certificate carries clientAuth EKU so the scheduler can require it on mTLS routes.
+ * Signs a Node CSR. The subject CN must equal the node id and the OU the site code. The certificate carries
+ * clientAuth (the scheduler requires it on mTLS routes) and serverAuth with a DNS SAN of the node id, because the
+ * Node also serves it to host agents on its gateway (REQ-DISC-004) and agents verify the name they connect to.
  */
 export async function signNodeCsr(ca: Ca, csrPem: string, nodeId: string, siteCode: string, days: number): Promise<IssuedCertificate> {
   const csr = new x509.Pkcs10CertificateRequest(csrPem);
@@ -78,13 +79,30 @@ export async function signNodeCsr(ca: Ca, csrPem: string, nodeId: string, siteCo
   const ou = csr.subjectName.getField('OU')[0];
   if (cn !== nodeId) throw new Error('CSR common name ' + String(cn) + ' does not match node ' + nodeId);
   if (ou !== siteCode) throw new Error('CSR organizational unit ' + String(ou) + ' does not match site ' + siteCode);
+  return issue(ca, csr, csr.subjectName, nodeId, [x509.ExtendedKeyUsage.clientAuth, x509.ExtendedKeyUsage.serverAuth], days);
+}
+
+/**
+ * Signs a host agent CSR (REQ-DISC-004). Agents know their id but not their site, so the CSR must name the agent in
+ * CN and the subject is rebuilt here as CN=agent, OU=site of the Node it enrols through. clientAuth only: agents
+ * never serve.
+ */
+export async function signAgentCsr(ca: Ca, csrPem: string, agentId: string, siteCode: string, days: number): Promise<IssuedCertificate> {
+  const csr = new x509.Pkcs10CertificateRequest(csrPem);
+  const cn = csr.subjectName.getField('CN')[0];
+  if (cn !== agentId) throw new Error('CSR common name ' + String(cn) + ' does not match agent ' + agentId);
+  const subject = new x509.Name([{ CN: [agentId] }, { OU: [siteCode] }]);
+  return issue(ca, csr, subject, agentId, [x509.ExtendedKeyUsage.clientAuth], days);
+}
+
+async function issue(ca: Ca, csr: x509.Pkcs10CertificateRequest, subject: x509.Name, dnsName: string, usages: x509.ExtendedKeyUsage[], days: number): Promise<IssuedCertificate> {
   if (!(await csr.verify())) throw new Error('CSR signature is invalid');
   const notBefore = new Date();
   const notAfter = validityEnd(notBefore, days);
   const serialHex = randomSerial();
   const cert = await x509.X509CertificateGenerator.create({
     serialNumber: serialHex,
-    subject: csr.subject,
+    subject,
     issuer: ca.certificate.subject,
     notBefore,
     notAfter,
@@ -94,7 +112,8 @@ export async function signNodeCsr(ca: Ca, csrPem: string, nodeId: string, siteCo
     extensions: [
       new x509.BasicConstraintsExtension(false, undefined, true),
       new x509.KeyUsagesExtension(x509.KeyUsageFlags.digitalSignature, true),
-      new x509.ExtendedKeyUsageExtension([x509.ExtendedKeyUsage.clientAuth]),
+      new x509.ExtendedKeyUsageExtension(usages),
+      new x509.SubjectAlternativeNameExtension([{ type: 'dns', value: dnsName }]),
       await x509.AuthorityKeyIdentifierExtension.create(ca.certificate),
       await x509.SubjectKeyIdentifierExtension.create(csr.publicKey),
     ],

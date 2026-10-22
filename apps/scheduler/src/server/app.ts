@@ -10,7 +10,7 @@ import { collectorResultSchema, observedCiSchema, observedRelationshipSchema } f
 import type { Env } from '@openmap/config';
 import type { PrismaClient } from '@openmap/db';
 import { JobNodeMismatch, JobNotFound, type JobStore } from './jobs.js';
-import { signNodeCsr, type Ca } from './pki.js';
+import { signAgentCsr, signNodeCsr, type Ca } from './pki.js';
 import type { ResultsQueue } from './results-queue.js';
 import type { SecretsReader } from './secrets.js';
 
@@ -164,7 +164,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     if (presented.length !== expected.length || !timingSafeEqual(presented, expected)) return reply.code(HTTP.status.forbidden).send({ error: 'enrolment token rejected' });
     let issued;
     try {
-      issued = await signNodeCsr(deps.ca, body.data.csrPem, body.data.agentId, node.site.code, deps.env.NODE_CERT_VALIDITY_DAYS);
+      issued = await signAgentCsr(deps.ca, body.data.csrPem, body.data.agentId, node.site.code, deps.env.NODE_CERT_VALIDITY_DAYS);
     } catch (err) {
       return reply.code(HTTP.status.badRequest).send({ error: err instanceof Error ? err.message : 'invalid CSR' });
     }
