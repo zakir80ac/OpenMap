@@ -138,6 +138,16 @@ export const BSM = {
   percentScale: 100,
   /** Health states ordered from best to worst; index is severity rank. */
   healthOrder: ['healthy', 'unknown', 'degraded', 'down'] as const,
+  /** A certificate this close to expiry marks its listener degraded. */
+  certificateWarnDays: 30,
+  /** A liveness-bearing CI not observed for this long is unknown, not healthy. */
+  staleAfterMinutes: 180,
+  /** Service recomputation waits this long after the last CI change so one sweep recomputes once. */
+  recomputeDebounceMs: 2_000,
+  /** Periodic recomputation (stale detection) interval for every known tenant. */
+  tickMs: 60_000,
+  /** Kubernetes workloads with fewer ready than desired replicas are degraded; none ready is down. */
+  workloadHealthyRatio: 1,
   /** Predicted impact states ordered from worst to best for result sorting. */
   predictedOrder: ['down', 'degraded', 'at_risk', 'unaffected'] as const,
 } as const;

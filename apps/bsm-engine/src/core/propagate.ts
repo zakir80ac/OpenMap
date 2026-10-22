@@ -24,6 +24,7 @@ export interface GroupState {
   down: number;
   unknown: number;
   minHealthy: number;
+  memberCount: number;
 }
 
 export interface ServiceState {
@@ -61,7 +62,7 @@ export function groupState(group: RedundancyGroup, health: ReadonlyMap<string, H
   else if (degraded > 0 || serving === group.minHealthy && group.memberCiIds.length > group.minHealthy) state = 'degraded';
   else if (unknown > 0 && healthy < group.minHealthy) state = 'unknown';
   else state = 'healthy';
-  return { name: group.name, state, healthy, degraded, down, unknown, minHealthy: group.minHealthy };
+  return { name: group.name, state, healthy, degraded, down, unknown, minHealthy: group.minHealthy, memberCount: group.memberCiIds.length };
 }
 
 export function propagate(model: ServiceModel, health: ReadonlyMap<string, Health>): ServiceState {

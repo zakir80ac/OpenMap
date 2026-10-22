@@ -5,3 +5,7 @@ export * from './core/sla.js';
 export * from './core/simulate.js';
 export * from './integrations/payloads.js';
 export * from './integrations/delivery.js';
+export * from './integrations/routes.js';
+export * from './service/health-rules.js';
+export * from './service/incidents.js';
+export { createEngine, type Engine, type EngineDeps, type ApplyReport, type RecomputeReport, type SecretsReader, HEALTH_CHANGED, INCIDENT_OPENED, INCIDENT_RESOLVED, INCIDENT_UPDATED } from './service/engine.js';
