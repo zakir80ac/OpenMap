@@ -1,0 +1,1 @@
+{"nodes": [{"id": "pkg_github_com_openmap_openmap_apps_node", "label": "github.com/openmap/openmap/apps/node", "file_type": "code", "type": "package", "ecosystem": "go", "source_file": "apps/node/go.mod", "source_location": "L1"}], "edges": []}

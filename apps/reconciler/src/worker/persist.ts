@@ -1,9 +1,45 @@
 // REQ-CORE-013 REQ-CORE-005 — writes a ReconcileOutput to Postgres in one transaction together
 // with its outbox events. Nothing else writes CIs; every other store learns through the outbox.
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
-import type { Prisma, PrismaClient } from '@openmap/db';
+import { Prisma, type PrismaClient } from '@openmap/db';
 import { identityKeyOf } from './lookup.js';
 import type { ReconcileOutput } from '../core/reconcile.js';
+
+type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+
+/** One round trip for every updated CI: unnest parallel arrays and join on id. */
+async function updateCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
+  if (cis.length === 0) return;
+  const ids = cis.map((c) => c.id);
+  const identities = cis.map((c) => JSON.stringify(c.identity));
+  const identityKeys = cis.map((c) => identityKeyOf(c.type, c.identity));
+  const attributes = cis.map((c) => JSON.stringify(c.attributes));
+  const tags = cis.map((c) => JSON.stringify(c.tags));
+  const collectors = cis.map((c) => c.source.collectorId);
+  const nodes = cis.map((c) => c.source.nodeId);
+  const runs = cis.map((c) => c.source.runId);
+  const confidences = cis.map((c) => c.source.confidence);
+  const observed = cis.map((c) => c.observedAt);
+  const checksums = cis.map((c) => c.checksum);
+  await tx.$executeRaw(Prisma.sql`
+    UPDATE cis AS c SET
+      identity = u.identity::jsonb,
+      "identityKey" = u.identity_key,
+      attributes = u.attributes::jsonb,
+      tags = ARRAY(SELECT jsonb_array_elements_text(u.tags::jsonb)),
+      "sourceCollectorId" = u.collector,
+      "sourceNodeId" = u.node,
+      "sourceRunId" = u.run,
+      "sourceConfidence" = u.confidence,
+      "observedAt" = u.observed_at::timestamptz,
+      checksum = u.checksum,
+      "updatedAt" = now()
+    FROM unnest(
+      ${ids}::uuid[], ${identities}::text[], ${identityKeys}::text[], ${attributes}::text[], ${tags}::text[],
+      ${collectors}::text[], ${nodes}::text[], ${runs}::text[], ${confidences}::float8[], ${observed}::text[], ${checksums}::text[]
+    ) AS u(id, identity, identity_key, attributes, tags, collector, node, run, confidence, observed_at, checksum)
+    WHERE c.id = u.id`);
+}
 
 function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -75,23 +111,7 @@ export async function persist(prisma: PrismaClient, tenantId: string, out: Recon
         await tx.ciExternalId.createMany({ data: ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })), skipDuplicates: true });
       }
     }
-    for (const ci of out.updated) {
-      await tx.ci.update({
-        where: { id: ci.id },
-        data: {
-          identity: json(ci.identity),
-          identityKey: identityKeyOf(ci.type, ci.identity),
-          attributes: json(ci.attributes),
-          tags: ci.tags,
-          sourceCollectorId: ci.source.collectorId,
-          sourceNodeId: ci.source.nodeId,
-          sourceRunId: ci.source.runId,
-          sourceConfidence: ci.source.confidence,
-          observedAt: new Date(ci.observedAt),
-          checksum: ci.checksum,
-        },
-      });
-    }
+    await updateCisBatch(tx, out.updated);
     if (out.relationshipsCreated.length) await tx.relationship.createMany({ data: out.relationshipsCreated.map(relationshipCreate), skipDuplicates: true });
     if (out.relationshipsSeen.length) await tx.relationship.updateMany({ where: { id: { in: out.relationshipsSeen } }, data: { observedAt: new Date() } });
     for (const c of out.conflicts) {

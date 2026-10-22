@@ -192,14 +192,21 @@ export async function dispatchOnce(prisma: PrismaClient, sinks: Sinks, database:
     for (const [i, e] of events.entries()) if (rows[i]!.pending.includes('bsm') || rows[i]!.pending.includes('websocket')) await sinks.stream.publish(e);
   });
   if (succeeded.has('bsm')) succeeded.add('websocket');
+  const allTargets: OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
+  if (failures.length === 0 && allTargets.every((t) => succeeded.has(t))) {
+    // Common case: everything landed, one statement closes the whole batch.
+    await prisma.outboxEvent.updateMany({ where: { sequence: { in: rows.map((r) => r.sequence) } }, data: { pending: [], attempts: { increment: 1 }, deliveredAt: new Date(), lastError: null } });
+    return { claimed: rows.length, delivered: rows.length, failures };
+  }
   let delivered = 0;
+  const lastError = failures.map((f) => f.target + ': ' + f.error).join('; ');
   for (const row of rows) {
     const remaining = row.pending.filter((t) => !succeeded.has(t));
     const done = remaining.length === 0;
     if (done) delivered++;
     await prisma.outboxEvent.update({
       where: { sequence: row.sequence },
-      data: { pending: remaining, attempts: { increment: 1 }, deliveredAt: done ? new Date() : null, lastError: failures.length ? failures.map((f) => f.target + ': ' + f.error).join('; ') : null },
+      data: { pending: remaining, attempts: { increment: 1 }, deliveredAt: done ? new Date() : null, lastError: lastError.length ? lastError : null },
     });
   }
   return { claimed: rows.length, delivered, failures };
