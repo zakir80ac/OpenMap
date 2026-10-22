@@ -9,7 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LAYER_VISIBILITY_STORAGE_KEY, allLayersVisible } from '@/hooks/useLayerVisibility';
 import { Providers } from '@/providers';
 import type { DependencyCanvasProps } from './DependencyCanvas';
-import { DependenciesView, parseDepth, toAsOf, toLocalInput } from './DependenciesView';
+import { toAsOf, toLocalInput } from '@/lib/time-travel';
+import { DependenciesView, parseDepth } from './DependenciesView';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 

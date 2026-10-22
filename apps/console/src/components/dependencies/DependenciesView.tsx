@@ -5,7 +5,7 @@
 // map can be linked from anywhere (`/dependencies?ci=…&direction=…&depth=…&asOf=…`).
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { BSM, DEPENDENCY_MAP, GRAPH } from '@openmap/constants';
+import { DEPENDENCY_MAP, GRAPH } from '@openmap/constants';
 import { CI_LAYERS } from '@openmap/contracts';
 import type { Locale } from '@openmap/i18n';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx, layerColor } from '@openmap/ui';
@@ -23,6 +23,7 @@ import {
 import { healthKey, layerKey, predictedKey, relationshipFamilyKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
 import { ciDetailQuery, impactQuery, type CiSummary, type ImpactDirection } from '@/lib/queries';
+import { toAsOf, toLocalInput } from '@/lib/time-travel';
 import { useFormatters, useT } from '@/providers';
 import { DependencyCanvas, type HoverInfo } from './DependencyCanvas';
 import { FocusSearch } from './FocusSearch';
@@ -51,25 +52,6 @@ export function parseDepth(value: string | undefined): number {
   const parsed = value === undefined || value.trim() === '' ? Number.NaN : Number(value);
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > GRAPH.maxImpactDepth) return GRAPH.defaultImpactDepth;
   return parsed;
-}
-
-/** `datetime-local` value (local wall clock, no zone) to an ISO instant, or undefined when cleared or invalid. */
-export function toAsOf(localValue: string): string | undefined {
-  if (localValue === '') return undefined;
-  const date = new Date(localValue);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-}
-
-/** Length of a `datetime-local` value with minutes precision. */
-const LOCAL_INPUT_LENGTH = 'YYYY-MM-DDTHH:mm'.length;
-
-/** ISO instant to the `datetime-local` field value (local wall clock, minutes precision). */
-export function toLocalInput(iso: string | undefined): string {
-  if (iso === undefined) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const offsetMs = date.getTimezoneOffset() * BSM.msPerMinute;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, LOCAL_INPUT_LENGTH);
 }
 
 export function DependenciesView({ locale, ciId, direction, depth, asOf }: DependenciesViewProps): ReactNode {

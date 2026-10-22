@@ -3,14 +3,16 @@
 // chips. Hidden layers (per-device visibility) are excluded unless a chip selects one explicitly.
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import Link from 'next/link';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, cx, layerColor, spacing } from '@openmap/ui';
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react';
 import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { healthKey, layerKey } from '@/lib/keys';
+import { localizedHref } from '@/lib/locale-path';
 import { cisInfiniteQuery, type CiFilterInput } from '@/lib/queries';
-import { useFormatters, useT } from '@/providers';
+import { useFormatters, useLocale, useT } from '@/providers';
 
 /** Two text lines plus padding; expressed through the spacing scale so apps/ carries no numeric literal. */
 const ROW_HEIGHT = spacing['28'] + spacing['28'];
@@ -26,6 +28,7 @@ const columns = 'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minma
 
 export function CmdbView({ text }: CmdbViewProps): ReactNode {
   const t = useT();
+  const locale = useLocale();
   const format = useFormatters();
   const { visibility, visibleCount } = useLayerVisibility();
   const [selected, setSelected] = useState<CiLayer | undefined>(undefined);
@@ -134,7 +137,9 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
                       style={{ height: item.size, transform: 'translateY(' + String(item.start) + 'px)' }}
                     >
                       <span role="cell" className="min-w-0">
-                        <span className="block truncate font-medium text-om-primary">{row.displayName}</span>
+                        <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(row.id))} className="block truncate font-medium text-om-primary hover:text-om-cyan">
+                          {row.displayName}
+                        </Link>
                         <span className="block truncate font-om-mono text-om-2xs text-om-muted">{row.id}</span>
                       </span>
                       <span role="cell" className="truncate font-om-mono text-om-xs text-om-secondary">
