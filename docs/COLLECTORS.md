@@ -5,6 +5,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | Collector | Family | Protocols | Credential types | Target kinds | Emits |
 | --- | --- | --- | --- | --- | --- |
 | `certificate` | certificate | tls | none | host, url | certificate, listening_service |
+| `cisco_ucs` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
 | `cloud_aws` | cloud_aws | https | api_token, cloud_role | account | cloud_account, cloud_resource, vm, subnet, ip_address, database_cluster, load_balancer |
 | `cloud_azure` | cloud_azure | https | oauth_client | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system |
 | `database` | database | postgresql, mysql, tds, mongodb, resp | password, none | host | database_cluster, database, listening_service, ip_address |
@@ -31,4 +32,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-26 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+27 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
