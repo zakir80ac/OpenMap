@@ -1,0 +1,106 @@
+# @openmap/api
+
+NestJS 11 on Fastify 5 with Mercurius, serving the frozen GraphQL contract
+(`packages/contracts/graphql/schema.graphql`, schema-first) against Postgres (Prisma) and Memgraph
+(`@openmap/graph`), plus REST probes, Prometheus metrics, OpenTelemetry spans and WebSocket
+subscriptions. Requirement: REQ-CORE-012.
+
+## Run
+
+```
+pnpm install
+pnpm -r --filter './packages/*' build
+pnpm --filter @openmap/bsm-engine build && pnpm --filter @openmap/assistant build && pnpm --filter @openmap/scheduler build
+pnpm --filter @openmap/api build
+pnpm --filter @openmap/api start        # node dist/main.js
+pnpm --filter @openmap/api dev          # tsx watch src/main.ts
+```
+
+Configuration comes only from `@openmap/config` (`loadEnv()`); nothing is read from `process.env`
+elsewhere. Variables used here: `API_PORT`, `POSTGRES_URL`, `MEMGRAPH_URL` (+ user/password),
+`KEYCLOAK_URL`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `PUBLIC_CONSOLE_URL` (CORS origin),
+`METRICS_PATH`, `OTEL_EXPORTER_OTLP_ENDPOINT` (empty disables export), `OPENBAO_ADDR`,
+`OPENBAO_TOKEN`, `OPENBAO_MOUNT`, `LLM_*`, `FEATURE_ASSISTANT`, `FEATURE_OUTBOUND_INTEGRATIONS`,
+`DEPLOY_PROFILE`. The server binds `::` (dual stack) on `API_PORT`.
+
+Endpoints:
+
+| Path | Purpose |
+| --- | --- |
+| `POST /graphql` | The contract (queries, mutations); `GET` is disabled, no GraphiQL |
+| `ws://…/graphql` | Subscriptions (`graphql-ws` / `graphql-transport-ws`) |
+| `GET /healthz` | Liveness, no token |
+| `GET /readyz` | Readiness: Postgres `SELECT 1`, Memgraph `RETURN 1`; 503 when either fails |
+| `GET ${METRICS_PATH}` | Prometheus: Node defaults, `openmap_graphql_requests_total{operation,status}`, `openmap_graphql_duration_seconds` |
+
+## Tests
+
+```
+pnpm --filter @openmap/api test               # unit: cursor, CiFilter → Prisma, next free IP, metrics hook
+pnpm --filter @openmap/api test:integration   # against the compose stack (Postgres + Memgraph)
+```
+
+The integration test boots the Nest application in-process, mints its own RS256 token and replaces
+the `JWKS` provider with a local key set (`Test.createTestingModule(...).overrideProvider(JWKS)`).
+There is no "auth disabled" mode anywhere in the code.
+
+## Auth model
+
+- Every request carries `Authorization: Bearer <JWT>` issued by Keycloak
+  (`${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`). Signatures are verified with `jose` against the realm
+  JWKS (`…/protocol/openid-connect/certs`), algorithm RS256, issuer checked, and the token must be
+  issued for `KEYCLOAK_CLIENT_ID` (`azp` or `aud`).
+- The `tenant` claim is the tenant's UUID or its slug (the realm import seeds `default`);
+  `TenantDirectory` resolves slugs through the `tenants` table. The result becomes
+  `TenantContext.tenantId`, a request-scoped provider. Every resolver reads the tenant from it and
+  every repository method takes `tenantId` first, so no query can cross tenants.
+- Realm roles come from `realm_access.roles` and the flat `roles` claim the realm import maps:
+  `openmap-admin` ⊇ `openmap-operator` ⊇ `openmap-analyst`, `openmap-auditor` ⊇ `openmap-analyst`.
+  Queries need a valid token; mutations are annotated with `@Roles(...)`: writes to the CMDB, plans,
+  assets, incidents, scenarios and discovery need `operator`; integration configuration needs
+  `admin`; `setLayerVisibility` and `askAssistant` need `analyst`.
+- Subscriptions authenticate on `connection_init` with `payload.authorization`; the connection is
+  refused without a valid token and every topic is tenant-scoped.
+- `/healthz`, `/readyz` and the metrics route are intentionally unauthenticated (probes/scrapers).
+
+## Outbox semantics
+
+Every write runs inside `OutboxService.transaction(tenantId, fn)`:
+
+1. `fn` receives the Prisma transaction client and `emit()`. Business rows and one
+   `outbox_events` row per emitted event (CloudEvents 1.0 envelope, `tenantid` extension,
+   `traceparent` from the active span) are written in the **same** Postgres transaction, so a
+   committed write always has its events and a rolled-back write leaves none.
+2. `pending` lists the stores that must still acknowledge the event (`memgraph`, `clickhouse`,
+   `meilisearch`, `websocket`, `bsm`). The reconciler drains the outbox and fans out; this API
+   never writes to Memgraph, ClickHouse or Meilisearch directly.
+3. After commit the envelopes are published on the in-process `EventBus`; the subscriptions
+   module forwards them to Mercurius pub/sub (`events`, `serviceHealthChanged`, `sweepProgress`),
+   scoped by tenant.
+
+Event types emitted here: `openmap.ci.labelled`, `openmap.ci.updated`,
+`openmap.relationship.created|retired`, `openmap.plan.status.changed`,
+`openmap.asset.stage.changed`, `openmap.incident.updated`,
+`openmap.integration.delivery.succeeded|failed`, `openmap.impact.simulation.completed`,
+`openmap.discovery.job.scheduled`, `openmap.assistant.query.answered`, `openmap.audit.action`.
+
+## Data conventions the resolvers rely on
+
+- Health lives on graph nodes (set by the BSM engine); `Ci.health` and `ServiceHealth.state` are
+  read from Memgraph in one batched query per request.
+- Business-service facts come from CI attributes: `tier`, `usersAffected`, `revenuePerHour`,
+  `revenueCurrency`, `slaTargetPercent`, `recoveryDescription`, `recoveryMinutes`, `ownerTeams`.
+  Redundancy groups are derived from `part_of_service` members grouped by their `redundancyGroup`
+  attribute (`minHealthy`, default 1). SLA downtime is computed from `openmap.bsm.health.changed`
+  events over the rolling 30-day period.
+- IPAM: subnet CIs carry `cidr` and `vrf`; the tree is CIDR containment within a VRF; addresses are
+  `ip_address` CIs linked by `in_subnet`. DCIM: devices are linked to racks by `located_in` /
+  `mounted_on` (`startUnit`, `heightUnits`, `face` on the relationship or device), feeds by
+  `powered_by` (`ratedWatts`, `currentWatts`).
+- Discovery: `runDiscovery` plans one scope per subnet CI (`cidr`, `credentialRef`,
+  `credentialType`, `exclusions`) through `@openmap/scheduler`'s planner and persists the resulting
+  `CollectorJob`s as `discovery_jobs`.
+- Integrations: credentials are resolved at call time from OpenBao KV v2
+  (`${OPENBAO_ADDR}/v1/${OPENBAO_MOUNT}/data/<credentialRef>`); outbound calls require
+  `FEATURE_OUTBOUND_INTEGRATIONS`, a non-airgap profile and the tenant's
+  `outboundIntegrationsEnabled` setting.
