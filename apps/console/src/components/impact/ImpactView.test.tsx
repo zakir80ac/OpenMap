@@ -4,7 +4,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/auth')>()), useCan: () => () => true }));
+import type * as AuthModule from '@/lib/auth';
+vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useCan: () => () => true }));
 
 import { Providers } from '@/providers';
 import { ImpactView } from './ImpactView';
@@ -101,12 +102,13 @@ describe.each(LOCALES)('ImpactView in %s', (locale) => {
       </Providers>,
     );
     expect(screen.getByText(translate(locale, 'impact.condition.pickFirst'))).toBeTruthy();
-    const list = await screen.findByRole('listbox', { name: translate(locale, 'impact.explorer.list') });
-    expect(within(list).getAllByRole('option')).toHaveLength(3);
+    const list = await screen.findByRole('list', { name: translate(locale, 'impact.explorer.list') });
+    expect(within(list).getAllByRole('button')).toHaveLength(3);
     const runButton = screen.getByRole('button', { name: translate(locale, 'impact.run') });
     expect((runButton as HTMLButtonElement).disabled).toBe(true);
 
-    fireEvent.click(within(list).getByRole('option', { name: /^pg-core-01/ }));
+    fireEvent.click(within(list).getByRole('button', { name: /^pg-core-01/ }));
+    expect(within(list).getByRole('button', { name: /^pg-core-01/ }).getAttribute('aria-pressed')).toBe('true');
     const conditions = screen.getByRole('radiogroup', { name: translate(locale, 'impact.condition.list') });
     const labels = within(conditions)
       .getAllByRole('radio')
@@ -159,14 +161,14 @@ describe.each(LOCALES)('ImpactView in %s', (locale) => {
         <ImpactView locale={locale} />
       </Providers>,
     );
-    await screen.findByRole('listbox', { name: translate(locale, 'impact.explorer.list') });
+    await screen.findByRole('list', { name: translate(locale, 'impact.explorer.list') });
     fireEvent.change(screen.getByRole('searchbox', { name: translate(locale, 'impact.explorer.search') }), { target: { value: 'ryd' } });
     await waitFor(() => {
       expect(calls.some((c) => c.op === 'Search' && c.variables?.['text'] === 'ryd')).toBe(true);
     });
     await waitFor(() => {
-      const list = screen.getByRole('listbox', { name: translate(locale, 'impact.explorer.list') });
-      expect(within(list).getAllByRole('option')).toHaveLength(1);
+      const list = screen.getByRole('list', { name: translate(locale, 'impact.explorer.list') });
+      expect(within(list).getAllByRole('button')).toHaveLength(1);
     });
   });
 });

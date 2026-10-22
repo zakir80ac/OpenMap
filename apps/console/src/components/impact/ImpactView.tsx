@@ -249,15 +249,14 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
             ) : components.length === 0 ? (
               <p className="text-om-sm text-om-secondary">{t('impact.explorer.empty')}</p>
             ) : (
-              <ul role="listbox" aria-multiselectable="true" aria-label={t('impact.explorer.list')} className="flex max-h-96 flex-col gap-om-4 overflow-y-auto">
+              <ul aria-label={t('impact.explorer.list')} className="flex max-h-96 flex-col gap-om-4 overflow-y-auto">
                 {components.map((ci) => {
                   const picked = selected.has(ci.id);
                   return (
                     <li key={ci.id}>
                       <button
                         type="button"
-                        role="option"
-                        aria-selected={picked}
+                        aria-pressed={picked}
                         onClick={() => {
                           toggleComponent(ci);
                         }}

@@ -1,0 +1,76 @@
+{
+  "name": "lighthouse",
+  "formFactor": "desktop",
+  "budgets": {
+    "performance": 0.9,
+    "accessibility": 0.95,
+    "bestPractices": 0.95
+  },
+  "pages": [
+    {
+      "label": "sign-in",
+      "url": "http://localhost:3000/en/dashboard",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "dashboard",
+      "url": "http://localhost:3000/en/dashboard",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "layers",
+      "url": "http://localhost:3000/en/layers",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "discovery",
+      "url": "http://localhost:3000/en/discovery",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "dependencies",
+      "url": "http://localhost:3000/en/dependencies",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "cmdb",
+      "url": "http://localhost:3000/en/cmdb",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "services",
+      "url": "http://localhost:3000/en/services",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    },
+    {
+      "label": "impact",
+      "url": "http://localhost:3000/en/impact",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": []
+    }
+  ],
+  "generatedAt": "2026-10-22T12:50:42.438Z"
+}

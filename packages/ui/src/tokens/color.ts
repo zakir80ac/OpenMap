@@ -22,7 +22,8 @@ export const borders = {
 export const text = {
   primary: '#EEF2FF',
   secondary: '#9AA3B8',
-  muted: '#5E677C',
+  /** Lifted from the approved #5E677C (3.3:1) to hold WCAG AA 4.5:1 for 11 px captions on every surface (REQ-UI-003 Lighthouse). */
+  muted: '#848DA3',
 } as const satisfies Record<string, HexColor>;
 
 /**
@@ -55,6 +56,20 @@ export const accents = {
   /** hardware */
   steel: '#C7CEE0',
 } as const satisfies Record<string, HexColor>;
+
+/**
+ * Accent tints that fall under 4.5:1 as small text on a tinted panel (violet 3.8:1, rose 4.4:1) are swapped for a
+ * lighter text variant by `readableAccent`; every other accent already clears AA on every surface.
+ */
+export const accentText = {
+  [accents.violet]: '#A78BFA',
+  [accents.rose]: '#FD7F97',
+} as const satisfies Record<string, HexColor>;
+
+/** The colour to paint small text in when a component is tinted with `accent`. */
+export function readableAccent(accent: string): string {
+  return (accentText as Record<string, string>)[accent] ?? accent;
+}
 
 export type AccentName = keyof typeof accents;
 

@@ -31,13 +31,13 @@ export function LocaleSwitcher({ locale }: LocaleSwitcherProps): ReactNode {
             hrefLang={candidate}
             lang={candidate}
             aria-current={current ? 'true' : undefined}
-            aria-label={t(fullLabel[candidate])}
             className={cx(
               'rounded-om-pill px-om-8 py-om-4 text-om-2xs font-semibold leading-none transition-colors duration-om-base ease-om-standard',
               current ? 'bg-om-cyan/15 text-om-cyan' : 'text-om-secondary hover:text-om-primary',
             )}
           >
-            {t(shortLabel[candidate])}
+            <span aria-hidden="true">{t(shortLabel[candidate])}</span>
+            <span className="sr-only">{t(fullLabel[candidate])}</span>
           </Link>
         );
       })}

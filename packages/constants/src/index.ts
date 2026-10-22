@@ -96,6 +96,13 @@ export const PERF_BUDGETS = {
   discoverySweepDevices: 10_000,
   /** Wall-clock budget for one discovery sweep of discoverySweepDevices. */
   discoverySweepMinutes: 15,
+  /**
+   * Lighthouse category floors (0–1) for the console's signed-in screens, CLAUDE.md §7. docs/SPEC.md has not
+   * supplied its own targets yet (risk R-001), so these are the floors the console is held to until it does.
+   */
+  lighthousePerformanceMin: 0.9,
+  lighthouseAccessibilityMin: 0.95,
+  lighthouseBestPracticesMin: 0.95,
 } as const;
 
 /**

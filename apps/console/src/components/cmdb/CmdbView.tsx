@@ -160,8 +160,9 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
               </div>
             </div>
           )}
+        </div>
 
-          <div className="flex items-center justify-between gap-om-12 border-t border-om-border-glass px-om-16 py-om-10 text-om-xs text-om-secondary">
+        <div className="flex items-center justify-between gap-om-12 border-t border-om-border-glass px-om-16 py-om-10 text-om-xs text-om-secondary">
             <span>{totalCount === undefined ? t('common.loading') : t('cmdb.total', { count: format.integer(totalCount) })}</span>
             {query.hasNextPage ? (
               <button
@@ -175,7 +176,6 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
             ) : rows.length > 0 ? (
               <span className="text-om-muted">{t('cmdb.endOfList')}</span>
             ) : null}
-          </div>
         </div>
       </Card>
     </div>

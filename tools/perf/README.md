@@ -6,8 +6,9 @@ under `tools/perf/results/` (CI writes them; they are not committed).
 | Test | Tool | Budget | Result file |
 | --- | --- | --- | --- |
 | Impact query on 100k nodes | k6 `k6/impact-query.js` | p95 < 1000 ms | `results/impact-query.json` |
-| Screen interaction p95 | Playwright timing in `apps/console/e2e` | p95 < 100 ms | `results/screen-interaction.json` |
-| Graph rendering | Playwright frame timing on the dependency map | 60 fps | `results/graph-render.json` |
+| Screen interaction p95 | Playwright `apps/console/e2e/perf.spec.ts` (T-089) | p95 < 100 ms | `results/screen-interaction.json` |
+| Graph rendering | Playwright frame timing on the dependency map, same spec | 60 fps | `results/graph-render.json` |
+| Lighthouse | `pnpm --filter @openmap/perf lighthouse` user flow over the signed-in console | performance ≥ 0.90, accessibility ≥ 0.95, best practices ≥ 0.95 | `results/lighthouse.json` (+ `lighthouse-flow.html`) |
 | Discovery sweep | synth-estate replay through the scheduler and reconciler | 10k devices < 15 min | `results/discovery-sweep.json` |
 
 ## Impact query
@@ -22,3 +23,15 @@ API_URL=http://localhost:4000/graphql TOKEN=... ROOT_IDS=id1,id2 k6 run k6/impac
 ```
 
 The summary writes `results/impact-query.json`; `pnpm guard` then fails if p95 is over budget.
+
+## Screen interaction, graph frame rate and Lighthouse
+
+Both run against the **production build** on the configured `PUBLIC_CONSOLE_URL` with the compose stack (API and Keycloak) up:
+
+```bash
+pnpm --filter @openmap/console build && pnpm --filter @openmap/console start
+pnpm --filter @openmap/console exec playwright test e2e/perf.spec.ts --project=en
+pnpm --filter @openmap/perf lighthouse
+```
+
+The perf spec signs in as the realm's seeded administrator, samples click-to-paint latency on layer toggles, CMDB layer filters, the account menu and the dependency-map direction select, then zooms and pans the map for three seconds while counting frames. The Lighthouse runner drives the Chromium that Playwright installed (Puppeteer attaches over the DevTools socket, because Puppeteer cannot spawn that binary on every host), audits the sign-in screen cold and every primary screen as a navigation with the desktop preset, and lists the failing accessibility and best-practice audits per page so a budget miss names its cause. `pnpm guard` fails when any result file is over budget.

@@ -32,7 +32,7 @@ describe('colour tokens', () => {
   it('encode the approved design values exactly', () => {
     expect(colors.ground).toBe('#070A12');
     expect(surfaces).toEqual({ surface1: '#0E1322', surface2: '#141A2C', surface3: '#1B2238' });
-    expect(text).toEqual({ primary: '#EEF2FF', secondary: '#9AA3B8', muted: '#5E677C' });
+    expect(text).toEqual({ primary: '#EEF2FF', secondary: '#9AA3B8', muted: '#848DA3' });
     expect(accents.cyan).toBe('#22D3EE');
     expect(accents.violet).toBe('#8B5CF6');
     expect(accents.amber).toBe('#F5B82E');

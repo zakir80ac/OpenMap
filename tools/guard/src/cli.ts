@@ -33,11 +33,19 @@ function scan(): Finding[] {
   return findings;
 }
 
+interface LighthousePage {
+  label: string;
+  performance: number;
+  accessibility: number;
+  bestPractices: number;
+}
+
 interface PerfResult {
   name: string;
   p95Ms?: number;
   fps?: number;
   minutes?: number;
+  pages?: LighthousePage[];
 }
 
 function perfBudgets(): Finding[] {
@@ -51,6 +59,13 @@ function perfBudgets(): Finding[] {
     if (r.name === 'impact-query' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.impactQuery100kP95Ms) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'impact p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.impactQuery100kP95Ms) });
     if (r.name === 'graph-render' && r.fps !== undefined && r.fps < PERF_BUDGETS.graphRenderFps) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'graph ' + String(r.fps) + ' fps under ' + String(PERF_BUDGETS.graphRenderFps) });
     if (r.name === 'discovery-sweep' && r.minutes !== undefined && r.minutes > PERF_BUDGETS.discoverySweepMinutes) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'sweep ' + String(r.minutes) + ' min over ' + String(PERF_BUDGETS.discoverySweepMinutes) });
+    if (r.name === 'lighthouse' && r.pages !== undefined) {
+      for (const page of r.pages) {
+        if (page.performance < PERF_BUDGETS.lighthousePerformanceMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse performance ' + String(page.performance) + ' under ' + String(PERF_BUDGETS.lighthousePerformanceMin) });
+        if (page.accessibility < PERF_BUDGETS.lighthouseAccessibilityMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse accessibility ' + String(page.accessibility) + ' under ' + String(PERF_BUDGETS.lighthouseAccessibilityMin) });
+        if (page.bestPractices < PERF_BUDGETS.lighthouseBestPracticesMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse best practices ' + String(page.bestPractices) + ' under ' + String(PERF_BUDGETS.lighthouseBestPracticesMin) });
+      }
+    }
   }
   return out;
 }

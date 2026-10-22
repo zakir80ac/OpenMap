@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useDirection } from '../direction.js';
 import { cx, mergeStyle, type OmStyle } from '../style.js';
 import { componentClasses } from '../tailwind-preset.js';
-import { layerColor, stateColor, text, varRef, withAlpha, type HexColor, type LayerName, type UiState } from '../tokens/index.js';
+import { layerColor, stateColor, text, varRef, withAlpha, type HexColor, type LayerName, type UiState, readableAccent } from '../tokens/index.js';
 
 export type TagVariant = 'neutral' | 'state' | 'layer';
 
@@ -38,7 +38,7 @@ export function Tag(props: TagProps): ReactNode {
     '--om-tag-accent': accent,
     paddingInline: varRef('space-6'),
     paddingBlock: varRef('space-4'),
-    color: accent,
+    color: readableAccent(accent),
     borderColor: withAlpha(accent, BORDER_ALPHA),
     background: withAlpha(accent, TINT_ALPHA),
   };

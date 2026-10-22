@@ -1,0 +1,19 @@
+{
+  "name": "@openmap/perf",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lighthouse": "tsx src/lighthouse.ts"
+  },
+  "dependencies": {
+    "@openmap/config": "workspace:*",
+    "@openmap/constants": "workspace:*",
+    "@openmap/i18n": "workspace:*",
+    "@playwright/test": "^1.64.1",
+    "lighthouse": "^12.8.2",
+    "puppeteer-core": "^24.22.0"
+  },
+  "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0" }
+}

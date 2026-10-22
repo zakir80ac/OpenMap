@@ -3,7 +3,7 @@ import type { MouseEventHandler, ReactNode } from 'react';
 import { useDirection } from '../direction.js';
 import { cx, mergeStyle, type OmStyle } from '../style.js';
 import { componentClasses } from '../tailwind-preset.js';
-import { accents, glow, text, varRef, withAlpha, type HexColor } from '../tokens/index.js';
+import { accents, glow, text, varRef, withAlpha, type HexColor, readableAccent } from '../tokens/index.js';
 
 export const PILL_VARIANTS = ['default', 'primary', 'violet', 'time-travel'] as const;
 export type PillVariant = (typeof PILL_VARIANTS)[number];
@@ -42,7 +42,7 @@ export function Pill({ children, variant = 'default', icon, glowing, onClick, se
     '--om-pill-accent': accent,
     paddingInline: varRef('space-10'),
     paddingBlock: varRef('space-4'),
-    color: isAccent ? accent : varRef('text-secondary'),
+    color: isAccent ? readableAccent(accent) : varRef('text-secondary'),
     borderStyle: variant === 'time-travel' ? 'dashed' : 'solid',
     borderColor: isAccent ? withAlpha(accent, BORDER_ALPHA) : varRef('border-strong'),
     background:
