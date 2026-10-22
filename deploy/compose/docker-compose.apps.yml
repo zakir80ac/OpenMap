@@ -1,0 +1,137 @@
+# REQ-INT-001 REQ-INT-002 — OpenMap application services on top of the infrastructure stack:
+#   docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d --build
+# `migrate` applies Postgres, ClickHouse and Memgraph migrations once and exits; the services wait
+# for it. Service hostnames are the compose service names; every other value mirrors the documented
+# defaults in packages/config/src/env.ts and can be overridden from .env.
+name: openmap
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-app-env: &app-env
+  NODE_ENV: production
+  POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}
+  MEMGRAPH_URL: bolt://memgraph:7687
+  CLICKHOUSE_URL: http://clickhouse:8123
+  CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
+  CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
+  VALKEY_URL: redis://valkey:6379
+  MEILI_URL: http://meilisearch:7700
+  MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-openmap-dev-master-key}
+  KEYCLOAK_URL: http://keycloak:8080
+  KEYCLOAK_REALM: ${KEYCLOAK_REALM:-openmap}
+  OPENBAO_ADDR: http://openbao:8200
+  OPENBAO_TOKEN: ${OPENBAO_TOKEN:-openmap-dev-root}
+  SUPERSET_URL: http://superset:8088
+  LLM_URL: ${LLM_URL:-http://llm-cpu:8000}
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+  PUBLIC_CONSOLE_URL: ${PUBLIC_CONSOLE_URL:-http://localhost:3000}
+  PUBLIC_KEYCLOAK_URL: ${PUBLIC_KEYCLOAK_URL:-http://localhost:8080}
+
+x-app-depends: &app-depends
+  postgres: { condition: service_healthy }
+  memgraph: { condition: service_healthy }
+  clickhouse: { condition: service_healthy }
+  valkey: { condition: service_healthy }
+  meilisearch: { condition: service_healthy }
+  migrate: { condition: service_completed_successfully }
+
+services:
+  migrate:
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/reconciler:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node-service.Dockerfile
+      args: { APP: reconciler }
+    environment: *app-env
+    command: ["node", "node_modules/@openmap/db/dist/cli.js", "all"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      memgraph: { condition: service_healthy }
+      clickhouse: { condition: service_healthy }
+
+  api:
+    <<: *restart
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/api:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node-service.Dockerfile
+      args: { APP: api }
+    environment:
+      <<: *app-env
+      API_PORT: 4000
+    ports: ["${API_PORT:-4000}:4000"]
+    depends_on: *app-depends
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/healthz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  scheduler:
+    <<: *restart
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/scheduler:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node-service.Dockerfile
+      args: { APP: scheduler }
+    environment:
+      <<: *app-env
+      SCHEDULER_PORT: 4200
+      SCHEDULER_CA_CERT_PATH: /etc/openmap/pki/ca.crt
+      SCHEDULER_CA_KEY_PATH: /etc/openmap/pki/ca.key
+      SCHEDULER_TLS_CERT_PATH: /etc/openmap/pki/scheduler.crt
+      SCHEDULER_TLS_KEY_PATH: /etc/openmap/pki/scheduler.key
+      EVIDENCE_DIR: /var/lib/openmap/evidence
+    # pki:init is idempotent: it writes the CA and server certificate on first start and never overwrites them.
+    command: ["sh", "-c", "node dist/pki-init.js && exec node dist/main.js"]
+    ports: ["${SCHEDULER_PORT:-4200}:4200"]
+    volumes: [scheduler-pki:/etc/openmap/pki, evidence:/var/lib/openmap/evidence]
+    depends_on: *app-depends
+
+  reconciler:
+    <<: *restart
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/reconciler:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node-service.Dockerfile
+      args: { APP: reconciler }
+    environment: *app-env
+    depends_on: *app-depends
+
+  bsm-engine:
+    <<: *restart
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/bsm-engine:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node-service.Dockerfile
+      args: { APP: bsm-engine }
+    environment: *app-env
+    depends_on: *app-depends
+
+  node:
+    <<: *restart
+    profiles: [node]
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/node:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/node.Dockerfile
+    environment:
+      OPENMAP_NODE_ID: ${OPENMAP_NODE_ID:-node-compose-01}
+      OPENMAP_SITE_CODE: ${OPENMAP_SITE_CODE:-LOCAL}
+      OPENMAP_SCHEDULER_URL: https://scheduler:4200
+      OPENMAP_ENROL_TOKEN: ${OPENMAP_ENROL_TOKEN:-}
+      NODE_MTLS_CA_PATH: /etc/openmap/pki/ca.crt
+      NODE_MTLS_CERT_PATH: /etc/openmap/pki/node.crt
+      NODE_MTLS_KEY_PATH: /etc/openmap/pki/node.key
+    volumes: [node-pki:/etc/openmap/pki, node-evidence:/var/lib/openmap/evidence]
+    depends_on:
+      scheduler: { condition: service_started }
+
+volumes:
+  scheduler-pki:
+  evidence:
+  node-pki:
+  node-evidence:

@@ -1,0 +1,11 @@
+.git
+.local
+graphify-out
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+packages/testing/fixtures/synth*
+tools/perf/bin
+deploy/airgap-bundle/*.tar

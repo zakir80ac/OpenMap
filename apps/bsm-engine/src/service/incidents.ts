@@ -42,7 +42,14 @@ export interface ResolveAction {
   serviceCiId: string;
 }
 
-export type IncidentAction = OpenAction | UpdateAction | ResolveAction;
+/** The known cause cleared but the service is not yet observed healthy: the incident is mitigated, not resolved. */
+export interface MitigateAction {
+  kind: 'mitigate';
+  incidentId: string;
+  serviceCiId: string;
+}
+
+export type IncidentAction = OpenAction | UpdateAction | ResolveAction | MitigateAction;
 
 /** Tier-1 down is critical, any down or tier-1 degraded is high, other degradation is medium. */
 export function severityFor(tier: number, state: Health): IncidentSeverity {
@@ -74,6 +81,8 @@ export function incidentActions(changed: readonly ServiceState[], open: readonly
       }
     } else if (existing && state.state === 'healthy') {
       actions.push({ kind: 'resolve', incidentId: existing.id, serviceCiId: state.serviceCiId });
+    } else if (existing && state.state === 'unknown') {
+      actions.push({ kind: 'mitigate', incidentId: existing.id, serviceCiId: state.serviceCiId });
     }
   }
   return actions;

@@ -26,10 +26,11 @@ describe('incidentActions', () => {
     expect(incidentActions([state('svc-1', 'degraded', ['db-1'])], open, summaries)).toEqual([]);
   });
 
-  it('resolves when the service is healthy again and ignores unknown', () => {
+  it('resolves when the service is healthy again and mitigates when it becomes unknown', () => {
     const open = [{ id: 'inc-1', serviceCiId: 'svc-1', severity: 'high' as const, rootCauseCiId: null }];
     expect(incidentActions([state('svc-1', 'healthy')], open, summaries)).toEqual([{ kind: 'resolve', incidentId: 'inc-1', serviceCiId: 'svc-1' }]);
-    expect(incidentActions([state('svc-1', 'unknown')], open, summaries)).toEqual([]);
+    expect(incidentActions([state('svc-1', 'unknown')], open, summaries)).toEqual([{ kind: 'mitigate', incidentId: 'inc-1', serviceCiId: 'svc-1' }]);
+    expect(incidentActions([state('svc-1', 'unknown')], [], summaries)).toEqual([]);
   });
 
   it('grades severity', () => {

@@ -229,7 +229,7 @@ export function createEngine(deps: EngineDeps) {
       await emit(tenantId, HEALTH_CHANGED, state.serviceCiId, { serviceId: state.serviceCiId, state: state.state, previous: previous.get(state.serviceCiId) ?? 'unknown', rootCauseIds: state.rootCauseCiIds, groups: state.groups });
     }
     const actions = incidentActions(changed, await openIncidents(tenantId, changed.map((c) => c.serviceCiId)), summaries);
-    const rootNames = new Map((await prisma.ci.findMany({ where: { id: { in: actions.flatMap((a) => (a.kind === 'resolve' ? [] : a.rootCauseCiIds)) } }, select: { id: true, displayName: true } })).map((c) => [c.id, c.displayName]));
+    const rootNames = new Map((await prisma.ci.findMany({ where: { id: { in: actions.flatMap((a) => ('rootCauseCiIds' in a ? a.rootCauseCiIds : [])) } }, select: { id: true, displayName: true } })).map((c) => [c.id, c.displayName]));
     for (const action of actions) {
       if (action.kind === 'open') {
         const service = services.find((s) => s.id === action.serviceCiId);
@@ -248,6 +248,9 @@ export function createEngine(deps: EngineDeps) {
       } else if (action.kind === 'update') {
         await prisma.incident.update({ where: { id: action.incidentId }, data: { severity: action.severity, rootCauseCiId: action.rootCauseCiIds[0] ?? null } });
         await emit(tenantId, INCIDENT_UPDATED, action.incidentId, { incidentId: action.incidentId, severity: action.severity, rootCauseIds: action.rootCauseCiIds });
+      } else if (action.kind === 'mitigate') {
+        await prisma.incident.update({ where: { id: action.incidentId }, data: { state: 'mitigated' } });
+        await emit(tenantId, INCIDENT_UPDATED, action.incidentId, { incidentId: action.incidentId, serviceId: action.serviceCiId, state: 'mitigated' });
       } else {
         await prisma.incident.update({ where: { id: action.incidentId }, data: { state: 'resolved', resolvedAt: new Date(now) } });
         await prisma.incidentLink.updateMany({ where: { incidentId: action.incidentId }, data: { remoteState: 'resolved', syncedAt: new Date(now) } });
