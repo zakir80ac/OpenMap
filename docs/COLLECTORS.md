@@ -33,6 +33,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `object_storage` | object_storage | s3 | api_token | url, host | object_bucket |
 | `oracle_vm` | oracle_vm | https | password | host | vm_cluster, hypervisor, host, vm, operating_system, ip_address, lun, nas_share |
 | `port_scan` | port_scan | tcp | none | host, cidr | host, unknown, ip_address, listening_service |
+| `saas` | saas | https | oauth_client, service_account, password | account | saas_tenant, saas_application, vendor |
 | `snmp` | snmp | snmp-v2c, snmp-v3 | snmp_v2c, snmp_v3 | host | network_device, interface, vlan, ip_address, unknown |
 | `ssh_agentless` | ssh_agentless | ssh | password, ssh_key | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 | `storage_ontap` | storage | https | password | host | storage_array, lun, nas_share, host, ip_address |
@@ -41,4 +42,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-36 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+37 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.

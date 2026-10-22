@@ -83,6 +83,12 @@ func b64url(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }
 
 // SignedJWT builds the RS256 assertion for the service account (RFC 7523 §2.1).
 func SignedJWT(clientEmail, privateKeyPEM, scope, audience string, now time.Time) (string, error) {
+	return SignedDelegatedJWT(clientEmail, privateKeyPEM, scope, audience, "", now)
+}
+
+// SignedDelegatedJWT is SignedJWT with Google Workspace domain-wide delegation: `subject` is the administrator the
+// service account acts as (the `sub` claim); empty means no delegation.
+func SignedDelegatedJWT(clientEmail, privateKeyPEM, scope, audience, subject string, now time.Time) (string, error) {
 	block, _ := pem.Decode([]byte(privateKeyPEM))
 	if block == nil {
 		return "", errors.New("privateKeyPem holds no PEM block")
@@ -100,7 +106,11 @@ func SignedJWT(clientEmail, privateKeyPEM, scope, audience string, now time.Time
 		return "", errors.New("service account key is neither PKCS#8 nor PKCS#1")
 	}
 	header, _ := json.Marshal(map[string]string{"alg": "RS256", "typ": "JWT"})
-	claims, _ := json.Marshal(map[string]any{"iss": clientEmail, "scope": scope, "aud": audience, "iat": now.Unix(), "exp": now.Add(jwtLifetime).Unix()})
+	claimSet := map[string]any{"iss": clientEmail, "scope": scope, "aud": audience, "iat": now.Unix(), "exp": now.Add(jwtLifetime).Unix()}
+	if subject != "" {
+		claimSet["sub"] = subject
+	}
+	claims, _ := json.Marshal(claimSet)
 	signingInput := b64url(header) + "." + b64url(claims)
 	digest := sha256.Sum256([]byte(signingInput))
 	sig, err := rsa.SignPKCS1v15(rand.Reader, key, crypto.SHA256, digest[:])
