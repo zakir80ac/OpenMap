@@ -1,0 +1,92 @@
+// REQ-UI-001 — emits the `--om-*` CSS custom properties for :root plus the small [dir] blocks that logical CSS cannot cover.
+import { accents, borders, ground, surfaces, text } from './color.js';
+import { layerColors } from './layers.js';
+import { duration, easing, pulsePeriod } from './motion.js';
+import { radii } from './radii.js';
+import { glows, shadows } from './shadows.js';
+import { spacing } from './spacing.js';
+import { stateColors } from './states.js';
+import { fontFamily, fontSizePx, letterSpacing } from './typography.js';
+
+/** Prefix for every custom property this package emits. */
+export const CSS_VAR_PREFIX = '--om-';
+
+export function cssVar(name: string): `--om-${string}` {
+  return `${CSS_VAR_PREFIX}${name}`;
+}
+
+/** `var(--om-<name>)`, for inline styles that must reference a token through the cascade. */
+export function varRef(name: string): string {
+  return 'var(' + cssVar(name) + ')';
+}
+
+function kebab(key: string): string {
+  return key.replace(/([a-z0-9])([A-Z])/g, '$1-$2').replace(/_/g, '-').toLowerCase();
+}
+
+function declarations(entries: Record<string, string | number>, group: string): string[] {
+  return Object.entries(entries).map(([key, value]) => {
+    const px = typeof value === 'number' ? String(value) + 'px' : value;
+    const name = group === '' ? kebab(key) : group + '-' + kebab(key);
+    return '  ' + cssVar(name) + ': ' + px + ';';
+  });
+}
+
+/**
+ * Direction-dependent values.
+ *
+ * Nearly everything in this system is direction-agnostic because components use logical properties
+ * (`margin-inline`, `padding-inline`, `inset-inline-start`, `border-start-start-radius`, `text-align: start`)
+ * which the browser flips for `[dir=rtl]` on its own. The only things logical properties cannot express
+ * are angles and signs: a gradient that should travel in reading direction, a transform that should move
+ * towards the inline end, and the origin a progress fill grows from. Those three read these variables.
+ */
+export const directionVariables = {
+  ltr: {
+    /** 1 in ltr, -1 in rtl; multiply an x-translation by it. */
+    'flow-sign': '1',
+    /** gradient angle that runs in reading direction */
+    'flow-angle': '90deg',
+    /** physical side the inline start resolves to, for `transform-origin` */
+    'inline-start': 'left',
+    'inline-end': 'right',
+  },
+  rtl: {
+    'flow-sign': '-1',
+    'flow-angle': '270deg',
+    'inline-start': 'right',
+    'inline-end': 'left',
+  },
+} as const;
+
+export type DirectionVariableName = keyof (typeof directionVariables)['ltr'];
+
+/**
+ * Returns a stylesheet string: one `:root { ... }` block with every token as `--om-*`, followed by
+ * `[dir=ltr]` and `[dir=rtl]` blocks that only hold the four direction variables above.
+ * The console injects this once in its root layout.
+ */
+export function cssVariables(): string {
+  const root: string[] = [
+    '  ' + cssVar('ground') + ': ' + ground + ';',
+    ...declarations(surfaces, ''),
+    ...declarations(borders, 'border'),
+    ...declarations(text, 'text'),
+    ...declarations(accents, 'accent'),
+    ...declarations(layerColors, 'layer'),
+    ...declarations(stateColors, 'state'),
+    ...declarations(fontFamily, 'font'),
+    ...declarations(fontSizePx, 'text-size'),
+    ...declarations(letterSpacing, 'tracking'),
+    ...declarations(radii, 'radius'),
+    ...declarations(spacing, 'space'),
+    ...declarations(shadows, 'shadow'),
+    ...declarations(glows, 'glow'),
+    ...declarations(duration, 'duration'),
+    ...declarations(easing, 'ease'),
+    '  ' + cssVar('pulse-period') + ': ' + pulsePeriod + ';',
+  ];
+  const dirBlock = (dir: 'ltr' | 'rtl'): string =>
+    '[dir=' + dir + '] {\n' + declarations(directionVariables[dir], 'dir').join('\n') + '\n}';
+  return [':root {\n' + root.join('\n') + '\n}', dirBlock('ltr'), dirBlock('rtl')].join('\n\n') + '\n';
+}

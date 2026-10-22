@@ -1,0 +1,35 @@
+{
+  "name": "@openmap/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "prisma", "clickhouse", "memgraph"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "prisma:diff": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
+    "migrate:postgres": "tsx src/cli.ts postgres",
+    "migrate:clickhouse": "tsx src/cli.ts clickhouse",
+    "migrate:memgraph": "tsx src/cli.ts memgraph",
+    "migrate": "tsx src/cli.ts all"
+  },
+  "dependencies": {
+    "@clickhouse/client": "^1.24.0",
+    "@openmap/config": "workspace:*",
+    "@openmap/constants": "workspace:*",
+    "@openmap/contracts": "workspace:*",
+    "@prisma/client": "^6.19.0",
+    "neo4j-driver": "^5.28.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  }
+}

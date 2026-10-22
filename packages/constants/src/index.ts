@@ -98,6 +98,19 @@ export const PERF_BUDGETS = {
   discoverySweepMinutes: 15,
 } as const;
 
+/**
+ * Graph query limits. Depth 6 covers DC → hardware → hypervisor → VM → application → service with one
+ * spare hop; 12 is the hard ceiling that keeps the 100k-node impact query inside its budget.
+ */
+export const GRAPH = {
+  defaultImpactDepth: 6,
+  maxImpactDepth: 12,
+  defaultPageSize: 50,
+  maxPageSize: 500,
+  /** Relationship types that carry failure from a dependency to its dependants (traversed upstream). */
+  impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service'] as const,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,
