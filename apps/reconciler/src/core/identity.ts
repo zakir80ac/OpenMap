@@ -1,24 +1,56 @@
-// REQ-CORE-013 — identity resolution: maps observed CIs to stored ids through the contract's identity
-// keys, and reports conflicts when one observation points at two different stored CIs.
-import { CI_IDENTITY_KEYS, type CiType, type ObservedCi } from '@openmap/contracts';
+// REQ-CORE-013 — identity resolution. Two kinds of match: the full identity tuple of a type (always),
+// and any single key that is globally unique (serial number, UUID, FQDN…). Keys that are only unique
+// within a parent (ifIndex, vlanId, name) never match alone, which is what keeps interface 1 of one
+// switch from colliding with interface 1 of every other switch.
+import { CI_IDENTITY_KEYS, GLOBAL_IDENTITY_KEYS, type CiType, type ObservedCi } from '@openmap/contracts';
 
-/** `type|key=value`, lower-cased value so serials and hostnames match regardless of case. */
-export function identityKey(type: CiType, key: string, value: string): string {
-  return type + '|' + key + '=' + value.trim().toLowerCase();
+const TUPLE_PREFIX = 'tuple';
+
+function norm(value: string): string {
+  return value.trim().toLowerCase();
 }
 
-/** Every identity key an observation offers, in contract precedence order. */
+/** Canonical tuple of all present identity values in contract precedence order; the stored identityKey. */
+export function identityTuple(type: CiType, identity: Record<string, string>): string {
+  return CI_IDENTITY_KEYS[type]
+    .map((k) => identity[k])
+    .filter((v): v is string => v !== undefined && v !== '')
+    .map(norm)
+    .join('|');
+}
+
+/** `type|key=value` for a globally unique key. */
+export function identityKey(type: CiType, key: string, value: string): string {
+  return type + '|' + key + '=' + norm(value);
+}
+
+export function tupleKey(type: CiType, identity: Record<string, string>): string {
+  return type + '|' + TUPLE_PREFIX + '=' + identityTuple(type, identity);
+}
+
+/** Every lookup key an observation offers: the tuple first, then each globally unique key. */
 export function identityKeysOf(ci: Pick<ObservedCi, 'type' | 'identity'>): string[] {
   const out: string[] = [];
+  const tuple = identityTuple(ci.type, ci.identity);
+  if (tuple !== '') out.push(tupleKey(ci.type, ci.identity));
   for (const key of CI_IDENTITY_KEYS[ci.type]) {
     const value = ci.identity[key];
-    if (value !== undefined && value !== '') out.push(identityKey(ci.type, key, value));
+    if (value !== undefined && value !== '' && GLOBAL_IDENTITY_KEYS.has(key)) out.push(identityKey(ci.type, key, value));
+  }
+  return out;
+}
+
+/** Globally unique (key, value) pairs of an observation, for store lookups by JSON containment. */
+export function globalPairs(ci: Pick<ObservedCi, 'type' | 'identity'>): Array<{ key: string; value: string }> {
+  const out: Array<{ key: string; value: string }> = [];
+  for (const key of CI_IDENTITY_KEYS[ci.type]) {
+    const value = ci.identity[key];
+    if (value !== undefined && value !== '' && GLOBAL_IDENTITY_KEYS.has(key)) out.push({ key, value });
   }
   return out;
 }
 
 export interface IdentityIndex {
-  /** Returns the stored CI id for an identity key, or undefined. */
   lookup(key: string): string | undefined;
 }
 
@@ -27,7 +59,6 @@ export type Resolution =
   | { kind: 'existing'; ciId: string; matchedKeys: string[] }
   | { kind: 'conflict'; ciIds: string[]; matchedKeys: string[] };
 
-/** Resolves an observation. A conflict means the same device was previously stored as two CIs; the reconciler emits an event and merges nothing. */
 export function resolve(ci: Pick<ObservedCi, 'type' | 'identity'>, index: IdentityIndex): Resolution {
   const keys = identityKeysOf(ci);
   const hits = new Map<string, string[]>();

@@ -1,4 +1,4 @@
-// T-017 REQ-CORE-012 — GraphQL metrics hook helpers and the Prometheus registry.
+// T-031 REQ-CORE-012 — GraphQL metrics hook helpers and the Prometheus registry.
 import { describe, expect, it } from 'vitest';
 import { trace } from '@opentelemetry/api';
 import { PERF_BUDGETS, TIME } from '@openmap/constants';

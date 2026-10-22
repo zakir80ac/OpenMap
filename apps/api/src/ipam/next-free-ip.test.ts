@@ -1,4 +1,4 @@
-// T-016 REQ-IPAM-001 — next free IPv4 address arithmetic.
+// T-030 REQ-IPAM-001 — next free IPv4 address arithmetic.
 import { describe, expect, it } from 'vitest';
 import { nextFreeIpv4, usableHosts } from './next-free-ip.js';
 

@@ -1,4 +1,4 @@
-// T-014 REQ-CORE-012 — cursor encoding and page-size clamping.
+// T-028 REQ-CORE-012 — cursor encoding and page-size clamping.
 import { describe, expect, it } from 'vitest';
 import { GRAPH } from '@openmap/constants';
 import { clampPageSize, decodeCursor, encodeCursor, InvalidCursorError, toPage } from './cursor.js';

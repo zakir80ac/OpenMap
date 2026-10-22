@@ -1,4 +1,4 @@
-// T-015 REQ-CMDB-001 — CiFilter → Prisma where translation.
+// T-029 REQ-CMDB-001 — CiFilter → Prisma where translation.
 import { describe, expect, it } from 'vitest';
 import { Prisma } from '@openmap/db';
 import { afterClause, attributeClause, buildCiWhere, LOCATED_IN, textClause } from './ci.filter.js';

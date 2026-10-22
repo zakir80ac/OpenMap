@@ -32,13 +32,20 @@ const storedHost: Ci = {
 };
 
 describe('identity', () => {
-  it('matches case-insensitively on any identity key and detects conflicts', () => {
+  it('matches case-insensitively on any globally unique key and detects conflicts', () => {
     const index = new MapIdentityIndex();
     index.add({ type: 'host', identity: { serialNumber: 'ABC' } }, 'a');
     index.add({ type: 'host', identity: { fqdn: 'x.bank.local' } }, 'b');
     expect(resolve({ type: 'host', identity: { serialNumber: 'abc' } }, index)).toMatchObject({ kind: 'existing', ciId: 'a' });
     expect(resolve({ type: 'host', identity: { serialNumber: 'abc', fqdn: 'X.BANK.LOCAL' } }, index)).toMatchObject({ kind: 'conflict' });
     expect(resolve({ type: 'host', identity: { serialNumber: 'zzz' } }, index)).toEqual({ kind: 'new' });
+  });
+  it('matches parent-scoped keys only as a tuple', () => {
+    const index = new MapIdentityIndex();
+    index.add({ type: 'interface', identity: { deviceRef: 'serial:A', ifIndex: '1', name: 'Et1' } }, 'ifA1');
+    index.add({ type: 'interface', identity: { deviceRef: 'serial:B', ifIndex: '1', name: 'Et1' } }, 'ifB1');
+    expect(resolve({ type: 'interface', identity: { deviceRef: 'serial:A', ifIndex: '1', name: 'Et1' } }, index)).toMatchObject({ kind: 'existing', ciId: 'ifA1' });
+    expect(resolve({ type: 'interface', identity: { deviceRef: 'serial:C', ifIndex: '1', name: 'Et1' } }, index)).toEqual({ kind: 'new' });
   });
 });
 

@@ -2,11 +2,11 @@
 // The payload is the result as validated; the reconciler worker consumes it and writes through the outbox.
 import { Queue, type JobsOptions } from 'bullmq';
 import { Redis } from 'ioredis';
-import { DISCOVERY } from '@openmap/constants';
+import { DISCOVERY, RECONCILER } from '@openmap/constants';
 import type { CollectorResult } from '@openmap/contracts';
 import type { Env } from '@openmap/config';
 
-export const RESULTS_QUEUE = 'openmap:collector-results';
+export const RESULTS_QUEUE = RECONCILER.resultsQueue;
 
 export interface ResultsQueue {
   publish(result: CollectorResult): Promise<string>;

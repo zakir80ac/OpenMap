@@ -68,7 +68,7 @@ export function reconcile(result: CollectorResult, lookup: StoredLookup): Reconc
       };
       out.created.push(ci);
       for (const k of identityKeysOf(observed)) createdByKey.set(k, id);
-      out.events.push(envelope(result.tenantId, 'openmap.ci.created', id, { type: ci.type, layer: ci.layer, name: ci.name, source }));
+      out.events.push(envelope(result.tenantId, 'openmap.ci.created', id, { ci }));
       continue;
     }
     const existing = lookup.getCi(resolution.ciId);
@@ -83,7 +83,7 @@ export function reconcile(result: CollectorResult, lookup: StoredLookup): Reconc
     }
     const updated: Ci = { ...existing, identity, attributes: merged.attributes, source: merged.source, observedAt: observed.observedAt, checksum: newChecksum, tags: [...new Set([...existing.tags, ...observed.tags])] };
     out.updated.push(updated);
-    out.events.push(envelope(result.tenantId, 'openmap.ci.updated', updated.id, { changedKeys: merged.changedKeys, source: merged.source }));
+    out.events.push(envelope(result.tenantId, 'openmap.ci.updated', updated.id, { ci: updated, changedKeys: merged.changedKeys }));
   }
 
   for (const rel of result.relationships) {
@@ -111,7 +111,7 @@ export function reconcile(result: CollectorResult, lookup: StoredLookup): Reconc
       validTo: null,
     };
     out.relationshipsCreated.push(created);
-    out.events.push(envelope(result.tenantId, 'openmap.relationship.created', created.id, { type: created.type, fromCiId: fromId, toCiId: toId }));
+    out.events.push(envelope(result.tenantId, 'openmap.relationship.created', created.id, { relationship: created }));
   }
   return out;
 }

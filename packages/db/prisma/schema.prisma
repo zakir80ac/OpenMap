@@ -1360,3 +1360,23 @@ model UserPreference {
   @@id([tenantId, userId])
   @@map("user_preferences")
 }
+
+/// Relationship observations whose endpoints were not yet known when their result arrived; retried
+/// after later results land (REQ-CORE-013).
+model PendingRelationship {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  type       RelationshipType
+  fromRef    Json
+  toRef      Json
+  attributes Json
+  observedAt DateTime @db.Timestamptz(3)
+  sourceCollectorId String
+  sourceNodeId      String
+  sourceRunId       String
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([tenantId, createdAt])
+  @@map("pending_relationships")
+}

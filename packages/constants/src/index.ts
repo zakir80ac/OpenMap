@@ -227,6 +227,29 @@ export const ASSISTANT = {
   temperature: 0.1,
 } as const;
 
+/** Reconciler and outbox dispatcher pacing. */
+export const RECONCILER = {
+  /** Outbox rows claimed per dispatcher tick. */
+  outboxBatchSize: 200,
+  /** Idle wait between dispatcher ticks when the outbox is empty. */
+  outboxIdleMs: 1_000,
+  /** Candidate CIs fetched per identity lookup batch. */
+  lookupBatchSize: 500,
+  /** Meilisearch index name prefix; one index per tenant keeps row-level isolation simple. */
+  searchIndexPrefix: 'cis-',
+  /** BullMQ stream that in-process subscribers (BSM engine, API WebSocket fan-out) consume. BullMQ forbids ':' in names. */
+  eventStreamQueue: 'openmap-events',
+  /** BullMQ queue carrying accepted collector results from the scheduler to the reconciler. */
+  resultsQueue: 'openmap-collector-results',
+  /** Worker concurrency for collector results. */
+  resultsConcurrency: 4,
+  /** Results between progress lines in the replay tool. */
+  replayProgressEvery: 10,
+  /** Pending relationships retried per pass and the attempt ceiling before they are dropped as stale. */
+  pendingRelationshipBatch: 2_000,
+  pendingRelationshipMaxAttempts: 20,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

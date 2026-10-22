@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "rootDir": "src", "composite": true },
+  "compilerOptions": { "outDir": "dist", "rootDir": "src", "composite": true, "lib": ["ES2023", "DOM"] },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts"],
-  "references": [{ "path": "../../packages/constants" }, { "path": "../../packages/config" }, { "path": "../../packages/contracts" }]
+  "exclude": ["src/**/*.test.ts", "src/**/*.integration.test.ts"],
+  "references": [{ "path": "../../packages/constants" }, { "path": "../../packages/config" }, { "path": "../../packages/contracts" }, { "path": "../../packages/db" }, { "path": "../../packages/graph" }]
 }
