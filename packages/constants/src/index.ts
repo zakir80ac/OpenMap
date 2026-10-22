@@ -265,6 +265,74 @@ export const RECONCILER = {
   pendingRelationshipMaxAttempts: 20,
 } as const;
 
+/**
+ * Dependency map geometry and interaction (apps/console, REQ-UI-007, REQ-DEP-005). Graph units are Sigma's
+ * abstract coordinates; the camera fits them to the viewport. Lanes are the twelve CI_LAYERS in contract order,
+ * bottom (facilities) to top (applications), so y grows with the layer index.
+ */
+export const DEPENDENCY_MAP = {
+  /** Vertical distance between lane centre lines, graph units. */
+  laneHeight: 120,
+  /** Horizontal distance between neighbouring nodes in one lane, graph units. */
+  nodeSpacing: 60,
+  /** Nodes in a lane are centred on the root's x; the divisor halves the lane width to find the start. */
+  laneCentreDivisor: 2,
+  /** Root (focus) node radius in px; every extra hop shrinks a node by nodeSizeStep down to minNodeSize. */
+  rootNodeSize: 18,
+  nodeSizeStep: 2,
+  minNodeSize: 6,
+  /** Edge thickness in px, and the thickness of edges on an impact path to a service. */
+  edgeSize: 1.5,
+  pathEdgeSize: 3,
+  /** Label font size in px and the rendered node size under which labels are not drawn. */
+  labelSize: 12,
+  labelRenderedSizeThreshold: 8,
+  /** Camera zoom limits as ratios of the fitted view, and the zoom animation length. */
+  cameraMinRatio: 0.05,
+  cameraMaxRatio: 4,
+  zoomDurationMs: 200,
+  /** Distance in px from the pointer at which the hover tooltip is anchored. */
+  tooltipOffsetPx: 12,
+  /** Graphs smaller than this are laid out synchronously; larger ones go to the layout Web Worker. */
+  workerMinNodes: 200,
+  /** Relationships fetched for the selected CI to type-colour its edges. */
+  selectedRelationshipsLimit: 100,
+} as const;
+
+/**
+ * Translucency steps the console applies to design-token accents (0..1). The design system's own glow alphas live in
+ * @openmap/ui; these are the screen-level tints the Obsidian Pro canvas uses for backdrops, guides and tinted panels.
+ */
+export const CONSOLE_ALPHA = {
+  /** Label backdrop over the WebGL canvas: readable text, map still visible underneath. */
+  labelBackdrop: 0.9,
+  /** Edges that bridge a hidden layer are drawn fainter than direct edges. */
+  bridgedEdge: 0.45,
+  /** Lane label chips and guide lines on the map. */
+  laneTint: 0.18,
+  /** Blast-radius panel background and border. */
+  panelTint: 0.14,
+  panelBorder: 0.3,
+} as const;
+
+/** Console-wide interaction constants shared by several screens (REQ-UI-003). */
+export const CONSOLE = {
+  /** Keystroke-to-request delay for incremental search boxes; one request per pause, not per key. */
+  searchDebounceMs: 250,
+  /** Hits shown in an incremental search dropdown. */
+  searchResultLimit: 12,
+  /** Rows in a component explorer or picker list before the user must narrow the search. */
+  explorerPageSize: 50,
+  /** Relationships loaded per CI detail page before "load more". */
+  relationshipsPageSize: 100,
+  /** Recent discovery jobs shown on the discovery screen. */
+  discoveryJobsLimit: 50,
+  /** Polling interval for live screens (discovery sweep, service health) in milliseconds. */
+  livePollMs: 10_000,
+  /** Characters of a UUID shown when a code is not available. */
+  shortIdLength: 8,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

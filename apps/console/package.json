@@ -23,9 +23,12 @@
     "@openmap/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.0",
     "@tanstack/react-virtual": "^3.13.0",
+    "graphology": "0.26.0",
+    "graphology-layout": "0.6.1",
     "next": "^15.3.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "sigma": "4.0.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
@@ -35,6 +38,7 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "graphology-types": "0.24.8",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.20.0",

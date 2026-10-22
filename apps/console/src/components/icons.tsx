@@ -23,6 +23,13 @@ export const ICON_NAMES = [
   'chevronDown',
   'eye',
   'eyeOff',
+  'zoomIn',
+  'zoomOut',
+  'fit',
+  'play',
+  'check',
+  'arrowRight',
+  'tag',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -160,6 +167,18 @@ const glyphs: Record<IconName, ReactNode> = {
       <path d="M3 3l18 18" />
       <path d="M10.6 6.1A10.6 10.6 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.2 3.9M6.6 6.6C3.9 8.4 2 12 2 12s3.5 6.5 10 6.5c1.5 0 2.9-.3 4.1-.9" />
       <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
+  zoomIn: <path d="M12 5v14M5 12h14" />,
+  zoomOut: <path d="M5 12h14" />,
+  fit: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
+  play: <path d="M7 4.5v15l12-7.5Z" />,
+  check: <path d="m5 12 4.5 4.5L19 7" />,
+  arrowRight: <path d="M4 12h16m-6-6 6 6-6 6" />,
+  tag: (
+    <>
+      <path d="M3 11.5V4h7.5l9.5 9.5-7.5 7.5Z" />
+      <circle cx="7.5" cy="8.5" r="1.5" />
     </>
   ),
 };
