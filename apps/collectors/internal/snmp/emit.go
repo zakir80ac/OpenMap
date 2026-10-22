@@ -65,6 +65,9 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 		identity["sysName"] = d.SysName
 	}
 	ciType := typeNetworkDevice
+	if d.Power != nil && d.Serial != "" {
+		ciType = d.Power.Kind
+	}
 	if len(identity) == 0 {
 		// Nothing we can key on beyond the address: surface it as unknown for a person to label.
 		ciType = typeUnknown
@@ -86,7 +89,21 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 		"vlanCount":      len(d.Vlans),
 		"deviceRef":      ref,
 	}
+	if d.Power != nil {
+		powerAttributes(d.Power, attrs)
+	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: ciType, Identity: identity, Name: firstNonEmpty(d.SysName, target.Value), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+	if d.Power != nil && ciType == typePdu {
+		for _, o := range d.Power.Outlets {
+			feedIdentity := map[string]string{"pduRef": d.Serial, "name": firstNonEmpty(o.Name, "outlet-"+o.Index)}
+			feedAttrs := map[string]any{"outletIndex": o.Index, "watts": o.Watts, "pdu": d.Serial}
+			if o.On != nil {
+				feedAttrs["on"] = *o.On
+			}
+			obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typePowerFeed, Identity: feedIdentity, Name: feedIdentity["name"], Attributes: feedAttrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+			obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: devRef, To: contract.CiRef{Type: typePowerFeed, Identity: feedIdentity}, Attributes: map[string]any{}, ObservedAt: at})
+		}
+	}
 
 	ifByIndex := map[int64]Interface{}
 	for _, it := range d.Interfaces {

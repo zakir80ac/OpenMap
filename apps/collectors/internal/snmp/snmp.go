@@ -187,9 +187,20 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 	if w.Scalars[oidSysDescr] == nil && w.Scalars[oidSysName] == nil {
 		return nil, collector.Errorf(contract.ErrUnsupportedDevice, false, "%s answered without sysDescr or sysName", target.Value)
 	}
+	// Power MIBs: one extra GET; agents without them answer noSuchObject, which decode drops.
+	if power, err := c.Get(powerScalarOIDs); err == nil {
+		for _, pdu := range power.Variables {
+			if v := decode(pdu); v != nil {
+				w.Scalars[pdu.Name] = v
+			}
+		}
+	}
 	tables := tableOIDs
 	if !skipArp {
 		tables = append(append([]string{}, tables...), oidIpNetToMediaPhys)
+	}
+	if parsePower(w) != nil {
+		tables = append(append([]string{}, tables...), powerTableOIDs...)
 	}
 	for _, root := range tables {
 		if ctx.Err() != nil {

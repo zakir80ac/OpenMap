@@ -102,6 +102,8 @@ type Device struct {
 	Neighbours   []Neighbour
 	ArpEntries   []ArpEntry
 	Addresses    []Address
+	// Power is set when the device answers UPS-MIB or a vendor PDU/UPS MIB.
+	Power *PowerFacts
 }
 
 type Interface struct {
@@ -171,6 +173,13 @@ func Parse(w *Walk) Device {
 	d.parseNeighbours(w)
 	d.parseArp(w)
 	d.parseAddresses(w)
+	d.Power = parsePower(w)
+	if d.Power != nil {
+		d.Serial = firstNonEmpty(d.Serial, d.Power.Serial)
+		d.Model = firstNonEmpty(d.Model, d.Power.Model)
+		d.Manufacturer = firstNonEmpty(d.Manufacturer, d.Power.Manufacturer)
+		d.Firmware = firstNonEmpty(d.Firmware, d.Power.Firmware)
+	}
 	return d
 }
 
