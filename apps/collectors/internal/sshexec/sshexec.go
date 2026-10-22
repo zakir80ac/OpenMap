@@ -159,6 +159,60 @@ func Run(ctx context.Context, target contract.Target, cred *contract.Credential,
 	return Output{Stdout: stdout.Bytes(), Stderr: stderr.String(), HostKey: seenKey}, nil
 }
 
+// Exec opens one SSH connection and runs each command in its own exec channel, which is how
+// network operating systems (FOS, NX-OS, IOS-XE, EOS, Junos) accept commands without a shell.
+// Output is keyed by command; a command that fails yields its stderr text under the same key.
+func Exec(ctx context.Context, target contract.Target, cred *contract.Credential, options map[string]any, commands []string) (map[string]string, string, error) {
+	methods, user, err := AuthMethods(cred)
+	if err != nil {
+		return nil, "", err
+	}
+	var seenKey string
+	cfg := &ssh.ClientConfig{User: user, Auth: methods, HostKeyCallback: HostKeyCallback(target, options, &seenKey), Timeout: dialTimeout}
+	dialer := net.Dialer{Timeout: dialTimeout}
+	conn, err := dialer.DialContext(ctx, "tcp", net.JoinHostPort(target.Value, strconv.Itoa(Port(options))))
+	if err != nil {
+		return nil, "", collector.Errorf(contract.ErrUnreachable, true, "dial %s: %v", target.Value, err)
+	}
+	defer conn.Close()
+	if dl, ok := ctx.Deadline(); ok {
+		_ = conn.SetDeadline(dl)
+	} else {
+		_ = conn.SetDeadline(time.Now().Add(sessionTimeout))
+	}
+	c, chans, reqs, err := ssh.NewClientConn(conn, target.Value, cfg)
+	if err != nil {
+		msg := err.Error()
+		if strings.Contains(msg, "host key") {
+			return nil, seenKey, collector.Errorf(contract.ErrPermissionDenied, false, "%v", err)
+		}
+		if strings.Contains(msg, "unable to authenticate") || strings.Contains(msg, "no supported methods") {
+			return nil, seenKey, collector.Errorf(contract.ErrAuthFailed, false, "%s rejected the credential", target.Value)
+		}
+		return nil, seenKey, collector.Errorf(contract.ErrUnreachable, true, "%s: %v", target.Value, err)
+	}
+	client := ssh.NewClient(c, chans, reqs)
+	defer client.Close()
+	out := make(map[string]string, len(commands))
+	for _, cmd := range commands {
+		session, err := client.NewSession()
+		if err != nil {
+			return out, seenKey, collector.Errorf(contract.ErrInternal, true, "session: %v", err)
+		}
+		var stdout, stderr bytes.Buffer
+		session.Stdout = &stdout
+		session.Stderr = &stderr
+		runErr := session.Run(cmd)
+		_ = session.Close()
+		if runErr != nil && stdout.Len() == 0 {
+			out[cmd] = strings.TrimSpace(stderr.String())
+			continue
+		}
+		out[cmd] = stdout.String()
+	}
+	return out, seenKey, nil
+}
+
 // ShellQuote single-quotes a string for a POSIX shell.
 func ShellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
