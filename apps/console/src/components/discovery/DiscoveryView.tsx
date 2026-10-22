@@ -8,7 +8,9 @@ import { BSM, CONSOLE, TIME } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
 import { Bar, Card, Dot, Kpi, Pill, SectionTitle, Tag, accents, cx, type UiState } from '@openmap/ui';
 import { useMemo, type ReactNode } from 'react';
+import { ROLES } from '@openmap/constants';
 import { QueryState } from '@/components/common/QueryState';
+import { useCan } from '@/lib/auth';
 import { Icon } from '@/components/icons';
 import { localizedHref } from '@/lib/locale-path';
 import { currentSweepQuery, discoveryJobsQuery, discoveryNodesQuery, runDiscovery, type DiscoveryJob, type DiscoveryNode, type Sweep } from '@/lib/queries';
@@ -96,6 +98,8 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
   const jobs = useQuery(discoveryJobsQuery());
   const sweep = useQuery(currentSweepQuery());
 
+  const can = useCan();
+  const allowed = can(ROLES.operator);
   const run = useMutation({
     mutationFn: () => runDiscovery(),
     onSuccess: async () => {
@@ -129,6 +133,7 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
         description={t('discovery.subtitle')}
         action={
           <span className="flex items-center gap-om-8">
+            {allowed ? null : <span className="text-om-xs text-om-muted">{t('auth.requiresRole', { role: ROLES.operator })}</span>}
             {run.isSuccess ? <Pill variant="primary">{t('discovery.runStarted', { id: run.data.id })}</Pill> : null}
             {run.isError ? (
               <span role="alert">
@@ -139,7 +144,8 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
             ) : null}
             <button
               type="button"
-              disabled={run.isPending || sweepRunning}
+              disabled={run.isPending || sweepRunning || !allowed}
+              title={allowed ? undefined : t('auth.requiresRole', { role: ROLES.operator })}
               onClick={() => {
                 run.mutate();
               }}

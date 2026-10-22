@@ -10,23 +10,31 @@ const realmFile = fileURLToPath(new URL('../../../deploy/compose/keycloak/realm-
 
 interface RealmUser {
   username: string;
+  realmRoles?: string[];
   credentials?: Array<{ type: string; value: string; temporary?: boolean }>;
 }
 
-/** The compose stack imports this realm; its first password user is the one the e2e signs in as. */
-export function seededUser(): { username: string; password: string } {
+export interface SeededUser {
+  username: string;
+  password: string;
+  roles: string[];
+}
+
+/** A password user from the realm the compose stack imports (default: the first one, the administrator). */
+export function seededUser(username?: string): SeededUser {
   const realm = JSON.parse(readFileSync(realmFile, 'utf8')) as { users?: RealmUser[] };
   for (const user of realm.users ?? []) {
+    if (username !== undefined && user.username !== username) continue;
     const credential = user.credentials?.find((c) => c.type === 'password');
-    if (credential !== undefined) return { username: user.username, password: credential.value };
+    if (credential !== undefined) return { username: user.username, password: credential.value, roles: user.realmRoles ?? [] };
   }
-  throw new Error('realm export has no user with a password credential');
+  throw new Error('realm export has no password user' + (username === undefined ? '' : ' named ' + username));
 }
 
 /** From the sign-in screen through Keycloak and back to the console; resolves once the primary navigation is visible. */
-export async function signIn(page: Page, locale: Locale): Promise<void> {
+export async function signIn(page: Page, locale: Locale, username?: string): Promise<void> {
   await page.getByRole('button', { name: translate(locale, 'auth.signIn') }).click();
-  const user = seededUser();
+  const user = seededUser(username);
   await page.locator('#username').fill(user.username);
   await page.locator('#password').fill(user.password);
   await page.locator('#kc-login').click();

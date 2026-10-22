@@ -511,5 +511,6 @@
   "auth.tenant": "Tenant",
   "auth.roles": "Roles",
   "auth.noRoles": "No realm roles",
-  "auth.signOut": "Sign out"
+  "auth.signOut": "Sign out",
+  "auth.requiresRole": "Requires the {role} role"
 }

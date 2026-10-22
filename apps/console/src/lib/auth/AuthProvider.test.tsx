@@ -70,6 +70,7 @@ describe('AuthProvider', () => {
   it('starts signed out when nothing is stored and installs no bearer token', () => {
     mount();
     expect(status()).toBe('signed-out');
+    expect(latest?.can('openmap-analyst')).toBe(false);
     expect(latest?.getAccessToken()).toBeUndefined();
     expect(idp.calls).toHaveLength(0);
   });
@@ -90,6 +91,8 @@ describe('AuthProvider', () => {
 
     expect(latest?.user).toMatchObject({ username: 'admin', displayName: 'OpenMap Admin', tenant: 'default', email: 'admin@openmap.local' });
     expect(latest?.user?.roles).toEqual(['offline_access', 'openmap-admin']);
+    expect(latest?.can('openmap-operator')).toBe(true);
+    expect(latest?.can('openmap-node')).toBe(false);
     expect(readRefreshToken()).toBe('refresh-initial');
     const firstAccess = latest?.getAccessToken();
     expect(firstAccess).toBeDefined();

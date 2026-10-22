@@ -2,6 +2,8 @@
 // REQ-UI-008 REQ-CMDB-012 — "Label this CI": classifies a CI discovered as `unknown` through the labelCi mutation
 // (title, description, layer, optional type constrained to the chosen layer). The label outranks every collector.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ROLES } from '@openmap/constants';
+import { useCan } from '@/lib/auth';
 import { CI_LAYERS, CI_TYPES, CI_TYPE_LAYER, type CiLayer } from '@openmap/contracts';
 import { Card, Pill, SectionTitle, Tag, layerColor } from '@openmap/ui';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
@@ -29,6 +31,8 @@ export function LabelCiPanel({ ci }: LabelCiPanelProps): ReactNode {
   const [type, setType] = useState<string>(ci.userLabel?.type ?? '');
   const types = useMemo(() => CI_TYPES.filter((candidate) => CI_TYPE_LAYER[candidate] === layer), [layer]);
 
+  const can = useCan();
+  const allowed = can(ROLES.operator);
   const mutation = useMutation({
     mutationFn: labelCi,
     onSuccess: async () => {
@@ -115,11 +119,13 @@ export function LabelCiPanel({ ci }: LabelCiPanelProps): ReactNode {
         <div className="flex flex-wrap items-center gap-om-10 md:col-span-2">
           <button
             type="submit"
-            disabled={mutation.isPending || title.trim() === ''}
+            disabled={mutation.isPending || title.trim() === '' || !allowed}
+            title={allowed ? undefined : t('auth.requiresRole', { role: ROLES.operator })}
             className="rounded-om-control-lg bg-om-violet px-om-14 py-om-8 text-om-sm font-semibold text-om-primary shadow-om-glow-button-violet transition-opacity duration-om-base hover:opacity-90 disabled:opacity-60"
           >
             {mutation.isPending ? t('cmdb.detail.label.saving') : t('cmdb.detail.label.submit')}
           </button>
+          {allowed ? null : <span className="text-om-xs text-om-muted">{t('auth.requiresRole', { role: ROLES.operator })}</span>}
           {mutation.isSuccess ? (
             <Pill variant="violet" icon={<Icon name="check" className="size-3.5" />}>
               {t('cmdb.detail.label.saved', { layer: t(layerKey(mutation.data.layer)) })}

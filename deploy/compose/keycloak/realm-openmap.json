@@ -109,6 +109,28 @@
           "default"
         ]
       }
+    },
+    {
+      "username": "auditor",
+      "enabled": true,
+      "email": "auditor@openmap.local",
+      "firstName": "OpenMap",
+      "lastName": "Auditor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "auditor",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "openmap-auditor"
+      ],
+      "attributes": {
+        "tenant": [
+          "default"
+        ]
+      }
     }
   ],
   "components": {

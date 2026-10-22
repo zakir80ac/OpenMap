@@ -4,6 +4,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/auth')>()), useCan: () => () => true }));
+
 import { Providers } from '@/providers';
 import { DiscoveryView, collectorsByNode, jobDurationSeconds, jobState, nodeState, sweepElapsedMinutes } from './DiscoveryView';
 

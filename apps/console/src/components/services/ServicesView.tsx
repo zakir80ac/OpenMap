@@ -3,6 +3,8 @@
 // causes, SLA target and error budget, grouped by state (worst first) with a health filter; open incidents from
 // `incidents` beside them with an acknowledge action (acknowledgeIncident).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ROLES } from '@openmap/constants';
+import { useCan } from '@/lib/auth';
 import Link from 'next/link';
 import { BSM, CONSOLE } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
@@ -76,6 +78,8 @@ export function ServicesView({ locale }: ServicesViewProps): ReactNode {
     return map;
   }, [incidents.data]);
 
+  const can = useCan();
+  const allowed = can(ROLES.operator);
   const acknowledge = useMutation({
     mutationFn: acknowledgeIncident,
     onSuccess: async () => {
@@ -274,7 +278,8 @@ export function ServicesView({ locale }: ServicesViewProps): ReactNode {
                     <div className="flex items-center gap-om-8">
                       <button
                         type="button"
-                        disabled={acknowledging || acknowledged}
+                        disabled={acknowledging || acknowledged || !allowed}
+                        title={allowed ? undefined : t('auth.requiresRole', { role: ROLES.operator })}
                         onClick={() => {
                           acknowledge.mutate(incident.id);
                         }}

@@ -511,5 +511,6 @@
   "auth.tenant": "المستأجر",
   "auth.roles": "الأدوار",
   "auth.noRoles": "لا توجد أدوار في النطاق",
-  "auth.signOut": "تسجيل الخروج"
+  "auth.signOut": "تسجيل الخروج",
+  "auth.requiresRole": "يتطلب الدور {role}"
 }

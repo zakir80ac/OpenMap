@@ -367,6 +367,30 @@ export const AUTH = {
   deniedErrorCodes: ['access_denied', 'login_required', 'consent_required', 'interaction_required'] as const,
 } as const;
 
+/**
+ * Realm roles the Keycloak realm import (deploy/compose/keycloak/realm-openmap.json) defines, shared by the API's
+ * role guard (REQ-CORE-012) and the console's action gating (REQ-SEC-001). `node` is the Discovery Node service
+ * identity and grants no console access; `automation` is the service-account client for API tokens (REQ-SEC-009).
+ */
+export const ROLES = {
+  admin: 'openmap-admin',
+  operator: 'openmap-operator',
+  analyst: 'openmap-analyst',
+  auditor: 'openmap-auditor',
+  node: 'openmap-node',
+} as const;
+
+export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+/** Granting a role grants every role listed here: admin implies operator, operator implies analyst, auditor implies analyst. */
+export const ROLE_IMPLICATIONS: Record<Role, readonly Role[]> = {
+  [ROLES.admin]: [ROLES.admin, ROLES.operator, ROLES.analyst, ROLES.auditor],
+  [ROLES.operator]: [ROLES.operator, ROLES.analyst],
+  [ROLES.analyst]: [ROLES.analyst],
+  [ROLES.auditor]: [ROLES.auditor, ROLES.analyst],
+  [ROLES.node]: [ROLES.node],
+};
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

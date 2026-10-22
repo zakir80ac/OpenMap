@@ -3,6 +3,7 @@
 // in memory, the refresh token mirrored to sessionStorage so a reload restores the session, silent renewal before
 // expiry, RP-initiated logout, and the access-token hooks the GraphQL transport uses. Navigation, fetch and the clock
 // are injectable so the whole flow runs under test without a browser redirect.
+import type { Role } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { setAuthHooks } from '@/lib/graphql';
@@ -24,6 +25,7 @@ import {
   type TokenSet,
 } from './oidc';
 import { codeChallenge, createCodeVerifier, createNonce, createState } from './pkce';
+import { hasRole } from './roles';
 import { clearPending, readPending, readRefreshToken, savePending, writeRefreshToken } from './storage';
 import { exchangeCode, refreshGrant } from './token-client';
 
@@ -59,6 +61,8 @@ export interface AuthValue {
   reason: AuthReason | undefined;
   /** The server's own wording when the reason is `rejected` (shown verbatim under the translated reason). */
   reasonDetail: string | undefined;
+  /** Whether the signed-in user holds the role (after implication). False when signed out. */
+  can: (role: Role) => boolean;
   getAccessToken: () => string | undefined;
   /** Starts the Authorization Code flow; the browser leaves for the identity provider. */
   signIn: AsyncAction<[returnTo?: string]>;
@@ -198,6 +202,7 @@ export function AuthProvider({ locale, children, navigate = defaultNavigate, fet
   }, [renew]);
 
   const getAccessToken = useCallback((): string | undefined => tokensRef.current?.accessToken, []);
+  const can = useCallback((role: Role): boolean => user !== undefined && hasRole(user.roles, role), [user]);
 
   const signIn = useCallback(
     async (returnTo?: string): Promise<void> => {
@@ -312,8 +317,8 @@ export function AuthProvider({ locale, children, navigate = defaultNavigate, fet
   }, [clearSession, getAccessToken]);
 
   const value = useMemo<AuthValue>(
-    () => ({ status, user, reason, reasonDetail, getAccessToken, signIn, completeSignIn, signOut }),
-    [status, user, reason, reasonDetail, getAccessToken, signIn, completeSignIn, signOut],
+    () => ({ status, user, reason, reasonDetail, can, getAccessToken, signIn, completeSignIn, signOut }),
+    [status, user, reason, reasonDetail, can, getAccessToken, signIn, completeSignIn, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -322,4 +327,9 @@ export function useAuth(): AuthValue {
   const value = useContext(AuthContext);
   if (value === undefined) throw new Error('useAuth must be used inside AuthProvider');
   return value;
+}
+
+/** The role check alone, for screens that gate an action on the signed-in user's roles. */
+export function useCan(): (role: Role) => boolean {
+  return useAuth().can;
 }

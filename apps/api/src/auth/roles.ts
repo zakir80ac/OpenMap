@@ -1,23 +1,9 @@
-// REQ-CORE-012 — realm roles the Keycloak realm import (deploy/compose/keycloak/realm-openmap.json)
-// defines. admin implies operator, operator implies analyst, auditor implies analyst; `node` is the
-// Discovery Node service identity and grants no console access.
-export const ROLES = {
-  admin: 'openmap-admin',
-  operator: 'openmap-operator',
-  analyst: 'openmap-analyst',
-  auditor: 'openmap-auditor',
-  node: 'openmap-node',
-} as const;
+// REQ-CORE-012 — realm-role helpers over the shared role table in @openmap/constants (the same table the console
+// uses to gate actions, REQ-SEC-001). admin implies operator, operator implies analyst, auditor implies analyst;
+// `node` is the Discovery Node service identity and grants no console access.
+import { ROLES, ROLE_IMPLICATIONS, type Role } from '@openmap/constants';
 
-export type Role = (typeof ROLES)[keyof typeof ROLES];
-
-const IMPLIED: Record<Role, readonly Role[]> = {
-  [ROLES.admin]: [ROLES.admin, ROLES.operator, ROLES.analyst, ROLES.auditor],
-  [ROLES.operator]: [ROLES.operator, ROLES.analyst],
-  [ROLES.analyst]: [ROLES.analyst],
-  [ROLES.auditor]: [ROLES.auditor, ROLES.analyst],
-  [ROLES.node]: [ROLES.node],
-};
+export { ROLES, type Role };
 
 const ALL = new Set<string>(Object.values(ROLES));
 
@@ -30,7 +16,7 @@ export function effectiveRoles(granted: readonly string[]): Set<string> {
   const out = new Set<string>();
   for (const r of granted) {
     out.add(r);
-    if (isRole(r)) for (const i of IMPLIED[r]) out.add(i);
+    if (isRole(r)) for (const i of ROLE_IMPLICATIONS[r]) out.add(i);
   }
   return out;
 }

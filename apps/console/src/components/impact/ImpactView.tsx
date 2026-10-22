@@ -5,6 +5,8 @@
 // recovery) → assistant suggestions (askAssistant grounded on the scenario, plus the engine's recommendations) and
 // the saved scenarios list from impactScenarios.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ROLES } from '@openmap/constants';
+import { useCan } from '@/lib/auth';
 import Link from 'next/link';
 import { ASSISTANT, CONSOLE, GRAPH } from '@openmap/constants';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
@@ -96,6 +98,8 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
 
   const scenarios = useQuery(impactScenariosQuery());
 
+  const can = useCan();
+  const allowed = can(ROLES.operator);
   const assistant = useMutation({ mutationFn: askAssistant });
   const askAbout = (outcome: RunOutcome): void => {
     const question = t('impact.assistant.question', {
@@ -170,9 +174,11 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
         action={
           <span className="flex items-center gap-om-8">
             <Pill onClick={clear}>{t('impact.clear')}</Pill>
+            {allowed ? null : <span className="text-om-xs text-om-muted">{t('auth.requiresRole', { role: ROLES.operator })}</span>}
             <button
               type="button"
-              disabled={!canRun}
+              disabled={!canRun || !allowed}
+              title={allowed ? undefined : t('auth.requiresRole', { role: ROLES.operator })}
               onClick={() => {
                 if (activeCondition !== undefined) run.mutate({ components: chosen, condition: activeCondition });
               }}
