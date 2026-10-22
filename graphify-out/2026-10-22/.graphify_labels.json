@@ -496,5 +496,14 @@
   "494": "ui/vitest.config.ts",
   "495": "github.com/openmap/openmap/apps/collectors",
   "496": "github.com/openmap/openmap/apps/node",
-  "497": "synth-estate/vitest.config.ts"
+  "497": "synth-estate/vitest.config.ts",
+  "498": "REQ-INT-002 REQ-SEC-003 — offline bundle loaded on an isolated host with egress blocked (2026-10-22)",
+  "499": "bsm-engine/src/main.ts",
+  "500": "enum",
+  "501": "required",
+  "502": "RolesGuard",
+  "503": "TestIsc",
+  "504": "REQ-DISC-031 REQ-DISC-004 — bare-metal release build (2026-10-22)",
+  "505": "scenarioId",
+  "506": "build-release.sh"
 }
