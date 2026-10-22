@@ -320,6 +320,8 @@ export const ASSISTANT = {
   /** Cypher execution timeout for assistant queries, milliseconds. */
   queryTimeoutMs: 15_000,
   temperature: 0.1,
+  /** Times a rejected query is sent back to the model with the reason before the question is refused. */
+  repairAttempts: 2,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */

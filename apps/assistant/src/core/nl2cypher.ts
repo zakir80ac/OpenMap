@@ -54,15 +54,36 @@ function summarise(question: string, rows: Array<Record<string, unknown>>): stri
   return String(rows.length) + ' row' + (rows.length === 1 ? '' : 's') + ' with columns ' + columns.join(', ') + '.';
 }
 
-export async function ask(question: string, tenantId: string, llm: LlmClient, repo: GraphRepository, now: () => string = () => new Date().toISOString()): Promise<AssistantAnswer> {
-  if (question.trim().length === 0 || question.length > ASSISTANT.maxQuestionLength) throw new AssistantError('question is empty or too long', null);
+/**
+ * Asks the model for a query and, when the validator rejects it, sends the rejection back as the next turn so the
+ * model can repair its own output (missing $tenantId scope, a write, no RETURN). Small models need this; large ones
+ * rarely use it. The last rejection is what the user sees when every attempt fails.
+ */
+export async function generateCypher(question: string, llm: LlmClient): Promise<string> {
   const messages: ChatMessage[] = [
     { role: 'system', content: systemPrompt() },
     { role: 'user', content: question },
   ];
-  const completion = await llm.complete(messages);
-  const cypher = enforceLimit(extractCypher(completion.text));
-  validateCypher(cypher);
+  let lastError: AssistantError | null = null;
+  for (let attempt = 0; attempt <= ASSISTANT.repairAttempts; attempt++) {
+    const completion = await llm.complete(messages);
+    const cypher = enforceLimit(extractCypher(completion.text));
+    try {
+      validateCypher(cypher);
+      return cypher;
+    } catch (err) {
+      if (!(err instanceof AssistantError)) throw err;
+      lastError = err;
+      messages.push({ role: 'assistant', content: completion.text });
+      messages.push({ role: 'user', content: 'That query was rejected: ' + err.message + '. Rewrite it following the rules (read-only, every node variable filtered by tenantId = $tenantId, a RETURN clause). Reply with only the Cypher query.' });
+    }
+  }
+  throw lastError ?? new AssistantError('the model returned no query', null);
+}
+
+export async function ask(question: string, tenantId: string, llm: LlmClient, repo: GraphRepository, now: () => string = () => new Date().toISOString()): Promise<AssistantAnswer> {
+  if (question.trim().length === 0 || question.length > ASSISTANT.maxQuestionLength) throw new AssistantError('question is empty or too long', null);
+  const cypher = await generateCypher(question, llm);
   const rows = await repo.readOnly<Record<string, unknown>>(cypher, { tenantId, now: now() });
   const truncated = rows.length >= ASSISTANT.maxRowsReturned;
   return { question, cypher, rows, text: summarise(question, rows), truncated };

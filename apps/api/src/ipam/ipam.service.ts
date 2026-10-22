@@ -11,6 +11,8 @@ import { stringAttribute } from '../common/validation.js';
 import { nextFreeIpv4, usableHosts } from './next-free-ip.js';
 
 export const IN_SUBNET: RelationshipType = 'in_subnet';
+/** VRF name the address plan's supernets are filed under when they belong to no routing instance. */
+export const SHARED_VRF = 'global';
 
 export interface SubnetView {
   ci: CiRecord;
@@ -46,15 +48,21 @@ export class IpamService {
     return out;
   }
 
-  /** Parent is the smallest other subnet in the same VRF that contains this one. */
+  /**
+   * Parent is the smallest other subnet that contains this one in the same VRF; when the VRF has no such supernet,
+   * the smallest containing subnet of the shared address plan (the `global` or unset VRF, where supernets live).
+   */
   private static parentOf(s: ParsedSubnet, all: readonly ParsedSubnet[]): ParsedSubnet | null {
-    let best: ParsedSubnet | null = null;
-    for (const other of all) {
-      if (other.ci.id === s.ci.id || other.vrf !== s.vrf) continue;
-      if (other.block.size <= s.block.size || !contains(other.block, s.block.base)) continue;
-      if (best === null || other.block.size < best.block.size) best = other;
-    }
-    return best;
+    const pick = (candidates: readonly ParsedSubnet[]): ParsedSubnet | null => {
+      let best: ParsedSubnet | null = null;
+      for (const other of candidates) {
+        if (other.ci.id === s.ci.id) continue;
+        if (other.block.size <= s.block.size || !contains(other.block, s.block.base)) continue;
+        if (best === null || other.block.size < best.block.size) best = other;
+      }
+      return best;
+    };
+    return pick(all.filter((o) => o.vrf === s.vrf)) ?? pick(all.filter((o) => o.vrf === null || o.vrf === SHARED_VRF));
   }
 
   async subnets(tenantId: string, parentId: string | null): Promise<SubnetView[]> {

@@ -123,6 +123,27 @@ REST API, see `docs/STATE.md`).
   Credentials* and store it in OpenBao; create one such client per tenant. The flow and a request example are in
   `apps/api/README.md`.
 
+## Analytics and the assistant (REQ-UI-017, REQ-UI-018, REQ-INT-004)
+
+**Analytics.** The API provisions the "OpenMap estate analytics" dashboard in Superset on first use of the Analytics
+screen: a ClickHouse database connection (from `CLICKHOUSE_URL`/`CLICKHOUSE_DB`), five datasets over the warehouse
+tables, five charts, the dashboard layout, the embedded-dashboard id and the `OpenMapEmbedded` guest role with Gamma's
+permissions. Each request then mints a five-minute guest token whose row-level-security clause pins `tenant_id`, and
+the console embeds the dashboard with Superset's embedded SDK from `PUBLIC_SUPERSET_URL` (the origin browsers reach;
+`SUPERSET_URL` is the backchannel). Superset credentials come from `SUPERSET_ADMIN_USER`/`SUPERSET_ADMIN_PASSWORD`;
+`superset_config.py` enables `EMBEDDED_SUPERSET`, `ROW_LEVEL_SECURITY` and the security API the provisioner uses.
+
+**Assistant.** `askAssistant` needs an OpenAI-compatible chat endpoint at `LLM_BASE_URL`. The compose stack ships two
+profiles: `gpu` (vLLM, `LLM_MODEL`) and `cpu` (llama.cpp server, `LLM_GGUF` under `LLM_MODELS_DIR`). The defaults in
+`.env.example` name a small coder model for laptops; put the GGUF in `./models` and start the profile:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile cpu up -d llm-cpu
+```
+
+The generated Cypher is validated read-only and shown with every answer; a model that produces an invalid query gets
+an explicit refusal in the console rather than a wrong answer.
+
 ## Host agents (REQ-DISC-004)
 
 `openmap-agent` is a static binary for Linux, Windows and macOS (built from `apps/collectors/cmd/agent`, shipped in
