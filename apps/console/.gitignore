@@ -1,0 +1,8 @@
+.next/
+out/
+next-env.d.ts
+src/app/theme.css
+e2e/screenshots/
+test-results/
+playwright-report/
+*.tsbuildinfo

@@ -1,0 +1,63 @@
+/* REQ-UI-003 — console stylesheet: Tailwind v4, the generated Obsidian Pro theme, fonts and shell dimensions. */
+@import 'tailwindcss';
+@import './theme.css';
+
+/* The design-system components in packages/ui carry om-* utility classes; scan their build output too. */
+@source '../../../../packages/ui/dist';
+
+:root {
+  /* Shell geometry from the approved design: 232px glass sidebar, 64px top bar. */
+  --om-sidebar-width: 232px;
+  --om-topbar-height: 64px;
+
+  /* next/font exposes each family on <html>; route the token families through them. */
+  --font-om-display: var(--font-manrope), var(--font-inter), system-ui, sans-serif;
+  --font-om-body: var(--font-inter), system-ui, sans-serif;
+  --font-om-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --om-font-display: var(--font-om-display);
+  --om-font-body: var(--font-om-body);
+  --om-font-mono: var(--font-om-mono);
+
+  color-scheme: dark;
+}
+
+:root[lang='ar'] {
+  --font-om-display: var(--font-arabic), var(--font-manrope), system-ui, sans-serif;
+  --font-om-body: var(--font-arabic), var(--font-inter), system-ui, sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--om-ground);
+  color: var(--om-text-primary);
+  font-family: var(--om-font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  /* Deep navy ground with the two accent glows from the design canvas. */
+  background-image:
+    radial-gradient(60rem 30rem at 15% -10%, color-mix(in srgb, var(--om-accent-cyan) 14%, transparent), transparent 70%),
+    radial-gradient(50rem 28rem at 110% 10%, color-mix(in srgb, var(--om-accent-violet) 16%, transparent), transparent 70%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--om-accent-cyan) 35%, transparent);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--om-accent-cyan);
+  outline-offset: 2px;
+}
+
+/* Thin, token-coloured scrollbars for the virtualised lists. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--om-surface3) transparent;
+}
+
+kbd {
+  font-family: var(--om-font-mono);
+}

@@ -12,7 +12,8 @@
     "start": "tsx scripts/next.ts start",
     "typecheck": "tsx scripts/gen-theme.ts && tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "postbuild": "tsx scripts/stamp-next-env.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",
@@ -34,7 +35,6 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "@vitejs/plugin-react": "^5.0.0",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.20.0",
