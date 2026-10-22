@@ -9,3 +9,4 @@ graphify-out
 packages/testing/fixtures/synth*
 tools/perf/bin
 deploy/airgap-bundle/*.tar
+**/*.tsbuildinfo
