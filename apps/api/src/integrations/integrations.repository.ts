@@ -7,7 +7,7 @@ import { isoOf, toIso } from '../common/time.js';
 import { asRecord } from '../common/validation.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { IntegrationInput } from './integrations.schemas.js';
-import type { IntegrationView } from './integrations.types.js';
+import type { IntegrationDeliveryView, IntegrationDetailView, IntegrationView } from './integrations.types.js';
 
 export const INTEGRATIONS_REPOSITORY = Symbol('INTEGRATIONS_REPOSITORY');
 
@@ -25,6 +25,10 @@ export interface IntegrationsRepository {
   viewsByIds(tenantId: string, ids: readonly string[]): Promise<IntegrationView[]>;
   /** Full contract-shaped configuration, for adapters. */
   config(tenantId: string, id: string): Promise<IntegrationConfig>;
+  /** Configuration plus status for the console's detail panel (REQ-UI-014). */
+  detail(tenantId: string, id: string): Promise<IntegrationDetailView | null>;
+  /** Most recent deliveries of one integration, newest first (REQ-UI-014). */
+  deliveries(tenantId: string, integrationId: string, first: number): Promise<IntegrationDeliveryView[]>;
   upsert(tx: Prisma.TransactionClient, tenantId: string, id: string | null, input: IntegrationInput): Promise<IntegrationView>;
   recordStatus(tx: Prisma.TransactionClient, id: string, patch: StatusPatch): Promise<void>;
   recordDelivery(tx: Prisma.TransactionClient, delivery: IntegrationDelivery): Promise<void>;
@@ -96,6 +100,18 @@ export class PrismaIntegrationsRepository implements IntegrationsRepository {
     const row = await this.prisma.client.integrationConfig.findFirst({ where: { id, tenantId } });
     if (!row) throw new NotFoundException('integration ' + id + ' not found');
     return toConfig(row);
+  }
+
+  async detail(tenantId: string, id: string): Promise<IntegrationDetailView | null> {
+    const row = await this.prisma.client.integrationConfig.findFirst({ where: { id, tenantId }, include: { status: true } });
+    if (!row) return null;
+    const config = toConfig(row);
+    return { ...toView(row), endpoint: config.endpoint, credentialRef: config.credentialRef, settings: config.settings, fieldMappings: config.fieldMappings, classMappings: config.classMappings, subscribedEvents: config.subscribedEvents, createdAt: config.createdAt, updatedAt: config.updatedAt };
+  }
+
+  async deliveries(tenantId: string, integrationId: string, first: number): Promise<IntegrationDeliveryView[]> {
+    const rows = await this.prisma.client.integrationDelivery.findMany({ where: { tenantId, integrationId }, orderBy: { createdAt: 'desc' }, take: first });
+    return rows.map((d) => ({ id: d.id, direction: d.direction, eventId: d.eventId, remoteId: d.remoteId, state: d.state, attempts: d.attempts, responseCode: d.responseCode, error: d.error, createdAt: isoOf(d.createdAt), completedAt: d.completedAt === null ? null : isoOf(d.completedAt) }));
   }
 
   async upsert(tx: Prisma.TransactionClient, tenantId: string, id: string | null, input: IntegrationInput): Promise<IntegrationView> {

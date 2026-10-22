@@ -9,7 +9,7 @@ import { TenantSettingsService } from '../tenant/tenant-settings.service.js';
 import { INTEGRATIONS_REPOSITORY, type IntegrationsRepository } from './integrations.repository.js';
 import type { IntegrationInput } from './integrations.schemas.js';
 import { SecretsService } from './secrets.service.js';
-import type { IntegrationView } from './integrations.types.js';
+import type { IntegrationDeliveryView, IntegrationDetailView, IntegrationView } from './integrations.types.js';
 
 /** Connectivity probes wait at most the impact-query budget; a slower remote is reported as failing. */
 export const PROBE_TIMEOUT_MS = PERF_BUDGETS.impactQuery100kP95Ms;
@@ -26,6 +26,16 @@ export class IntegrationsService {
 
   list(tenantId: string, category: string | null): Promise<IntegrationView[]> {
     return this.repo.list(tenantId, category);
+  }
+
+  async detail(tenantId: string, id: string): Promise<IntegrationDetailView> {
+    const view = await this.repo.detail(tenantId, id);
+    if (!view) throw new NotFoundException('integration ' + id + ' not found');
+    return view;
+  }
+
+  deliveries(tenantId: string, integrationId: string, first: number): Promise<IntegrationDeliveryView[]> {
+    return this.repo.deliveries(tenantId, integrationId, first);
   }
 
   async require(tenantId: string, id: string): Promise<IntegrationView> {

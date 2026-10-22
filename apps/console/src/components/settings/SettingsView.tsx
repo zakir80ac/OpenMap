@@ -19,7 +19,7 @@ export interface SettingsViewProps {
 }
 
 /** Actions a mutation can carry, offered as the filter list; the server owns the truth, this is the display order. */
-export const AUDIT_ACTIONS = ['labelCi', 'updateCiAttributes', 'createRelationship', 'retireRelationship', 'setLayerVisibility', 'runDiscovery', 'saveScenario', 'runSimulation', 'createPlan', 'setPlanStatus', 'setAssetStage', 'upsertIntegration', 'testIntegration', 'reportIncident', 'acknowledgeIncident', 'askAssistant'] as const;
+export const AUDIT_ACTIONS = ['labelCi', 'updateCiAttributes', 'createRelationship', 'retireRelationship', 'setLayerVisibility', 'runDiscovery', 'saveScenario', 'runSimulation', 'createPlan', 'setPlanStatus', 'setAssetStage', 'upsertIntegration', 'testIntegration', 'reportIncident', 'acknowledgeIncident', 'askAssistant', 'updateTenantSettings'] as const;
 
 export function summariseDetails(details: Record<string, unknown>): string {
   const args = (details['arguments'] ?? details) as Record<string, unknown>;

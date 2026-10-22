@@ -240,6 +240,77 @@ export const ITSM = {
 } as const;
 
 /** Assistant limits: schema grounding is truncated to keep prompts inside small local models. */
+/** Electrical unit conversions used by DCIM views (REQ-DCIM-001). */
+export const POWER = {
+  wattsPerKilowatt: 1_000,
+  /** Default PDU input voltage when a collector reports amps without volts (single-phase data-centre feeds). */
+  defaultInputVoltage: 230,
+} as const;
+
+/** Assets screen (REQ-UI-009): warranty and support horizons offered in the attention table, in days. */
+export const ASSETS = {
+  warrantyHorizonsDays: [30, 90, 180, 365] as const,
+  defaultWarrantyHorizonDays: 90,
+  /** Lines a new plan starts with. */
+  initialBomLines: 1,
+} as const;
+
+/** IPAM screen (REQ-UI-010): utilisation thresholds that colour a subnet. */
+export const IPAM = {
+  warnUtilisationPercent: 70,
+  criticalUtilisationPercent: 90,
+  /** Indent per tree level in the subnet tree, px. */
+  treeIndentPx: 20,
+} as const;
+
+/** DCIM screen (REQ-UI-011): rack elevation geometry (SVG user units) and power thresholds. */
+export const DCIM = {
+  unitHeightPx: 14,
+  rackWidthPx: 220,
+  rackPaddingPx: 24,
+  isoDepthPx: 18,
+  /** Gap between a device plate and the unit lines; inset of the plate from the frame and of its label. */
+  unitGapPx: 2,
+  plateInsetPx: 6,
+  plateTextInsetPx: 12,
+  /** Unit numbers are printed every N units. */
+  unitLabelEvery: 5,
+  unitLabelOffsetPx: 4,
+  unitLabelBaselinePx: 3,
+  /** Longest device name printed on a plate before an ellipsis. */
+  labelMaxChars: 28,
+  /** Trailing hyphen-separated segments of a rack name shown on a heat-map tile (row and position). */
+  tileNameSegments: 2,
+  warnPowerPercent: 70,
+  criticalPowerPercent: 90,
+} as const;
+
+/** Embedded Superset analytics (REQ-UI-017). Names are stable keys the provisioner looks up, never shown raw. */
+export const ANALYTICS = {
+  databaseName: 'OpenMap ClickHouse',
+  dashboardSlug: 'openmap-estate',
+  dashboardTitle: 'OpenMap estate analytics',
+  /** Superset role the guest token assumes; the provisioner grants it Gamma's permissions once. */
+  guestRole: 'OpenMapEmbedded',
+  templateRole: 'Gamma',
+  guestFirstName: 'OpenMap',
+  guestLastName: 'Console',
+  /** Row limit for every provisioned chart. */
+  chartRowLimit: 10_000,
+  /** Dashboard grid: Superset rows are 12 columns wide; chart heights are in grid units of 8 px. */
+  gridColumns: 12,
+  chartHeight: 50,
+  /** Superset REST call timeout. */
+  requestTimeoutMs: 15_000,
+  /** Guest token lifetime; mirrors GUEST_TOKEN_JWT_EXP_SECONDS in superset_config.py. */
+  guestTokenSeconds: 300,
+  /** Charts per dashboard row for the wide and the narrow rows. */
+  chartsPerWideRow: 2,
+  chartsPerNarrowRow: 3,
+  /** Characters of a Superset error body carried into the API's error message. */
+  errorExcerptChars: 300,
+} as const;
+
 export const ASSISTANT = {
   maxRowsReturned: 200,
   /** Names listed in a summary before "and N more". */
@@ -460,6 +531,6 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.1.0',
   collector: '0.1.0',
-  graphql: '0.3.0',
+  graphql: '0.4.0',
   event: '0.1.0',
 };

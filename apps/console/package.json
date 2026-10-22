@@ -21,6 +21,7 @@
     "@openmap/contracts": "workspace:*",
     "@openmap/i18n": "workspace:*",
     "@openmap/ui": "workspace:*",
+    "@superset-ui/embedded-sdk": "0.4.0",
     "@tanstack/react-query": "^5.90.0",
     "@tanstack/react-virtual": "^3.13.0",
     "graphology": "0.26.0",

@@ -125,7 +125,7 @@ export interface CiSummary {
   health: HealthState;
 }
 
-const CI_SUMMARY_FIELDS = 'id name displayName type layer health';
+export const CI_SUMMARY_FIELDS = 'id name displayName type layer health';
 
 export interface SearchHit {
   ci: CiSummary;

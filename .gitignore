@@ -16,3 +16,5 @@ packages/testing/fixtures/synth*/
 
 # local runtime state for dev runs (PKI, evidence, collector binaries)
 .local/
+# LLM weights for the CPU profile are downloaded, never committed
+deploy/compose/models/

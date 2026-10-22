@@ -34,10 +34,11 @@ export class IpamService {
   private async parsedSubnets(tenantId: string): Promise<ParsedSubnet[]> {
     const out: ParsedSubnet[] = [];
     for (const ci of await this.cis.byType(tenantId, 'subnet')) {
-      const cidr = stringAttribute(ci.attributes, 'cidr');
+      // The contract identifies a subnet by (cidr, vrfRef); older collectors put them in attributes.
+      const cidr = stringAttribute(ci.identity, 'cidr') ?? stringAttribute(ci.attributes, 'cidr');
       if (cidr === null) continue;
       try {
-        out.push({ ci, cidr, block: parseCidr(cidr), vrf: stringAttribute(ci.attributes, 'vrf') });
+        out.push({ ci, cidr, block: parseCidr(cidr), vrf: stringAttribute(ci.identity, 'vrfRef') ?? stringAttribute(ci.attributes, 'vrf') });
       } catch {
         // A subnet CI whose cidr attribute is not IPv4 is left out of the IPv4 tree.
       }
@@ -103,7 +104,7 @@ export class IpamService {
 
   async nextFreeIp(tenantId: string, subnetId: string): Promise<string | null> {
     const subnet = await this.subnet(tenantId, subnetId);
-    const used = (await this.addressCis(tenantId, subnetId)).map((c) => stringAttribute(c.attributes, 'address') ?? c.name);
+    const used = (await this.addressCis(tenantId, subnetId)).map((c) => stringAttribute(c.identity, 'address') ?? stringAttribute(c.attributes, 'address') ?? c.name);
     return nextFreeIpv4(subnet.cidr, used);
   }
 }

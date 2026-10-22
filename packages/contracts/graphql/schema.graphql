@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.3.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.4.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -113,7 +113,7 @@ type Incident { id: UUID! service: Ci! openedAt: DateTime! resolvedAt: DateTime 
 type IncidentLink { integration: Integration! remoteId: String! remoteUrl: String remoteState: String! syncedAt: DateTime! }
 
 type Subnet { ci: Ci! cidr: String! vrf: String utilisationPercent: Float! addresses(first: Int = 100, after: String): CiConnection! children: [Subnet!]! }
-type Rack { ci: Ci! units: Int! occupiedUnits: Int! devices: [RackDevice!]! powerFeeds: [PowerFeed!]! }
+type Rack { ci: Ci! units: Int! occupiedUnits: Int! devices: [RackDevice!]! powerFeeds: [PowerFeed!]! row: Ci room: Ci }
 type RackDevice { ci: Ci! startUnit: Int! heightUnits: Int! face: String! }
 type PowerFeed { ci: Ci! ratedWatts: Int! currentWatts: Int! }
 
@@ -139,6 +139,12 @@ type BomLine { description: String! manufacturer: String model: String sku: Stri
 type Vulnerability { ci: Ci! cveId: String! cvss: Float! severity: String! fixedIn: String exploited: Boolean! internetFacing: Boolean! }
 
 type Integration { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! }
+# REQ-UI-014 (ADR-012) — the full configuration of one integration and its recent deliveries.
+type IntegrationDetail { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! endpoint: String! credentialRef: String! settings: JSON! fieldMappings: JSON! classMappings: JSON! subscribedEvents: [String!]! createdAt: DateTime! updatedAt: DateTime! }
+type IntegrationDelivery { id: UUID! direction: String! eventId: UUID remoteId: String state: String! attempts: Int! responseCode: Int error: String createdAt: DateTime! completedAt: DateTime }
+# REQ-UI-017 (ADR-012) — what the console needs to embed the tenant's Superset dashboard: a guest token carrying
+# row-level security on tenant_id, the dashboard's embedded id and the Superset origin browsers reach.
+type AnalyticsEmbed { supersetUrl: String! dashboardId: String! token: String! expiresInSeconds: Int! }
 
 type DiscoveryNode { id: String! site: Ci status: String! lastHeartbeat: DateTime! activeJobs: Int! certificateExpiresAt: DateTime! }
 type DiscoveryJob { id: UUID! collectorId: String! node: DiscoveryNode! status: String! targets: Int! scheduledAt: DateTime! startedAt: DateTime finishedAt: DateTime cisEmitted: Int! errors: Int! }
@@ -177,6 +183,9 @@ type Query {
   plans(status: [PlanStatus!]): [InfraPlan!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   integrations(category: String): [Integration!]!
+  integration(id: UUID!): IntegrationDetail!
+  integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
+  analyticsEmbed: AnalyticsEmbed!
   discoveryNodes: [DiscoveryNode!]!
   discoveryJobs(status: String, first: Int = 50): [DiscoveryJob!]!
   currentSweep: Sweep

@@ -51,6 +51,8 @@ export const envSchema = z.object({
   OPENBAO_MOUNT: z.string().default('openmap'),
   /** Superset: embedded analytics. */
   SUPERSET_URL: url.default('http://localhost:8088'),
+  /** Superset origin the browser loads the embedded dashboard from; SUPERSET_URL is the backchannel. */
+  PUBLIC_SUPERSET_URL: url.default('http://localhost:8088'),
   SUPERSET_ADMIN_USER: z.string().default('admin'),
   SUPERSET_ADMIN_PASSWORD: z.string().default('admin'),
   /** LLM endpoint (OpenAI-compatible): vLLM on GPU, llama.cpp server as the CPU fallback. */

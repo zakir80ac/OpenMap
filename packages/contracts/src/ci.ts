@@ -309,6 +309,29 @@ export const GLOBAL_IDENTITY_KEYS: ReadonlySet<string> = new Set([
   'principalName', 'contractNumber', 'circuitId', 'address', 'cidr', 'moRef', 'clusterId', 'accountId', 'tenantId',
 ]);
 
+/**
+ * Attribute names DCIM collectors and the synthetic estate use for rack placement and power (REQ-DCIM-001). Each
+ * entry lists the accepted names in precedence order: the first is what collectors emit, the rest are accepted
+ * synonyms. Placement attributes live on the located_in / mounted_on relationship, falling back to the device.
+ */
+export const DCIM_ATTRIBUTES = {
+  /** Rack height in rack units. */
+  rackUnits: ['heightU', 'units'],
+  /** Lowest rack unit a device occupies. */
+  position: ['uPosition', 'startUnit'],
+  /** Device height in rack units. */
+  height: ['heightU', 'heightUnits'],
+  face: ['face'],
+  ratedWatts: ['ratedWatts'],
+  currentWatts: ['currentWatts'],
+  /** PDU rating and measurement as the SNMP collectors report them; watts derive from amps × volts and kW × 1000. */
+  ratedAmps: ['ratedAmps'],
+  inputVoltage: ['inputVoltage'],
+  measuredKw: ['measuredKw'],
+  /** Room or rack design power in kW. */
+  designKw: ['designKw'],
+} as const;
+
 /** Identity keys per type: the attribute names reconciliation matches on, in precedence order. */
 export const CI_IDENTITY_KEYS: Record<CiType, readonly string[]> = {
   host: ['serialNumber', 'systemUuid', 'fqdn', 'primaryMac'],

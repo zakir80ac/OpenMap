@@ -1,4 +1,4 @@
-# REQ-UI-016 — Superset configuration for embedded analytics. Values come from the compose environment.
+# REQ-UI-017 — Superset configuration for embedded analytics. Values come from the compose environment.
 import os
 
 SECRET_KEY = os.environ["SUPERSET_SECRET_KEY"]
@@ -7,6 +7,9 @@ SQLALCHEMY_DATABASE_URI = (
     f"@{os.environ['DATABASE_HOST']}:{os.environ['DATABASE_PORT']}/{os.environ['DATABASE_DB']}"
     "?options=-csearch_path%3Dsuperset"
 )
+
+# The API grants the embedded guest role its permissions through the security API at provisioning time.
+FAB_ADD_SECURITY_API = True
 
 FEATURE_FLAGS = {
     "EMBEDDED_SUPERSET": True,
