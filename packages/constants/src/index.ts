@@ -169,11 +169,42 @@ export const IPV4 = {
 export const TIME = {
   secondsPerMinute: 60,
   msPerSecond: 1000,
+  hoursPerDay: 24,
+  msPerDay: 86_400_000,
 } as const;
 
-/** HTTP statuses worth retrying when delivering to a remote system; everything else fails fast. */
+/** Node PKI parameters shared by the scheduler (issuer) and tests. */
+export const PKI = {
+  /** Random serial length in bytes; 16 satisfies RFC 5280's 20-octet maximum with margin. */
+  serialBytes: 16,
+  curve: 'P-256',
+  hash: 'SHA-256',
+  /** Internal CA lifetime (ten years) and scheduler server certificate lifetime (browser-safe 825 days). */
+  caValidityDays: 3650,
+  serverValidityDays: 825,
+} as const;
+
+/** Credential reference syntax accepted by the secrets reader: path segments, no traversal. */
+export const CREDENTIAL_REF_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/_.-]*$/;
+
+/** HTTP statuses used by services and adapters; the retryable set drives delivery back-off. */
 export const HTTP = {
   retryableStatuses: [408, 425, 429, 500, 502, 503, 504] as const,
+  status: {
+    ok: 200,
+    created: 201,
+    accepted: 202,
+    noContent: 204,
+    badRequest: 400,
+    unauthorized: 401,
+    forbidden: 403,
+    notFound: 404,
+    conflict: 409,
+    tooManyRequests: 429,
+    internalError: 500,
+  },
+  /** Largest request body the scheduler accepts from a Node: a 10k-device result stays well below this. */
+  maxNodeBodyBytes: 64 * 1024 * 1024,
 } as const;
 
 /** ITSM priority scale shared by every adapter: 1 is the most urgent. */
@@ -229,6 +260,18 @@ export const GUARD_FORBIDDEN_TOKENS = [
   'sample data',
   'hardcoded',
 ] as const;
+
+/**
+ * IPv4 literals the guard accepts anywhere: protocol constants, not deployment addresses.
+ * Wildcard bind, loopback and the all-ones mask never differ between deployments.
+ */
+export const GUARD_ALLOWED_IPV4 = ['0.0.0.0', '127.0.0.1', '255.255.255.255'] as const;
+
+/**
+ * Paths the guard treats as configuration boundaries where literal defaults are allowed:
+ * the TypeScript config package and the Go Discovery Node's equivalent module.
+ */
+export const GUARD_CONFIG_BOUNDARIES = ['packages/config/', 'apps/node/internal/config/'] as const;
 
 /** Numeric literals permitted in apps/ outside @openmap/constants (CLAUDE.md §7). */
 export const GUARD_ALLOWED_NUMERIC_LITERALS = [0, 1, -1] as const;

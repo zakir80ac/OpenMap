@@ -21,7 +21,8 @@ describe('loadEnv', () => {
   it('describes every variable with its default', () => {
     const rows = describeEnv();
     expect(rows.find((r) => r.name === 'DEFAULT_LOCALE')?.defaultValue).toBe('en');
-    expect(rows.length).toBeGreaterThan(30);
+    expect(rows.length).toBeGreaterThan(40);
+    expect(rows.find((r) => r.name === 'NODE_CERT_VALIDITY_DAYS')?.defaultValue).toBe('90');
   });
 });
 

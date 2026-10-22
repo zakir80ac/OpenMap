@@ -2,7 +2,7 @@
 // management switches, firewalls, load balancers, branch routers and switches, HQ campus access.
 // Interfaces, VLANs, VRFs, routed /31 links and management addresses are consistent with IPAM.
 import { SYNTH_ESTATE } from '@openmap/constants';
-import { INTERFACES_EMITTED, NETWORK_MODELS, POOL, UPLINKS_PER_ACCESS, VENDORS, VLAN_ID, VRF, type NetworkModelDef } from '../catalog.js';
+import { DOMAIN, INTERFACES_EMITTED, NETWORK_MODELS, POOL, UPLINKS_PER_ACCESS, VENDORS, VLAN_ID, VRF, type NetworkModelDef } from '../catalog.js';
 import type { Slot } from '../estate.js';
 import { cidr, ip4, linkPair, OCTET_MAX, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
@@ -83,9 +83,9 @@ export function addDevice(world: World, rng: Rng, site: SiteWorld, model: Networ
   const attributes = {
     sysName,
     sysDescr: model.manufacturer + ' ' + model.model + ', ' + model.osName + ' ' + model.osVersion,
-    sysObjectId: model.sysObjectId,
+    sysObjectId: model.sysObjectId.join('.'),
     sysLocation: options.rack ? options.rack.name + ' U' + String(options.uPosition ?? 0) : site.def.name,
-    sysContact: 'noc@' + site.def.code.toLowerCase() + '.bank.local',
+    sysContact: 'noc@' + DOMAIN,
     sysUptimeSeconds: rng.int(3600, UPTIME_MAX_SECONDS),
     manufacturer: model.manufacturer,
     model: model.model,
@@ -206,10 +206,11 @@ function nextPort(device: DeviceRec, maxPort: number): InterfaceRec {
 export function allocateHostPort(world: World, rng: Rng, tor: DeviceRec, description: string, prodVlanId: number): InterfaceRec {
   const port = ((tor.portCursor - 1) % ACCESS_HOST_PORTS) + 1;
   tor.portCursor++;
+  const fresh = !tor.interfaces.some((i) => i.ifIndex === port);
   const iface = addInterface(world, rng, tor, port, description);
   describe(world, iface, description);
   const vlanIdx = tor.vlans.get(prodVlanId);
-  if (vlanIdx !== undefined && port <= ACCESS_HOST_PORTS && tor.portCursor - 1 <= ACCESS_HOST_PORTS) world.b.rel(tor.slot, 'in_vlan', iface.idx, vlanIdx, { mode: 'access' });
+  if (fresh && vlanIdx !== undefined) world.b.rel(tor.slot, 'in_vlan', iface.idx, vlanIdx, { mode: 'access' });
   return iface;
 }
 

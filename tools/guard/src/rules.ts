@@ -1,5 +1,5 @@
 // REQ-CORE-008 — guard rules (CLAUDE.md §7). Pure functions over file text so each rule is unit-testable.
-import { GUARD_ALLOWED_NUMERIC_LITERALS, GUARD_FORBIDDEN_TOKENS, GUARD_HEADER_LINES } from '@openmap/constants';
+import { GUARD_ALLOWED_IPV4, GUARD_ALLOWED_NUMERIC_LITERALS, GUARD_CONFIG_BOUNDARIES, GUARD_FORBIDDEN_TOKENS, GUARD_HEADER_LINES } from '@openmap/constants';
 
 export interface Finding {
   rule: string;
@@ -15,7 +15,9 @@ export interface FileInput {
 }
 
 export const TEST_PATH = /(\/__tests__\/|\.test\.[a-z]+$|\.spec\.[a-z]+$|_test\.go$|\/fixtures\/)/;
-const CONFIG_DEFAULTS = /^packages\/config\//;
+function isConfigBoundary(path: string): boolean {
+  return GUARD_CONFIG_BOUNDARIES.some((prefix) => path.startsWith(prefix));
+}
 const CONSTANTS_PKG = /^packages\/constants\//;
 const I18N_LOCALES = /^packages\/i18n\/locales\//;
 const CONSOLE_APP = /^apps\/console\/.*\.tsx$/;
@@ -60,18 +62,25 @@ export function unsafeTypes(file: FileInput): Finding[] {
   return out;
 }
 
-const IPV4 = /\b(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}\b/;
+/** A dotted quad not embedded in a longer dotted sequence (SNMP OIDs and version strings are not addresses). */
+const IPV4 = /(?<![\w.])(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}(?![\w.])/g;
+const ALLOWED_IPV4 = new Set<string>(GUARD_ALLOWED_IPV4);
+
+function hasForeignIpv4(line: string): boolean {
+  for (const m of line.matchAll(IPV4)) if (!ALLOWED_IPV4.has(m[0])) return true;
+  return false;
+}
 const URL = /\bhttps?:\/\/[^\s'"`)]+/;
 const PORT_ASSIGN = /\b(port|PORT)\s*[:=]\s*\d{2,5}\b/;
 const SECRET = /\b(password|secret|token|apikey|api_key)\s*[:=]\s*['"][^'"]{4,}['"]/i;
 const ABS_PATH = /(['"`])(\/(etc|usr|var|opt|home)\/[^'"`]*|[A-Z]:\\[^'"`]*)\1/;
 
 export function literals(file: FileInput): Finding[] {
-  if (CONFIG_DEFAULTS.test(file.path)) return [];
+  if (isConfigBoundary(file.path)) return [];
   const out: Finding[] = [];
   lines(file.text).forEach((l, i) => {
     if (l.trim().startsWith('//') || l.trim().startsWith('*') || l.trim().startsWith('#')) return;
-    if (IPV4.test(l) && !/\d+\.\d+\.\d+\.\d+-[a-z]/.test(l)) out.push({ rule: 'literal', file: file.path, line: i + 1, message: 'literal IPv4 address' });
+    if (hasForeignIpv4(l)) out.push({ rule: 'literal', file: file.path, line: i + 1, message: 'literal IPv4 address' });
     if (URL.test(l) && !/schema\.org|w3\.org|json-schema\.org|openmap\.dev\/contracts/.test(l)) out.push({ rule: 'literal', file: file.path, line: i + 1, message: 'literal URL' });
     if (PORT_ASSIGN.test(l)) out.push({ rule: 'literal', file: file.path, line: i + 1, message: 'literal port' });
     if (SECRET.test(l)) out.push({ rule: 'literal', file: file.path, line: i + 1, message: 'literal credential' });

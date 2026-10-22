@@ -1,0 +1,162 @@
+// REQ-QA-001 — synth-estate CLI: `generate` writes one NDJSON file per collector family plus
+// estate-summary.json, services.json and organization.json; `stats` summarises an output directory.
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { buildEstate } from './estate.js';
+import { emitEstate, NDJSON_SUFFIX, SUMMARY_FILE } from './emit.js';
+
+const DEFAULT_SEED = 42;
+const DEFAULT_SCALE = 1;
+const DEFAULT_OUT = join('..', '..', 'packages', 'testing', 'fixtures', 'synth');
+const MS_PER_SECOND = 1000;
+const BYTES_PER_MIB = 1024 * 1024;
+
+type Flags = Record<string, string | boolean>;
+
+function parseArgs(argv: string[]): { positional: string[]; flags: Flags } {
+  const positional: string[] = [];
+  const flags: Flags = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i] ?? '';
+    if (a.startsWith('--')) {
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next !== undefined && !next.startsWith('--')) {
+        flags[key] = next;
+        i++;
+      } else flags[key] = true;
+    } else positional.push(a);
+  }
+  return { positional, flags };
+}
+
+function numberFlag(flags: Flags, key: string, fallback: number): number {
+  const raw = flags[key];
+  if (raw === undefined || raw === true) return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) throw new Error('--' + key + ' must be a number, got ' + String(raw));
+  return n;
+}
+
+function stringFlag(flags: Flags, key: string, fallback: string): string {
+  const raw = flags[key];
+  return typeof raw === 'string' ? raw : fallback;
+}
+
+function table(rows: Array<[string, string | number]>): string {
+  const width = rows.reduce((w, [k]) => Math.max(w, k.length), 0);
+  return rows.map(([k, v]) => '  ' + k.padEnd(width) + '  ' + String(v)).join('\n');
+}
+
+function recordRows(rec: Record<string, number>): Array<[string, number]> {
+  return Object.entries(rec).sort((a, b) => b[1] - a[1]);
+}
+
+async function generate(flags: Flags): Promise<void> {
+  const seed = numberFlag(flags, 'seed', DEFAULT_SEED);
+  const scale = numberFlag(flags, 'scale', DEFAULT_SCALE);
+  const out = resolve(process.cwd(), stringFlag(flags, 'out', DEFAULT_OUT));
+  const t0 = performance.now();
+  const estate = buildEstate(seed, scale);
+  const built = performance.now();
+  const report = await emitEstate(estate, out);
+  const done = performance.now();
+  const s = report.summary;
+  console.log('synth-estate: seed ' + String(seed) + ', scale ' + String(scale) + ' -> ' + out);
+  console.log(table([
+    ['CIs', s.totals.cis],
+    ['relationships', s.totals.relationships],
+    ['collector results', s.totals.results],
+    ['business services', s.businessServices],
+    ['build time', ((built - t0) / MS_PER_SECOND).toFixed(1) + ' s'],
+    ['emit time', ((done - built) / MS_PER_SECOND).toFixed(1) + ' s'],
+    ['output size', (report.files.reduce((a, f) => a + f.bytes, 0) / BYTES_PER_MIB).toFixed(1) + ' MiB'],
+  ]));
+  console.log('files:');
+  console.log(table(report.files.map((f) => [f.family + NDJSON_SUFFIX, String(f.results) + ' results, ' + String(f.cis) + ' CIs, ' + String(f.relationships) + ' rels'] as [string, string])));
+  console.log('CI types:');
+  console.log(table(recordRows(s.ciTypes)));
+  console.log('layers:');
+  console.log(table(recordRows(s.layers)));
+}
+
+async function countLines(path: string): Promise<number> {
+  return new Promise((resolveCount, reject) => {
+    let lines = 0;
+    const stream = createReadStream(path);
+    stream.on('data', (chunk: string | Buffer) => {
+      const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+      for (const byte of buf) if (byte === 0x0a) lines++;
+    });
+    stream.on('end', () => {
+      resolveCount(lines);
+    });
+    stream.on('error', reject);
+  });
+}
+
+interface StoredSummary {
+  seed: number;
+  scale: number;
+  totals: { cis: number; relationships: number; results: number };
+  businessServices: number;
+  ciTypes: Record<string, number>;
+  layers: Record<string, number>;
+  relationshipTypes: Record<string, number>;
+  sites: Record<string, number>;
+}
+
+async function stats(positional: string[], flags: Flags): Promise<void> {
+  const dir = resolve(process.cwd(), stringFlag(flags, 'dir', positional[0] ?? DEFAULT_OUT));
+  const summaryPath = join(dir, SUMMARY_FILE);
+  if (!existsSync(summaryPath)) throw new Error('no ' + SUMMARY_FILE + ' in ' + dir + '; run generate first');
+  const summary = JSON.parse(readFileSync(summaryPath, 'utf8')) as StoredSummary;
+  console.log('synth-estate output at ' + dir + ' (seed ' + String(summary.seed) + ', scale ' + String(summary.scale) + ')');
+  console.log(table([
+    ['CIs', summary.totals.cis],
+    ['relationships', summary.totals.relationships],
+    ['collector results', summary.totals.results],
+    ['business services', summary.businessServices],
+  ]));
+  console.log('files:');
+  const rows: Array<[string, string]> = [];
+  for (const name of readdirSync(dir).filter((f) => f.endsWith(NDJSON_SUFFIX)).sort()) {
+    const path = join(dir, name);
+    const lines = await countLines(path);
+    rows.push([name, String(lines) + ' results, ' + (statSync(path).size / BYTES_PER_MIB).toFixed(1) + ' MiB']);
+  }
+  console.log(table(rows));
+  console.log('CI types:');
+  console.log(table(recordRows(summary.ciTypes)));
+  console.log('layers:');
+  console.log(table(recordRows(summary.layers)));
+  console.log('relationship types:');
+  console.log(table(recordRows(summary.relationshipTypes)));
+  console.log('sites:');
+  console.log(table(recordRows(summary.sites)));
+}
+
+function usage(): string {
+  return ['usage:', '  synth generate [--seed N] [--scale F] [--out DIR]', '  synth stats [DIR|--dir DIR]'].join('\n');
+}
+
+async function main(): Promise<void> {
+  const { positional, flags } = parseArgs(process.argv.slice(2));
+  const command = positional[0];
+  switch (command) {
+    case 'generate':
+      await generate(flags);
+      return;
+    case 'stats':
+      await stats(positional.slice(1), flags);
+      return;
+    default:
+      console.error(usage());
+      process.exit(command === undefined ? 0 : 1);
+  }
+}
+
+main().catch((err: unknown) => {
+  console.error('synth-estate: ' + (err instanceof Error ? err.message : String(err)));
+  process.exit(1);
+});

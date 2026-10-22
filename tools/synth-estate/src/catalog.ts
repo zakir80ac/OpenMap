@@ -91,9 +91,9 @@ export interface HostModelDef {
 }
 
 export const HOST_MODELS: readonly HostModelDef[] = [
-  { manufacturer: 'Dell Technologies', model: 'PowerEdge R650', heightU: 1, cpuSockets: 2, coresPerSocket: 32, memoryGb: 512, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70.00', serialPrefix: 'D', partNumber: '0R650' },
-  { manufacturer: 'Dell Technologies', model: 'PowerEdge R750', heightU: 2, cpuSockets: 2, coresPerSocket: 32, memoryGb: 1024, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70.00', serialPrefix: 'D', partNumber: '0R750' },
-  { manufacturer: 'Dell Technologies', model: 'PowerEdge R760', heightU: 2, cpuSockets: 2, coresPerSocket: 48, memoryGb: 1536, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70.00', serialPrefix: 'D', partNumber: '0R760' },
+  { manufacturer: 'Dell Technologies', model: 'PowerEdge R650', heightU: 1, cpuSockets: 2, coresPerSocket: 32, memoryGb: 512, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70', serialPrefix: 'D', partNumber: '0R650' },
+  { manufacturer: 'Dell Technologies', model: 'PowerEdge R750', heightU: 2, cpuSockets: 2, coresPerSocket: 32, memoryGb: 1024, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70', serialPrefix: 'D', partNumber: '0R750' },
+  { manufacturer: 'Dell Technologies', model: 'PowerEdge R760', heightU: 2, cpuSockets: 2, coresPerSocket: 48, memoryGb: 1536, bmcProduct: 'iDRAC9', bmcFirmware: '7.10.70', serialPrefix: 'D', partNumber: '0R760' },
   { manufacturer: 'Hewlett Packard Enterprise', model: 'ProLiant DL360 Gen11', heightU: 1, cpuSockets: 2, coresPerSocket: 32, memoryGb: 512, bmcProduct: 'iLO 6', bmcFirmware: '1.62', serialPrefix: 'CZ', partNumber: 'P52563-B21' },
   { manufacturer: 'Hewlett Packard Enterprise', model: 'ProLiant DL380 Gen11', heightU: 2, cpuSockets: 2, coresPerSocket: 40, memoryGb: 1024, bmcProduct: 'iLO 6', bmcFirmware: '1.62', serialPrefix: 'CZ', partNumber: 'P52560-B21' },
   { manufacturer: 'Hewlett Packard Enterprise', model: 'ProLiant DL380 Gen10 Plus', heightU: 2, cpuSockets: 2, coresPerSocket: 28, memoryGb: 768, bmcProduct: 'iLO 5', bmcFirmware: '3.06', serialPrefix: 'CZ', partNumber: 'P05172-B21' },
@@ -135,7 +135,8 @@ export interface NetworkModelDef {
   model: string;
   osName: string;
   osVersion: string;
-  sysObjectId: string;
+  /** SNMP sysObjectID arcs, joined with dots at run time. */
+  sysObjectId: readonly number[];
   ports: number;
   speedMbps: number;
   heightU: number;
@@ -144,18 +145,18 @@ export interface NetworkModelDef {
 }
 
 export const NETWORK_MODELS: readonly NetworkModelDef[] = [
-  { role: 'core', manufacturer: 'Cisco Systems', model: 'Nexus 9364C-GX', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: '1.3.6.1.4.1.9.12.3.1.3.2494', ports: 64, speedMbps: 100_000, heightU: 2, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
-  { role: 'core', manufacturer: 'Arista Networks', model: 'DCS-7280CR3-32P4', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: '1.3.6.1.4.1.30065.1.3011.7280.3735.3.4.1', ports: 36, speedMbps: 100_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
-  { role: 'distribution', manufacturer: 'Cisco Systems', model: 'Nexus 93180YC-FX3', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: '1.3.6.1.4.1.9.12.3.1.3.2305', ports: 54, speedMbps: 25_000, heightU: 1, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
-  { role: 'distribution', manufacturer: 'Arista Networks', model: 'DCS-7050SX3-48YC8', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: '1.3.6.1.4.1.30065.1.3011.7050.3735.48.2905.8', ports: 56, speedMbps: 25_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
-  { role: 'access', manufacturer: 'Cisco Systems', model: 'Nexus 93108TC-FX3P', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: '1.3.6.1.4.1.9.12.3.1.3.2306', ports: 54, speedMbps: 10_000, heightU: 1, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
-  { role: 'access', manufacturer: 'Arista Networks', model: 'DCS-7050TX3-48C8', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: '1.3.6.1.4.1.30065.1.3011.7050.3735.48.2878.8', ports: 56, speedMbps: 10_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
-  { role: 'management', manufacturer: 'Cisco Systems', model: 'Catalyst 9300-48T', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: '1.3.6.1.4.1.9.1.2494', ports: 52, speedMbps: 1_000, heightU: 1, ifPrefix: 'GigabitEthernet1/0/', serialPrefix: 'FJC' },
-  { role: 'firewall', manufacturer: 'Palo Alto Networks', model: 'PA-5440', osName: 'PAN-OS', osVersion: '11.1.4-h7', sysObjectId: '1.3.6.1.4.1.25461.2.3.56', ports: 24, speedMbps: 100_000, heightU: 3, ifPrefix: 'ethernet1/', serialPrefix: '0139' },
-  { role: 'firewall', manufacturer: 'Fortinet', model: 'FortiGate 4201F', osName: 'FortiOS', osVersion: '7.4.5', sysObjectId: '1.3.6.1.4.1.12356.101.1.42001', ports: 24, speedMbps: 100_000, heightU: 3, ifPrefix: 'port', serialPrefix: 'FG42' },
-  { role: 'load_balancer', manufacturer: 'F5', model: 'BIG-IP i7800', osName: 'TMOS', osVersion: '17.1.1.3', sysObjectId: '1.3.6.1.4.1.3375.2.1.3.4.113', ports: 12, speedMbps: 40_000, heightU: 2, ifPrefix: '', serialPrefix: 'f5-' },
-  { role: 'wan_router', manufacturer: 'Cisco Systems', model: 'Catalyst 8300-1N1S-4T2X', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: '1.3.6.1.4.1.9.1.2902', ports: 6, speedMbps: 10_000, heightU: 1, ifPrefix: 'GigabitEthernet0/0/', serialPrefix: 'FLM' },
-  { role: 'branch_switch', manufacturer: 'Cisco Systems', model: 'Catalyst 9200L-24P-4G', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: '1.3.6.1.4.1.9.1.2652', ports: 28, speedMbps: 1_000, heightU: 1, ifPrefix: 'GigabitEthernet1/0/', serialPrefix: 'JAE' },
+  { role: 'core', manufacturer: 'Cisco Systems', model: 'Nexus 9364C-GX', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 12, 3, 1, 3, 2494], ports: 64, speedMbps: 100_000, heightU: 2, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
+  { role: 'core', manufacturer: 'Arista Networks', model: 'DCS-7280CR3-32P4', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: [1, 3, 6, 1, 4, 1, 30065, 1, 3011, 7280, 3735, 3, 4, 1], ports: 36, speedMbps: 100_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
+  { role: 'distribution', manufacturer: 'Cisco Systems', model: 'Nexus 93180YC-FX3', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 12, 3, 1, 3, 2305], ports: 54, speedMbps: 25_000, heightU: 1, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
+  { role: 'distribution', manufacturer: 'Arista Networks', model: 'DCS-7050SX3-48YC8', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: [1, 3, 6, 1, 4, 1, 30065, 1, 3011, 7050, 3735, 48, 2905, 8], ports: 56, speedMbps: 25_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
+  { role: 'access', manufacturer: 'Cisco Systems', model: 'Nexus 93108TC-FX3P', osName: 'NX-OS', osVersion: '10.3(4a)', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 12, 3, 1, 3, 2306], ports: 54, speedMbps: 10_000, heightU: 1, ifPrefix: 'Ethernet1/', serialPrefix: 'FDO' },
+  { role: 'access', manufacturer: 'Arista Networks', model: 'DCS-7050TX3-48C8', osName: 'EOS', osVersion: '4.32.2F', sysObjectId: [1, 3, 6, 1, 4, 1, 30065, 1, 3011, 7050, 3735, 48, 2878, 8], ports: 56, speedMbps: 10_000, heightU: 1, ifPrefix: 'Ethernet', serialPrefix: 'JPE' },
+  { role: 'management', manufacturer: 'Cisco Systems', model: 'Catalyst 9300-48T', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 1, 2494], ports: 52, speedMbps: 1_000, heightU: 1, ifPrefix: 'GigabitEthernet1/0/', serialPrefix: 'FJC' },
+  { role: 'firewall', manufacturer: 'Palo Alto Networks', model: 'PA-5440', osName: 'PAN-OS', osVersion: '11.1.4-h7', sysObjectId: [1, 3, 6, 1, 4, 1, 25461, 2, 3, 56], ports: 24, speedMbps: 100_000, heightU: 3, ifPrefix: 'ethernet1/', serialPrefix: '0139' },
+  { role: 'firewall', manufacturer: 'Fortinet', model: 'FortiGate 4201F', osName: 'FortiOS', osVersion: '7.4.5', sysObjectId: [1, 3, 6, 1, 4, 1, 12356, 101, 1, 42001], ports: 24, speedMbps: 100_000, heightU: 3, ifPrefix: 'port', serialPrefix: 'FG42' },
+  { role: 'load_balancer', manufacturer: 'F5', model: 'BIG-IP i7800', osName: 'TMOS', osVersion: '17.1.1', sysObjectId: [1, 3, 6, 1, 4, 1, 3375, 2, 1, 3, 4, 113], ports: 12, speedMbps: 40_000, heightU: 2, ifPrefix: '1.', serialPrefix: 'f5-' },
+  { role: 'wan_router', manufacturer: 'Cisco Systems', model: 'Catalyst 8300-1N1S-4T2X', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 1, 2902], ports: 6, speedMbps: 10_000, heightU: 1, ifPrefix: 'GigabitEthernet0/0/', serialPrefix: 'FLM' },
+  { role: 'branch_switch', manufacturer: 'Cisco Systems', model: 'Catalyst 9200L-24P-4G', osName: 'IOS-XE', osVersion: '17.12.4', sysObjectId: [1, 3, 6, 1, 4, 1, 9, 1, 2652], ports: 28, speedMbps: 1_000, heightU: 1, ifPrefix: 'GigabitEthernet1/0/', serialPrefix: 'JAE' },
 ];
 
 /** Interfaces materialised per device role when no cabling drives the count (uplinks, trunks, HA links). */
@@ -229,7 +230,7 @@ export const SOFTWARE: readonly SoftwareDef[] = [
   { vendor: 'Apache Software Foundation', name: 'Kafka', version: '3.8.0', on: ['linux'], path: ['opt', 'kafka'], licensed: false, category: 'middleware' },
   { vendor: 'Redis Ltd', name: 'Redis', version: '7.4.0', on: ['linux'], path: ['usr', 'bin', 'redis-server'], licensed: false, category: 'middleware' },
   { vendor: 'PostgreSQL Global Development Group', name: 'PostgreSQL', version: '16.4', on: ['linux'], path: ['usr', 'pgsql-16'], licensed: false, category: 'database' },
-  { vendor: 'Oracle', name: 'Database Enterprise Edition', version: '19.24.0.0', on: ['linux'], path: ['u01', 'app', 'oracle', 'product', '19c'], licensed: true, category: 'database' },
+  { vendor: 'Oracle', name: 'Database Enterprise Edition', version: '19.24.0', on: ['linux'], path: ['u01', 'app', 'oracle', 'product', '19c'], licensed: true, category: 'database' },
   { vendor: 'Microsoft', name: 'SQL Server', version: '2022 CU14', on: ['windows'], path: ['C:', 'Program Files', 'Microsoft SQL Server', 'MSSQL16.MSSQLSERVER'], licensed: true, category: 'database' },
   { vendor: 'MongoDB', name: 'MongoDB Server', version: '7.0.14', on: ['linux'], path: ['usr', 'bin', 'mongod'], licensed: true, category: 'database' },
   { vendor: 'Elastic', name: 'Elasticsearch', version: '8.15.2', on: ['linux'], path: ['usr', 'share', 'elasticsearch'], licensed: true, category: 'database' },
@@ -320,15 +321,15 @@ export const SHARED_AUTH_APP: AppArchetypeDef = { slug: 'iam-sso', title: 'Ident
 export interface InfraAppDef {
   slug: string;
   title: string;
-  port: number;
+  listenPort: number;
   protocol: 'tcp' | 'udp';
   process: string;
   os: OsDef;
 }
 export const INFRA_APPS: readonly InfraAppDef[] = [
-  { slug: 'infra-dns', title: 'Internal DNS', port: 53, protocol: 'udp', process: 'named', os: OS_RHEL },
-  { slug: 'infra-monitoring', title: 'Monitoring (Zabbix)', port: 10051, protocol: 'tcp', process: 'zabbix_server', os: OS_UBUNTU },
-  { slug: 'infra-backup', title: 'Backup (Veeam)', port: 9392, protocol: 'tcp', process: 'Veeam.Backup.Service', os: OS_WINDOWS },
+  { slug: 'infra-dns', title: 'Internal DNS', listenPort: 53, protocol: 'udp', process: 'named', os: OS_RHEL },
+  { slug: 'infra-monitoring', title: 'Monitoring (Zabbix)', listenPort: 10051, protocol: 'tcp', process: 'zabbix_server', os: OS_UBUNTU },
+  { slug: 'infra-backup', title: 'Backup (Veeam)', listenPort: 9392, protocol: 'tcp', process: 'Veeam.Backup.Service', os: OS_WINDOWS },
 ];
 
 export const TIER_PORT = { web: 443, api: 8443 } as const;
@@ -365,14 +366,14 @@ export const UNKNOWN_DEVICES: readonly UnknownDeviceDef[] = [
   { kind: 'camera', sysDescr: 'AXIS P3245-LVE Network Camera 10.12.166', ports: [80, 443, 554], oui: [0xac, 0xcc, 0x8e], vendor: 'Axis Communications' },
   { kind: 'camera', sysDescr: 'Hikvision DS-2CD2143G2-IU V5.7.3 build 220120', ports: [80, 554, 8000], oui: [0x44, 0x47, 0xcc], vendor: 'Hikvision' },
   { kind: 'ups_card', sysDescr: 'APC Web/SNMP Management Card (MB:v4.1.0 PF:v7.1.2 PN:apc_hw05_aos_712.bin AF1:v7.1.2 AN1:apc_hw05_sumx_712.bin MN:AP9641 HR:5)', ports: [80, 443, 161], oui: [0x00, 0xc0, 0xb7], vendor: 'Schneider Electric' },
-  { kind: 'access_control', sysDescr: 'HID VertX EVO V2000 Controller 3.7.1.2', ports: [443, 4050], oui: [0x00, 0x06, 0x8e], vendor: 'HID Global' },
-  { kind: 'bms', sysDescr: 'Honeywell WEBs-N4 4.13.2.18 (Niagara)', ports: [80, 443, 1911, 4911], oui: [0x00, 0x40, 0x84], vendor: 'Honeywell' },
+  { kind: 'access_control', sysDescr: 'HID VertX EVO V2000 Controller 3.7.1', ports: [443, 4050], oui: [0x00, 0x06, 0x8e], vendor: 'HID Global' },
+  { kind: 'bms', sysDescr: 'Honeywell WEBs-N4 4.13.2 (Niagara)', ports: [80, 443, 1911, 4911], oui: [0x00, 0x40, 0x84], vendor: 'Honeywell' },
   { kind: 'video_conference', sysDescr: 'Poly Studio X50 4.2.1-382015', ports: [80, 443, 5060, 5061], oui: [0x64, 0x16, 0x7f], vendor: 'Poly' },
   { kind: 'ip_phone', sysDescr: 'Cisco IP Phone 8851, V03, sip88xx.14-2-1-0001-14', ports: [80, 443, 5060], oui: [0x00, 0x1b, 0x54], vendor: 'Cisco Systems' },
   { kind: 'signage', sysDescr: 'Samsung MagicINFO Player S7 QM55B T-KTM2ELAKUC-1120', ports: [80, 7001], oui: [0x8c, 0xc8, 0xcd], vendor: 'Samsung' },
   { kind: 'badge_printer', sysDescr: 'Evolis Primacy 2 Printer', ports: [80, 9100], oui: [0x00, 0x1e, 0xc0], vendor: 'Evolis' },
   { kind: 'cash_counter', sysDescr: 'Glory GFS-220 Network Module 2.3', ports: [80, 5000], oui: [0x00, 0x0a, 0x51], vendor: 'Glory' },
-  { kind: 'wifi_ap', sysDescr: 'Aruba AP-535 ArubaOS 8.11.2.2', ports: [22, 443, 4343], oui: [0x20, 0x4c, 0x03], vendor: 'HPE Aruba' },
+  { kind: 'wifi_ap', sysDescr: 'Aruba AP-535 ArubaOS 8.11.2', ports: [22, 443, 4343], oui: [0x20, 0x4c, 0x03], vendor: 'HPE Aruba' },
   { kind: 'iot_sensor', sysDescr: 'Raspberry Pi 4 Model B Rev 1.5 Linux 6.6.31+rpt-rpi-v8', ports: [22, 1883], oui: [0xd8, 0x3a, 0xdd], vendor: 'Raspberry Pi Foundation' },
 ];
 

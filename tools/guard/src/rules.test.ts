@@ -25,6 +25,13 @@ describe('guard rules', () => {
     expect(literals(f('apps/api/src/x.ts', "readFile('/etc/openmap/x')"))).toHaveLength(1);
     expect(literals(f('packages/config/src/env.ts', "default('http://localhost:8123')"))).toHaveLength(0);
   });
+  it('does not mistake SNMP OIDs, versions or protocol constants for addresses', () => {
+    expect(literals(f('apps/collectors/x.go', 'oidSysDescr = ".1.3.6.1.2.1.1.1.0"'))).toHaveLength(0);
+    expect(literals(f('apps/api/src/x.ts', "const v = '1.2.3.4.5'"))).toHaveLength(0);
+    expect(literals(f('apps/api/src/x.ts', "bind('0.0.0.0'); loop('127.0.0.1')"))).toHaveLength(0);
+    expect(literals(f('apps/api/src/x.ts', "const h = '10.0.0.1'"))).toHaveLength(1);
+    expect(literals(f('apps/node/internal/config/config.go', 'defaultCAPath = "/etc/openmap/pki/ca.crt"'))).toHaveLength(0);
+  });
   it('flags magic numbers in apps only', () => {
     expect(magicNumbers(f('apps/api/src/x.ts', 'const n = 42;'))).toHaveLength(1);
     expect(magicNumbers(f('apps/api/src/x.ts', 'const n = 0 + 1 - -1;'))).toHaveLength(0);

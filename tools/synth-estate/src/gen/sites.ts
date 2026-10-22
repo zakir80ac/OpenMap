@@ -1,5 +1,5 @@
 // REQ-QA-001 — organization, sites, inter-site links and IPAM supernets.
-import { LINK_KINDS, organizationSchema, siteLinkSchema, siteSchema, type Organization, type Site, type SiteLink } from '@openmap/contracts';
+import { organizationSchema, siteLinkSchema, siteSchema, type LINK_KINDS, type Organization, type Site, type SiteLink } from '@openmap/contracts';
 import { BUSINESS_UNITS, INDUSTRY, ORGANIZATION_NAME, REGULATORY_SCOPE, SITES, TIME_ZONE } from '../catalog.js';
 import { cidr, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
@@ -37,6 +37,9 @@ const LINKS: readonly LinkDef[] = [
 const BRANCH_BASE_COUNT = 212;
 const SUPERNET_PREFIX_ROOT = 8;
 const SUPERNET_PREFIX_SITE = 12;
+/** Design power capacity by site kind, kW. */
+const FACILITY_KW: Record<string, number> = { datacenter: 4800, colocation: 1200, office: 320, branch: 8 };
+const DESIGN_PUE = 1.4;
 
 export interface OrganizationBundle {
   organization: Organization;
@@ -80,7 +83,6 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
       devices: [],
       cores: [],
       dists: [],
-      accessPool: [],
       firewalls: [],
       loadBalancers: [],
       hypervisors: [],
@@ -91,6 +93,7 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
       subnets: new Map(),
       ipamSlot: null,
       nodeId,
+      cloudAccountIdx: -1,
     };
     world.sites.push(site);
     const locationCount = def.kind === 'branch' ? branchCount : 1;
@@ -131,6 +134,7 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
         geo: { lat: def.lat, lon: def.lon },
         cloud: def.cloud,
         locationCount,
+        facility: def.cloud ? null : { powerCapacityKw: FACILITY_KW[def.kind] ?? 0, rackCount: 0, designPue: def.kind === 'datacenter' || def.kind === 'colocation' ? DESIGN_PUE : null },
         ciId: null,
       }),
     );
@@ -180,6 +184,15 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
         role: link.role,
         latencyMs: link.latencyMs,
         ciId: null,
+        carrierContractRef: 'CTR-' + link.provider.toUpperCase().replace(/[^A-Z]/g, '') + '-' + rng.alnum(6),
+        telemetry: {
+          latencyMs: link.latencyMs,
+          jitterMs: Number(rng.float(0.1, 2.5).toFixed(2)),
+          throughputMbps: Math.round(link.bandwidthMbps * rng.float(0.05, 0.7)),
+          lossPercent: Number(rng.float(0, 0.05).toFixed(3)),
+          redundancyState: link.diversePaths > 1 ? 'active_active' : 'active_standby',
+          observedAt: isoAt(0),
+        },
       }),
     );
   }

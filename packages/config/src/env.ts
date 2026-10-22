@@ -77,6 +77,15 @@ export const envSchema = z.object({
   NODE_MTLS_KEY_PATH: z.string().default('/etc/openmap/pki/node.key'),
   /** Interval at which a Discovery Node pulls jobs from the scheduler. */
   NODE_JOB_PULL_INTERVAL_MS: z.coerce.number().int().positive().default(5_000),
+  /** Scheduler-side PKI: the internal CA that signs Node certificates, and the scheduler's own TLS pair. */
+  SCHEDULER_CA_CERT_PATH: z.string().default('/etc/openmap/pki/ca.crt'),
+  SCHEDULER_CA_KEY_PATH: z.string().default('/etc/openmap/pki/ca.key'),
+  SCHEDULER_TLS_CERT_PATH: z.string().default('/etc/openmap/pki/scheduler.crt'),
+  SCHEDULER_TLS_KEY_PATH: z.string().default('/etc/openmap/pki/scheduler.key'),
+  /** Validity of issued Node certificates; Nodes re-enrol before expiry. */
+  NODE_CERT_VALIDITY_DAYS: z.coerce.number().int().positive().default(90),
+  /** Where the scheduler keeps raw evidence uploaded by Nodes (content-addressed). */
+  EVIDENCE_DIR: z.string().default('/var/lib/openmap/evidence'),
 
   /** Feature switches. */
   FEATURE_OUTBOUND_INTEGRATIONS: bool.default(false),

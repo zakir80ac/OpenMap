@@ -189,9 +189,13 @@ export interface SiteWorld {
   ipamSlot: Slot | null;
   /** Primary node id of the site for collectors that run from inside the site. */
   nodeId: string;
+  /** cloud_account CI for cloud regions, -1 elsewhere. */
+  cloudAccountIdx: number;
 }
 
 export interface World {
+  /** Kubernetes services still to be created by application generators after system services. */
+  k8sServiceBudget: number;
   b: EstateBuilder;
   rng: Rng;
   sites: SiteWorld[];

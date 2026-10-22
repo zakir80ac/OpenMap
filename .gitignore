@@ -12,3 +12,4 @@ tools/perf/results/
 graphify-out/*.tmp
 
 tools/perf/bin/
+packages/testing/fixtures/synth*/

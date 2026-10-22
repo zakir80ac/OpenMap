@@ -14,15 +14,25 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "start": "node dist/main.js",
+    "dev": "tsx watch src/main.ts",
+    "pki:init": "tsx src/pki-init.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",
     "@openmap/constants": "workspace:*",
     "@openmap/contracts": "workspace:*",
+    "@openmap/db": "workspace:*",
+    "@peculiar/x509": "^1.12.3",
+    "bullmq": "^5.56.0",
+    "fastify": "^5.4.0",
+    "ioredis": "^5.6.1",
     "zod": "^4.1.0"
   },
   "devDependencies": {
+    "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vitest": "^4.0.0"
   }
