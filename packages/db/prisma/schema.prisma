@@ -522,6 +522,8 @@ model TenantSettings {
   discoveryIntervalMinutes    Int
   historyRetentionDays        Int
   staleAfterDays              Int
+  /// REQ-SEC-005 — days the ClickHouse audit_log copy is kept; default mirrors TENANT_SETTINGS_DEFAULTS.auditRetentionDays.
+  auditRetentionDays          Int      @default(2555)
   assistantEnabled            Boolean
   outboundIntegrationsEnabled Boolean
   createdAt                   DateTime @default(now()) @db.Timestamptz(3)

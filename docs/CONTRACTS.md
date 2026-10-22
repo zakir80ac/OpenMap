@@ -1,6 +1,6 @@
 # OpenMap frozen contracts
 
-Status: **0.1.0 — proposed**. Contracts are drafted from CLAUDE.md §0, the approved design canvas and docs/CAPABILITY-MAP.md while docs/SPEC.md is pending (ADR-002). They become **frozen** when REQ-CORE-001…006 reach Done. After that, any change needs an ADR, a version bump here, and a tracker row.
+Status: **frozen** (REQ-CORE-001…006 Done on 2026-10-22). The contracts were drafted from CLAUDE.md §0, the approved design canvas and docs/CAPABILITY-MAP.md while docs/SPEC.md is pending (ADR-002); when SPEC.md arrives, differences are reconciled as ADRs. Any change needs an ADR, a version bump here, and a tracker row. `pnpm contracts:check` (CI) rejects a GraphQL schema change without the matching bump: additions need a minor bump, breaking changes a major one.
 
 | Contract | File | Version | Consumers |
 | --- | --- | --- | --- |
@@ -32,3 +32,5 @@ Semantic versions per contract. Minor bumps add optional fields or enum members;
 | 2026-10-22 | all | Initial 0.1.0 drafts | ADR-002 |
 | 2026-10-22 | ci | Twelve-layer model, user labels, OS and SaaS types | ADR-004 |
 | 2026-10-22 | asset | Infrastructure plans replace purchase orders | ADR-005 |
+| 2026-10-22 | graphql, event | 0.2.0: `auditLog` query, AuditEntry/AuditConnection; `openmap.audit.action` event | ADR-010 |
+| 2026-10-22 | all | Frozen; Go view checked against the emitted JSON Schemas (T-093/T-094), GraphQL bump check in CI (T-092) | ADR-002 |

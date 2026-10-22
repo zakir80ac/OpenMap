@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: pnpm/action-setup@v4
         with: { version: 10 }
       - uses: actions/setup-node@v4
@@ -18,6 +19,7 @@ jobs:
         with: { go-version: "1.23" }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm contracts:check -- --base origin/${{ github.base_ref || 'main' }}
       - run: pnpm i18n:check
       - run: pnpm typecheck
       - run: pnpm test

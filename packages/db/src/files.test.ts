@@ -77,6 +77,19 @@ describe('clickhouse/0001_init.sql', () => {
   });
 });
 
+describe('clickhouse/0002_audit_retention.sql', () => {
+  const files = listMigrationFiles(CLICKHOUSE_DIR, '.sql');
+  const file = files.find((f) => f.path.endsWith('0002_audit_retention.sql'));
+  const statements = loadStatements(file ?? { version: '', path: '' }, '--', clickhouseParameters(env));
+
+  it('carries the REQ header and sets the audit_log TTL from the tenant settings default', () => {
+    expect(readFileSync(file?.path ?? '', 'utf8').startsWith('-- REQ-SEC-005')).toBe(true);
+    expect(statements).toHaveLength(1);
+    expect(statements[0]).not.toMatch(/\{[a-z_]+\}/);
+    expect(statements[0]).toBe('ALTER TABLE ' + env.CLICKHOUSE_DB + '.audit_log MODIFY TTL toDateTime(at) + INTERVAL ' + clickhouseParameters(env)['audit_retention_days'] + ' DAY');
+  });
+});
+
 describe('memgraph/0001_schema.cypher', () => {
   const files = listMigrationFiles(MEMGRAPH_DIR, '.cypher');
   const text = readFileSync(files[0]?.path ?? '', 'utf8');

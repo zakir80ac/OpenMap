@@ -115,10 +115,10 @@
         {
           "name": "tenant",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
           "config": {
+            "user.attribute": "tenant",
             "claim.name": "tenant",
-            "claim.value": "default",
             "jsonType.label": "String",
             "id.token.claim": "false",
             "access.token.claim": "true",

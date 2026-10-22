@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && tsx src/emit-json-schema.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check:graphql": "tsx src/check-graphql.ts",
     "test": "vitest run"
   },
   "dependencies": { "@openmap/constants": "workspace:*", "graphql": "^16.11.0", "zod": "^4.1.0" },

@@ -6,6 +6,8 @@ import { IPV4, PERF_BUDGETS, TIME } from '@openmap/constants';
 
 export const GRAPHQL_REQUESTS_METRIC = 'openmap_graphql_requests_total';
 export const GRAPHQL_DURATION_METRIC = 'openmap_graphql_duration_seconds';
+/** REQ-SEC-005 — audit entries written, by mutation name. */
+export const AUDIT_ENTRIES_METRIC = 'openmap_audit_entries_total';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -32,11 +34,13 @@ export class MetricsService {
   readonly registry = new Registry();
   readonly requests: Counter<'operation' | 'status'>;
   readonly duration: Histogram<'operation' | 'status'>;
+  readonly auditEntries: Counter<'action'>;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
     this.requests = new Counter({ name: GRAPHQL_REQUESTS_METRIC, help: 'GraphQL operations served, by operation name and outcome', labelNames: ['operation', 'status'], registers: [this.registry] });
     this.duration = new Histogram({ name: GRAPHQL_DURATION_METRIC, help: 'GraphQL operation duration in seconds', labelNames: ['operation', 'status'], buckets: durationBuckets(), registers: [this.registry] });
+    this.auditEntries = new Counter({ name: AUDIT_ENTRIES_METRIC, help: 'Audit log entries written, by mutation', labelNames: ['action'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

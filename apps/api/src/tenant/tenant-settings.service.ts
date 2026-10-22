@@ -17,6 +17,7 @@ export class TenantSettingsService implements TenantSettingsRepository {
       discoveryIntervalMinutes: row.discoveryIntervalMinutes,
       historyRetentionDays: row.historyRetentionDays,
       staleAfterDays: row.staleAfterDays,
+      auditRetentionDays: row.auditRetentionDays,
       assistantEnabled: row.assistantEnabled,
       outboundIntegrationsEnabled: row.outboundIntegrationsEnabled,
     });

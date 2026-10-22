@@ -14,6 +14,8 @@ export const tenantSettingsSchema = z.object({
   historyRetentionDays: z.number().int().positive(),
   /** Days after which an unseen CI is marked stale. */
   staleAfterDays: z.number().int().positive(),
+  /** Days the ClickHouse copy of the audit log is kept (REQ-SEC-005); the Postgres audit_logs table is never pruned. */
+  auditRetentionDays: z.number().int().positive(),
   /** Whether the AI assistant is enabled for this tenant (requires FEATURE_ASSISTANT). */
   assistantEnabled: z.boolean(),
   /** Whether tenant-enabled outbound integrations may make network calls. */
@@ -29,6 +31,8 @@ export const TENANT_SETTINGS_DEFAULTS: TenantSettings = {
   discoveryIntervalMinutes: 60,
   historyRetentionDays: 365,
   staleAfterDays: 7,
+  // Seven years: the longest retention common audit regimes (SOX, PCI DSS, Saudi NCA ECC) ask for.
+  auditRetentionDays: 2555,
   assistantEnabled: true,
   outboundIntegrationsEnabled: false,
 };

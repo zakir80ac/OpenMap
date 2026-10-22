@@ -18,6 +18,7 @@ export function clickhouseParameters(env: Env): Record<string, string> {
   return {
     database: env.CLICKHOUSE_DB,
     history_retention_days: String(TENANT_SETTINGS_DEFAULTS.historyRetentionDays),
+    audit_retention_days: String(TENANT_SETTINGS_DEFAULTS.auditRetentionDays),
   };
 }
 

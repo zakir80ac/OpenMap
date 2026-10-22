@@ -18,6 +18,7 @@
     "guard": "pnpm --filter @openmap/guard exec tsx src/cli.ts",
     "i18n:check": "pnpm --filter @openmap/i18n run check",
     "contracts:build": "pnpm --filter @openmap/contracts run build",
+    "contracts:check": "pnpm --filter @openmap/contracts run check:graphql",
     "graph:update": "graphify update .",
     "prepare": "lefthook install"
   },

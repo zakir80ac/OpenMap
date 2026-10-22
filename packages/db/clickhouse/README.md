@@ -13,6 +13,7 @@ The runner replaces these tokens in every statement before sending it:
 | -------------------------- | ----------------------------------------------------------- |
 | `{database}`               | `CLICKHOUSE_DB` from `@openmap/config` (`loadEnv()`)         |
 | `{history_retention_days}` | `TENANT_SETTINGS_DEFAULTS.historyRetentionDays` (`@openmap/config`); the `metrics` TTL |
+| `{audit_retention_days}`   | `TENANT_SETTINGS_DEFAULTS.auditRetentionDays` (`@openmap/config`); the `audit_log` TTL (REQ-SEC-005) |
 
 Nothing else in a file is interpreted; no secrets ever appear in DDL. The connection
 (`CLICKHOUSE_URL`, `CLICKHOUSE_USER`, `CLICKHOUSE_PASSWORD`) comes from `loadEnv()` only.

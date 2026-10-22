@@ -107,9 +107,11 @@ REST API, see `docs/STATE.md`).
 - **Brute force.** Progressive lockout is on: 10 failures, waits growing by 60 s up to 15 minutes, failures
   forgotten after 12 hours.
 - **API tokens.** Automation uses the confidential `openmap-automation` client (client-credentials grant, service
-  account with `openmap-operator`, hardcoded `tenant` claim, `aud: openmap-api`). Read the secret once from
-  *Clients → openmap-automation → Credentials* and store it in OpenBao; create one such client per tenant. The flow
-  and a request example are in `apps/api/README.md`.
+  account with `openmap-operator`, `aud: openmap-api`). The `tenant` claim comes from the service-account user's
+  `tenant` attribute (*Clients → openmap-automation → Service account roles → user*, attribute `tenant`), exactly like
+  an interactive user, so one client serves one tenant. Read the secret once from *Clients → openmap-automation →
+  Credentials* and store it in OpenBao; create one such client per tenant. The flow and a request example are in
+  `apps/api/README.md`.
 
 ## Host agents (REQ-DISC-004)
 

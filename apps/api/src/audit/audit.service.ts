@@ -1,8 +1,10 @@
 // REQ-SEC-005 — the immutable audit log (ADR-010): every successful mutation becomes an audit_logs row and an
 // `openmap.audit.action` event in one outbox transaction; reads page newest-first with a stable (at, id) cursor.
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@openmap/db';
 import { PrismaService } from '../db/prisma.service.js';
+import { MetricsService } from '../metrics/metrics.service.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { clampPageSize, decodeCursor, encodeCursor, toPage } from '../common/cursor.js';
 
@@ -64,22 +66,27 @@ export class AuditService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly metrics: MetricsService,
   ) {}
 
-  /** Appends one entry and publishes the matching event; both or neither are committed. */
+  /**
+   * Appends one entry and publishes the matching event; both or neither are committed. The event goes out first so
+   * the row is written once, trace id included: audit_logs is append-only (migration 0007), so a later UPDATE would
+   * abort the transaction.
+   */
   async record(actor: AuditActor, action: string, subjectType: string, subjectId: string, details: Record<string, unknown>): Promise<AuditEntry> {
     const at = new Date();
+    const auditId = randomUUID();
     const safeDetails = redact(details) as Record<string, unknown>;
-    return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
+    const entry = await this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
+      const envelope = await emit({ type: 'openmap.audit.action', subject: subjectType + '/' + subjectId, data: { auditId, actor: actor.username, action, subjectType, subjectId, details: safeDetails, at: at.toISOString(), requestId: actor.requestId } });
       const row = await tx.auditLog.create({
-        data: { tenantId: actor.tenantId, actor: actor.username, action, subjectType, subjectId, details: safeDetails as Prisma.InputJsonObject, at },
+        data: { id: auditId, tenantId: actor.tenantId, actor: actor.username, action, subjectType, subjectId, details: safeDetails as Prisma.InputJsonObject, at, traceparent: envelope.traceparent ?? null },
       });
-      const envelope = await emit({ type: 'openmap.audit.action', subject: subjectType + '/' + subjectId, data: { auditId: row.id, actor: actor.username, action, subjectType, subjectId, details: safeDetails, at: at.toISOString(), requestId: actor.requestId } });
-      if (envelope.traceparent !== undefined) {
-        await tx.auditLog.update({ where: { id: row.id }, data: { traceparent: envelope.traceparent } }).catch(() => undefined);
-      }
-      return toEntry({ ...row, traceparent: envelope.traceparent ?? null });
+      return toEntry(row);
     });
+    this.metrics.auditEntries.inc({ action });
+    return entry;
   }
 
   /** Newest first; the cursor encodes (at, id) so pages stay stable while new entries arrive. */
