@@ -1,0 +1,46 @@
+#!/usr/bin/env sh
+# REQ-INT-002 REQ-INT-008 — builds the offline bundle on a connected machine: every image the compose
+# profiles reference (infrastructure and OpenMap services), saved as one tar with a checksum manifest,
+# plus the compose files and this directory's load script. Usage:
+#   deploy/airgap-bundle/build-bundle.sh [version] [output-dir]
+set -eu
+version="${1:-dev}"
+out="${2:-$(pwd)/openmap-bundle-${version}}"
+here="$(cd "$(dirname "$0")" && pwd)"
+repo="$(cd "$here/../.." && pwd)"
+compose="$repo/deploy/compose"
+mkdir -p "$out"
+
+echo "building OpenMap images ${version}"
+for app in api scheduler reconciler bsm-engine; do
+  docker build -f "$repo/deploy/docker/node-service.Dockerfile" --build-arg APP="$app" -t "openmap/${app}:${version}" "$repo"
+done
+docker build -f "$repo/deploy/docker/node.Dockerfile" -t "openmap/node:${version}" "$repo"
+
+echo "collecting infrastructure images from the compose files"
+infra="$(OPENMAP_VERSION="$version" docker compose -f "$compose/docker-compose.yml" -f "$compose/docker-compose.apps.yml" --profile cpu --profile node config --images | sort -u)"
+images="$infra"
+for app in api scheduler reconciler bsm-engine node; do
+  images="$images
+openmap/${app}:${version}"
+done
+images="$(printf '%s\n' "$images" | sort -u)"
+printf '%s\n' "$images" > "$out/images.txt"
+
+echo "pulling infrastructure images"
+printf '%s\n' "$infra" | grep -v '^openmap/' | while read -r img; do
+  [ -n "$img" ] && docker pull "$img"
+done
+
+echo "saving images"
+# shellcheck disable=SC2086
+docker save $(printf '%s ' $images) | gzip -1 > "$out/openmap-images-${version}.tar.gz"
+
+cp "$compose/docker-compose.yml" "$compose/docker-compose.apps.yml" "$compose/docker-compose.airgap.yml" "$compose/.env.example" "$out/"
+cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$out/"
+cp "$here/load-bundle.sh" "$out/"
+cp "$repo/deploy/README.md" "$out/DEPLOY.md"
+
+(cd "$out" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+echo "bundle ready: $out"
+du -sh "$out"

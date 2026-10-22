@@ -1,6 +1,12 @@
 # REQ-INT-002 — air-gapped overlay: no image pulls, no telemetry, LLM on CPU from the bundled GGUF.
-# Usage: docker compose -f docker-compose.yml -f docker-compose.airgap.yml --profile cpu up -d
+# Usage: docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml --profile cpu up -d
 services:
+  api: { pull_policy: never }
+  scheduler: { pull_policy: never }
+  reconciler: { pull_policy: never }
+  bsm-engine: { pull_policy: never }
+  migrate: { pull_policy: never }
+  node: { pull_policy: never }
   postgres: { pull_policy: never }
   memgraph: { pull_policy: never, environment: { MEMGRAPH_TELEMETRY_ENABLED: "false" } }
   clickhouse: { pull_policy: never }

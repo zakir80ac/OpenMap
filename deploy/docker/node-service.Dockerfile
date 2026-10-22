@@ -21,7 +21,8 @@ COPY apps ./apps
 COPY tools ./tools
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @openmap/db exec prisma generate
-RUN pnpm --filter "@openmap/${APP}..." build
+# Turbo builds the dependency closure in graph order (dependsOn ^build), the same pipeline as CI.
+RUN pnpm exec turbo run build --filter="@openmap/${APP}..." --no-daemon
 RUN pnpm --filter "@openmap/${APP}" deploy --prod --legacy /out
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
