@@ -19,6 +19,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/openmap/openmap/apps/node/internal/agentgw"
 	"github.com/openmap/openmap/apps/node/internal/config"
 	noderuntime "github.com/openmap/openmap/apps/node/internal/runtime"
 	"github.com/openmap/openmap/apps/node/internal/supervisor"
@@ -131,7 +132,23 @@ func run(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	}
 	sup := supervisor.New(cfg.CollectorsDir, cfg.EvidenceDir, log)
 	node := noderuntime.New(noderuntime.Options{NodeID: cfg.NodeID, SiteCode: cfg.SiteCode, MaxConcurrentJobs: cfg.MaxConcurrentJobs, PullInterval: cfg.JobPullInterval, HeartbeatInterval: cfg.HeartbeatInterval, CertExpiresAt: expires}, client, sup, log)
-	return node.Run(ctx)
+	if cfg.AgentListenAddr == "" {
+		return node.Run(ctx)
+	}
+	// REQ-DISC-004 — host agents at this site enrol and report through the gateway; it shares the Node's lifetime.
+	gateway, err := agentgw.New(cfg.AgentListenAddr, cfg.MTLSCAPath, cfg.MTLSCertPath, cfg.MTLSKeyPath, client, agentgw.FileStore(cfg.EvidenceDir), log)
+	if err != nil {
+		return fmt.Errorf("agent gateway: %w", err)
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	errCh := make(chan error, 2)
+	go func() { errCh <- gateway.Serve(ctx) }()
+	go func() { errCh <- node.Run(ctx) }()
+	err = <-errCh
+	cancel()
+	<-errCh
+	return err
 }
 
 func certificateExpiry(path string) (time.Time, error) {

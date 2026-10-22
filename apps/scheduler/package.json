@@ -20,7 +20,8 @@
     "dev": "tsx watch src/main.ts",
     "pki:init": "tsx src/pki-init.ts",
     "node:register": "tsx src/node-register.ts",
-    "job:submit": "tsx src/job-submit.ts"
+    "job:submit": "tsx src/job-submit.ts",
+    "agent:register": "tsx src/agent-register.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",

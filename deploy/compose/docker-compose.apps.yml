@@ -146,7 +146,14 @@ services:
       # Single-node profile only: the Node reads the scheduler's CA from the shared volume to trust it
       # during enrolment. Remote sites receive the CA file out of band and leave this unset.
       OPENMAP_BOOTSTRAP_CA_PATH: /etc/openmap/bootstrap/ca.crt
+      # REQ-DISC-004 — host agents at this site enrol and report here over mTLS (empty disables the gateway).
+      OPENMAP_AGENT_LISTEN_ADDR: ${OPENMAP_AGENT_LISTEN_ADDR:-:4300}
+    ports: ["${OPENMAP_AGENT_PORT:-4300}:4300"]
     volumes: [node-pki:/etc/openmap/pki, node-evidence:/var/lib/openmap/evidence, "scheduler-pki:/etc/openmap/bootstrap:ro"]
+    networks:
+      default:
+        # The Node's certificate names its node id; agents in the compose network reach it under that name.
+        aliases: ["${OPENMAP_NODE_ID:-node-compose-01}"]
     depends_on:
       scheduler: { condition: service_started }
 

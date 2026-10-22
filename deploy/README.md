@@ -110,3 +110,24 @@ REST API, see `docs/STATE.md`).
   account with `openmap-operator`, hardcoded `tenant` claim, `aud: openmap-api`). Read the secret once from
   *Clients → openmap-automation → Credentials* and store it in OpenBao; create one such client per tenant. The flow
   and a request example are in `apps/api/README.md`.
+
+## Host agents (REQ-DISC-004)
+
+`openmap-agent` is a static binary for Linux, Windows and macOS (built from `apps/collectors/cmd/agent`, shipped in
+the Node image under `/opt/openmap/collectors/agent`). It reports the host's own inventory (identity, OS, addresses,
+listening services with their processes, installed software) through its site's Discovery Node; agents never talk to
+the scheduler.
+
+1. On the Node, enable the gateway: `OPENMAP_AGENT_LISTEN_ADDR=:4300` (compose `node` profile does this). The gateway
+   serves the Node's own mTLS certificate, so agents must reach the Node under its node id (the compose network alias)
+   or a name the certificate carries.
+2. Register the agent and get its one-time token:
+   `pnpm --filter @openmap/scheduler agent:register -- --node <nodeId> --agent <host fqdn>`.
+3. On the host: `OPENMAP_AGENT_NODE_URL=https://<node>:4300 OPENMAP_AGENT_ID=<host fqdn> OPENMAP_ENROL_TOKEN=<token>
+   OPENMAP_BOOTSTRAP_CA_PATH=<discovery ca.crt> openmap-agent enrol`. The certificate and key land under
+   `/etc/openmap/agent` (`%ProgramData%\OpenMapgent` on Windows) or wherever `AGENT_MTLS_*_PATH` point.
+4. `openmap-agent run` reports every `OPENMAP_AGENT_INTERVAL_MS` (default 15 minutes); `openmap-agent report` sends
+   once; `openmap-agent collect` prints the observation without sending it.
+
+Each report is a run of a standing `agent` job on that Node, so history, evidence (stored on the Node by digest) and
+metrics appear in the console exactly like agentless discovery.

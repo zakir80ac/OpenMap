@@ -5,6 +5,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | Collector | Family | Protocols | Credential types | Target kinds | Emits |
 | --- | --- | --- | --- | --- | --- |
 | `a10_thunder` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
+| `agent` | agent | mtls | none | host | host, operating_system, ip_address, listening_service, software, software_instance |
 | `certificate` | certificate | tls | none | host, url | certificate, listening_service |
 | `cisco_ucs` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
 | `citrix_adc` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
@@ -40,4 +41,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-35 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+36 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.

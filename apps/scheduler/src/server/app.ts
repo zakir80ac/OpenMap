@@ -1,12 +1,12 @@
 // REQ-DISC-028 REQ-DISC-031 REQ-SEC-004 — the HTTP surface Discovery Nodes talk to, over mTLS:
 // enrolment (one-time token → signed certificate), heartbeat, job pull, result post, credential
 // resolution. Every mTLS route checks the peer certificate names the node in the path.
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import type { PeerCertificate, TLSSocket } from 'node:tls';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { HTTP } from '@openmap/constants';
-import { collectorResultSchema } from '@openmap/contracts';
+import { CONTRACT_VERSIONS, DISCOVERY, HTTP, PKI } from '@openmap/constants';
+import { collectorResultSchema, observedCiSchema, observedRelationshipSchema } from '@openmap/contracts';
 import type { Env } from '@openmap/config';
 import type { PrismaClient } from '@openmap/db';
 import { JobNodeMismatch, JobNotFound, type JobStore } from './jobs.js';
@@ -39,6 +39,21 @@ const heartbeatSchema = z.object({
 });
 const pullSchema = z.object({ capacity: z.number().int().min(0), collectors: z.array(z.string()) });
 const credentialSchema = z.object({ credentialRef: z.string().min(1), jobId: z.string().uuid() });
+/** REQ-DISC-004 — agent enrolment, forwarded by the agent's Discovery Node. */
+const agentEnrolSchema = z.object({ agentId: z.string().min(1), token: z.string().min(1), csrPem: z.string().min(1) });
+/** REQ-DISC-004 — an agent's self-report, forwarded by its Node with the fingerprint of the client certificate it presented. */
+const agentReportSchema = z.object({
+  agentId: z.string().min(1),
+  certificateFingerprint: z.string().length(PKI.sha256HexLength),
+  agentVersion: z.string(),
+  startedAt: z.string(),
+  finishedAt: z.string(),
+  cis: z.array(observedCiSchema),
+  relationships: z.array(observedRelationshipSchema),
+  evidence: z.array(z.object({ kind: z.string(), digest: z.string(), sizeBytes: z.number().int().min(0) })),
+});
+/** Collector id the agent's reports are filed under; the standing job per agent carries it. */
+export const AGENT_COLLECTOR_ID = 'agent';
 
 export function tokenDigest(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -132,6 +147,65 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       if (err instanceof JobNodeMismatch) return reply.code(HTTP.status.forbidden).send({ error: err.message });
       throw err;
     }
+  });
+
+  // REQ-DISC-004 — host agents enrol and report through their Node; the Node authenticates as itself and vouches for
+  // the agent's client certificate, and the scheduler checks the agent belongs to that Node.
+  app.post<{ Params: { nodeId: string } }>('/v1/nodes/:nodeId/agents/enrol', async (req, reply) => {
+    if (!(await requireNode(req, reply, req.params.nodeId))) return;
+    const body = agentEnrolSchema.safeParse(req.body);
+    if (!body.success) return reply.code(HTTP.status.badRequest).send({ error: body.error.message });
+    const node = await deps.prisma.discoveryNode.findUnique({ where: { id: req.params.nodeId }, include: { site: true } });
+    if (!node) return reply.code(HTTP.status.forbidden).send({ error: 'node is not enrolled' });
+    const agent = await deps.prisma.agent.findUnique({ where: { tenantId_agentId: { tenantId: node.tenantId, agentId: body.data.agentId } } });
+    if (!agent || agent.nodeId !== node.id || agent.status !== 'pending' || !agent.enrolTokenDigest) return reply.code(HTTP.status.forbidden).send({ error: 'no pending enrolment for agent ' + body.data.agentId + ' on ' + node.id });
+    const presented = Buffer.from(tokenDigest(body.data.token), 'hex');
+    const expected = Buffer.from(agent.enrolTokenDigest, 'hex');
+    if (presented.length !== expected.length || !timingSafeEqual(presented, expected)) return reply.code(HTTP.status.forbidden).send({ error: 'enrolment token rejected' });
+    let issued;
+    try {
+      issued = await signNodeCsr(deps.ca, body.data.csrPem, body.data.agentId, node.site.code, deps.env.NODE_CERT_VALIDITY_DAYS);
+    } catch (err) {
+      return reply.code(HTTP.status.badRequest).send({ error: err instanceof Error ? err.message : 'invalid CSR' });
+    }
+    await deps.prisma.agent.update({
+      where: { id: agent.id },
+      data: { status: 'enrolled', enrolledAt: new Date(), enrolTokenDigest: null, certificateSerial: issued.serialHex, certificateFingerprint: issued.fingerprintSha256, certificateExpiresAt: issued.notAfter },
+    });
+    return reply.code(HTTP.status.created).send({ certificatePem: issued.certificatePem, caPem: deps.caPem, expiresAt: issued.notAfter.toISOString() });
+  });
+
+  app.post<{ Params: { nodeId: string } }>('/v1/nodes/:nodeId/agents/report', async (req, reply) => {
+    if (!(await requireNode(req, reply, req.params.nodeId))) return;
+    const body = agentReportSchema.safeParse(req.body);
+    if (!body.success) return reply.code(HTTP.status.badRequest).send({ error: body.error.message });
+    const node = await deps.prisma.discoveryNode.findUnique({ where: { id: req.params.nodeId } });
+    if (!node) return reply.code(HTTP.status.forbidden).send({ error: 'node is not enrolled' });
+    const agent = await deps.prisma.agent.findUnique({ where: { tenantId_agentId: { tenantId: node.tenantId, agentId: body.data.agentId } } });
+    if (!agent || agent.nodeId !== node.id || agent.status !== 'enrolled') return reply.code(HTTP.status.forbidden).send({ error: 'agent ' + body.data.agentId + ' is not enrolled on ' + node.id });
+    if (agent.certificateFingerprint !== body.data.certificateFingerprint.toLowerCase()) return reply.code(HTTP.status.forbidden).send({ error: 'agent certificate does not match the enrolled one' });
+    if (agent.certificateExpiresAt !== null && agent.certificateExpiresAt.getTime() < Date.now()) return reply.code(HTTP.status.forbidden).send({ error: 'agent certificate expired' });
+    // One standing job per agent so every report is a run of the same job (history, evidence, metrics in one place).
+    let jobId = agent.jobId;
+    if (jobId === null) {
+      const job = await deps.prisma.discoveryJob.create({
+        data: {
+          tenantId: node.tenantId, collectorId: AGENT_COLLECTOR_ID, nodeId: node.id, targets: [{ kind: 'host', value: body.data.agentId }], credentialRef: null, credentialType: 'none',
+          timeoutMs: DISCOVERY.defaultJobTimeoutMs, rateLimitConcurrency: 1, rateLimitRps: 1, options: { agentId: body.data.agentId }, scheduledAt: new Date(), status: 'started', startedAt: new Date(), contractVersion: CONTRACT_VERSIONS.collector,
+        },
+      });
+      jobId = job.id;
+    }
+    const result = collectorResultSchema.parse({
+      jobId, runId: randomUUID(), tenantId: node.tenantId, collectorId: AGENT_COLLECTOR_ID, nodeId: node.id, status: 'success',
+      startedAt: body.data.startedAt, finishedAt: body.data.finishedAt, cis: body.data.cis, relationships: body.data.relationships, evidence: body.data.evidence, errors: [],
+      metrics: { targetsAttempted: 1, targetsReached: 1, cisEmitted: body.data.cis.length, relationshipsEmitted: body.data.relationships.length, durationMs: Math.max(0, new Date(body.data.finishedAt).getTime() - new Date(body.data.startedAt).getTime()) },
+      contractVersion: CONTRACT_VERSIONS.collector,
+    });
+    const { runId } = await deps.jobs.complete(result);
+    await deps.results.publish(result);
+    await deps.prisma.agent.update({ where: { id: agent.id }, data: { jobId, lastReportAt: new Date(), version: body.data.agentVersion } });
+    return reply.code(HTTP.status.accepted).send({ runId, jobId });
   });
 
   app.post<{ Params: { nodeId: string } }>('/v1/nodes/:nodeId/credentials/resolve', async (req, reply) => {

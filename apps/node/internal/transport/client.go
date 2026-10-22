@@ -195,3 +195,35 @@ func (c *Client) ResolveCredential(ctx context.Context, ref, jobID string) (cont
 	err := c.do(ctx, http.MethodPost, fmt.Sprintf(pathCreds, c.nodeID), CredentialRequest{CredentialRef: ref, JobID: jobID}, &out)
 	return out, err
 }
+
+// AgentEnrol forwards an agent's enrolment request to the scheduler as this Node (REQ-DISC-004). The scheduler's
+// status code and body are returned verbatim so the gateway can relay them to the agent.
+func (c *Client) AgentEnrol(ctx context.Context, body json.RawMessage) (json.RawMessage, int, error) {
+	return c.relay(ctx, "/v1/nodes/"+url.PathEscape(c.nodeID)+"/agents/enrol", body)
+}
+
+// AgentReport forwards an agent's inventory report to the scheduler as this Node.
+func (c *Client) AgentReport(ctx context.Context, body json.RawMessage) (json.RawMessage, int, error) {
+	return c.relay(ctx, "/v1/nodes/"+url.PathEscape(c.nodeID)+"/agents/report", body)
+}
+
+func (c *Client) relay(ctx context.Context, path string, body json.RawMessage) (json.RawMessage, int, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base.ResolveReference(&url.URL{Path: path}).String(), bytes.NewReader(body))
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-OpenMap-Node", c.nodeID)
+	req.Header.Set("X-OpenMap-Contract", contract.Version)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer res.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(res.Body, maxBodyBytes))
+	if err != nil {
+		return nil, 0, err
+	}
+	return data, res.StatusCode, nil
+}

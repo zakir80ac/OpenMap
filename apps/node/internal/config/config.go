@@ -29,6 +29,8 @@ type Config struct {
 	MaxConcurrentJobs int
 	LogLevel          string
 	MetricsAddr       string
+	// AgentListenAddr enables the agent gateway (REQ-DISC-004) when set, e.g. ":4300"; empty keeps it off.
+	AgentListenAddr string
 }
 
 const (
@@ -47,6 +49,7 @@ const (
 	envMaxJobs           = "OPENMAP_MAX_CONCURRENT_JOBS"
 	envLogLevel          = "LOG_LEVEL"
 	envMetricsAddr       = "OPENMAP_NODE_METRICS_ADDR"
+	envAgentListenAddr   = "OPENMAP_AGENT_LISTEN_ADDR"
 
 	defaultJobPullIntervalMs = 5000
 	defaultHeartbeatMs       = 15000
@@ -95,6 +98,7 @@ func Load() (Config, error) {
 		EvidenceDir:     env(envEvidenceDir, defaultEvidenceDir),
 		LogLevel:        env(envLogLevel, defaultLogLevel),
 		MetricsAddr:     env(envMetricsAddr, defaultMetricsAddr),
+		AgentListenAddr: env(envAgentListenAddr, ""),
 	}
 	if cfg.NodeID == "" {
 		problems = append(problems, errors.New(envNodeID+" is required"))

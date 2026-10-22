@@ -201,6 +201,8 @@ export const PKI = {
   enrolTokenBytes: 32,
   curve: 'P-256',
   hash: 'SHA-256',
+  /** Hex characters in a SHA-256 digest, the form certificate fingerprints and evidence digests are stored in. */
+  sha256HexLength: 64,
   /** Internal CA lifetime (ten years) and scheduler server certificate lifetime (browser-safe 825 days). */
   caValidityDays: 3650,
   serverValidityDays: 825,

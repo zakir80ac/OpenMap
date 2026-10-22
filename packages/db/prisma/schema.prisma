@@ -487,6 +487,7 @@ model Tenant {
   ciExternalIds           CiExternalId[]
   relationships           Relationship[]
   discoveryNodes          DiscoveryNode[]
+  agents                  Agent[]
   discoveryJobs           DiscoveryJob[]
   collectorRuns           CollectorRun[]
   evidence                Evidence[]
@@ -794,6 +795,7 @@ model DiscoveryNode {
   site   Site           @relation(fields: [siteId], references: [id], onDelete: Restrict)
   jobs   DiscoveryJob[]
   runs   CollectorRun[]
+  agents Agent[]
 
   @@index([tenantId, siteId])
   @@index([tenantId, certificateExpiresAt])
@@ -801,6 +803,35 @@ model DiscoveryNode {
 }
 
 /// collectorJobSchema plus scheduling state.
+/// A host agent (REQ-DISC-004): enrols through its site's Discovery Node with a one-time token, reports its own
+/// inventory over mTLS, and is filed as the `agent` collector against a standing job on that Node.
+model Agent {
+  id                     String              @id @default(uuid()) @db.Uuid
+  tenantId               String              @db.Uuid
+  nodeId                 String
+  /// Stable agent identity (the host's fqdn by convention); the certificate CN.
+  agentId                String
+  status                 NodeEnrolmentStatus
+  enrolTokenDigest       String?             @db.Char(64)
+  enrolledAt             DateTime?           @db.Timestamptz(3)
+  certificateSerial      String?
+  certificateFingerprint String?             @db.Char(64)
+  certificateExpiresAt   DateTime?           @db.Timestamptz(3)
+  version                String?
+  lastReportAt           DateTime?           @db.Timestamptz(3)
+  /// The standing discovery job every report is recorded against (created on the first report).
+  jobId                  String?             @db.Uuid
+  createdAt              DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime            @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  node   DiscoveryNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, agentId])
+  @@index([nodeId, status])
+  @@map("agents")
+}
+
 model DiscoveryJob {
   id                   String         @id @default(uuid()) @db.Uuid
   tenantId             String         @db.Uuid
