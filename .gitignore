@@ -10,3 +10,5 @@ coverage/
 Thumbs.db
 tools/perf/results/
 graphify-out/*.tmp
+
+tools/perf/bin/
