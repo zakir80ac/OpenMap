@@ -20,18 +20,18 @@ type RateLimit struct {
 }
 
 type Job struct {
-	JobID           string                 `json:"jobId"`
-	TenantID        string                 `json:"tenantId"`
-	CollectorID     string                 `json:"collectorId"`
-	NodeID          string                 `json:"nodeId"`
-	Targets         []Target               `json:"targets"`
-	CredentialRef   *string                `json:"credentialRef"`
-	CredentialType  string                 `json:"credentialType"`
-	TimeoutMs       int                    `json:"timeoutMs"`
-	RateLimit       RateLimit              `json:"rateLimit"`
-	Options         map[string]any         `json:"options"`
-	ScheduledAt     time.Time              `json:"scheduledAt"`
-	ContractVersion string                 `json:"contractVersion"`
+	JobID           string         `json:"jobId"`
+	TenantID        string         `json:"tenantId"`
+	CollectorID     string         `json:"collectorId"`
+	NodeID          string         `json:"nodeId"`
+	Targets         []Target       `json:"targets"`
+	CredentialRef   *string        `json:"credentialRef"`
+	CredentialType  string         `json:"credentialType"`
+	TimeoutMs       int            `json:"timeoutMs"`
+	RateLimit       RateLimit      `json:"rateLimit"`
+	Options         map[string]any `json:"options"`
+	ScheduledAt     time.Time      `json:"scheduledAt"`
+	ContractVersion string         `json:"contractVersion"`
 }
 
 type ExternalID struct {
@@ -135,9 +135,9 @@ const (
 // Credential is what the Node hands a collector after resolving the job's credentialRef from OpenBao.
 // Collectors never see the vault; they receive this on stdin alongside the job.
 type Credential struct {
-	Type       string            `json:"type"`
-	Fields     map[string]string `json:"fields"`
-	ExpiresAt  *time.Time        `json:"expiresAt,omitempty"`
+	Type      string            `json:"type"`
+	Fields    map[string]string `json:"fields"`
+	ExpiresAt *time.Time        `json:"expiresAt,omitempty"`
 }
 
 // Invocation is the single JSON document a collector reads from stdin.
@@ -145,4 +145,7 @@ type Invocation struct {
 	Job        Job         `json:"job"`
 	Credential *Credential `json:"credential"`
 	RunID      string      `json:"runId"`
+	// EvidenceDir is where the collector writes raw evidence bytes under <dir>/<kind>/<digest[:2]>/<digest>;
+	// the Node owns the directory and the Result only carries digests. Empty means do not store.
+	EvidenceDir string `json:"evidenceDir,omitempty"`
 }

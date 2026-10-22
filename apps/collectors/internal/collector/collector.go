@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -49,6 +50,20 @@ func (e *TargetError) Error() string { return e.Code + ": " + e.Message }
 
 func Errorf(code string, retryable bool, format string, args ...any) error {
 	return &TargetError{Code: code, Message: fmt.Sprintf(format, args...), Retryable: retryable}
+}
+
+// StoreEvidence writes raw evidence bytes under <dir>/<kind>/<digest[:2]>/<digest>, content-addressed
+// so identical captures are stored once. The Node's evidence API serves them back by digest.
+func StoreEvidence(dir, kind, digest string, data []byte) error {
+	sub := filepath.Join(dir, kind, digest[:2])
+	if err := os.MkdirAll(sub, 0o700); err != nil {
+		return err
+	}
+	path := filepath.Join(sub, digest)
+	if _, err := os.Stat(path); err == nil {
+		return nil
+	}
+	return os.WriteFile(path, data, 0o600)
 }
 
 // Main is the entry point every collector binary calls from its main().
@@ -140,7 +155,13 @@ func Execute(ctx context.Context, impl Implementation, inv contract.Invocation) 
 			result.Relationships = append(result.Relationships, obs.Relationships...)
 			for _, ev := range obs.Evidence {
 				sum := sha256.Sum256(ev.Data)
-				result.Evidence = append(result.Evidence, contract.Evidence{Kind: ev.Kind, Target: target, Digest: hex.EncodeToString(sum[:]), SizeBytes: len(ev.Data), CapturedAt: time.Now().UTC()})
+				digest := hex.EncodeToString(sum[:])
+				if inv.EvidenceDir != "" {
+					if err := StoreEvidence(inv.EvidenceDir, ev.Kind, digest, ev.Data); err != nil {
+						result.Errors = append(result.Errors, contract.CollectorError{Target: &target, Code: contract.ErrInternal, Message: "evidence store: " + err.Error(), Retryable: false})
+					}
+				}
+				result.Evidence = append(result.Evidence, contract.Evidence{Kind: ev.Kind, Target: target, Digest: digest, SizeBytes: len(ev.Data), CapturedAt: time.Now().UTC()})
 			}
 		}()
 	}

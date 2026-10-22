@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	pathEnrol     = "/v1/nodes/enrol"
-	pathHeartbeat = "/v1/nodes/%s/heartbeat"
-	pathPull      = "/v1/nodes/%s/jobs/pull"
-	pathResult    = "/v1/jobs/%s/result"
-	pathCreds     = "/v1/nodes/%s/credentials/resolve"
+	pathEnrol      = "/v1/nodes/enrol"
+	pathHeartbeat  = "/v1/nodes/%s/heartbeat"
+	pathPull       = "/v1/nodes/%s/jobs/pull"
+	pathResult     = "/v1/jobs/%s/result"
+	pathCreds      = "/v1/nodes/%s/credentials/resolve"
 	requestTimeout = 30 * time.Second
 	maxBodyBytes   = 64 << 20 // results for 10k-device sweeps stay far below this
 )
@@ -157,7 +157,9 @@ type HTTPError struct {
 	Body   string
 }
 
-func (e *HTTPError) Error() string { return fmt.Sprintf("scheduler responded %d: %s", e.Status, e.Body) }
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("scheduler responded %d: %s", e.Status, e.Body)
+}
 
 // Retryable reports whether the scheduler's answer warrants a retry on the next tick.
 func (e *HTTPError) Retryable() bool {

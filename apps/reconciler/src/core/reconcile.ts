@@ -6,6 +6,7 @@ import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelop
 import { identityKeysOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { envelope } from './events.js';
+import { sanitizeResult } from './sanitize.js';
 
 export interface StoredLookup {
   index: IdentityIndex;
@@ -36,7 +37,8 @@ function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, create
   return undefined;
 }
 
-export function reconcile(result: CollectorResult, lookup: StoredLookup): ReconcileOutput {
+export function reconcile(input: CollectorResult, lookup: StoredLookup): ReconcileOutput {
+  const result = sanitizeResult(input);
   const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [] };
   const createdByKey = new Map<string, string>();
   const provenance = { collectorId: result.collectorId, nodeId: result.nodeId, runId: result.runId };

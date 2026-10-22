@@ -145,4 +145,7 @@ type Invocation struct {
 	Job        Job         `json:"job"`
 	Credential *Credential `json:"credential"`
 	RunID      string      `json:"runId"`
+	// EvidenceDir is where the collector writes raw evidence bytes under <dir>/<kind>/<digest[:2]>/<digest>;
+	// the Node owns the directory and the Result only carries digests. Empty means do not store.
+	EvidenceDir string `json:"evidenceDir,omitempty"`
 }

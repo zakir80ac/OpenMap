@@ -11,20 +11,20 @@ import (
 )
 
 type Config struct {
-	NodeID             string
-	SiteCode           string
-	SchedulerURL       string
-	MTLSCAPath         string
-	MTLSCertPath       string
-	MTLSKeyPath        string
-	EnrolToken         string
-	JobPullInterval    time.Duration
-	HeartbeatInterval  time.Duration
-	CollectorsDir      string
-	EvidenceDir        string
-	MaxConcurrentJobs  int
-	LogLevel           string
-	MetricsAddr        string
+	NodeID            string
+	SiteCode          string
+	SchedulerURL      string
+	MTLSCAPath        string
+	MTLSCertPath      string
+	MTLSKeyPath       string
+	EnrolToken        string
+	JobPullInterval   time.Duration
+	HeartbeatInterval time.Duration
+	CollectorsDir     string
+	EvidenceDir       string
+	MaxConcurrentJobs int
+	LogLevel          string
+	MetricsAddr       string
 }
 
 const (

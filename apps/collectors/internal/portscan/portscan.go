@@ -84,7 +84,7 @@ var bannerRules = []struct {
 	{"ftp", regexp.MustCompile(`^220[ -].*(FTP|FileZilla|vsftpd|ProFTPD)`)},
 	{"pop3", regexp.MustCompile(`^\+OK`)},
 	{"imap", regexp.MustCompile(`^\* OK`)},
-	{"mysql", regexp.MustCompile(`^.{4}\x0a([\d.]+-?[\w.-]*)\x00`)},
+	{"mysql", regexp.MustCompile(`^.{4}\n([\d.]+-?[\w.-]*)\.`)},
 	{"redis", regexp.MustCompile(`^-(NOAUTH|ERR)`)},
 	{"telnet", regexp.MustCompile(`^\xff[\xfb-\xfe]`)},
 }
@@ -132,7 +132,24 @@ func readBanner(conn net.Conn, timeout time.Duration) string {
 	_ = conn.SetReadDeadline(time.Now().Add(timeout))
 	buf := make([]byte, bannerBytes)
 	n, _ := bufio.NewReader(conn).Read(buf)
-	return strings.TrimRight(string(buf[:n]), "\r\n")
+	return printable(buf[:n])
+}
+
+// printable keeps the banner as text: binary protocol bytes (MySQL, Postgres, RDP) become '.',
+// so banners stay safe for JSON, jsonb and the console while the classifier still sees the shape.
+func printable(b []byte) string {
+	out := make([]rune, 0, len(b))
+	for _, c := range b {
+		switch {
+		case c == '\t' || c == '\n' || c == '\r':
+			out = append(out, rune(c))
+		case c < ' ' || c == 0x7f:
+			out = append(out, '.')
+		default:
+			out = append(out, rune(c))
+		}
+	}
+	return strings.TrimRight(string(out), "\r\n.")
 }
 
 func tlsName(state tls.ConnectionState) string {

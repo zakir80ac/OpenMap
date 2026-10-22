@@ -89,7 +89,7 @@ func (s *Supervisor) Run(ctx context.Context, job contract.Job, cred *contract.C
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	input, err := json.Marshal(contract.Invocation{Job: job, Credential: cred, RunID: runID})
+	input, err := json.Marshal(contract.Invocation{Job: job, Credential: cred, RunID: runID, EvidenceDir: s.evidenceDir})
 	if err != nil {
 		return s.fail(result, started, contract.ErrInternal, "encode invocation: "+err.Error(), false)
 	}
