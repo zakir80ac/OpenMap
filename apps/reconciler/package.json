@@ -13,6 +13,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node dist/main.js",
     "dev": "tsx watch src/main.ts",
+    "bench": "tsx src/bench.ts",
     "replay": "tsx src/replay.ts"
   },
   "dependencies": {

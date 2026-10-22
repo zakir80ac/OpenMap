@@ -89,7 +89,7 @@ async function main(): Promise<void> {
   if (args.reset) await resetTenant(prisma, sinks, env.CLICKHOUSE_DB, summaryTenant);
   const started = Date.now();
   let n = 0;
-  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, lookupMs: 0, reconcileMs: 0, persistMs: 0 };
+  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, lookupMs: 0, reconcileMs: 0, reconcileCpuMs: 0, persistMs: 0 };
   let tenantId = '';
   for await (const raw of results(args.dir)) {
     const result = collectorResultSchema.parse(raw);
@@ -104,7 +104,9 @@ async function main(): Promise<void> {
     totals.lookupMs += s.lookupMs;
     totals.reconcileMs += s.reconcileMs;
     totals.persistMs += s.persistMs;
+    totals.reconcileCpuMs += Math.round(s.reconcileCpuMs);
     n++;
+    console.log(JSON.stringify({ msg: 'result', collectorId: result.collectorId, cis: result.cis.length, relationships: result.relationships.length, created: s.created, lookupMs: s.lookupMs, reconcileMs: s.reconcileMs, reconcileCpuMs: Math.round(s.reconcileCpuMs), persistMs: s.persistMs, unresolved: s.unresolvedRelationships }));
     if (n % RECONCILER.replayProgressEvery === 0) console.log(JSON.stringify({ msg: 'progress', results: n, ...totals, seconds: Math.round((Date.now() - started) / TIME.msPerSecond) }));
   }
   let pendingResolved = 0;

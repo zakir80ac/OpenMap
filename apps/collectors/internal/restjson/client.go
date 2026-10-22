@@ -81,6 +81,12 @@ func parseBase(base string, defaultPort int) (*url.URL, error) {
 	return &url.URL{Scheme: "https", Host: net.JoinHostPort(host, port)}, nil
 }
 
+// Transport builds an HTTPS transport with the collector TLS policy for callers that need raw
+// http access (login endpoints returning tokens in headers).
+func Transport(verifyTLS bool) *http.Transport {
+	return &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // see New
+}
+
 // Raw returns every successful response body captured so far.
 func (c *Client) Raw() [][]byte {
 	c.mu.Lock()

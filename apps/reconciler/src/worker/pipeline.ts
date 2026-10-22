@@ -1,7 +1,7 @@
 // REQ-CORE-013 — one collector result through lookup → reconcile → persist. Relationships whose
 // endpoints are not yet known are parked in pending_relationships and retried after later results
 // land, so a sweep resolves cross-collector references no matter which result arrives first.
-import { RECONCILER } from '@openmap/constants';
+import { RECONCILER, TIME } from '@openmap/constants';
 import type { CollectorResult, ObservedRelationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { reconcile } from '../core/reconcile.js';
@@ -16,6 +16,13 @@ export interface PipelineSummary extends PersistSummary {
   lookupMs: number;
   reconcileMs: number;
   persistMs: number;
+  /** CPU time (user + system) the process consumed inside the synchronous reconcile phase. */
+  reconcileCpuMs: number;
+}
+
+function cpuMs(since: NodeJS.CpuUsage): number {
+  const d = process.cpuUsage(since);
+  return (d.user + d.system) / TIME.microsecondsPerMillisecond;
 }
 
 function json(value: unknown): Prisma.InputJsonValue {
@@ -52,7 +59,9 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
   };
   const lookup = await timed(() => loadLookup(prisma, result), (ms) => (lookupMs += ms));
   const t1 = Date.now();
+  const cpu1 = process.cpuUsage();
   const out = reconcile(result, lookup);
+  const reconcileCpuMs = cpuMs(cpu1);
   reconcileMs += Date.now() - t1;
   const summary = await timed(() => persist(prisma, result.tenantId, out), (ms) => (persistMs += ms));
   let unresolved = out.unresolvedRelationships;
@@ -69,7 +78,7 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
     unresolved = out2.unresolvedRelationships;
     await timed(() => park(prisma, result, unresolved), (ms) => (persistMs += ms));
   }
-  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs };
+  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
 }
 
 /** Retries parked relationships for a tenant; resolved ones are persisted, exhausted ones dropped. */
