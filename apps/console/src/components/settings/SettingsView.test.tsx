@@ -32,6 +32,7 @@ const state = { calls: [] as Array<{ op: string; variables: Record<string, unkno
 function respond(body: { query: string; variables?: Record<string, unknown> }): unknown {
   const op = /^(query|mutation) (\w+)/.exec(body.query)?.[2] ?? 'unknown';
   state.calls.push({ op, variables: body.variables ?? {} });
+  if (op === 'TenantSettings') return { data: { tenantSettings: { locale: 'en', timeZone: 'UTC', discoveryIntervalMinutes: 60, historyRetentionDays: 365, staleAfterDays: 7, auditRetentionDays: 2555, assistantEnabled: true, outboundIntegrationsEnabled: false } } };
   if (op !== 'AuditLog') return { errors: [{ message: 'unexpected operation ' + op }] };
   const action = body.variables?.['action'];
   const after = body.variables?.['after'];
@@ -84,7 +85,7 @@ describe.each(LOCALES)('SettingsView (%s)', (locale) => {
       expect(state.calls.some((c) => c.variables['after'] === 'c1')).toBe(true);
     });
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'runDiscovery' } });
+    fireEvent.change(screen.getByRole('combobox', { name: translate(locale, 'settings.audit.filter.action') }), { target: { value: 'runDiscovery' } });
     await waitFor(() => {
       expect(state.calls.some((c) => c.variables['action'] === 'runDiscovery')).toBe(true);
     });
@@ -97,7 +98,7 @@ describe.each(LOCALES)('SettingsView (%s)', (locale) => {
     roles.current = ['openmap-analyst'];
     mount(locale);
     expect(screen.queryByText(translate(locale, 'settings.audit.title'))).toBeNull();
-    expect(state.calls).toHaveLength(0);
+    expect(state.calls.filter((c) => c.op === 'AuditLog')).toHaveLength(0);
   });
 });
 

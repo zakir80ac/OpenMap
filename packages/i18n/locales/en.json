@@ -530,5 +530,22 @@
   "settings.audit.more": "Load more",
   "settings.audit.total": "{count} entries",
   "settings.audit.filter.action": "Filter by action",
-  "settings.audit.filter.all": "All actions"
+  "settings.audit.filter.all": "All actions",
+  "settings.tenant.title": "Tenant settings",
+  "settings.tenant.subtitle": "Defaults every user of this tenant inherits. Only administrators can change them.",
+  "settings.tenant.readOnly": "You can view these settings; an administrator can change them.",
+  "settings.tenant.locale": "Default locale",
+  "settings.tenant.locale.en": "English",
+  "settings.tenant.locale.ar": "Arabic",
+  "settings.tenant.timeZone": "Time zone",
+  "settings.tenant.discoveryIntervalMinutes": "Discovery interval (minutes)",
+  "settings.tenant.historyRetentionDays": "History retention (days)",
+  "settings.tenant.staleAfterDays": "Mark unseen CIs stale after (days)",
+  "settings.tenant.auditRetentionDays": "Audit log retention in analytics (days)",
+  "settings.tenant.assistantEnabled": "AI assistant enabled",
+  "settings.tenant.outboundIntegrationsEnabled": "Outbound integrations may call external systems",
+  "settings.tenant.save": "Save settings",
+  "settings.tenant.saving": "Saving…",
+  "settings.tenant.saved": "Settings saved.",
+  "settings.tenant.error": "The settings could not be saved."
 }

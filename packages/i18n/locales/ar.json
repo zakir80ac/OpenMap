@@ -530,5 +530,22 @@
   "settings.audit.more": "تحميل المزيد",
   "settings.audit.total": "{count} قيدًا",
   "settings.audit.filter.action": "تصفية حسب الإجراء",
-  "settings.audit.filter.all": "كل الإجراءات"
+  "settings.audit.filter.all": "كل الإجراءات",
+  "settings.tenant.title": "إعدادات المستأجر",
+  "settings.tenant.subtitle": "القيم الافتراضية التي يرثها كل مستخدم في هذا المستأجر. يمكن للمسؤولين فقط تغييرها.",
+  "settings.tenant.readOnly": "يمكنك عرض هذه الإعدادات؛ ويمكن للمسؤول تغييرها.",
+  "settings.tenant.locale": "اللغة الافتراضية",
+  "settings.tenant.locale.en": "الإنجليزية",
+  "settings.tenant.locale.ar": "العربية",
+  "settings.tenant.timeZone": "المنطقة الزمنية",
+  "settings.tenant.discoveryIntervalMinutes": "فاصل الاكتشاف (دقائق)",
+  "settings.tenant.historyRetentionDays": "الاحتفاظ بالسجل التاريخي (أيام)",
+  "settings.tenant.staleAfterDays": "اعتبار العناصر غير المرصودة قديمة بعد (أيام)",
+  "settings.tenant.auditRetentionDays": "الاحتفاظ بسجل التدقيق في التحليلات (أيام)",
+  "settings.tenant.assistantEnabled": "تفعيل المساعد الذكي",
+  "settings.tenant.outboundIntegrationsEnabled": "السماح للتكاملات الصادرة بالاتصال بأنظمة خارجية",
+  "settings.tenant.save": "حفظ الإعدادات",
+  "settings.tenant.saving": "جارٍ الحفظ…",
+  "settings.tenant.saved": "تم حفظ الإعدادات.",
+  "settings.tenant.error": "تعذّر حفظ الإعدادات."
 }

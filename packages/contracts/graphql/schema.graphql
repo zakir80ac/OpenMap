@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.2.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.3.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -155,6 +155,11 @@ type AuditEntry { id: UUID! at: DateTime! actor: String! action: String! subject
 type AuditEdge { cursor: String! node: AuditEntry! }
 type AuditConnection { edges: [AuditEdge!]! pageInfo: PageInfo! totalCount: Int! }
 
+# REQ-UI-019 REQ-CORE-012 (ADR-011) — tenant settings: the per-tenant layer above process configuration. Every
+# signed-in role reads them; administrators change them. Omitted input fields keep their value.
+type TenantSettings { locale: String! timeZone: String! discoveryIntervalMinutes: Int! historyRetentionDays: Int! staleAfterDays: Int! auditRetentionDays: Int! assistantEnabled: Boolean! outboundIntegrationsEnabled: Boolean! }
+input TenantSettingsInput { locale: String timeZone: String discoveryIntervalMinutes: Int historyRetentionDays: Int staleAfterDays: Int auditRetentionDays: Int assistantEnabled: Boolean outboundIntegrationsEnabled: Boolean }
+
 type Query {
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -178,6 +183,7 @@ type Query {
   layers: [LayerSummary!]!
   unknownCis(first: Int = 50, after: String): CiConnection!
   auditLog(subjectType: String, subjectId: String, actor: String, action: String, first: Int = 50, after: String): AuditConnection!
+  tenantSettings: TenantSettings!
 }
 
 input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLayer! type: String }
@@ -203,6 +209,7 @@ type Mutation {
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!
   acknowledgeIncident(incidentId: UUID!): Incident!
   askAssistant(question: String!): AssistantAnswer!
+  updateTenantSettings(input: TenantSettingsInput!): TenantSettings!
 }
 
 type Subscription {

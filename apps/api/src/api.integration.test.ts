@@ -6,7 +6,7 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type GenerateKeyPairResult } from 'jose';
 import neo4j from 'neo4j-driver';
-import { loadEnv } from '@openmap/config';
+import { loadEnv, TENANT_SETTINGS_DEFAULTS, type TenantSettings } from '@openmap/config';
 import { createPrismaClient, type Prisma } from '@openmap/db';
 import { createGraphRepository, type GraphCi, type GraphRelationship } from '@openmap/graph';
 import { AppModule } from './app.module.js';
@@ -277,6 +277,29 @@ describe('OpenMap API (integration)', () => {
     expect(asAuditor.errors).toBeUndefined();
     expect(asAuditor.data?.auditLog.totalCount).toBeGreaterThanOrEqual(1);
     expect(asAuditor.data?.auditLog.edges[0]?.node.subjectId).toBe(ids.subnet);
+  });
+
+  it('serves tenant settings to every signed-in role and lets only administrators change them', async () => {
+    // T-097 REQ-UI-019 REQ-CORE-012
+    const fields = '{ locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled }';
+    const read = await gql<{ tenantSettings: TenantSettings }>('{ tenantSettings ' + fields + ' }');
+    expect(read.errors).toBeUndefined();
+    expect(read.data?.tenantSettings).toEqual(TENANT_SETTINGS_DEFAULTS);
+
+    const denied = await gql('mutation { updateTenantSettings(input: { staleAfterDays: 14 }) { staleAfterDays } }');
+    expect(denied.errors?.[0]?.message).toMatch(/roles/);
+
+    const adminToken = await mint([ROLES.admin], keys.privateKey);
+    const updated = await gql<{ updateTenantSettings: TenantSettings }>('mutation { updateTenantSettings(input: { staleAfterDays: 14, locale: "ar", timeZone: null }) ' + fields + ' }', {}, adminToken);
+    expect(updated.errors).toBeUndefined();
+    expect(updated.data?.updateTenantSettings).toEqual({ ...TENANT_SETTINGS_DEFAULTS, staleAfterDays: 14, locale: 'ar' });
+    const again = await gql<{ tenantSettings: TenantSettings }>('{ tenantSettings ' + fields + ' }');
+    expect(again.data?.tenantSettings.staleAfterDays).toBe(14);
+
+    const invalid = await gql('mutation { updateTenantSettings(input: { discoveryIntervalMinutes: 0 }) { locale } }', {}, adminToken);
+    expect(invalid.errors?.[0]?.message).toMatch(/updateTenantSettings input/);
+    const audited = await prisma.auditLog.findFirst({ where: { tenantId, action: 'updateTenantSettings' } });
+    expect(audited).not.toBeNull();
   });
 
   it('creates and retires relationships through the outbox', async () => {

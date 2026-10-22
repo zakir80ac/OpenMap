@@ -634,3 +634,35 @@ export function auditLogInfiniteQuery(filter: AuditFilterInput) {
     getNextPageParam: (last) => (last.pageInfo.hasNextPage ? last.pageInfo.endCursor : null),
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Tenant settings — REQ-UI-019 REQ-CORE-012 (ADR-011)
+// ---------------------------------------------------------------------------------------------------------------
+
+export interface TenantSettingsView {
+  locale: string;
+  timeZone: string;
+  discoveryIntervalMinutes: number;
+  historyRetentionDays: number;
+  staleAfterDays: number;
+  auditRetentionDays: number;
+  assistantEnabled: boolean;
+  outboundIntegrationsEnabled: boolean;
+}
+
+export type TenantSettingsPatch = Partial<TenantSettingsView>;
+
+const TENANT_SETTINGS_FIELDS = 'locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled';
+const TENANT_SETTINGS_QUERY = 'query TenantSettings { tenantSettings { ' + TENANT_SETTINGS_FIELDS + ' } }';
+const UPDATE_TENANT_SETTINGS_MUTATION = 'mutation UpdateTenantSettings($input: TenantSettingsInput!) { updateTenantSettings(input: $input) { ' + TENANT_SETTINGS_FIELDS + ' } }';
+
+export function tenantSettingsQuery() {
+  return queryOptions({
+    queryKey: ['tenantSettings'] as const,
+    queryFn: ({ signal }) => gql<{ tenantSettings: TenantSettingsView }>(TENANT_SETTINGS_QUERY, {}, signal).then((d) => d.tenantSettings),
+  });
+}
+
+export function updateTenantSettings(input: TenantSettingsPatch): Promise<TenantSettingsView> {
+  return gql<{ updateTenantSettings: TenantSettingsView }>(UPDATE_TENANT_SETTINGS_MUTATION, { input }).then((d) => d.updateTenantSettings);
+}

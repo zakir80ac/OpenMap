@@ -1,5 +1,5 @@
 'use client';
-// REQ-SEC-005 REQ-UI-003 — Settings: the signed-in identity (user, tenant, roles) and the tenant's immutable audit
+// REQ-SEC-005 REQ-UI-003 REQ-UI-019 — Settings: the signed-in identity (user, tenant, roles), the tenant settings editor and the tenant's immutable audit
 // log from `auditLog`, newest first, with an action filter and cursor paging. Auditors and administrators see the
 // log; other roles see their session only, because the API refuses the query for them.
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { Icon } from '@/components/icons';
 import { useAuth, useCan } from '@/lib/auth';
 import { auditLogInfiniteQuery, type AuditEntry } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
+import { TenantSettingsCard } from './TenantSettingsCard';
 
 export interface SettingsViewProps {
   locale: Locale;
@@ -71,6 +72,8 @@ export function SettingsView({ locale }: SettingsViewProps): ReactNode {
           </div>
         </dl>
       </Card>
+
+      <TenantSettingsCard />
 
       {canAudit ? (
         <Card padding="24" className="flex flex-col gap-om-16">
