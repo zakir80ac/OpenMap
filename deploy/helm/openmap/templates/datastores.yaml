@@ -1,4 +1,18 @@
 # REQ-INT-003 — stateful datastores as in-chart StatefulSets (no external subcharts, air-gap friendly).
+# REQ-INT-001 — the schemas Keycloak and Superset use inside the shared Postgres, created on first start exactly as
+# deploy/compose/postgres/init does; OpenMap's own tables live in public and are managed by the migrations job.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openmap.fullname" . }}-postgres-init
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "postgres") | nindent 4 }}
+data:
+  01-schemas.sql: |
+    -- REQ-INT-001 — schemas for the platform services that share the Postgres instance.
+    -- OpenMap's own tables live in public (Prisma); Keycloak and Superset get their own schemas.
+    CREATE SCHEMA IF NOT EXISTS keycloak;
+    CREATE SCHEMA IF NOT EXISTS superset;
+---
 {{- $root := . }}
 {{- range $store := list
   (dict "component" "postgres" "image" .Values.postgres.image "port" 5432 "storage" .Values.postgres.storage "mount" "/var/lib/postgresql/data" "resources" .Values.postgres.resources)
@@ -42,6 +56,19 @@ spec:
       {{- with $root.Values.image.pullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if eq $store.component "memgraph" }}
+      # Memgraph crashes on start when its data directory is not owned by its own user (a fresh PersistentVolume is
+      # root-owned), so the volume is handed over before the database starts; the same image, as root, does it.
+      initContainers:
+        - name: own-data
+          image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $store.image }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          command: ["sh", "-c", "chown -R memgraph:memgraph {{ $store.mount }}"]
+          securityContext: { runAsUser: 0 }
+          volumeMounts:
+            - name: data
+              mountPath: {{ $store.mount }}
+      {{- end }}
       containers:
         - name: {{ $store.component }}
           image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $store.image }}
@@ -52,6 +79,11 @@ spec:
           volumeMounts:
             - name: data
               mountPath: {{ $store.mount }}
+            {{- if eq $store.component "postgres" }}
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+            {{- end }}
           {{- if eq $store.component "postgres" }}
           envFrom:
             - secretRef: { name: {{ include "openmap.fullname" $root }}-datastores }
@@ -86,6 +118,11 @@ spec:
             httpGet: { path: /health, port: 7700 }
             periodSeconds: 5
           {{- end }}
+      {{- if eq $store.component "postgres" }}
+      volumes:
+        - name: init
+          configMap: { name: {{ include "openmap.fullname" $root }}-postgres-init }
+      {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: data

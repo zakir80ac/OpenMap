@@ -1,11 +1,9 @@
-# REQ-INT-003 — kind cluster for the chart's smoke test. The default local-path provisioner would place every
-# PersistentVolume on the node container's overlay filesystem, which Memgraph's memory-mapped storage cannot use
-# (it crashes on start); mounting a real directory of the Docker host over the provisioner's root gives the volumes
-# an ordinary filesystem. Create with: kind create cluster --name openmap --config deploy/kind/cluster.yaml
+# REQ-INT-003 — kind cluster for the chart's smoke test (`helm install` on a real cluster):
+#   kind create cluster --name openmap --config deploy/kind/cluster.yaml
+# One control-plane node is enough for the evaluation values (values-local.yaml). Images built locally are loaded
+# with `kind load docker-image` (or `docker save | ctr images import` for images whose multi-platform manifests kind
+# cannot import), and the chart is installed with the image tags the compose files use.
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
-    extraMounts:
-      - hostPath: /var/lib/openmap-kind-volumes
-        containerPath: /var/local-path-provisioner
