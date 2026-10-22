@@ -43,7 +43,7 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 
 ## In progress
 
-- REQ-INT-002 / REQ-SEC-003: air-gap verification — the bundle is being loaded inside a Docker-in-Docker host whose new outbound connections are dropped by iptables (DNS and registry provably unreachable); smoke and the e2e suite run against it from the host on ports 13000/14000/18080. Result recorded in `docs/evidence/airgap/load-airgap.md` when complete.
+- REQ-INT-002 / REQ-SEC-003 are **Done**: the bundle loaded inside a Docker-in-Docker host whose new outbound connections are dropped by iptables, the stack came up healthy, was seeded with the scale-0.05 estate, and the full e2e suite passed against it (`docs/evidence/airgap/load-airgap.md`). The bundle is being rebuilt with the fixed console image, realm and loader. The e2e suite now has a `setup` project (first-use password change of seeded users) and runs with one worker because the realm's brute-force quick-login check disables an account several workers sign into within a second.
 - REQ-DISC-031 / REQ-DISC-004 (in review): installers exist; a packaged release (signed binaries, tarball with `bin/`, `collectors/`, `install/`) is still to produce.
 - REQ-SEC-009: SAML brokering and MFA are realm policy still to capture in `realm-openmap.json`; API tokens done.
 - Collectors: every planned family exists; none is Done without recorded vendor transcripts (risk R-004).
@@ -57,7 +57,7 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 
 ## Next three
 
-1. Finish the air-gap proof (REQ-INT-002 → Done, REQ-SEC-003) and rebuild the bundle with the parametrised realm; then push so the new CI jobs run (REQ-QA-002/004 → Done).
+1. Push so the new CI jobs run (REQ-QA-002/004 → Done, REQ-INT-003 → Done); exercise the CPU LLM profile offline (REQ-INT-004, REQ-INT-008).
 2. Release packaging for the Node and the agent (REQ-DISC-031/004 → Done): tarballs per OS with `bin/`, `collectors/`, `install/`, checksums; the SaaS layer screen (REQ-CMDB-011).
 3. Scale-1 replay for the 15-minute budget; then the remaining collector families and the Device42 agent import.
 

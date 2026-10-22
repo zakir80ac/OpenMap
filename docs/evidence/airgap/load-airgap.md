@@ -65,3 +65,32 @@ migrate-1  | memgraph: applied [0001_schema] skipped []
 
 ## End-to-end suite against the air-gapped stack
 
+The stack was seeded with the scale-0.05 synthetic estate (28,200 CIs; `docker cp` into the host, then
+`docker compose run --rm -v /estate:/estate reconciler node dist/replay.js --dir /estate`, 415 outbox batches
+dispatched) and the realm's `admin` and `auditor` were pointed at that tenant through the admin API, as on the dev
+stack. The suite then ran from the laptop against the published ports (`PUBLIC_CONSOLE_URL=http://localhost:13000`):
+
+```
+ok  1 [setup] › e2e/setup.ts › seeded users complete their first sign-in
+ok  2 [en] › perf.spec.ts › screen interactions stay under the p95 budget and the dependency map holds its frame rate
+ok  3 [en] › roles.spec.ts › an auditor cannot run discovery: the console disables the action and the API refuses the mutation
+ok  4 [en] › shell.spec.ts › anonymous visitors see the sign-in screen, signing in renders the dashboard shell
+ok  5 [en] › shell.spec.ts › a path without a locale is redirected to the default locale
+ok  6 [en] › walkthrough.spec.ts › every primary screen renders for a signed-in user and is captured in both locales
+ok  8 [ar] › roles.spec.ts › …
+ok  9 [ar] › shell.spec.ts › …
+ok 10 [ar] › shell.spec.ts › …
+ok 11 [ar] › walkthrough.spec.ts › …
+1 skipped (perf in ar, by design)   10 passed (34.7s)
+```
+
+Full output: `e2e-airgap.log`. Two test-harness changes came out of the first runs on a freshly imported realm: a
+`setup` project completes each seeded user's first-use password change before the locale projects start, and the
+suite runs with one worker because the realm's brute-force policy (`quickLoginCheckMilliSeconds`) disables an account
+that several workers sign into within the same second — Keycloak logged `user_temporarily_disabled`, the control
+working as designed.
+
+## Result
+
+REQ-INT-002 and REQ-SEC-003 acceptance met: the offline bundle loads on a host with no egress and the full e2e suite
+passes against it. The bundle is rebuilt after this test so it carries the fixed console image, realm and loader.

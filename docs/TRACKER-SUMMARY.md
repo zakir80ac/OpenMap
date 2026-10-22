@@ -1,50 +1,43 @@
 # OpenMap tracker summary
 
-Generated 2026-10-22T12:05:25.577Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-10-22T15:17:47.314Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 115 |
-| In progress | 57 |
+| Not started | 106 |
+| In progress | 50 |
 | Blocked | 0 |
-| In review | 2 |
-| Done | 14 |
+| In review | 9 |
+| Done | 23 |
 | **Total** | **188** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 19 | 8 | 5 | 0 | 42% |
+| CORE | 19 | 12 | 1 | 0 | 63% |
 | DISC | 31 | 1 | 27 | 0 | 3% |
 | DEP | 5 | 0 | 2 | 0 | 0% |
-| CMDB | 38 | 0 | 2 | 0 | 0% |
+| CMDB | 38 | 0 | 3 | 0 | 0% |
 | IPAM | 7 | 0 | 2 | 0 | 0% |
 | DCIM | 9 | 0 | 1 | 0 | 0% |
 | BSM | 5 | 0 | 3 | 0 | 0% |
-| UI | 27 | 2 | 5 | 0 | 7% |
+| UI | 27 | 3 | 5 | 0 | 11% |
 | AI | 6 | 0 | 2 | 0 | 0% |
-| INT | 19 | 1 | 5 | 0 | 5% |
+| INT | 19 | 2 | 3 | 0 | 11% |
 | QA | 4 | 1 | 0 | 0 | 25% |
-| PERF | 5 | 0 | 1 | 0 | 0% |
-| SEC | 13 | 1 | 2 | 0 | 8% |
+| PERF | 5 | 0 | 0 | 0 | 0% |
+| SEC | 13 | 4 | 1 | 0 | 31% |
 
 ## In progress
 
-- REQ-CORE-001 · CI contract frozen (packages/contracts/ci.ts)
-- REQ-CORE-002 · Collector contract frozen (collector.ts)
-- REQ-CORE-005 · Event contract frozen (event.ts)
-- REQ-CORE-006 · GraphQL schema frozen (graphql/schema.graphql)
 - REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
 - REQ-UI-006 · Screen · Discovery: nodes, jobs, credentials, sweep progress
 - REQ-UI-007 · Screen · Dependency map: Sigma.js WebGL in a worker, impact panel, layer filters
 - REQ-UI-008 · Screen · CMDB list and CI detail with tabs, history timeline and evidence
 - REQ-UI-012 · Screen · Business services: service model, SLA budget, incident timeline, cost
 - REQ-UI-013 · Screen · Impact modeling: scenarios, propagation flow, affected services, actions, report and respond
-- REQ-PERF-003 · Graph rendering at 60 fps
 - REQ-SEC-002 · OpenBao for collector and integration credentials
-- REQ-INT-002 · Air-gapped compose profile and offline bundle
-- REQ-INT-003 · Helm chart
 - REQ-AI-001 · NL to Cypher with schema grounding and read-only execution
 - REQ-AI-004 · Recommended actions in impact modeling and incidents
 - REQ-CMDB-012 · Layer · unknown populated and filterable
@@ -62,6 +55,7 @@ Generated 2026-10-22T12:05:25.577Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DISC-013 · Blade chassis / Cisco UCS / HPE OneView
 - REQ-DISC-014 · Storage arrays: Pure, NetApp, Dell EMC, HPE, IBM, Hitachi
 - REQ-DISC-015 · Fibre Channel fabric: Brocade, Cisco MDS (zones, name server)
+- REQ-DISC-016 · NAS shares: SMB, NFS
 - REQ-DISC-017 · Object storage: S3, MinIO, Ceph RGW
 - REQ-DISC-018 · Load balancers: F5, Citrix ADC, A10, HAProxy, NGINX
 - REQ-DISC-019 · Network flow: NetFlow v5/v9, IPFIX, sFlow
@@ -74,6 +68,7 @@ Generated 2026-10-22T12:05:25.577Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DISC-026 · PDU / UPS / CRAC monitoring over SNMP
 - REQ-DISC-027 · Vulnerability feed ingestion (NVD, vendor advisories, Tenable/Qualys/Rapid7 imports)
 - REQ-DISC-029 · Discovery scheduling, exclusions, rate limits, credential sets
+- REQ-CMDB-022 · SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows
 - REQ-IPAM-001 · Subnets, supernets, VRFs, VLANs, utilisation
 - REQ-IPAM-002 · IP addresses, reservations, DHCP ranges, conflicts
 - REQ-DCIM-002 · Buildings, rooms, rows, racks, rack layouts (front/rear)
@@ -84,8 +79,6 @@ Generated 2026-10-22T12:05:25.577Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-INT-005 · Incident reporting to ITSM
 - REQ-INT-006 · SIEM and SOAR integration
 - REQ-INT-007 · Delivery audit and replay for every integration message
-- REQ-SEC-009 · RBAC, SSO (SAML/OIDC), MFA, API tokens
-- REQ-DISC-031 · Remote Collector install
 - REQ-DEP-005 · Lane layout mode: layers as horizontal lanes with blast-radius isolation on click
 - REQ-CMDB-037 · CI short codes (layer prefix plus slug) generated, unique per tenant and editable
 
@@ -94,16 +87,16 @@ Generated 2026-10-22T12:05:25.577Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-CORE-001 [P0] CI contract frozen (packages/contracts/ci.ts)
-- REQ-CORE-002 [P0] Collector contract frozen (collector.ts)
-- REQ-CORE-005 [P0] Event contract frozen (event.ts)
-- REQ-CORE-006 [P0] GraphQL schema frozen (graphql/schema.graphql)
 - REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
 - REQ-UI-006 [P0] Screen · Discovery: nodes, jobs, credentials, sweep progress
 - REQ-UI-007 [P0] Screen · Dependency map: Sigma.js WebGL in a worker, impact panel, layer filters
 - REQ-UI-008 [P0] Screen · CMDB list and CI detail with tabs, history timeline and evidence
 - REQ-UI-012 [P0] Screen · Business services: service model, SLA budget, incident timeline, cost
 - REQ-UI-013 [P0] Screen · Impact modeling: scenarios, propagation flow, affected services, actions, report and respond
+- REQ-SEC-002 [P0] OpenBao for collector and integration credentials
+- REQ-AI-001 [P0] NL to Cypher with schema grounding and read-only execution
+- REQ-AI-004 [P1] Recommended actions in impact modeling and incidents
+- REQ-CMDB-012 [P0] Layer · unknown populated and filterable
 
 ## Open risks
 
