@@ -15,12 +15,13 @@ echo "building OpenMap images ${version}"
 for app in api scheduler reconciler bsm-engine; do
   docker build -f "$repo/deploy/docker/node-service.Dockerfile" --build-arg APP="$app" -t "openmap/${app}:${version}" "$repo"
 done
+docker build -f "$repo/deploy/docker/console.Dockerfile" -t "openmap/console:${version}" "$repo"
 docker build -f "$repo/deploy/docker/node.Dockerfile" -t "openmap/node:${version}" "$repo"
 
 echo "collecting infrastructure images from the compose files"
 infra="$(OPENMAP_VERSION="$version" docker compose -f "$compose/docker-compose.yml" -f "$compose/docker-compose.apps.yml" --profile cpu --profile node config --images | sort -u)"
 images="$infra"
-for app in api scheduler reconciler bsm-engine node; do
+for app in api scheduler reconciler bsm-engine console node; do
   images="$images
 openmap/${app}:${version}"
 done

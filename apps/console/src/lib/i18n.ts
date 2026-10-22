@@ -16,8 +16,14 @@ export async function requireLocale(params: Promise<{ locale: string }>): Promis
   return locale;
 }
 
-/** Default locale as exposed to every runtime by next.config.ts from loadEnv().DEFAULT_LOCALE. */
+/**
+ * Default locale. Only the middleware needs it, and the middleware runs on the server, so the deployment's own
+ * DEFAULT_LOCALE is read at run time first (one console image serves every deployment); the value next.config.mjs
+ * inlined at build time is the fallback for development builds that run without that variable.
+ */
 export function defaultLocale(): Locale {
-  const configured = process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? '';
-  return isLocale(configured) ? configured : LOCALES[0];
+  const runtime = process.env.DEFAULT_LOCALE ?? '';
+  if (isLocale(runtime)) return runtime;
+  const built = process.env.NEXT_PUBLIC_DEFAULT_LOCALE ?? '';
+  return isLocale(built) ? built : LOCALES[0];
 }

@@ -1,5 +1,6 @@
 // REQ-UI-003 — adds the default locale to any path that lacks one, so `/cmdb` becomes `/<DEFAULT_LOCALE>/cmdb`.
-// Runs on the edge runtime; the default locale is inlined by next.config.ts from loadEnv().DEFAULT_LOCALE.
+// Runs on the edge runtime; the default locale is the deployment's DEFAULT_LOCALE at run time, falling back to the
+// value next.config.mjs inlined at build time.
 import { NextResponse, type NextRequest } from 'next/server';
 import { defaultLocale } from '@/lib/i18n';
 import { splitLocale, withLocale } from '@/lib/locale-path';

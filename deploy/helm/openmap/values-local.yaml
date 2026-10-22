@@ -1,0 +1,74 @@
+# REQ-INT-003 — values for a single-node evaluation cluster (kind, minikube, Docker Desktop): one replica of
+# everything, small volumes and modest requests so the whole stack fits a laptop. Images are the locally built
+# `openmap/*:dev` tags loaded into the cluster (`kind load docker-image …`). Not for production: see values.yaml.
+image:
+  tag: dev
+  pullPolicy: IfNotPresent
+
+api:
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "2", memory: 1Gi }
+
+console:
+  replicas: 1
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+scheduler:
+  pkiStorage: 100Mi
+  evidenceStorage: 1Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "2", memory: 1Gi }
+
+reconciler:
+  replicas: 1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+bsmEngine:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+ingress:
+  enabled: false
+
+postgres:
+  storage: 2Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "2", memory: 1Gi }
+
+memgraph:
+  storage: 2Gi
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+clickhouse:
+  storage: 2Gi
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+valkey:
+  storage: 500Mi
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: "1", memory: 256Mi }
+
+meilisearch:
+  storage: 1Gi
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: "1", memory: 1Gi }
+
+keycloak:
+  resources:
+    requests: { cpu: 200m, memory: 512Mi }
+    limits: { cpu: "2", memory: 1536Mi }

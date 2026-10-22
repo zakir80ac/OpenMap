@@ -21,6 +21,7 @@ x-app-env: &app-env
   MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-openmap-dev-master-key}
   KEYCLOAK_URL: http://keycloak:8080
   KEYCLOAK_REALM: ${KEYCLOAK_REALM:-openmap}
+  KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-openmap-console}
   OPENBAO_ADDR: http://openbao:8200
   OPENBAO_TOKEN: ${OPENBAO_TOKEN:-openmap-dev-root}
   SUPERSET_URL: http://superset:8088
@@ -69,6 +70,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  console:
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/console:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/console.Dockerfile
+    environment:
+      <<: *app-env
+      CONSOLE_PORT: "3000"
+    ports: ["${CONSOLE_PORT:-3000}:3000"]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
 
   scheduler:
     <<: *restart
