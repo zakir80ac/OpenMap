@@ -11,6 +11,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `dhcp` | dhcp | winrm, ssh | password, ssh_key | host | dhcp_scope, dhcp_lease, ip_address |
 | `dns` | dns | dns-axfr | none, api_token | host | dns_zone, dns_record, ip_address |
 | `fc_fabric` | fc_fabric | ssh | password, ssh_key | host | fc_switch, fc_fabric, fc_zone, port |
+| `hpe_oneview` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
 | `hyperv` | hyperv | winrm | password | host | vm_cluster, hypervisor, host, vm, operating_system, ip_address |
 | `ipmi_redfish` | ipmi_redfish | redfish | password | host | host, bmc |
 | `kubernetes` | kubernetes | https | api_token, password | host, url | k8s_cluster, k8s_namespace, k8s_workload, k8s_service, container, container_registry, host, operating_system, ip_address |
@@ -30,4 +31,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-25 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+26 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
