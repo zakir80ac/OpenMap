@@ -22,6 +22,9 @@ describe('cypher builders', () => {
     expect(q.text).toContain('(root)<-[:DEPENDS_ON|RUNS_ON');
     expect(q.text).toContain('*1..4]-(x:Ci');
     expect(q.text).toContain('validTo IS NULL');
+    expect(q.text).toContain('UNION ALL');
+    expect(q.text).toContain('*0..4]-(x:Ci {tenantId: $tenantId})-[ps:PART_OF_SERVICE]->(s:Ci');
+    expect(q.text.split('PART_OF_SERVICE').length).toBe(2);
     expect(q.params).toEqual({ tenantId: tenant, rootId: 'root', asOf: null });
   });
   it('builds a downstream query with restricted edge types', () => {

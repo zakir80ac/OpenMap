@@ -176,11 +176,18 @@ export class BoltGraphRepository implements GraphRepository {
   async impact(tenantId: string, rootId: string, options: ImpactQueryOptions): Promise<ImpactResult> {
     const started = Date.now();
     const q = impactQuery(tenantId, rootId, options);
-    const nodes = await this.read(q.text, q.params, (r): ImpactNode => ({
+    const rows = await this.read(q.text, q.params, (r): ImpactNode => ({
       ci: toCi(r.get('ci') as CiRow),
       depth: toNumber(r.get('depth')),
       path: r.get('path') as string[],
     }));
+    // The union may return a service both as a closure node and via the service hop; keep the shortest.
+    const byId = new Map<string, ImpactNode>();
+    for (const n of rows) {
+      const prev = byId.get(n.ci.id);
+      if (!prev || n.depth < prev.depth) byId.set(n.ci.id, n);
+    }
+    const nodes = [...byId.values()].sort((a, b) => a.depth - b.depth || (a.ci.tier ?? Number.MAX_SAFE_INTEGER) - (b.ci.tier ?? Number.MAX_SAFE_INTEGER));
     const services = nodes.filter((n) => n.ci.type === 'business_service');
     return { rootId, nodes, services, durationMs: Date.now() - started };
   }

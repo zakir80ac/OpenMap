@@ -735,7 +735,8 @@ CREATE TABLE "audit_logs" (
     "subjectId" TEXT NOT NULL,
     "details" JSONB NOT NULL,
     "traceparent" TEXT,
-    "at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "at" TIMESTAMPTZ(3) NOT NULL,
+    "createdAt" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
 );

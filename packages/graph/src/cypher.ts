@@ -42,31 +42,43 @@ export function temporal(alias: string): string {
     ' AND ($asOf IS NULL OR ' + alias + '.validFrom <= $asOf)';
 }
 
+const SERVICE_EDGE: RelationshipType = 'part_of_service';
+
+/** Dependency edges to traverse; the service membership edge is applied as a final forward hop instead. */
 function edgeAlternatives(types: readonly RelationshipType[]): string {
-  const list = types.length ? types : GRAPH.impactEdgeTypes;
+  const list = (types.length ? types : GRAPH.impactEdgeTypes).filter((t) => t !== SERVICE_EDGE);
   return list.map((t) => relLabel(t)).join('|');
 }
 
+const CI_PROJECTION = '{ .id, .tenantId, .type, .layer, .name, .displayName, .lifecycle, .health, .tier, .validFrom, .validTo }';
+
 /**
- * Impact traversal. Upstream follows edges against their direction (who depends on the root);
- * downstream follows with the direction (what the root depends on). Business services are
- * collected separately with their shortest path.
+ * Impact traversal. Upstream follows dependency edges against their direction (who depends on the
+ * root); downstream follows with the direction (what the root depends on). Business services are
+ * reached by one forward PART_OF_SERVICE hop from any node in the closure, including the root.
+ * Each node and service is returned once with its shortest path.
  */
 export function impactQuery(tenantId: string, rootId: string, options: ImpactQueryOptions): Query {
   const depth = clampDepth(options.maxDepth);
   const rels = edgeAlternatives(options.edgeTypes);
   const arrow = (dir: ImpactDirection): [string, string] => (dir === 'upstream' ? ['<-', '-'] : dir === 'downstream' ? ['-', '->'] : ['-', '-']);
   const [left, right] = arrow(options.direction);
-  const text =
+  const service = relLabel(SERVICE_EDGE);
+  const closure =
     'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
     'MATCH p = (root)' + left + '[:' + rels + '*1..' + String(depth) + ']' + right + '(x:Ci {tenantId: $tenantId})\n' +
     'WHERE ' + temporal('x') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')\n' +
     'WITH x, p ORDER BY length(p) ASC\n' +
     'WITH x, head(collect(p)) AS sp\n' +
-    'RETURN x { .id, .tenantId, .type, .layer, .name, .displayName, .lifecycle, .health, .tier, .validFrom, .validTo } AS ci,\n' +
-    '       length(sp) AS depth,\n' +
-    '       [n IN nodes(sp) | n.id] AS path\n' +
-    'ORDER BY depth ASC, ci.tier ASC';
+    'RETURN x ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
+  const services =
+    'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
+    'MATCH p = (root)' + left + '[:' + rels + '*0..' + String(depth) + ']' + right + '(x:Ci {tenantId: $tenantId})-[ps:' + service + ']->(s:Ci {tenantId: $tenantId})\n' +
+    'WHERE ' + temporal('s') + ' AND ' + temporal('ps') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')\n' +
+    'WITH s, p ORDER BY length(p) ASC\n' +
+    'WITH s, head(collect(p)) AS sp\n' +
+    'RETURN s ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
+  const text = closure + '\nUNION ALL\n' + services;
   return { text, params: { tenantId, rootId, asOf: options.asOf } };
 }
 

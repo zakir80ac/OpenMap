@@ -9,12 +9,14 @@ const env = loadEnv();
 const repo = new BoltGraphRepository({ url: env.MEMGRAPH_URL, user: env.MEMGRAPH_USER, password: env.MEMGRAPH_PASSWORD, engine: 'memgraph' });
 const tenantId = randomUUID();
 const now = new Date().toISOString();
+/** Everything is created an hour ago so that "as of a moment before retirement" has history to read. */
+const created = new Date(Date.now() - 3_600_000).toISOString();
 
 function ci(type: GraphCi['type'], layer: GraphCi['layer'], name: string, tier: number | null = null): GraphCi {
-  return { id: randomUUID(), tenantId, type, layer, name, displayName: name, lifecycle: 'managed', health: 'healthy', tier, validFrom: now, validTo: null };
+  return { id: randomUUID(), tenantId, type, layer, name, displayName: name, lifecycle: 'managed', health: 'healthy', tier, validFrom: created, validTo: null };
 }
 function rel(type: GraphRelationship['type'], from: GraphCi, to: GraphCi): GraphRelationship {
-  return { id: randomUUID(), tenantId, type, fromCiId: from.id, toCiId: to.id, validFrom: now, validTo: null };
+  return { id: randomUUID(), tenantId, type, fromCiId: from.id, toCiId: to.id, validFrom: created, validTo: null };
 }
 
 describe('Memgraph repository', () => {

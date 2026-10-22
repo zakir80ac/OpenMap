@@ -171,6 +171,19 @@ export const TIME = {
   msPerSecond: 1000,
 } as const;
 
+/** HTTP statuses worth retrying when delivering to a remote system; everything else fails fast. */
+export const HTTP = {
+  retryableStatuses: [408, 425, 429, 500, 502, 503, 504] as const,
+} as const;
+
+/** ITSM priority scale shared by every adapter: 1 is the most urgent. */
+export const ITSM = {
+  priorityHighest: 1,
+  priorityHigh: 2,
+  priorityMedium: 3,
+  jiraPriorityNames: { 1: 'Highest', 2: 'High', 3: 'Medium' } as const,
+} as const;
+
 /** Assistant limits: schema grounding is truncated to keep prompts inside small local models. */
 export const ASSISTANT = {
   maxRowsReturned: 200,
