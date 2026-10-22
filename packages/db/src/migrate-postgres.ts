@@ -81,3 +81,33 @@ export async function migratePostgres(env: Env = loadEnv(), dir: string = MIGRAT
   }
   return report;
 }
+
+/** Connects and runs a trivial query; rejects while Postgres is not yet accepting connections. */
+export async function pingPostgres(env: Env = loadEnv()): Promise<void> {
+  const client = new pg.Client({ connectionString: env.POSTGRES_URL });
+  await client.connect();
+  try {
+    await client.query('SELECT 1');
+  } finally {
+    await client.end();
+  }
+}
+
+/**
+ * Names of migrations on disk that the bookkeeping table does not record as finished. Empty means the schema is
+ * current; a missing bookkeeping table means nothing has ever been applied, so every migration is pending.
+ */
+export async function pendingPostgresMigrations(env: Env = loadEnv(), dir: string = MIGRATIONS_DIR): Promise<string[]> {
+  const client = new pg.Client({ connectionString: env.POSTGRES_URL });
+  await client.connect();
+  try {
+    const exists = await client.query<{ present: boolean }>('SELECT to_regclass($1) IS NOT NULL AS present', [BOOKKEEPING_TABLE]);
+    const onDisk = listPostgresMigrations(dir).map((m) => m.name);
+    if (exists.rows[0]?.present !== true) return onDisk;
+    const done = await client.query<{ migration_name: string }>('SELECT migration_name FROM "' + BOOKKEEPING_TABLE + '" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL');
+    const applied = new Set(done.rows.map((r) => r.migration_name));
+    return onDisk.filter((name) => !applied.has(name));
+  } finally {
+    await client.end();
+  }
+}

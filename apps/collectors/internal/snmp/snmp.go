@@ -195,12 +195,23 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 			}
 		}
 	}
+	// Cooling MIBs (REQ-DISC-026): the same one-GET probe; CRAC units answer, everything else returns noSuchObject.
+	if cooling, err := c.Get(coolingScalarOIDs); err == nil {
+		for _, pdu := range cooling.Variables {
+			if v := decode(pdu); v != nil {
+				w.Scalars[pdu.Name] = v
+			}
+		}
+	}
 	tables := tableOIDs
 	if !skipArp {
 		tables = append(append([]string{}, tables...), oidIpNetToMediaPhys)
 	}
 	if parsePower(w) != nil {
 		tables = append(append([]string{}, tables...), powerTableOIDs...)
+	}
+	if parseCooling(w, w.scalarString(oidSysObjectID)) != nil {
+		tables = append(append([]string{}, tables...), coolingTableOIDs...)
 	}
 	for _, root := range tables {
 		if ctx.Err() != nil {

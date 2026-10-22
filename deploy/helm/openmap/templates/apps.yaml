@@ -1,15 +1,13 @@
-# REQ-INT-003 — the OpenMap services: migrations job (pre-install/pre-upgrade hook), API, console,
-# scheduler (mTLS listener with its PKI volume), reconciler and BSM engine.
+# REQ-INT-003 — the OpenMap services: migrations job, API, console, scheduler (mTLS listener with its PKI
+# volume), reconciler and BSM engine. The migrations job is an ordinary resource, not a hook: a pre-install hook
+# would run before the datastores and the credentials Secret exist. It waits for Postgres, applies every pending
+# migration (idempotent bookkeeping), and the services wait for `migrate status` to report nothing pending.
 {{- $root := . }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "openmap.fullname" . }}-migrate
+  name: {{ include "openmap.fullname" . }}-migrate-{{ .Release.Revision }}
   labels: {{- include "openmap.componentLabels" (dict "root" . "component" "migrate") | nindent 4 }}
-  annotations:
-    helm.sh/hook: pre-install,pre-upgrade
-    helm.sh/hook-weight: "0"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 spec:
   backoffLimit: {{ .Values.migrate.backoffLimit }}
   template:
@@ -20,6 +18,12 @@ spec:
       {{- with .Values.image.pullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: wait-for-postgres
+          image: {{ include "openmap.image" (dict "root" . "app" "reconciler") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js ping; do sleep {{ .Values.migrate.pollSeconds }}; done"]
+          env: {{- include "openmap.appEnv" . | nindent 12 }}
       containers:
         - name: migrate
           image: {{ include "openmap.image" (dict "root" . "app" "reconciler") }}
@@ -48,6 +52,12 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
+      initContainers:
+        - name: wait-for-migrations
+          image: {{ include "openmap.image" (dict "root" $root "app" $app.component) }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js status; do sleep {{ $root.Values.migrate.pollSeconds }}; done"]
+          env: {{- include "openmap.appEnv" $root | nindent 12 }}
       containers:
         - name: {{ $app.component }}
           image: {{ include "openmap.image" (dict "root" $root "app" $app.component) }}
@@ -107,6 +117,8 @@ spec:
             - { name: CONSOLE_PORT, value: {{ .Values.console.port | quote }} }
             - { name: PUBLIC_API_URL, value: {{ .Values.api.publicUrl | quote }} }
             - { name: PUBLIC_KEYCLOAK_URL, value: {{ .Values.keycloak.publicUrl | quote }} }
+            - { name: KEYCLOAK_REALM, value: {{ .Values.keycloak.realm | quote }} }
+            - { name: KEYCLOAK_CLIENT_ID, value: {{ .Values.keycloak.consoleClientId | quote }} }
             - { name: DEFAULT_LOCALE, value: {{ .Values.global.tenantDefaultLocale | quote }} }
           ports: [{ containerPort: {{ .Values.console.port }} }]
           readinessProbe:
@@ -152,6 +164,12 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
+      initContainers:
+        - name: wait-for-migrations
+          image: {{ include "openmap.image" (dict "root" . "app" "scheduler") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js status; do sleep {{ .Values.migrate.pollSeconds }}; done"]
+          env: {{- include "openmap.appEnv" . | nindent 12 }}
       containers:
         - name: scheduler
           image: {{ include "openmap.image" (dict "root" . "app" "scheduler") }}

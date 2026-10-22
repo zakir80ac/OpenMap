@@ -52,7 +52,9 @@ bsmEngine:
     limits: { cpu: "2", memory: 2Gi }
 
 migrate:
-  backoffLimit: 3
+  backoffLimit: 6
+  # Seconds between readiness polls while the job waits for Postgres and the services wait for the migrations.
+  pollSeconds: 5
 
 ingress:
   enabled: true
@@ -105,6 +107,8 @@ meilisearch:
 keycloak:
   image: quay.io/keycloak/keycloak:26.3
   realm: openmap
+  # Public client the console signs in through (KEYCLOAK_CLIENT_ID); the realm export defines it.
+  consoleClientId: openmap-console
   adminUser: admin
   adminPassword: admin
   publicUrl: http://auth.openmap.localhost

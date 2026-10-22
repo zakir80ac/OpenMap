@@ -68,6 +68,14 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 	if d.Power != nil && d.Serial != "" {
 		ciType = d.Power.Kind
 	}
+	if d.Cooling != nil {
+		if d.Serial == "" && d.Cooling.Serial != "" {
+			identity["serialNumber"] = d.Cooling.Serial
+		}
+		if identity["serialNumber"] != "" {
+			ciType = typeCoolingUnit
+		}
+	}
 	if len(identity) == 0 {
 		// Nothing we can key on beyond the address: surface it as unknown for a person to label.
 		ciType = typeUnknown
@@ -91,6 +99,11 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 	}
 	if d.Power != nil {
 		powerAttributes(d.Power, attrs)
+	}
+	if d.Cooling != nil {
+		coolingAttributes(d.Cooling, attrs)
+		attrs["model"] = firstNonEmpty(d.Model, d.Cooling.Model)
+		attrs["firmware"] = firstNonEmpty(d.Firmware, d.Cooling.Firmware)
 	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: ciType, Identity: identity, Name: firstNonEmpty(d.SysName, target.Value), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 	if d.Power != nil && ciType == typePdu {
