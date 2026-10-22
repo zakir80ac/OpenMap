@@ -8,8 +8,11 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `certificate` | certificate | tls | none | host, url | certificate, listening_service |
 | `cisco_ucs` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
 | `citrix_adc` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
+| `cloud_alibaba` | cloud_alibaba | https | access_key | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system, load_balancer, database_cluster |
 | `cloud_aws` | cloud_aws | https | api_token, cloud_role | account | cloud_account, cloud_resource, vm, subnet, ip_address, database_cluster, load_balancer |
 | `cloud_azure` | cloud_azure | https | oauth_client | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system |
+| `cloud_gcp` | cloud_gcp | https | service_account | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system, load_balancer, database_cluster |
+| `cloud_oci` | cloud_oci | https | api_key | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system, load_balancer, database_cluster |
 | `database` | database | postgresql, mysql, tds, mongodb, resp | password, none | host | database_cluster, database, listening_service, ip_address |
 | `dhcp` | dhcp | winrm, ssh | password, ssh_key | host | dhcp_scope, dhcp_lease, ip_address |
 | `dns` | dns | dns-axfr | none, api_token | host | dns_zone, dns_record, ip_address |
@@ -22,6 +25,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `kvm_libvirt` | kvm_libvirt | ssh | password, ssh_key | host | hypervisor, host, vm, operating_system, ip_address |
 | `ldap` | ldap | ldap, ldaps | password | host | user_account, service_account, host |
 | `load_balancer` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
+| `nas` | nas | winrm, ssh, sunrpc | password, ssh_key, none | host | nas_share |
 | `netflow` | netflow | netflow-v5, netflow-v9, ipfix, sflow-v5 | none | flow_source | ip_address |
 | `nginx` | load_balancer | http, https | none, password | host, url | load_balancer, listening_service, ip_address |
 | `nutanix_ahv` | nutanix_ahv | https | password | host, url | vm_cluster, hypervisor, host, bmc, vm, operating_system, ip_address, subnet, vlan, lun |
@@ -36,4 +40,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-31 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+35 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
