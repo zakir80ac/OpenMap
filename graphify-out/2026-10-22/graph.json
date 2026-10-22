@@ -861,7 +861,7 @@
       "label": "Layers",
       "file_type": "code",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L296",
+      "source_location": "L319",
       "_origin": "ast"
     },
     {
@@ -869,7 +869,7 @@
       "label": "Impact",
       "file_type": "code",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L311",
+      "source_location": "L334",
       "_origin": "ast"
     },
     {
@@ -877,7 +877,7 @@
       "label": "Plan",
       "file_type": "code",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L336",
+      "source_location": "L359",
       "_origin": "ast"
     },
     {
@@ -885,7 +885,7 @@
       "label": "Subnets",
       "file_type": "code",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L380",
+      "source_location": "L403",
       "_origin": "ast"
     },
     {
@@ -8633,6 +8633,94 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_api_src_tenant_tenant_settings_resolver",
+      "label": "tenant-settings.resolver.ts",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsinputschema",
+      "label": "tenantSettingsInputSchema",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_withoutnulls",
+      "label": "withoutNulls()",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "label": "TenantSettingsResolver",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_ts_resolver",
+      "label": "Resolver",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_ts_mutation",
+      "label": "Mutation",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_ts_args",
+      "label": "Args",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_tenantsettings",
+      "label": ".tenantSettings()",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "label": ".updateTenantSettings()",
+      "file_type": "code",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L34",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_tenant_tenant_settings_resolver_ts_docref_adr_0011",
+      "label": "ADR-0011",
+      "file_type": "doc_ref",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_api_src_tenant_tenant_settings_service",
       "label": "tenant-settings.service.ts",
       "file_type": "code",
@@ -8781,7 +8869,7 @@
       "label": "TenantModule",
       "file_type": "code",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast"
     },
     {
@@ -23923,6 +24011,14 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_console_e2e_settings_spec",
+      "label": "settings.spec.ts",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_console_e2e_setup",
       "label": "setup.ts",
       "file_type": "code",
@@ -26391,7 +26487,7 @@
       "label": "mount()",
       "file_type": "code",
       "source_file": "apps/console/src/components/settings/SettingsView.test.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "_origin": "ast"
     },
     {
@@ -26407,7 +26503,7 @@
       "label": "SettingsViewProps",
       "file_type": "code",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -26415,7 +26511,7 @@
       "label": "AUDIT_ACTIONS",
       "file_type": "code",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -26423,7 +26519,7 @@
       "label": "summariseDetails()",
       "file_type": "code",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -26431,7 +26527,127 @@
       "label": "SettingsView()",
       "file_type": "code",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test",
+      "label": "TenantSettingsCard.test.tsx",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_roles",
+      "label": "roles",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_authvalue",
+      "label": "authValue()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_server",
+      "label": "server",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_state",
+      "label": "state",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_respond",
+      "label": "respond()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
       "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_test_mount",
+      "label": "mount()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L62",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard",
+      "label": "TenantSettingsCard.tsx",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_number_fields",
+      "label": "NUMBER_FIELDS",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_switch_fields",
+      "label": "SWITCH_FIELDS",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_diffsettings",
+      "label": "diffSettings()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "label": "TenantSettingsCard()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsformprops",
+      "label": "TenantSettingsFormProps",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L70",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "label": "TenantSettingsForm()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L77",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_settings_tenantsettingscard_tsx_docref_adr_0011",
+      "label": "ADR-0011",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L2",
       "_origin": "ast"
     },
     {
@@ -29144,6 +29360,46 @@
       "file_type": "code",
       "source_file": "apps/console/src/lib/queries.ts",
       "source_location": "L629",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_queries_tenantsettingsview",
+      "label": "TenantSettingsView",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L642",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_queries_tenantsettingspatch",
+      "label": "TenantSettingsPatch",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L653",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_queries_tenantsettingsquery",
+      "label": "tenantSettingsQuery()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L659",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_queries_updatetenantsettings",
+      "label": "updateTenantSettings()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L666",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_queries_ts_docref_adr_0011",
+      "label": "ADR-0011",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L639",
       "_origin": "ast"
     },
     {
@@ -63953,6 +64209,46 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_adr_adr_011_tenant_settings_over_graphql",
+      "label": "ADR-011-tenant-settings-over-graphql.md",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_011_tenant_settings_over_graphql_adr_011_tenant_settings_are_read_and_changed_through_graphql_contract_0_3_0",
+      "label": "ADR-011 — Tenant settings are read and changed through GraphQL (contract 0.3.0)",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_011_tenant_settings_over_graphql_context",
+      "label": "Context",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_011_tenant_settings_over_graphql_decision",
+      "label": "Decision",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_011_tenant_settings_over_graphql_consequences",
+      "label": "Consequences",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_evidence_airgap_bundle_build",
       "label": "bundle-build.md",
       "file_type": "document",
@@ -65327,8 +65623,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Readiness on /readyz and liveness on /healthz; reconciler and bsm-engine share the same range loop with port 0 so they get no Service or probes.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 268,
+      "community_name": "Design cues taken from the AetherTwin prototype (Gemini / AI Studio)",
       "norm_label": "helm api deployment",
       "id": "deploy_helm_openmap_templates_apps_api_deployment"
     },
@@ -65458,8 +65754,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Hosts are parsed from api.publicUrl, console.publicUrl and keycloak.publicUrl with urlParse; /graphql, /healthz, /readyz route to the API and / to the console, with a separate console host rule only when it differs from the API host.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 242,
+      "community_name": "@openmap/console",
       "norm_label": "helm ingress (api, console, keycloak hosts)",
       "id": "deploy_helm_openmap_templates_ingress_ingress"
     },
@@ -67972,8 +68268,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "capability area 9: onboarding and digital twin",
       "id": "docs_capability_map_onboarding_digital_twin"
     },
@@ -68182,8 +68478,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "six-step onboarding: organization, sites, connectivity, nodes and credentials, integrations, generate twin",
       "id": "docs_capability_map_six_step_onboarding_wizard"
     },
@@ -68196,8 +68492,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "inter-site links as cis with kind, provider, bandwidth, diverse paths (sitelinkschema, site_link)",
       "id": "docs_capability_map_inter_site_links_as_cis"
     },
@@ -68828,8 +69124,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Reviewed at Syed's request: a six-section IT Digital Twin and BSM demo; records what OpenMap adopts, already had, and deliberately does differently.",
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "design cues taken from the aethertwin prototype (gemini / ai studio)",
       "id": "docs_design_cues_aethertwin_prototype_review"
     },
@@ -68857,8 +69153,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "adopt a sites and connectivity screen: wan links with carrier, latency, throughput, loss, redundancy; site cards",
       "id": "docs_design_cues_sites_and_connectivity_screen"
     },
@@ -68871,8 +69167,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "rack twin: adopt per-device power draw and exhaust temperature, phase a/b balance kpi, slot inspection cable list",
       "id": "docs_design_cues_rack_twin_cues"
     },
@@ -68913,8 +69209,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "adopt runbooks attached to scenarios and incidents, and estimated loss per hour as the standard money figure",
       "id": "docs_design_cues_incident_sandbox_runbooks"
     },
@@ -68942,8 +69238,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "layer_headline_metric: one headline metric per layer so every card and table agrees",
       "id": "docs_design_cues_layer_headline_metric"
     },
@@ -68956,8 +69252,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "money everywhere: impact per hour, annual contract cost, total support commitment surfaced on cards",
       "id": "docs_design_cues_money_everywhere"
     },
@@ -68970,8 +69266,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "health vocabulary kept as healthy / degraded / down / unknown / at-risk because they map to propagation rules",
       "id": "docs_design_cues_health_vocabulary"
     },
@@ -68984,8 +69280,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "warranties and support contracts are records attached to assets and vendors, not dependency-graph cis",
       "id": "docs_design_cues_warranties_as_records_not_cis"
     },
@@ -69514,8 +69810,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 350,
-      "community_name": "oids.go",
+      "community": 139,
+      "community_name": "OpenMap — Claude Code master prompt (CLAUDE.md)",
       "norm_label": "organization.json: organization, site[] and sitelink[] documents for the onboarding wizard",
       "id": "tools_synth_estate_readme_organization_json"
     },
@@ -70452,6 +70748,28 @@
     },
     {
       "source": "apps_api_src_api_integration_test",
+      "target": "e_openmap_packages_config_dist_index_tenant_settings_defaults",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/api.integration.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_api_integration_test",
+      "target": "e_openmap_packages_config_dist_index_tenantsettings",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/api.integration.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_api_integration_test",
       "target": "e_openmap_packages_db_dist_index_js",
       "relation": "imports_from",
       "context": "import",
@@ -70772,7 +71090,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L296",
+      "source_location": "L319",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -70782,7 +71100,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L311",
+      "source_location": "L334",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -70792,7 +71110,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L336",
+      "source_location": "L359",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -70802,7 +71120,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/api.integration.test.ts",
-      "source_location": "L380",
+      "source_location": "L403",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -96740,6 +97058,296 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "ref_nestjs_graphql",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "e_openmap_packages_config_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "e_openmap_packages_config_dist_index_tenantsettingsschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "e_openmap_packages_config_dist_index_tenantsettings",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_auth_roles_decorator",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_auth_roles_decorator_roles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_auth_roles",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_auth_roles_roles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_common_validation",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_common_validation_parseinput",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_service",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_service_tenantsettingsservice",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_context",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_context_tenantcontext",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsinputschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_withoutnulls",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_ts_resolver",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_tenantsettings",
+      "target": "packages_graph_src_cypher_query",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_ts_mutation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L32",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_auth_roles_decorator_roles",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_ts_args",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_tenantsettings",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_withoutnulls",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_ts_docref_adr_0011",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_tenant_tenant_settings_service",
       "target": "ref_nestjs_common",
       "relation": "imports_from",
@@ -97070,12 +97678,34 @@
     },
     {
       "source": "apps_api_src_tenant_tenant_module",
-      "target": "apps_api_src_tenant_tenant_settings_service",
+      "target": "apps_api_src_tenant_tenant_settings_resolver",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
       "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_module",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant.module.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_module",
+      "target": "apps_api_src_tenant_tenant_settings_service",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant.module.ts",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -97086,7 +97716,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -97097,7 +97727,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -97108,7 +97738,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -97118,7 +97748,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -97128,7 +97758,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -97139,7 +97769,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -144036,6 +144666,72 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "ref_playwright_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_islocale",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_translate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "apps_console_e2e_auth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_settings_spec",
+      "target": "apps_console_e2e_auth_signin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/settings.spec.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_console_e2e_setup",
       "target": "ref_playwright_test",
       "relation": "imports_from",
@@ -155995,7 +156691,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.test.tsx",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -156265,11 +156961,33 @@
     },
     {
       "source": "apps_console_src_components_settings_settingsview",
+      "target": "apps_console_src_components_settings_tenantsettingscard",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/SettingsView.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_settingsview",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/SettingsView.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_settingsview",
       "target": "apps_console_src_components_settings_settingsview_settingsviewprops",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -156279,7 +156997,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -156289,7 +157007,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -156299,7 +157017,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -156310,7 +157028,511 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L137",
+      "source_location": "L140",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "ref_testing_library_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "e_openmap_packages_i18n_dist_src_index_locales",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "e_openmap_packages_i18n_dist_src_index_translate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_lib_auth_index",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_lib_auth_authprovider_authvalue",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_providers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_providers_providers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_diffsettings",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_roles",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_authvalue",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_server",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_state",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_respond",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_test",
+      "target": "apps_console_src_components_settings_tenantsettingscard_test_mount",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.test.tsx",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "ref_tanstack_react_query",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_constants_dist_index_locales",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_constants_dist_index_roles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_ui_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_ui_dist_index_card",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "e_openmap_packages_ui_dist_index_sectiontitle",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_common_querystate",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_common_querystate_querystate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_icons",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_icons_icon",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_auth_index",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_auth_authprovider_usecan",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_queries",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_queries_tenantsettingsquery",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_queries_updatetenantsettings",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_queries_tenantsettingspatch",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_lib_queries_tenantsettingsview",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_providers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_providers_uset",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_number_fields",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_switch_fields",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_diffsettings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsformprops",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L70",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L77",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "target": "apps_console_src_components_settings_tenantsettingscard_diffsettings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard",
+      "target": "apps_console_src_components_settings_tenantsettingscard_tsx_docref_adr_0011",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -164799,6 +166021,56 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/queries.ts",
       "source_location": "L629",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries",
+      "target": "apps_console_src_lib_queries_tenantsettingsview",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L642",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries",
+      "target": "apps_console_src_lib_queries_tenantsettingspatch",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L653",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries",
+      "target": "apps_console_src_lib_queries_tenantsettingsquery",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L659",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries",
+      "target": "apps_console_src_lib_queries_updatetenantsettings",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L666",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries",
+      "target": "apps_console_src_lib_queries_ts_docref_adr_0011",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L639",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -234174,6 +235446,46 @@
       "_origin": "ast"
     },
     {
+      "source": "docs_adr_adr_011_tenant_settings_over_graphql",
+      "target": "docs_adr_adr_011_tenant_settings_over_graphql_adr_011_tenant_settings_are_read_and_changed_through_graphql_contract_0_3_0",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_011_tenant_settings_over_graphql_adr_011_tenant_settings_are_read_and_changed_through_graphql_contract_0_3_0",
+      "target": "docs_adr_adr_011_tenant_settings_over_graphql_context",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_011_tenant_settings_over_graphql_adr_011_tenant_settings_are_read_and_changed_through_graphql_contract_0_3_0",
+      "target": "docs_adr_adr_011_tenant_settings_over_graphql_decision",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_011_tenant_settings_over_graphql_adr_011_tenant_settings_are_read_and_changed_through_graphql_contract_0_3_0",
+      "target": "docs_adr_adr_011_tenant_settings_over_graphql_consequences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-011-tenant-settings-over-graphql.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "docs_evidence_airgap_bundle_build",
       "target": "docs_evidence_airgap_bundle_build_req_int_002_offline_bundle_build_2026_10_22",
       "relation": "contains",
@@ -242603,6 +243915,28 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_constructor",
+      "target": "apps_api_src_tenant_tenant_settings_service_tenantsettingsservice",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_constructor",
+      "target": "apps_api_src_tenant_tenant_context_tenantcontext",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_tenant_tenant_settings_service_tenantsettingsservice_constructor",
       "target": "apps_api_src_db_prisma_service_prismaservice",
       "relation": "references",
@@ -246763,6 +248097,18 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_common_validation_parseinput",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "e_openmap_apps_api_src_tenant_tenant_module_ts",
       "target": "apps_api_src_tenant_tenant_context_tenantcontext",
       "relation": "indirect_call",
@@ -246770,7 +248116,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -246782,7 +248128,19 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/api/src/tenant/tenant.module.ts",
-      "source_location": "L7",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "e_openmap_apps_api_src_tenant_tenant_module_ts",
+      "target": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/tenant/tenant.module.ts",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254678,7 +256036,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254690,7 +256048,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254702,7 +256060,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254714,7 +256072,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254726,7 +256084,79 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/settings/SettingsView.tsx",
-      "source_location": "L37",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "target": "apps_console_src_providers_uset",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "target": "apps_console_src_lib_auth_authprovider_usecan",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingscard",
+      "target": "apps_console_src_lib_queries_tenantsettingsquery",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "target": "apps_console_src_providers_uset",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L78",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "target": "apps_console_src_lib_queries_updatetenantsettings",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_settings_tenantsettingscard_tenantsettingsform",
+      "target": "apps_console_src_lib_queries_tenantsettingsquery",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/settings/TenantSettingsCard.tsx",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -255459,6 +256889,30 @@
       "confidence_score": 1.0,
       "source_file": "apps/console/src/lib/queries.ts",
       "source_location": "L632",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries_tenantsettingsquery",
+      "target": "apps_console_src_lib_graphql_gql",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L662",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_queries_updatetenantsettings",
+      "target": "apps_console_src_lib_graphql_gql",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/lib/queries.ts",
+      "source_location": "L667",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -259239,6 +260693,30 @@
       "confidence_score": 1.0,
       "source_file": "apps/api/src/subscriptions/subscriptions.publisher.ts",
       "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_tenantsettings",
+      "target": "apps_api_src_tenant_tenant_settings_service_tenantsettingsservice_get",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_tenant_tenant_settings_resolver_tenantsettingsresolver_updatetenantsettings",
+      "target": "apps_api_src_tenant_tenant_settings_service_tenantsettingsservice_update",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/api/src/tenant/tenant-settings.resolver.ts",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },

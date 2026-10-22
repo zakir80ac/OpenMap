@@ -489,18 +489,5 @@
   "487": "scheduler/vitest.integration.config.ts",
   "488": "superset_config.py",
   "489": "install-agent.ps1",
-  "490": "install-node.ps1",
-  "491": "prisma.config.ts",
-  "492": "graph/vitest.config.ts",
-  "493": "graph/vitest.integration.config.ts",
-  "494": "ui/vitest.config.ts",
-  "495": "github.com/openmap/openmap/apps/collectors",
-  "496": "github.com/openmap/openmap/apps/node",
-  "497": "synth-estate/vitest.config.ts",
-  "498": "REQ-INT-002 REQ-SEC-003 — offline bundle loaded on an isolated host with egress blocked (2026-10-22)",
-  "499": "bsm-engine/src/main.ts",
-  "500": "enum",
-  "501": "required",
-  "502": "RolesGuard",
-  "503": "TestIsc"
+  "490": "install-node.ps1"
 }

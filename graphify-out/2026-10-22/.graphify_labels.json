@@ -502,8 +502,5 @@
   "500": "enum",
   "501": "required",
   "502": "RolesGuard",
-  "503": "TestIsc",
-  "504": "REQ-DISC-031 REQ-DISC-004 — bare-metal release build (2026-10-22)",
-  "505": "scenarioId",
-  "506": "build-release.sh"
+  "503": "TestIsc"
 }
