@@ -8,7 +8,8 @@ here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here"
 
 echo "verifying checksums"
-sha256sum -c SHA256SUMS --quiet
+# BusyBox (Alpine) and GNU coreutils agree on -c; --quiet/--status do not exist on BusyBox.
+sha256sum -c SHA256SUMS >/dev/null
 
 echo "loading images"
 gunzip -c "openmap-images-${version}.tar.gz" | docker load

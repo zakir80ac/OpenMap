@@ -1,4 +1,5 @@
-# REQ-CORE-008 — CI: guard, tracker verify, typecheck, unit tests, contracts, i18n; integration and e2e on the compose stack.
+# REQ-CORE-008 REQ-QA-002 REQ-QA-004 REQ-INT-003 — CI: guard, tracker verify, typecheck, unit tests, contracts, i18n;
+# integration tests on the compose datastores; Playwright e2e (en, ar) on the full compose stack; helm install on kind.
 name: ci
 on:
   push: { branches: [main] }
@@ -44,3 +45,61 @@ jobs:
       - run: pnpm -r --filter './packages/*' --filter './apps/*' run test:integration --if-present
       - run: docker compose -f deploy/compose/docker-compose.yml down -v
         if: always()
+  e2e:
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cp deploy/compose/.env.example deploy/compose/.env
+      - name: Build and start the full stack
+        working-directory: deploy/compose
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.apps.yml build
+          docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d
+      - name: Wait for the API and the console
+        run: |
+          for i in $(seq 1 90); do curl -sf http://localhost:4000/readyz >/dev/null && curl -sf http://localhost:3000/en >/dev/null && exit 0; sleep 5; done
+          docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml ps
+          docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml logs --tail=100 api console migrate
+          exit 1
+      - run: pnpm --filter @openmap/console exec playwright install --with-deps chromium
+      - run: pnpm --filter @openmap/console e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: e2e-screenshots, path: "apps/console/e2e/screenshots" }
+      - run: docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml down -v
+        if: always()
+  kind:
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with: { cluster_name: openmap, config: deploy/kind/cluster.yaml }
+      - name: Build the application images
+        working-directory: deploy/compose
+        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine node console
+      - name: Load the images into the cluster
+        run: for img in api scheduler reconciler bsm-engine node console; do kind load docker-image "openmap/$img:dev" --name openmap; done
+      - run: helm lint deploy/helm/openmap
+      - run: helm install openmap deploy/helm/openmap -f deploy/helm/openmap/values-local.yaml --wait --timeout 20m
+      - name: Smoke test
+        run: |
+          kubectl get pods
+          kubectl wait --for=condition=complete --timeout=10m job -l app.kubernetes.io/component=migrate || kubectl get jobs
+          kubectl port-forward svc/openmap-api 4000:4000 >/dev/null 2>&1 &
+          kubectl port-forward svc/openmap-console 3000:3000 >/dev/null 2>&1 &
+          sleep 5
+          curl -sf http://localhost:4000/readyz
+          curl -sf http://localhost:4000/healthz
+          curl -sf -o /dev/null -w "console %{http_code}\n" http://localhost:3000/en/dashboard
+      - run: kubectl get pods -A && kubectl describe pods | tail -200
+        if: failure()
