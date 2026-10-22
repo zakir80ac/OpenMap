@@ -56,11 +56,12 @@ export function groupState(group: RedundancyGroup, health: ReadonlyMap<string, H
     else unknown++;
   }
   // Degraded members still serve, so they count toward the minimum but mark the group degraded.
+  // Members nobody has observed yet are unknown, not down: a group short of its minimum is down
+  // only when a member is known to be down; otherwise its state is unknown.
   const serving = healthy + degraded;
   let state: Health;
-  if (serving < group.minHealthy) state = 'down';
+  if (serving < group.minHealthy) state = down > 0 ? 'down' : 'unknown';
   else if (degraded > 0 || serving === group.minHealthy && group.memberCiIds.length > group.minHealthy) state = 'degraded';
-  else if (unknown > 0 && healthy < group.minHealthy) state = 'unknown';
   else state = 'healthy';
   return { name: group.name, state, healthy, degraded, down, unknown, minHealthy: group.minHealthy, memberCount: group.memberCiIds.length };
 }

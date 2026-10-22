@@ -144,6 +144,23 @@ export function createEngine(deps: EngineDeps) {
     });
   }
 
+  /**
+   * Members the graph has never scored (health unknown) are scored from their stored snapshot, so
+   * services converge after a restart or a replay without waiting for the next observation.
+   */
+  async function refreshUnknownMembers(tenantId: string, memberIds: readonly string[], health: Map<string, Health>): Promise<void> {
+    const unknown = [...new Set(memberIds)].filter((id) => (health.get(id) ?? 'unknown') === 'unknown');
+    if (unknown.length === 0) return;
+    const rows = await prisma.ci.findMany({ where: { tenantId, id: { in: unknown }, validTo: null }, select: { id: true, type: true, attributes: true, observedAt: true, lifecycle: true } });
+    const now = deps.now();
+    for (const row of rows) {
+      const verdict = deriveHealth({ type: row.type, attributes: row.attributes as Ci['attributes'], observedAt: row.observedAt.toISOString(), lifecycle: row.lifecycle }, now);
+      if (verdict.health === 'unknown') continue;
+      await graph.setHealth(tenantId, row.id, verdict.health);
+      health.set(row.id, verdict.health);
+    }
+  }
+
   async function openIncidents(tenantId: string, serviceIds: readonly string[]): Promise<OpenIncident[]> {
     const rows = await prisma.incident.findMany({ where: { tenantId, source: SOURCE_NAME, state: { in: [...ACTIVE_INCIDENT_STATES] }, affectedServiceCiIds: { hasSome: [...serviceIds] } } });
     return rows.flatMap((r) => r.affectedServiceCiIds.filter((s) => serviceIds.includes(s)).map((serviceCiId) => ({ id: r.id, serviceCiId, severity: r.severity, rootCauseCiId: r.rootCauseCiId })));
@@ -197,6 +214,7 @@ export function createEngine(deps: EngineDeps) {
     const models = await modelsFor(tenantId, serviceIds);
     const memberIds = models.flatMap((m) => m.groups.flatMap((g) => g.memberCiIds));
     const health = await healthMap(tenantId, [...new Set([...memberIds, ...serviceIds])]);
+    await refreshUnknownMembers(tenantId, memberIds, health);
     const previous = new Map(serviceIds.map((id) => [id, health.get(id) ?? 'unknown'] as const));
     const { changed } = propagateAll(models, health, previous);
     if (changed.length === 0) return report;
