@@ -140,6 +140,49 @@ export const BSM = {
   predictedOrder: ['down', 'degraded', 'at_risk', 'unaffected'] as const,
 } as const;
 
+/**
+ * Discovery planning defaults. Concurrency and rate limits are per job; a sweep is split into chunks
+ * so that the 15-minute budget for 10k devices holds with the default Node concurrency.
+ */
+export const DISCOVERY = {
+  defaultConcurrency: 32,
+  defaultRequestsPerSecond: 200,
+  defaultJobTimeoutMs: 600_000,
+  /** Targets per job; keeps result payloads small and lets failed chunks retry independently. */
+  targetsPerJob: 256,
+  /** Hosts addressable in a /24; used to expand CIDR targets without allocating per address. */
+  maxCidrExpansion: 65_536,
+  /** Retry schedule in milliseconds for retryable collector errors. */
+  retryBackoffMs: [30_000, 120_000, 600_000] as const,
+} as const;
+
+/** IPv4 arithmetic facts, named so apps carry no numeric literals. */
+export const IPV4 = {
+  octets: 4,
+  bitsPerOctet: 8,
+  octetMax: 255,
+  binaryBase: 2,
+  /** Blocks larger than this skip network and broadcast addresses when enumerating hosts. */
+  minSizeWithReservedEnds: 2,
+} as const;
+
+export const TIME = {
+  secondsPerMinute: 60,
+  msPerSecond: 1000,
+} as const;
+
+/** Assistant limits: schema grounding is truncated to keep prompts inside small local models. */
+export const ASSISTANT = {
+  maxRowsReturned: 200,
+  /** Names listed in a summary before "and N more". */
+  summaryNames: 5,
+  maxCypherLength: 4_000,
+  maxQuestionLength: 2_000,
+  /** Cypher execution timeout for assistant queries, milliseconds. */
+  queryTimeoutMs: 15_000,
+  temperature: 0.1,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

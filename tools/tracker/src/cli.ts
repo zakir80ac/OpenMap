@@ -181,6 +181,15 @@ async function cmdStatus(): Promise<void> {
   for (const r of nextRequirements(data, NEXT_COUNT)) console.log('  ' + r.id + ' [' + r.priority + '] ' + r.title);
 }
 
+async function cmdList(flags: Flags): Promise<void> {
+  const data = await load();
+  const ws = str(flags, 'ws');
+  const status = str(flags, 'status');
+  const rows = data.requirements.filter((r) => (!ws || r.workstream === ws) && (!status || r.status === status));
+  for (const r of rows) console.log(r.id.padEnd(14) + ' [' + r.priority + '] ' + r.status.padEnd(12) + ' ' + r.title);
+  console.log('tracker: ' + String(rows.length) + ' rows');
+}
+
 async function cmdNext(): Promise<void> {
   const data = await load();
   const [r] = nextRequirements(data, 1);
@@ -305,6 +314,8 @@ async function main(): Promise<void> {
       return cmdStatus();
     case 'next':
       return cmdNext();
+    case 'list':
+      return cmdList(flags);
     case 'report':
       return cmdReport();
     case 'verify':
@@ -312,7 +323,7 @@ async function main(): Promise<void> {
     case 'session':
       return cmdSession(flags);
     default:
-      fail('usage: tracker <init|add|set|status|next|report|verify|session>');
+      fail('usage: tracker <init|add|set|status|next|list|report|verify|session>');
   }
 }
 

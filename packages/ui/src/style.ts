@@ -18,9 +18,9 @@ export function px(value: number): string {
   return String(value) + 'px';
 }
 
-/** Clamp a ratio to 0..1 then express it as a CSS percentage with two decimals. */
+/** Clamp a ratio to 0..1 then express it as a CSS percentage (at most two decimals, trailing zeros dropped). */
 export function percent(value: number, max: number): string {
   const ratio = max <= 0 ? 0 : Math.min(Math.max(value / max, 0), 1);
   const HUNDRED = 100;
-  return (Math.round(ratio * HUNDRED * HUNDRED) / HUNDRED).toFixed(2) + '%';
+  return String(Math.round(ratio * HUNDRED * HUNDRED) / HUNDRED) + '%';
 }

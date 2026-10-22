@@ -23,7 +23,7 @@ export type TagProps =
 const TINT_ALPHA = 0.12;
 const BORDER_ALPHA = 0.3;
 
-export function tagAccent(props: Pick<TagProps, 'variant' | 'state' | 'layer'>): HexColor {
+export function tagAccent(props: TagProps): HexColor {
   if (props.variant === 'state') return stateColor(props.state);
   if (props.variant === 'layer') return layerColor(props.layer);
   return text.secondary;

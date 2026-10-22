@@ -1,3 +1,5 @@
+-- REQ-CORE-009 — initial Postgres schema. Generated from prisma/schema.prisma with
+-- `pnpm --filter @openmap/db prisma:diff`; regenerate rather than hand-edit.
 -- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
