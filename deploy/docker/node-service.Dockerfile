@@ -9,20 +9,22 @@ FROM node:${NODE_VERSION}-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-RUN corepack enable
+# openssl: Prisma's query engine links against libssl and detects the version at generate time.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/* && corepack enable
 WORKDIR /repo
 
 FROM base AS build
 ARG APP
 RUN test -n "$APP" || (echo "build-arg APP is required (api|scheduler|reconciler|bsm-engine)" && exit 1)
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc tsconfig.base.json ./
+ENV TURBO_TELEMETRY_DISABLED=1
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json .npmrc tsconfig.base.json turbo.json ./
 COPY packages ./packages
 COPY apps ./apps
 COPY tools ./tools
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 RUN pnpm --filter @openmap/db exec prisma generate
 # Turbo builds the dependency closure in graph order (dependsOn ^build), the same pipeline as CI.
-RUN pnpm exec turbo run build --filter="@openmap/${APP}..." --no-daemon
+RUN pnpm exec turbo run build --filter="@openmap/${APP}..."
 RUN pnpm --filter "@openmap/${APP}" deploy --prod --legacy /out
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
@@ -31,6 +33,7 @@ ENV NODE_ENV=production
 LABEL org.opencontainers.image.title="openmap-${APP}" \
       org.opencontainers.image.source="https://github.com/openmap/openmap" \
       org.opencontainers.image.licenses="Apache-2.0"
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
 USER node
