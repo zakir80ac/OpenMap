@@ -75,6 +75,7 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
       rooms: [],
       racks: [],
       storageRacks: [],
+      networkRacks: [],
       hosts: [],
       devices: [],
       cores: [],

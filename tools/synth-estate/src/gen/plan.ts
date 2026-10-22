@@ -1,9 +1,9 @@
 // REQ-QA-001 — host plan: decides, before any rack exists, how many hosts each site gets, which are
 // hypervisors (grouped into clusters with a platform) and which bare-metal OS the rest run.
 import { SYNTH_ESTATE } from '@openmap/constants';
-import { BARE_METAL_OS, BARE_METAL_OS_WEIGHTS, HOST_MODELS, HYPERVISOR_OS, HYPERVISOR_PLATFORMS, HYPERVISOR_PLATFORM_WEIGHTS } from '../catalog.js';
+import { BARE_METAL_OS, BARE_METAL_OS_WEIGHTS, HOST_MODELS, HYPERVISOR_OS, HYPERVISOR_PLATFORMS, HYPERVISOR_PLATFORM_WEIGHTS, HYPERVISOR_PREFIX } from '../catalog.js';
 import type { Rng } from '../rng.js';
-import type { HostPlan, World } from '../world.js';
+import { pad, type HostPlan, type World } from '../world.js';
 
 /** Average consolidation ratio; drives the hypervisor count from the VM count. */
 export const VMS_PER_HYPERVISOR = 12;
@@ -37,21 +37,24 @@ export function planHosts(world: World, rng: Rng): HostPlan[] {
     const hosts = hostsPerSite.get(site.def.code) ?? 0;
     const hypervisors = Math.min(hosts, hypervisorsPerSite.get(site.def.code) ?? 0);
     let remaining = hypervisors;
+    let siteClusters = 0;
     while (remaining > 0) {
       let size = Math.min(remaining, rng.int(CLUSTER_MIN, CLUSTER_MAX));
       if (remaining - size > 0 && remaining - size < CLUSTER_MIN) size = remaining;
       const platform = HYPERVISOR_PLATFORMS[rng.weighted(HYPERVISOR_PLATFORM_WEIGHTS)] ?? 'vmware';
       const cluster = clusterSeq++;
+      const clusterName = site.short + '-' + HYPERVISOR_PREFIX[platform] + '-c' + pad(siteClusters + 1, 2);
+      siteClusters++;
       for (let i = 0; i < size; i++) {
         const model = rng.weighted([HYPERVISOR_2U_WEIGHT, 1]) === 0 ? rng.pick(twoU) : rng.pick(oneU);
-        plans.push({ site, model, platform, cluster, os: HYPERVISOR_OS[platform], rack: null, uPosition: 0 });
+        plans.push({ site, model, platform, cluster, clusterName, os: HYPERVISOR_OS[platform], rack: null, uPosition: 0 });
       }
       remaining -= size;
     }
     for (let i = hypervisors; i < hosts; i++) {
       const os = BARE_METAL_OS[rng.weighted(BARE_METAL_OS_WEIGHTS)] ?? BARE_METAL_OS[0];
       if (!os) throw new Error('no bare-metal operating systems in catalogue');
-      plans.push({ site, model: rng.pick(HOST_MODELS), platform: null, cluster: -1, os, rack: null, uPosition: 0 });
+      plans.push({ site, model: rng.pick(HOST_MODELS), platform: null, cluster: -1, clusterName: null, os, rack: null, uPosition: 0 });
     }
   }
   return plans;

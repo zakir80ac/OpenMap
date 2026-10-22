@@ -145,7 +145,7 @@ function newRow(world: World, site: SiteWorld, rng: Rng): RowWorld {
   return row;
 }
 
-function newRack(world: World, site: SiteWorld, rng: Rng): RackWorld {
+export function newRack(world: World, site: SiteWorld, rng: Rng): RackWorld {
   const { b } = world;
   const slot = dcimSlot(world, site);
   let row = site.rooms[site.rooms.length - 1]?.rows.at(-1);
