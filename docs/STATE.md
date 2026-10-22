@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-10-22 (marathon, checkpoint 5)
+## Last session · 2026-10-22 (marathon, checkpoint 6)
 
 **What exists and runs**
 
@@ -21,6 +21,11 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 - **Security and audit**: role-gated console actions from the shared role table (REQ-SEC-001 Done), API tokens through the `openmap-automation` service account, realm TOTP and lockout policy, SSO brokering documented (REQ-SEC-009 in review); every mutation audited through the outbox into append-only `audit_logs` and ClickHouse, `auditLog` in GraphQL 0.2.0 (ADR-010), Settings screen (REQ-SEC-005 in review).
 - **Performance**: Lighthouse 1.0 (performance, accessibility, best practices) on every screen, p95 interaction 32 ms, dependency map 60 fps on the production build (`docs/evidence/perf`); `tools/perf` holds the Lighthouse flow runner and guard enforces the budgets.
 - **Deployment**: console image with run-time public settings, `helm install` green on kind (13 pods, migrations job, API ready, console 200 — `docs/evidence/helm`), chart fixes (migrations as a plain job with readiness waits, Memgraph volume ownership, Postgres schema init), `deploy/kind/cluster.yaml`.
+- **Contracts frozen (REQ-CORE-001…006 Done)**: `pnpm contracts:check` (CI) compares `schema.graphql` with its committed base using graphql's breaking-change analysis — additions need a minor bump, breaking changes a major bump, the header version is pinned to `CONTRACT_VERSIONS.graphql`; the Go contract view in `apps/node` and `apps/collectors` is checked by reflection against the emitted JSON Schemas; the outbox dispatcher fan-out is unit-tested.
+- **Audit log (REQ-SEC-005 Done)**: a real bug was found and fixed on the rebuilt image — the entry's follow-up UPDATE of the trace id hit the append-only trigger and aborted the transaction, so no mutation was audited while tracing was on; the event is now emitted first and the row written once. `openmap_audit_entries_total{action}` metric; tenant setting `auditRetentionDays` (seven years) drives the ClickHouse `audit_log` TTL (Postgres 0009, ClickHouse 0002); Settings screenshots with live entries in `docs/evidence/console`.
+- **Services on bare metal (REQ-DISC-031, REQ-DISC-004 in review)**: both Go binaries read an environment file and host themselves as Windows services; `deploy/install/` has systemd units, a launchd daemon and sh/PowerShell installers that enrol once with the one-time token.
+- **Offline bundle (REQ-INT-002)**: `build-bundle.sh` produced a 2.7 GB bundle with 17 images and checksums (`docs/evidence/airgap/bundle-build.md`); the realm import now takes the console's public URL from `CONSOLE_PUBLIC_URL`, so an air-gapped host at any hostname can sign in; the loader's checksum step works on BusyBox.
+- **CI**: `verify` (guard, tracker, typecheck, unit, contracts check, i18n), `integration` (compose datastores), `e2e` (full compose stack, Playwright en+ar) and `kind` (helm install smoke) jobs — the last two await their first GitHub Actions run (REQ-QA-002/004 in review).
 - Design: 13 screens on the Obsidian Pro canvas: https://claude.ai/artifact/VcFmJuAaHCmrvgpPMmTzrf.
 
 **Throughput (REQ-CORE-013 / REQ-PERF-003), scale-0.05 estate = 28,200 CIs, 66,332 relationships, 2,246 devices, serial replay on the dev laptop:**
@@ -36,12 +41,10 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 
 ## In progress
 
-- REQ-INT-002: the offline bundle build (`deploy/airgap-bundle/build-bundle.sh`) is running end to end for the first time; `load-bundle.sh` on a clean host not yet exercised.
-- REQ-DISC-004: packaged installers (systemd/launchd/Windows service) and signed release binaries for `openmap-agent` and `openmap-node`.
-
-- REQ-SEC-001 and REQ-UI-003 are **In review**: remaining for Done are an e2e for a role-denied API path, attribute rules beyond the tenant claim, and the Lighthouse / p95 interaction measurements. REQ-SEC-009: SAML brokering and MFA are realm policy still to capture in `realm-openmap.json`; API tokens not started.
-- Collectors: 25 families built; none Done without recorded vendor fixtures (risk R-004). Every planned family now exists; none is Done without recorded vendor transcripts.
-- REQ-INT-001/002/003: images and chart exist; a full `docker compose … apps.yml up` and a `helm install` on a cluster have not been run end to end yet.
+- REQ-INT-002 / REQ-SEC-003: air-gap verification — the bundle is being loaded inside a Docker-in-Docker host whose new outbound connections are dropped by iptables (DNS and registry provably unreachable); smoke and the e2e suite run against it from the host on ports 13000/14000/18080. Result recorded in `docs/evidence/airgap/load-airgap.md` when complete.
+- REQ-DISC-031 / REQ-DISC-004 (in review): installers exist; a packaged release (signed binaries, tarball with `bin/`, `collectors/`, `install/`) is still to produce.
+- REQ-SEC-009: SAML brokering and MFA are realm policy still to capture in `realm-openmap.json`; API tokens done.
+- Collectors: every planned family exists; none is Done without recorded vendor transcripts (risk R-004).
 - REQ-CORE-013: scale-1 replay (550k CIs) and the concurrent-worker measurement still to run.
 - REQ-UI-007: force-layout toggle and the graph fps capture in tools/perf are outstanding.
 
@@ -52,8 +55,8 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 
 ## Next three
 
-1. Finish REQ-INT-002: load the bundle on a clean Docker host with egress blocked and run the e2e suite there (REQ-SEC-003); then CI jobs that run the compose integration tests, the e2e suite and the kind install (REQ-QA-002, REQ-QA-004).
-2. Installers and signed binaries for the Node and the agent (REQ-DISC-031, REQ-DISC-004); the ClickHouse audit retention setting in tenant settings (REQ-SEC-005 → Done).
+1. Finish the air-gap proof (REQ-INT-002 → Done, REQ-SEC-003) and rebuild the bundle with the parametrised realm; then push so the new CI jobs run (REQ-QA-002/004 → Done).
+2. Release packaging for the Node and the agent (REQ-DISC-031/004 → Done): tarballs per OS with `bin/`, `collectors/`, `install/`, checksums; the SaaS layer screen (REQ-CMDB-011).
 3. Scale-1 replay for the 15-minute budget; then the remaining collector families and the Device42 agent import.
 
 **Dev-stack notes (also in project memory):** the Keycloak realm import runs with IGNORE_EXISTING, so realm-file edits reach an existing realm only through the admin REST API (user profile first, then user attributes); the local `admin` user's `tenant` attribute points at the synthetic tenant so the console shows the estate, while a fresh install keeps `default` (migration 0005). The browser console error buffer in the desktop app accumulates across navigations; the Next dev-server log is the clean signal.

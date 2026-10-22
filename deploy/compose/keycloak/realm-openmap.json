@@ -44,10 +44,10 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "redirectUris": [
-        "${env.CONSOLE_PUBLIC_URL:http://localhost:3000}/*"
+        "${CONSOLE_PUBLIC_URL:http://localhost:3000}/*"
       ],
       "webOrigins": [
-        "${env.CONSOLE_PUBLIC_URL:http://localhost:3000}"
+        "${CONSOLE_PUBLIC_URL:http://localhost:3000}"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",

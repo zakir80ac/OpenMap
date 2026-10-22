@@ -147,8 +147,11 @@ with no arguments under the Windows service control manager hosts itself as a se
 | macOS (launchd) | run under compose or Kubernetes | `install-agent.sh` + `com.openmap.agent.plist` |
 | Windows | `install-node.ps1` (service `OpenMapNode`) | `install-agent.ps1` (service `OpenMapAgent`) |
 
-Unpack a release (`bin/openmap-node`, `bin/openmap-agent`, `collectors/`, `install/`) and run the installer as root
-or from an elevated PowerShell with the one-time token from `node-register` / `agent:register`:
+`deploy/install/build-release.sh <version> [out] [os/arch …]` builds the release: one tarball per target (Linux
+amd64/arm64, Windows amd64, macOS arm64/amd64) holding `bin/openmap-node`, `bin/openmap-agent`, every collector under
+`collectors/`, the `install/` scripts and units, `VERSION` and `SHA256SUMS`, plus a `SHA256SUMS-<version>` over the
+tarballs. Unpack one and run the installer as root or from an elevated PowerShell with the one-time token from
+`node-register` / `agent:register`:
 
 ```bash
 sudo install/install-node.sh --node node-ryd-02 --site RYD --scheduler https://scheduler.example:4200 --token <token> --ca ca.crt
