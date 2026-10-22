@@ -1,8 +1,7 @@
 // REQ-QA-001 — cross-generator records. Generators append to these so later stages (hosts need
 // racks and ToR ports, VMs need hypervisors, flows need listening services) can reference CIs by
 // index, and the IPAM helper keeps every address consistent with the subnet CIs it creates.
-import type { CiType } from '@openmap/contracts';
-import { POOL, VRF, type DbEngine, type HostModelDef, type HypervisorPlatform, type NetworkModelDef, type OsDef, type SiteDef } from './catalog.js';
+import { DOMAIN, POOL, VRF, type DbEngine, type HostModelDef, type HypervisorPlatform, type NetworkModelDef, type OsDef, type SiteDef, type SoftwareDef } from './catalog.js';
 import type { EstateBuilder, Slot } from './estate.js';
 import { cidr, poolAddress, RFC1918_TEN } from './ip.js';
 import type { Rng } from './rng.js';
@@ -43,6 +42,9 @@ export interface HostPlan {
   model: HostModelDef;
   /** Hypervisor platform when this host runs a hypervisor, else null (bare metal). */
   platform: HypervisorPlatform | null;
+  /** Global cluster sequence for hypervisors, -1 for bare metal. */
+  cluster: number;
+  clusterName: string | null;
   os: OsDef;
   rack: RackWorld | null;
   uPosition: number;
@@ -59,10 +61,11 @@ export interface HostRec {
   ipIdx: number;
   bmcIp: string;
   primaryMac: string;
+  slot: Slot;
   /** Filled by the virtualization generator for hypervisor hosts. */
   hypervisor: HypervisorRec | null;
-  /** Vendor CI index resolved by the commercial generator. */
-  manufacturer: string;
+  /** Application role once claimed by the application generator. */
+  role: string | null;
 }
 
 export interface InterfaceRec {
@@ -80,8 +83,10 @@ export interface DeviceRec {
   serial: string;
   rack: RackWorld | null;
   interfaces: InterfaceRec[];
-  /** Index of the next host-facing port to hand out. */
+  /** Index of the next host-facing port to hand out (1-based port number). */
   portCursor: number;
+  /** VLAN CI index per VLAN id configured on this device. */
+  vlans: Map<number, number>;
   slot: Slot;
 }
 
@@ -105,16 +110,16 @@ export interface VmRec {
   ip: string;
   ipIdx: number;
   instanceUuid: string;
+  slot: Slot;
   /** Workload role assigned by the application generator; null while unassigned. */
   role: string | null;
-  vcpus: number;
-  memoryGb: number;
 }
 
 export interface ListeningRec {
   idx: number;
   /** Compute CI (vm or host) the service listens on. */
   computeIdx: number;
+  site: SiteWorld;
   ip: string;
   port: number;
   protocol: 'tcp' | 'udp';
@@ -122,10 +127,13 @@ export interface ListeningRec {
 
 export interface ComponentRec {
   idx: number;
+  name: string;
   tier: 'web' | 'api' | 'db' | 'auth' | 'infra';
   /** Compute CIs (vm, host or k8s_workload) that run this component. */
   computeIdx: number[];
   listeners: ListeningRec[];
+  /** Kubernetes service CI when the component runs as a workload. */
+  k8sServiceIdx: number | null;
 }
 
 export interface ApplicationRec {
@@ -136,6 +144,7 @@ export interface ApplicationRec {
   containerised: boolean;
   components: ComponentRec[];
   site: SiteWorld;
+  slot: Slot;
 }
 
 export interface K8sClusterRec {
@@ -143,11 +152,11 @@ export interface K8sClusterRec {
   name: string;
   clusterUid: string;
   site: SiteWorld;
-  nodes: number[];
   slot: Slot;
   namespaces: Map<string, number>;
-  /** Worker VMs used to place pods of workloads scheduled here. */
-  workerVms: VmRec[];
+  /** Worker nodes (VM CIs on-premises, cloud_resource CIs in cloud regions). */
+  nodeIdx: number[];
+  services: number;
 }
 
 export interface SiteWorld {
@@ -160,11 +169,12 @@ export interface SiteWorld {
   supernetIdx: number;
   rooms: RoomWorld[];
   racks: RackWorld[];
+  storageRacks: RackWorld[];
+  networkRacks: RackWorld[];
   hosts: HostRec[];
   devices: DeviceRec[];
   cores: DeviceRec[];
   dists: DeviceRec[];
-  accessPool: DeviceRec[];
   firewalls: DeviceRec[];
   loadBalancers: DeviceRec[];
   hypervisors: HypervisorRec[];
@@ -186,14 +196,18 @@ export interface World {
   rng: Rng;
   sites: SiteWorld[];
   hostPlans: HostPlan[];
-  /** Filled by generators as they run; read by later ones. */
   listeners: ListeningRec[];
   applications: ApplicationRec[];
   authApp: ApplicationRec | null;
   infraListeners: Map<string, ListeningRec[]>;
-  softwareIdx: Map<string, number>;
-  hostAgentSoftware: Map<number, number[]>;
-  storageSlot: Slot | null;
+  /** Software CI index per "vendor|name|version". */
+  software: Map<string, number>;
+  /** Branch subnet CI indices in branch order (for DHCP scopes and unknown devices). */
+  branchSubnets: number[];
+  branchCidrs: string[];
+  /** Unknown devices claimed per branch so DHCP leases line up with the scan. */
+  unknownByBranch: Map<number, number[]>;
+  k8sClusters: K8sClusterRec[];
 }
 
 export type PoolName = keyof typeof POOL;
@@ -212,6 +226,10 @@ export function siteOf(world: World, code: string): SiteWorld {
   return site;
 }
 
+export function primarySite(world: World): SiteWorld {
+  return siteOf(world, 'RYD');
+}
+
 export function ipamSlot(world: World, site: SiteWorld): Slot {
   if (site.ipamSlot) return site.ipamSlot;
   const slot = world.b.slotFor('ipam|' + site.def.code, {
@@ -224,6 +242,53 @@ export function ipamSlot(world: World, site: SiteWorld): Slot {
   });
   site.ipamSlot = slot;
   return slot;
+}
+
+/** DCIM sweep: smart PDUs, UPS and cooling expose rack and room placement over SNMP. */
+export function dcimSlot(world: World, site: SiteWorld): Slot {
+  return world.b.slotFor('dcim|' + site.def.code, {
+    family: 'pdu',
+    collectorId: 'pdu-dcim',
+    nodeId: site.nodeId,
+    siteCode: site.def.code,
+    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase + POOL.mgmt, 0, 0, 16), label: site.def.code + ' facilities' },
+    evidenceKind: 'snmp_walk',
+  });
+}
+
+/** Software asset management: software catalogue, licences, vendors and contracts. */
+export function samSlot(world: World): Slot {
+  const site = primarySite(world);
+  return world.b.slotFor('sam', {
+    family: 'agent',
+    collectorId: 'agent-sam',
+    nodeId: site.nodeId,
+    siteCode: site.def.code,
+    target: { kind: 'host', value: 'sam-' + site.short + '-01.' + DOMAIN, label: 'software asset inventory' },
+    evidenceKind: 'agent_report',
+  });
+}
+
+export function softwareKey(def: Pick<SoftwareDef, 'vendor' | 'name' | 'version'>): string {
+  return def.vendor + '|' + def.name + '|' + def.version;
+}
+
+export function ensureSoftware(world: World, def: SoftwareDef): number {
+  const key = softwareKey(def);
+  const existing = world.software.get(key);
+  if (existing !== undefined) return existing;
+  const slot = samSlot(world);
+  const idx = world.b.ci(
+    slot,
+    'software',
+    { vendor: def.vendor, name: def.name, version: def.version },
+    def.vendor + ' ' + def.name + ' ' + def.version,
+    { category: def.category, licensed: def.licensed, platforms: [...def.on], endOfSupport: null },
+    primarySite(world).def.code,
+    { tags: ['software', def.category] },
+  );
+  world.software.set(key, idx);
+  return idx;
 }
 
 const POOL_VRF: Record<PoolName, string> = { mgmt: VRF.mgmt, oob: VRF.oob, servers: VRF.prod, vms: VRF.prod, storage: VRF.storage, k8s: VRF.prod, dmz: VRF.dmz, links: VRF.default };
@@ -250,6 +315,15 @@ export function ensureSubnet(world: World, site: SiteWorld, subnetCidr: string, 
   return idx;
 }
 
+/** Creates an ip_address CI in the caller's slot with its uses_ip and in_subnet relationships. */
+export function attachIp(world: World, slot: Slot, ownerIdx: number, alloc: IpAlloc, siteCode: string, extra: Record<string, string | number | boolean | null> = {}): number {
+  const { b } = world;
+  const idx = b.ci(slot, 'ip_address', { address: alloc.address, vrfRef: alloc.vrf }, alloc.address, { version: 4, vrf: alloc.vrf, subnet: alloc.subnetCidr, status: 'assigned', ...extra }, siteCode, { tags: ['ipam'] });
+  b.rel(slot, 'uses_ip', ownerIdx, idx);
+  b.rel(slot, 'in_subnet', idx, alloc.subnetIdx);
+  return idx;
+}
+
 export function shortCode(def: SiteDef): string {
   const head = def.code.split('-')[0] ?? def.code;
   return head.toLowerCase();
@@ -259,6 +333,12 @@ export function pad(n: number, width: number): string {
   return String(n).padStart(width, '0');
 }
 
-export function typeOf(world: World, idx: number): CiType {
-  return world.b.get(idx).type;
+export function fqdnOf(hostname: string): string {
+  return hostname + '.' + DOMAIN;
+}
+
+/** Install path built from catalogue segments with the OS separator. */
+export function installPath(segments: readonly string[], family: OsDef['family']): string {
+  if (family === 'windows') return segments.join('\\');
+  return '/' + segments.join('/');
 }
