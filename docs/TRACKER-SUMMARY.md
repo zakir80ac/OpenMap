@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-10-22T15:17:47.314Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 106 |
-| In progress | 50 |
+| Not started | 102 |
+| In progress | 46 |
 | Blocked | 0 |
 | In review | 9 |
-| Done | 23 |
+| Done | 31 |
 | **Total** | **188** |
 
 ## By workstream
@@ -22,7 +22,7 @@ Generated 2026-10-22T15:17:47.314Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | IPAM | 7 | 0 | 2 | 0 | 0% |
 | DCIM | 9 | 0 | 1 | 0 | 0% |
 | BSM | 5 | 0 | 3 | 0 | 0% |
-| UI | 27 | 3 | 5 | 0 | 11% |
+| UI | 27 | 11 | 1 | 0 | 41% |
 | AI | 6 | 0 | 2 | 0 | 0% |
 | INT | 19 | 2 | 3 | 0 | 11% |
 | QA | 4 | 1 | 0 | 0 | 25% |
@@ -32,11 +32,7 @@ Generated 2026-10-22T15:17:47.314Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## In progress
 
 - REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
-- REQ-UI-006 · Screen · Discovery: nodes, jobs, credentials, sweep progress
-- REQ-UI-007 · Screen · Dependency map: Sigma.js WebGL in a worker, impact panel, layer filters
-- REQ-UI-008 · Screen · CMDB list and CI detail with tabs, history timeline and evidence
-- REQ-UI-012 · Screen · Business services: service model, SLA budget, incident timeline, cost
-- REQ-UI-013 · Screen · Impact modeling: scenarios, propagation flow, affected services, actions, report and respond
+- REQ-UI-019 · Screen · Settings: tenant, users and roles, audit
 - REQ-SEC-002 · OpenBao for collector and integration credentials
 - REQ-AI-001 · NL to Cypher with schema grounding and read-only execution
 - REQ-AI-004 · Recommended actions in impact modeling and incidents
@@ -88,15 +84,15 @@ Generated 2026-10-22T15:17:47.314Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## Next up
 
 - REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
-- REQ-UI-006 [P0] Screen · Discovery: nodes, jobs, credentials, sweep progress
-- REQ-UI-007 [P0] Screen · Dependency map: Sigma.js WebGL in a worker, impact panel, layer filters
-- REQ-UI-008 [P0] Screen · CMDB list and CI detail with tabs, history timeline and evidence
-- REQ-UI-012 [P0] Screen · Business services: service model, SLA budget, incident timeline, cost
-- REQ-UI-013 [P0] Screen · Impact modeling: scenarios, propagation flow, affected services, actions, report and respond
+- REQ-UI-019 [P0] Screen · Settings: tenant, users and roles, audit
 - REQ-SEC-002 [P0] OpenBao for collector and integration credentials
 - REQ-AI-001 [P0] NL to Cypher with schema grounding and read-only execution
 - REQ-AI-004 [P1] Recommended actions in impact modeling and incidents
 - REQ-CMDB-012 [P0] Layer · unknown populated and filterable
+- REQ-DISC-001 [P0] Agentless discovery: SNMP v1/v2c/v3
+- REQ-DISC-002 [P0] WMI / WinRM Windows discovery
+- REQ-DISC-003 [P0] SSH Linux/Unix discovery
+- REQ-DISC-005 [P0] Hypervisor: VMware vCenter/ESXi
 
 ## Open risks
 
