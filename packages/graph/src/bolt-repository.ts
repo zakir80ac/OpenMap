@@ -85,11 +85,13 @@ export class BoltGraphRepository implements GraphRepository {
     return this.driver.session(config);
   }
 
+  // Managed transactions: the driver retries transient errors (Memgraph's "conflicting transactions",
+  // leader changes, connection resets) with backoff, so a busy graph never fails a dispatcher batch.
   private async read<T>(text: string, params: Record<string, unknown>, map: (r: BoltRecord) => T): Promise<T[]> {
     const s = this.session('READ');
     try {
-      const res = await s.run(text, params);
-      return res.records.map(map);
+      const records = await s.executeRead(async (tx) => (await tx.run(text, params)).records);
+      return records.map(map);
     } finally {
       await s.close();
     }
@@ -98,8 +100,7 @@ export class BoltGraphRepository implements GraphRepository {
   private async write(text: string, params: Record<string, unknown>): Promise<number> {
     const s = this.session('WRITE');
     try {
-      const res = await s.run(text, params);
-      const first = res.records[0];
+      const first = await s.executeWrite(async (tx) => (await tx.run(text, params)).records[0]);
       return first ? toNumber(first.get('n')) : 0;
     } finally {
       await s.close();
@@ -142,6 +143,16 @@ export class BoltGraphRepository implements GraphRepository {
 
   async retireCi(tenantId: string, id: string, at: string): Promise<void> {
     await this.write(retireCiQuery(), { tenantId, id, at });
+  }
+
+  async purgeTenant(tenantId: string): Promise<number> {
+    // Batched so a large tenant never holds one transaction over the whole graph.
+    let total = 0;
+    for (;;) {
+      const n = await this.write('MATCH (c:Ci {tenantId: $tenantId}) WITH c LIMIT $limit DETACH DELETE c RETURN count(*) AS n', { tenantId, limit: neo4j.int(GRAPH.purgeBatchSize) });
+      total += n;
+      if (n === 0) return total;
+    }
   }
 
   async upsertRelationship(rel: GraphRelationship): Promise<void> {

@@ -78,6 +78,8 @@ export interface GraphRepository {
   shortestPath(tenantId: string, fromId: string, toId: string, asOf: string | null): Promise<GraphRelationship[]>;
   layerCounts(tenantId: string, asOf: string | null): Promise<LayerCount[]>;
   setHealth(tenantId: string, id: string, health: GraphCi['health']): Promise<void>;
+  /** Deletes every node and edge of a tenant (tenant off-boarding, test and replay resets). Returns nodes removed. */
+  purgeTenant(tenantId: string): Promise<number>;
   /** Read-only Cypher for the assistant; writes are rejected before reaching the engine. */
   readOnly<T extends Record<string, unknown>>(cypher: string, params: Record<string, unknown>): Promise<T[]>;
   close(): Promise<void>;

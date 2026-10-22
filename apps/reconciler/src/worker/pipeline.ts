@@ -12,6 +12,10 @@ export interface PipelineSummary extends PersistSummary {
   unchanged: number;
   unresolvedRelationships: number;
   durationMs: number;
+  /** Phase split of durationMs, so throughput work targets the right store. */
+  lookupMs: number;
+  reconcileMs: number;
+  persistMs: number;
 }
 
 function json(value: unknown): Prisma.InputJsonValue {
@@ -37,21 +41,35 @@ async function park(prisma: PrismaClient, result: CollectorResult, rels: readonl
 
 export async function processResult(prisma: PrismaClient, result: CollectorResult): Promise<PipelineSummary> {
   const started = Date.now();
-  const lookup = await loadLookup(prisma, result);
+  let lookupMs = 0;
+  let reconcileMs = 0;
+  let persistMs = 0;
+  const timed = async <T>(fn: () => Promise<T>, add: (ms: number) => void): Promise<T> => {
+    const t0 = Date.now();
+    const v = await fn();
+    add(Date.now() - t0);
+    return v;
+  };
+  const lookup = await timed(() => loadLookup(prisma, result), (ms) => (lookupMs += ms));
+  const t1 = Date.now();
   const out = reconcile(result, lookup);
-  const summary = await persist(prisma, result.tenantId, out);
+  reconcileMs += Date.now() - t1;
+  const summary = await timed(() => persist(prisma, result.tenantId, out), (ms) => (persistMs += ms));
   let unresolved = out.unresolvedRelationships;
   if (unresolved.length > 0) {
     // Endpoints created by this very result are visible now; retry once before parking the rest.
     const retry: CollectorResult = { ...result, cis: [], relationships: unresolved };
-    const out2 = reconcile(retry, await loadLookup(prisma, retry));
-    const s2 = await persist(prisma, result.tenantId, out2);
+    const lookup2 = await timed(() => loadLookup(prisma, retry), (ms) => (lookupMs += ms));
+    const t2 = Date.now();
+    const out2 = reconcile(retry, lookup2);
+    reconcileMs += Date.now() - t2;
+    const s2 = await timed(() => persist(prisma, result.tenantId, out2), (ms) => (persistMs += ms));
     summary.relationships += s2.relationships;
     summary.events += s2.events;
     unresolved = out2.unresolvedRelationships;
-    await park(prisma, result, unresolved);
+    await timed(() => park(prisma, result, unresolved), (ms) => (persistMs += ms));
   }
-  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, durationMs: Date.now() - started };
+  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs };
 }
 
 /** Retries parked relationships for a tenant; resolved ones are persisted, exhausted ones dropped. */

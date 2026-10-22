@@ -669,6 +669,8 @@ model Ci {
   @@index([tenantId, validTo])
   @@index([tenantId, lifecycle])
   @@index([tenantId, type, identityKey])
+  @@index([tenantId, identityKey])
+  @@index([identity(ops: JsonbPathOps)], type: Gin)
   @@index([tenantId, checksum])
   @@index([attributes(ops: JsonbPathOps)], type: Gin)
   @@map("cis")

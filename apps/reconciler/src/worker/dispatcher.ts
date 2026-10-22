@@ -4,7 +4,7 @@
 import { createClient, type ClickHouseClient } from '@clickhouse/client';
 import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
-import { RECONCILER } from '@openmap/constants';
+import { HTTP, RECONCILER } from '@openmap/constants';
 import type { Env } from '@openmap/config';
 import { eventEnvelopeSchema, type Ci, type EventEnvelope, type Relationship } from '@openmap/contracts';
 import type { PrismaClient } from '@openmap/db';
@@ -21,10 +21,13 @@ export interface Sinks {
 
 export interface SearchSink {
   indexCis(tenantId: string, cis: readonly Ci[]): Promise<void>;
+  /** Drops the tenant's index (tenant off-boarding, replay resets). */
+  dropTenant(tenantId: string): Promise<void>;
 }
 
 export interface EventStream {
   publish(envelope: EventEnvelope): Promise<void>;
+  publishMany(envelopes: readonly EventEnvelope[]): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -135,15 +138,24 @@ export function createMeilisearchSink(env: Pick<Env, 'MEILI_URL' | 'MEILI_MASTER
       const res = await fetchImpl(new URL('indexes/' + index + '/documents?primaryKey=id', base), { method: 'POST', headers, body: JSON.stringify(docs) });
       if (!res.ok) throw new Error('meilisearch returned ' + String(res.status));
     },
+    async dropTenant(tenantId) {
+      const res = await fetchImpl(new URL('indexes/' + RECONCILER.searchIndexPrefix + tenantId, base), { method: 'DELETE', headers });
+      if (!res.ok && res.status !== HTTP.status.notFound) throw new Error('meilisearch returned ' + String(res.status));
+    },
   };
 }
 
 export function createEventStream(env: Pick<Env, 'VALKEY_URL'>): EventStream {
   const connection = new Redis(env.VALKEY_URL, { maxRetriesPerRequest: null, enableReadyCheck: false });
   const queue = new Queue<EventEnvelope>(RECONCILER.eventStreamQueue, { connection });
+  const opts = (envelope: EventEnvelope) => ({ jobId: envelope.id, removeOnComplete: { count: RECONCILER.outboxBatchSize * RECONCILER.resultsConcurrency }, removeOnFail: { count: RECONCILER.outboxBatchSize } });
   return {
     async publish(envelope) {
-      await queue.add(envelope.type, envelope, { jobId: envelope.id, removeOnComplete: { count: RECONCILER.outboxBatchSize * RECONCILER.resultsConcurrency }, removeOnFail: { count: RECONCILER.outboxBatchSize } });
+      await queue.add(envelope.type, envelope, opts(envelope));
+    },
+    async publishMany(envelopes) {
+      if (envelopes.length === 0) return;
+      await queue.addBulk(envelopes.map((e) => ({ name: e.type, data: e, opts: opts(e) })));
     },
     async close() {
       await queue.close();
@@ -188,9 +200,7 @@ export async function dispatchOnce(prisma: PrismaClient, sinks: Sinks, database:
   await attempt('meilisearch', async () => {
     for (const [tenantId, cis] of byTenant) await sinks.search.indexCis(tenantId, cis);
   });
-  await attempt('bsm', async () => {
-    for (const [i, e] of events.entries()) if (rows[i]!.pending.includes('bsm') || rows[i]!.pending.includes('websocket')) await sinks.stream.publish(e);
-  });
+  await attempt('bsm', () => sinks.stream.publishMany(events.filter((_, i) => rows[i]!.pending.includes('bsm') || rows[i]!.pending.includes('websocket'))));
   if (succeeded.has('bsm')) succeeded.add('websocket');
   const allTargets: OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
   if (failures.length === 0 && allTargets.every((t) => succeeded.has(t))) {

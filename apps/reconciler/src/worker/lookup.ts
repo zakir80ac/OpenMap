@@ -1,6 +1,7 @@
 // REQ-CORE-013 — Prisma-backed lookup for one collector result: fetches every stored CI whose
 // identity tuple or any globally unique identity value appears in the result, through the
 // (tenantId, type, identityKey) index and the jsonb_path_ops GIN index, then answers resolve() from memory.
+import { RECONCILER } from '@openmap/constants';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import type { Ci, CollectorResult, ObservedCi, Relationship } from '@openmap/contracts';
 import { globalPairs, identityTuple, MapIdentityIndex } from '../core/identity.js';
@@ -63,12 +64,28 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
     }
   }
   if (tuples.size === 0 && containments.size === 0) return [];
-  const tupleList = [...tuples];
+  const rows = new Map<string, CiRow>();
+  const collect = (batch: CiRow[]): void => {
+    for (const row of batch) rows.set(row.id, row);
+  };
+  if (tuples.size > 0) {
+    // Btree probe through cis_tenantId_identityKey_idx; "= ANY" is index-searchable.
+    const tupleList = [...tuples];
+    collect(await prisma.$queryRaw<CiRow[]>(Prisma.sql`
+      SELECT * FROM cis
+      WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "identityKey" = ANY(${tupleList}::text[])`));
+  }
+  // GIN cannot serve "@> ANY(array)", so containment terms become an OR chain the planner turns into
+  // a BitmapOr of index probes; chunked so one statement never carries thousands of terms.
   const jsonList = [...containments];
-  return prisma.$queryRaw<CiRow[]>(Prisma.sql`
-    SELECT * FROM cis
-    WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL
-      AND ("identityKey" = ANY(${tupleList}::text[]) OR identity @> ANY(${jsonList}::jsonb[]))`);
+  for (let i = 0; i < jsonList.length; i += RECONCILER.lookupBatchSize) {
+    const chunk = jsonList.slice(i, i + RECONCILER.lookupBatchSize);
+    const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
+    collect(await prisma.$queryRaw<CiRow[]>(Prisma.sql`
+      SELECT * FROM cis
+      WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND (${terms})`));
+  }
+  return [...rows.values()];
 }
 
 /** Loads current CIs matching any identity in the result, plus current relationships among them. */

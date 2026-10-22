@@ -107,6 +107,8 @@ export const GRAPH = {
   maxImpactDepth: 12,
   defaultPageSize: 50,
   maxPageSize: 500,
+  /** Nodes detached and deleted per transaction when a tenant is purged from the graph. */
+  purgeBatchSize: 5_000,
   /** Relationship types that carry failure from a dependency to its dependants (traversed upstream). */
   impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service'] as const,
 } as const;
@@ -229,8 +231,8 @@ export const ASSISTANT = {
 
 /** Reconciler and outbox dispatcher pacing. */
 export const RECONCILER = {
-  /** Outbox rows claimed per dispatcher tick. */
-  outboxBatchSize: 200,
+  /** Outbox rows claimed per dispatcher tick; every target receives the batch in one round trip. */
+  outboxBatchSize: 1_000,
   /** Idle wait between dispatcher ticks when the outbox is empty. */
   outboxIdleMs: 1_000,
   /** Candidate CIs fetched per identity lookup batch. */

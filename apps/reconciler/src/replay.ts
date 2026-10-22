@@ -31,13 +31,21 @@ function parseArgs(argv: string[]): Args {
   return { dir: resolve(dir), dispatch, reset };
 }
 
-/** Removes everything the synthetic tenant wrote so a replay starts from an empty estate. */
-async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, tenantId: string): Promise<void> {
+type Sinks = Parameters<typeof dispatchOnce>[1];
+
+/** Removes everything the synthetic tenant wrote, in every store, so a replay starts from an empty estate. */
+async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, sinks: Sinks, database: string, tenantId: string): Promise<void> {
   await prisma.pendingRelationship.deleteMany({ where: { tenantId } });
   await prisma.outboxEvent.deleteMany({ where: { tenantId } });
   await prisma.reconciliationConflict.deleteMany({ where: { tenantId } });
   await prisma.relationship.deleteMany({ where: { tenantId } });
   await prisma.ci.deleteMany({ where: { tenantId } });
+  const purged = await sinks.graph.purgeTenant(tenantId);
+  for (const table of ['events', 'ci_history', 'relationship_history']) {
+    await sinks.clickhouse.command({ query: 'ALTER TABLE ' + database + '.' + table + ' DELETE WHERE tenant_id = {tenantId:String}', query_params: { tenantId }, clickhouse_settings: { mutations_sync: '2' } });
+  }
+  await sinks.search.dropTenant(tenantId);
+  console.log(JSON.stringify({ msg: 'reset', tenantId, graphNodesPurged: purged }));
 }
 
 async function* results(dir: string): AsyncGenerator<unknown> {
@@ -75,10 +83,13 @@ async function main(): Promise<void> {
   const prisma = createPrismaClient(env);
   await ensureTenant(prisma, args.dir);
   const summaryTenant = (JSON.parse(readFileSync(join(args.dir, 'estate-summary.json'), 'utf8')) as { tenantId: string }).tenantId;
-  if (args.reset) await resetTenant(prisma, summaryTenant);
+  const graph = createGraphRepository(env);
+  await graph.ensureSchema();
+  const sinks: Sinks = { graph, clickhouse: createClickHouse(env), search: createMeilisearchSink(env), stream: createEventStream(env) };
+  if (args.reset) await resetTenant(prisma, sinks, env.CLICKHOUSE_DB, summaryTenant);
   const started = Date.now();
   let n = 0;
-  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0 };
+  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, lookupMs: 0, reconcileMs: 0, persistMs: 0 };
   let tenantId = '';
   for await (const raw of results(args.dir)) {
     const result = collectorResultSchema.parse(raw);
@@ -90,26 +101,28 @@ async function main(): Promise<void> {
     totals.relationships += s.relationships;
     totals.conflicts += s.conflicts;
     totals.unresolved += s.unresolvedRelationships;
+    totals.lookupMs += s.lookupMs;
+    totals.reconcileMs += s.reconcileMs;
+    totals.persistMs += s.persistMs;
     n++;
     if (n % RECONCILER.replayProgressEvery === 0) console.log(JSON.stringify({ msg: 'progress', results: n, ...totals, seconds: Math.round((Date.now() - started) / TIME.msPerSecond) }));
   }
   let pendingResolved = 0;
+  const pendingStart = Date.now();
   for (;;) {
     const r = await retryPendingRelationships(prisma, tenantId);
     pendingResolved += r.resolved;
     if (r.tried === 0 || r.resolved === 0) break;
   }
+  const pendingMs = Date.now() - pendingStart;
   const pendingLeft = await prisma.pendingRelationship.count({ where: { tenantId } });
   const reconcileMs = Date.now() - started;
   const dupes = await prisma.$queryRaw<Array<{ n: bigint }>>`SELECT count(*) AS n FROM (SELECT "tenantId", type, "identityKey" FROM cis WHERE "validTo" IS NULL GROUP BY 1,2,3 HAVING count(*) > 1) d`;
   const ciCount = await prisma.ci.count({ where: { tenantId, validTo: null } });
   const relCount = await prisma.relationship.count({ where: { tenantId, validTo: null } });
-  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), reconcileMs }));
+  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), reconcileMs, pendingMs }));
 
   if (args.dispatch) {
-    const graph = createGraphRepository(env);
-    await graph.ensureSchema();
-    const sinks = { graph, clickhouse: createClickHouse(env), search: createMeilisearchSink(env), stream: createEventStream(env) };
     const dispatchStart = Date.now();
     let delivered = 0;
     for (;;) {
@@ -120,10 +133,10 @@ async function main(): Promise<void> {
     }
     const layers = await graph.layerCounts(tenantId, null);
     console.log(JSON.stringify({ msg: 'dispatched', delivered, dispatchMs: Date.now() - dispatchStart, graphLayers: layers }));
-    await sinks.stream.close();
-    await sinks.clickhouse.close();
-    await graph.close();
   }
+  await sinks.stream.close();
+  await sinks.clickhouse.close();
+  await graph.close();
   await prisma.$disconnect();
 }
 
