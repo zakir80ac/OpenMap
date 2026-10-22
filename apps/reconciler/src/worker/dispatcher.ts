@@ -165,7 +165,9 @@ export function createEventStream(env: Pick<Env, 'VALKEY_URL'>): EventStream {
 }
 
 export function createClickHouse(env: Pick<Env, 'CLICKHOUSE_URL' | 'CLICKHOUSE_USER' | 'CLICKHOUSE_PASSWORD' | 'CLICKHOUSE_DB'>): ClickHouseClient {
-  return createClient({ url: env.CLICKHOUSE_URL, username: env.CLICKHOUSE_USER, password: env.CLICKHOUSE_PASSWORD, database: env.CLICKHOUSE_DB });
+  // Async inserts let ClickHouse coalesce the dispatcher's small batches server-side; waiting keeps
+  // the outbox acknowledgement truthful (a row is only marked delivered once it is durable).
+  return createClient({ url: env.CLICKHOUSE_URL, username: env.CLICKHOUSE_USER, password: env.CLICKHOUSE_PASSWORD, database: env.CLICKHOUSE_DB, clickhouse_settings: { async_insert: 1, wait_for_async_insert: 1 } });
 }
 
 export interface DispatchReport {
