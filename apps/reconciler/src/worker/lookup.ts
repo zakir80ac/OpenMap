@@ -78,13 +78,18 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
   // GIN cannot serve "@> ANY(array)", so containment terms become an OR chain the planner turns into
   // a BitmapOr of index probes; chunked so one statement never carries thousands of terms.
   const jsonList = [...containments];
-  for (let i = 0; i < jsonList.length; i += RECONCILER.lookupBatchSize) {
-    const chunk = jsonList.slice(i, i + RECONCILER.lookupBatchSize);
-    const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
-    collect(await prisma.$queryRaw<CiRow[]>(Prisma.sql`
-      SELECT * FROM cis
-      WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND (${terms})`));
-  }
+  const chunks: string[][] = [];
+  for (let i = 0; i < jsonList.length; i += RECONCILER.lookupBatchSize) chunks.push(jsonList.slice(i, i + RECONCILER.lookupBatchSize));
+  // Chunks are independent; the pool runs them concurrently.
+  const batches = await Promise.all(
+    chunks.map((chunk) => {
+      const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
+      return prisma.$queryRaw<CiRow[]>(Prisma.sql`
+        SELECT * FROM cis
+        WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND (${terms})`);
+    }),
+  );
+  for (const batch of batches) collect(batch);
   return [...rows.values()];
 }
 

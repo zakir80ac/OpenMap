@@ -173,6 +173,7 @@ export const TIME = {
   msPerSecond: 1000,
   hoursPerDay: 24,
   msPerDay: 86_400_000,
+  microsecondsPerMillisecond: 1000,
 } as const;
 
 /** Node PKI parameters shared by the scheduler (issuer) and tests. */
@@ -248,7 +249,7 @@ export const RECONCILER = {
   /** Results between progress lines in the replay tool. */
   replayProgressEvery: 10,
   /** Pending relationships retried per pass and the attempt ceiling before they are dropped as stale. */
-  pendingRelationshipBatch: 2_000,
+  pendingRelationshipBatch: 10_000,
   pendingRelationshipMaxAttempts: 20,
 } as const;
 

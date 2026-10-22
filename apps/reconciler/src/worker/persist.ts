@@ -1,5 +1,7 @@
 // REQ-CORE-013 REQ-CORE-005 — writes a ReconcileOutput to Postgres in one transaction together
 // with its outbox events. Nothing else writes CIs; every other store learns through the outbox.
+// Every table is written with one array-based INSERT/UPDATE per batch (unnest of parallel arrays),
+// which is what keeps a 10k-device sweep inside the 15-minute budget.
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { identityKeyOf } from './lookup.js';
@@ -7,20 +9,40 @@ import type { ReconcileOutput } from '../core/reconcile.js';
 
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
+const OUTBOX_TARGETS: Array<'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm'> = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
+
+function json(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
+
+function nullable(value: string | null | undefined): string | null {
+  return value ?? null;
+}
+
+/** One round trip for every created CI. ON CONFLICT mirrors createMany's skipDuplicates. */
+async function insertCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
+  if (cis.length === 0) return;
+  await tx.$executeRaw(Prisma.sql`
+    INSERT INTO cis (id, "tenantId", type, identity, "identityKey", name, "displayName", code, layer, "userLabel", lifecycle, attributes, tags,
+      "sourceCollectorId", "sourceNodeId", "sourceRunId", "sourceConfidence", "observedAt", "validFrom", "validTo", checksum, "updatedAt")
+    SELECT u.id, u.tenant_id, u.type::"CiType", u.identity::jsonb, u.identity_key, u.name, u.display_name, u.code, u.layer::"CiLayer",
+      CASE WHEN u.user_label IS NULL THEN NULL ELSE u.user_label::jsonb END, u.lifecycle::"Lifecycle", u.attributes::jsonb,
+      ARRAY(SELECT jsonb_array_elements_text(u.tags::jsonb)), u.collector, u.node, u.run, u.confidence, u.observed_at::timestamptz, u.valid_from::timestamptz,
+      CASE WHEN u.valid_to IS NULL THEN NULL ELSE u.valid_to::timestamptz END, u.checksum, now()
+    FROM unnest(
+      ${cis.map((c) => c.id)}::uuid[], ${cis.map((c) => c.tenantId)}::uuid[], ${cis.map((c) => c.type)}::text[], ${cis.map((c) => JSON.stringify(c.identity))}::text[],
+      ${cis.map((c) => identityKeyOf(c.type, c.identity))}::text[], ${cis.map((c) => c.name)}::text[], ${cis.map((c) => c.displayName)}::text[], ${cis.map((c) => c.code)}::text[],
+      ${cis.map((c) => c.layer)}::text[], ${cis.map((c) => (c.userLabel ? JSON.stringify(c.userLabel) : null))}::text[], ${cis.map((c) => c.lifecycle)}::text[],
+      ${cis.map((c) => JSON.stringify(c.attributes))}::text[], ${cis.map((c) => JSON.stringify(c.tags))}::text[],
+      ${cis.map((c) => c.source.collectorId)}::text[], ${cis.map((c) => c.source.nodeId)}::text[], ${cis.map((c) => c.source.runId)}::text[], ${cis.map((c) => c.source.confidence)}::float8[],
+      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.validFrom)}::text[], ${cis.map((c) => nullable(c.validTo))}::text[], ${cis.map((c) => c.checksum)}::text[]
+    ) AS u(id, tenant_id, type, identity, identity_key, name, display_name, code, layer, user_label, lifecycle, attributes, tags, collector, node, run, confidence, observed_at, valid_from, valid_to, checksum)
+    ON CONFLICT (id) DO NOTHING`);
+}
+
 /** One round trip for every updated CI: unnest parallel arrays and join on id. */
 async function updateCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
   if (cis.length === 0) return;
-  const ids = cis.map((c) => c.id);
-  const identities = cis.map((c) => JSON.stringify(c.identity));
-  const identityKeys = cis.map((c) => identityKeyOf(c.type, c.identity));
-  const attributes = cis.map((c) => JSON.stringify(c.attributes));
-  const tags = cis.map((c) => JSON.stringify(c.tags));
-  const collectors = cis.map((c) => c.source.collectorId);
-  const nodes = cis.map((c) => c.source.nodeId);
-  const runs = cis.map((c) => c.source.runId);
-  const confidences = cis.map((c) => c.source.confidence);
-  const observed = cis.map((c) => c.observedAt);
-  const checksums = cis.map((c) => c.checksum);
   await tx.$executeRaw(Prisma.sql`
     UPDATE cis AS c SET
       identity = u.identity::jsonb,
@@ -35,64 +57,38 @@ async function updateCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
       checksum = u.checksum,
       "updatedAt" = now()
     FROM unnest(
-      ${ids}::uuid[], ${identities}::text[], ${identityKeys}::text[], ${attributes}::text[], ${tags}::text[],
-      ${collectors}::text[], ${nodes}::text[], ${runs}::text[], ${confidences}::float8[], ${observed}::text[], ${checksums}::text[]
+      ${cis.map((c) => c.id)}::uuid[], ${cis.map((c) => JSON.stringify(c.identity))}::text[], ${cis.map((c) => identityKeyOf(c.type, c.identity))}::text[],
+      ${cis.map((c) => JSON.stringify(c.attributes))}::text[], ${cis.map((c) => JSON.stringify(c.tags))}::text[],
+      ${cis.map((c) => c.source.collectorId)}::text[], ${cis.map((c) => c.source.nodeId)}::text[], ${cis.map((c) => c.source.runId)}::text[], ${cis.map((c) => c.source.confidence)}::float8[],
+      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.checksum)}::text[]
     ) AS u(id, identity, identity_key, attributes, tags, collector, node, run, confidence, observed_at, checksum)
     WHERE c.id = u.id`);
 }
 
-function json(value: unknown): Prisma.InputJsonValue {
-  return value as Prisma.InputJsonValue;
+async function insertRelationshipsBatch(tx: Tx, rels: readonly Relationship[]): Promise<void> {
+  if (rels.length === 0) return;
+  await tx.$executeRaw(Prisma.sql`
+    INSERT INTO relationships (id, "tenantId", type, "fromCiId", "toCiId", attributes, "sourceCollectorId", "sourceNodeId", "sourceRunId", "sourceConfidence", "observedAt", "validFrom", "validTo", "updatedAt")
+    SELECT u.id, u.tenant_id, u.type::"RelationshipType", u.from_id, u.to_id, u.attributes::jsonb, u.collector, u.node, u.run, u.confidence, u.observed_at::timestamptz, u.valid_from::timestamptz,
+      CASE WHEN u.valid_to IS NULL THEN NULL ELSE u.valid_to::timestamptz END, now()
+    FROM unnest(
+      ${rels.map((r) => r.id)}::uuid[], ${rels.map((r) => r.tenantId)}::uuid[], ${rels.map((r) => r.type)}::text[], ${rels.map((r) => r.fromCiId)}::uuid[], ${rels.map((r) => r.toCiId)}::uuid[],
+      ${rels.map((r) => JSON.stringify(r.attributes))}::text[], ${rels.map((r) => r.source.collectorId)}::text[], ${rels.map((r) => r.source.nodeId)}::text[], ${rels.map((r) => r.source.runId)}::text[],
+      ${rels.map((r) => r.source.confidence)}::float8[], ${rels.map((r) => r.observedAt)}::text[], ${rels.map((r) => r.validFrom)}::text[], ${rels.map((r) => nullable(r.validTo))}::text[]
+    ) AS u(id, tenant_id, type, from_id, to_id, attributes, collector, node, run, confidence, observed_at, valid_from, valid_to)
+    ON CONFLICT (id) DO NOTHING`);
 }
 
-const OUTBOX_TARGETS: Array<'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm'> = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
-
-function ciCreate(ci: Ci): Prisma.CiUncheckedCreateInput {
-  return {
-    id: ci.id,
-    tenantId: ci.tenantId,
-    type: ci.type,
-    identity: json(ci.identity),
-    identityKey: identityKeyOf(ci.type, ci.identity),
-    name: ci.name,
-    displayName: ci.displayName,
-    code: ci.code,
-    layer: ci.layer,
-    ...(ci.userLabel ? { userLabel: json(ci.userLabel) } : {}),
-    lifecycle: ci.lifecycle,
-    attributes: json(ci.attributes),
-    tags: ci.tags,
-    sourceCollectorId: ci.source.collectorId,
-    sourceNodeId: ci.source.nodeId,
-    sourceRunId: ci.source.runId,
-    sourceConfidence: ci.source.confidence,
-    observedAt: new Date(ci.observedAt),
-    validFrom: new Date(ci.validFrom),
-    validTo: ci.validTo ? new Date(ci.validTo) : null,
-    checksum: ci.checksum,
-  };
-}
-
-function relationshipCreate(r: Relationship): Prisma.RelationshipUncheckedCreateInput {
-  return {
-    id: r.id,
-    tenantId: r.tenantId,
-    type: r.type,
-    fromCiId: r.fromCiId,
-    toCiId: r.toCiId,
-    attributes: json(r.attributes),
-    sourceCollectorId: r.source.collectorId,
-    sourceNodeId: r.source.nodeId,
-    sourceRunId: r.source.runId,
-    sourceConfidence: r.source.confidence,
-    observedAt: new Date(r.observedAt),
-    validFrom: new Date(r.validFrom),
-    validTo: r.validTo ? new Date(r.validTo) : null,
-  };
-}
-
-function outboxCreate(e: EventEnvelope): Prisma.OutboxEventUncheckedCreateInput {
-  return { eventId: e.id, tenantId: e.tenantid, type: e.type, subject: e.subject, envelope: json(e), pending: OUTBOX_TARGETS };
+async function insertOutboxBatch(tx: Tx, events: readonly EventEnvelope[]): Promise<void> {
+  if (events.length === 0) return;
+  const pending = Prisma.sql`ARRAY[${Prisma.join(OUTBOX_TARGETS.map((t) => Prisma.sql`${t}`))}]::"OutboxTarget"[]`;
+  await tx.$executeRaw(Prisma.sql`
+    INSERT INTO outbox_events ("eventId", "tenantId", type, subject, envelope, pending)
+    SELECT u.event_id, u.tenant_id, u.type, u.subject, u.envelope::jsonb, ${pending}
+    FROM unnest(
+      ${events.map((e) => e.id)}::uuid[], ${events.map((e) => e.tenantid)}::uuid[], ${events.map((e) => e.type)}::text[], ${events.map((e) => e.subject)}::text[], ${events.map((e) => JSON.stringify(e))}::text[]
+    ) AS u(event_id, tenant_id, type, subject, envelope)
+    ON CONFLICT ("eventId") DO NOTHING`);
 }
 
 export interface PersistSummary {
@@ -105,21 +101,18 @@ export interface PersistSummary {
 
 export async function persist(prisma: PrismaClient, tenantId: string, out: ReconcileOutput): Promise<PersistSummary> {
   return prisma.$transaction(async (tx) => {
-    if (out.created.length) await tx.ci.createMany({ data: out.created.map(ciCreate), skipDuplicates: true });
-    for (const ci of out.created) {
-      if (ci.externalIds.length) {
-        await tx.ciExternalId.createMany({ data: ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })), skipDuplicates: true });
-      }
-    }
+    await insertCisBatch(tx, out.created);
+    const externalIds = out.created.flatMap((ci) => ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })));
+    if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
     await updateCisBatch(tx, out.updated);
-    if (out.relationshipsCreated.length) await tx.relationship.createMany({ data: out.relationshipsCreated.map(relationshipCreate), skipDuplicates: true });
+    await insertRelationshipsBatch(tx, out.relationshipsCreated);
     if (out.relationshipsSeen.length) await tx.relationship.updateMany({ where: { id: { in: out.relationshipsSeen } }, data: { observedAt: new Date() } });
-    for (const c of out.conflicts) {
-      await tx.reconciliationConflict.create({
-        data: { tenantId, type: c.observed.type, identityKey: identityKeyOf(c.observed.type, c.observed.identity), field: 'identity', candidates: json({ ciIds: c.ciIds, observed: c.observed }) },
+    if (out.conflicts.length) {
+      await tx.reconciliationConflict.createMany({
+        data: out.conflicts.map((c) => ({ tenantId, type: c.observed.type, identityKey: identityKeyOf(c.observed.type, c.observed.identity), field: 'identity', candidates: json({ ciIds: c.ciIds, observed: c.observed }) })),
       });
     }
-    if (out.events.length) await tx.outboxEvent.createMany({ data: out.events.map(outboxCreate), skipDuplicates: true });
+    await insertOutboxBatch(tx, out.events);
     return { created: out.created.length, updated: out.updated.length, relationships: out.relationshipsCreated.length, conflicts: out.conflicts.length, events: out.events.length };
   });
 }

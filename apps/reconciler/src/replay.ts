@@ -118,11 +118,11 @@ async function main(): Promise<void> {
   }
   const pendingMs = Date.now() - pendingStart;
   const pendingLeft = await prisma.pendingRelationship.count({ where: { tenantId } });
-  const reconcileMs = Date.now() - started;
+  const phaseMs = Date.now() - started;
   const dupes = await prisma.$queryRaw<Array<{ n: bigint }>>`SELECT count(*) AS n FROM (SELECT "tenantId", type, "identityKey" FROM cis WHERE "validTo" IS NULL GROUP BY 1,2,3 HAVING count(*) > 1) d`;
   const ciCount = await prisma.ci.count({ where: { tenantId, validTo: null } });
   const relCount = await prisma.relationship.count({ where: { tenantId, validTo: null } });
-  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), reconcileMs, pendingMs }));
+  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), pendingMs, phaseMs, cisPerSecond: Math.round((ciCount / phaseMs) * TIME.msPerSecond) }));
 
   if (args.dispatch) {
     const dispatchStart = Date.now();
