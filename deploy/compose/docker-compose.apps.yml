@@ -126,7 +126,10 @@ services:
       NODE_MTLS_CA_PATH: /etc/openmap/pki/ca.crt
       NODE_MTLS_CERT_PATH: /etc/openmap/pki/node.crt
       NODE_MTLS_KEY_PATH: /etc/openmap/pki/node.key
-    volumes: [node-pki:/etc/openmap/pki, node-evidence:/var/lib/openmap/evidence]
+      # Single-node profile only: the Node reads the scheduler's CA from the shared volume to trust it
+      # during enrolment. Remote sites receive the CA file out of band and leave this unset.
+      OPENMAP_BOOTSTRAP_CA_PATH: /etc/openmap/bootstrap/ca.crt
+    volumes: [node-pki:/etc/openmap/pki, node-evidence:/var/lib/openmap/evidence, "scheduler-pki:/etc/openmap/bootstrap:ro"]
     depends_on:
       scheduler: { condition: service_started }
 

@@ -84,7 +84,11 @@ func enrol(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	if err != nil {
 		return err
 	}
-	client, err := transport.NewEnrolment(cfg.SchedulerURL, cfg.NodeID, cfg.MTLSCAPath)
+	trustPath := cfg.MTLSCAPath
+	if _, statErr := os.Stat(trustPath); statErr != nil && cfg.BootstrapCAPath != "" {
+		trustPath = cfg.BootstrapCAPath
+	}
+	client, err := transport.NewEnrolment(cfg.SchedulerURL, cfg.NodeID, trustPath)
 	if err != nil {
 		return err
 	}

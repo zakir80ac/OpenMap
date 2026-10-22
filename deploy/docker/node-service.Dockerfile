@@ -39,7 +39,10 @@ ENV NODE_ENV=production
 LABEL org.opencontainers.image.title="openmap-${APP}" \
       org.opencontainers.image.source="https://github.com/openmap/openmap" \
       org.opencontainers.image.licenses="Apache-2.0"
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/openmap/pki /var/lib/openmap/evidence && chown -R node:node /etc/openmap /var/lib/openmap
+# Volumes mounted on these paths inherit the node ownership on first use (scheduler PKI, evidence).
+VOLUME ["/etc/openmap/pki", "/var/lib/openmap/evidence"]
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
 USER node

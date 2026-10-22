@@ -11,13 +11,17 @@ import (
 )
 
 type Config struct {
-	NodeID            string
-	SiteCode          string
-	SchedulerURL      string
-	MTLSCAPath        string
-	MTLSCertPath      string
-	MTLSKeyPath       string
-	EnrolToken        string
+	NodeID       string
+	SiteCode     string
+	SchedulerURL string
+	MTLSCAPath   string
+	MTLSCertPath string
+	MTLSKeyPath  string
+	EnrolToken   string
+	// BootstrapCAPath trusts the scheduler during enrolment when MTLSCAPath does not exist yet
+	// (the enrolment response then writes the CA to MTLSCAPath). Optional; operators who
+	// distribute the CA file directly leave it empty.
+	BootstrapCAPath   string
 	JobPullInterval   time.Duration
 	HeartbeatInterval time.Duration
 	CollectorsDir     string
@@ -35,6 +39,7 @@ const (
 	envCertPath          = "NODE_MTLS_CERT_PATH"
 	envKeyPath           = "NODE_MTLS_KEY_PATH"
 	envEnrolToken        = "OPENMAP_ENROL_TOKEN"
+	envBootstrapCA       = "OPENMAP_BOOTSTRAP_CA_PATH"
 	envJobPullIntervalMs = "NODE_JOB_PULL_INTERVAL_MS"
 	envHeartbeatMs       = "NODE_HEARTBEAT_INTERVAL_MS"
 	envCollectorsDir     = "OPENMAP_COLLECTORS_DIR"
@@ -78,17 +83,18 @@ func envInt(key string, fallback int) (int, error) {
 func Load() (Config, error) {
 	var problems []error
 	cfg := Config{
-		NodeID:        env(envNodeID, ""),
-		SiteCode:      env(envSiteCode, ""),
-		SchedulerURL:  env(envSchedulerURL, ""),
-		MTLSCAPath:    env(envCAPath, defaultCAPath),
-		MTLSCertPath:  env(envCertPath, defaultCertPath),
-		MTLSKeyPath:   env(envKeyPath, defaultKeyPath),
-		EnrolToken:    env(envEnrolToken, ""),
-		CollectorsDir: env(envCollectorsDir, defaultCollectorsDir),
-		EvidenceDir:   env(envEvidenceDir, defaultEvidenceDir),
-		LogLevel:      env(envLogLevel, defaultLogLevel),
-		MetricsAddr:   env(envMetricsAddr, defaultMetricsAddr),
+		NodeID:          env(envNodeID, ""),
+		SiteCode:        env(envSiteCode, ""),
+		SchedulerURL:    env(envSchedulerURL, ""),
+		MTLSCAPath:      env(envCAPath, defaultCAPath),
+		MTLSCertPath:    env(envCertPath, defaultCertPath),
+		MTLSKeyPath:     env(envKeyPath, defaultKeyPath),
+		EnrolToken:      env(envEnrolToken, ""),
+		BootstrapCAPath: env(envBootstrapCA, ""),
+		CollectorsDir:   env(envCollectorsDir, defaultCollectorsDir),
+		EvidenceDir:     env(envEvidenceDir, defaultEvidenceDir),
+		LogLevel:        env(envLogLevel, defaultLogLevel),
+		MetricsAddr:     env(envMetricsAddr, defaultMetricsAddr),
 	}
 	if cfg.NodeID == "" {
 		problems = append(problems, errors.New(envNodeID+" is required"))
