@@ -83,3 +83,30 @@ helm upgrade --install openmap deploy/helm/openmap \
 Migrations run as a `pre-install,pre-upgrade` hook. The scheduler is a StatefulSet with two
 volumes: the discovery PKI and the evidence store. Discovery Nodes run outside the cluster, at the
 sites they observe, from the `openmap/node` image or the bare binary.
+
+## Identity: SSO, MFA and API tokens (REQ-SEC-009)
+
+The realm export `compose/keycloak/realm-openmap.json` is the source of truth for identity policy and is imported on
+first start (Keycloak ignores it once the realm exists; apply later changes through the admin console or the admin
+REST API, see `docs/STATE.md`).
+
+- **Console sign-in** is OIDC Authorization Code with PKCE through the public `openmap-console` client; the API
+  verifies the issuer against `PUBLIC_KEYCLOAK_URL` and the audience against `KEYCLOAK_CLIENT_ID` / `KEYCLOAK_API_CLIENT_ID`.
+- **Roles** are realm roles (`openmap-admin ⊇ operator ⊇ analyst`, `auditor ⊇ analyst`); the `tenant` user attribute
+  scopes every request. Map both from your directory when brokering.
+- **Enterprise SSO (SAML or OIDC brokering).** Add the corporate identity provider under *Identity Providers* (SAML
+  2.0 or OpenID Connect) and give it two mappers: an *Attribute Importer* that writes the assertion's tenant
+  attribute into the user attribute `tenant`, and a *Role Mapper* (or *Advanced Attribute to Role*) that grants the
+  realm roles from the directory's groups. Set the provider as the realm's default with *Browser flow → Identity
+  Provider Redirector* so users never see the Keycloak form. Nothing in the console or API changes: tokens still
+  come from this realm.
+- **MFA.** The realm pins the TOTP policy (6 digits, 30 s, one window of drift, no code reuse) and enables the
+  *Configure OTP* required action; the default browser flow enforces the second factor for every user who has
+  enrolled. To make it mandatory, set *Configure OTP* as a default action for new users or require it for the
+  `openmap-admin` role with a conditional OTP sub-flow in the browser flow.
+- **Brute force.** Progressive lockout is on: 10 failures, waits growing by 60 s up to 15 minutes, failures
+  forgotten after 12 hours.
+- **API tokens.** Automation uses the confidential `openmap-automation` client (client-credentials grant, service
+  account with `openmap-operator`, hardcoded `tenant` claim, `aud: openmap-api`). Read the secret once from
+  *Clients → openmap-automation → Credentials* and store it in OpenBao; create one such client per tenant. The flow
+  and a request example are in `apps/api/README.md`.

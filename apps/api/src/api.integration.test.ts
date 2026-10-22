@@ -45,8 +45,8 @@ const ids = {
   ip2: randomUUID(),
 };
 
-async function mint(roles: string[], privateKey: CryptoKey): Promise<string> {
-  return new SignJWT({ tenant: tenantId, preferred_username: 'tester', realm_access: { roles }, azp: env.KEYCLOAK_CLIENT_ID })
+async function mint(roles: string[], privateKey: CryptoKey, client: { azp: string; aud?: string[] } = { azp: env.KEYCLOAK_CLIENT_ID }): Promise<string> {
+  return new SignJWT({ tenant: tenantId, preferred_username: 'tester', realm_access: { roles }, azp: client.azp, ...(client.aud === undefined ? {} : { aud: client.aud }) })
     .setProtectedHeader({ alg: SIGNING_ALGORITHM, kid: KID })
     .setIssuer(realmUrl(env).toString())
     .setSubject(userId)
@@ -189,6 +189,17 @@ describe('OpenMap API (integration)', () => {
       .sign(keys.privateKey);
     const res = await app.inject({ method: 'POST', url: '/graphql', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + foreign }, payload: { query: '{ layers { layer } }' } });
     expect(JSON.parse(res.body).errors[0].message).toMatch(/client/i);
+  });
+
+  it('accepts a service-account token addressed to the API client and refuses one from a foreign client', async () => {
+    const automation = await mint([ROLES.operator], keys.privateKey, { azp: 'openmap-automation', aud: [env.KEYCLOAK_API_CLIENT_ID] });
+    const ok = await gql<{ layers: unknown[] }>('query { layers { layer } }', {}, automation);
+    expect(ok.errors).toBeUndefined();
+    expect(Array.isArray(ok.data?.layers)).toBe(true);
+
+    const foreign = await mint([ROLES.operator], keys.privateKey, { azp: 'some-other-app', aud: ['some-other-api'] });
+    const denied = await gql<{ layers: unknown[] }>('query { layers { layer } }', {}, foreign);
+    expect(denied.errors?.[0]?.message).toContain('not issued for this client');
   });
 
   it('pages CIs with a cursor and applies CiFilter', async () => {

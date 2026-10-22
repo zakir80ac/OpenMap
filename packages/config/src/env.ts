@@ -40,6 +40,11 @@ export const envSchema = z.object({
   KEYCLOAK_URL: url.default('http://localhost:8080'),
   KEYCLOAK_REALM: z.string().default('openmap'),
   KEYCLOAK_CLIENT_ID: z.string().default('openmap-console'),
+  /**
+   * The API's own (bearer-only) client in the realm. Tokens minted for automation through the client-credentials
+   * grant (REQ-SEC-009) carry it in `aud`, so the API accepts them without being issued for the console client.
+   */
+  KEYCLOAK_API_CLIENT_ID: z.string().default('openmap-api'),
   /** OpenBao: secrets for collector credentials. */
   OPENBAO_ADDR: url.default('http://localhost:8200'),
   OPENBAO_TOKEN: z.string().default('openmap-dev-root'),

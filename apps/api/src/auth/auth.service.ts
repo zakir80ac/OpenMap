@@ -53,8 +53,12 @@ export class AuthService {
     const claims = claimsSchema.safeParse(payload);
     if (!claims.success) throw new UnauthorizedException('token lacks required claims (sub, tenant)');
     const c = claims.data;
+    // Browser sessions are issued for the console client (`azp`); automation tokens from the client-credentials
+    // grant are addressed to the API's own client in `aud` (REQ-SEC-009). Anything else is a foreign token.
     const audiences = typeof c.aud === 'string' ? [c.aud] : (c.aud ?? []);
-    if (c.azp !== this.env.KEYCLOAK_CLIENT_ID && !audiences.includes(this.env.KEYCLOAK_CLIENT_ID)) {
+    const forConsole = c.azp === this.env.KEYCLOAK_CLIENT_ID || audiences.includes(this.env.KEYCLOAK_CLIENT_ID);
+    const forApi = audiences.includes(this.env.KEYCLOAK_API_CLIENT_ID);
+    if (!forConsole && !forApi) {
       throw new UnauthorizedException('token was not issued for this client');
     }
     const tenantId = await this.tenants.resolve(c.tenant);
