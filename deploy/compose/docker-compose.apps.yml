@@ -85,6 +85,9 @@ services:
       SCHEDULER_TLS_CERT_PATH: /etc/openmap/pki/scheduler.crt
       SCHEDULER_TLS_KEY_PATH: /etc/openmap/pki/scheduler.key
       EVIDENCE_DIR: /var/lib/openmap/evidence
+      # Nodes inside the compose network reach the scheduler by service name; external Nodes by the public host.
+      PUBLIC_SCHEDULER_URL: https://scheduler:4200
+      SCHEDULER_TLS_EXTRA_SANS: ${SCHEDULER_TLS_EXTRA_SANS:-localhost}
     # pki:init is idempotent: it writes the CA and server certificate on first start and never overwrites them.
     command: ["sh", "-c", "node dist/pki-init.js && exec node dist/main.js"]
     ports: ["${SCHEDULER_PORT:-4200}:4200"]

@@ -65,6 +65,10 @@ export const envSchema = z.object({
   /** Public origins, used for OIDC redirects and CORS. */
   PUBLIC_CONSOLE_URL: url.default('http://localhost:3000'),
   PUBLIC_API_URL: url.default('http://localhost:4000'),
+  /** Origin Discovery Nodes reach the scheduler on; its hostname becomes the scheduler certificate's subject. */
+  PUBLIC_SCHEDULER_URL: url.default('https://localhost:4200'),
+  /** Extra DNS names for the scheduler certificate (comma-separated), e.g. the compose or cluster service name. */
+  SCHEDULER_TLS_EXTRA_SANS: z.string().default(''),
 
   /** OpenTelemetry collector endpoint; empty disables export (spans still recorded in-process). */
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default(''),

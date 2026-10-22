@@ -166,7 +166,8 @@ spec:
             - { name: SCHEDULER_TLS_KEY_PATH, value: /etc/openmap/pki/scheduler.key }
             - { name: NODE_CERT_VALIDITY_DAYS, value: {{ .Values.scheduler.nodeCertValidityDays | quote }} }
             - { name: EVIDENCE_DIR, value: /var/lib/openmap/evidence }
-            - { name: PUBLIC_API_URL, value: {{ printf "https://%s" .Values.scheduler.publicHost | quote }} }
+            - { name: PUBLIC_SCHEDULER_URL, value: {{ printf "https://%s" .Values.scheduler.publicHost | quote }} }
+            - { name: SCHEDULER_TLS_EXTRA_SANS, value: {{ include "openmap.svc" (dict "root" . "component" "scheduler") | quote }} }
           ports: [{ containerPort: {{ .Values.scheduler.port }} }]
           readinessProbe:
             httpGet: { path: /healthz, port: {{ .Values.scheduler.port }}, scheme: HTTPS }

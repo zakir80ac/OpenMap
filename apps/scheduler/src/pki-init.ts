@@ -20,7 +20,8 @@ async function main(): Promise<void> {
   if (!existsSync(env.SCHEDULER_TLS_CERT_PATH)) {
     const ca = await loadCa(readFileSync(env.SCHEDULER_CA_CERT_PATH, 'utf8'), readFileSync(env.SCHEDULER_CA_KEY_PATH, 'utf8'));
     const keys = await webcrypto.subtle.generateKey({ name: 'ECDSA', namedCurve: PKI.curve }, true, ['sign', 'verify']);
-    const host = new URL(env.PUBLIC_API_URL).hostname;
+    const host = new URL(env.PUBLIC_SCHEDULER_URL).hostname;
+    const sans = [host, ...env.SCHEDULER_TLS_EXTRA_SANS.split(',').map((s) => s.trim()).filter((s) => s.length > 0 && s !== host)];
     const notBefore = new Date();
     const cert = await x509.X509CertificateGenerator.create({
       serialNumber: Buffer.from(webcrypto.getRandomValues(new Uint8Array(PKI.serialBytes))).toString('hex'),
@@ -33,7 +34,7 @@ async function main(): Promise<void> {
       signingKey: ca.privateKey,
       extensions: [
         new x509.ExtendedKeyUsageExtension([x509.ExtendedKeyUsage.serverAuth]),
-        new x509.SubjectAlternativeNameExtension([{ type: 'dns', value: host }]),
+        new x509.SubjectAlternativeNameExtension(sans.map((value) => ({ type: 'dns' as const, value }))),
       ],
     });
     const pkcs8 = await webcrypto.subtle.exportKey('pkcs8', keys.privateKey);
