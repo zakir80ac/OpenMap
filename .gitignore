@@ -13,3 +13,6 @@ graphify-out/*.tmp
 
 tools/perf/bin/
 packages/testing/fixtures/synth*/
+
+# local runtime state for dev runs (PKI, evidence, collector binaries)
+.local/

@@ -18,7 +18,9 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node dist/main.js",
     "dev": "tsx watch src/main.ts",
-    "pki:init": "tsx src/pki-init.ts"
+    "pki:init": "tsx src/pki-init.ts",
+    "node:register": "tsx src/node-register.ts",
+    "job:submit": "tsx src/job-submit.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",

@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	collectorID  = "storage"
+	collectorID  = "storage_ontap"
 	version      = "0.1.0"
 	vendor       = "netapp_ontap"
 	evidenceKind = "api_response"

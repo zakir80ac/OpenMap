@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	collectorID  = "storage"
+	collectorID  = "storage_pure"
 	version      = "0.1.0"
 	vendor       = "pure_storage"
 	evidenceKind = "api_response"
