@@ -60,7 +60,7 @@ async function main(): Promise<void> {
     });
     console.log(JSON.stringify({ msg: 'site created', id: site.id, code: site.code }));
   }
-  const token = randomBytes(PKI.serialBytes * 2).toString('hex');
+  const token = randomBytes(PKI.enrolTokenBytes).toString('hex');
   await prisma.discoveryNode.upsert({
     where: { id: args.node },
     update: { status: 'pending', enrolTokenDigest: tokenDigest(token), siteId: site.id, tenantId: tenant.id },

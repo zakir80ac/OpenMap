@@ -180,6 +180,8 @@ export const TIME = {
 export const PKI = {
   /** Random serial length in bytes; 16 satisfies RFC 5280's 20-octet maximum with margin. */
   serialBytes: 16,
+  /** Random bytes in a one-time Node enrolment token (hex-encoded when shown). */
+  enrolTokenBytes: 32,
   curve: 'P-256',
   hash: 'SHA-256',
   /** Internal CA lifetime (ten years) and scheduler server certificate lifetime (browser-safe 825 days). */
