@@ -30,6 +30,9 @@ export const ICON_NAMES = [
   'check',
   'arrowRight',
   'tag',
+  'user',
+  'signOut',
+  'shield',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -179,6 +182,24 @@ const glyphs: Record<IconName, ReactNode> = {
     <>
       <path d="M3 11.5V4h7.5l9.5 9.5-7.5 7.5Z" />
       <circle cx="7.5" cy="8.5" r="1.5" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20.5c0-3.6 3.6-6 8-6s8 2.4 8 6" />
+    </>
+  ),
+  signOut: (
+    <>
+      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+      <path d="M14 8l4 4-4 4M18 12H9" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" />
+      <path d="m9 12 2 2 4-4.5" />
     </>
   ),
 };

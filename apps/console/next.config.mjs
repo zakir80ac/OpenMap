@@ -24,6 +24,10 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: env.PUBLIC_API_URL,
     NEXT_PUBLIC_DEFAULT_LOCALE: env.DEFAULT_LOCALE,
+    // REQ-SEC-001 — the browser-side OIDC client: Keycloak as the browser reaches it, the realm and the public client.
+    NEXT_PUBLIC_KEYCLOAK_URL: env.PUBLIC_KEYCLOAK_URL,
+    NEXT_PUBLIC_KEYCLOAK_REALM: env.KEYCLOAK_REALM,
+    NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: env.KEYCLOAK_CLIENT_ID,
   },
 };
 

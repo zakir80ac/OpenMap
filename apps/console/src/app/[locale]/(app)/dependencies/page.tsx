@@ -2,7 +2,8 @@
 // instant) is carried in the query string so a map can be linked from the CI detail, services and impact screens.
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { DependenciesView, isImpactDirection, parseDepth } from '@/components/dependencies/DependenciesView';
+import { DependenciesView } from '@/components/dependencies/DependenciesView';
+import { isImpactDirection, parseDepth } from '@/components/dependencies/params';
 import { getT, requireLocale } from '@/lib/i18n';
 
 interface PageProps {

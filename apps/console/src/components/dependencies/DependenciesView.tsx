@@ -28,6 +28,7 @@ import { useFormatters, useT } from '@/providers';
 import { DependencyCanvas, type HoverInfo } from './DependencyCanvas';
 import { FocusSearch } from './FocusSearch';
 import { ImpactPanel } from './ImpactPanel';
+import { DIRECTIONS, isImpactDirection, parseDepth } from './params';
 import { useLaneLayout } from './useLaneLayout';
 
 export interface DependenciesViewProps {
@@ -39,20 +40,8 @@ export interface DependenciesViewProps {
   asOf: string | undefined;
 }
 
-const DIRECTIONS: readonly ImpactDirection[] = ['upstream', 'downstream', 'both'];
 const DEPTHS: readonly number[] = Array.from({ length: GRAPH.maxImpactDepth }, (_, index) => index + 1);
 const PREDICTED = ['down', 'degraded', 'at_risk', 'unaffected'] as const;
-
-export function isImpactDirection(value: string | undefined): value is ImpactDirection {
-  return value !== undefined && (DIRECTIONS as readonly string[]).includes(value);
-}
-
-/** Depth from a query string or select value: integers 1..maxImpactDepth; anything else is the default. */
-export function parseDepth(value: string | undefined): number {
-  const parsed = value === undefined || value.trim() === '' ? Number.NaN : Number(value);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > GRAPH.maxImpactDepth) return GRAPH.defaultImpactDepth;
-  return parsed;
-}
 
 export function DependenciesView({ locale, ciId, direction, depth, asOf }: DependenciesViewProps): ReactNode {
   const t = useT();

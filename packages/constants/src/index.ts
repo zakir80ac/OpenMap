@@ -333,6 +333,40 @@ export const CONSOLE = {
   shortIdLength: 8,
 } as const;
 
+/**
+ * Browser sign-in (REQ-SEC-001, REQ-SEC-009): OIDC Authorization Code flow with PKCE against the Keycloak realm.
+ * Lengths follow RFC 7636 (verifier 43–128 characters: 48 random bytes encode to 64) and the OIDC Core
+ * recommendations for state and nonce entropy. Hosts and client ids live in @openmap/config, not here.
+ */
+export const AUTH = {
+  pkceVerifierBytes: 48,
+  stateBytes: 16,
+  nonceBytes: 16,
+  /** PKCE transform; the only method the realm client accepts (`pkce.code.challenge.method`). */
+  challengeMethod: 'S256',
+  challengeHash: 'SHA-256',
+  /** `openid` is mandatory; `profile` and `email` supply preferred_username, name and email for the user menu. */
+  scope: 'openid profile email',
+  /** Access tokens are renewed this long before `exp` so no request is sent with a token about to expire. */
+  refreshLeadMs: 30_000,
+  /** Lower bound on the renewal timer, so a token already inside the lead window does not renew in a tight loop. */
+  minRefreshDelayMs: 5_000,
+  /** Base64 encodes three bytes as four characters; base64url decoding pads back to this block length. */
+  base64BlockLength: 4,
+  /** Segments of a compact JWS: header.payload.signature. */
+  jwtSegments: 3,
+  /** Default token lifetime assumed when the token endpoint omits `expires_in` (the realm issues 900 s tokens). */
+  fallbackExpiresInSeconds: 300,
+  /** Relative path of the OIDC discovery document under the realm URL (RFC 8414). */
+  discoveryPath: '.well-known/openid-configuration',
+  /** Console route, under the locale segment, that the identity provider redirects back to. */
+  callbackPath: '/auth/callback',
+  /** sessionStorage keys: the refresh token (survives a reload, never shared across tabs) and the pending request. */
+  storageKeys: { refresh: 'openmap.auth.refresh', pending: 'openmap.auth.pending' },
+  /** OIDC error codes returned on the callback that mean the user declined rather than that something broke. */
+  deniedErrorCodes: ['access_denied', 'login_required', 'consent_required', 'interaction_required'] as const,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

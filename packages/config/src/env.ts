@@ -65,6 +65,12 @@ export const envSchema = z.object({
   /** Public origins, used for OIDC redirects and CORS. */
   PUBLIC_CONSOLE_URL: url.default('http://localhost:3000'),
   PUBLIC_API_URL: url.default('http://localhost:4000'),
+  /**
+   * Keycloak as the browser reaches it. The console's OIDC flow (discovery, authorize, token, end_session) runs
+   * against this origin, so the `iss` claim Keycloak writes into tokens is derived from it; the API must verify
+   * against the same issuer (KC_HOSTNAME in deploy/compose pins it to this value).
+   */
+  PUBLIC_KEYCLOAK_URL: url.default('http://localhost:8080'),
   /** Origin Discovery Nodes reach the scheduler on; its hostname becomes the scheduler certificate's subject. */
   PUBLIC_SCHEDULER_URL: url.default('https://localhost:4200'),
   /** Extra DNS names for the scheduler certificate (comma-separated), e.g. the compose or cluster service name. */
