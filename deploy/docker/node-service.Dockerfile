@@ -3,7 +3,7 @@
 # The build stage compiles the workspace once; `pnpm deploy` then copies only the service, its
 # production dependencies and the workspace packages it imports into the runtime image.
 # syntax=docker/dockerfile:1.7
-ARG NODE_VERSION=22
+ARG NODE_VERSION=24
 
 FROM node:${NODE_VERSION}-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm

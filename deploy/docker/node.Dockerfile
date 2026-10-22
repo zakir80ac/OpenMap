@@ -9,11 +9,9 @@ FROM golang:${GO_VERSION}-bookworm AS build
 ENV CGO_ENABLED=0
 WORKDIR /src
 COPY go.work go.work.sum ./
-COPY apps/collectors/go.mod apps/collectors/go.sum ./apps/collectors/
-COPY apps/node/go.mod apps/node/go.sum ./apps/node/
-RUN --mount=type=cache,target=/go/pkg/mod cd apps/collectors && go mod download && cd ../node && go mod download
 COPY apps/collectors ./apps/collectors
 COPY apps/node ./apps/node
+RUN --mount=type=cache,target=/go/pkg/mod cd apps/collectors && go mod download && cd ../node && go mod download
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p /out/collectors && cd apps/collectors && \
     for d in cmd/*/; do n=$(basename "$d"); go build -trimpath -ldflags="-s -w" -o "/out/collectors/$n" "./cmd/$n"; done && \
