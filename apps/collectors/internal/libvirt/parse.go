@@ -45,7 +45,7 @@ type Address struct {
 	Interface string
 	MAC       string
 	Protocol  string
-	Address   string // CIDR as printed, e.g. 10.0.0.5/24
+	Address   string // CIDR as printed by virsh (address slash prefix length)
 }
 
 // Node is the hypervisor host as reported by virsh nodeinfo / version / hostname and sysfs DMI.
