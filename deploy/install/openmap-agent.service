@@ -1,0 +1,24 @@
+# REQ-DISC-004 — systemd unit for the host agent. Settings come from /etc/openmap/agent/agent.env (written by
+# install-agent.sh); the agent also reads that file itself (OPENMAP_AGENT_ENV_FILE).
+[Unit]
+Description=OpenMap host agent
+Documentation=https://github.com/openmap/openmap/blob/main/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Root so the inventory can read every process's socket owners under /proc and the package database.
+User=root
+EnvironmentFile=-/etc/openmap/agent/agent.env
+ExecStart=/opt/openmap/bin/openmap-agent run
+Restart=on-failure
+RestartSec=30s
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/etc/openmap/agent
+
+[Install]
+WantedBy=multi-user.target

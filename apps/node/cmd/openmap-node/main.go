@@ -21,13 +21,33 @@ import (
 
 	"github.com/openmap/openmap/apps/node/internal/agentgw"
 	"github.com/openmap/openmap/apps/node/internal/config"
+	"github.com/openmap/openmap/apps/node/internal/envfile"
 	noderuntime "github.com/openmap/openmap/apps/node/internal/runtime"
 	"github.com/openmap/openmap/apps/node/internal/supervisor"
 	"github.com/openmap/openmap/apps/node/internal/transport"
 )
 
 func main() {
+	// Service managers pass little or no environment: the installer's env file fills in what is not set (REQ-DISC-031).
+	if err := envfile.Load(config.EnvFilePath()); err != nil {
+		fmt.Fprintln(os.Stderr, "environment file:", err)
+		os.Exit(2)
+	}
 	if len(os.Args) < 2 {
+		// Under the Windows Service Control Manager there are no arguments: host `run` as the service.
+		cfg, err := config.Load()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "configuration:", err)
+			os.Exit(2)
+		}
+		log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level(cfg.LogLevel)}))
+		if hosted, err := runAsServiceIfNeeded(cfg, log); hosted {
+			if err != nil {
+				log.Error("service failed", "err", err)
+				os.Exit(1)
+			}
+			return
+		}
 		fmt.Fprintln(os.Stderr, "usage: openmap-node <enrol|run|version>")
 		os.Exit(2)
 	}

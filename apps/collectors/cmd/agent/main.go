@@ -43,6 +43,8 @@ const (
 	envBootstrap  = "OPENMAP_BOOTSTRAP_CA_PATH"
 	envIntervalMs = "OPENMAP_AGENT_INTERVAL_MS"
 	envLogLevel   = "LOG_LEVEL"
+	envEnvFile    = "OPENMAP_AGENT_ENV_FILE"
+	envFileName   = "agent.env"
 
 	defaultIntervalMs = 900_000
 	httpTimeout       = 120 * time.Second
@@ -102,7 +104,27 @@ func loadConfig() (config, error) {
 }
 
 func main() {
+	// Service managers pass little or no environment: the installer's env file (next to the PKI material by
+	// default) fills in whatever the environment did not set.
+	if err := agent.LoadEnvFile(env(envEnvFile, filepath.Join(defaultPKIDir(), envFileName))); err != nil {
+		fmt.Fprintln(os.Stderr, "environment file:", err)
+		os.Exit(2)
+	}
 	if len(os.Args) < 2 {
+		// Under the Windows Service Control Manager there are no arguments: host the `run` command as the service.
+		cfg, err := loadConfig()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "configuration:", err)
+			os.Exit(2)
+		}
+		log := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: level(cfg.LogLevel)}))
+		if hosted, err := runAsServiceIfNeeded(cfg, log); hosted {
+			if err != nil {
+				log.Error("service failed", "err", err)
+				os.Exit(1)
+			}
+			return
+		}
 		fmt.Fprintln(os.Stderr, "usage: openmap-agent <collect|enrol|report|run|version>")
 		os.Exit(2)
 	}

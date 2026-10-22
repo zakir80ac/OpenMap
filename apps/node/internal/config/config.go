@@ -50,6 +50,7 @@ const (
 	envLogLevel          = "LOG_LEVEL"
 	envMetricsAddr       = "OPENMAP_NODE_METRICS_ADDR"
 	envAgentListenAddr   = "OPENMAP_AGENT_LISTEN_ADDR"
+	envEnvFile           = "OPENMAP_NODE_ENV_FILE"
 
 	defaultJobPullIntervalMs = 5000
 	defaultHeartbeatMs       = 15000
@@ -61,7 +62,13 @@ const (
 	defaultCAPath            = "/etc/openmap/pki/ca.crt"
 	defaultCertPath          = "/etc/openmap/pki/node.crt"
 	defaultKeyPath           = "/etc/openmap/pki/node.key"
+	defaultEnvFile           = "/etc/openmap/node.env"
 )
+
+// EnvFilePath is where the installer writes the Node's settings for the service manager (OPENMAP_NODE_ENV_FILE).
+func EnvFilePath() string {
+	return env(envEnvFile, defaultEnvFile)
+}
 
 func env(key, fallback string) string {
 	if v, ok := os.LookupEnv(key); ok && v != "" {

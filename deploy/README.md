@@ -125,9 +125,42 @@ the scheduler.
    `pnpm --filter @openmap/scheduler agent:register -- --node <nodeId> --agent <host fqdn>`.
 3. On the host: `OPENMAP_AGENT_NODE_URL=https://<node>:4300 OPENMAP_AGENT_ID=<host fqdn> OPENMAP_ENROL_TOKEN=<token>
    OPENMAP_BOOTSTRAP_CA_PATH=<discovery ca.crt> openmap-agent enrol`. The certificate and key land under
-   `/etc/openmap/agent` (`%ProgramData%\OpenMapgent` on Windows) or wherever `AGENT_MTLS_*_PATH` point.
+   `/etc/openmap/agent` (`%ProgramData%\OpenMap\agent` on Windows) or wherever `AGENT_MTLS_*_PATH` point.
 4. `openmap-agent run` reports every `OPENMAP_AGENT_INTERVAL_MS` (default 15 minutes); `openmap-agent report` sends
    once; `openmap-agent collect` prints the observation without sending it.
 
 Each report is a run of a standing `agent` job on that Node, so history, evidence (stored on the Node by digest) and
 metrics appear in the console exactly like agentless discovery.
+
+## Installing the Node and the agent as services (REQ-DISC-031, REQ-DISC-004)
+
+Both binaries run as native services on bare metal; `deploy/install/` holds the units and installers. Each binary
+reads an environment file at start (`OPENMAP_NODE_ENV_FILE`, default `/etc/openmap/node.env`; `OPENMAP_AGENT_ENV_FILE`,
+default `agent.env` next to the agent's PKI directory) so the units carry no site-specific values, and a binary started
+with no arguments under the Windows service control manager hosts itself as a service.
+
+| Platform | Node | Agent |
+| --- | --- | --- |
+| Linux (systemd) | `install-node.sh` + `openmap-node.service` | `install-agent.sh` + `openmap-agent.service` |
+| macOS (launchd) | run under compose or Kubernetes | `install-agent.sh` + `com.openmap.agent.plist` |
+| Windows | `install-node.ps1` (service `OpenMapNode`) | `install-agent.ps1` (service `OpenMapAgent`) |
+
+Unpack a release (`bin/openmap-node`, `bin/openmap-agent`, `collectors/`, `install/`) and run the installer as root
+or from an elevated PowerShell with the one-time token from `node-register` / `agent:register`:
+
+```bash
+sudo install/install-node.sh --node node-ryd-02 --site RYD --scheduler https://scheduler.example:4200 --token <token> --ca ca.crt
+sudo install/install-agent.sh --node-url https://node-ryd-02.example:4300 --token <token> --ca ca.crt
+```
+
+```powershell
+.\install\install-node.ps1 -NodeId node-ryd-02 -SiteCode RYD -SchedulerUrl https://scheduler.example:4200 -Token <token> -Ca .\ca.crt
+.\install\install-agent.ps1 -NodeUrl https://node-ryd-02.example:4300 -Token <token> -Ca .\ca.crt
+```
+
+The installers copy the binaries (`/opt/openmap/bin`, `%ProgramFiles%\OpenMap`), write the environment file with
+restricted permissions (`/etc/openmap`, `%ProgramData%\OpenMap`), enrol once with the token (which is never stored),
+then enable and start the service with automatic restart. The Linux Node runs as the unprivileged `openmap` user with
+`CAP_NET_RAW` only; the agent runs as root/SYSTEM because it reads every process's sockets and the package database.
+Re-running an installer upgrades the binary and recreates the service without re-enrolling if the certificate already
+exists. Logs: `journalctl -u openmap-node`, `/var/log/openmap-agent.log` on macOS, the Application event log on Windows.

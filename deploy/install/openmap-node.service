@@ -1,0 +1,27 @@
+# REQ-DISC-031 — systemd unit for a bare-metal Discovery Node. Settings come from /etc/openmap/node.env (written by
+# install-node.sh); the Node also reads that file itself (OPENMAP_NODE_ENV_FILE), so the unit stays generic.
+[Unit]
+Description=OpenMap Discovery Node
+Documentation=https://github.com/openmap/openmap/blob/main/deploy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=openmap
+Group=openmap
+EnvironmentFile=-/etc/openmap/node.env
+ExecStart=/opt/openmap/bin/openmap-node run
+Restart=on-failure
+RestartSec=5s
+# Hardening: the Node needs its PKI and evidence directories and nothing else writable.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/etc/openmap/pki /var/lib/openmap/evidence
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target
