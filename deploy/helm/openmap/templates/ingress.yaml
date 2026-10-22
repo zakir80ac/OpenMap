@@ -1,0 +1,53 @@
+# REQ-INT-003 — one Ingress for the console, API and Keycloak hosts taken from their public URLs.
+{{- if .Values.ingress.enabled }}
+{{- $apiHost := (urlParse .Values.api.publicUrl).host }}
+{{- $consoleHost := (urlParse .Values.console.publicUrl).host }}
+{{- $authHost := (urlParse .Values.keycloak.publicUrl).host }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openmap.fullname" . }}
+  labels: {{- include "openmap.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ $apiHost }}
+      http:
+        paths:
+          - path: /graphql
+            pathType: Prefix
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "api") }}, port: { number: {{ .Values.api.port }} } } }
+          - path: /healthz
+            pathType: Exact
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "api") }}, port: { number: {{ .Values.api.port }} } } }
+          - path: /readyz
+            pathType: Exact
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "api") }}, port: { number: {{ .Values.api.port }} } } }
+          {{- if .Values.console.enabled }}
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "console") }}, port: { number: {{ .Values.console.port }} } } }
+          {{- end }}
+    {{- if ne $consoleHost $apiHost }}
+    - host: {{ $consoleHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "console") }}, port: { number: {{ .Values.console.port }} } } }
+    {{- end }}
+    - host: {{ $authHost }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: {{ include "openmap.svc" (dict "root" . "component" "keycloak") }}, port: { number: 8080 } } }
+{{- end }}

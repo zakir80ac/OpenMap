@@ -1,0 +1,126 @@
+# REQ-INT-003 — default values. Every value mirrors the documented defaults in packages/config/src/env.ts
+# and deploy/compose. Set image.registry to the mirror for air-gapped clusters (REQ-INT-002).
+image:
+  registry: ""
+  repositoryPrefix: openmap
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+global:
+  tenantDefaultLocale: en
+  storageClass: ""
+
+api:
+  replicas: 2
+  port: 4000
+  publicUrl: http://openmap.localhost
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+console:
+  enabled: true
+  replicas: 2
+  port: 3000
+  publicUrl: http://openmap.localhost
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 1Gi }
+
+scheduler:
+  replicas: 1
+  port: 4200
+  publicHost: scheduler.openmap.localhost
+  nodeCertValidityDays: 90
+  pkiStorage: 1Gi
+  evidenceStorage: 20Gi
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+reconciler:
+  replicas: 2
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits: { cpu: "4", memory: 4Gi }
+
+bsmEngine:
+  replicas: 1
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 2Gi }
+
+migrate:
+  backoffLimit: 3
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  tls: []
+
+postgres:
+  image: postgres:17
+  storage: 50Gi
+  database: openmap
+  username: openmap
+  password: openmap
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits: { cpu: "4", memory: 8Gi }
+
+memgraph:
+  image: memgraph/memgraph-mage:3.4
+  storage: 50Gi
+  resources:
+    requests: { cpu: "1", memory: 4Gi }
+    limits: { cpu: "8", memory: 32Gi }
+
+clickhouse:
+  image: clickhouse/clickhouse-server:25.8
+  storage: 100Gi
+  database: openmap
+  username: openmap
+  password: openmap
+  resources:
+    requests: { cpu: "1", memory: 2Gi }
+    limits: { cpu: "8", memory: 16Gi }
+
+valkey:
+  image: valkey/valkey:8
+  storage: 5Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 2Gi }
+
+meilisearch:
+  image: getmeili/meilisearch:v1.15
+  storage: 20Gi
+  masterKey: openmap-dev-master-key
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: "2", memory: 4Gi }
+
+keycloak:
+  image: quay.io/keycloak/keycloak:26.3
+  realm: openmap
+  adminUser: admin
+  adminPassword: admin
+  publicUrl: http://auth.openmap.localhost
+  resources:
+    requests: { cpu: 500m, memory: 1Gi }
+    limits: { cpu: "2", memory: 4Gi }
+
+openbao:
+  image: openbao/openbao:2.3
+  mount: openmap
+  # Dev-mode root token; production installs supply an existing OpenBao via openbao.external.
+  token: openmap-dev-root
+  external:
+    enabled: false
+    address: ""
+
+llm:
+  enabled: false
+  url: ""

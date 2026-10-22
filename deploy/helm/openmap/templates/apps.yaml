@@ -1,0 +1,192 @@
+# REQ-INT-003 — the OpenMap services: migrations job (pre-install/pre-upgrade hook), API, console,
+# scheduler (mTLS listener with its PKI volume), reconciler and BSM engine.
+{{- $root := . }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "openmap.fullname" . }}-migrate
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "migrate") | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migrate.backoffLimit }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" . "component" "migrate") | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ include "openmap.image" (dict "root" . "app" "reconciler") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["node", "node_modules/@openmap/db/dist/cli.js", "all"]
+          env: {{- include "openmap.appEnv" . | nindent 12 }}
+{{- range $app := list
+  (dict "component" "api" "replicas" .Values.api.replicas "port" .Values.api.port "resources" .Values.api.resources "extraEnv" (list (dict "name" "API_PORT" "value" (toString .Values.api.port))))
+  (dict "component" "reconciler" "replicas" .Values.reconciler.replicas "port" 0 "resources" .Values.reconciler.resources "extraEnv" list)
+  (dict "component" "bsm-engine" "replicas" .Values.bsmEngine.replicas "port" 0 "resources" .Values.bsmEngine.resources "extraEnv" list) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openmap.svc" (dict "root" $root "component" $app.component) }}
+  labels: {{- include "openmap.componentLabels" (dict "root" $root "component" $app.component) | nindent 4 }}
+spec:
+  replicas: {{ $app.replicas }}
+  selector:
+    matchLabels: {{- include "openmap.selector" (dict "root" $root "component" $app.component) | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" $root "component" $app.component) | nindent 8 }}
+    spec:
+      {{- with $root.Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
+      containers:
+        - name: {{ $app.component }}
+          image: {{ include "openmap.image" (dict "root" $root "app" $app.component) }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          env:
+            {{- include "openmap.appEnv" $root | nindent 12 }}
+            {{- range $e := $app.extraEnv }}
+            - { name: {{ $e.name }}, value: {{ $e.value | quote }} }
+            {{- end }}
+          {{- if gt (int $app.port) 0 }}
+          ports: [{ containerPort: {{ $app.port }} }]
+          readinessProbe:
+            httpGet: { path: /readyz, port: {{ $app.port }} }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthz, port: {{ $app.port }} }
+            periodSeconds: 30
+          {{- end }}
+          resources: {{- toYaml $app.resources | nindent 12 }}
+{{- if gt (int $app.port) 0 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openmap.svc" (dict "root" $root "component" $app.component) }}
+  labels: {{- include "openmap.componentLabels" (dict "root" $root "component" $app.component) | nindent 4 }}
+spec:
+  selector: {{- include "openmap.selector" (dict "root" $root "component" $app.component) | nindent 4 }}
+  ports: [{ name: http, port: {{ $app.port }}, targetPort: {{ $app.port }} }]
+{{- end }}
+{{- end }}
+{{- if .Values.console.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "console") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "console") | nindent 4 }}
+spec:
+  replicas: {{ .Values.console.replicas }}
+  selector:
+    matchLabels: {{- include "openmap.selector" (dict "root" . "component" "console") | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" . "component" "console") | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: { runAsNonRoot: true, runAsUser: 1000 }
+      containers:
+        - name: console
+          image: {{ include "openmap.image" (dict "root" . "app" "console") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: CONSOLE_PORT, value: {{ .Values.console.port | quote }} }
+            - { name: PUBLIC_API_URL, value: {{ .Values.api.publicUrl | quote }} }
+            - { name: PUBLIC_KEYCLOAK_URL, value: {{ .Values.keycloak.publicUrl | quote }} }
+            - { name: DEFAULT_LOCALE, value: {{ .Values.global.tenantDefaultLocale | quote }} }
+          ports: [{ containerPort: {{ .Values.console.port }} }]
+          readinessProbe:
+            httpGet: { path: /, port: {{ .Values.console.port }} }
+            periodSeconds: 10
+          resources: {{- toYaml .Values.console.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "console") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "console") | nindent 4 }}
+spec:
+  selector: {{- include "openmap.selector" (dict "root" . "component" "console") | nindent 4 }}
+  ports: [{ name: http, port: {{ .Values.console.port }}, targetPort: {{ .Values.console.port }} }]
+{{- end }}
+---
+# Scheduler: a StatefulSet because it owns the discovery CA and the evidence store.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "scheduler") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "scheduler") | nindent 4 }}
+spec:
+  selector: {{- include "openmap.selector" (dict "root" . "component" "scheduler") | nindent 4 }}
+  ports: [{ name: https, port: {{ .Values.scheduler.port }}, targetPort: {{ .Values.scheduler.port }} }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "scheduler") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "scheduler") | nindent 4 }}
+spec:
+  serviceName: {{ include "openmap.svc" (dict "root" . "component" "scheduler") }}
+  replicas: {{ .Values.scheduler.replicas }}
+  selector:
+    matchLabels: {{- include "openmap.selector" (dict "root" . "component" "scheduler") | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" . "component" "scheduler") | nindent 8 }}
+    spec:
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
+      containers:
+        - name: scheduler
+          image: {{ include "openmap.image" (dict "root" . "app" "scheduler") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "node dist/pki-init.js && exec node dist/main.js"]
+          env:
+            {{- include "openmap.appEnv" . | nindent 12 }}
+            - { name: SCHEDULER_PORT, value: {{ .Values.scheduler.port | quote }} }
+            - { name: SCHEDULER_CA_CERT_PATH, value: /etc/openmap/pki/ca.crt }
+            - { name: SCHEDULER_CA_KEY_PATH, value: /etc/openmap/pki/ca.key }
+            - { name: SCHEDULER_TLS_CERT_PATH, value: /etc/openmap/pki/scheduler.crt }
+            - { name: SCHEDULER_TLS_KEY_PATH, value: /etc/openmap/pki/scheduler.key }
+            - { name: NODE_CERT_VALIDITY_DAYS, value: {{ .Values.scheduler.nodeCertValidityDays | quote }} }
+            - { name: EVIDENCE_DIR, value: /var/lib/openmap/evidence }
+            - { name: PUBLIC_API_URL, value: {{ printf "https://%s" .Values.scheduler.publicHost | quote }} }
+          ports: [{ containerPort: {{ .Values.scheduler.port }} }]
+          readinessProbe:
+            httpGet: { path: /healthz, port: {{ .Values.scheduler.port }}, scheme: HTTPS }
+            periodSeconds: 10
+          volumeMounts:
+            - { name: pki, mountPath: /etc/openmap/pki }
+            - { name: evidence, mountPath: /var/lib/openmap/evidence }
+          resources: {{- toYaml .Values.scheduler.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata: { name: pki }
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.global.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.scheduler.pkiStorage }} } }
+    - metadata: { name: evidence }
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.global.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.scheduler.evidenceStorage }} } }

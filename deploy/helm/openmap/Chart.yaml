@@ -1,0 +1,12 @@
+apiVersion: v2
+name: openmap
+description: "REQ-INT-003 — OpenMap: sovereign discovery, CMDB, IPAM/DCIM, BSM and impact modelling. Single chart, no external subcharts, so it installs air-gapped from a mirrored registry."
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28.0-0"
+keywords: [cmdb, discovery, ipam, dcim, bsm, device42]
+home: https://github.com/openmap/openmap
+sources: [https://github.com/openmap/openmap]
+maintainers:
+  - name: OpenMap maintainers

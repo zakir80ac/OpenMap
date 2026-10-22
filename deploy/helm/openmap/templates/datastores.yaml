@@ -1,0 +1,100 @@
+# REQ-INT-003 — stateful datastores as in-chart StatefulSets (no external subcharts, air-gap friendly).
+{{- $root := . }}
+{{- range $store := list
+  (dict "component" "postgres" "image" .Values.postgres.image "port" 5432 "storage" .Values.postgres.storage "mount" "/var/lib/postgresql/data" "resources" .Values.postgres.resources)
+  (dict "component" "memgraph" "image" .Values.memgraph.image "port" 7687 "storage" .Values.memgraph.storage "mount" "/var/lib/memgraph" "resources" .Values.memgraph.resources)
+  (dict "component" "clickhouse" "image" .Values.clickhouse.image "port" 8123 "storage" .Values.clickhouse.storage "mount" "/var/lib/clickhouse" "resources" .Values.clickhouse.resources)
+  (dict "component" "valkey" "image" .Values.valkey.image "port" 6379 "storage" .Values.valkey.storage "mount" "/data" "resources" .Values.valkey.resources)
+  (dict "component" "meilisearch" "image" .Values.meilisearch.image "port" 7700 "storage" .Values.meilisearch.storage "mount" "/meili_data" "resources" .Values.meilisearch.resources) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openmap.svc" (dict "root" $root "component" $store.component) }}
+  labels: {{- include "openmap.componentLabels" (dict "root" $root "component" $store.component) | nindent 4 }}
+spec:
+  clusterIP: None
+  selector: {{- include "openmap.selector" (dict "root" $root "component" $store.component) | nindent 4 }}
+  ports:
+    - name: {{ $store.component }}
+      port: {{ $store.port }}
+      targetPort: {{ $store.port }}
+{{- if eq $store.component "clickhouse" }}
+    - name: native
+      port: 9000
+      targetPort: 9000
+{{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openmap.svc" (dict "root" $root "component" $store.component) }}
+  labels: {{- include "openmap.componentLabels" (dict "root" $root "component" $store.component) | nindent 4 }}
+spec:
+  serviceName: {{ include "openmap.svc" (dict "root" $root "component" $store.component) }}
+  replicas: 1
+  selector:
+    matchLabels: {{- include "openmap.selector" (dict "root" $root "component" $store.component) | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" $root "component" $store.component) | nindent 8 }}
+    spec:
+      {{- with $root.Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $store.component }}
+          image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $store.image }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $store.port }}
+          resources: {{- toYaml $store.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $store.mount }}
+          {{- if eq $store.component "postgres" }}
+          envFrom:
+            - secretRef: { name: {{ include "openmap.fullname" $root }}-datastores }
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", {{ $root.Values.postgres.username | quote }}] }
+            periodSeconds: 5
+          {{- else if eq $store.component "memgraph" }}
+          args: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60"]
+          readinessProbe:
+            tcpSocket: { port: 7687 }
+            periodSeconds: 5
+          {{- else if eq $store.component "clickhouse" }}
+          env:
+            - { name: CLICKHOUSE_DB, value: {{ $root.Values.clickhouse.database | quote }} }
+            - { name: CLICKHOUSE_USER, value: {{ $root.Values.clickhouse.username | quote }} }
+            - { name: CLICKHOUSE_PASSWORD, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" $root }}-datastores, key: CLICKHOUSE_PASSWORD } } }
+            - { name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT, value: "1" }
+          readinessProbe:
+            httpGet: { path: /ping, port: 8123 }
+            periodSeconds: 5
+          {{- else if eq $store.component "valkey" }}
+          args: ["--appendonly", "yes"]
+          readinessProbe:
+            exec: { command: ["valkey-cli", "ping"] }
+            periodSeconds: 5
+          {{- else if eq $store.component "meilisearch" }}
+          env:
+            - { name: MEILI_MASTER_KEY, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" $root }}-datastores, key: MEILI_MASTER_KEY } } }
+            - { name: MEILI_NO_ANALYTICS, value: "true" }
+            - { name: MEILI_ENV, value: production }
+          readinessProbe:
+            httpGet: { path: /health, port: 7700 }
+            periodSeconds: 5
+          {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with $root.Values.global.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $store.storage }}
+{{- end }}
