@@ -460,6 +460,6 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.1.0',
   collector: '0.1.0',
-  graphql: '0.1.0',
+  graphql: '0.2.0',
   event: '0.1.0',
 };

@@ -8,7 +8,7 @@ import { signIn } from './auth';
 
 const screenshotsDir = fileURLToPath(new URL('./screenshots/', import.meta.url));
 
-const SCREENS = ['layers', 'discovery', 'dependencies', 'cmdb', 'services', 'impact'] as const;
+const SCREENS = ['layers', 'discovery', 'dependencies', 'cmdb', 'services', 'impact', 'settings'] as const;
 const SHELL_TIMEOUT_MS = 30_000;
 
 test('every primary screen renders for a signed-in user and is captured in both locales', async ({ page }, testInfo) => {

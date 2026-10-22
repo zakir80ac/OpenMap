@@ -150,6 +150,11 @@ type SearchHit { ci: Ci! score: Float! highlight: String }
 
 type AssistantAnswer { text: String! cypher: String! rows: JSON! cis: [Ci!]! }
 
+# REQ-SEC-005 (ADR-010) — immutable audit log: one entry per successful mutation, newest first.
+type AuditEntry { id: UUID! at: DateTime! actor: String! action: String! subjectType: String! subjectId: String! details: JSON! traceparent: String }
+type AuditEdge { cursor: String! node: AuditEntry! }
+type AuditConnection { edges: [AuditEdge!]! pageInfo: PageInfo! totalCount: Int! }
+
 type Query {
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -172,6 +177,7 @@ type Query {
   currentSweep: Sweep
   layers: [LayerSummary!]!
   unknownCis(first: Int = 50, after: String): CiConnection!
+  auditLog(subjectType: String, subjectId: String, actor: String, action: String, first: Int = 50, after: String): AuditConnection!
 }
 
 input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLayer! type: String }

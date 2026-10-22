@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { MercuriusDriver, type MercuriusDriverConfig } from '@nestjs/mercurius';
 import { AssetsModule } from './assets/assets.module.js';
 import { AssistantModule } from './assistant/assistant.module.js';
+import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AuthService } from './auth/auth.service.js';
 import { CiLoaderFactory } from './ci/ci.loaders.js';
@@ -47,6 +48,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     IntegrationsModule,
     AssistantModule,
     SubscriptionsModule,
+    AuditModule,
     GraphQLModule.forRootAsync<MercuriusDriverConfig>({
       driver: MercuriusDriver,
       imports: [CiModule],

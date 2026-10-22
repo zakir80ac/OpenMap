@@ -590,3 +590,47 @@ const RUN_DISCOVERY_MUTATION = [
 export function runDiscovery(collectorIds: string[] | null = null, siteId: string | null = null): Promise<Sweep> {
   return gql<{ runDiscovery: Sweep }>(RUN_DISCOVERY_MUTATION, { collectorIds, siteId }).then((data) => data.runDiscovery);
 }
+
+// REQ-SEC-005 — the tenant's immutable audit log, newest first, paged by cursor.
+export interface AuditEntry {
+  id: string;
+  at: string;
+  actor: string;
+  action: string;
+  subjectType: string;
+  subjectId: string;
+  details: Record<string, unknown>;
+  traceparent: string | null;
+}
+
+export interface AuditPage {
+  edges: Array<{ cursor: string; node: AuditEntry }>;
+  pageInfo: { endCursor: string | null; hasNextPage: boolean };
+  totalCount: number;
+}
+
+export interface AuditFilterInput {
+  action?: string | null;
+  subjectType?: string | null;
+  subjectId?: string | null;
+  actor?: string | null;
+}
+
+const AUDIT_LOG_QUERY = [
+  'query AuditLog($action: String, $subjectType: String, $subjectId: String, $actor: String, $first: Int, $after: String) {',
+  '  auditLog(action: $action, subjectType: $subjectType, subjectId: $subjectId, actor: $actor, first: $first, after: $after) {',
+  '    edges { cursor node { id at actor action subjectType subjectId details traceparent } }',
+  '    pageInfo { endCursor hasNextPage }',
+  '    totalCount',
+  '  }',
+  '}',
+].join('\n');
+
+export function auditLogInfiniteQuery(filter: AuditFilterInput) {
+  return infiniteQueryOptions({
+    queryKey: ['auditLog', filter] as const,
+    queryFn: ({ pageParam, signal }) => gql<{ auditLog: AuditPage }>(AUDIT_LOG_QUERY, { ...filter, first: CONSOLE.explorerPageSize, after: pageParam }, signal).then((d) => d.auditLog),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => (last.pageInfo.hasNextPage ? last.pageInfo.endCursor : null),
+  });
+}

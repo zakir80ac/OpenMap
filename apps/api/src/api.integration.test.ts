@@ -259,6 +259,26 @@ describe('OpenMap API (integration)', () => {
     expect(envelope.data.label.title).toBe('Ledger primary');
   });
 
+  it('records every mutation in the immutable audit log and serves it to auditors only', async () => {
+    const before = await prisma.auditLog.count({ where: { tenantId } });
+    const input = { ciId: ids.subnet, title: 'Audited subnet', description: 'audit trail check', layer: 'network_security' };
+    const labelled = await gql<{ labelCi: { id: string } }>('mutation LabelForAudit($input: LabelCiInput!) { labelCi(input: $input) { id } }', { input });
+    expect(labelled.errors).toBeUndefined();
+    const rows = await prisma.auditLog.findMany({ where: { tenantId }, orderBy: { at: 'desc' } });
+    expect(rows.length).toBe(before + 1);
+    expect(rows[0]).toMatchObject({ actor: 'tester', action: 'labelCi', subjectType: 'Ci', subjectId: ids.subnet });
+    expect((rows[0]!.details as { arguments: { input: { title: string } } }).arguments.input.title).toBe('Audited subnet');
+    await expect(prisma.auditLog.delete({ where: { id: rows[0]!.id } })).rejects.toThrow(/append-only/);
+
+    const asOperator = await gql<{ auditLog: { totalCount: number; edges: Array<{ node: { action: string } }> } }>('{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }', {}, operatorToken);
+    expect(asOperator.errors?.[0]?.message).toMatch(/roles/);
+    const auditorToken = await mint([ROLES.auditor], keys.privateKey);
+    const asAuditor = await gql<{ auditLog: { totalCount: number; edges: Array<{ node: { action: string; subjectId: string } }> } }>('{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }', {}, auditorToken);
+    expect(asAuditor.errors).toBeUndefined();
+    expect(asAuditor.data?.auditLog.totalCount).toBeGreaterThanOrEqual(1);
+    expect(asAuditor.data?.auditLog.edges[0]?.node.subjectId).toBe(ids.subnet);
+  });
+
   it('creates and retires relationships through the outbox', async () => {
     const created = await gql<{ createRelationship: { id: string; type: string; from: { id: string }; to: { id: string } } }>(
       'mutation Rel($type: String!, $from: UUID!, $to: UUID!) { createRelationship(type: $type, fromCiId: $from, toCiId: $to, attributes: { note: "test" }) { id type from { id } to { id } } }',

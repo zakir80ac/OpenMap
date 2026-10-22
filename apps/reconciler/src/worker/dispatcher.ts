@@ -125,6 +125,32 @@ async function deliverClickHouse(ch: ClickHouseClient, database: string, events:
       observed_at: chDate(r.observedAt), valid_from: chDate(r.validFrom), valid_to: r.validTo ? chDate(r.validTo) : null,
     }));
   if (relRows.length) await ch.insert({ table: database + '.relationship_history', values: relRows, format: 'JSONEachRow' });
+  const auditRows = events.map(auditRowFromEvent).filter((r): r is AuditRow => r !== null);
+  if (auditRows.length) await ch.insert({ table: database + '.audit_log', values: auditRows, format: 'JSONEachRow' });
+}
+
+interface AuditRow {
+  tenant_id: string;
+  id: string;
+  actor: string;
+  action: string;
+  subject_type: string;
+  subject_id: string;
+  details: string;
+  traceparent: string;
+  at: string;
+}
+
+/** REQ-SEC-005 — `openmap.audit.action` events become audit_log rows (the retention and analytics copy). */
+export function auditRowFromEvent(e: EventEnvelope): AuditRow | null {
+  if (e.type !== 'openmap.audit.action') return null;
+  const d = e.data as { auditId?: unknown; actor?: unknown; action?: unknown; subjectType?: unknown; subjectId?: unknown; details?: unknown; at?: unknown };
+  if (typeof d.auditId !== 'string' || typeof d.action !== 'string') return null;
+  return {
+    tenant_id: e.tenantid, id: d.auditId, actor: typeof d.actor === 'string' ? d.actor : '', action: d.action,
+    subject_type: typeof d.subjectType === 'string' ? d.subjectType : '', subject_id: typeof d.subjectId === 'string' ? d.subjectId : '',
+    details: JSON.stringify(d.details ?? {}), traceparent: e.traceparent ?? '', at: chDate(typeof d.at === 'string' ? d.at : e.time),
+  };
 }
 
 export function createMeilisearchSink(env: Pick<Env, 'MEILI_URL' | 'MEILI_MASTER_KEY'>, fetchImpl: typeof fetch = fetch): SearchSink {

@@ -7,7 +7,7 @@ Status: **0.1.0 — proposed**. Contracts are drafted from CLAUDE.md §0, the ap
 | CI | `packages/contracts/src/ci.ts` → `schemas/ci.schema.json`, `observed-ci`, `relationship`, `observed-relationship` | 0.1.0 | reconciler, api, collectors (Go via JSON Schema), console |
 | Collector | `packages/contracts/src/collector.ts` → `collector-manifest`, `collector-job`, `collector-result` | 0.1.0 | apps/node (Go), apps/collectors (Go), scheduler, reconciler |
 | Event | `packages/contracts/src/event.ts` → `event-envelope`, `outbox-record` | 0.1.0 | every service; outbox subscribers; integrations |
-| GraphQL | `packages/contracts/graphql/schema.graphql` | 0.1.0 | apps/api (Mercurius), apps/console, Terraform provider |
+| GraphQL | `packages/contracts/graphql/schema.graphql` | 0.2.0 (ADR-010: `auditLog`, AuditEntry/AuditConnection) | apps/api (Mercurius), apps/console, Terraform provider |
 | Asset | `packages/contracts/src/asset.ts` → `asset-record`, `infra-plan`, `support-contract`, `vendor-contact` | 0.1.0 | api, console, warranty integrations |
 | Impact | `packages/contracts/src/impact.ts` → `impact-scenario`, `impact-simulation` | 0.1.0 | bsm-engine, api, console, assistant |
 | Integration | `packages/contracts/src/integration.ts` → `integration-config`, `integration-delivery`, `security-alert` | 0.1.0 | api, bsm-engine, integration adapters |
