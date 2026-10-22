@@ -28,6 +28,8 @@ export function TenantSettingsCard(): ReactNode {
   const t = useT();
   const can = useCan();
   const settings = useQuery(tenantSettingsQuery());
+  // Lives here, not in the form: the form remounts on every fresh server copy (its key), which would drop it.
+  const [saved, setSaved] = useState(false);
 
   return (
     <Card padding="24" className="flex flex-col gap-om-16">
@@ -44,8 +46,23 @@ export function TenantSettingsCard(): ReactNode {
           }}
         />
       ) : (
-        <TenantSettingsForm key={JSON.stringify(settings.data)} current={settings.data} editable={can(ROLES.admin)} />
+        <TenantSettingsForm
+          key={JSON.stringify(settings.data)}
+          current={settings.data}
+          editable={can(ROLES.admin)}
+          onEdit={() => {
+            setSaved(false);
+          }}
+          onSaved={() => {
+            setSaved(true);
+          }}
+        />
       )}
+      {saved ? (
+        <p role="status" className="text-om-xs text-om-emerald">
+          {t('settings.tenant.saved')}
+        </p>
+      ) : null}
     </Card>
   );
 }
@@ -53,19 +70,20 @@ export function TenantSettingsCard(): ReactNode {
 interface TenantSettingsFormProps {
   current: TenantSettingsView;
   editable: boolean;
+  onEdit: () => void;
+  onSaved: () => void;
 }
 
-function TenantSettingsForm({ current, editable }: TenantSettingsFormProps): ReactNode {
+function TenantSettingsForm({ current, editable, onEdit, onSaved }: TenantSettingsFormProps): ReactNode {
   const t = useT();
   const idPrefix = useId();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<TenantSettingsView>(current);
-  const [saved, setSaved] = useState(false);
   const mutation = useMutation({
     mutationFn: updateTenantSettings,
     onSuccess: async (next) => {
+      onSaved();
       queryClient.setQueryData(tenantSettingsQuery().queryKey, next);
-      setSaved(true);
       await queryClient.invalidateQueries({ queryKey: ['layers'] });
     },
   });
@@ -76,11 +94,11 @@ function TenantSettingsForm({ current, editable }: TenantSettingsFormProps): Rea
   const onSubmit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     if (!editable || !dirty) return;
-    setSaved(false);
+    onEdit();
     mutation.mutate(patch);
   };
   const update = <K extends keyof TenantSettingsView>(key: K, value: TenantSettingsView[K]): void => {
-    setSaved(false);
+    onEdit();
     setDraft((d) => ({ ...d, [key]: value }));
   };
 
@@ -181,11 +199,6 @@ function TenantSettingsForm({ current, editable }: TenantSettingsFormProps): Rea
         ) : (
           <p className="text-om-xs text-om-muted">{t('settings.tenant.readOnly')}</p>
         )}
-        {saved ? (
-          <p role="status" className="text-om-xs text-om-emerald">
-            {t('settings.tenant.saved')}
-          </p>
-        ) : null}
         {mutation.isError ? (
           <p role="alert" className="text-om-xs text-om-rose">
             {t('settings.tenant.error')}

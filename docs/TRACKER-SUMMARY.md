@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-10-22T15:32:23.838Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
 | Not started | 102 |
-| In progress | 46 |
+| In progress | 45 |
 | Blocked | 0 |
 | In review | 9 |
-| Done | 31 |
+| Done | 32 |
 | **Total** | **188** |
 
 ## By workstream
@@ -22,7 +22,7 @@ Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | IPAM | 7 | 0 | 2 | 0 | 0% |
 | DCIM | 9 | 0 | 1 | 0 | 0% |
 | BSM | 5 | 0 | 3 | 0 | 0% |
-| UI | 27 | 11 | 1 | 0 | 41% |
+| UI | 27 | 12 | 0 | 0 | 44% |
 | AI | 6 | 0 | 2 | 0 | 0% |
 | INT | 19 | 2 | 3 | 0 | 11% |
 | QA | 4 | 1 | 0 | 0 | 25% |
@@ -32,7 +32,6 @@ Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## In progress
 
 - REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
-- REQ-UI-019 · Screen · Settings: tenant, users and roles, audit
 - REQ-SEC-002 · OpenBao for collector and integration credentials
 - REQ-AI-001 · NL to Cypher with schema grounding and read-only execution
 - REQ-AI-004 · Recommended actions in impact modeling and incidents
@@ -84,7 +83,6 @@ Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## Next up
 
 - REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
-- REQ-UI-019 [P0] Screen · Settings: tenant, users and roles, audit
 - REQ-SEC-002 [P0] OpenBao for collector and integration credentials
 - REQ-AI-001 [P0] NL to Cypher with schema grounding and read-only execution
 - REQ-AI-004 [P1] Recommended actions in impact modeling and incidents
@@ -93,6 +91,7 @@ Generated 2026-10-22T15:19:48.955Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DISC-002 [P0] WMI / WinRM Windows discovery
 - REQ-DISC-003 [P0] SSH Linux/Unix discovery
 - REQ-DISC-005 [P0] Hypervisor: VMware vCenter/ESXi
+- REQ-DISC-006 [P0] Hypervisor: Hyper-V / SCVMM
 
 ## Open risks
 
