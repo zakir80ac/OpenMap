@@ -1,0 +1,1357 @@
+// REQ-CORE-009 — OpenMap system of record (Postgres). Mirrors packages/contracts: every
+// enum below is the exact member list of the matching contract constant (tested in
+// src/schema.test.ts). Postgres holds the current state; history goes to ClickHouse and the
+// dependency graph to Memgraph, both fed from outbox_events.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Enums (contract mirrors)
+// ---------------------------------------------------------------------------------------------
+
+/// @openmap/constants LOCALES
+enum Locale {
+  en
+  ar
+}
+
+/// CI_LAYERS (ci.ts)
+enum CiLayer {
+  dc
+  network_security
+  hardware
+  storage
+  virtualization
+  cloud
+  os
+  containers
+  databases
+  applications
+  saas
+  unknown
+}
+
+/// CI_TYPES (ci.ts). Adding a type is a contract change, so it is a migration too.
+enum CiType {
+  host
+  chassis
+  blade
+  bmc
+  hypervisor
+  vm_cluster
+  vm
+  operating_system
+  container
+  k8s_cluster
+  k8s_namespace
+  k8s_workload
+  k8s_service
+  container_registry
+  network_device
+  interface
+  port
+  vlan
+  vrf
+  ip_address
+  subnet
+  dns_zone
+  dns_record
+  dhcp_scope
+  dhcp_lease
+  load_balancer
+  firewall_rule
+  site_link
+  storage_array
+  lun
+  fc_switch
+  fc_fabric
+  fc_zone
+  nas_share
+  object_bucket
+  database
+  database_cluster
+  certificate
+  application
+  application_component
+  listening_service
+  business_service
+  software
+  software_instance
+  licence
+  vulnerability
+  site
+  building
+  room
+  row
+  rack
+  pdu
+  power_feed
+  power_circuit
+  ups
+  cooling_unit
+  cable
+  patch_panel
+  cloud_account
+  cloud_resource
+  saas_application
+  saas_tenant
+  user_account
+  service_account
+  vendor
+  contract
+  cost_centre
+  unknown
+}
+
+/// RELATIONSHIP_TYPES (ci.ts)
+enum RelationshipType {
+  depends_on
+  runs_on
+  hosted_on
+  contains
+  member_of
+  connected_to
+  cabled_to
+  located_in
+  powered_by
+  cooled_by
+  uses_ip
+  in_subnet
+  in_vlan
+  resolves_to
+  leased_to
+  installed_on
+  licensed_by
+  affected_by
+  part_of_service
+  communicates_with
+  mounted_on
+  backed_by
+  owns
+  manages
+  billed_to
+  secured_by
+  covered_by
+  supported_by
+  assigned_to
+  spare_for
+  zoned_with
+  presented_to
+  replicates_to
+}
+
+/// LIFECYCLES (ci.ts)
+enum Lifecycle {
+  discovered
+  managed
+  planned
+  retired
+}
+
+/// SITE_KINDS (organization.ts)
+enum SiteKind {
+  datacenter
+  colocation
+  office
+  branch
+  cloud_region
+  edge
+}
+
+/// LINK_KINDS (organization.ts)
+enum LinkKind {
+  dark_fibre
+  dwdm
+  mpls
+  sd_wan
+  dia
+  expressroute
+  direct_connect
+  cloud_interconnect
+  vpn
+  point_to_point
+  cellular
+}
+
+/// siteLinkSchema.role (organization.ts)
+enum LinkRole {
+  primary
+  backup
+  overlay
+}
+
+/// siteSchema.cloud.provider (organization.ts)
+enum CloudProvider {
+  azure
+  aws
+  gcp
+  oci
+  other
+}
+
+/// nodeEnrolmentSchema.status (organization.ts)
+enum NodeEnrolmentStatus {
+  pending
+  enrolled
+  cloud_managed
+  agent_only
+}
+
+/// ONBOARDING_STEPS (organization.ts)
+enum OnboardingStep {
+  organization
+  sites
+  connectivity
+  nodes_credentials
+  integrations
+  generate
+}
+
+/// COLLECTOR_FAMILIES (collector.ts)
+enum CollectorFamily {
+  snmp
+  ssh_cli
+  wmi
+  winrm
+  ssh_agentless
+  vmware
+  hyperv
+  kvm_libvirt
+  nutanix_ahv
+  oracle_vm
+  kubernetes
+  cloud_aws
+  cloud_azure
+  cloud_gcp
+  netflow
+  port_scan
+  ipmi_redfish
+  fc_fabric
+  nas
+  object_storage
+  dns
+  dhcp
+  ldap
+  database
+  storage
+  pdu
+  agent
+  load_balancer
+  certificate
+  vulnerability_feed
+  saas
+  os_patch
+}
+
+/// collectorManifestSchema.language (collector.ts)
+enum CollectorLanguage {
+  go
+  python
+}
+
+/// CREDENTIAL_TYPES (collector.ts)
+enum CredentialType {
+  none
+  snmp_v2c
+  snmp_v3
+  password
+  ssh_key
+  api_token
+  oauth_client
+  certificate
+  kubeconfig
+  cloud_role
+}
+
+/// TARGET_KINDS (collector.ts)
+enum TargetKind {
+  host
+  cidr
+  url
+  cluster
+  account
+  zone
+  flow_source
+}
+
+/// EVIDENCE_KINDS (collector.ts)
+enum EvidenceKind {
+  snmp_walk
+  cli_output
+  api_response
+  flow_sample
+  scan_output
+  agent_report
+}
+
+/// RESULT_STATUSES (collector.ts)
+enum ResultStatus {
+  success
+  partial
+  failed
+}
+
+/// Discovery job lifecycle; one state per openmap.discovery.job.* event type (event.ts).
+enum JobStatus {
+  scheduled
+  started
+  completed
+  failed
+}
+
+/// outboxRecordSchema.pending members (event.ts)
+enum OutboxTarget {
+  memgraph
+  clickhouse
+  meilisearch
+  websocket
+  bsm
+}
+
+/// Reconciliation conflict handling state.
+enum ConflictStatus {
+  open
+  resolved
+  dismissed
+}
+
+/// ASSET_STAGES (asset.ts)
+enum AssetStage {
+  planned
+  in_stock
+  deployed
+  spare
+  rma
+  retired
+  disposed
+}
+
+/// SUPPORT_LEVELS (asset.ts)
+enum SupportLevel {
+  none
+  basic
+  next_business_day
+  four_hour
+  mission_critical
+  custom
+}
+
+/// DEPRECIATION_METHODS (asset.ts)
+enum DepreciationMethod {
+  straight_line
+  declining_balance
+  none
+}
+
+/// PLAN_KINDS (asset.ts)
+enum PlanKind {
+  new_infrastructure
+  stack_expansion
+  refresh
+  migration
+  decommission
+}
+
+/// PLAN_STATUSES (asset.ts)
+enum PlanStatus {
+  draft
+  approved
+  building
+  live
+  cancelled
+}
+
+/// SCENARIO_KINDS (impact.ts)
+enum ScenarioKind {
+  component
+  power
+  rack
+  site
+  network
+  storage
+  cloud_region
+  shared_service
+  maintenance
+}
+
+/// INTEGRATION_CATEGORIES (integration.ts)
+enum IntegrationCategory {
+  itsm
+  siem
+  soar
+  monitoring
+  notification
+  automation
+  warranty
+  identity
+  finance
+  iac
+}
+
+/// DIRECTIONS (integration.ts)
+enum Direction {
+  inbound
+  outbound
+  bidirectional
+}
+
+/// integrationDeliverySchema.direction (integration.ts): out = OpenMap to remote, in = remote to OpenMap.
+enum MessageDirection {
+  out
+  in
+}
+
+/// DELIVERY_STATES (integration.ts)
+enum DeliveryState {
+  pending
+  delivered
+  failed
+  retrying
+  dead_letter
+}
+
+/// integrationStatusSchema.health (integration.ts)
+enum IntegrationHealth {
+  healthy
+  warning
+  failing
+  disabled
+}
+
+/// securityAlertSchema.severity (integration.ts)
+enum AlertSeverity {
+  informational
+  low
+  medium
+  high
+  critical
+}
+
+/// Incident lifecycle; opened/updated/resolved map to openmap.incident.* events (event.ts).
+enum IncidentState {
+  open
+  acknowledged
+  mitigated
+  resolved
+  closed
+}
+
+// ---------------------------------------------------------------------------------------------
+// Organization, tenancy, sites
+// ---------------------------------------------------------------------------------------------
+
+/// Global root of the digital twin (organizationSchema). One per deployment is typical.
+model Organization {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  industry        String
+  timeZone        String
+  defaultLocale   Locale
+  regulatoryScope String[]
+  airGapped       Boolean
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  tenants       Tenant[]
+  businessUnits BusinessUnit[]
+  sites         Site[]
+  siteLinks     SiteLink[]
+  onboarding    OnboardingState?
+
+  @@map("organizations")
+}
+
+/// A tenant is the scope of every other row. Business units become tenants.
+model Tenant {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  /// URL-safe short name used in Keycloak realm roles and Superset row-level security.
+  slug           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  settings     TenantSettings?
+  businessUnit BusinessUnit?
+
+  cis                     Ci[]
+  ciExternalIds           CiExternalId[]
+  relationships           Relationship[]
+  discoveryNodes          DiscoveryNode[]
+  discoveryJobs           DiscoveryJob[]
+  collectorRuns           CollectorRun[]
+  evidence                Evidence[]
+  reconciliationConflicts ReconciliationConflict[]
+  outboxEvents            OutboxEvent[]
+  assetRecords            AssetRecord[]
+  assetAudits             AssetAudit[]
+  infraPlans              InfraPlan[]
+  bomLines                BomLine[]
+  supportContracts        SupportContract[]
+  vendorContacts          VendorContact[]
+  impactScenarios         ImpactScenario[]
+  impactSimulations       ImpactSimulation[]
+  impactValidations       ImpactValidation[]
+  incidents               Incident[]
+  incidentLinks           IncidentLink[]
+  integrationConfigs      IntegrationConfig[]
+  integrationDeliveries   IntegrationDelivery[]
+  securityAlerts          SecurityAlert[]
+  auditLogs               AuditLog[]
+  userPreferences         UserPreference[]
+
+  @@unique([organizationId, slug])
+  @@map("tenants")
+}
+
+/// tenantSettingsSchema (@openmap/config). One row per tenant, created with TENANT_SETTINGS_DEFAULTS.
+model TenantSettings {
+  tenantId                    String   @id @db.Uuid
+  locale                      Locale
+  timeZone                    String
+  discoveryIntervalMinutes    Int
+  historyRetentionDays        Int
+  staleAfterDays              Int
+  assistantEnabled            Boolean
+  outboundIntegrationsEnabled Boolean
+  createdAt                   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt                   DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+/// organizationSchema.businessUnits: the organisational name behind a tenant.
+model BusinessUnit {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  tenantId       String   @unique @db.Uuid
+  name           String
+  costCentreCiId String?  @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("business_units")
+}
+
+/// siteSchema
+model Site {
+  id             String         @id @default(uuid()) @db.Uuid
+  organizationId String         @db.Uuid
+  code           String
+  name           String
+  kind           SiteKind
+  tier           Int?
+  address        String
+  city           String
+  countryCode    String         @db.Char(2)
+  geoLat         Float?
+  geoLon         Float?
+  cloudProvider  CloudProvider?
+  cloudRegion    String?
+  locationCount  Int            @default(1)
+  ciId           String?        @db.Uuid
+  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  linksFrom      SiteLink[]      @relation("SiteLinkFrom")
+  linksTo        SiteLink[]      @relation("SiteLinkTo")
+  discoveryNodes DiscoveryNode[]
+
+  @@unique([organizationId, code])
+  @@map("sites")
+}
+
+/// siteLinkSchema
+model SiteLink {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  fromSiteId     String   @db.Uuid
+  toSiteId       String   @db.Uuid
+  kind           LinkKind
+  provider       String?
+  circuitId      String?
+  bandwidthMbps  Int
+  diversePaths   Int
+  role           LinkRole
+  latencyMs      Float?
+  ciId           String?  @db.Uuid
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromSite     Site         @relation("SiteLinkFrom", fields: [fromSiteId], references: [id], onDelete: Cascade)
+  toSite       Site         @relation("SiteLinkTo", fields: [toSiteId], references: [id], onDelete: Cascade)
+
+  @@index([fromSiteId])
+  @@index([toSiteId])
+  @@map("site_links")
+}
+
+/// onboardingSchema: wizard progress per organization.
+model OnboardingState {
+  organizationId String           @id @db.Uuid
+  step           OnboardingStep
+  completedSteps OnboardingStep[]
+  credentialRefs String[]
+  integrationIds String[]         @db.Uuid
+  seedImports    Json
+  generatedAt    DateTime?        @db.Timestamptz(3)
+  firstSweepId   String?          @db.Uuid
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_states")
+}
+
+// ---------------------------------------------------------------------------------------------
+// CMDB core: CIs and relationships (bitemporal: validFrom/validTo, observedAt)
+// ---------------------------------------------------------------------------------------------
+
+/// ciSchema. One row per CI id holding the current version; validTo is set when the CI is
+/// retired and every superseded version is appended to ClickHouse ci_history.
+model Ci {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @db.Uuid
+  type              CiType
+  /// Values for CI_IDENTITY_KEYS[type], as observed.
+  identity          Json
+  /// Canonical join of the identity values in key precedence order; reconciliation lookup key.
+  identityKey       String
+  name              String
+  displayName       String
+  layer             CiLayer
+  /// userLabelSchema or null.
+  userLabel         Json?
+  lifecycle         Lifecycle
+  attributes        Json
+  tags              String[]
+  /// provenanceSchema, flattened.
+  sourceCollectorId String
+  sourceNodeId      String
+  sourceRunId       String
+  sourceConfidence  Float
+  observedAt        DateTime  @db.Timestamptz(3)
+  validFrom         DateTime  @db.Timestamptz(3)
+  validTo           DateTime? @db.Timestamptz(3)
+  /// SHA-256 of canonical (type, identity, attributes).
+  checksum          String    @db.Char(64)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant            Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  externalIds       CiExternalId[]
+  relationshipsFrom Relationship[] @relation("RelationshipFrom")
+  relationshipsTo   Relationship[] @relation("RelationshipTo")
+  assetRecords      AssetRecord[]
+
+  @@index([tenantId, type])
+  @@index([tenantId, layer])
+  @@index([tenantId, validTo])
+  @@index([tenantId, lifecycle])
+  @@index([tenantId, type, identityKey])
+  @@index([tenantId, checksum])
+  @@index([attributes(ops: JsonbPathOps)], type: Gin)
+  @@map("cis")
+}
+
+/// externalIdSchema: identifiers for a CI in other systems (ITSM sys_id, cloud ARN, asset tag).
+model CiExternalId {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  ciId       String   @db.Uuid
+  source     String
+  externalId String
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci     Ci     @relation(fields: [ciId], references: [id], onDelete: Cascade)
+
+  @@unique([ciId, source, externalId])
+  @@index([tenantId, source, externalId])
+  @@map("ci_external_ids")
+}
+
+/// relationshipSchema. Direction is from → to as the type names it.
+model Relationship {
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  type              RelationshipType
+  fromCiId          String           @db.Uuid
+  toCiId            String           @db.Uuid
+  attributes        Json
+  sourceCollectorId String
+  sourceNodeId      String
+  sourceRunId       String
+  sourceConfidence  Float
+  observedAt        DateTime         @db.Timestamptz(3)
+  validFrom         DateTime         @db.Timestamptz(3)
+  validTo           DateTime?        @db.Timestamptz(3)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fromCi Ci     @relation("RelationshipFrom", fields: [fromCiId], references: [id], onDelete: Cascade)
+  toCi   Ci     @relation("RelationshipTo", fields: [toCiId], references: [id], onDelete: Cascade)
+
+  @@index([fromCiId])
+  @@index([toCiId])
+  @@index([tenantId, type])
+  @@index([tenantId, validTo])
+  @@index([fromCiId, toCiId, type])
+  @@map("relationships")
+}
+
+/// Unresolved disagreement between sources about one CI field; the reconciler emits
+/// openmap.reconciliation.conflict and a user or precedence rule resolves it.
+model ReconciliationConflict {
+  id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @db.Uuid
+  ciId        String?        @db.Uuid
+  type        CiType
+  identityKey String
+  field       String
+  /// Array of { value, source: provenanceSchema, observedAt }.
+  candidates  Json
+  status      ConflictStatus @default(open)
+  chosenValue Json?
+  resolvedBy  String?
+  resolvedAt  DateTime?      @db.Timestamptz(3)
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([tenantId, ciId])
+  @@map("reconciliation_conflicts")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Discovery
+// ---------------------------------------------------------------------------------------------
+
+/// collectorManifestSchema: global registry of collector binaries, keyed by (id, version).
+model CollectorManifest {
+  collectorId     String
+  version         String
+  family          CollectorFamily
+  language        CollectorLanguage
+  protocols       String[]
+  credentialTypes CredentialType[]
+  targetKinds     TargetKind[]
+  emits           String[]
+  contractVersion String
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@id([collectorId, version])
+  @@index([family])
+  @@map("collector_manifests")
+}
+
+/// nodeEnrolmentSchema plus mTLS material: a Discovery Node enrolled at a site.
+model DiscoveryNode {
+  id                     String              @id
+  tenantId               String              @db.Uuid
+  siteId                 String              @db.Uuid
+  status                 NodeEnrolmentStatus
+  enrolTokenDigest       String?             @db.Char(64)
+  enrolledAt             DateTime?           @db.Timestamptz(3)
+  certificateSerial      String?
+  certificateFingerprint String?             @db.Char(64)
+  certificateExpiresAt   DateTime?           @db.Timestamptz(3)
+  version                String?
+  lastHeartbeatAt        DateTime?           @db.Timestamptz(3)
+  /// Collector ids present on the Node, from its last heartbeat.
+  collectorIds           String[]
+  createdAt              DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime            @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  site   Site           @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  jobs   DiscoveryJob[]
+  runs   CollectorRun[]
+
+  @@index([tenantId, siteId])
+  @@index([tenantId, certificateExpiresAt])
+  @@map("discovery_nodes")
+}
+
+/// collectorJobSchema plus scheduling state.
+model DiscoveryJob {
+  id                   String         @id @default(uuid()) @db.Uuid
+  tenantId             String         @db.Uuid
+  collectorId          String
+  nodeId               String
+  /// Array of targetSchema.
+  targets              Json
+  credentialRef        String?
+  credentialType       CredentialType
+  timeoutMs            Int
+  rateLimitConcurrency Int
+  rateLimitRps         Float
+  options              Json
+  scheduledAt          DateTime       @db.Timestamptz(3)
+  status               JobStatus      @default(scheduled)
+  startedAt            DateTime?      @db.Timestamptz(3)
+  finishedAt           DateTime?      @db.Timestamptz(3)
+  contractVersion      String
+  createdAt            DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime       @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  node   DiscoveryNode  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  runs   CollectorRun[]
+
+  @@index([tenantId, status, scheduledAt])
+  @@index([nodeId, status])
+  @@map("discovery_jobs")
+}
+
+/// collectorResultSchema header and metrics; CIs and relationships go through reconciliation.
+model CollectorRun {
+  id                   String       @id @default(uuid()) @db.Uuid
+  tenantId             String       @db.Uuid
+  jobId                String       @db.Uuid
+  collectorId          String
+  nodeId               String
+  status               ResultStatus
+  startedAt            DateTime     @db.Timestamptz(3)
+  finishedAt           DateTime     @db.Timestamptz(3)
+  targetsAttempted     Int
+  targetsReached       Int
+  cisEmitted           Int
+  relationshipsEmitted Int
+  durationMs           Int
+  /// Array of collectorErrorSchema.
+  errors               Json
+  contractVersion      String
+  createdAt            DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime     @updatedAt @db.Timestamptz(3)
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  job      DiscoveryJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  node     DiscoveryNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  evidence Evidence[]
+
+  @@index([tenantId, startedAt])
+  @@index([jobId])
+  @@map("collector_runs")
+}
+
+/// evidenceSchema: digest of raw collector output kept by the Node under that digest.
+model Evidence {
+  id          String       @id @default(uuid()) @db.Uuid
+  tenantId    String       @db.Uuid
+  runId       String       @db.Uuid
+  kind        EvidenceKind
+  targetKind  TargetKind
+  targetValue String
+  targetLabel String?
+  digest      String       @db.Char(64)
+  sizeBytes   BigInt
+  capturedAt  DateTime     @db.Timestamptz(3)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  run    CollectorRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([tenantId, digest])
+  @@map("evidence")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Outbox
+// ---------------------------------------------------------------------------------------------
+
+/// outboxRecordSchema. Readers poll WHERE deliveredAt IS NULL ORDER BY sequence.
+model OutboxEvent {
+  sequence    BigInt         @id @default(autoincrement())
+  eventId     String         @unique @db.Uuid
+  tenantId    String         @db.Uuid
+  /// EVENT_TYPES member; a string because the list grows with every workstream.
+  type        String
+  subject     String
+  envelope    Json
+  pending     OutboxTarget[]
+  attempts    Int            @default(0)
+  lastError   String?
+  createdAt   DateTime       @default(now()) @db.Timestamptz(3)
+  deliveredAt DateTime?      @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([deliveredAt])
+  @@index([tenantId, type, createdAt])
+  @@index([subject])
+  @@map("outbox_events")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Asset management
+// ---------------------------------------------------------------------------------------------
+
+/// assetRecordSchema. warranty and endOfLife are embedded JSON (warrantySchema, endOfLifeSchema).
+model AssetRecord {
+  id                    String             @id @default(uuid()) @db.Uuid
+  tenantId              String             @db.Uuid
+  ciId                  String?            @db.Uuid
+  assetTag              String
+  serialNumber          String?
+  manufacturer          String
+  model                 String
+  partNumber            String?
+  stage                 AssetStage
+  stageChangedAt        DateTime           @db.Timestamptz(3)
+  locationCiId          String?            @db.Uuid
+  custodian             String?
+  ownerCostCentreCiId   String?            @db.Uuid
+  planId                String?            @db.Uuid
+  purchasedAt           DateTime?          @db.Date
+  purchaseCostAmount    Decimal?           @db.Decimal(18, 2)
+  purchaseCostCurrency  String?            @db.Char(3)
+  depreciationMethod    DepreciationMethod
+  usefulLifeMonths      Int
+  residualValueAmount   Decimal            @db.Decimal(18, 2)
+  residualValueCurrency String             @db.Char(3)
+  warranty              Json?
+  supportContractId     String?            @db.Uuid
+  endOfLife             Json?
+  stockOnHand           Int?
+  stockReorderPoint     Int?
+  tags                  String[]
+  customFields          Json
+  createdAt             DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime           @updatedAt @db.Timestamptz(3)
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci              Ci?              @relation(fields: [ciId], references: [id], onDelete: SetNull)
+  plan            InfraPlan?       @relation(fields: [planId], references: [id], onDelete: SetNull)
+  supportContract SupportContract? @relation(fields: [supportContractId], references: [id], onDelete: SetNull)
+  audits          AssetAudit[]
+
+  @@unique([tenantId, assetTag])
+  @@index([tenantId, stage])
+  @@index([tenantId, serialNumber])
+  @@index([ciId])
+  @@index([planId])
+  @@map("asset_records")
+}
+
+/// assetAuditSchema: append-only.
+model AssetAudit {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  assetId   String   @db.Uuid
+  actor     String
+  at        DateTime @db.Timestamptz(3)
+  field     String
+  fromValue String?
+  toValue   String?
+  note      String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  asset  AssetRecord @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, at])
+  @@map("asset_audits")
+}
+
+/// infraPlanSchema. BOM lines are rows in bom_lines; assetIds are asset_records.planId.
+model InfraPlan {
+  id                    String     @id @default(uuid()) @db.Uuid
+  tenantId              String     @db.Uuid
+  number                String
+  name                  String
+  description           String
+  kind                  PlanKind
+  status                PlanStatus
+  owner                 String
+  targetSiteCiId        String?    @db.Uuid
+  targetRackCiIds       String[]   @db.Uuid
+  costCentreCiId        String?    @db.Uuid
+  estimatedCostAmount   Decimal?   @db.Decimal(18, 2)
+  estimatedCostCurrency String?    @db.Char(3)
+  /// Array of { source, id }.
+  externalRefs          Json
+  plannedLiveAt         DateTime?  @db.Date
+  createdAt             DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime   @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bom    BomLine[]
+  assets AssetRecord[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId, status])
+  @@map("infra_plans")
+}
+
+/// bomLineSchema
+model BomLine {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @db.Uuid
+  planId           String   @db.Uuid
+  position         Int
+  description      String
+  manufacturer     String?
+  model            String?
+  sku              String?
+  layer            CiLayer
+  quantity         Int
+  received         Int      @default(0)
+  unitCostAmount   Decimal? @db.Decimal(18, 2)
+  unitCostCurrency String?  @db.Char(3)
+  vendorCiId       String?  @db.Uuid
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   InfraPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, position])
+  @@map("bom_lines")
+}
+
+/// supportContractSchema
+model SupportContract {
+  id                 String       @id @default(uuid()) @db.Uuid
+  tenantId           String       @db.Uuid
+  vendorCiId         String       @db.Uuid
+  contractNumber     String
+  title              String
+  level              SupportLevel
+  responseMinutes    Int?
+  startsAt           DateTime     @db.Date
+  endsAt             DateTime     @db.Date
+  autoRenews         Boolean
+  annualCostAmount   Decimal?     @db.Decimal(18, 2)
+  annualCostCurrency String?      @db.Char(3)
+  costCentreCiId     String?      @db.Uuid
+  primaryContactId   String?      @db.Uuid
+  /// Array of { source, id }.
+  externalIds        Json
+  documentRefs       String[]
+  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  primaryContact VendorContact? @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
+  assets         AssetRecord[]
+
+  @@unique([tenantId, vendorCiId, contractNumber])
+  @@index([tenantId, endsAt])
+  @@map("support_contracts")
+}
+
+/// vendorContactSchema
+model VendorContact {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  vendorCiId      String   @db.Uuid
+  name            String
+  role            String
+  email           String?
+  phone           String?
+  portalUrl       String?
+  availability    String?
+  escalationLevel Int      @default(1)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contracts SupportContract[]
+
+  @@index([tenantId, vendorCiId])
+  @@map("vendor_contacts")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Impact modeling and incidents
+// ---------------------------------------------------------------------------------------------
+
+/// impactScenarioSchema
+model ImpactScenario {
+  id                    String       @id @default(uuid()) @db.Uuid
+  tenantId              String       @db.Uuid
+  name                  String
+  kind                  ScenarioKind
+  failedCiIds           String[]     @db.Uuid
+  maxDepth              Int
+  honourRedundancy      Boolean
+  includeSharedServices Boolean
+  evaluatedAt           DateTime?    @db.Timestamptz(3)
+  createdBy             String
+  changeRefSource       String?
+  changeRefId           String?
+  createdAt             DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime     @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  simulations ImpactSimulation[]
+
+  @@index([tenantId, kind])
+  @@map("impact_scenarios")
+}
+
+/// impactSimulationSchema. services and recommendations are JSON arrays of the contract shapes.
+model ImpactSimulation {
+  id                       String   @id @default(uuid()) @db.Uuid
+  tenantId                 String   @db.Uuid
+  scenarioId               String   @db.Uuid
+  ranAt                    DateTime @db.Timestamptz(3)
+  durationMs               Int
+  failedCiIds              String[] @db.Uuid
+  affectedApplicationCiIds String[] @db.Uuid
+  /// Array of affectedServiceSchema.
+  services                 Json
+  servicesDown             Int
+  servicesDegraded         Int
+  usersAffected            Int
+  revenueAtRiskAmount      Decimal? @db.Decimal(18, 2)
+  revenueAtRiskCurrency    String?  @db.Char(3)
+  recommendations          Json
+  createdAt                DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scenario    ImpactScenario     @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  validations ImpactValidation[]
+
+  @@index([scenarioId, ranAt])
+  @@index([tenantId, ranAt])
+  @@map("impact_simulations")
+}
+
+/// impactValidationSchema: a simulation compared with the incident that really happened.
+model ImpactValidation {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @db.Uuid
+  simulationId          String   @db.Uuid
+  incidentId            String   @db.Uuid
+  predictedServiceCiIds String[] @db.Uuid
+  actualServiceCiIds    String[] @db.Uuid
+  accuracy              Float
+  missedServiceCiIds    String[] @db.Uuid
+  validatedAt           DateTime @db.Timestamptz(3)
+  createdAt             DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  simulation ImpactSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  incident   Incident         @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@unique([simulationId, incidentId])
+  @@map("impact_validations")
+}
+
+/// An incident opened by BSM correlation, an integration or a user (openmap.incident.* events).
+model Incident {
+  id                   String        @id @default(uuid()) @db.Uuid
+  tenantId             String        @db.Uuid
+  title                String
+  description          String
+  severity             AlertSeverity
+  state                IncidentState @default(open)
+  /// Service, integration or user that opened it.
+  source               String
+  affectedServiceCiIds String[]      @db.Uuid
+  rootCauseCiId        String?       @db.Uuid
+  /// Outbox event ids correlated into this incident.
+  correlatedEventIds   String[]      @db.Uuid
+  openedAt             DateTime      @db.Timestamptz(3)
+  acknowledgedAt       DateTime?     @db.Timestamptz(3)
+  resolvedAt           DateTime?     @db.Timestamptz(3)
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  links       IncidentLink[]
+  validations ImpactValidation[]
+
+  @@index([tenantId, state, openedAt])
+  @@map("incidents")
+}
+
+/// incidentLinkSchema
+model IncidentLink {
+  incidentId    String   @db.Uuid
+  integrationId String   @db.Uuid
+  tenantId      String   @db.Uuid
+  remoteId      String
+  remoteUrl     String?
+  remoteState   String
+  syncedAt      DateTime @db.Timestamptz(3)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident    Incident          @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@id([incidentId, integrationId])
+  @@index([integrationId, remoteId])
+  @@map("incident_links")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Integrations and security
+// ---------------------------------------------------------------------------------------------
+
+/// integrationConfigSchema. vendor is a string: adding a vendor is a tracker row, not a contract change.
+model IntegrationConfig {
+  id               String              @id @default(uuid()) @db.Uuid
+  tenantId         String              @db.Uuid
+  category         IntegrationCategory
+  vendor           String
+  name             String
+  enabled          Boolean             @default(false)
+  direction        Direction
+  endpoint         String
+  credentialRef    String
+  settings         Json
+  fieldMappings    Json
+  classMappings    Json
+  subscribedEvents String[]
+  scheduleCron     String?
+  createdAt        DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime            @updatedAt @db.Timestamptz(3)
+
+  tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status         IntegrationStatus?
+  deliveries     IntegrationDelivery[]
+  incidentLinks  IncidentLink[]
+  securityAlerts SecurityAlert[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, category, enabled])
+  @@map("integration_configs")
+}
+
+/// integrationStatusSchema: rolling health, one row per integration.
+model IntegrationStatus {
+  integrationId       String            @id @db.Uuid
+  health              IntegrationHealth @default(disabled)
+  lastSuccessAt       DateTime?         @db.Timestamptz(3)
+  lastErrorAt         DateTime?         @db.Timestamptz(3)
+  lastError           String?
+  credentialExpiresAt DateTime?         @db.Timestamptz(3)
+  deliveredLastHour   Int               @default(0)
+  failedLastHour      Int               @default(0)
+  createdAt           DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime          @updatedAt @db.Timestamptz(3)
+
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@map("integration_statuses")
+}
+
+/// integrationDeliverySchema: every message to or from a remote system, for audit and replay.
+model IntegrationDelivery {
+  id            String           @id @default(uuid()) @db.Uuid
+  tenantId      String           @db.Uuid
+  integrationId String           @db.Uuid
+  direction     MessageDirection
+  eventId       String?          @db.Uuid
+  remoteId      String?
+  state         DeliveryState    @default(pending)
+  attempts      Int              @default(0)
+  requestDigest String           @db.Char(64)
+  responseCode  Int?
+  error         String?
+  createdAt     DateTime         @default(now()) @db.Timestamptz(3)
+  completedAt   DateTime?        @db.Timestamptz(3)
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId, state, createdAt])
+  @@index([tenantId, createdAt])
+  @@index([eventId])
+  @@map("integration_deliveries")
+}
+
+/// securityAlertSchema
+model SecurityAlert {
+  id                   String        @id @default(uuid()) @db.Uuid
+  tenantId             String        @db.Uuid
+  integrationId        String        @db.Uuid
+  remoteId             String
+  severity             AlertSeverity
+  title                String
+  observedAt           DateTime      @db.Timestamptz(3)
+  /// Array of { kind, value }.
+  indicators           Json
+  resolvedCiIds        String[]      @db.Uuid
+  affectedServiceCiIds String[]      @db.Uuid
+  /// Array of { playbook, integrationId, state }.
+  responseActions      Json
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, remoteId])
+  @@index([tenantId, severity, observedAt])
+  @@map("security_alerts")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Audit and user state
+// ---------------------------------------------------------------------------------------------
+
+/// Append-only record of every user and system action (openmap.audit.action). Mirrored to ClickHouse audit_log.
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  actor       String
+  action      String
+  subjectType String
+  subjectId   String
+  details     Json
+  traceparent String?
+  at          DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, at])
+  @@index([tenantId, subjectType, subjectId])
+  @@map("audit_logs")
+}
+
+/// Per-user console state: which layers are visible, locale and view preferences.
+model UserPreference {
+  tenantId      String    @db.Uuid
+  userId        String
+  locale        Locale?
+  timeZone      String?
+  visibleLayers CiLayer[]
+  /// Saved views, column choices and other console state the API validates per screen.
+  preferences   Json
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, userId])
+  @@map("user_preferences")
+}

@@ -111,6 +111,35 @@ export const GRAPH = {
   impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service'] as const,
 } as const;
 
+/**
+ * Reconciliation precedence. Discovery observations outrank imported seeds; a user label outranks
+ * everything. Equal confidence is broken by the newer observation.
+ */
+export const RECONCILIATION = {
+  discoveryDefaultConfidence: 0.9,
+  importSeedConfidence: 0.6,
+  userLabelConfidence: 1,
+  /** Below this a source cannot overwrite an existing attribute, only fill a missing one. */
+  overwriteMinConfidence: 0.5,
+} as const;
+
+/**
+ * Business service management rules. A redundancy group is down when healthy members fall below
+ * its minimum, degraded when it has no spare member left. Degraded services are assumed to lose
+ * this fraction of revenue per hour in impact totals.
+ */
+export const BSM = {
+  slaPeriodDays: 30,
+  degradedRevenueFactor: 0.3,
+  minutesPerDay: 1440,
+  msPerMinute: 60_000,
+  percentScale: 100,
+  /** Health states ordered from best to worst; index is severity rank. */
+  healthOrder: ['healthy', 'unknown', 'degraded', 'down'] as const,
+  /** Predicted impact states ordered from worst to best for result sorting. */
+  predictedOrder: ['down', 'degraded', 'at_risk', 'unaffected'] as const,
+} as const;
+
 /** Synthetic estate sizing from CLAUDE.md §8, used by tools/synth-estate and perf tests. */
 export const SYNTH_ESTATE = {
   totalCis: 100_000,

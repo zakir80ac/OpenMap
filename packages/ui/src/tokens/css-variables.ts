@@ -90,3 +90,16 @@ export function cssVariables(): string {
     '[dir=' + dir + '] {\n' + declarations(directionVariables[dir], 'dir').join('\n') + '\n}';
   return [':root {\n' + root.join('\n') + '\n}', dirBlock('ltr'), dirBlock('rtl')].join('\n\n') + '\n';
 }
+
+/** Name of the keyframes Dot and live Pills animate with. */
+export const PULSE_ANIMATION = 'om-pulse';
+
+/** The one keyframes rule the components need (live pulse). Opacity only, so it is cheap and direction-free. */
+export function keyframesCss(): string {
+  return '@keyframes ' + PULSE_ANIMATION + ' {\n  0%, 100% { opacity: 1; }\n  50% { opacity: .35; }\n}\n';
+}
+
+/** Everything the console must inject once: variables, direction blocks and keyframes. */
+export function stylesheet(): string {
+  return cssVariables() + '\n' + keyframesCss();
+}

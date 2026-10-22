@@ -1,0 +1,19 @@
+{
+  "name": "@openmap/bsm-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@openmap/config": "workspace:*",
+    "@openmap/constants": "workspace:*",
+    "@openmap/contracts": "workspace:*",
+    "@openmap/graph": "workspace:*",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": { "typescript": "^5.9.0", "vitest": "^4.0.0" }
+}

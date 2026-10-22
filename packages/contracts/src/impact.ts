@@ -1,4 +1,4 @@
-// REQ-BSM-010 — impact modeling contract: "what if" scenarios simulated over the dependency graph.
+// REQ-BSM-003 — impact modeling contract: "what if" scenarios simulated over the dependency graph.
 // A scenario names failed components; a simulation returns every service it touches with
 // predicted state, SLA effect and a recovery path. Accuracy is measured against real incidents.
 import { z } from 'zod';
