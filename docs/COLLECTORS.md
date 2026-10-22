@@ -1,17 +1,20 @@
 # Collector families
 
-Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<family>`). Credentials are OpenBao references resolved by the Node; collectors never see the vault. Every family emits the CI types listed and records raw evidence by SHA-256 digest.
+Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<family>`, via `apps/collectors/scripts/gen-docs.sh`). Credentials are OpenBao references resolved by the Node; collectors never see the vault. Every family emits the CI types listed and records raw evidence by SHA-256 digest.
 
 | Collector | Family | Protocols | Credential types | Target kinds | Emits |
 | --- | --- | --- | --- | --- | --- |
+| `a10_thunder` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
 | `certificate` | certificate | tls | none | host, url | certificate, listening_service |
 | `cisco_ucs` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
+| `citrix_adc` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
 | `cloud_aws` | cloud_aws | https | api_token, cloud_role | account | cloud_account, cloud_resource, vm, subnet, ip_address, database_cluster, load_balancer |
 | `cloud_azure` | cloud_azure | https | oauth_client | account | cloud_account, cloud_resource, vm, subnet, ip_address, operating_system |
 | `database` | database | postgresql, mysql, tds, mongodb, resp | password, none | host | database_cluster, database, listening_service, ip_address |
 | `dhcp` | dhcp | winrm, ssh | password, ssh_key | host | dhcp_scope, dhcp_lease, ip_address |
 | `dns` | dns | dns-axfr | none, api_token | host | dns_zone, dns_record, ip_address |
 | `fc_fabric` | fc_fabric | ssh | password, ssh_key | host | fc_switch, fc_fabric, fc_zone, port |
+| `haproxy` | load_balancer | http, https | none, password | host, url | load_balancer, listening_service, ip_address |
 | `hpe_oneview` | ipmi_redfish | https | password | host | chassis, blade, host, bmc, network_device |
 | `hyperv` | hyperv | winrm | password | host | vm_cluster, hypervisor, host, vm, operating_system, ip_address |
 | `ipmi_redfish` | ipmi_redfish | redfish | password | host | host, bmc |
@@ -20,6 +23,7 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `ldap` | ldap | ldap, ldaps | password | host | user_account, service_account, host |
 | `load_balancer` | load_balancer | https | password | host | load_balancer, listening_service, ip_address |
 | `netflow` | netflow | netflow-v5, netflow-v9, ipfix, sflow-v5 | none | flow_source | ip_address |
+| `nginx` | load_balancer | http, https | none, password | host, url | load_balancer, listening_service, ip_address |
 | `nutanix_ahv` | nutanix_ahv | https | password | host, url | vm_cluster, hypervisor, host, bmc, vm, operating_system, ip_address, subnet, vlan, lun |
 | `object_storage` | object_storage | s3 | api_token | url, host | object_bucket |
 | `oracle_vm` | oracle_vm | https | password | host | vm_cluster, hypervisor, host, vm, operating_system, ip_address, lun, nas_share |
@@ -32,4 +36,4 @@ Generated from each collector binary's `--manifest` (`apps/collectors/cmd/<famil
 | `vulnerability_feed` | vulnerability_feed | https | none, api_token | url | vulnerability |
 | `wmi` | wmi | winrm | password | host | host, vm, operating_system, interface, ip_address, listening_service, software, software_instance |
 
-27 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
+31 families, contract version 0.1.0. Source of truth: the manifests; regenerate this file after adding a family.
