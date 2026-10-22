@@ -48,6 +48,11 @@ volume (idempotent, never overwritten).
    `docker compose exec scheduler node dist/job-submit.js --tenant <tenant uuid> --node node-hq-01 --collector port_scan --target 10.0.0.0/24 --kind cidr`.
 
 Nodes only ever connect outbound to the scheduler over mTLS; no inbound port is opened on a site.
+The compose `node` profile trusts the scheduler during its first enrolment by reading the scheduler's
+CA from the shared `scheduler-pki` volume (`OPENMAP_BOOTSTRAP_CA_PATH`). A Node at a remote site
+receives `ca.crt` out of band instead and leaves that variable unset. The scheduler certificate names
+`PUBLIC_SCHEDULER_URL`'s host plus every name in `SCHEDULER_TLS_EXTRA_SANS` (the compose service name
+`scheduler` and `localhost` by default), so in-network and external Nodes both verify it.
 
 ## Air-gapped
 
