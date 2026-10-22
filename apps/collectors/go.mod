@@ -7,6 +7,7 @@ require golang.org/x/time v0.16.0
 require (
 	github.com/gosnmp/gosnmp v1.45.0
 	github.com/masterzen/winrm v0.0.0-20261004123143-57b335310d59
+	github.com/miekg/dns v1.1.73
 )
 
 require (
