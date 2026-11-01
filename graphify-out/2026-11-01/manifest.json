@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "docs/STATE.md": {
-    "mtime": 1793553445.3283567,
-    "ast_hash": "ab9c4c866182ac65b6b32096fd2e941b",
+    "mtime": 1793562875.496245,
+    "ast_hash": "0f0f046fe09d333033dce85f17ed61dc",
     "semantic_hash": ""
   },
   "docs/adr/ADR-001-monorepo-tooling.md": {
@@ -395,8 +395,8 @@
     "semantic_hash": "03302e16c34b747e0c05ce2fe7322a02"
   },
   "graphify-out/converted/OpenMap-Tracker_d0198e2e.md": {
-    "mtime": 1793553447.432964,
-    "ast_hash": "b0a332f3df1af23301ebf9b6455588f1",
+    "mtime": 1793562907.0949366,
+    "ast_hash": "c91862881b6367a09771b385cd6e7bba",
     "semantic_hash": ""
   },
   "lefthook.yml": {
@@ -2050,8 +2050,8 @@
     "semantic_hash": "6e9a52b478a6597295424e0f137808e2"
   },
   "docs/TRACKER-SUMMARY.md": {
-    "mtime": 1793551278.9277165,
-    "ast_hash": "23abaf403a6903e23ce56da72c0bc397",
+    "mtime": 1793562808.5202456,
+    "ast_hash": "7f973a4a112822f6b341019d88a8c1bb",
     "semantic_hash": ""
   },
   "packages/db/clickhouse/README.md": {

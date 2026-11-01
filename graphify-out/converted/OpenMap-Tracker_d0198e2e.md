@@ -189,7 +189,7 @@
 | REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-SEC-012 | SEC | Compliance | Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate |  | Controls mapped to CIs; posture tab on the assets screen; audit pass rate and high-risk CI count computed from evidence | P1 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-037 | CMDB | Identity | CI short codes (layer prefix plus slug) generated, unique per tenant and editable |  | ciCode() applied by the reconciler; uniqueness enforced in Postgres; shown on every card and in search | P0 | Done | Claude |  | docs/DESIGN-CUES.md | T-062, T-111, T-063 | ciCode() keeps dotted non-domain names apart (10.0.0.1 -> NET-10-0-0-1); Postgres trigger plus partial unique index keep codes unique per tenant (migration 0010, 499 duplicate groups renumbered on the dev estate); Ci.code and setCiCode in GraphQL 0.6.0 (ADR-014); code on CMDB rows, search hits and the CI detail header with operator editing; commit 0d660e0 | 2026-10-22 | 2026-11-01 | Console derives and shows the short code via ciCode() on the CI detail header; server-side uniqueness and editing remain. |
-| REQ-CMDB-038 | CMDB | Layers | Headline metric per layer on cards and tables (LAYER_HEADLINE_METRIC) |  | Every card shows the layer's headline metric from ClickHouse; unit and label from the contract | P1 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-CMDB-038 | CMDB | Layers | Headline metric per layer on cards and tables (LAYER_HEADLINE_METRIC) |  | Every card shows the layer's headline metric from ClickHouse; unit and label from the contract | P1 | Done |  |  | docs/DESIGN-CUES.md | T-005, T-008, T-025, T-091, T-093, T-094, T-114, T-115, T-087 | docs/evidence/cmdb/headline-metrics.md; docs/evidence/console/cmdb-en.png, cmdb-ar.png, ci-detail-en.png, ci-detail-ar.png; ADR-016; replay 28,501 samples stored / 0 dropped; API 50-row page with headlines 21-76 ms; e2e walkthrough 3 passed; commit 01df3cf | 2026-10-22 | 2026-11-01 |  |
 | REQ-SEC-013 | SEC | Contracts | ADR-006 accepted: @peculiar/x509 for Node certificate issuance |  | ADR status Accepted by Syed; dependency recorded in the Components sheet | P1 | Not started |  |  | docs/adr/ADR-006-node-pki-library.md |  |  | 2026-10-22 | 2026-10-22 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
@@ -197,7 +197,7 @@
 | CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 19 | 17 | 89 |
 | DISC | Discovery and collectors | Discovery, Onboarding and digital twin |  | 31 | 2 | 6 |
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 2 | 40 |
-| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity |  | 38 | 16 | 42 |
+| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity |  | 38 | 17 | 45 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks |  | 5 | 3 | 60 |
@@ -262,7 +262,7 @@
 | Test ID | Type | Covers REQ IDs | Last run | Result | Duration |
 | --- | --- | --- | --- | --- | --- |
 | T-001 | unit | REQ-CORE-003, REQ-CORE-004 | 2026-10-22 | Pass | 0 |
-| T-005 | unit | REQ-CORE-004, REQ-CORE-001, REQ-CORE-002, REQ-CORE-005, REQ-CORE-006 | 2026-10-22 | Pass | 0 |
+| T-005 | unit | REQ-CORE-004, REQ-CORE-001, REQ-CORE-002, REQ-CORE-005, REQ-CORE-006, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
 | T-003 | unit | REQ-CORE-007 | 2026-10-22 | Pass | 0 |
 | T-004 | unit | REQ-CORE-008 | 2026-10-22 | Pass | 0 |
 | T-002 | unit | REQ-UI-002, REQ-UI-025 | 2026-10-22 | Pass | 0 |
@@ -270,7 +270,7 @@
 | T-014 | unit | REQ-CORE-009, REQ-CORE-010 | 2026-10-22 | Pass | 0 |
 | T-006 | unit | REQ-CORE-011 | 2026-10-22 | Pass | 0 |
 | T-007 | unit | REQ-CORE-011 | 2026-10-22 | Pass | 0 |
-| T-025 | unit | REQ-QA-001, REQ-CORE-002 | 2026-10-22 | Pass | 0 |
+| T-025 | unit | REQ-QA-001, REQ-CORE-002, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
 | T-026 | unit | REQ-QA-001 | 2026-10-22 | Pass | 0 |
 | T-021 | unit | REQ-SEC-004, REQ-DISC-028, REQ-INT-001 | 2026-10-22 | Pass | 0 |
 | T-023 | unit | REQ-SEC-004, REQ-DISC-028, REQ-INT-001 | 2026-10-22 | Pass | 0 |
@@ -299,7 +299,7 @@
 | T-084 | unit | REQ-SEC-001 | 2026-10-22 | Pass | 0 |
 | T-085 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
 | T-086 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
-| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018 | 2026-10-22 | Pass | 0 |
+| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
 | T-088 | unit | REQ-SEC-001, REQ-SEC-009, REQ-DISC-004, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-006 | 2026-10-22 | Pass | 0 |
 | T-089 | unit | REQ-UI-003, REQ-PERF-001, REQ-PERF-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013 | 2026-10-22 | Pass | 0 |
 | T-045 | unit | REQ-DISC-026 | 2026-10-22 | Pass | 0 |
@@ -316,9 +316,9 @@
 | T-075 | unit | REQ-CMDB-022, REQ-DISC-004 | 2026-10-22 | Pass | 0 |
 | T-038 | unit | REQ-SEC-005 | 2026-10-22 | Pass | 0 |
 | T-090 | unit | REQ-SEC-005, REQ-UI-019, REQ-SEC-007 | 2026-10-22 | Pass | 0 |
-| T-093 | unit | REQ-CORE-002 | 2026-10-22 | Pass | 0 |
-| T-094 | unit | REQ-CORE-002 | 2026-10-22 | Pass | 0 |
-| T-091 | unit | REQ-CORE-005, REQ-SEC-005, REQ-CORE-017 | 2026-10-22 | Pass | 0 |
+| T-093 | unit | REQ-CORE-002, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
+| T-094 | unit | REQ-CORE-002, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
+| T-091 | unit | REQ-CORE-005, REQ-SEC-005, REQ-CORE-017, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
 | T-092 | unit | REQ-CORE-006 | 2026-10-22 | Pass | 0 |
 | T-095 | unit | REQ-SEC-005, REQ-SEC-007 | 2026-10-22 | Pass | 0 |
 | T-076 | unit | REQ-DISC-004 | 2026-10-22 | Pass | 0 |
@@ -346,8 +346,10 @@
 | T-112 | unit | REQ-DISC-029 | 2026-11-01 | Pass | 0 |
 | T-011 | unit | REQ-AI-001 | 2026-11-01 | Pass | 0 |
 | T-113 | unit | REQ-AI-001 | 2026-11-01 | Pass | 0 |
-| T-008 | unit | REQ-CORE-016, REQ-CORE-017 | 2026-11-01 | Pass | 0 |
+| T-008 | unit | REQ-CORE-016, REQ-CORE-017, REQ-CMDB-038 | 2026-11-01 | Pass | 0 |
 | T-049 | unit | REQ-CORE-016, REQ-CORE-017 | 2026-11-01 | Pass | 0 |
+| T-114 | unit | REQ-CMDB-038 | 2026-11-01 | Pass | 0 |
+| T-115 | unit | REQ-CMDB-038 | 2026-11-01 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -359,16 +361,17 @@
 | 2026-10-22 | Checkpoint 6 (continued): air-gap e2e green on the isolated host (INT-002, SEC-003 Done), bundle rebuilt with the fixed console image; screens Dashboard, Layers, Discovery, Dependency map, CMDB, Business services, Impact, English UI Done on existing e2e/Lighthouse/p95 evidence; tenant settings editor shipped (GraphQL 0.3.0, ADR-011, UI-019 Done) with unit, integration and e2e tests; e2e suite now serial with a setup project because the realm's brute-force policy disables an account hammered by parallel sign-ins. |  |  |  |
 | 2026-10-22 | Checkpoint 7: the six missing screens (Assets, IPAM, DCIM, Integrations, Analytics, Assistant) built and verified on the shipped images in en and ar — unit tests T-100..T-105, e2e T-106, Lighthouse all screens (accessibility and best practices 1.0; analytics 0.82 against the documented embedded-screen floor); GraphQL 0.4.0 (ADR-012: integration detail/deliveries, analyticsEmbed, Rack.row/room); API fixes for IPAM identity keys and DCIM placement attributes; Superset dashboard provisioned by the API with RLS guest tokens; CPU LLM profile running with a self-correcting NL→Cypher loop; compose LLM variable mismatch fixed. |  |  |  |
 | 2026-11-01 | Checkpoint 9: assistant NL->Cypher fixed (REQ-AI-001, commit 3bdd482; golden set 12/12 on the 1.5B model); 56 queued closures applied (checkpoints 4-9); llm-cpu health check fixed in compose |  |  |  |
+| 2026-11-01 | Checkpoint 10: REQ-CMDB-038 headline metric per layer end to end (ADR-016: ci/collector/event 0.2.0, GraphQL 0.8.0; metric samples via outbox to ClickHouse; API loader; console column and cards); persist transaction budget; commit 01df3cf |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-01T19:53:30.232Z |  |  |  |  |  |  |
+| Generated | 2026-11-01T20:47:24.020Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 68 | 28 | 0 | 4 | 88 |  |  |
+| All | 67 | 28 | 0 | 4 | 89 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
 | DEP | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
-| CMDB | 21 | 1 | 0 | 0 | 16 | 38 | 42 |
+| CMDB | 20 | 1 | 0 | 0 | 17 | 38 | 45 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 2 | 0 | 0 | 0 | 3 | 5 | 60 |
@@ -380,11 +383,11 @@
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
 | P0 | 13 | 27 | 0 | 3 | 67 | 110 |  |
-| P1 | 52 | 1 | 0 | 1 | 21 | 75 |  |
+| P1 | 51 | 1 | 0 | 1 | 22 | 75 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 38 |  |  |  |  |  |  |
-| 2026-11-01 | 88 |  |  |  |  |  |  |
+| 2026-11-01 | 89 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
