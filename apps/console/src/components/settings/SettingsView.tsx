@@ -4,7 +4,6 @@
 // log; other roles see their session only, because the API refuses the query for them.
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { ROLES } from '@openmap/constants';
-import type { Locale } from '@openmap/i18n';
 import { Card, Pill, SectionTitle, Tag } from '@openmap/ui';
 import { useMemo, useState, type ReactNode } from 'react';
 import { QueryState } from '@/components/common/QueryState';
@@ -14,21 +13,17 @@ import { auditLogInfiniteQuery, type AuditEntry } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
 import { TenantSettingsCard } from './TenantSettingsCard';
 
-export interface SettingsViewProps {
-  locale: Locale;
-}
-
 /** Actions a mutation can carry, offered as the filter list; the server owns the truth, this is the display order. */
 export const AUDIT_ACTIONS = ['labelCi', 'updateCiAttributes', 'createRelationship', 'retireRelationship', 'setLayerVisibility', 'runDiscovery', 'saveScenario', 'runSimulation', 'createPlan', 'setPlanStatus', 'setAssetStage', 'upsertIntegration', 'testIntegration', 'reportIncident', 'acknowledgeIncident', 'askAssistant', 'updateTenantSettings'] as const;
 
 export function summariseDetails(details: Record<string, unknown>): string {
   const args = (details['arguments'] ?? details) as Record<string, unknown>;
   return Object.entries(args)
-    .map(([key, value]) => key + '=' + (typeof value === 'object' ? JSON.stringify(value) : String(value)))
+    .map(([key, value]) => key + '=' + (typeof value === 'string' ? value : JSON.stringify(value)))
     .join(' · ');
 }
 
-export function SettingsView({ locale }: SettingsViewProps): ReactNode {
+export function SettingsView(): ReactNode {
   const t = useT();
   const format = useFormatters();
   const auth = useAuth();
@@ -38,7 +33,6 @@ export function SettingsView({ locale }: SettingsViewProps): ReactNode {
   const audit = useInfiniteQuery({ ...auditLogInfiniteQuery({ action: action === '' ? null : action }), enabled: canAudit });
   const entries = useMemo<AuditEntry[]>(() => audit.data?.pages.flatMap((p) => p.edges.map((e) => e.node)) ?? [], [audit.data]);
   const total = audit.data?.pages[0]?.totalCount ?? 0;
-  void locale;
 
   return (
     <div className="flex flex-col gap-om-24">

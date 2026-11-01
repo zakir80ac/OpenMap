@@ -10,7 +10,7 @@ import { Providers } from '@/providers';
 import { AnalyticsView, type EmbedFn } from './AnalyticsView';
 
 const authValue = (): AuthValue =>
-  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: async () => undefined, completeSignIn: async () => '/', signOut: async () => undefined }) as unknown as AuthValue;
+  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: () => Promise.resolve(undefined), completeSignIn: () => Promise.resolve('/'), signOut: () => Promise.resolve(undefined) }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
 const state = { fail: false, tokens: 0 };
@@ -50,7 +50,7 @@ describe.each(LOCALES)('AnalyticsView (%s)', (locale) => {
     await waitFor(() => {
       expect(embed).toHaveBeenCalledTimes(1);
     });
-    const params = (embed as unknown as ReturnType<typeof vi.fn>).mock.calls[0]![0] as Parameters<EmbedFn>[0];
+    const params = (embed as unknown as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as Parameters<EmbedFn>[0];
     expect(params.id).toBe('dash-uuid');
     expect(params.supersetDomain).toBe('http://superset.test');
     expect(params.iframeTitle).toBe(translate(locale, 'analytics.iframeTitle'));

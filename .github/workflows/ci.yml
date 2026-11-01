@@ -23,6 +23,7 @@ jobs:
       - run: pnpm contracts:check -- --base origin/${{ github.base_ref || 'main' }}
       - run: pnpm i18n:check
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm test
       - run: pnpm guard
       - run: pnpm tracker verify

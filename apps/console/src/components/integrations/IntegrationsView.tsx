@@ -6,7 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '@openmap/constants';
 import { DIRECTIONS, EVENT_TYPES, INTEGRATION_CATEGORIES, INTEGRATION_VENDORS } from '@openmap/contracts';
-import type { Locale, MessageKey } from '@openmap/i18n';
+import type { MessageKey } from '@openmap/i18n';
 import { Card, Kpi, Pill, SectionTitle, StateBadge, Tag, type UiState } from '@openmap/ui';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
 import { Button, Field, Select, TextInput, rowClass, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
@@ -15,10 +15,6 @@ import { Icon } from '@/components/icons';
 import { useCan } from '@/lib/auth';
 import { integrationDeliveriesQuery, integrationQuery, integrationsQuery, testIntegration, upsertIntegration, type ClassMapping, type FieldMapping, type Integration, type IntegrationDetail, type IntegrationHealth, type IntegrationInput } from '@/lib/estate-queries';
 import { useFormatters, useT } from '@/providers';
-
-export interface IntegrationsViewProps {
-  locale: Locale;
-}
 
 export const HEALTH_STATE: Record<IntegrationHealth, UiState> = { healthy: 'healthy', warning: 'degraded', failing: 'down', disabled: 'unknown' };
 
@@ -34,7 +30,7 @@ function directionKey(direction: string): MessageKey {
   return ('integrations.direction.' + direction) as MessageKey;
 }
 
-export function IntegrationsView({ locale }: IntegrationsViewProps): ReactNode {
+export function IntegrationsView(): ReactNode {
   const t = useT();
   const format = useFormatters();
   const can = useCan();
@@ -45,7 +41,6 @@ export function IntegrationsView({ locale }: IntegrationsViewProps): ReactNode {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<IntegrationDetail | 'new' | null>(null);
   const integrations = useQuery(integrationsQuery(category === '' ? null : category));
-  void locale;
 
   const list = integrations.data ?? [];
   const totals = useMemo(() => {
@@ -336,7 +331,7 @@ function IntegrationDetailPanel({ id, canAdmin, onEdit, onChanged }: DetailProps
           <QueryState status="pending" />
         ) : deliveries.isError ? (
           <QueryState status="error" />
-        ) : (deliveries.data ?? []).length === 0 ? (
+        ) : deliveries.data.length === 0 ? (
           <span className="text-om-xs text-om-muted">{t('integrations.deliveries.empty')}</span>
         ) : (
           <div className="overflow-x-auto">
@@ -351,7 +346,7 @@ function IntegrationDetailPanel({ id, canAdmin, onEdit, onChanged }: DetailProps
                 </tr>
               </thead>
               <tbody>
-                {(deliveries.data ?? []).map((x) => (
+                {deliveries.data.map((x) => (
                   <tr key={x.id} className={rowClass}>
                     <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>{format.dateTime(x.createdAt)}</td>
                     <td className={tdClass}>

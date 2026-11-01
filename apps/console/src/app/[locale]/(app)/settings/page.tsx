@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SettingsPage({ params }: PageProps): Promise<ReactNode> {
-  const locale = await requireLocale(params);
-  return <SettingsView locale={locale} />;
+  await requireLocale(params);
+  return <SettingsView />;
 }

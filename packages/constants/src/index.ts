@@ -407,6 +407,19 @@ export const DEPENDENCY_MAP = {
   workerMinNodes: 200,
   /** Relationships fetched for the selected CI to type-colour its edges. */
   selectedRelationshipsLimit: 100,
+  /**
+   * Force layout (Fruchterman-Reingold, deterministic, seeded from the lane positions). It is O(n^2) per iteration,
+   * so it is offered up to forceMaxNodes; larger graphs stay in lanes, which are O(n log n).
+   */
+  forceMaxNodes: 2_500,
+  forceIterations: 150,
+  /** Ideal edge length in graph units; repulsion scales with its square, attraction with its inverse. */
+  forceIdealDistance: 70,
+  /** Largest move per node on the first iteration, shrinking by forceCooling each iteration. */
+  forceInitialStep: 40,
+  forceCooling: 0.95,
+  /** Two nodes closer than this are pushed apart as if at this distance, so coincident seeds do not explode. */
+  forceMinDistance: 0.5,
 } as const;
 
 /**
@@ -423,6 +436,8 @@ export const CONSOLE_ALPHA = {
   /** Blast-radius panel background and border. */
   panelTint: 0.14,
   panelBorder: 0.3,
+  /** Nodes outside an isolated blast radius on the map. */
+  dimmedNode: 0.12,
 } as const;
 
 /** Console-wide interaction constants shared by several screens (REQ-UI-003). */

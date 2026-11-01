@@ -18,9 +18,9 @@ const authValue = (): AuthValue =>
     reasonDetail: undefined,
     can: (role: string) => roles.current.includes('openmap-admin') || roles.current.includes(role),
     getAccessToken: () => 'tok',
-    signIn: async () => undefined,
-    completeSignIn: async () => '/',
-    signOut: async () => undefined,
+    signIn: () => Promise.resolve(undefined),
+    completeSignIn: () => Promise.resolve('/'),
+    signOut: () => Promise.resolve(undefined),
   }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
@@ -71,7 +71,7 @@ afterEach(() => {
 function mount(locale: (typeof LOCALES)[number]): void {
   render(
     <Providers locale={locale}>
-      <IntegrationsView locale={locale} />
+      <IntegrationsView />
     </Providers>,
   );
 }

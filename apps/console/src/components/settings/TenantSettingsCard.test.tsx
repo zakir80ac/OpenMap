@@ -18,9 +18,9 @@ const authValue = (): AuthValue =>
     reasonDetail: undefined,
     can: (role: string) => roles.current.includes('openmap-admin') || roles.current.includes(role),
     getAccessToken: () => 'tok',
-    signIn: async () => undefined,
-    completeSignIn: async () => '/',
-    signOut: async () => undefined,
+    signIn: () => Promise.resolve(undefined),
+    completeSignIn: () => Promise.resolve('/'),
+    signOut: () => Promise.resolve(undefined),
   }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
@@ -89,7 +89,7 @@ describe('TenantSettingsCard', () => {
       expect(update?.variables).toEqual({ input: { staleAfterDays: 14 } });
       expect(server.settings.staleAfterDays).toBe(14);
       await waitFor(() => {
-        expect((screen.getByLabelText(translate(locale, 'settings.tenant.staleAfterDays')) as HTMLInputElement).value).toBe('14');
+        expect(screen.getByLabelText<HTMLInputElement>(translate(locale, 'settings.tenant.staleAfterDays')).value).toBe('14');
       });
     });
   }

@@ -9,7 +9,7 @@ import { Providers } from '@/providers';
 import { AssistantView, cell, columnsOf } from './AssistantView';
 
 const authValue = (): AuthValue =>
-  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: async () => undefined, completeSignIn: async () => '/', signOut: async () => undefined }) as unknown as AuthValue;
+  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: () => Promise.resolve(undefined), completeSignIn: () => Promise.resolve('/'), signOut: () => Promise.resolve(undefined) }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
 const state = { refuse: false, calls: [] as string[] };

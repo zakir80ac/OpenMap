@@ -18,9 +18,9 @@ const authValue = (): AuthValue =>
     reasonDetail: undefined,
     can: (role: string) => roles.current.includes('openmap-admin') || roles.current.includes(role) || (role === 'openmap-analyst' && roles.current.includes('openmap-operator')),
     getAccessToken: () => 'tok',
-    signIn: async () => undefined,
-    completeSignIn: async () => '/',
-    signOut: async () => undefined,
+    signIn: () => Promise.resolve(undefined),
+    completeSignIn: () => Promise.resolve('/'),
+    signOut: () => Promise.resolve(undefined),
   }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
@@ -42,7 +42,7 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
       const days = v['warrantyExpiringWithinDays'];
       const stage = v['stage'] as string[] | null | undefined;
       let list = assets;
-      if (typeof days === 'number') list = list.filter((a) => a.warrantyEndsAt !== null && new Date(a.warrantyEndsAt).getTime() <= Date.now() + days * 24 * 60 * 60 * 1000);
+      if (typeof days === 'number') list = list.filter((a) => new Date(a.warrantyEndsAt).getTime() <= Date.now() + days * 24 * 60 * 60 * 1000);
       if (Array.isArray(stage)) list = list.filter((a) => stage.includes(a.stage));
       return { data: { assets: list } };
     }
@@ -72,8 +72,8 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
 beforeEach(() => {
   state.calls = [];
   roles.current = ['openmap-operator'];
-  assets[0]!.stage = 'deployed';
-  plans[0]!.status = 'draft';
+  for (const a of assets.slice(0, 1)) a.stage = 'deployed';
+  for (const p of plans.slice(0, 1)) p.status = 'draft';
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
@@ -142,8 +142,8 @@ describe.each(LOCALES)('AssetsView (%s)', (locale) => {
     const form = screen.getByRole('form', { name: translate(locale, 'assets.plans.new') });
     fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.plans.name')), { target: { value: 'Edge expansion' } });
     fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.plans.description')), { target: { value: 'Two more leaf switches' } });
-    fireEvent.change(within(form).getAllByLabelText(translate(locale, 'assets.plans.bom.description'))[0]!, { target: { value: 'Leaf switch' } });
-    fireEvent.change(within(form).getAllByLabelText(translate(locale, 'assets.plans.bom.quantity'))[0]!, { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.plans.bom.description')), { target: { value: 'Leaf switch' } });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.plans.bom.quantity')), { target: { value: '2' } });
     fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'assets.plans.create') }));
     await screen.findByRole('status');
     const create = state.calls.find((c) => c.op === 'CreatePlan');

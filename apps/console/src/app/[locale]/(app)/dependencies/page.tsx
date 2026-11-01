@@ -1,9 +1,9 @@
 // REQ-UI-007 REQ-DEP-003 REQ-DEP-005 — Dependency map route. The map's state (focus CI, direction, depth, as-of
-// instant) is carried in the query string so a map can be linked from the CI detail, services and impact screens.
+// instant, layout mode) is carried in the query string so a map can be linked from the CI detail, services and impact screens.
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { DependenciesView } from '@/components/dependencies/DependenciesView';
-import { isImpactDirection, parseDepth } from '@/components/dependencies/params';
+import { isImpactDirection, parseDepth, parseLayout } from '@/components/dependencies/params';
 import { getT, requireLocale } from '@/lib/i18n';
 
 interface PageProps {
@@ -31,6 +31,7 @@ export default async function DependenciesPage({ params, searchParams }: PagePro
       direction={isImpactDirection(direction) ? direction : 'upstream'}
       depth={parseDepth(single(query['depth']))}
       asOf={single(query['asOf'])}
+      layout={parseLayout(single(query['layout']))}
     />
   );
 }

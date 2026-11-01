@@ -17,9 +17,9 @@ const authValue = (): AuthValue =>
     reasonDetail: undefined,
     can: (role: string) => roles.current.includes('openmap-admin') || roles.current.includes(role),
     getAccessToken: () => 'tok',
-    signIn: async () => undefined,
-    completeSignIn: async () => '/',
-    signOut: async () => undefined,
+    signIn: () => Promise.resolve(undefined),
+    completeSignIn: () => Promise.resolve('/'),
+    signOut: () => Promise.resolve(undefined),
   }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
@@ -62,7 +62,7 @@ afterEach(() => {
 function mount(locale: (typeof LOCALES)[number]): void {
   render(
     <Providers locale={locale}>
-      <SettingsView locale={locale} />
+      <SettingsView />
     </Providers>,
   );
 }
@@ -76,8 +76,8 @@ describe.each(LOCALES)('SettingsView (%s)', (locale) => {
     const table = await screen.findByRole('table');
     const rows = within(table).getAllByRole('row');
     expect(rows).toHaveLength(3);
-    expect(within(rows[1]!).getByText('labelCi')).toBeTruthy();
-    expect(within(rows[2]!).getByText('operator')).toBeTruthy();
+    expect(within(rows[1] ?? document.body).getByText('labelCi')).toBeTruthy();
+    expect(within(rows[2] ?? document.body).getByText('operator')).toBeTruthy();
     expect(screen.getByText(translate(locale, 'settings.audit.total', { count: '2' }))).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: translate(locale, 'settings.audit.more') }));

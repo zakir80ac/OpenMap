@@ -440,9 +440,9 @@ describe('OpenMap API (integration)', () => {
 
   it('inventories software with licence compliance and walks a CVE to the services it puts at risk', async () => {
     // T-108 REQ-UI-015 REQ-UI-016 REQ-CMDB-031 REQ-SEC-008
-    const software = await gql<{ software: Array<{ name: string; version: string; instances: number; hosts: number; running: number; vulnerabilities: number; licence: { entitlement: number; consumed: number; overDeployed: boolean } | null }> }>('{ software(first: 10) { name version instances hosts running vulnerabilities licence { entitlement consumed overDeployed } } }');
+    const software = await gql<{ software: Array<{ name: string; version: string; instances: number; hosts: number; running: number; vulnerabilities: number; licence: { entitlement: number; consumed: number; overDeployed: boolean; expiresAt: string | null } | null }> }>('{ software(first: 10) { name version instances hosts running vulnerabilities licence { entitlement consumed overDeployed expiresAt } } }');
     expect(software.errors).toBeUndefined();
-    expect(software.data?.software).toEqual([{ name: 'PostgreSQL', version: '16.4', instances: 1, hosts: 1, running: 1, vulnerabilities: 1, licence: { entitlement: 32, consumed: 40, overDeployed: true } }]);
+    expect(software.data?.software).toEqual([{ name: 'PostgreSQL', version: '16.4', instances: 1, hosts: 1, running: 1, vulnerabilities: 1, licence: { entitlement: 32, consumed: 40, overDeployed: true, expiresAt: '2027-01-01T00:00:00.000Z' } }]);
 
     const summaries = await gql<{ vulnerabilitySummaries: Array<{ cveId: string; cvss: number; exploited: boolean; affectedSoftware: number; affectedHosts: number }> }>('{ vulnerabilitySummaries(minCvss: 9) { cveId cvss exploited affectedSoftware affectedHosts } }');
     expect(summaries.data?.vulnerabilitySummaries).toEqual([{ cveId: 'CVE-2026-0001', cvss: 9.8, exploited: true, affectedSoftware: 1, affectedHosts: 1 }]);

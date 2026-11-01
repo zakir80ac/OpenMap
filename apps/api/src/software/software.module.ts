@@ -5,5 +5,9 @@ import { GraphModule } from '../graph/graph.module.js';
 import { SoftwareResolver } from './software.resolver.js';
 import { SoftwareService } from './software.service.js';
 
-@Module({ imports: [CiModule, GraphModule], providers: [SoftwareService, SoftwareResolver], exports: [SoftwareService] })
+@Module({
+  imports: [CiModule, GraphModule],
+  providers: [SoftwareService, SoftwareResolver],
+  exports: [SoftwareService],
+})
 export class SoftwareModule {}

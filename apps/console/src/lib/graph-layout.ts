@@ -45,7 +45,10 @@ export function normalisePath(rootId: string, nodeId: string, path: ReadonlyArra
 }
 
 /** Consecutive visible pairs of a chain; hidden ids are skipped and the pair across them is marked bridged. */
-export function visiblePairs(chain: ReadonlyArray<string>, visible: ReadonlySet<string>): Array<{ source: string; target: string; bridged: boolean }> {
+export function visiblePairs(
+  chain: ReadonlyArray<string>,
+  visible: ReadonlySet<string>,
+): Array<{ source: string; target: string; bridged: boolean }> {
   const out: Array<{ source: string; target: string; bridged: boolean }> = [];
   let previous: string | undefined;
   let skipped = false;
@@ -54,7 +57,8 @@ export function visiblePairs(chain: ReadonlyArray<string>, visible: ReadonlySet<
       if (previous !== undefined) skipped = true;
       continue;
     }
-    if (previous !== undefined && previous !== id) out.push({ source: previous, target: id, bridged: skipped });
+    if (previous !== undefined && previous !== id)
+      out.push({ source: previous, target: id, bridged: skipped });
     previous = id;
     skipped = false;
   }
@@ -120,10 +124,27 @@ export interface LayoutNode {
   label: string;
 }
 
+import { type LayoutMode } from './layout-mode';
+
+export { LAYOUT_MODES, isLayoutMode, type LayoutMode } from './layout-mode';
+
+/** The force layout is offered only while the pairwise iteration stays inside the interaction budget. */
+export function forceLayoutAvailable(nodeCount: number): boolean {
+  return nodeCount <= DEPENDENCY_MAP.forceMaxNodes;
+}
+
+export interface LayoutEdge {
+  source: string;
+  target: string;
+}
+
 export interface LayoutRequest {
   requestId: number;
   rootId: string;
+  mode: LayoutMode;
   nodes: LayoutNode[];
+  /** Edges drive the force layout's attraction; the lane layout ignores them. */
+  edges: LayoutEdge[];
 }
 
 export interface Position {
@@ -193,9 +214,133 @@ export function assignLanePositions(request: LayoutRequest): LayoutResponse {
   return { requestId: request.requestId, positions, lanes: laneSummaries, durationMs: now() - started };
 }
 
+/**
+ * Force layout: Fruchterman-Reingold with a fixed iteration count and a cooling step, seeded from the lane layout so
+ * the result is deterministic for a given graph (no randomness, no time dependence). Every pair repels, every edge
+ * attracts, the root is pinned at the origin. Lanes are not reported: there are none in this mode.
+ */
+export function assignForcePositions(request: LayoutRequest): LayoutResponse {
+  const started = now();
+  const seed = assignLanePositions(request);
+  const ids = request.nodes.map((n) => n.id);
+  const index = new Map(ids.map((id, i) => [id, i]));
+  const count = ids.length;
+  const xs = new Float64Array(count);
+  const ys = new Float64Array(count);
+  ids.forEach((id, i) => {
+    const p = seed.positions[id];
+    xs[i] = p?.x ?? 0;
+    ys[i] = p?.y ?? 0;
+  });
+  const edges: Array<[number, number]> = [];
+  for (const edge of request.edges) {
+    const a = index.get(edge.source);
+    const b = index.get(edge.target);
+    if (a !== undefined && b !== undefined && a !== b) edges.push([a, b]);
+  }
+  const k = DEPENDENCY_MAP.forceIdealDistance;
+  const k2 = k * k;
+  const rootIndex = index.get(request.rootId);
+  const dx = new Float64Array(count);
+  const dy = new Float64Array(count);
+  let step = DEPENDENCY_MAP.forceInitialStep;
+  for (let iteration = 0; iteration < DEPENDENCY_MAP.forceIterations; iteration += 1) {
+    dx.fill(0);
+    dy.fill(0);
+    for (let i = 0; i < count; i += 1) {
+      for (let j = i + 1; j < count; j += 1) {
+        let vx = (xs[i] ?? 0) - (xs[j] ?? 0);
+        let vy = (ys[i] ?? 0) - (ys[j] ?? 0);
+        let distance = Math.hypot(vx, vy);
+        if (distance < DEPENDENCY_MAP.forceMinDistance) {
+          // Coincident nodes get a deterministic nudge along the index order.
+          vx = DEPENDENCY_MAP.forceMinDistance;
+          vy = 0;
+          distance = DEPENDENCY_MAP.forceMinDistance;
+        }
+        const repulsion = k2 / distance;
+        const ux = (vx / distance) * repulsion;
+        const uy = (vy / distance) * repulsion;
+        dx[i] = (dx[i] ?? 0) + ux;
+        dy[i] = (dy[i] ?? 0) + uy;
+        dx[j] = (dx[j] ?? 0) - ux;
+        dy[j] = (dy[j] ?? 0) - uy;
+      }
+    }
+    for (const [a, b] of edges) {
+      const vx = (xs[a] ?? 0) - (xs[b] ?? 0);
+      const vy = (ys[a] ?? 0) - (ys[b] ?? 0);
+      const distance = Math.max(Math.hypot(vx, vy), DEPENDENCY_MAP.forceMinDistance);
+      const attraction = (distance * distance) / k;
+      const ux = (vx / distance) * attraction;
+      const uy = (vy / distance) * attraction;
+      dx[a] = (dx[a] ?? 0) - ux;
+      dy[a] = (dy[a] ?? 0) - uy;
+      dx[b] = (dx[b] ?? 0) + ux;
+      dy[b] = (dy[b] ?? 0) + uy;
+    }
+    for (let i = 0; i < count; i += 1) {
+      if (i === rootIndex) continue;
+      const magnitude = Math.hypot(dx[i] ?? 0, dy[i] ?? 0);
+      if (magnitude === 0) continue;
+      const scale = Math.min(magnitude, step) / magnitude;
+      xs[i] = (xs[i] ?? 0) + (dx[i] ?? 0) * scale;
+      ys[i] = (ys[i] ?? 0) + (dy[i] ?? 0) * scale;
+    }
+    step *= DEPENDENCY_MAP.forceCooling;
+  }
+  const positions: Record<string, Position> = {};
+  ids.forEach((id, i) => {
+    positions[id] = { x: xs[i] ?? 0, y: ys[i] ?? 0 };
+  });
+  return { requestId: request.requestId, positions, lanes: [], durationMs: now() - started };
+}
+
+/** The layout a request asks for; the Web Worker and the main-thread fallback both call this. */
+export function layoutPositions(request: LayoutRequest): LayoutResponse {
+  return request.mode === 'force' && forceLayoutAvailable(request.nodes.length)
+    ? assignForcePositions(request)
+    : assignLanePositions(request);
+}
+
+/**
+ * Blast radius of one node inside the drawn graph: the node, everything reachable from it along edge direction
+ * (what it carries) and everything that reaches it (what it stands on), so the chain through the node stays lit
+ * while the rest of the map dims.
+ */
+export function impactClosure(graph: Pick<ImpactGraph, 'edges'>, nodeId: string): Set<string> {
+  const forward = new Map<string, string[]>();
+  const backward = new Map<string, string[]>();
+  for (const edge of graph.edges) {
+    forward.set(edge.source, [...(forward.get(edge.source) ?? []), edge.target]);
+    backward.set(edge.target, [...(backward.get(edge.target) ?? []), edge.source]);
+  }
+  const closure = new Set<string>([nodeId]);
+  const walk = (adjacency: Map<string, string[]>): void => {
+    const queue = [nodeId];
+    const seen = new Set<string>([nodeId]);
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (current === undefined) break;
+      for (const next of adjacency.get(current) ?? []) {
+        if (seen.has(next)) continue;
+        seen.add(next);
+        closure.add(next);
+        queue.push(next);
+      }
+    }
+  };
+  walk(forward);
+  walk(backward);
+  return closure;
+}
+
 /** Node radius shrinks with distance from the root but never below the minimum. */
 export function nodeSize(depth: number): number {
-  return Math.max(DEPENDENCY_MAP.minNodeSize, DEPENDENCY_MAP.rootNodeSize - depth * DEPENDENCY_MAP.nodeSizeStep);
+  return Math.max(
+    DEPENDENCY_MAP.minNodeSize,
+    DEPENDENCY_MAP.rootNodeSize - depth * DEPENDENCY_MAP.nodeSizeStep,
+  );
 }
 
 export function nodeColor(node: Pick<MapNode, 'layer'>): HexColor {
@@ -220,7 +365,15 @@ export function predictedColor(state: PredictedState): HexColor {
  * Relationship families and their accents. Every contract relationship type has a colour (compile-time complete),
  * so an edge whose type is known is drawn in its family's accent and the legend lists the families.
  */
-export const RELATIONSHIP_FAMILIES = ['dependency', 'placement', 'power', 'network', 'risk', 'commercial', 'data'] as const;
+export const RELATIONSHIP_FAMILIES = [
+  'dependency',
+  'placement',
+  'power',
+  'network',
+  'risk',
+  'commercial',
+  'data',
+] as const;
 export type RelationshipFamily = (typeof RELATIONSHIP_FAMILIES)[number];
 
 export const relationshipFamily = {

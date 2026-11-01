@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "tsx scripts/next.ts start",
     "typecheck": "tsx scripts/gen-theme.ts && tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src e2e",
     "test": "vitest run",
     "e2e": "playwright test",
     "postbuild": "tsx scripts/stamp-next-env.ts"

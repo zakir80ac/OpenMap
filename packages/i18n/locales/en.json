@@ -235,7 +235,7 @@
   "dependencies.panel.relationships": "Relationships of the focus CI",
   "dependencies.panel.path": "Impact path",
   "dependencies.panel.query": "Query {ms} ms",
-  "dependencies.nodeAction": "Open {name}",
+  "dependencies.nodeAction": "Click to isolate the blast radius of {name}, double-click to open it",
   "relationship.depends_on": "depends on",
   "relationship.runs_on": "runs on",
   "relationship.hosted_on": "hosted on",
@@ -883,5 +883,11 @@
   "vulnerabilities.detail.column.users": "Users",
   "vulnerabilities.detail.column.sla": "SLA budget",
   "vulnerabilities.detail.tier": "Tier {tier}",
-  "vulnerabilities.detail.slaMinutes": "{minutes} min left"
+  "vulnerabilities.detail.slaMinutes": "{minutes} min left",
+  "dependencies.layout.label": "Layout",
+  "dependencies.layout.lane": "Lanes",
+  "dependencies.layout.force": "Force",
+  "dependencies.layout.forceUnavailable": "The force layout is offered up to {count} nodes; larger maps stay in lanes.",
+  "dependencies.isolate.active": "Blast radius of {name}: {count} nodes lit, the rest dimmed",
+  "dependencies.isolate.clear": "Show everything"
 }

@@ -343,7 +343,7 @@ function DnsTab({ locale }: IpamViewProps): ReactNode {
             locale={locale}
             title={t('ipam.dns.zones')}
             rows={zoneRows}
-            total={zones.data?.pages[0]?.totalCount ?? 0}
+            total={zones.data.pages[0]?.totalCount ?? 0}
             hasMore={zones.hasNextPage}
             loading={zones.isFetchingNextPage}
             loadMore={() => {
@@ -361,7 +361,7 @@ function DnsTab({ locale }: IpamViewProps): ReactNode {
             locale={locale}
             title={t('ipam.dns.records')}
             rows={recordRows}
-            total={records.data?.pages[0]?.totalCount ?? 0}
+            total={records.data.pages[0]?.totalCount ?? 0}
             hasMore={records.hasNextPage}
             loading={records.isFetchingNextPage}
             loadMore={() => {
@@ -401,7 +401,7 @@ function DhcpTab({ locale }: IpamViewProps): ReactNode {
             locale={locale}
             title={t('ipam.dhcp.scopes')}
             rows={scopeRows}
-            total={scopes.data?.pages[0]?.totalCount ?? 0}
+            total={scopes.data.pages[0]?.totalCount ?? 0}
             hasMore={scopes.hasNextPage}
             loading={scopes.isFetchingNextPage}
             loadMore={() => {
@@ -420,7 +420,7 @@ function DhcpTab({ locale }: IpamViewProps): ReactNode {
             locale={locale}
             title={t('ipam.dhcp.leases')}
             rows={leaseRows}
-            total={leases.data?.pages[0]?.totalCount ?? 0}
+            total={leases.data.pages[0]?.totalCount ?? 0}
             hasMore={leases.hasNextPage}
             loading={leases.isFetchingNextPage}
             loadMore={() => {

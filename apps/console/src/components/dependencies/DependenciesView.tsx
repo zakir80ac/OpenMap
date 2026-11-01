@@ -1,8 +1,9 @@
 'use client';
 // REQ-UI-007 REQ-DEP-003 REQ-DEP-005 — Dependency map screen: focus picker, direction, depth (bounded by
-// GRAPH.maxImpactDepth), time travel (`asOf`), lane toggles per layer, the Sigma.js canvas with lane layout from a
-// Web Worker, hover tooltips, click-through to the CI detail, and the impact side panel. State lives in the URL so a
-// map can be linked from anywhere (`/dependencies?ci=…&direction=…&depth=…&asOf=…`).
+// GRAPH.maxImpactDepth), time travel (`asOf`), lane toggles per layer, lane or force layout, the Sigma.js canvas laid
+// out in a Web Worker, hover tooltips, blast-radius isolation on click (everything outside the clicked node's impact
+// closure dims), double-click through to the CI detail, and the impact side panel. State lives in the URL so a map
+// can be linked from anywhere (`/dependencies?ci=…&direction=…&depth=…&asOf=…&layout=…`).
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { DEPENDENCY_MAP, GRAPH } from '@openmap/constants';
@@ -13,10 +14,14 @@ import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import {
+  LAYOUT_MODES,
   RELATIONSHIP_FAMILIES,
   buildImpactGraph,
+  forceLayoutAvailable,
+  impactClosure,
   predictedColor,
   relationshipFamilyColor,
+  type LayoutMode,
   type LayoutRequest,
   type MapNode,
 } from '@/lib/graph-layout';
@@ -38,23 +43,38 @@ export interface DependenciesViewProps {
   depth: number;
   /** ISO timestamp or undefined for now. */
   asOf: string | undefined;
+  layout: LayoutMode;
 }
 
 const DEPTHS: readonly number[] = Array.from({ length: GRAPH.maxImpactDepth }, (_, index) => index + 1);
 const PREDICTED = ['down', 'degraded', 'at_risk', 'unaffected'] as const;
 
-export function DependenciesView({ locale, ciId, direction, depth, asOf }: DependenciesViewProps): ReactNode {
+export function DependenciesView({
+  locale,
+  ciId,
+  direction,
+  depth,
+  asOf,
+  layout: layoutMode,
+}: DependenciesViewProps): ReactNode {
   const t = useT();
   const format = useFormatters();
   const router = useRouter();
   const { visibility, toggle, showAll, visibleCount } = useLayerVisibility();
   const [hover, setHover] = useState<HoverInfo | undefined>(undefined);
+  const [isolatedId, setIsolatedId] = useState<string | undefined>(undefined);
   const requestCounter = useRef(0);
 
-  const impact = useQuery({ ...impactQuery({ ciId: ciId ?? '', direction, maxDepth: depth, asOf: asOf ?? null }), enabled: ciId !== undefined });
+  const impact = useQuery({
+    ...impactQuery({ ciId: ciId ?? '', direction, maxDepth: depth, asOf: asOf ?? null }),
+    enabled: ciId !== undefined,
+  });
   const focusDetail = useQuery({ ...ciDetailQuery(ciId ?? '', asOf ?? null), enabled: ciId !== undefined });
 
-  const graph = useMemo(() => (impact.data === undefined ? undefined : buildImpactGraph(impact.data, visibility)), [impact.data, visibility]);
+  const graph = useMemo(
+    () => (impact.data === undefined ? undefined : buildImpactGraph(impact.data, visibility)),
+    [impact.data, visibility],
+  );
 
   const layoutRequest = useMemo<LayoutRequest | undefined>(() => {
     if (graph === undefined || impact.data === undefined) return undefined;
@@ -62,12 +82,31 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
     return {
       requestId: requestCounter.current,
       rootId: impact.data.root.id,
+      mode: layoutMode,
       nodes: graph.nodes.map((n) => ({ id: n.id, layer: n.layer, depth: n.depth, label: n.label })),
+      edges: graph.edges.map((e) => ({ source: e.source, target: e.target })),
     };
-  }, [graph, impact.data]);
+  }, [graph, impact.data, layoutMode]);
   const layout = useLaneLayout(layoutRequest);
+  const forceAvailable = graph === undefined ? true : forceLayoutAvailable(graph.nodes.length);
 
-  const relationships = useMemo(() => focusDetail.data?.relationships.edges.map((edge) => edge.node) ?? [], [focusDetail.data]);
+  // The isolated node must still be drawn; a changed focus, depth or lane set drops the isolation silently.
+  const isolated = useMemo(
+    () => (isolatedId === undefined ? undefined : graph?.nodes.find((n) => n.id === isolatedId)),
+    [graph, isolatedId],
+  );
+  const highlight = useMemo(
+    () => (graph === undefined || isolated === undefined ? undefined : impactClosure(graph, isolated.id)),
+    [graph, isolated],
+  );
+  const isolate = (node: MapNode): void => {
+    setIsolatedId((current) => (current === node.id ? undefined : node.id));
+  };
+
+  const relationships = useMemo(
+    () => focusDetail.data?.relationships.edges.map((edge) => edge.node) ?? [],
+    [focusDetail.data],
+  );
 
   /** Edges touching the focus CI whose relationship type is known take the family colour of that type. */
   const edgeTypes = useMemo(() => {
@@ -79,16 +118,24 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
     return map;
   }, [relationships]);
 
-  const navigate = (next: { ciId?: string | undefined; direction?: ImpactDirection; depth?: number; asOf?: string | undefined }): void => {
+  const navigate = (next: {
+    ciId?: string | undefined;
+    direction?: ImpactDirection;
+    depth?: number;
+    asOf?: string | undefined;
+    layout?: LayoutMode;
+  }): void => {
     const params = new URLSearchParams();
     const id = 'ciId' in next ? next.ciId : ciId;
     const dir = next.direction ?? direction;
     const d = next.depth ?? depth;
     const at = 'asOf' in next ? next.asOf : asOf;
+    const mode = next.layout ?? layoutMode;
     if (id !== undefined) params.set('ci', id);
     if (dir !== 'upstream') params.set('direction', dir);
     if (d !== GRAPH.defaultImpactDepth) params.set('depth', String(d));
     if (at !== undefined) params.set('asOf', at);
+    if (mode !== 'lane') params.set('layout', mode);
     const query = params.toString();
     router.replace(localizedHref(locale, '/dependencies') + (query === '' ? '' : '?' + query));
   };
@@ -106,10 +153,16 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
         as="h1"
         size="lg"
         eyebrow={t('app.name')}
-        description={focus === undefined ? t('dependencies.subtitle') : t('dependencies.focusOn', { name: focus.displayName })}
+        description={
+          focus === undefined
+            ? t('dependencies.subtitle')
+            : t('dependencies.focusOn', { name: focus.displayName })
+        }
         action={
           <Pill variant={timeTravelling ? 'time-travel' : 'primary'} glowing>
-            {timeTravelling ? t('dependencies.asOf.label') + ' · ' + format.dateTime(asOf) : t('dependencies.asOf.now')}
+            {timeTravelling
+              ? t('dependencies.asOf.label') + ' · ' + format.dateTime(asOf)
+              : t('dependencies.asOf.now')}
           </Pill>
         }
       >
@@ -117,7 +170,11 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
       </SectionTitle>
 
       <Card as="section" padding="16" className="flex flex-col gap-om-12">
-        <div role="toolbar" aria-label={t('dependencies.toolbar')} className="grid grid-cols-1 gap-om-12 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,1fr)]">
+        <div
+          role="toolbar"
+          aria-label={t('dependencies.toolbar')}
+          className="grid grid-cols-1 gap-om-12 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,1fr)]"
+        >
           <FocusSearch
             current={focus}
             onPick={(ci) => {
@@ -125,7 +182,9 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
             }}
           />
           <label className="flex flex-col gap-om-4">
-            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('dependencies.direction.label')}</span>
+            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('dependencies.direction.label')}
+            </span>
             <select
               value={direction}
               onChange={(event) => {
@@ -142,7 +201,9 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
             </select>
           </label>
           <label className="flex flex-col gap-om-4">
-            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('dependencies.depth.label')}</span>
+            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('dependencies.depth.label')}
+            </span>
             <select
               value={depth}
               onChange={(event) => {
@@ -158,7 +219,9 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
             </select>
           </label>
           <label className="flex flex-col gap-om-4">
-            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('dependencies.asOf.label')}</span>
+            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('dependencies.asOf.label')}
+            </span>
             <span className="flex items-center gap-om-6">
               <input
                 type="datetime-local"
@@ -185,7 +248,11 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
           </label>
         </div>
 
-        <div role="group" aria-label={t('dependencies.lanes.label')} className="flex flex-wrap items-center gap-om-6">
+        <div
+          role="group"
+          aria-label={t('dependencies.lanes.label')}
+          className="flex flex-wrap items-center gap-om-6"
+        >
           {CI_LAYERS.map((layer) => {
             const on = visibility[layer];
             return (
@@ -194,7 +261,13 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
                 variant={on ? 'primary' : 'default'}
                 selected={on}
                 glowing={false}
-                icon={<span aria-hidden="true" className="inline-block size-2 rounded-om-pill" style={{ background: layerColor(layer) }} />}
+                icon={
+                  <span
+                    aria-hidden="true"
+                    className="inline-block size-2 rounded-om-pill"
+                    style={{ background: layerColor(layer) }}
+                  />
+                }
                 className={cx(!on && 'opacity-60')}
                 onClick={() => {
                   toggle(layer);
@@ -209,6 +282,43 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
               {t('dependencies.lanes.showAll')}
             </Pill>
           ) : null}
+        </div>
+        <div className="flex items-center">
+          <div
+            role="group"
+            aria-label={t('dependencies.layout.label')}
+            className="ms-auto flex items-center gap-om-4 rounded-om-pill border border-om-border-glass p-om-2"
+          >
+            {LAYOUT_MODES.map((mode) => {
+              const disabled = mode === 'force' && !forceAvailable;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={layoutMode === mode}
+                  disabled={disabled}
+                  title={
+                    disabled
+                      ? t('dependencies.layout.forceUnavailable', {
+                          count: format.integer(DEPENDENCY_MAP.forceMaxNodes),
+                        })
+                      : undefined
+                  }
+                  onClick={() => {
+                    navigate({ layout: mode });
+                  }}
+                  className={cx(
+                    'rounded-om-pill px-om-10 py-om-4 text-om-xs transition-colors duration-om-fast disabled:opacity-40',
+                    layoutMode === mode
+                      ? 'bg-om-surface3 text-om-primary'
+                      : 'text-om-secondary hover:text-om-primary',
+                  )}
+                >
+                  {t(mode === 'lane' ? 'dependencies.layout.lane' : 'dependencies.layout.force')}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </Card>
 
@@ -236,7 +346,12 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
             {graph.nodes.length <= 1 ? (
               <Card className="flex-1">
                 <QueryState status="empty" />
-                <p className="mt-om-10 text-om-sm text-om-secondary">{t('dependencies.empty', { name: impact.data.root.displayName, count: format.integer(depth) })}</p>
+                <p className="mt-om-10 text-om-sm text-om-secondary">
+                  {t('dependencies.empty', {
+                    name: impact.data.root.displayName,
+                    count: format.integer(depth),
+                  })}
+                </p>
               </Card>
             ) : layout === undefined ? (
               <Card className="flex-1">
@@ -250,34 +365,74 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
                   lanes={layout.lanes}
                   edgeTypes={edgeTypes}
                   rootId={impact.data.root.id}
+                  highlight={highlight}
                   label={t('dependencies.canvas.label', { name: impact.data.root.displayName })}
                   onHover={setHover}
-                  onSelect={openCi}
+                  onSelect={isolate}
+                  onOpen={openCi}
                   className="min-h-[40rem] flex-1"
                 />
+                {isolated !== undefined && highlight !== undefined ? (
+                  <div
+                    role="status"
+                    className="absolute start-1/2 top-om-16 z-10 flex -translate-x-1/2 items-center gap-om-8 rounded-om-panel border border-om-border-strong bg-om-surface1/90 px-om-12 py-om-6 text-om-xs text-om-secondary backdrop-blur-md rtl:translate-x-1/2"
+                  >
+                    <span>
+                      {t('dependencies.isolate.active', {
+                        name: isolated.label,
+                        count: format.integer(highlight.size),
+                      })}
+                    </span>
+                    <Pill
+                      variant="violet"
+                      glowing={false}
+                      onClick={() => {
+                        setIsolatedId(undefined);
+                      }}
+                    >
+                      {t('dependencies.isolate.clear')}
+                    </Pill>
+                  </div>
+                ) : null}
                 {hover !== undefined ? (
                   <div
                     role="tooltip"
                     className="pointer-events-none absolute z-10 flex max-w-xs flex-col gap-om-4 rounded-om-panel border border-om-border-strong bg-om-surface2/95 p-om-10 text-om-xs shadow-om-card backdrop-blur-md"
-                    style={{ insetInlineStart: hover.x + DEPENDENCY_MAP.tooltipOffsetPx, top: hover.y + DEPENDENCY_MAP.tooltipOffsetPx }}
+                    style={{
+                      insetInlineStart: hover.x + DEPENDENCY_MAP.tooltipOffsetPx,
+                      top: hover.y + DEPENDENCY_MAP.tooltipOffsetPx,
+                    }}
                   >
-                    <span className="truncate font-om-display text-om-sm font-bold text-om-primary">{hover.node.label}</span>
+                    <span className="truncate font-om-display text-om-sm font-bold text-om-primary">
+                      {hover.node.label}
+                    </span>
                     <span className="font-om-mono text-om-2xs text-om-muted">{hover.node.type}</span>
                     <span className="flex flex-wrap items-center gap-om-6">
                       <LayerBadge layer={hover.node.layer} label={t(layerKey(hover.node.layer))} />
                       <StateBadge state={hover.node.health} label={t(healthKey[hover.node.health])} />
                       <Tag>{t(predictedKey[hover.node.predicted])}</Tag>
                     </span>
-                    <span className="text-om-2xs text-om-secondary">{t('common.hops', { count: format.integer(hover.node.depth) })}</span>
-                    <span className="text-om-2xs text-om-cyan">{t('dependencies.nodeAction', { name: hover.node.label })}</span>
+                    <span className="text-om-2xs text-om-secondary">
+                      {t('common.hops', { count: format.integer(hover.node.depth) })}
+                    </span>
+                    <span className="text-om-2xs text-om-cyan">
+                      {t('dependencies.nodeAction', { name: hover.node.label })}
+                    </span>
                   </div>
                 ) : null}
-                <div className="pointer-events-none absolute bottom-om-16 start-om-16 flex flex-col gap-om-6 rounded-om-panel border border-om-border-strong bg-om-surface1/85 p-om-10 text-om-2xs text-om-secondary backdrop-blur-md" aria-label={t('dependencies.legend.title')}>
+                <div
+                  className="pointer-events-none absolute bottom-om-16 start-om-16 flex flex-col gap-om-6 rounded-om-panel border border-om-border-strong bg-om-surface1/85 p-om-10 text-om-2xs text-om-secondary backdrop-blur-md"
+                  aria-label={t('dependencies.legend.title')}
+                >
                   <span className="font-semibold text-om-muted">{t('dependencies.legend.predicted')}</span>
                   <span className="flex flex-wrap gap-om-8">
                     {PREDICTED.map((state) => (
                       <span key={state} className="flex items-center gap-om-4">
-                        <span aria-hidden="true" className="inline-block h-px w-4" style={{ background: predictedColor(state) }} />
+                        <span
+                          aria-hidden="true"
+                          className="inline-block h-px w-4"
+                          style={{ background: predictedColor(state) }}
+                        />
                         {t(predictedKey[state])}
                       </span>
                     ))}
@@ -286,13 +441,20 @@ export function DependenciesView({ locale, ciId, direction, depth, asOf }: Depen
                   <span className="flex flex-wrap gap-om-8">
                     {RELATIONSHIP_FAMILIES.map((family) => (
                       <span key={family} className="flex items-center gap-om-4">
-                        <span aria-hidden="true" className="inline-block size-2 rounded-om-pill" style={{ background: relationshipFamilyColor[family] }} />
+                        <span
+                          aria-hidden="true"
+                          className="inline-block size-2 rounded-om-pill"
+                          style={{ background: relationshipFamilyColor[family] }}
+                        />
                         {t(relationshipFamilyKey(family))}
                       </span>
                     ))}
                   </span>
                 </div>
-                <p role="status" className="pointer-events-none absolute end-om-16 top-om-16 rounded-om-panel border border-om-border-strong bg-om-surface1/85 px-om-10 py-om-6 font-om-mono text-om-2xs text-om-secondary backdrop-blur-md">
+                <p
+                  role="status"
+                  className="pointer-events-none absolute end-om-16 top-om-16 rounded-om-panel border border-om-border-strong bg-om-surface1/85 px-om-10 py-om-6 font-om-mono text-om-2xs text-om-secondary backdrop-blur-md"
+                >
                   {t('dependencies.hud.stats', {
                     nodes: format.integer(graph.nodes.length),
                     edges: format.integer(graph.edges.length),

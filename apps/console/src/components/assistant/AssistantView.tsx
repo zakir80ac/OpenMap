@@ -38,8 +38,8 @@ export function columnsOf(rows: ReadonlyArray<Record<string, unknown>>): string[
 
 export function cell(value: unknown): string {
   if (value === null || value === undefined) return '';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
 }
 
 /** The API answers a rejected question with its reason and the Cypher it refused to run. */

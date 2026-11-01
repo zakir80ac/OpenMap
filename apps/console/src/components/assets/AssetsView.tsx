@@ -285,11 +285,11 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
               void plans.refetch();
             }}
           />
-        ) : (plans.data ?? []).length === 0 ? (
+        ) : plans.data.length === 0 ? (
           <p className="text-om-sm text-om-secondary">{t('assets.plans.empty')}</p>
         ) : (
           <div className="flex flex-col gap-om-12">
-            {(plans.data ?? []).map((plan) => (
+            {plans.data.map((plan) => (
               <PlanCard
                 key={plan.id}
                 plan={plan}

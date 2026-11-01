@@ -235,7 +235,7 @@
   "dependencies.panel.relationships": "علاقات عنصر التركيز",
   "dependencies.panel.path": "مسار الأثر",
   "dependencies.panel.query": "الاستعلام {ms} م.ث",
-  "dependencies.nodeAction": "فتح {name}",
+  "dependencies.nodeAction": "انقر لعزل نطاق تأثير {name}، وانقر مرتين لفتحه",
   "relationship.depends_on": "يعتمد على",
   "relationship.runs_on": "يعمل على",
   "relationship.hosted_on": "مستضاف على",
@@ -883,5 +883,11 @@
   "vulnerabilities.detail.column.users": "المستخدمون",
   "vulnerabilities.detail.column.sla": "رصيد SLA",
   "vulnerabilities.detail.tier": "المستوى {tier}",
-  "vulnerabilities.detail.slaMinutes": "بقي {minutes} دقيقة"
+  "vulnerabilities.detail.slaMinutes": "بقي {minutes} دقيقة",
+  "dependencies.layout.label": "التخطيط",
+  "dependencies.layout.lane": "مسارات",
+  "dependencies.layout.force": "قوى",
+  "dependencies.layout.forceUnavailable": "تخطيط القوى متاح حتى {count} عقدة؛ الخرائط الأكبر تبقى في المسارات.",
+  "dependencies.isolate.active": "نطاق تأثير {name}: {count} عقدة مضاءة والبقية معتمة",
+  "dependencies.isolate.clear": "عرض الكل"
 }

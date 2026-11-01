@@ -6,7 +6,9 @@ import type { z } from 'zod';
 export function parseInput<T extends z.ZodType>(schema: T, value: unknown, what: string): z.infer<T> {
   const result = schema.safeParse(value);
   if (!result.success) {
-    const issues = result.error.issues.map((i) => (i.path.length ? i.path.map(String).join('.') + ': ' : '') + i.message);
+    const issues = result.error.issues.map(
+      (i) => (i.path.length ? i.path.map(String).join('.') + ': ' : '') + i.message,
+    );
     throw new BadRequestException({ message: 'invalid ' + what, issues });
   }
   return result.data;
@@ -14,7 +16,9 @@ export function parseInput<T extends z.ZodType>(schema: T, value: unknown, what:
 
 /** Narrow a JSON value to a plain object; anything else yields an empty object. */
 export function asRecord(value: unknown): Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 export function stringAttribute(attributes: Record<string, unknown>, key: string): string | null {
@@ -27,6 +31,13 @@ export function numberAttribute(attributes: Record<string, unknown>, key: string
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   if (typeof v === 'string' && v.trim().length > 0 && Number.isFinite(Number(v))) return Number(v);
   return null;
+}
+
+/** A date or instant attribute as an ISO 8601 instant; calendar dates ('2027-01-01') become midnight UTC, junk is null. */
+export function isoAttribute(attributes: Record<string, unknown>, key: string): string | null {
+  const v = attributes[key];
+  const date = v instanceof Date ? v : typeof v === 'string' && v.trim().length > 0 ? new Date(v) : null;
+  return date !== null && !Number.isNaN(date.getTime()) ? date.toISOString() : null;
 }
 
 export function booleanAttribute(attributes: Record<string, unknown>, key: string): boolean | null {

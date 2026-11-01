@@ -14,6 +14,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function IntegrationsPage({ params }: PageProps): Promise<ReactNode> {
-  const locale = await requireLocale(params);
-  return <IntegrationsView locale={locale} />;
+  await requireLocale(params);
+  return <IntegrationsView />;
 }

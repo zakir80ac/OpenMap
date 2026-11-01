@@ -10,7 +10,7 @@ import { Providers } from '@/providers';
 import { flattenSubnets, IpamView, utilisationAccent } from './IpamView';
 
 const authValue = (): AuthValue =>
-  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: async () => undefined, completeSignIn: async () => '/', signOut: async () => undefined }) as unknown as AuthValue;
+  ({ status: 'signed-in', user: { subject: 's1', username: 'an', displayName: 'Analyst', email: 'a@bank.local', tenant: 'default', roles: ['openmap-analyst'] }, reason: undefined, reasonDetail: undefined, can: () => true, getAccessToken: () => 'tok', signIn: () => Promise.resolve(undefined), completeSignIn: () => Promise.resolve('/'), signOut: () => Promise.resolve(undefined) }) as unknown as AuthValue;
 vi.mock('@/lib/auth', async (importOriginal) => ({ ...(await importOriginal<typeof AuthModule>()), useAuth: () => authValue(), useCan: () => authValue().can }));
 
 const ci = (id: string, name: string, type: string) => ({ id, name, displayName: name, type, layer: 'network_security', health: 'healthy' });
@@ -34,7 +34,7 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
   if (op === 'Subnets') return { data: { subnets: tree } };
   if (op === 'NextFreeIp') return { data: { nextFreeIp: '10.0.1.11' } };
   if (op === 'CisByAttribute') {
-    const types = (body.variables?.['types'] as string[]) ?? [];
+    const types = (body.variables?.['types'] ?? []) as string[];
     const map: Record<string, unknown[]> = { ip_address: addresses, dns_zone: zones, dns_record: records, dhcp_scope: scopes, dhcp_lease: leases };
     return { data: { cis: page(map[types[0] ?? ''] ?? []) } };
   }

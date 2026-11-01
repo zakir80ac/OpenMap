@@ -43,7 +43,7 @@ export function groupRooms(racks: ReadonlyArray<Rack>, unplacedLabel: string): R
   const map = new Map<string, RoomGroup>();
   for (const rack of racks) {
     const key = rack.room?.id ?? '';
-    const group = map.get(key) ?? { id: key, name: rack.room?.displayName ?? unplacedLabel, designKw: typeof rack.room?.attributes['designKw'] === 'number' ? (rack.room.attributes['designKw'] as number) : null, racks: [], ratedWatts: 0, currentWatts: 0, units: 0, occupiedUnits: 0 };
+    const group = map.get(key) ?? { id: key, name: rack.room?.displayName ?? unplacedLabel, designKw: typeof rack.room?.attributes['designKw'] === 'number' ? (rack.room.attributes['designKw']) : null, racks: [], ratedWatts: 0, currentWatts: 0, units: 0, occupiedUnits: 0 };
     const power = rackPower(rack);
     group.racks.push(rack);
     group.ratedWatts += power.ratedWatts;
@@ -178,7 +178,7 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
     <div className="grid grid-cols-1 gap-om-16 xl:grid-cols-[1fr_2fr]">
       <section aria-label={t('dcim.elevation.title')}>
       <Card padding="24" className="flex flex-col gap-om-12">
-        <SectionTitle as="h2" size="sm" description={[rack.room?.displayName, rack.row?.displayName].filter((x) => x !== undefined && x !== null).join(' · ')} action={<Icon name="dcim" className="size-5 text-om-violet" />}>
+        <SectionTitle as="h2" size="sm" description={[rack.room?.displayName, rack.row?.displayName].filter((x): x is string => typeof x === 'string').join(' · ')} action={<Icon name="dcim" className="size-5 text-om-violet" />}>
           {rack.ci.displayName}
         </SectionTitle>
         <RackElevation rack={rack} />
