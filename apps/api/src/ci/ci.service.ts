@@ -12,6 +12,7 @@ import { checksumOf } from './checksum.js';
 import type { CiLoaders } from './ci.loaders.js';
 import { toVersion } from './ci.mapper.js';
 import { CI_REPOSITORY, type CiRepository } from './ci.repository.js';
+import { LAYER_PREFERENCES, type LayerPreferenceRepository } from '../graph/graph.repository.js';
 import type { CiFilterInput, LabelCiInput } from './ci.schemas.js';
 import type { CiRecord, CiVersionRecord, Connection, HealthState, RelationshipDirection, RelationshipRecord, SearchHitRecord, VulnerabilityRecord } from './ci.types.js';
 
@@ -30,9 +31,20 @@ export interface Actor {
 export class CiService {
   constructor(
     @Inject(CI_REPOSITORY) private readonly repo: CiRepository,
+    @Inject(LAYER_PREFERENCES) private readonly preferences: LayerPreferenceRepository,
     private readonly graph: GraphService,
     private readonly outbox: OutboxService,
   ) {}
+
+  /**
+   * REQ-CMDB-001…011 — the layer visibility a user toggles on the Layers screen applies to every list: without an
+   * explicit `layers` filter, hidden layers are left out; an explicit filter always wins.
+   */
+  async withVisibleLayers(tenantId: string, userId: string, filter: CiFilterInput): Promise<CiFilterInput> {
+    if (filter.layers && filter.layers.length > 0) return filter;
+    const visible = await this.preferences.visibleLayers(tenantId, userId);
+    return visible === null ? filter : { ...filter, layers: visible };
+  }
 
   ci(tenantId: string, id: string, asOf: string | null): Promise<CiRecord | null> {
     return this.repo.findById(tenantId, id, asOf);
@@ -48,9 +60,10 @@ export class CiService {
     return this.repo.findByIds(tenantId, ids);
   }
 
-  async cis(tenantId: string, filter: CiFilterInput, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
+  async cis(tenantId: string, userId: string, requested: CiFilterInput, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
     const size = clampPageSize(first);
     const cursor = after ? decodeCursor(after) : null;
+    const filter = await this.withVisibleLayers(tenantId, userId, requested);
     const healthIds = filter.health && filter.health.length > 0 ? await this.idsWithHealth(tenantId, filter.health) : null;
     const page = await this.repo.list(tenantId, filter, healthIds, size, cursor);
     if (loaders) for (const ci of page.items) loaders.ci.prime(ci.id, ci);
@@ -59,8 +72,9 @@ export class CiService {
     return { edges, pageInfo: { endCursor: last ? last.cursor : null, hasNextPage: page.hasNextPage }, totalCount: page.totalCount };
   }
 
-  unknownCis(tenantId: string, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
-    return this.cis(tenantId, { types: ['unknown'] }, first, after, loaders);
+  /** The unknown layer's CIs for labelling; the explicit layer filter keeps them listed even while the layer is hidden. */
+  unknownCis(tenantId: string, userId: string, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
+    return this.cis(tenantId, userId, { types: ['unknown'], layers: ['unknown'] }, first, after, loaders);
   }
 
   async search(tenantId: string, text: string, layers: readonly CiLayer[], first: number | null | undefined): Promise<SearchHitRecord[]> {

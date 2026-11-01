@@ -32,8 +32,8 @@ spec:
           env: {{- include "openmap.appEnv" . | nindent 12 }}
 {{- range $app := list
   (dict "component" "api" "replicas" .Values.api.replicas "port" .Values.api.port "resources" .Values.api.resources "extraEnv" (list (dict "name" "API_PORT" "value" (toString .Values.api.port))))
-  (dict "component" "reconciler" "replicas" .Values.reconciler.replicas "port" 0 "resources" .Values.reconciler.resources "extraEnv" list)
-  (dict "component" "bsm-engine" "replicas" .Values.bsmEngine.replicas "port" 0 "resources" .Values.bsmEngine.resources "extraEnv" list) }}
+  (dict "component" "reconciler" "replicas" .Values.reconciler.replicas "port" .Values.reconciler.port "resources" .Values.reconciler.resources "extraEnv" list)
+  (dict "component" "bsm-engine" "replicas" .Values.bsmEngine.replicas "port" .Values.bsmEngine.port "resources" .Values.bsmEngine.resources "extraEnv" list) }}
 ---
 apiVersion: apps/v1
 kind: Deployment

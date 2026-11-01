@@ -19,6 +19,11 @@ if [ ! -f .env ]; then
   echo "created .env from .env.example: edit the secrets before exposing the stack"
 fi
 
+profiles=""
+if [ -d models ] && [ -n "$(ls models 2>/dev/null)" ]; then
+  profiles="--profile cpu"
+  echo "LLM weights present: starting the cpu profile"
+fi
 echo "starting OpenMap (air-gapped profile)"
-OPENMAP_VERSION="$version" docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml up -d
+OPENMAP_VERSION="$version" docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml $profiles up -d
 docker compose ps

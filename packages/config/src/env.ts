@@ -67,6 +67,8 @@ export const envSchema = z.object({
   CONSOLE_PORT: port.default(3000),
   RECONCILER_PORT: port.default(4100),
   SCHEDULER_PORT: port.default(4200),
+  /** Plain-HTTP listener for the scheduler's /metrics, /healthz and /readyz; the Node API itself is mTLS on SCHEDULER_PORT. */
+  SCHEDULER_METRICS_PORT: port.default(4201),
   ASSISTANT_PORT: port.default(4300),
   BSM_ENGINE_PORT: port.default(4400),
   /** Public origins, used for OIDC redirects and CORS. */

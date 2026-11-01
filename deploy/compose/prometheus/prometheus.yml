@@ -4,10 +4,12 @@ global:
 scrape_configs:
   - job_name: otel-collector
     static_configs: [{ targets: ["otel-collector:8889"] }]
+  # Every OpenMap service serves /metrics, /healthz and /readyz: the API on its port, the scheduler on its plain-HTTP
+  # metrics port (the Node API is mTLS), the reconciler and the BSM engine on theirs. Targets are compose service names.
   - job_name: openmap-services
     metrics_path: /metrics
     static_configs:
-      - targets: ["host.docker.internal:4000", "host.docker.internal:4100", "host.docker.internal:4200", "host.docker.internal:4300", "host.docker.internal:4400"]
+      - targets: ["api:4000", "reconciler:4100", "scheduler:4201", "bsm-engine:4400"]
   - job_name: clickhouse
     static_configs: [{ targets: ["clickhouse:9363"] }]
   - job_name: memgraph

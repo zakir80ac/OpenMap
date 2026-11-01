@@ -40,6 +40,17 @@ docker save $(printf '%s ' $images) | gzip -1 > "$out/openmap-images-${version}.
 cp "$compose/docker-compose.yml" "$compose/docker-compose.apps.yml" "$compose/docker-compose.airgap.yml" "$compose/.env.example" "$out/"
 cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$out/"
 cp "$here/load-bundle.sh" "$out/"
+# The CPU LLM profile needs its weights offline: ship the GGUF named in .env (or .env.example) when it is present.
+models_dir="$compose/models"
+gguf="$( { [ -f "$compose/.env" ] && grep -E '^LLM_GGUF=' "$compose/.env"; } || grep -E '^LLM_GGUF=' "$compose/.env.example" || true)"
+gguf="${gguf#LLM_GGUF=}"
+if [ -n "$gguf" ] && [ -f "$models_dir/$gguf" ]; then
+  mkdir -p "$out/models"
+  cp "$models_dir/$gguf" "$out/models/"
+  echo "bundled LLM weights: $gguf"
+else
+  echo "no LLM weights at $models_dir/$gguf: the cpu profile will need them copied into ./models on the target"
+fi
 cp "$repo/deploy/README.md" "$out/DEPLOY.md"
 
 (cd "$out" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)

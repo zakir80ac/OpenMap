@@ -232,6 +232,7 @@ export const HTTP = {
     unauthorized: 401,
     forbidden: 403,
     notFound: 404,
+    serviceUnavailable: 503,
     conflict: 409,
     tooManyRequests: 429,
     internalError: 500,

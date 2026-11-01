@@ -12,7 +12,7 @@
   "exclude": ["src/**/*.test.ts"],
   "references": [
     { "path": "../../packages/constants" },
-    { "path": "../../packages/config" },
+    { "path": "../../packages/config" }, { "path": "../../packages/telemetry" },
     { "path": "../../packages/contracts" },
     { "path": "../../packages/db" },
     { "path": "../../packages/graph" },

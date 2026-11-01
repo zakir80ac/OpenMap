@@ -30,13 +30,13 @@ export class CiResolver {
   cis(@Args('filter') filter: unknown, @Args('first') first: unknown, @Args('after') after: unknown): Promise<Connection<CiRecord>> {
     const f = parseInput(ciFilterSchema.nullish(), filter, 'CiFilter') ?? {};
     const page = parseInput(pagingSchema, { first, after }, 'paging');
-    return this.service.cis(this.tenant.tenantId, f, page.first, page.after, this.tenant.loaders);
+    return this.service.cis(this.tenant.tenantId, this.tenant.userId, f, page.first, page.after, this.tenant.loaders);
   }
 
   @Query('unknownCis')
   unknownCis(@Args('first') first: unknown, @Args('after') after: unknown): Promise<Connection<CiRecord>> {
     const page = parseInput(pagingSchema, { first, after }, 'paging');
-    return this.service.unknownCis(this.tenant.tenantId, page.first, page.after, this.tenant.loaders);
+    return this.service.unknownCis(this.tenant.tenantId, this.tenant.userId, page.first, page.after, this.tenant.loaders);
   }
 
   @Query('search')

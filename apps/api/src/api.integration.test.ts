@@ -328,6 +328,14 @@ describe('OpenMap API (integration)', () => {
     expect(toggled.data?.setLayerVisibility.filter((l) => l.visible)).toHaveLength(11);
     const pref = await prisma.userPreference.findUnique({ where: { tenantId_userId: { tenantId, userId } } });
     expect(pref?.visibleLayers).not.toContain('hardware');
+    // REQ-CMDB-003: a hidden layer leaves every list until it is shown again; an explicit filter still reaches it.
+    const hiddenList = await gql<{ cis: { totalCount: number; edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { totalCount edges { node { layer } } } }');
+    expect(hiddenList.data?.cis.edges.some((e) => e.node.layer === 'hardware')).toBe(false);
+    const explicit = await gql<{ cis: { totalCount: number } }>('{ cis(filter: { layers: [hardware] }, first: 50) { totalCount } }');
+    expect(explicit.data?.cis.totalCount).toBe(1);
+    await gql('mutation { setLayerVisibility(layer: hardware, visible: true) { layer } }');
+    const shownAgain = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { edges { node { layer } } } }');
+    expect(shownAgain.data?.cis.edges.some((e) => e.node.layer === 'hardware')).toBe(true);
   });
 
   it('computes impact from a failed PDU up to the business service', async () => {
