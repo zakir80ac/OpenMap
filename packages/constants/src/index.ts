@@ -301,6 +301,10 @@ export const VULNERABILITY = {
   maxBlastRadiusHosts: 25,
   /** Upstream depth of each walk; the layer model's deepest chain fits in the graph default. */
   blastRadiusDepth: 0,
+  /** CVSS floors offered by the Vulnerabilities screen filter (NVD low/medium/high/critical boundaries). */
+  cvssFilterSteps: [4, 7, 9] as const,
+  /** CVSS at or above this is counted as critical in headline figures. */
+  criticalCvssMin: 9,
 } as const;
 
 /** Software and licences screen (REQ-UI-015, REQ-CMDB-031). */

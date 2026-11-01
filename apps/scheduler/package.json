@@ -30,6 +30,7 @@
     "@openmap/db": "workspace:*",
     "@openmap/telemetry": "workspace:*",
     "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/instrumentation": "^0.300.0",
     "@peculiar/x509": "^1.12.3",
     "bullmq": "^5.56.0",
     "fastify": "^5.4.0",

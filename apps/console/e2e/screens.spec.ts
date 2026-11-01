@@ -1,4 +1,4 @@
-// T-106 REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-017 REQ-UI-018 — the six estate screens against the live
+// T-106 REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-015 REQ-UI-016 REQ-UI-017 REQ-UI-018 — the estate screens against the live
 // stack, per locale project: IPAM shows a subnet's addresses and next free address; DCIM selects a rack and draws its
 // elevation; Assets creates a plan whose planned assets appear in the register; Integrations creates an integration
 // and probes it (the probe outcome is whatever the tenant's outbound policy allows); Analytics mounts the embedded
@@ -102,4 +102,30 @@ test('Assistant: an example question is answered or explicitly refused', async (
   await expect(answered.or(refused).first()).toBeVisible({ timeout: ASSISTANT_TIMEOUT_MS });
   const outcome = (await answered.count()) > 0 ? 'answered' : 'refused: ' + ((await refused.first().textContent()) ?? '');
   testInfo.annotations.push({ type: 'assistant', description: outcome });
+});
+
+test('Software: the catalogue lists discovered products with their licence position', async ({ page }, testInfo) => {
+  const locale = localeOf(testInfo.project.name);
+  await page.goto('/' + locale + '/software');
+  await signIn(page, locale);
+  const table = page.getByRole('table').first();
+  await expect(table.getByRole('row').nth(1)).toBeVisible();
+  await expect(table.getByRole('columnheader', { name: translate(locale, 'software.table.licence') })).toBeVisible();
+  await expect(page.getByRole('region', { name: translate(locale, 'software.posture.overDeployed') })).toBeVisible();
+  await page.getByLabel(translate(locale, 'software.filter.licensedOnly')).check();
+  await expect(table.getByRole('row').nth(1)).toBeVisible();
+  await expect(table.getByText(translate(locale, 'software.licence.none'))).toHaveCount(0);
+});
+
+test('Vulnerabilities: the highest CVE opens its blast radius through the graph', async ({ page }, testInfo) => {
+  const locale = localeOf(testInfo.project.name);
+  await page.goto('/' + locale + '/vulnerabilities');
+  await signIn(page, locale);
+  const cves = page.getByRole('button', { name: new RegExp(translate(locale, 'vulnerabilities.select', { cve: 'CVE-' })) });
+  await expect(cves.first()).toBeVisible();
+  await cves.first().click();
+  const panel = page.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.title') });
+  await expect(panel.getByRole('heading', { level: 3 })).toBeVisible();
+  await expect(panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.hosts') })).toBeVisible();
+  await expect(panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.services') })).toBeVisible();
 });

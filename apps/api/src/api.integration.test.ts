@@ -219,15 +219,15 @@ describe('OpenMap API (integration)', () => {
     const query = 'query Cis($filter: CiFilter, $first: Int, $after: String) { cis(filter: $filter, first: $first, after: $after) { totalCount pageInfo { endCursor hasNextPage } edges { cursor node { id name type health source { collectorId } } } } }';
     const first = await gql<Page>(query, { filter: { tags: ['integration-test'] }, first: 3 });
     expect(first.errors).toBeUndefined();
-    expect(first.data?.cis.totalCount).toBe(8);
+    expect(first.data?.cis.totalCount).toBe(12);
     expect(first.data?.cis.edges).toHaveLength(3);
     expect(first.data?.cis.pageInfo.hasNextPage).toBe(true);
     expect(first.data?.cis.edges[0]?.node.health).toBe('healthy');
     const second = await gql<Page>(query, { filter: { tags: ['integration-test'] }, first: 10, after: first.data?.cis.pageInfo.endCursor });
-    expect(second.data?.cis.edges).toHaveLength(5);
+    expect(second.data?.cis.edges).toHaveLength(9);
     expect(second.data?.cis.pageInfo.hasNextPage).toBe(false);
     const names = [...(first.data?.cis.edges ?? []), ...(second.data?.cis.edges ?? [])].map((e) => e.node.name);
-    expect(new Set(names).size).toBe(8);
+    expect(new Set(names).size).toBe(12);
     // Pages follow the database collation (case-insensitive), which matches locale-aware ordering.
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en')));
 
@@ -343,11 +343,18 @@ describe('OpenMap API (integration)', () => {
     // REQ-CMDB-003: a hidden layer leaves every list until it is shown again; an explicit filter still reaches it.
     const hiddenList = await gql<{ cis: { totalCount: number; edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { totalCount edges { node { layer } } } }');
     expect(hiddenList.data?.cis.edges.some((e) => e.node.layer === 'hardware')).toBe(false);
-    const explicit = await gql<{ cis: { totalCount: number } }>('{ cis(filter: { layers: [hardware] }, first: 50) { totalCount } }');
-    expect(explicit.data?.cis.totalCount).toBe(1);
+    // The host was relabelled into the databases layer earlier in this suite, so hide that layer too and reach it explicitly.
+    await gql('mutation { setLayerVisibility(layer: databases, visible: false) { layer } }');
+    const bothHidden = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { edges { node { layer } } } }');
+    expect(bothHidden.data?.cis.edges.some((e) => e.node.layer === 'databases')).toBe(false);
+    const explicit = await gql<{ cis: { totalCount: number } }>('{ cis(filter: { layers: [databases] }, first: 50) { totalCount } }');
+    const databasesRows = await prisma.ci.count({ where: { tenantId, layer: 'databases', validTo: null } });
+    expect(databasesRows).toBeGreaterThan(0);
+    expect(explicit.data?.cis.totalCount).toBe(databasesRows);
+    await gql('mutation { setLayerVisibility(layer: databases, visible: true) { layer } }');
     await gql('mutation { setLayerVisibility(layer: hardware, visible: true) { layer } }');
     const shownAgain = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { edges { node { layer } } } }');
-    expect(shownAgain.data?.cis.edges.some((e) => e.node.layer === 'hardware')).toBe(true);
+    expect(shownAgain.data?.cis.edges.some((e) => e.node.layer === 'databases')).toBe(true);
   });
 
   it('computes impact from a failed PDU up to the business service', async () => {

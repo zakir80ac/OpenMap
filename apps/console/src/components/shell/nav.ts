@@ -29,6 +29,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { key: 'nav.dependencies', href: '/dependencies', icon: 'dependencies' },
       { key: 'nav.cmdb', href: '/cmdb', icon: 'cmdb' },
       { key: 'nav.assets', href: '/assets', icon: 'assets' },
+      { key: 'nav.software', href: '/software', icon: 'software' },
     ],
   },
   {
@@ -49,6 +50,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     key: 'nav.group.insight',
     items: [
+      { key: 'nav.vulnerabilities', href: '/vulnerabilities', icon: 'shield' },
       { key: 'nav.analytics', href: '/analytics', icon: 'analytics' },
       { key: 'nav.assistant', href: '/assistant', icon: 'assistant' },
     ],

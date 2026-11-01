@@ -18,7 +18,7 @@ import puppeteer, { type Page } from 'puppeteer-core';
 const resultsDir = fileURLToPath(new URL('../results/', import.meta.url));
 const realmFile = fileURLToPath(new URL('../../../deploy/compose/keycloak/realm-openmap.json', import.meta.url));
 const LOCALE: Locale = 'en';
-const SCREENS = ['dashboard', 'layers', 'discovery', 'dependencies', 'cmdb', 'assets', 'services', 'impact', 'integrations', 'ipam', 'dcim', 'analytics', 'assistant', 'settings'] as const;
+const SCREENS = ['dashboard', 'layers', 'discovery', 'dependencies', 'cmdb', 'assets', 'software', 'services', 'impact', 'integrations', 'ipam', 'dcim', 'vulnerabilities', 'analytics', 'assistant', 'settings'] as const;
 const NAVIGATION_TIMEOUT_MS = 60_000;
 const SCORE_DECIMALS = 100;
 /** Lighthouse's desktop preset: the console is an operator desk, not a phone app. */
