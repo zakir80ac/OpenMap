@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.4.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.5.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -137,6 +137,12 @@ type InfraPlan { id: UUID! number: String! name: String! kind: String! status: P
 type BomLine { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! received: Int! unitCost: Money }
 
 type Vulnerability { ci: Ci! cveId: String! cvss: Float! severity: String! fixedIn: String exploited: Boolean! internetFacing: Boolean! }
+# REQ-UI-016 REQ-SEC-008 REQ-CMDB-035 (ADR-013) — one row per CVE with what it touches; the detail walks the blast radius.
+type VulnerabilitySummary { ci: Ci! cveId: String! title: String! severity: String! cvss: Float! exploited: Boolean! cisaKev: Boolean! patchAvailable: Boolean! publishedAt: DateTime internetFacing: Boolean! affectedSoftware: Int! affectedHosts: Int! fixedIn: String }
+type VulnerabilityDetail { summary: VulnerabilitySummary! software: [Ci!]! hosts: [Ci!]! services: [AffectedService!]! blastRadiusTruncated: Boolean! }
+# REQ-UI-015 REQ-CMDB-030 REQ-CMDB-031 (ADR-013) — software products with their instances, hosts, licence and CVE count.
+type LicenceSummary { ci: Ci! metric: String! licenceType: String! entitlement: Int! consumed: Int! overDeployed: Boolean! expiresAt: DateTime expired: Boolean! annualCost: Money contract: Ci }
+type SoftwareProduct { ci: Ci! vendor: String! name: String! version: String! category: String endOfSupport: DateTime instances: Int! hosts: Int! running: Int! licence: LicenceSummary vulnerabilities: Int! }
 
 type Integration { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! }
 # REQ-UI-014 (ADR-012) — the full configuration of one integration and its recent deliveries.
@@ -182,6 +188,9 @@ type Query {
   assets(stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
   plans(status: [PlanStatus!]): [InfraPlan!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
+  vulnerabilitySummaries(minCvss: Float, exploitedOnly: Boolean, internetFacing: Boolean): [VulnerabilitySummary!]!
+  vulnerability(cveId: String!): VulnerabilityDetail
+  software(text: String, licensedOnly: Boolean, first: Int = 50): [SoftwareProduct!]!
   integrations(category: String): [Integration!]!
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!

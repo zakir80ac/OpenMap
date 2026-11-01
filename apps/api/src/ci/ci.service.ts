@@ -185,10 +185,11 @@ function toVulnerability(affected: CiRecord, vuln: CiRecord): VulnerabilityRecor
   return {
     ci: affected,
     cveId: stringAttribute(a, 'cveId') ?? vuln.name,
-    cvss: numberAttribute(a, 'cvss') ?? 0,
+    // Feeds and the synthetic estate write cvssScore / exploitedInWild; older collectors cvss / exploited.
+    cvss: numberAttribute(a, 'cvssScore') ?? numberAttribute(a, 'cvss') ?? 0,
     severity: stringAttribute(a, 'severity') ?? 'unknown',
     fixedIn: stringAttribute(a, 'fixedIn'),
-    exploited: booleanAttribute(a, 'exploited') ?? false,
+    exploited: booleanAttribute(a, 'exploitedInWild') ?? booleanAttribute(a, 'exploited') ?? false,
     internetFacing: booleanAttribute(a, 'internetFacing') ?? false,
   };
 }

@@ -7,7 +7,7 @@ Status: **frozen** (REQ-CORE-001…006 Done on 2026-10-22). The contracts were d
 | CI | `packages/contracts/src/ci.ts` → `schemas/ci.schema.json`, `observed-ci`, `relationship`, `observed-relationship` | 0.1.0 | reconciler, api, collectors (Go via JSON Schema), console |
 | Collector | `packages/contracts/src/collector.ts` → `collector-manifest`, `collector-job`, `collector-result` | 0.1.0 | apps/node (Go), apps/collectors (Go), scheduler, reconciler |
 | Event | `packages/contracts/src/event.ts` → `event-envelope`, `outbox-record` | 0.1.0 | every service; outbox subscribers; integrations |
-| GraphQL | `packages/contracts/graphql/schema.graphql` | 0.4.0 (ADR-010 `auditLog`; ADR-011 tenant settings; ADR-012 `integration`, `integrationDeliveries`, `analyticsEmbed`, `Rack.row/room`) | apps/api (Mercurius), apps/console, Terraform provider |
+| GraphQL | `packages/contracts/graphql/schema.graphql` | 0.5.0 (ADR-010 `auditLog`; ADR-011 tenant settings; ADR-012 integrations, analytics, rack placement; ADR-013 `software`, `vulnerabilitySummaries`, `vulnerability`) | apps/api (Mercurius), apps/console, Terraform provider |
 | Asset | `packages/contracts/src/asset.ts` → `asset-record`, `infra-plan`, `support-contract`, `vendor-contact` | 0.1.0 | api, console, warranty integrations |
 | Impact | `packages/contracts/src/impact.ts` → `impact-scenario`, `impact-simulation` | 0.1.0 | bsm-engine, api, console, assistant |
 | Integration | `packages/contracts/src/integration.ts` → `integration-config`, `integration-delivery`, `security-alert` | 0.1.0 | api, bsm-engine, integration adapters |
@@ -35,4 +35,5 @@ Semantic versions per contract. Minor bumps add optional fields or enum members;
 | 2026-10-22 | graphql, event | 0.2.0: `auditLog` query, AuditEntry/AuditConnection; `openmap.audit.action` event | ADR-010 |
 | 2026-10-22 | graphql | 0.3.0: `TenantSettings`, `tenantSettings` query, `updateTenantSettings` mutation | ADR-011 |
 | 2026-10-22 | graphql | 0.4.0: `IntegrationDetail`, `IntegrationDelivery`, `AnalyticsEmbed`, `Rack.row`/`Rack.room`; queries `integration`, `integrationDeliveries`, `analyticsEmbed` | ADR-012 |
+| 2026-11-01 | graphql | 0.5.0: `SoftwareProduct`, `LicenceSummary`, `VulnerabilitySummary`, `VulnerabilityDetail`; queries `software`, `vulnerabilitySummaries`, `vulnerability` | ADR-013 |
 | 2026-10-22 | all | Frozen; Go view checked against the emitted JSON Schemas (T-093/T-094), GraphQL bump check in CI (T-092) | ADR-002 |

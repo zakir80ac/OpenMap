@@ -137,7 +137,9 @@ function newRow(world: World, site: SiteWorld, rng: Rng): RowWorld {
   if (!room || room.rows.length >= ROWS_PER_ROOM) room = newRoom(world, site, rng);
   const letter = ROW_LETTERS[room.rows.length] ?? 'Z';
   const name = letter;
-  const idx = b.ci(slot, 'row', { roomRef: room.name, name }, site.def.code + '-' + room.name + '-' + name, { position: room.rows.length + 1, rackCapacity: RACKS_PER_ROW, aisle: room.rows.length % 2 === 0 ? 'cold' : 'hot' }, site.def.code, { tags: ['facility'] });
+  // roomRef is the room's tenant-wide name (site + room): rooms repeat short names like DH01 across sites and the
+  // contract identifies rows and racks by (roomRef, name).
+  const idx = b.ci(slot, 'row', { roomRef: site.def.code + '-' + room.name, name }, site.def.code + '-' + room.name + '-' + name, { position: room.rows.length + 1, rackCapacity: RACKS_PER_ROW, aisle: room.rows.length % 2 === 0 ? 'cold' : 'hot' }, site.def.code, { tags: ['facility'] });
   b.rel(slot, 'located_in', idx, room.idx);
   const row: RowWorld = { idx, name, room, racks: [], dists: [] };
   room.rows.push(row);
@@ -155,7 +157,7 @@ export function newRack(world: World, site: SiteWorld, rng: Rng): RackWorld {
   const idx = b.ci(
     slot,
     'rack',
-    { roomRef: room.name, name },
+    { roomRef: site.def.code + '-' + room.name, name },
     name,
     { heightU: RACK_HEIGHT_U, widthMm: 600, depthMm: 1200, designKw: RACK_DESIGN_KW, usedU: 0, row: row.name, position: row.racks.length + 1, assetTag: 'RK-' + rng.alnum(6) },
     site.def.code,

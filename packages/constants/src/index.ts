@@ -295,6 +295,20 @@ export const DCIM = {
   criticalPowerPercent: 90,
 } as const;
 
+/** Vulnerabilities screen (REQ-UI-016, REQ-SEC-008): the blast-radius walk from affected hosts to business services. */
+export const VULNERABILITY = {
+  /** Hosts walked per CVE; a CVE on more hosts reports a truncated blast radius rather than blowing the query budget. */
+  maxBlastRadiusHosts: 25,
+  /** Upstream depth of each walk; the layer model's deepest chain fits in the graph default. */
+  blastRadiusDepth: 0,
+} as const;
+
+/** Software and licences screen (REQ-UI-015, REQ-CMDB-031). */
+export const SOFTWARE = {
+  /** Licences expiring within this many days are flagged. */
+  expiryHorizonDays: 90,
+} as const;
+
 /** Embedded Superset analytics (REQ-UI-017). Names are stable keys the provisioner looks up, never shown raw. */
 export const ANALYTICS = {
   databaseName: 'OpenMap ClickHouse',
@@ -543,6 +557,6 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.1.0',
   collector: '0.1.0',
-  graphql: '0.4.0',
+  graphql: '0.5.0',
   event: '0.1.0',
 };

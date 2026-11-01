@@ -43,6 +43,10 @@ const ids = {
   subnet: randomUUID(),
   ip1: randomUUID(),
   ip2: randomUUID(),
+  software: randomUUID(),
+  instance: randomUUID(),
+  licence: randomUUID(),
+  vuln: randomUUID(),
 };
 
 async function mint(roles: string[], privateKey: CryptoKey, client: { azp: string; aud?: string[] } = { azp: env.KEYCLOAK_CLIENT_ID }): Promise<string> {
@@ -120,6 +124,10 @@ describe('OpenMap API (integration)', () => {
         ciRow(ids.subnet, 'subnet', 'network_security', 'core-db-net', { cidr: '10.42.0.0/29', vrf: 'prod' }),
         ciRow(ids.ip1, 'ip_address', 'network_security', '10.42.0.1', { address: '10.42.0.1' }),
         ciRow(ids.ip2, 'ip_address', 'network_security', '10.42.0.2', { address: '10.42.0.2' }),
+        ciRow(ids.software, 'software', 'applications', 'PostgreSQL 16.4', { category: 'database', licensed: true }, { vendor: 'PostgreSQL', name: 'PostgreSQL', version: '16.4' }),
+        ciRow(ids.instance, 'software_instance', 'applications', 'PostgreSQL 16.4 on db-ryd-pg-core-01', { running: true, version: '16.4' }, { hostRef: ids.host, softwareRef: 'PostgreSQL/PostgreSQL/16.4', installPath: '/usr/lib/postgresql/16' }),
+        ciRow(ids.licence, 'licence', 'applications', 'PostgreSQL support licence', { metric: 'core', licenceType: 'subscription', entitlement: 32, consumed: 40, overDeployed: true, expiresAt: '2027-01-01', expired: false, annualCost: 12000, currency: 'SAR' }, { softwareRef: 'PostgreSQL/PostgreSQL/16.4', licenceKeyDigest: 'f'.repeat(64) }),
+        ciRow(ids.vuln, 'vulnerability', 'applications', 'CVE-2026-0001', { cveId: 'CVE-2026-0001', title: 'PostgreSQL remote code execution', severity: 'critical', cvssScore: 9.8, exploitedInWild: true, cisaKev: true, patchAvailable: true, publishedAt: '2026-01-10T00:00:00.000Z' }, { cveId: 'CVE-2026-0001' }),
       ],
     });
     const rels = [
@@ -130,6 +138,10 @@ describe('OpenMap API (integration)', () => {
       relRow('part_of_service', ids.db, ids.service),
       relRow('in_subnet', ids.ip1, ids.subnet),
       relRow('in_subnet', ids.ip2, ids.subnet),
+      relRow('member_of', ids.instance, ids.software),
+      relRow('installed_on', ids.instance, ids.host),
+      relRow('licensed_by', ids.software, ids.licence),
+      relRow('affected_by', ids.software, ids.vuln),
     ];
     await prisma.relationship.createMany({ data: rels });
 
@@ -417,6 +429,22 @@ describe('OpenMap API (integration)', () => {
     expect(subnet?.utilisationPercent).toBeCloseTo((2 / 6) * 100, 5);
     expect(subnet?.addresses.totalCount).toBe(2);
     expect(res.data?.nextFreeIp).toBe('10.42.0.3');
+  });
+
+  it('inventories software with licence compliance and walks a CVE to the services it puts at risk', async () => {
+    // T-108 REQ-UI-015 REQ-UI-016 REQ-CMDB-031 REQ-SEC-008
+    const software = await gql<{ software: Array<{ name: string; version: string; instances: number; hosts: number; running: number; vulnerabilities: number; licence: { entitlement: number; consumed: number; overDeployed: boolean } | null }> }>('{ software(first: 10) { name version instances hosts running vulnerabilities licence { entitlement consumed overDeployed } } }');
+    expect(software.errors).toBeUndefined();
+    expect(software.data?.software).toEqual([{ name: 'PostgreSQL', version: '16.4', instances: 1, hosts: 1, running: 1, vulnerabilities: 1, licence: { entitlement: 32, consumed: 40, overDeployed: true } }]);
+
+    const summaries = await gql<{ vulnerabilitySummaries: Array<{ cveId: string; cvss: number; exploited: boolean; affectedSoftware: number; affectedHosts: number }> }>('{ vulnerabilitySummaries(minCvss: 9) { cveId cvss exploited affectedSoftware affectedHosts } }');
+    expect(summaries.data?.vulnerabilitySummaries).toEqual([{ cveId: 'CVE-2026-0001', cvss: 9.8, exploited: true, affectedSoftware: 1, affectedHosts: 1 }]);
+
+    const detail = await gql<{ vulnerability: { hosts: Array<{ id: string }>; services: Array<{ service: { id: string }; predicted: string }>; blastRadiusTruncated: boolean } | null }>('{ vulnerability(cveId: "CVE-2026-0001") { hosts { id } services { service { id } predicted } blastRadiusTruncated } }');
+    expect(detail.data?.vulnerability?.hosts.map((h) => h.id)).toEqual([ids.host]);
+    expect(detail.data?.vulnerability?.services.map((s) => s.service.id)).toEqual([ids.service]);
+    expect(detail.data?.vulnerability?.blastRadiusTruncated).toBe(false);
+    expect((await gql<{ vulnerability: unknown }>('{ vulnerability(cveId: "CVE-0000-0000") { blastRadiusTruncated } }')).data?.vulnerability).toBeNull();
   });
 
   it('exposes Prometheus metrics for the GraphQL operations served', async () => {
