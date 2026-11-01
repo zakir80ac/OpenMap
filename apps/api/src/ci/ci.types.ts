@@ -47,6 +47,24 @@ export interface RelationshipRecord {
   validTo: string | null;
 }
 
+/** Latest sample of one metric for one CI, as read from ClickHouse metrics_latest (REQ-CMDB-038). */
+export interface MetricPoint {
+  metric: string;
+  value: number;
+  /** ISO instant of the sample. */
+  observedAt: string;
+}
+
+/** The GraphQL HeadlineMetric: the contract's spec for the CI's layer plus the latest value, when one exists. */
+export interface HeadlineMetricRecord {
+  key: string;
+  label: string;
+  unit: string;
+  metric: string;
+  value: number | null;
+  observedAt: string | null;
+}
+
 export interface CiVersionRecord {
   validFrom: string;
   validTo: string | null;

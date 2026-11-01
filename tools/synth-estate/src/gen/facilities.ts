@@ -175,7 +175,7 @@ export function newRack(world: World, site: SiteWorld, rng: Rng): RackWorld {
       'pdu',
       { serialNumber: model.serialPrefix + rng.alnum(10) },
       name + ' PDU-' + feed,
-      { manufacturer: model.manufacturer, model: model.model, outlets: model.outlets, ratedAmps: model.ratedAmps, inputVoltage: INPUT_VOLTAGE, feed, measuredKw: Number(rng.float(0.8, 4.2).toFixed(2)), firmware: '6.9.' + String(rng.int(2, 8)), snmpSysName: name.toLowerCase() + '-pdu-' + feed.toLowerCase() },
+      { manufacturer: model.manufacturer, model: model.model, outlets: model.outlets, ratedAmps: model.ratedAmps, inputVoltage: INPUT_VOLTAGE, feed, rack: name, measuredKw: Number(rng.float(0.8, 4.2).toFixed(2)), firmware: '6.9.' + String(rng.int(2, 8)), snmpSysName: name.toLowerCase() + '-pdu-' + feed.toLowerCase() },
       site.def.code,
       { tags: ['power'], primary: true },
     );

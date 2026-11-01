@@ -42,6 +42,8 @@ export const EVENT_TYPES = [
   'openmap.asset.eos.approaching',
   'openmap.plan.status.changed',
   'openmap.ci.labelled',
+  /** ADR-016: a batch of metric samples resolved to CI ids; ClickHouse `metrics` is the only store that keeps them. */
+  'openmap.metric.sampled',
 ] as const;
 export const eventTypeSchema = z.enum(EVENT_TYPES);
 export type EventType = z.infer<typeof eventTypeSchema>;

@@ -6,7 +6,7 @@ import type { ClickHouseClient } from '@clickhouse/client';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import type { PrismaClient } from '@openmap/db';
 import type { GraphRepository } from '@openmap/graph';
-import { auditRowFromEvent, dispatchOnce, toGraphCi, type OutboxTarget, type Sinks } from './dispatcher.js';
+import { auditRowFromEvent, dispatchOnce, metricRowsFromEvent, toGraphCi, type OutboxTarget, type Sinks } from './dispatcher.js';
 
 const tenantId = '2b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e';
 const now = '2026-10-22T09:00:00.000Z';
@@ -62,6 +62,12 @@ function rows() {
       pending: [...allTargets],
       envelope: envelope('9b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e', 'openmap.audit.action', { auditId: 'ab2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e', actor: 'admin', action: 'labelCi', subjectType: 'ci', subjectId: ci.id, details: { title: 'Web' }, at: now }),
     },
+    {
+      sequence: 4n,
+      eventId: 'cb2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e',
+      pending: ['clickhouse' as OutboxTarget],
+      envelope: envelope('cb2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e', 'openmap.metric.sampled', { runId: source.runId, collectorId: 'ssh-agentless', samples: [{ ciId: ci.id, metric: 'host.cpu.utilisation_percent', ts: now, value: 41.5, unit: 'percent', labels: { core: 'all' } }] }),
+    },
   ];
 }
 
@@ -82,15 +88,17 @@ describe('outbox dispatcher', () => {
     const h = harness(insert);
     const report = await dispatchOnce(h.prisma, h.sinks, 'openmap');
 
-    expect(report).toEqual({ claimed: 3, delivered: 3, failures: [] });
+    expect(report).toEqual({ claimed: 4, delivered: 4, failures: [] });
     expect(h.graph.upsertCis).toHaveBeenCalledWith([toGraphCi(ci)]);
     expect(h.graph.upsertRelationships).toHaveBeenCalledWith([expect.objectContaining({ id: relationship.id, type: 'RUNS_ON' })]);
     const tables = (insert as unknown as ReturnType<typeof vi.fn>).mock.calls.map((c) => (c[0] as { table: string; values: unknown[] }));
-    expect(tables.map((t) => t.table).sort()).toEqual(['openmap.audit_log', 'openmap.ci_history', 'openmap.events', 'openmap.relationship_history']);
-    expect(tables.find((t) => t.table === 'openmap.events')?.values).toHaveLength(3);
+    expect(tables.map((t) => t.table).sort()).toEqual(['openmap.audit_log', 'openmap.ci_history', 'openmap.events', 'openmap.metrics', 'openmap.relationship_history']);
+    expect(tables.find((t) => t.table === 'openmap.events')?.values).toHaveLength(4);
     expect(tables.find((t) => t.table === 'openmap.audit_log')?.values).toEqual([expect.objectContaining({ action: 'labelCi', actor: 'admin', subject_id: ci.id })]);
+    expect(tables.find((t) => t.table === 'openmap.metrics')?.values).toEqual([{ tenant_id: tenantId, ci_id: ci.id, metric: 'host.cpu.utilisation_percent', ts: '2026-10-22 09:00:00.000', value: 41.5, unit: 'percent', labels: { core: 'all' }, source_run_id: source.runId }]);
     expect(h.search.indexCis).toHaveBeenCalledWith(tenantId, [ci]);
     expect(h.stream.publishMany).toHaveBeenCalledTimes(1);
+    // The metric event is pending for ClickHouse only, so the stream receives the other three.
     expect((h.stream.publishMany.mock.calls[0] as unknown[])[0]).toHaveLength(3);
     expect(h.updateMany).toHaveBeenCalledTimes(1);
     expect(h.update).not.toHaveBeenCalled();
@@ -103,11 +111,11 @@ describe('outbox dispatcher', () => {
     const h = harness(insert);
     const report = await dispatchOnce(h.prisma, h.sinks, 'openmap');
 
-    expect(report.claimed).toBe(3);
+    expect(report.claimed).toBe(4);
     expect(report.delivered).toBe(0);
     expect(report.failures).toEqual([{ target: 'clickhouse', error: 'clickhouse down' }]);
     expect(h.updateMany).not.toHaveBeenCalled();
-    expect(h.update).toHaveBeenCalledTimes(3);
+    expect(h.update).toHaveBeenCalledTimes(4);
     for (const call of h.update.mock.calls as unknown as Array<[{ data: { pending: OutboxTarget[]; deliveredAt: Date | null; lastError: string | null } }]>) {
       expect(call[0].data.pending).toEqual(['clickhouse']);
       expect(call[0].data.deliveredAt).toBeNull();
@@ -115,6 +123,12 @@ describe('outbox dispatcher', () => {
     }
     expect(h.graph.upsertCis).toHaveBeenCalledTimes(1);
     expect(h.stream.publishMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps only well-formed metric events to metrics rows', () => {
+    expect(metricRowsFromEvent(envelope('7b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e', 'openmap.ci.created', { ci }))).toEqual([]);
+    expect(metricRowsFromEvent(envelope('7b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e', 'openmap.metric.sampled', { runId: 'not-a-uuid', samples: [] }))).toEqual([]);
+    expect(metricRowsFromEvent(rows()[3]!.envelope)).toHaveLength(1);
   });
 
   it('maps only audit events to audit_log rows', () => {

@@ -360,6 +360,14 @@ export const RECONCILER = {
   outboxIdleMs: 1_000,
   /** Candidate CIs fetched per identity lookup batch. */
   lookupBatchSize: 500,
+  /**
+   * Budget for the single Postgres transaction that writes one collector result (CIs, relationships, conflicts and
+   * outbox rows). Prisma's default of five seconds fits a small sweep chunk but not a 2000-device result on a busy
+   * host; a 10k-device sweep must still land inside the fifteen-minute discovery budget, so two minutes per result.
+   */
+  persistTransactionTimeoutMs: 120_000,
+  /** How long a result waits for a connection from the pool before the persist is abandoned. */
+  persistTransactionMaxWaitMs: 10_000,
   /** Meilisearch index name prefix; one index per tenant keeps row-level isolation simple. */
   searchIndexPrefix: 'cis-',
   /** BullMQ stream that in-process subscribers (BSM engine, API WebSocket fan-out) consume. BullMQ forbids ':' in names. */
@@ -373,6 +381,11 @@ export const RECONCILER = {
   /** Pending relationships retried per pass and the attempt ceiling before they are dropped as stale. */
   pendingRelationshipBatch: 10_000,
   pendingRelationshipMaxAttempts: 20,
+  /**
+   * Metric samples carried per `openmap.metric.sampled` event (ADR-016). A sweep of 10k hosts yields tens of
+   * thousands of samples; chunking keeps every outbox envelope and ClickHouse insert at a few hundred kilobytes.
+   */
+  samplesPerEvent: 500,
 } as const;
 
 /**
@@ -574,8 +587,11 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 
 /** Current contract versions. Bumping one requires an ADR and a tracker row. */
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
-  ci: '0.1.0',
-  collector: '0.1.0',
-  graphql: '0.7.0',
-  event: '0.1.0',
+  /** 0.2.0 (ADR-016): metric samples, HEALTH_STATES and the ClickHouse metric name per layer headline. */
+  ci: '0.2.0',
+  /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
+  collector: '0.2.0',
+  graphql: '0.8.0',
+  /** 0.2.0 (ADR-016): `openmap.metric.sampled`. */
+  event: '0.2.0',
 };

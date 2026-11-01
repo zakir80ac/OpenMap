@@ -1,0 +1,152 @@
+{
+  "$id": "https://openmap.dev/contracts/metric-sample/0.2.0",
+  "title": "metric-sample",
+  "version": "0.2.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ci": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "host",
+                "chassis",
+                "blade",
+                "bmc",
+                "hypervisor",
+                "vm_cluster",
+                "vm",
+                "operating_system",
+                "container",
+                "k8s_cluster",
+                "k8s_namespace",
+                "k8s_workload",
+                "k8s_service",
+                "container_registry",
+                "network_device",
+                "interface",
+                "port",
+                "vlan",
+                "vrf",
+                "ip_address",
+                "subnet",
+                "dns_zone",
+                "dns_record",
+                "dhcp_scope",
+                "dhcp_lease",
+                "load_balancer",
+                "firewall_rule",
+                "site_link",
+                "storage_array",
+                "lun",
+                "fc_switch",
+                "fc_fabric",
+                "fc_zone",
+                "nas_share",
+                "object_bucket",
+                "database",
+                "database_cluster",
+                "certificate",
+                "application",
+                "application_component",
+                "listening_service",
+                "business_service",
+                "software",
+                "software_instance",
+                "licence",
+                "vulnerability",
+                "site",
+                "building",
+                "room",
+                "row",
+                "rack",
+                "pdu",
+                "power_feed",
+                "power_circuit",
+                "ups",
+                "cooling_unit",
+                "cable",
+                "patch_panel",
+                "cloud_account",
+                "cloud_resource",
+                "saas_application",
+                "saas_tenant",
+                "user_account",
+                "service_account",
+                "vendor",
+                "contract",
+                "cost_centre",
+                "unknown"
+              ]
+            },
+            "identity": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "type",
+            "identity"
+          ]
+        }
+      ]
+    },
+    "metric": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z][a-z0-9_]*){2,}$"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "value": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "labels": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "ci",
+    "metric",
+    "ts",
+    "value",
+    "unit",
+    "labels"
+  ]
+}

@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.7.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.8.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -38,6 +38,8 @@ type Ci {
   validFrom: DateTime!
   validTo: DateTime
   health: HealthState!
+  """The layer's headline measurement (ADR-016): the latest ClickHouse sample of the metric LAYER_HEADLINE_METRIC names for the CI's layer; value and observedAt are null until a collector has sampled it. For the unknown layer the value is the days since the CI was last observed."""
+  headlineMetric: HeadlineMetric!
   relationships(direction: Direction = both, types: [String!], first: Int = 50, after: String): RelationshipConnection!
   asset: AssetRecord
   vulnerabilities: [Vulnerability!]!
@@ -45,6 +47,9 @@ type Ci {
 }
 
 type CiVersion { validFrom: DateTime! validTo: DateTime attributes: JSON! lifecycle: Lifecycle! source: Provenance! }
+
+"""One headline measurement: key and label from the contract's LAYER_HEADLINE_METRIC, unit as printed after the value, metric as stored in ClickHouse."""
+type HeadlineMetric { key: String! label: String! unit: String! metric: String! value: Float observedAt: DateTime }
 
 type Relationship {
   id: UUID!

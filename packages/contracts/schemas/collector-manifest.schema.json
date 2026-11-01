@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/collector-manifest/0.1.0",
+  "$id": "https://openmap.dev/contracts/collector-manifest/0.2.0",
   "title": "collector-manifest",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

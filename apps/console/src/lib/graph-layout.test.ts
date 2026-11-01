@@ -32,7 +32,7 @@ const allVisible = Object.fromEntries(CI_LAYERS.map((layer) => [layer, true])) a
 >;
 
 function ci(id: string, layer: (typeof CI_LAYERS)[number], type = 'host') {
-  return { id, name: id, displayName: id.toUpperCase(), code: 'X-' + id.toUpperCase(), type, layer, health: 'healthy' as const };
+  return { id, name: id, displayName: id.toUpperCase(), code: 'X-' + id.toUpperCase(), type, layer, health: 'healthy' as const, headlineMetric: { key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent', value: null, observedAt: null } };
 }
 
 const result: ImpactResult = {

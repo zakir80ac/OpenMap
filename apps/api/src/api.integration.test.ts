@@ -7,9 +7,11 @@ import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fa
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type GenerateKeyPairResult } from 'jose';
 import neo4j from 'neo4j-driver';
 import { loadEnv, TENANT_SETTINGS_DEFAULTS, type TenantSettings } from '@openmap/config';
+import { TIME } from '@openmap/constants';
 import { createPrismaClient, type Prisma } from '@openmap/db';
 import { createGraphRepository, type GraphCi, type GraphRelationship } from '@openmap/graph';
 import { AppModule } from './app.module.js';
+import { ClickHouseService } from './db/clickhouse.service.js';
 import { JWKS, realmUrl } from './auth/jwks.provider.js';
 import { SIGNING_ALGORITHM } from './auth/auth.service.js';
 import { ROLES } from './auth/roles.js';
@@ -406,6 +408,41 @@ describe('OpenMap API (integration)', () => {
     expect(text.data?.cis.edges.map((e) => e.node.name)).toEqual(['Ledger DB']);
     const down = await gql<Page>(query, { filter: { health: ['down'] } });
     expect(down.data?.cis.totalCount).toBe(0);
+  });
+
+  it('serves the layer headline metric from the latest ClickHouse sample, null until sampled, days since seen for unknown CIs (REQ-CMDB-038)', async () => {
+    type Headline = { ci: { layer: string; headlineMetric: { key: string; label: string; unit: string; metric: string; value: number | null; observedAt: string | null } } | null };
+    const query = 'query Headline($id: UUID!) { ci(id: $id) { layer headlineMetric { key label unit metric value observedAt } } }';
+    const clickhouse = app.get(ClickHouseService);
+    const older = '2026-10-22 08:00:00.000';
+    const latest = '2026-10-22 09:30:00.000';
+    await clickhouse.insert('metrics', [
+      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.cpu.utilisation_percent', ts: older, value: 12, unit: 'percent', labels: {}, source_run_id: randomUUID() },
+      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.cpu.utilisation_percent', ts: latest, value: 41.5, unit: 'percent', labels: {}, source_run_id: randomUUID() },
+      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.memory.utilisation_percent', ts: latest, value: 88, unit: 'percent', labels: {}, source_run_id: randomUUID() },
+    ]);
+    const host = await gql<Headline>(query, { id: ids.host });
+    expect(host.errors).toBeUndefined();
+    expect(host.data?.ci?.headlineMetric).toEqual({ key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent', value: 41.5, observedAt: '2026-10-22T09:30:00.000Z' });
+
+    const db = await gql<Headline>(query, { id: ids.db });
+    expect(db.data?.ci?.headlineMetric).toEqual({ key: 'iops', label: 'IOPS', unit: '', metric: 'db.instance.iops', value: null, observedAt: null });
+
+    const unknownId = randomUUID();
+    await prisma.ci.create({ data: { ...ciRow(unknownId, 'unknown', 'unknown', '10.20.4.99', {}, { address: '10.20.4.99' }), observedAt: new Date(Date.now() - 3 * TIME.msPerDay - TIME.msPerSecond) } });
+    const unknown = await gql<Headline>(query, { id: unknownId });
+    expect(unknown.data?.ci?.headlineMetric).toMatchObject({ key: 'lastSeenDays', unit: 'd', metric: 'discovery.last_seen.days', value: 3 });
+    expect(unknown.data?.ci?.headlineMetric.observedAt).not.toBeNull();
+
+    // One ClickHouse round trip per page: the loader batches every CI of the list query.
+    type Page = { cis: { edges: Array<{ node: { id: string; headlineMetric: { value: number | null } } }> } };
+    const page = await gql<Page>('query { cis(filter: { tags: ["integration-test"] }, first: 20) { edges { node { id headlineMetric { value } } } } }');
+    expect(page.errors).toBeUndefined();
+    const byId = new Map(page.data?.cis.edges.map((e) => [e.node.id, e.node.headlineMetric.value]));
+    expect(byId.get(ids.host)).toBe(41.5);
+    expect(byId.get(ids.db)).toBeNull();
+    const metricsText = (await app.inject({ method: 'GET', url: env.METRICS_PATH })).body;
+    expect(metricsText).toMatch(/openmap_clickhouse_queries_total\{query="headline_metrics",status="ok"\} [1-9]/);
   });
 
   it('reads a CI as of a point in time', async () => {

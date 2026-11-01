@@ -2,7 +2,25 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-01 (finish-everything marathon, checkpoint 9: the assistant)
+## Last session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
+
+REQ-CMDB-038 done end to end (ADR-016, `docs/evidence/cmdb/headline-metrics.md`). Metric samples now have a path:
+`CollectorResult.samples` (collector contract 0.2.0, Go `Samples` with omitempty on node and collectors) → the
+reconciler binds each sample's CiRef to an id, drops the unresolvable, emits `openmap.metric.sampled` (event 0.2.0,
+≤ `RECONCILER.samplesPerEvent` per envelope, pending for ClickHouse only) → the dispatcher writes `metrics` → migration
+0003 keeps `metrics_latest` current → `Ci.headlineMetric` (GraphQL 0.8.0) through a per-request ClickHouse batch
+loader (span + `openmap_clickhouse_queries_total`) → the console shows it on every CMDB row, the CI detail header,
+focus-search hits and the impact panel (`metric.<key>` in en and ar, contract unit, "No sample yet"). The synthetic
+estate emits one headline sample per CI of a known layer plus subnet utilisation and PDU power (rack name label), so a
+replay fills `metrics` (28,501 samples at scale 0.05, 0 dropped) and `subnet_utilisation_daily` for the first time.
+The API serves a 50-row page with headlines in 21–76 ms end to end. The persist transaction got an explicit budget
+(`RECONCILER.persistTransactionTimeoutMs`, 120 s): Prisma's default 5 s expired on a 2,000-CI result on this host.
+Replay procedure: stop the compose reconciler first, or its dispatcher claims the outbox with whatever its image has.
+Observations: the headline is per layer, so subnets and IPs show device traffic (a per-type override is a follow-up);
+`power_by_rack_hourly` keys on the rack CI id in `labels['rack_id']`, which collectors cannot know, so the view stays
+empty until the reconciler resolves CI references inside sample labels (follow-up for REQ-DCIM power from telemetry).
+
+## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 9: the assistant)
 
 Syed reported the assistant answering every question with `the query failed to run: Unbound variable: n`. Root cause:
 the grounding prompt carried the fragment `WHERE n.tenantId = $tenantId` and an impact pattern with `{name:$name}`;
@@ -21,7 +39,7 @@ Observation for BSM: all 15 business services are `unknown` in the graph and in 
 stack — the engine has had no CI health events since the estate replay (REQ-BSM-001/002 behaviour to revisit with a
 synthetic event feed; not an assistant defect).
 
-## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 8)
+## Earlier session · 2026-11-01 (finish-everything marathon, checkpoint 8)
 
 Syed asked for every Not started / In progress / In review row to be finished, dependencies on his side listed first,
 easiest rows first. Commits this session: `6e6a055` (telemetry in every service, layer visibility on every list),
@@ -88,7 +106,6 @@ tracker is the truth.
   in GraphQL 0.7.0 per ADR-015, the Discovery screen's scopes card with inline editing, T-010/T-067/T-112 and the e2e
   scope test); it moves to Done with the queued tracker closures. The scope builder now reads the CIDR from the subnet
   identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
-- REQ-CMDB-038: `LAYER_HEADLINE_METRIC` per layer card from ClickHouse — not started in code.
 - REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
 - REQ-AI-001 is complete in code (golden set 12/12, T-011/T-113/T-104/T-106); it moves to Done with the queued
   tracker closures. Test files of apps/assistant and apps/api are excluded from their tsconfig, so the root ESLint
@@ -103,8 +120,7 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-CMDB-038 headline metrics; REQ-CORE-019 (OpenAPI for the REST surface and a
-   generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
+1. REQ-CORE-019 (OpenAPI for the REST surface and a generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
    Prometheus metrics that now exist).
 2. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard; REQ-UI-021/022/023 reports, DOQL,
    BI; a synthetic CI health event feed so the BSM engine propagates service health on the dev estate.

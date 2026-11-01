@@ -6,7 +6,7 @@ package contract
 import "time"
 
 // Version is the collector contract version this binary speaks.
-const Version = "0.1.0"
+const Version = "0.2.0"
 
 type Target struct {
 	Kind  string `json:"kind"`
@@ -79,6 +79,17 @@ type CollectorError struct {
 	Retryable bool    `json:"retryable"`
 }
 
+// MetricSample is one measurement taken on an observed CI (ADR-016, contract 0.2.0). Ci is referenced
+// by identity like a relationship endpoint; the reconciler resolves it and stores the sample in ClickHouse.
+type MetricSample struct {
+	Ci     CiRef             `json:"ci"`
+	Metric string            `json:"metric"`
+	Ts     time.Time         `json:"ts"`
+	Value  float64           `json:"value"`
+	Unit   string            `json:"unit"`
+	Labels map[string]string `json:"labels"`
+}
+
 type Metrics struct {
 	TargetsAttempted     int `json:"targetsAttempted"`
 	TargetsReached       int `json:"targetsReached"`
@@ -100,6 +111,7 @@ type Result struct {
 	Relationships   []ObservedRelationship `json:"relationships"`
 	Evidence        []Evidence             `json:"evidence"`
 	Errors          []CollectorError       `json:"errors"`
+	Samples         []MetricSample         `json:"samples,omitempty"`
 	Metrics         Metrics                `json:"metrics"`
 	ContractVersion string                 `json:"contractVersion"`
 }

@@ -100,6 +100,7 @@ export async function loadLookup(prisma: PrismaClient, result: CollectorResult):
     if ('type' in r.from) refs.push(r.from);
     if ('type' in r.to) refs.push(r.to);
   }
+  for (const s of result.samples) if ('type' in s.ci) refs.push(s.ci);
   const cis = new Map<string, Ci>();
   const index = new MapIdentityIndex();
   for (const row of await fetchCandidates(prisma, result.tenantId, refs)) {

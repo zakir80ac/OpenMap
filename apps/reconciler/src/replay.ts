@@ -41,7 +41,7 @@ async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, sinks:
   await prisma.relationship.deleteMany({ where: { tenantId } });
   await prisma.ci.deleteMany({ where: { tenantId } });
   const purged = await sinks.graph.purgeTenant(tenantId);
-  for (const table of ['events', 'ci_history', 'relationship_history']) {
+  for (const table of ['events', 'ci_history', 'relationship_history', 'metrics', 'metrics_latest']) {
     await sinks.clickhouse.command({ query: 'ALTER TABLE ' + database + '.' + table + ' DELETE WHERE tenant_id = {tenantId:String}', query_params: { tenantId }, clickhouse_settings: { mutations_sync: '2' } });
   }
   await sinks.search.dropTenant(tenantId);
@@ -89,7 +89,7 @@ async function main(): Promise<void> {
   if (args.reset) await resetTenant(prisma, sinks, env.CLICKHOUSE_DB, summaryTenant);
   const started = Date.now();
   let n = 0;
-  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, lookupMs: 0, reconcileMs: 0, reconcileCpuMs: 0, persistMs: 0 };
+  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, samples: 0, samplesDropped: 0, lookupMs: 0, reconcileMs: 0, reconcileCpuMs: 0, persistMs: 0 };
   let tenantId = '';
   for await (const raw of results(args.dir)) {
     const result = collectorResultSchema.parse(raw);
@@ -101,6 +101,8 @@ async function main(): Promise<void> {
     totals.relationships += s.relationships;
     totals.conflicts += s.conflicts;
     totals.unresolved += s.unresolvedRelationships;
+    totals.samples += s.samples;
+    totals.samplesDropped += s.samplesDropped;
     totals.lookupMs += s.lookupMs;
     totals.reconcileMs += s.reconcileMs;
     totals.persistMs += s.persistMs;

@@ -2,6 +2,7 @@
 // with its outbox events. Nothing else writes CIs; every other store learns through the outbox.
 // Every table is written with one array-based INSERT/UPDATE per batch (unnest of parallel arrays),
 // which is what keeps a 10k-device sweep inside the 15-minute budget.
+import { RECONCILER } from '@openmap/constants';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { identityKeyOf } from './lookup.js';
@@ -9,13 +10,15 @@ import type { ReconcileOutput } from '../core/reconcile.js';
 
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
-const OUTBOX_TARGETS: Array<'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm'> = [
-  'memgraph',
-  'clickhouse',
-  'meilisearch',
-  'websocket',
-  'bsm',
-];
+type OutboxTarget = 'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm';
+
+const OUTBOX_TARGETS: readonly OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
+/** Metric samples (ADR-016) live only in ClickHouse: no graph node, search document or live update carries them. */
+const METRIC_TARGETS: readonly OutboxTarget[] = ['clickhouse'];
+
+export function targetsFor(type: EventEnvelope['type']): readonly OutboxTarget[] {
+  return type === 'openmap.metric.sampled' ? METRIC_TARGETS : OUTBOX_TARGETS;
+}
 
 function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -113,14 +116,24 @@ async function insertRelationshipsBatch(tx: Tx, rels: readonly Relationship[]): 
 
 async function insertOutboxBatch(tx: Tx, events: readonly EventEnvelope[]): Promise<void> {
   if (events.length === 0) return;
-  const pending = Prisma.sql`ARRAY[${Prisma.join(OUTBOX_TARGETS.map((t) => Prisma.sql`${t}`))}]::"OutboxTarget"[]`;
-  await tx.$executeRaw(Prisma.sql`
-    INSERT INTO outbox_events ("eventId", "tenantId", type, subject, envelope, pending)
-    SELECT u.event_id, u.tenant_id, u.type, u.subject, u.envelope::jsonb, ${pending}
-    FROM unnest(
-      ${events.map((e) => e.id)}::uuid[], ${events.map((e) => e.tenantid)}::uuid[], ${events.map((e) => e.type)}::text[], ${events.map((e) => e.subject)}::text[], ${events.map((e) => JSON.stringify(e))}::text[]
-    ) AS u(event_id, tenant_id, type, subject, envelope)
-    ON CONFLICT ("eventId") DO NOTHING`);
+  // One statement per distinct target list: a result's CI events and its metric events differ in where they go.
+  const groups = new Map<string, EventEnvelope[]>();
+  for (const e of events) {
+    const key = targetsFor(e.type).join(',');
+    const list = groups.get(key);
+    if (list) list.push(e);
+    else groups.set(key, [e]);
+  }
+  for (const [key, group] of groups) {
+    const pending = Prisma.sql`ARRAY[${Prisma.join(key.split(',').map((t) => Prisma.sql`${t}`))}]::"OutboxTarget"[]`;
+    await tx.$executeRaw(Prisma.sql`
+      INSERT INTO outbox_events ("eventId", "tenantId", type, subject, envelope, pending)
+      SELECT u.event_id, u.tenant_id, u.type, u.subject, u.envelope::jsonb, ${pending}
+      FROM unnest(
+        ${group.map((e) => e.id)}::uuid[], ${group.map((e) => e.tenantid)}::uuid[], ${group.map((e) => e.type)}::text[], ${group.map((e) => e.subject)}::text[], ${group.map((e) => JSON.stringify(e))}::text[]
+      ) AS u(event_id, tenant_id, type, subject, envelope)
+      ON CONFLICT ("eventId") DO NOTHING`);
+  }
 }
 
 export interface PersistSummary {
@@ -169,5 +182,5 @@ export async function persist(
       conflicts: out.conflicts.length,
       events: out.events.length,
     };
-  });
+  }, { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs });
 }

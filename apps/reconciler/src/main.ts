@@ -26,6 +26,8 @@ export function createReconcilerMetrics() {
     outboxBatches: new Counter({ name: 'openmap_outbox_batches_total', help: 'Outbox dispatcher ticks that claimed rows', registers: [registry] }),
     outboxDelivered: new Counter({ name: 'openmap_outbox_delivered_total', help: 'Outbox rows fully delivered', registers: [registry] }),
     outboxFailures: new Counter({ name: 'openmap_outbox_failures_total', help: 'Outbox target failures, by target', labelNames: ['target'], registers: [registry] }),
+    /** REQ-CMDB-038 — metric samples per result: bound to a CI and queued for ClickHouse, or dropped for want of one. */
+    samples: new Counter({ name: 'openmap_reconciler_metric_samples_total', help: 'Metric samples reconciled, by outcome (stored or dropped)', labelNames: ['outcome'], registers: [registry] }),
   };
 }
 
@@ -46,6 +48,8 @@ async function main(): Promise<void> {
         const summary = await withSpan(TRACER, 'reconcile.result', { 'openmap.collector': result.collectorId, 'openmap.run_id': result.runId, 'openmap.tenant_id': result.tenantId }, () => processResult(prisma, result));
         const retried = await withSpan(TRACER, 'reconcile.pending_relationships', { 'openmap.tenant_id': result.tenantId }, () => retryPendingRelationships(prisma, result.tenantId));
         metrics.results.inc({ collector: result.collectorId, outcome: 'ok' });
+        metrics.samples.inc({ outcome: 'stored' }, summary.samples);
+        metrics.samples.inc({ outcome: 'dropped' }, summary.samplesDropped);
         console.log(JSON.stringify({ msg: 'reconciled', runId: result.runId, collector: result.collectorId, ...summary, pendingResolved: retried.resolved }));
         return summary;
       } catch (err) {

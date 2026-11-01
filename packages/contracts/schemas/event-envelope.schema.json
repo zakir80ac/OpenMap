@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/event-envelope/0.1.0",
+  "$id": "https://openmap.dev/contracts/event-envelope/0.2.0",
   "title": "event-envelope",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -58,7 +58,8 @@
         "openmap.asset.warranty.expiring",
         "openmap.asset.eos.approaching",
         "openmap.plan.status.changed",
-        "openmap.ci.labelled"
+        "openmap.ci.labelled",
+        "openmap.metric.sampled"
       ]
     },
     "subject": {

@@ -1,5 +1,6 @@
 // T-008 REQ-CORE-013
 import { describe, expect, it } from 'vitest';
+import { RECONCILER } from '@openmap/constants';
 import type { Ci, CollectorResult, Relationship } from '@openmap/contracts';
 import { MapIdentityIndex, resolve } from './identity.js';
 import { checksum, merge } from './merge.js';
@@ -13,7 +14,7 @@ const t1 = '2026-10-22T10:00:00.000Z';
 function result(partial: Partial<CollectorResult>): CollectorResult {
   return {
     jobId: uuid, runId: uuid, tenantId, collectorId: 'snmp', nodeId: 'node-ryd-01', status: 'success', startedAt: t1, finishedAt: t1,
-    cis: [], relationships: [], evidence: [], errors: [], metrics: { targetsAttempted: 1, targetsReached: 1, cisEmitted: 0, relationshipsEmitted: 0, durationMs: 1 }, contractVersion: '0.1.0',
+    cis: [], relationships: [], samples: [], evidence: [], errors: [], metrics: { targetsAttempted: 1, targetsReached: 1, cisEmitted: 0, relationshipsEmitted: 0, durationMs: 1 }, contractVersion: '0.2.0',
     ...partial,
   };
 }
@@ -98,5 +99,27 @@ describe('reconcile', () => {
     expect(out.relationshipsCreated).toHaveLength(1);
     expect(out.relationshipsCreated[0]?.fromCiId).toBe('host-1');
     expect(out.unresolvedRelationships).toHaveLength(1);
+  });
+  it('binds metric samples to new and stored CIs, drops unknown ones and chunks the events (REQ-CMDB-038)', () => {
+    const sample = (ci: CollectorResult['samples'][number]['ci'], value: number) => ({ ci, metric: 'host.cpu.utilisation_percent', ts: t1, value, unit: 'percent', labels: { core: '0' } });
+    const many = Array.from({ length: RECONCILER.samplesPerEvent + 1 }, (_, i) => sample({ type: 'host', identity: { serialNumber: '7kq2m93' } }, i));
+    const out = reconcile(
+      result({
+        cis: [{ type: 'pdu', identity: { serialNumber: 'VG5K' }, name: 'PDU-R12-B', attributes: {}, tags: [], externalIds: [], observedAt: t1 }],
+        samples: [...many, sample({ type: 'pdu', identity: { serialNumber: 'VG5K' } }, 1200), sample({ id: 'host-1' }, 7), sample({ type: 'vm', identity: { instanceUuid: 'nope' } }, 1)],
+      }),
+      lookupWith([storedHost]),
+    );
+    expect(out.samples).toBe(RECONCILER.samplesPerEvent + 3);
+    expect(out.samplesDropped).toBe(1);
+    const events = out.events.filter((e) => e.type === 'openmap.metric.sampled');
+    expect(events).toHaveLength(2);
+    expect(events.map((e) => e.subject)).toEqual([uuid, uuid]);
+    const samples = events.flatMap((e) => (e.data as { samples: Array<{ ciId: string; value: number; labels: Record<string, string> }> }).samples);
+    expect(samples).toHaveLength(RECONCILER.samplesPerEvent + 3);
+    expect(samples.filter((s) => s.ciId === 'host-1')).toHaveLength(RECONCILER.samplesPerEvent + 2);
+    expect(samples.find((s) => s.value === 1200)?.ciId).toBe(out.created[0]?.id);
+    expect(samples[0]?.labels).toEqual({ core: '0' });
+    expect(samples.some((s) => 'ci' in s)).toBe(false);
   });
 });

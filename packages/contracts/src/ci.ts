@@ -196,21 +196,42 @@ export const LAYER_CODE_PREFIX: Record<CiLayer, string> = {
 /** Business services get their own prefix regardless of layer. */
 export const BUSINESS_SERVICE_CODE_PREFIX = 'BS';
 
-/** The one metric every card and table shows for a CI of this layer. */
-export const LAYER_HEADLINE_METRIC: Record<CiLayer, { key: string; label: string; unit: string }> = {
-  dc: { key: 'pue', label: 'PUE', unit: '' },
-  network_security: { key: 'throughputGbps', label: 'Traffic', unit: 'Gbps' },
-  hardware: { key: 'cpuPercent', label: 'Host load', unit: '%' },
-  storage: { key: 'iops', label: 'IOPS', unit: '' },
-  virtualization: { key: 'cpuPercent', label: 'CPU', unit: '%' },
-  cloud: { key: 'loadPercent', label: 'Load', unit: '%' },
-  os: { key: 'patchCompliancePercent', label: 'Patched', unit: '%' },
-  containers: { key: 'cpuPercent', label: 'CPU', unit: '%' },
-  databases: { key: 'iops', label: 'IOPS', unit: '' },
-  applications: { key: 'apdex', label: 'Apdex', unit: '' },
-  saas: { key: 'seatUtilisationPercent', label: 'Seats used', unit: '%' },
-  unknown: { key: 'lastSeenDays', label: 'Last seen', unit: 'd' },
-};
+/**
+ * The one metric every card and table shows for a CI of a layer (ADR-016). `key` names the headline in the
+ * console's i18n catalogue (`metric.<key>`), `label` is its canonical English label, `unit` is printed after the
+ * value, and `metric` is the ClickHouse `metrics.metric` name whose latest sample supplies the value
+ * (packages/db/clickhouse/README.md). `lastSeenDays` has no sample: the API derives it from `observedAt`.
+ */
+export interface HeadlineMetricSpec {
+  key: string;
+  label: string;
+  unit: string;
+  metric: string;
+}
+
+export const LAYER_HEADLINE_METRIC = {
+  dc: { key: 'pue', label: 'PUE', unit: '', metric: 'dcim.site.pue' },
+  network_security: { key: 'throughputGbps', label: 'Traffic', unit: 'Gbps', metric: 'net.device.throughput_gbps' },
+  hardware: { key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent' },
+  storage: { key: 'iops', label: 'IOPS', unit: '', metric: 'storage.array.iops' },
+  virtualization: { key: 'cpuPercent', label: 'CPU', unit: '%', metric: 'vm.cpu.utilisation_percent' },
+  cloud: { key: 'loadPercent', label: 'Load', unit: '%', metric: 'cloud.resource.load_percent' },
+  os: { key: 'patchCompliancePercent', label: 'Patched', unit: '%', metric: 'os.patch.compliance_percent' },
+  containers: { key: 'cpuPercent', label: 'CPU', unit: '%', metric: 'container.cpu.utilisation_percent' },
+  databases: { key: 'iops', label: 'IOPS', unit: '', metric: 'db.instance.iops' },
+  applications: { key: 'apdex', label: 'Apdex', unit: '', metric: 'app.apdex.score' },
+  saas: { key: 'seatUtilisationPercent', label: 'Seats used', unit: '%', metric: 'saas.seat.utilisation_percent' },
+  unknown: { key: 'lastSeenDays', label: 'Last seen', unit: 'd', metric: 'discovery.last_seen.days' },
+} as const satisfies Record<CiLayer, HeadlineMetricSpec>;
+
+/** The headline keys the console must label: `metric.<HeadlineMetricKey>` exists in every catalogue. */
+export type HeadlineMetricKey = (typeof LAYER_HEADLINE_METRIC)[CiLayer]['key'];
+
+/** Metric names a headline reads, in layer order and without repeats; the API asks ClickHouse for exactly these. */
+export const HEADLINE_METRIC_NAMES: readonly string[] = [...new Set(CI_LAYERS.map((layer) => LAYER_HEADLINE_METRIC[layer].metric))];
+
+/** `<domain>.<object>.<measure>[_<unit>]`, the ClickHouse metric name convention. */
+export const METRIC_NAME_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9_]*){2,}$/u;
 
 /** Generates a CI short code: layer prefix plus an upper-case slug of the name, capped for display. */
 /** Shape of a short code: a layer prefix, a dash, then the slug (and an optional numeric uniqueness suffix). */
@@ -486,6 +507,21 @@ export const observedRelationshipSchema = z.object({
   observedAt: z.iso.datetime(),
 });
 export type ObservedRelationship = z.infer<typeof observedRelationshipSchema>;
+
+/**
+ * One measurement a collector took on a CI it observed (ADR-016). The CI is referenced the way relationships
+ * reference endpoints (by identity, or by id when the collector was given one); the reconciler resolves it and
+ * drops samples whose CI it cannot find. `labels` carries dimensions (rack_id, cidr, interface).
+ */
+export const metricSampleSchema = z.object({
+  ci: ciRefSchema,
+  metric: z.string().regex(METRIC_NAME_PATTERN),
+  ts: z.iso.datetime(),
+  value: z.number().finite(),
+  unit: z.string(),
+  labels: z.record(z.string().min(1), z.string()),
+});
+export type MetricSample = z.infer<typeof metricSampleSchema>;
 
 export const relationshipSchema = z.object({
   id: z.uuid(),

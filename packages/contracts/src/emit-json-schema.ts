@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { CONTRACT_VERSIONS } from '@openmap/constants';
-import { ciSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
+import { ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
 import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } from './collector.js';
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
@@ -24,6 +24,7 @@ const entries: Array<[string, z.ZodType, string]> = [
   ['collector-manifest', collectorManifestSchema, CONTRACT_VERSIONS.collector],
   ['collector-job', collectorJobSchema, CONTRACT_VERSIONS.collector],
   ['collector-result', collectorResultSchema, CONTRACT_VERSIONS.collector],
+  ['metric-sample', metricSampleSchema, CONTRACT_VERSIONS.ci],
   ['event-envelope', eventEnvelopeSchema, CONTRACT_VERSIONS.event],
   ['outbox-record', outboxRecordSchema, CONTRACT_VERSIONS.event],
   ['asset-record', assetRecordSchema, CONTRACT_VERSIONS.ci],

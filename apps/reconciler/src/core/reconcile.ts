@@ -1,8 +1,8 @@
 // REQ-CORE-013 — reconciles one CollectorResult into stored CIs and relationships, producing the
 // writes and outbox events the stores apply. Pure: the caller supplies lookups and persists outputs.
 import { randomUUID } from 'node:crypto';
-import { RECONCILIATION } from '@openmap/constants';
-import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelope, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
+import { RECONCILER, RECONCILIATION } from '@openmap/constants';
+import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelope, type MetricSample, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
 import { identityKeysOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { envelope } from './events.js';
@@ -24,6 +24,15 @@ export interface ReconcileOutput {
   conflicts: Array<{ observed: ObservedCi; ciIds: string[] }>;
   unresolvedRelationships: ObservedRelationship[];
   events: EventEnvelope[];
+  /** Metric samples bound to a CI id and carried by `openmap.metric.sampled` events (ADR-016). */
+  samples: number;
+  /** Samples whose CI neither this result nor the store knows; they are not parked, the next sweep samples again. */
+  samplesDropped: number;
+}
+
+/** A sample as the dispatcher writes it to ClickHouse: the CI reference replaced by the stored id. */
+export interface ResolvedSample extends Omit<MetricSample, 'ci'> {
+  ciId: string;
 }
 
 function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, created: Map<string, string>): string | undefined {
@@ -39,7 +48,7 @@ function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, create
 
 export function reconcile(input: CollectorResult, lookup: StoredLookup): ReconcileOutput {
   const result = sanitizeResult(input);
-  const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [] };
+  const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [], samples: 0, samplesDropped: 0 };
   const createdByKey = new Map<string, string>();
   const provenance = { collectorId: result.collectorId, nodeId: result.nodeId, runId: result.runId };
 
@@ -114,6 +123,22 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     };
     out.relationshipsCreated.push(created);
     out.events.push(envelope(result.tenantId, 'openmap.relationship.created', created.id, { relationship: created }));
+  }
+
+  const resolved: ResolvedSample[] = [];
+  for (const sample of result.samples) {
+    const ciId = refToId(sample.ci, lookup, createdByKey);
+    if (!ciId) {
+      out.samplesDropped++;
+      continue;
+    }
+    const { ci: _ref, ...rest } = sample;
+    resolved.push({ ...rest, ciId });
+  }
+  out.samples = resolved.length;
+  for (let start = 0; start < resolved.length; start += RECONCILER.samplesPerEvent) {
+    const samples = resolved.slice(start, start + RECONCILER.samplesPerEvent);
+    out.events.push(envelope(result.tenantId, 'openmap.metric.sampled', result.runId, { runId: result.runId, collectorId: result.collectorId, samples }));
   }
   return out;
 }

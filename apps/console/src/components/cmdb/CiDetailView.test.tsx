@@ -38,6 +38,7 @@ const summary = (id: string, layer: string, type: string, displayName: string) =
   type,
   layer,
   health: 'healthy',
+  headlineMetric: { key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent', value: 41.5, observedAt: '2026-10-22T09:00:00.000Z' },
 });
 const calls: Array<{ query: string; variables: Record<string, unknown> }> = [];
 

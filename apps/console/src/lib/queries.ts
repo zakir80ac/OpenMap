@@ -38,6 +38,18 @@ export interface ServiceHealth {
   errorBudgetRemainingMinutes: number;
 }
 
+/** REQ-CMDB-038 — the layer's headline measurement (ADR-016): null value until a collector has sampled it. */
+export interface HeadlineMetric {
+  key: string;
+  label: string;
+  unit: string;
+  metric: string;
+  value: number | null;
+  observedAt: string | null;
+}
+
+export const HEADLINE_METRIC_FIELDS = 'headlineMetric { key label unit metric value observedAt }';
+
 export interface CiRow {
   id: string;
   code: string;
@@ -46,6 +58,7 @@ export interface CiRow {
   displayName: string;
   health: HealthState;
   observedAt: string;
+  headlineMetric: HeadlineMetric;
 }
 
 export interface CiConnection {
@@ -78,7 +91,7 @@ const CIS_QUERY = [
   '  cis(filter: $filter, first: $first, after: $after) {',
   '    totalCount',
   '    pageInfo { endCursor hasNextPage }',
-  '    edges { cursor node { id code type layer displayName health observedAt } }',
+  '    edges { cursor node { id code type layer displayName health observedAt ' + HEADLINE_METRIC_FIELDS + ' } }',
   '  }',
   '}',
 ].join('\n');
@@ -132,9 +145,10 @@ export interface CiSummary {
   type: string;
   layer: CiLayer;
   health: HealthState;
+  headlineMetric: HeadlineMetric;
 }
 
-export const CI_SUMMARY_FIELDS = 'id name displayName code type layer health';
+export const CI_SUMMARY_FIELDS = 'id name displayName code type layer health ' + HEADLINE_METRIC_FIELDS;
 
 export interface SearchHit {
   ci: CiSummary;

@@ -12,6 +12,10 @@ import {
   ciCode,
   collectorResultSchema,
   eventEnvelopeSchema,
+  HEADLINE_METRIC_NAMES,
+  LAYER_HEADLINE_METRIC,
+  METRIC_NAME_PATTERN,
+  metricSampleSchema,
   observedCiSchema,
   impactScenarioSchema,
   integrationConfigSchema,
@@ -55,6 +59,17 @@ describe('CI contract', () => {
 });
 
 describe('collector contract', () => {
+  it('accepts metric samples that reference a CI by identity or id and rejects malformed metric names', () => {
+    const sample = { ci: { type: 'host', identity: { fqdn: 'a.example' } }, metric: 'host.cpu.utilisation_percent', ts: now, value: 41.5, unit: 'percent', labels: {} };
+    expect(metricSampleSchema.safeParse(sample).success).toBe(true);
+    expect(metricSampleSchema.safeParse({ ...sample, ci: { id: uuid }, labels: { rack_id: 'R12' } }).success).toBe(true);
+    expect(metricSampleSchema.safeParse({ ...sample, metric: 'CPU' }).success).toBe(false);
+    expect(metricSampleSchema.safeParse({ ...sample, metric: 'host.cpu' }).success).toBe(false);
+    expect(metricSampleSchema.safeParse({ ...sample, value: Number.NaN }).success).toBe(false);
+    // Every headline metric name follows the convention and is unique per metric, and a 0.1.0 result without samples still parses.
+    for (const layer of CI_LAYERS) expect(LAYER_HEADLINE_METRIC[layer].metric).toMatch(METRIC_NAME_PATTERN);
+    expect(HEADLINE_METRIC_NAMES.length).toBe(new Set(HEADLINE_METRIC_NAMES).size);
+  });
   it('accepts a minimal successful result', () => {
     const r = collectorResultSchema.safeParse({
       jobId: uuid,
@@ -89,6 +104,7 @@ describe('collector contract', () => {
       contractVersion: '0.1.0',
     });
     expect(r.success).toBe(true);
+    expect(r.success ? r.data.samples : null).toEqual([]);
   });
 });
 

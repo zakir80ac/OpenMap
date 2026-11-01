@@ -1,6 +1,6 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-037 REQ-CMDB-012 — CI detail: header (code, name, type, layer, health, lifecycle, source,
-// observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
+// REQ-UI-008 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 — CI detail: header (code, name, type, layer, health, headline
+// metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
 // link), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
 // re-fetches `ci(id, asOf)` and the attribute diff against now). Unknown-layer CIs get the "Label this CI" panel.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ import type { Locale } from '@openmap/i18n';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx } from '@openmap/ui';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
 import { Button, TextInput } from '@/components/common/controls';
+import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import {
@@ -378,6 +379,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
             <span>{t('cmdb.detail.observed', { when: format.dateTime(ci.observedAt) })}</span>
           </p>
         </div>
+        <HeadlineMetric metric={ci.headlineMetric} variant="card" className="min-w-28 items-end text-end" />
         <div className="flex flex-wrap items-center gap-om-8">
           <LayerBadge layer={ci.layer} label={t(layerKey(ci.layer))} />
           <StateBadge state={ci.health} label={t(healthKey[ci.health])} live={ci.health !== 'healthy'} />

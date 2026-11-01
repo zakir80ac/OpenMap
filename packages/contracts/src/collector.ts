@@ -1,7 +1,7 @@
 // REQ-CORE-002 — collector contract, version CONTRACT_VERSIONS.collector.
 // A Discovery Node pulls CollectorJobs, runs a collector subprocess, and posts a CollectorResult.
 import { z } from 'zod';
-import { observedCiSchema, observedRelationshipSchema } from './ci.js';
+import { metricSampleSchema, observedCiSchema, observedRelationshipSchema } from './ci.js';
 
 /** Collector families. One directory per family under apps/collectors. */
 export const COLLECTOR_FAMILIES = [
@@ -152,6 +152,8 @@ export const collectorResultSchema = z.object({
   relationships: z.array(observedRelationshipSchema),
   evidence: z.array(evidenceSchema),
   errors: z.array(collectorErrorSchema),
+  /** Measurements taken during the run (ADR-016, contract 0.2.0); absent from results of 0.1.0 collectors. */
+  samples: z.array(metricSampleSchema).default([]),
   metrics: z.object({
     targetsAttempted: z.number().int().min(0),
     targetsReached: z.number().int().min(0),

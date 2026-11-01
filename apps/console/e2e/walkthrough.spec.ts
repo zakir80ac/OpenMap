@@ -33,10 +33,12 @@ test('every primary screen renders for a signed-in user and is captured in both 
     await page.screenshot({ path: screenshotsDir + screen + '-' + locale + '.png', fullPage: true });
   }
 
-  // CI detail: the first row link in the CMDB list.
+  // CI detail: the first row link in the CMDB list. Every row carries its layer's headline metric (REQ-CMDB-038).
   await page.goto('/' + locale + '/cmdb');
   const firstCi = page.locator('main a[href*="/cmdb/"]').first();
   await expect(firstCi).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: translate(locale, 'cmdb.column.metric') })).toBeVisible();
+  await expect(page.locator('main [role="row"] [data-metric]').first()).toBeVisible();
   await firstCi.click();
   await expect(page).toHaveURL(new RegExp('/' + locale + '/cmdb/[^/]+$'));
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: SHELL_TIMEOUT_MS });

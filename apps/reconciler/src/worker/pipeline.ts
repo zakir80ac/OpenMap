@@ -1,7 +1,7 @@
 // REQ-CORE-013 — one collector result through lookup → reconcile → persist. Relationships whose
 // endpoints are not yet known are parked in pending_relationships and retried after later results
 // land, so a sweep resolves cross-collector references no matter which result arrives first.
-import { RECONCILER, TIME } from '@openmap/constants';
+import { CONTRACT_VERSIONS, RECONCILER, TIME } from '@openmap/constants';
 import type { CollectorResult, ObservedRelationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { reconcile } from '../core/reconcile.js';
@@ -11,6 +11,9 @@ import { persist, type PersistSummary } from './persist.js';
 export interface PipelineSummary extends PersistSummary {
   unchanged: number;
   unresolvedRelationships: number;
+  /** Metric samples bound to a CI and queued for ClickHouse, and those whose CI the result did not resolve. */
+  samples: number;
+  samplesDropped: number;
   durationMs: number;
   /** Phase split of durationMs, so throughput work targets the right store. */
   lookupMs: number;
@@ -67,7 +70,7 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
   let unresolved = out.unresolvedRelationships;
   if (unresolved.length > 0) {
     // Endpoints created by this very result are visible now; retry once before parking the rest.
-    const retry: CollectorResult = { ...result, cis: [], relationships: unresolved };
+    const retry: CollectorResult = { ...result, cis: [], relationships: unresolved, samples: [] };
     const lookup2 = await timed(() => loadLookup(prisma, retry), (ms) => (lookupMs += ms));
     const t2 = Date.now();
     const out2 = reconcile(retry, lookup2);
@@ -78,7 +81,7 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
     unresolved = out2.unresolvedRelationships;
     await timed(() => park(prisma, result, unresolved), (ms) => (persistMs += ms));
   }
-  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
+  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
 }
 
 /** Retries parked relationships for a tenant; resolved ones are persisted, exhausted ones dropped. */
@@ -92,8 +95,8 @@ export async function retryPendingRelationships(prisma: PrismaClient, tenantId: 
       rows: [],
       result: {
         jobId: row.sourceRunId, runId: row.sourceRunId, tenantId, collectorId: row.sourceCollectorId, nodeId: row.sourceNodeId, status: 'success',
-        startedAt: row.observedAt.toISOString(), finishedAt: row.observedAt.toISOString(), cis: [], relationships: [], evidence: [], errors: [],
-        metrics: { targetsAttempted: 0, targetsReached: 0, cisEmitted: 0, relationshipsEmitted: 0, durationMs: 0 }, contractVersion: '0.1.0',
+        startedAt: row.observedAt.toISOString(), finishedAt: row.observedAt.toISOString(), cis: [], relationships: [], samples: [], evidence: [], errors: [],
+        metrics: { targetsAttempted: 0, targetsReached: 0, cisEmitted: 0, relationshipsEmitted: 0, durationMs: 0 }, contractVersion: CONTRACT_VERSIONS.collector,
       },
     };
     entry.rows.push(row);

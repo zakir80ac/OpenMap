@@ -7,6 +7,7 @@ import { LayerBadge, cx } from '@openmap/ui';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Icon } from '@/components/icons';
 import { layerKey } from '@/lib/keys';
+import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import { searchQuery, type CiSummary } from '@/lib/queries';
 import { useT } from '@/providers';
 
@@ -157,6 +158,7 @@ export function FocusSearch({ current, onPick, className }: FocusSearchProps): R
                   <span className="block truncate font-medium text-om-primary">{hit.ci.displayName}</span>
                   <span className="block truncate font-om-mono text-om-2xs text-om-muted">{hit.ci.code}</span>
                   <span className="block truncate font-om-mono text-om-2xs text-om-muted">{hit.ci.type}</span>
+                  <HeadlineMetric metric={hit.ci.headlineMetric} />
                 </span>
                 <LayerBadge layer={hit.ci.layer} label={t(layerKey(hit.ci.layer))} />
               </li>

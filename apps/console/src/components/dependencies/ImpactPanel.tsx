@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { predictedColor, predictedRank, predictedUiState, relationshipColor, type ImpactGraph } from '@/lib/graph-layout';
 import { healthKey, layerKey, predictedKey, relationshipKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
+import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import type { CiSummary, ImpactResult, RelationshipRow } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
 
@@ -44,6 +45,7 @@ export function ImpactPanel({ locale, result, graph, relationships, className }:
           <p className="text-om-2xs font-semibold uppercase tracking-[0.1em] text-om-muted">{root.type}</p>
           <h2 className="truncate font-om-display text-om-lg font-bold text-om-primary">{root.displayName}</h2>
           <p className="truncate font-om-mono text-om-2xs text-om-muted">{root.name}</p>
+          <HeadlineMetric metric={root.headlineMetric} className="mt-om-4" />
         </div>
         <StateBadge state={root.health} label={t(healthKey[root.health])} live={root.health !== 'healthy'} />
       </div>

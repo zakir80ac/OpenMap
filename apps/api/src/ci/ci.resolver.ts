@@ -1,6 +1,9 @@
-// REQ-CMDB-001 — CMDB resolvers for the frozen schema: Query.ci/cis/search/unknownCis/vulnerabilities,
-// the CI mutations, and the Ci / Relationship field resolvers. Every call is scoped by TenantContext.
+// REQ-CMDB-001 REQ-CMDB-038 — CMDB resolvers for the frozen schema: Query.ci/cis/search/unknownCis/vulnerabilities,
+// the CI mutations, and the Ci / Relationship field resolvers (health, headline metric, relationships, history).
+// Every call is scoped by TenantContext.
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { TIME } from '@openmap/constants';
+import { LAYER_HEADLINE_METRIC } from '@openmap/contracts';
 import { parseInput } from '../common/validation.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { ROLES } from '../auth/roles.js';
@@ -22,6 +25,7 @@ import type {
   CiRecord,
   CiVersionRecord,
   Connection,
+  HeadlineMetricRecord,
   HealthState,
   RelationshipRecord,
   SearchHitRecord,
@@ -168,6 +172,22 @@ export class CiFieldsResolver {
   @ResolveField('health')
   async health(@Parent() ci: CiRecord): Promise<HealthState> {
     return (await this.tenant.loaders.health.load(ci.id)) ?? 'unknown';
+  }
+
+  /**
+   * REQ-CMDB-038 — the layer's headline metric from ClickHouse. The unknown layer has no collector sampling it:
+   * its headline is how many days ago discovery last saw the CI, derived here from observedAt.
+   */
+  @ResolveField('headlineMetric')
+  async headlineMetric(@Parent() ci: CiRecord): Promise<HeadlineMetricRecord> {
+    const spec = LAYER_HEADLINE_METRIC[ci.layer];
+    const point = (await this.tenant.loaders.metrics.load(ci.id))?.get(spec.metric);
+    if (point) return { ...spec, value: point.value, observedAt: point.observedAt };
+    if (ci.layer === 'unknown') {
+      const days = Math.max(0, Math.floor((Date.now() - Date.parse(ci.observedAt)) / TIME.msPerDay));
+      return { ...spec, value: days, observedAt: ci.observedAt };
+    }
+    return { ...spec, value: null, observedAt: null };
   }
 
   @ResolveField('relationships')

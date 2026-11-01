@@ -6,7 +6,8 @@ import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
 import { HTTP, RECONCILER } from '@openmap/constants';
 import type { Env } from '@openmap/config';
-import { eventEnvelopeSchema, type Ci, type EventEnvelope, type Relationship } from '@openmap/contracts';
+import { eventEnvelopeSchema, metricSampleSchema, type Ci, type EventEnvelope, type Relationship } from '@openmap/contracts';
+import { z } from 'zod';
 import type { PrismaClient } from '@openmap/db';
 import type { GraphCi, GraphRelationship, GraphRepository } from '@openmap/graph';
 
@@ -127,6 +128,30 @@ async function deliverClickHouse(ch: ClickHouseClient, database: string, events:
   if (relRows.length) await ch.insert({ table: database + '.relationship_history', values: relRows, format: 'JSONEachRow' });
   const auditRows = events.map(auditRowFromEvent).filter((r): r is AuditRow => r !== null);
   if (auditRows.length) await ch.insert({ table: database + '.audit_log', values: auditRows, format: 'JSONEachRow' });
+  const metricRows = events.flatMap(metricRowsFromEvent);
+  if (metricRows.length) await ch.insert({ table: database + '.metrics', values: metricRows, format: 'JSONEachRow' });
+}
+
+interface MetricRow {
+  tenant_id: string;
+  ci_id: string;
+  metric: string;
+  ts: string;
+  value: number;
+  unit: string;
+  labels: Record<string, string>;
+  source_run_id: string;
+}
+
+const resolvedSampleSchema = metricSampleSchema.omit({ ci: true }).extend({ ciId: z.uuid() });
+const metricEventDataSchema = z.object({ runId: z.uuid(), samples: z.array(resolvedSampleSchema) });
+
+/** REQ-CMDB-038 ADR-016 — `openmap.metric.sampled` events become `metrics` rows, one per sample. */
+export function metricRowsFromEvent(e: EventEnvelope): MetricRow[] {
+  if (e.type !== 'openmap.metric.sampled') return [];
+  const parsed = metricEventDataSchema.safeParse(e.data);
+  if (!parsed.success) return [];
+  return parsed.data.samples.map((s) => ({ tenant_id: e.tenantid, ci_id: s.ciId, metric: s.metric, ts: chDate(s.ts), value: s.value, unit: s.unit, labels: s.labels, source_run_id: parsed.data.runId }));
 }
 
 interface AuditRow {

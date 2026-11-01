@@ -5,8 +5,8 @@ import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { COLLECTOR_FAMILIES, CONTRACT_VERSIONS, collectorResultSchema, type CollectorFamily, type CollectorResult, type ObservedCi, type ObservedRelationship } from '@openmap/contracts';
-import { summarise, type Estate, type EstateSummary, type Slot } from './estate.js';
+import { CI_TYPE_LAYER, COLLECTOR_FAMILIES, CONTRACT_VERSIONS, LAYER_HEADLINE_METRIC, collectorResultSchema, type CollectorFamily, type CollectorResult, type HeadlineMetricKey, type MetricSample, type ObservedCi, type ObservedRelationship } from '@openmap/contracts';
+import { summarise, type Estate, type EstateCi, type EstateSummary, type Slot } from './estate.js';
 import { Rng } from './rng.js';
 import { ESTATE_EPOCH_MS } from './time.js';
 
@@ -53,6 +53,85 @@ function compareSlots(a: Slot, b: Slot): number {
   return a.id - b.id;
 }
 
+/**
+ * REQ-CMDB-038 — every CI of a known layer carries one sample of its layer's headline metric per result, so the
+ * replayed estate fills ClickHouse `metrics` the way a real sweep would. Values come from the CI's own attributes
+ * when the generator already set one (DHCP scope utilisation, PDU load) and from the slot's RNG otherwise, inside
+ * the range an operator would expect for the measurement.
+ */
+const HEADLINE_UNITS: Record<HeadlineMetricKey, string> = {
+  pue: 'ratio',
+  throughputGbps: 'Gbps',
+  cpuPercent: 'percent',
+  iops: 'iops',
+  loadPercent: 'percent',
+  patchCompliancePercent: 'percent',
+  apdex: 'ratio',
+  seatUtilisationPercent: 'percent',
+  lastSeenDays: 'days',
+};
+const HEADLINE_RANGES: Record<HeadlineMetricKey, readonly [number, number, number]> = {
+  // [min, max, decimals]
+  pue: [1.18, 2.05, 2],
+  throughputGbps: [0.05, 38, 2],
+  cpuPercent: [3, 94, 1],
+  iops: [120, 48_000, 0],
+  loadPercent: [4, 91, 1],
+  patchCompliancePercent: [62, 100, 1],
+  apdex: [0.71, 1, 2],
+  seatUtilisationPercent: [18, 99, 1],
+  lastSeenDays: [0, 30, 0],
+};
+/** Attribute names whose value already is the headline measurement, by headline key. */
+const HEADLINE_ATTRIBUTES: Partial<Record<HeadlineMetricKey, readonly string[]>> = {
+  cpuPercent: ['cpuPercent', 'cpuUtilisationPercent'],
+  loadPercent: ['loadPercent', 'utilisationPercent'],
+  seatUtilisationPercent: ['seatUtilisationPercent'],
+  throughputGbps: ['throughputGbps'],
+};
+const SUBNET_UTILISATION_METRIC = 'ipam.subnet.utilisation_percent';
+const POWER_METRIC = 'dcim.power.watts';
+const SUBNET_UTILISATION_RANGE: readonly [number, number] = [4, 88];
+const PDU_WATTS_RANGE: readonly [number, number] = [600, 4200];
+const WATTS_PER_KILOWATT = 1000;
+
+function numberAttribute(ci: EstateCi, names: readonly string[]): number | undefined {
+  for (const name of names) {
+    const value = ci.attributes[name];
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function rounded(value: number, decimals: number): number {
+  return Number(value.toFixed(decimals));
+}
+
+export function samplesFor(ci: EstateCi, ts: string, rng: Rng): MetricSample[] {
+  const layer = CI_TYPE_LAYER[ci.type];
+  if (layer === 'unknown') return [];
+  const spec = LAYER_HEADLINE_METRIC[layer];
+  const [min, max, decimals] = HEADLINE_RANGES[spec.key];
+  const value = numberAttribute(ci, HEADLINE_ATTRIBUTES[spec.key] ?? []) ?? rounded(rng.float(min, max), decimals);
+  const ref = { type: ci.type, identity: ci.identity };
+  const samples: MetricSample[] = [{ ci: ref, metric: spec.metric, ts, value, unit: HEADLINE_UNITS[spec.key], labels: {} }];
+  if (ci.type === 'subnet') {
+    const [lo, hi] = SUBNET_UTILISATION_RANGE;
+    samples.push({ ci: ref, metric: SUBNET_UTILISATION_METRIC, ts, value: rounded(rng.float(lo, hi), 1), unit: 'percent', labels: { cidr: ci.identity['cidr'] ?? '', vrf: ci.identity['vrfRef'] ?? '' } });
+  }
+  if (ci.type === 'pdu') {
+    const [lo, hi] = PDU_WATTS_RANGE;
+    const measuredKw = numberAttribute(ci, ['measuredKw']);
+    const watts = measuredKw === undefined ? rounded(rng.float(lo, hi), 0) : rounded(measuredKw * WATTS_PER_KILOWATT, 0);
+    const feed = ci.attributes['feed'];
+    const rack = ci.attributes['rack'];
+    // `rack` is the rack's name; `rack_id` (the rack CI id that power_by_rack_hourly keys on) is only known once the
+    // reconciler has resolved it, which collectors never do (packages/db/clickhouse/README.md).
+    samples.push({ ci: ref, metric: POWER_METRIC, ts, value: watts, unit: 'W', labels: { pdu_id: ci.identity['serialNumber'] ?? '', feed: typeof feed === 'string' ? feed : '', rack: typeof rack === 'string' ? rack : '' } });
+  }
+  return samples;
+}
+
 /** Builds one CollectorResult for a slot from the CI and relationship indices assigned to it. */
 export function buildResult(estate: Estate, slot: Slot, ciIdx: readonly number[], relIdx: readonly number[], rng: Rng): CollectorResult {
   const { builder } = estate;
@@ -67,6 +146,7 @@ export function buildResult(estate: Estate, slot: Slot, ciIdx: readonly number[]
     const to = builder.get(rel.to);
     return { type: rel.type, from: { type: from.type, identity: from.identity }, to: { type: to.type, identity: to.identity }, attributes: rel.attributes ?? {}, observedAt: slot.observedAt };
   });
+  const samples: MetricSample[] = ciIdx.flatMap((i) => samplesFor(builder.get(i), slot.observedAt, rng));
   const ciJson = JSON.stringify(cis);
   const digest = createHash('sha256').update(ciJson).digest('hex');
   const failures = Math.floor(slot.primaryCount / UNREACHABLE_EVERY);
@@ -90,6 +170,7 @@ export function buildResult(estate: Estate, slot: Slot, ciIdx: readonly number[]
     finishedAt: slot.observedAt,
     cis,
     relationships,
+    samples,
     evidence: [{ kind: slot.evidenceKind, target: slot.target, digest, sizeBytes: Buffer.byteLength(ciJson), capturedAt: slot.observedAt }],
     errors,
     metrics: { targetsAttempted: targets + failures, targetsReached: targets, cisEmitted: cis.length, relationshipsEmitted: relationships.length, durationMs },

@@ -1,7 +1,7 @@
 // REQ-CORE-013 — strips control characters collectors may capture from banners, descriptions and
 // SNMP strings. Postgres jsonb rejects U+0000 outright, and the console never needs C0 controls, so
 // every observed string is cleaned once here before identity, checksum or persistence see it.
-import type { CollectorResult, ObservedCi, ObservedRelationship } from '@openmap/contracts';
+import type { CollectorResult, MetricSample, ObservedCi, ObservedRelationship } from '@openmap/contracts';
 
 // C0 controls except tab, newline and carriage return, plus DEL.
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/gu;
@@ -46,12 +46,17 @@ export function sanitizeRelationship(rel: ObservedRelationship): ObservedRelatio
   return { ...rel, from: sanitizeRef(rel.from), to: sanitizeRef(rel.to), attributes: sanitizeValue(rel.attributes) as ObservedRelationship['attributes'] };
 }
 
+export function sanitizeSample(sample: MetricSample): MetricSample {
+  return { ...sample, ci: sanitizeRef(sample.ci), unit: sanitizeString(sample.unit), labels: sanitizeIdentity(sample.labels) };
+}
+
 /** Returns a copy of the result with every observed string cleaned; the input is not mutated. */
 export function sanitizeResult(result: CollectorResult): CollectorResult {
   return {
     ...result,
     cis: result.cis.map(sanitizeCi),
     relationships: result.relationships.map(sanitizeRelationship),
+    samples: result.samples.map(sanitizeSample),
     errors: result.errors.map((e) => ({ ...e, message: sanitizeString(e.message) })),
   };
 }

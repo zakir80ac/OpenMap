@@ -1,12 +1,14 @@
 'use client';
-// REQ-UI-008 — CMDB: virtualised CI list (TanStack Virtual) over the cursor-paginated `cis` query, with layer filter
-// chips. Hidden layers (per-device visibility) are excluded unless a chip selects one explicitly.
+// REQ-UI-008 REQ-CMDB-038 — CMDB: virtualised CI list (TanStack Virtual) over the cursor-paginated `cis` query, with
+// layer filter chips and the layer's headline metric on every row. Hidden layers (per-device visibility) are
+// excluded unless a chip selects one explicitly.
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, cx, layerColor, spacing } from '@openmap/ui';
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react';
+import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { healthKey, layerKey } from '@/lib/keys';
@@ -25,7 +27,7 @@ export interface CmdbViewProps {
 }
 
 const columns =
-  'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
+  'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
 
 export function CmdbView({ text }: CmdbViewProps): ReactNode {
   const t = useT();
@@ -133,6 +135,7 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
             <span role="columnheader">{t('cmdb.column.type')}</span>
             <span role="columnheader">{t('cmdb.column.layer')}</span>
             <span role="columnheader">{t('cmdb.column.health')}</span>
+            <span role="columnheader">{t('cmdb.column.metric')}</span>
             <span role="columnheader">{t('cmdb.column.observed')}</span>
           </div>
 
@@ -188,6 +191,9 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
                       </span>
                       <span role="cell">
                         <StateBadge state={row.health} label={t(healthKey[row.health])} />
+                      </span>
+                      <span role="cell" className="min-w-0">
+                        <HeadlineMetric metric={row.headlineMetric} />
                       </span>
                       <span role="cell" className="truncate text-om-xs text-om-secondary">
                         {format.dateTime(row.observedAt)}

@@ -1,5 +1,5 @@
 // REQ-UI-003 — maps contract enums to their i18n keys so every view labels layers and health states the same way.
-import type { CiLayer } from '@openmap/contracts';
+import type { CiLayer, HeadlineMetricKey } from '@openmap/contracts';
 import type { MessageKey } from '@openmap/i18n';
 import { isRelationshipType, type RelationshipFamily } from './graph-layout';
 import type { HealthState, PredictedState } from './queries';
@@ -14,6 +14,11 @@ export const healthKey = {
 /** Every CiLayer has a `layer.<name>` entry in both catalogues; the template type makes a missing one a compile error. */
 export function layerKey(layer: CiLayer): MessageKey {
   return `layer.${layer}`;
+}
+
+/** REQ-CMDB-038 — every headline metric key of LAYER_HEADLINE_METRIC has a `metric.<key>` entry in both catalogues. */
+export function metricKey(key: HeadlineMetricKey): MessageKey {
+  return `metric.${key}`;
 }
 
 export const predictedKey = {

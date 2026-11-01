@@ -46,9 +46,33 @@ are `String` columns; query them with `JSONExtractString(attributes, 'serialNumb
 | `host.cpu.utilisation_percent`     | percent |                             |
 | `host.memory.utilisation_percent`  | percent |                             |
 | `vm.cpu.utilisation_percent`       | percent | `hypervisor_id`             |
-| `dcim.power.watts`                 | W       | `rack_id`, `pdu_id`, `feed` |
+| `dcim.power.watts`                 | W       | `rack_id` (rack CI id, set by the reconciler once label references resolve; collectors send `rack`, the name), `pdu_id`, `feed` |
 | `dcim.temperature.celsius`         | C       | `rack_id`, `sensor`         |
 | `ipam.subnet.utilisation_percent`  | percent | `cidr`, `vrf`               |
+
+Samples reach this table only through the outbox: a collector result carries `samples` (collector contract 0.2.0,
+ADR-016), the reconciler resolves each sample's CI reference to an id and emits `openmap.metric.sampled` events of
+at most `RECONCILER.samplesPerEvent` samples, and the dispatcher inserts them here. `source_run_id` is the run.
+
+### Headline metrics (`LAYER_HEADLINE_METRIC`, REQ-CMDB-038)
+
+One metric per layer feeds the value every card and table row shows; the API reads the latest sample from
+`metrics_latest` (migration 0003) for the CIs of a page in one query.
+
+| Layer | Metric | Unit |
+| --- | --- | --- |
+| dc | `dcim.site.pue` | ratio |
+| network_security | `net.device.throughput_gbps` | Gbps |
+| hardware | `host.cpu.utilisation_percent` | percent |
+| storage | `storage.array.iops` | IOPS |
+| virtualization | `vm.cpu.utilisation_percent` | percent |
+| cloud | `cloud.resource.load_percent` | percent |
+| os | `os.patch.compliance_percent` | percent |
+| containers | `container.cpu.utilisation_percent` | percent |
+| databases | `db.instance.iops` | IOPS |
+| applications | `app.apdex.score` | ratio |
+| saas | `saas.seat.utilisation_percent` | percent |
+| unknown | `discovery.last_seen.days` (derived by the API from `observed_at`, never sampled) | days |
 
 ## Materialized views
 
@@ -59,6 +83,7 @@ Targets are `AggregatingMergeTree`; read them with the `-Merge` combinators.
 | `layer_counts_daily_mv`     | `layer_counts_daily`       | `ci_history` | `uniqMerge(cis)`, `countMerge(versions)` grouped by `tenant_id, day, layer` |
 | `subnet_utilisation_daily_mv` | `subnet_utilisation_daily` | `metrics` where `ipam.subnet.utilisation_percent` | `avgMerge(utilisation_avg)`, `maxMerge(utilisation_max)` |
 | `power_by_rack_hourly_mv`   | `power_by_rack_hourly`     | `metrics` where `dcim.power.watts` and `labels['rack_id']` set | `avgMerge(watts_avg)`, `maxMerge(watts_max)`, `countMerge(samples)` |
+| `metrics_latest_mv`         | `metrics_latest` (ReplacingMergeTree(ts)) | `metrics` | `argMax(value, ts)`, `max(ts)` grouped by `tenant_id, ci_id, metric` |
 
 Example:
 

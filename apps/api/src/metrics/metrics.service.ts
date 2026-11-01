@@ -10,6 +10,8 @@ export const GRAPHQL_DURATION_METRIC = 'openmap_graphql_duration_seconds';
 export const AUDIT_ENTRIES_METRIC = 'openmap_audit_entries_total';
 /** REQ-UI-017 — Superset guest tokens minted for embedded analytics. */
 export const ANALYTICS_TOKENS_METRIC = 'openmap_analytics_guest_tokens_total';
+/** REQ-CMDB-038 — ClickHouse read queries issued by the API, by query name and outcome. */
+export const CLICKHOUSE_QUERIES_METRIC = 'openmap_clickhouse_queries_total';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -38,6 +40,7 @@ export class MetricsService {
   readonly duration: Histogram<'operation' | 'status'>;
   readonly auditEntries: Counter<'action'>;
   readonly analyticsTokens: Counter<string>;
+  readonly clickhouseQueries: Counter<'query' | 'status'>;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
@@ -45,6 +48,7 @@ export class MetricsService {
     this.duration = new Histogram({ name: GRAPHQL_DURATION_METRIC, help: 'GraphQL operation duration in seconds', labelNames: ['operation', 'status'], buckets: durationBuckets(), registers: [this.registry] });
     this.auditEntries = new Counter({ name: AUDIT_ENTRIES_METRIC, help: 'Audit log entries written, by mutation', labelNames: ['action'], registers: [this.registry] });
     this.analyticsTokens = new Counter({ name: ANALYTICS_TOKENS_METRIC, help: 'Superset guest tokens minted for embedded analytics', registers: [this.registry] });
+    this.clickhouseQueries = new Counter({ name: CLICKHOUSE_QUERIES_METRIC, help: 'ClickHouse read queries issued by the API, by query name and outcome', labelNames: ['query', 'status'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

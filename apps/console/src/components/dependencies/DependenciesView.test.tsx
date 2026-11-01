@@ -80,7 +80,7 @@ vi.mock('./DependencyCanvas', () => ({
 }));
 
 function ci(id: string, layer: (typeof CI_LAYERS)[number], type: string, displayName: string) {
-  return { id, name: id, displayName, type, layer, health: 'healthy' };
+  return { id, name: id, displayName, type, layer, health: 'healthy', headlineMetric: { key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent', value: 12.5, observedAt: '2026-10-22T09:00:00.000Z' } };
 }
 
 const impact = {

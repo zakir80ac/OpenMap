@@ -14,6 +14,7 @@ describe('sanitize', () => {
       startedAt: '2026-10-22T00:00:00.000Z', finishedAt: '2026-10-22T00:00:01.000Z',
       cis: [{ type: 'listening_service' as const, identity: { hostRef: 'h\u0000', protocol: 'tcp', port: '5432' }, name: 'tcp/5432\u0000', attributes: { banner: 'N\u0000\u0003', nested: { list: ['a\u0000'] } }, tags: ['x\u0000'], externalIds: [], observedAt: '2026-10-22T00:00:00.000Z' }],
       relationships: [{ type: 'runs_on' as const, from: { type: 'listening_service' as const, identity: { hostRef: 'h\u0000' } }, to: { type: 'unknown' as const, identity: { address: '127.0.0.1' } }, attributes: { note: '\u0000' }, observedAt: '2026-10-22T00:00:00.000Z' }],
+      samples: [{ ci: { type: 'host' as const, identity: { fqdn: 'a\u0000.example' } }, metric: 'host.cpu.utilisation_percent', ts: '2026-10-22T00:00:00.000Z', value: 1, unit: 'per\u0000cent', labels: { core: 'all\u0000' } }],
       evidence: [], errors: [{ code: 'parse_error' as const, message: 'bad\u0000', retryable: false }],
       metrics: { targetsAttempted: 1, targetsReached: 1, cisEmitted: 1, relationshipsEmitted: 1, durationMs: 1 }, contractVersion: '0.1.0',
     };
@@ -25,6 +26,9 @@ describe('sanitize', () => {
     expect(clean.cis[0]?.tags[0]).toBe('x');
     expect((clean.relationships[0]?.from as { identity: Record<string, string> }).identity['hostRef']).toBe('h');
     expect(clean.errors[0]?.message).toBe('bad');
+    expect((clean.samples[0]?.ci as { identity: Record<string, string> }).identity['fqdn']).toBe('a.example');
+    expect(clean.samples[0]?.unit).toBe('percent');
+    expect(clean.samples[0]?.labels['core']).toBe('all');
     expect(result.cis[0]?.name).toBe('tcp/5432\u0000');
   });
 });

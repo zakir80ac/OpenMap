@@ -4,7 +4,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SYNTH_ESTATE } from '@openmap/constants';
-import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, collectorResultSchema, RELATIONSHIP_TYPES, type CiType, type CollectorResult } from '@openmap/contracts';
+import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, collectorResultSchema, HEADLINE_METRIC_NAMES, LAYER_HEADLINE_METRIC, RELATIONSHIP_TYPES, type CiType, type CollectorResult } from '@openmap/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildEstate, summarise, type Estate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.js';
@@ -94,6 +94,32 @@ describe('synth-estate', () => {
       expect(r.evidence[0]?.digest).toBe(digest);
       expect(r.evidence[0]?.sizeBytes).toBe(Buffer.byteLength(JSON.stringify(r.cis)));
     }
+  });
+
+  it('samples the headline metric of every CI of a known layer, plus subnet utilisation and PDU power (REQ-CMDB-038)', () => {
+    let headline = 0;
+    let extras = 0;
+    for (const r of results) {
+      const known = new Set(r.cis.map((c) => identityKey(c.type, c.identity)));
+      const expected = r.cis.filter((c) => CI_TYPE_LAYER[c.type] !== 'unknown').length;
+      const own = r.samples.filter((s) => HEADLINE_METRIC_NAMES.includes(s.metric));
+      expect(own.length, r.collectorId).toBe(expected);
+      for (const sample of r.samples) {
+        if (!('identity' in sample.ci)) throw new Error('samples reference CIs by identity');
+        expect(known.has(identityKey(sample.ci.type, sample.ci.identity)), sample.metric).toBe(true);
+        expect(sample.ts).toBe(r.finishedAt);
+        expect(Number.isFinite(sample.value)).toBe(true);
+        if (HEADLINE_METRIC_NAMES.includes(sample.metric)) {
+          expect(sample.metric).toBe(LAYER_HEADLINE_METRIC[CI_TYPE_LAYER[sample.ci.type]].metric);
+          headline++;
+        } else {
+          expect(['ipam.subnet.utilisation_percent', 'dcim.power.watts']).toContain(sample.metric);
+          extras++;
+        }
+      }
+    }
+    expect(headline).toBeGreaterThan(1000);
+    expect(extras).toBeGreaterThan(10);
   });
 
   it('resolves every relationship endpoint to an emitted CI', () => {
