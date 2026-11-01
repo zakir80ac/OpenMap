@@ -23,7 +23,9 @@ export function createLlmClient(env: Pick<Env, 'LLM_BASE_URL' | 'LLM_MODEL' | 'L
   return {
     async complete(messages) {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), env.LLM_TIMEOUT_MS);
+      const timer = setTimeout(() => {
+        controller.abort();
+      }, env.LLM_TIMEOUT_MS);
       try {
         const res = await fetchImpl(endpoint, {
           method: 'POST',

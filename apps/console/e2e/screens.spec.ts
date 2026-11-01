@@ -3,6 +3,7 @@
 // elevation; Assets creates a plan whose planned assets appear in the register; Integrations creates an integration
 // and probes it (the probe outcome is whatever the tenant's outbound policy allows); Analytics mounts the embedded
 // Superset dashboard for this tenant; the Assistant answers or explains a refusal for an example question.
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { isLocale, translate, type Locale } from '@openmap/i18n';
 import { loadEnv } from '@openmap/config';
@@ -10,6 +11,7 @@ import { signIn } from './auth';
 
 const env = loadEnv();
 const ASSISTANT_TIMEOUT_MS = 120_000;
+const screenshotsDir = fileURLToPath(new URL('./screenshots/', import.meta.url));
 
 function localeOf(name: string): Locale {
   if (!isLocale(name)) throw new Error('project name must be a locale: ' + name);
@@ -122,6 +124,7 @@ test('Assistant: an example question is answered or explicitly refused', async (
   const outcome =
     (await answered.count()) > 0 ? 'answered' : 'refused: ' + ((await refused.first().textContent()) ?? '');
   testInfo.annotations.push({ type: 'assistant', description: outcome });
+  await page.screenshot({ path: screenshotsDir + 'assistant-answered-' + locale + '.png', fullPage: true });
 });
 
 test('Software: the catalogue lists discovered products with their licence position', async ({

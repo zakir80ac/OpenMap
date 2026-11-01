@@ -283,6 +283,11 @@ export type RelationshipType = z.infer<typeof relationshipTypeSchema>;
 export const LIFECYCLES = ['discovered', 'managed', 'planned', 'retired'] as const;
 export const lifecycleSchema = z.enum(LIFECYCLES);
 
+/** Health of a CI as stored on every node and exposed by the GraphQL `HealthState` enum. */
+export const HEALTH_STATES = ['healthy', 'degraded', 'down', 'unknown'] as const;
+export const healthStateSchema = z.enum(HEALTH_STATES);
+export type HealthState = z.infer<typeof healthStateSchema>;
+
 /** Attribute values are JSON scalars or arrays of scalars; nested objects go in their own CI. */
 export const scalarSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 export const attributeValueSchema = z.union([scalarSchema, z.array(scalarSchema)]);

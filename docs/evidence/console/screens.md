@@ -58,11 +58,10 @@ screens; the standard 0.9 applies to everything else and the accessibility and b
 - Assets and Integrations start empty on a fresh estate; the e2e creates a plan and an integration.
 - Analytics: the API provisioned the dashboard in Superset (database, 5 datasets, 5 charts, layout, embedding, guest
   role) on first use; `analyticsEmbed` answers in about a second afterwards.
-- Assistant: the dev stack runs `Qwen2.5-Coder-1.5B-Instruct` on llama.cpp (CPU). With the repair loop two of the
-  four example questions are answered (hosts per OS, racks by power) and two are refused with the validator's or the
-  engine's reason (an invented `$name` parameter; an unbound variable). Answer quality is the model's; the product
-  behaviour — validated read-only Cypher shown with every answer, explicit refusals — is what the screen promises.
-  `.env.example` names the 7B coder model for real deployments.
+- Assistant: the dev stack runs `Qwen2.5-Coder-1.5B-Instruct` on llama.cpp (CPU). Since the pipeline scopes, normalises
+  and schema-checks the model's Cypher deterministically (`docs/evidence/assistant.md`), the golden set passes 12 of
+  12 on this model: 10 questions answered, 2 refused with the reason (measurements that are not graph properties).
+  All four example prompts on the screen are answered. `.env.example` names the 7B coder model for real deployments.
 
 ## Screenshots
 

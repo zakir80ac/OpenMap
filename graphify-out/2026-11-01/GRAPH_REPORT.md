@@ -1,12 +1,12 @@
 # Graph Report - OpenMap  (2026-11-01)
 
 ## Corpus Check
-- 725 files · ~717,192 words
+- 726 files · ~724,255 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 8921 nodes · 16499 edges · 512 communities (449 shown, 63 thin omitted)
-- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 740 edges (avg confidence: 0.8)
+- 8958 nodes · 16603 edges · 525 communities (461 shown, 64 thin omitted)
+- Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 743 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -508,20 +508,35 @@
 - layer-counts.md
 - github.com/openmap/openmap/apps/collectors
 - github.com/openmap/openmap/apps/node
+- ADR-015 — Discovery scopes in the contract: `discoveryScopes`, `updateDiscoveryScope` (GraphQL 0.7.0)
+- Domain
+- scheduledAt
+- time
+- durationMs
+- serviceCiId
+- AuthModule
+- EnvModule
+- Collector
+- @openmap/graph
+- main
+- bullmq
+- bullmq
 
 ## God Nodes (most connected - your core abstractions)
-1. `Errorf()` - 104 edges
-2. `CiRecord` - 103 edges
+1. `CiRecord` - 105 edges
+2. `Errorf()` - 104 edges
 3. `enum` - 102 edges
-4. `useT()` - 88 edges
+4. `useT()` - 90 edges
 5. `Observation` - 78 edges
 6. `enum` - 69 edges
 7. `enum` - 69 edges
-8. `parseInput()` - 60 edges
+8. `parseInput()` - 62 edges
 9. `requireLocale()` - 59 edges
-10. `TenantContext` - 51 edges
+10. `gql()` - 53 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `listMigrationFiles()` --indirect_call--> `f()`  [INFERRED]
+  packages/db/src/files.ts → tools/guard/src/rules.test.ts
 - `lefthook pre-commit hooks` --semantically_similar_to--> `CI verify job`  [INFERRED] [semantically similar]
   lefthook.yml → .github/workflows/ci.yml
 - `DependencyCanvas()` --indirect_call--> `edge()`  [INFERRED]
@@ -530,8 +545,6 @@
   apps/console/src/components/vulnerabilities/VulnerabilitiesView.tsx → tools/perf/src/lighthouse.ts
 - `AuthProvider()` --indirect_call--> `Tokens`  [INFERRED]
   apps/console/src/lib/auth/AuthProvider.tsx → packages/ui/src/tokens/index.ts
-- `countLines()` --indirect_call--> `chunk()`  [INFERRED]
-  tools/synth-estate/src/cli.ts → apps/scheduler/src/core/planner.ts
 
 ## Import Cycles
 - None detected.
@@ -544,23 +557,23 @@
 - **Contracts drafted at 0.1.0 without SPEC.md from CLAUDE.md, design canvas and capability map** — docs_adr_adr_002_contracts_without_spec_adr_002, docs_contracts_frozen_contracts, docs_capability_map_device42_parity_map, graphify_out_converted_openmap_tracker_d0198e2e_risk_r_001, graphify_out_converted_openmap_tracker_d0198e2e_openmap_tracker [EXTRACTED 1.00]
 - **Go collector families implemented over ADR-008 protocol libraries** — docs_adr_adr_008_collector_protocol_libraries_adr_008, docs_collectors_collector_database, docs_collectors_collector_dns, docs_collectors_collector_ldap, docs_collectors_collector_wmi, docs_collectors_collector_hyperv, docs_collectors_collector_dhcp [EXTRACTED 1.00]
 
-## Communities (512 total, 63 thin omitted)
+## Communities (525 total, 64 thin omitted)
 
 ### Community 0 - "enum"
 Cohesion: 0.03
-Nodes (111): collectorsByNode(), DiscoveryView(), DiscoveryViewProps, JOB_STATUS_KEYS, jobDurationSeconds(), jobState(), jobStatusLabel(), NODE_STATUS_KEYS (+103 more)
+Nodes (85): collectorsByNode(), DiscoveryView(), DiscoveryViewProps, JOB_STATUS_KEYS, jobDurationSeconds(), jobState(), jobStatusLabel(), NODE_STATUS_KEYS (+77 more)
 
 ### Community 1 - "CiRecord"
-Cohesion: 0.03
-Nodes (103): AnalyticsView(), AnalyticsViewInternalProps, AnalyticsViewProps, EmbedFn, state, AssetsView(), AssetsViewProps, coverDates() (+95 more)
+Cohesion: 0.04
+Nodes (92): AnalyticsView(), AnalyticsViewInternalProps, AnalyticsViewProps, AssetsView(), AssetsViewProps, coverDates(), emptyLine(), endsBy() (+84 more)
 
 ### Community 2 - "assets.repository.ts"
-Cohesion: 0.05
-Nodes (95): router, pathname, SignInScreenProps, AsyncAction, AuthContext, AuthProvider(), AuthProviderProps, AuthReason (+87 more)
+Cohesion: 0.11
+Nodes (30): SignInScreenProps, AsyncAction, AuthContext, AuthProviderProps, AuthReason, AuthStatus, AuthUser, CallbackError (+22 more)
 
 ### Community 3 - "services.service.ts"
-Cohesion: 0.03
-Nodes (55): isoOf(), toIso(), stringArrayAttribute(), DISCOVERY_REPOSITORY, DiscoveryRepository, JobRow, JobRunStats, NodeRow (+47 more)
+Cohesion: 0.04
+Nodes (35): Actor, stringArrayAttribute(), DISCOVERY_REPOSITORY, DiscoveryRepository, PrismaDiscoveryRepository, Injectable, DiscoveryJobFieldsResolver, DiscoveryNodeFieldsResolver (+27 more)
 
 ### Community 4 - "bolt-repository.ts"
 Cohesion: 0.02
@@ -568,39 +581,39 @@ Nodes (102): affected_by, application, application_component, assigned_to, backe
 
 ### Community 5 - "app.ts"
 Cohesion: 0.05
-Nodes (39): AssetsModule, Module, AssetRow, ASSETS_REPOSITORY, AssetsQuery, AssetsRepository, estimatedCostOf(), PlanRow (+31 more)
+Nodes (41): AssetsModule, Module, AssetRow, ASSETS_REPOSITORY, AssetsQuery, AssetsRepository, estimatedCostOf(), PlanRow (+33 more)
 
 ### Community 6 - "enum"
 Cohesion: 0.06
-Nodes (77): DependenciesPage(), PageProps, single(), CiDetailView(), ciHref(), HistoryTab(), DependenciesView(), DependenciesViewProps (+69 more)
+Nodes (77): DependenciesPage(), PageProps, single(), RootPage(), CiDetailView(), ciHref(), HistoryTab(), DependenciesView() (+69 more)
 
 ### Community 7 - "enum"
-Cohesion: 0.05
-Nodes (66): AnalyticsPage(), generateMetadata(), PageProps, AssetsPage(), generateMetadata(), PageProps, AssistantPage(), generateMetadata() (+58 more)
+Cohesion: 0.04
+Nodes (71): AnalyticsPage(), generateMetadata(), PageProps, AssetsPage(), generateMetadata(), PageProps, AssistantPage(), generateMetadata() (+63 more)
 
 ### Community 8 - "IntegrationView"
 Cohesion: 0.05
-Nodes (38): afterClause(), attributeClause(), buildCiWhere(), CI_ORDER, textClause(), CI_INCLUDE, CiRow, identityOf() (+30 more)
+Nodes (34): afterClause(), attributeClause(), buildCiWhere(), CI_ORDER, textClause(), CI_INCLUDE, CiRow, identityOf() (+26 more)
 
 ### Community 9 - "discovery.service.ts"
-Cohesion: 0.05
-Nodes (56): AssistantModule, Module, AssistantResolver, questionArg, Resolver, AssistantAnswerView, AssistantService, Inject (+48 more)
+Cohesion: 0.04
+Nodes (68): AssistantModule, Module, AssistantResolver, questionArg, Resolver, AssistantAnswerView, AssistantService, Inject (+60 more)
 
 ### Community 10 - "rules.ts"
-Cohesion: 0.05
-Nodes (64): AppLayout(), AppLayoutProps, LocaleNotFound(), AuthCallbackView(), AuthCallbackViewProps, Phase, AuthGate(), AuthScreen() (+56 more)
+Cohesion: 0.06
+Nodes (62): AppLayout(), AppLayoutProps, LocaleNotFound(), AuthCallbackView(), AuthCallbackViewProps, Phase, AuthGate(), AuthScreen() (+54 more)
 
 ### Community 11 - "Node"
 Cohesion: 0.06
 Nodes (70): boolAttr(), columnFloats(), coolingAttributes(), entitySensors(), hasPrefix(), lgpState(), parseCooling(), systemStateName() (+62 more)
 
 ### Community 12 - "tailwind-preset.ts"
-Cohesion: 0.06
-Nodes (33): HealthState, PredictedState, BsmFactsService, ConditionSeverity, SERVICE_ATTRIBUTES, toPredicted(), Inject, Injectable (+25 more)
+Cohesion: 0.10
+Nodes (21): ServicesService, Injectable, ServiceHealthView, SubscriptionsPublisher, Injectable, filteredEvents(), SubscriptionContext, SubscriptionsResolver (+13 more)
 
 ### Community 13 - "parseInput"
-Cohesion: 0.06
-Nodes (59): classify(), Emit(), firstNonEmpty(), Context, Credential, Manifest, RR, Target (+51 more)
+Cohesion: 0.13
+Nodes (26): Aggregate(), decodeData(), decodeSFlow(), decodeV5(), Emit(), Context, Credential, Duration (+18 more)
 
 ### Community 14 - "TenantContext"
 Cohesion: 0.07
@@ -615,12 +628,12 @@ Cohesion: 0.03
 Nodes (68): application, application_component, blade, bmc, building, business_service, cable, certificate (+60 more)
 
 ### Community 17 - "db/src/index.ts"
-Cohesion: 0.07
-Nodes (26): Args, Mutation, Args, Roles(), CiResolver, Args, Mutation, SearchHitRecord (+18 more)
+Cohesion: 0.05
+Nodes (39): Args, Mutation, Args, Roles(), CiResolver, Args, Mutation, directionSchema (+31 more)
 
 ### Community 18 - "estate.ts"
-Cohesion: 0.05
-Nodes (42): AnalyticsResolver, Resolver, auditArgsSchema, AuditConnection, AuditEdge, AuditEntry, ALL, effectiveRoles() (+34 more)
+Cohesion: 0.04
+Nodes (60): AuditInterceptor, returnTypeName(), subjectIdOf(), ADR-0010, Injectable, AuditModule, Module, auditArgsSchema (+52 more)
 
 ### Community 19 - "app.module.ts"
 Cohesion: 0.09
@@ -631,40 +644,40 @@ Cohesion: 0.07
 Nodes (46): ComponentClassName, kebab(), prefixed(), TailwindTheme, themeColors, themeCss(), themeDuration, themeEasing (+38 more)
 
 ### Community 21 - "ui/package.json"
-Cohesion: 0.07
-Nodes (25): ImpactRepository, PrismaImpactRepository, ScenarioRow, SimulationRow, toScenario(), toSimulation(), Injectable, idArg (+17 more)
+Cohesion: 0.12
+Nodes (17): idArg, ImpactResolver, ImpactScenarioFieldsResolver, ImpactSimulationFieldsResolver, Args, Mutation, Parent, ResolveField (+9 more)
 
 ### Community 22 - "ipam.service.ts"
 Cohesion: 0.07
-Nodes (29): AuditActor, AuditFilter, AuditPage, redact(), REDACTED_FRAGMENTS, toEntry(), ADR-0010, CiLoaders (+21 more)
+Nodes (30): AuditActor, AuditFilter, AuditPage, redact(), REDACTED_FRAGMENTS, toEntry(), ADR-0010, CiService (+22 more)
 
 ### Community 23 - "RelationshipRecord"
-Cohesion: 0.07
-Nodes (26): IntegrationsModule, Module, ConfigOnly, ConfigRow, INTEGRATIONS_REPOSITORY, IntegrationsRepository, PrismaIntegrationsRepository, StatusPatch (+18 more)
+Cohesion: 0.02
+Nodes (77): isoOf(), toIso(), asRecord(), PrismaService, Inject, Injectable, JobRow, JobRunStats (+69 more)
 
 ### Community 24 - "db/package.json"
-Cohesion: 0.05
-Nodes (30): AuditInterceptor, returnTypeName(), subjectIdOf(), ADR-0010, Injectable, AuditModule, Module, AuditResolver (+22 more)
+Cohesion: 0.07
+Nodes (41): AssistantAnswerBlock(), ciHref(), componentsLabel(), conditionLabel(), ImpactView(), ImpactViewProps, RunOutcome, useDebounced() (+33 more)
 
 ### Community 25 - "reconciler/package.json"
 Cohesion: 0.04
-Nodes (28): main(), main(), main(), main(), main(), main(), main(), main() (+20 more)
+Nodes (27): main(), main(), main(), main(), main(), main(), main(), main() (+19 more)
 
 ### Community 26 - "scheduler/package.json"
-Cohesion: 0.09
-Nodes (37): BomLineView, toVulnerability(), Money, NO_CURRENCY, toMoney(), booleanAttribute(), isoAttribute(), numberAttribute() (+29 more)
+Cohesion: 0.11
+Nodes (27): BomLineView, Money, booleanAttribute(), isoAttribute(), stringAttribute(), AffectedServiceView, ImpactNodeView, cveArg (+19 more)
 
 ### Community 27 - "devDependencies"
 Cohesion: 0.06
-Nodes (43): hasLicence(), LicenceCell(), LicenceCellProps, licencePosture, LicensedProduct, money(), PostureGroup(), PostureGroupProps (+35 more)
+Nodes (44): PageProps, VulnerabilitiesPage(), hasLicence(), LicenceCell(), LicenceCellProps, licencePosture, LicensedProduct, money() (+36 more)
 
 ### Community 28 - "applications.ts"
-Cohesion: 0.07
-Nodes (51): RFC-1918, INTERFACES_EMITTED, NETWORK_MODELS, SoftwareDef, VENDORS, VLAN_ID, VRF, dbSlot() (+43 more)
+Cohesion: 0.06
+Nodes (53): RFC-1918, INTERFACES_EMITTED, NETWORK_MODELS, SoftwareDef, VENDORS, VLAN_ID, VRF, dbSlot() (+45 more)
 
 ### Community 29 - "world.ts"
-Cohesion: 0.08
-Nodes (45): Assemble(), Emit(), firstNonEmpty(), Context, Credential, Manifest, Target, Time (+37 more)
+Cohesion: 0.21
+Nodes (20): Assemble(), kv(), lastField(), ParseDmi(), ParseDomblklist(), ParseDomifaddr(), ParseDomiflist(), ParseDominfo() (+12 more)
 
 ### Community 30 - "enum"
 Cohesion: 0.08
@@ -687,7 +700,7 @@ Cohesion: 0.09
 Nodes (41): checkEnvelope(), Emit(), firstNonEmpty(), get(), Client, Context, Credential, Manifest (+33 more)
 
 ### Community 35 - "requireLocale"
-Cohesion: 0.07
+Cohesion: 0.08
 Nodes (35): calls, now, respond(), summary(), then, unknown, CmdbView(), CmdbViewProps (+27 more)
 
 ### Community 36 - "properties"
@@ -707,20 +720,20 @@ Cohesion: 0.05
 Nodes (42): eslint, @eslint/js, lefthook, description, devDependencies, eslint, @eslint/js, lefthook (+34 more)
 
 ### Community 40 - "components/index.ts"
-Cohesion: 0.10
-Nodes (36): clusterUID(), distribution(), Emit(), firstNonEmpty(), Client, Context, Credential, Manifest (+28 more)
+Cohesion: 0.13
+Nodes (27): clusterUID(), distribution(), Emit(), firstNonEmpty(), Client, Context, Credential, Manifest (+19 more)
 
 ### Community 41 - "subscriptions.resolver.ts"
-Cohesion: 0.10
-Nodes (37): contains(), Emit(), Client, Context, Credential, Manifest, T, Target (+29 more)
+Cohesion: 0.11
+Nodes (36): contains(), Emit(), Client, Context, Credential, Manifest, T, Target (+28 more)
 
 ### Community 42 - "properties"
-Cohesion: 0.09
-Nodes (31): RootPage(), IconName, ciHref(), errorBudgetPercent(), groupServices(), mapHref(), SERVICE_GROUP_ORDER, ServicesView() (+23 more)
+Cohesion: 0.17
+Nodes (15): ciHref(), errorBudgetPercent(), groupServices(), mapHref(), SERVICE_GROUP_ORDER, ServicesView(), ServicesViewProps, calls (+7 more)
 
 ### Community 43 - "enum"
-Cohesion: 0.06
-Nodes (38): APP_ARCHETYPES, APP_VARIANTS, BARE_METAL_OS, BARE_METAL_OS_WEIGHTS, BUSINESS_SERVICE_BASES, COST_CENTRES, CVE_SEVERITIES, CVE_SEVERITY_WEIGHTS (+30 more)
+Cohesion: 0.05
+Nodes (46): APP_ARCHETYPES, APP_VARIANTS, BARE_METAL_OS, BARE_METAL_OS_WEIGHTS, BUSINESS_SERVICE_BASES, BUSINESS_UNITS, COST_CENTRES, CVE_SEVERITIES (+38 more)
 
 ### Community 44 - "properties"
 Cohesion: 0.13
@@ -732,7 +745,7 @@ Nodes (33): countLines(), DEFAULT_OUT, Flags, generate(), main(), numberFlag(), 
 
 ### Community 46 - "useT"
 Cohesion: 0.10
-Nodes (32): Client, Clients, Cluster, Collector, DBInstance, Instance, Inventory, ipList (+24 more)
+Nodes (34): Client, Clients, Cluster, Collector, DBInstance, Instance, Inventory, ipList (+26 more)
 
 ### Community 47 - "impact.resolver.ts"
 Cohesion: 0.08
@@ -751,24 +764,24 @@ Cohesion: 0.05
 Nodes (39): openmap.asset.eos.approaching, openmap.asset.stage.changed, openmap.asset.warranty.expiring, openmap.assistant.query.answered, openmap.audit.action, openmap.bsm.health.changed, openmap.bsm.incident.correlated, openmap.bsm.sla.breached (+31 more)
 
 ### Community 51 - "assistant/package.json"
-Cohesion: 0.10
-Nodes (35): newClient(), aggregatedList(), b64url(), Emit(), firstNonEmpty(), Client, Context, Credential (+27 more)
+Cohesion: 0.11
+Nodes (29): b64url(), Emit(), firstNonEmpty(), Context, Credential, Manifest, RawMessage, Target (+21 more)
 
 ### Community 52 - "bsm-engine/package.json"
 Cohesion: 0.06
 Nodes (36): assetRecordSchema, Attributes, attributesSchema, attributeValueSchema, Ci, CI_IDENTITY_KEYS, CI_LAYERS, CI_TYPE_LAYER (+28 more)
 
 ### Community 53 - ".Run"
-Cohesion: 0.09
-Nodes (19): AuthenticatedRequest, AuthGuard, Injectable, AuthModule, Global, Module, AuthService, Injectable (+11 more)
+Cohesion: 0.23
+Nodes (6): AuthenticatedRequest, Principal, RolesGuard, Injectable, GqlContext, Inject
 
 ### Community 54 - "contracts/package.json"
 Cohesion: 0.09
 Nodes (35): DbEngine, GUEST_OS, GUEST_OS_WEIGHTS, HostModelDef, HYPERVISOR_COLLECTOR, HYPERVISOR_PRODUCT, HypervisorPlatform, NetworkModelDef (+27 more)
 
 ### Community 55 - "tracker/src/cli.ts"
-Cohesion: 0.11
-Nodes (14): ciIdsIn(), CiService, Injectable, nowIso(), SecretsService, Inject, Injectable, buildEnvelope() (+6 more)
+Cohesion: 0.14
+Nodes (10): canonicalJson(), checksumOf(), nowIso(), buildEnvelope(), currentTraceparent(), dataSchemaUri(), OutboxTransaction, OutboxTarget (+2 more)
 
 ### Community 56 - "graphql-metrics.hook.ts"
 Cohesion: 0.10
@@ -779,16 +792,16 @@ Cohesion: 0.11
 Nodes (31): atoi(), atoi64(), Emit(), firstNonEmpty(), Client, Context, Credential, Manifest (+23 more)
 
 ### Community 58 - "properties"
-Cohesion: 0.13
-Nodes (30): anyString(), Emit(), firstNonEmpty(), Context, Credential, Manifest, Target, Time (+22 more)
+Cohesion: 0.17
+Nodes (24): anyString(), Emit(), firstNonEmpty(), Context, Credential, Target, Time, ipString() (+16 more)
 
 ### Community 59 - "graph/package.json"
-Cohesion: 0.12
-Nodes (30): Emit(), firstNonEmpty(), Client, Context, Credential, Manifest, T, Target (+22 more)
+Cohesion: 0.13
+Nodes (28): Emit(), firstNonEmpty(), Client, Context, Manifest, T, Time, listAll() (+20 more)
 
 ### Community 60 - "commercial.ts"
 Cohesion: 0.06
-Nodes (34): items, type, items, type, items, minLength, required, type (+26 more)
+Nodes (34): items, type, items, type, items, type, minLength, required (+26 more)
 
 ### Community 61 - "required"
 Cohesion: 0.06
@@ -799,28 +812,28 @@ Cohesion: 0.06
 Nodes (34): affected_by, assigned_to, backed_by, billed_to, cabled_to, communicates_with, connected_to, contains (+26 more)
 
 ### Community 63 - "properties"
-Cohesion: 0.06
-Nodes (33): devDependencies, prisma, tsx, @types/pg, typescript, vitest, exports, files (+25 more)
+Cohesion: 0.04
+Nodes (46): dependencies, @clickhouse/client, neo4j-driver, @openmap/config, @openmap/constants, @openmap/contracts, pg, devDependencies (+38 more)
 
 ### Community 64 - "ci.ts"
 Cohesion: 0.06
 Nodes (33): dependencies, @openmap/config, @openmap/constants, @opentelemetry/api, @opentelemetry/auto-instrumentations-node, @opentelemetry/exporter-trace-otlp-http, @opentelemetry/instrumentation, @opentelemetry/sdk-node (+25 more)
 
 ### Community 65 - "compose.ts"
-Cohesion: 0.12
-Nodes (28): contractTarget(), Target, Classify(), Emit(), Conn, Context, Credential, Duration (+20 more)
+Cohesion: 0.17
+Nodes (20): Classify(), Emit(), Conn, Context, Credential, Duration, Manifest, Target (+12 more)
 
 ### Community 66 - "Parse"
 Cohesion: 0.06
-Nodes (33): format, pattern, type, pattern, type, items, type, anyOf (+25 more)
+Nodes (35): format, pattern, type, pattern, type, items, type, anyOf (+27 more)
 
 ### Community 67 - "tracker/package.json"
 Cohesion: 0.14
 Nodes (29): Address, Inventory, Listener, Package, windowsReport, Emit(), Inventory, Collect() (+21 more)
 
 ### Community 68 - "kubernetes.ts"
-Cohesion: 0.11
-Nodes (18): AnalyticsModule, Module, Inject, elapsedSeconds(), ExecutionLike, InFlight, operationNameOf(), operationTypeOf() (+10 more)
+Cohesion: 0.06
+Nodes (34): AnalyticsModule, Module, AnalyticsResolver, Resolver, AnalyticsEmbedView, AnalyticsService, ChartSpec, chartSpecs() (+26 more)
 
 ### Community 69 - "compilerOptions"
 Cohesion: 0.12
@@ -832,7 +845,7 @@ Nodes (32): enum, database, fc_fabric, load_balancer, pdu, saas, storage, agent 
 
 ### Community 71 - "synth-estate/package.json"
 Cohesion: 0.06
-Nodes (32): minLength, type, minLength, type, type, format, pattern, type (+24 more)
+Nodes (36): minLength, type, minLength, type, format, pattern, type, format (+28 more)
 
 ### Community 72 - "seed.ts"
 Cohesion: 0.14
@@ -851,8 +864,8 @@ Cohesion: 0.14
 Nodes (27): IsNotFound(), clientCredentials(), Emit(), firstNonEmpty(), Client, Context, Credential, Manifest (+19 more)
 
 ### Community 76 - "graph-layout.ts"
-Cohesion: 0.14
-Nodes (22): atoi(), attr(), classify(), Emit(), firstNonEmpty(), Context, Credential, Manifest (+14 more)
+Cohesion: 0.11
+Nodes (28): atoi(), attr(), classify(), Emit(), firstNonEmpty(), Context, Credential, Manifest (+20 more)
 
 ### Community 77 - "identity.ts"
 Cohesion: 0.15
@@ -864,11 +877,11 @@ Nodes (25): classify(), DomainOf(), Emit(), Filetime(), firstNonEmpty(), Conn, C
 
 ### Community 79 - "properties"
 Cohesion: 0.10
-Nodes (23): CiTable(), DhcpTab(), DnsTab(), flattenSubnets(), IpamView(), IpamViewProps, SubnetPanel(), SubnetsTab() (+15 more)
+Nodes (23): CiTable(), DhcpTab(), DnsTab(), flattenSubnets(), IpamViewProps, SubnetPanel(), SubnetsTab(), Tab (+15 more)
 
 ### Community 80 - "testing/package.json"
-Cohesion: 0.12
-Nodes (22): AuditRow, auditRowFromEvent(), chDate(), ciFromEvent(), deliverClickHouse(), deliverMemgraph(), dispatchOnce(), DispatchReport (+14 more)
+Cohesion: 0.07
+Nodes (23): AuditRow, auditRowFromEvent(), chDate(), ciFromEvent(), deliverClickHouse(), deliverMemgraph(), dispatchOnce(), DispatchReport (+15 more)
 
 ### Community 81 - "HealthService"
 Cohesion: 0.07
@@ -891,8 +904,8 @@ Cohesion: 0.11
 Nodes (22): Emit(), errorsAs(), firstNonEmpty(), Context, Credential, Error, Manifest, Target (+14 more)
 
 ### Community 86 - "required"
-Cohesion: 0.10
-Nodes (19): AssistantView(), AssistantViewProps, cell(), columnsOf(), errorOf(), EXAMPLE_KEYS, state, Turn (+11 more)
+Cohesion: 0.21
+Nodes (10): AssistantView(), AssistantViewProps, cell(), columnsOf(), errorOf(), EXAMPLE_KEYS, state, Turn (+2 more)
 
 ### Community 87 - "properties"
 Cohesion: 0.12
@@ -907,12 +920,12 @@ Cohesion: 0.07
 Nodes (28): anyOf, format, pattern, type, anyOf, anyOf, minLength, type (+20 more)
 
 ### Community 90 - "api.integration.test.ts"
-Cohesion: 0.20
-Nodes (21): CLICKHOUSE_DIR, listMigrationFiles(), loadStatements(), MEMGRAPH_DIR, MigrationFile, splitStatements(), substitute(), env (+13 more)
+Cohesion: 0.21
+Nodes (20): CLICKHOUSE_DIR, listMigrationFiles(), loadStatements(), MEMGRAPH_DIR, MigrationFile, splitStatements(), substitute(), env (+12 more)
 
 ### Community 91 - "config/src/index.ts"
-Cohesion: 0.15
-Nodes (14): AnalyticsEmbedView, AnalyticsService, ChartSpec, chartSpecs(), clickhouseUri(), DatasetSpec, datasetSpecs(), positionJson() (+6 more)
+Cohesion: 0.13
+Nodes (23): classify(), Emit(), firstNonEmpty(), Context, Credential, Manifest, RR, Target (+15 more)
 
 ### Community 92 - "required"
 Cohesion: 0.07
@@ -923,16 +936,16 @@ Cohesion: 0.07
 Nodes (26): dependencies, neo4j-driver, @openmap/config, @openmap/constants, @openmap/contracts, devDependencies, typescript, vitest (+18 more)
 
 ### Community 94 - "properties"
-Cohesion: 0.16
-Nodes (21): BarProps, CardProps, DOT_SIZES, DotProps, DotSize, GlassPanelProps, KpiProps, PILL_VARIANTS (+13 more)
+Cohesion: 0.13
+Nodes (23): BarProps, CardProps, DOT_SIZES, DotProps, DotSize, GlassPanelProps, KpiProps, PILL_VARIANTS (+15 more)
 
 ### Community 95 - "dependencies"
 Cohesion: 0.12
 Nodes (17): deliver(), DeliveryDeps, DeliveryOutcome, DeliveryRequest, digestOf(), extract(), RETRYABLE_STATUS, authHeaders() (+9 more)
 
 ### Community 96 - "run"
-Cohesion: 0.14
-Nodes (22): changeState, CiDetailViewProps, CodeField(), CodeFieldProps, ImpactSummaryCard(), lifecycleKey, mapHref(), Tab (+14 more)
+Cohesion: 0.12
+Nodes (28): changeState, CiDetailViewProps, CodeField(), CodeFieldProps, ImpactSummaryCard(), lifecycleKey, mapHref(), Tab (+20 more)
 
 ### Community 97 - "Switch"
 Cohesion: 0.08
@@ -943,8 +956,8 @@ Cohesion: 0.08
 Nodes (26): createdAt, id, manufacturer, model, tags, tenantId, updatedAt, warranty (+18 more)
 
 ### Community 99 - "properties"
-Cohesion: 0.08
-Nodes (26): anyOf, properties, null, number, minLength, type, estimatedMinutes, name (+18 more)
+Cohesion: 0.09
+Nodes (22): anyOf, properties, null, number, minLength, type, estimatedMinutes, name (+14 more)
 
 ### Community 100 - "required"
 Cohesion: 0.08
@@ -959,12 +972,12 @@ Cohesion: 0.15
 Nodes (22): authResponse, Collector, Inventory, Member, memberOper, ServiceGroup, serviceGroupOper, VersionOper (+14 more)
 
 ### Community 103 - "guard/package.json"
-Cohesion: 0.09
-Nodes (18): createdAt, env, graph, GraphQLResponse, ids, Impact, Layers, mint() (+10 more)
+Cohesion: 0.10
+Nodes (14): createdAt, env, graph, GraphQLResponse, ids, Impact, Layers, mint() (+6 more)
 
 ### Community 104 - "RolesGuard"
-Cohesion: 0.18
-Nodes (20): h(), groupState, Health, propagate(), propagateAll(), rank(), RedundancyGroup, ServiceModel (+12 more)
+Cohesion: 0.20
+Nodes (18): groupState, Health, propagate(), propagateAll(), rank(), RedundancyGroup, ServiceModel, worst() (+10 more)
 
 ### Community 105 - "auth.service.ts"
 Cohesion: 0.15
@@ -987,20 +1000,20 @@ Cohesion: 0.08
 Nodes (24): exceljs, dependencies, exceljs, @openmap/constants, @openmap/contracts, zod, devDependencies, tsx (+16 more)
 
 ### Community 110 - "compilerOptions"
-Cohesion: 0.15
-Nodes (22): CLOUD_RESOURCE_TYPES, addCloudResource(), awsAccountId(), cloudSlot(), COST_CENTRE_CODES, ENVIRONMENTS, generateCloud(), OWNERS (+14 more)
+Cohesion: 0.14
+Nodes (24): CLOUD_RESOURCE_TYPES, addCloudResource(), awsAccountId(), cloudSlot(), COST_CENTRE_CODES, ENVIRONMENTS, generateCloud(), OWNERS (+16 more)
 
 ### Community 111 - "locale-path.ts"
 Cohesion: 0.12
 Nodes (15): APP_FLOWS, BYTES_PER_FLOW, DNS_FLOWS, edge(), flowSlot(), generateFlows(), MONITORING_FLOWS, PACKETS_PER_FLOW (+7 more)
 
 ### Community 112 - "constants/package.json"
-Cohesion: 0.10
-Nodes (16): firstNonEmpty(), marshal(), Context, Inventory, toInt64(), Context, Inventory, Context (+8 more)
+Cohesion: 0.18
+Nodes (8): marshal(), Context, Inventory, toInt64(), Context, Inventory, mongoProber, mysqlProber
 
 ### Community 113 - "properties"
-Cohesion: 0.16
-Nodes (21): Emit(), FetchStub(), firstNonEmpty(), Client, Context, Credential, Manifest, T (+13 more)
+Cohesion: 0.13
+Nodes (25): Emit(), FetchStub(), firstNonEmpty(), Client, Context, Credential, Manifest, T (+17 more)
 
 ### Community 114 - "properties"
 Cohesion: 0.15
@@ -1011,8 +1024,8 @@ Cohesion: 0.08
 Nodes (23): compilerOptions, allowJs, incremental, jsx, lib, module, moduleResolution, noEmit (+15 more)
 
 ### Community 116 - "required"
-Cohesion: 0.19
-Nodes (15): emptyLookup(), main(), envelope(), canonical(), checksum(), merge(), MergeResult, outranks() (+7 more)
+Cohesion: 0.21
+Nodes (14): emptyLookup(), main(), envelope(), canonical(), checksum(), merge(), MergeResult, outranks() (+6 more)
 
 ### Community 117 - "required"
 Cohesion: 0.16
@@ -1047,8 +1060,8 @@ Cohesion: 0.09
 Nodes (23): dependencies, graphology, graphology-layout, @openmap/config, @openmap/constants, @openmap/contracts, @openmap/i18n, @openmap/ui (+15 more)
 
 ### Community 125 - "integration.ts"
-Cohesion: 0.13
-Nodes (16): newRunID(), Context, Credential, Job, Manifest, Mutex, Result, T (+8 more)
+Cohesion: 0.17
+Nodes (13): newRunID(), Context, Credential, Job, Manifest, Mutex, Result, T (+5 more)
 
 ### Community 126 - "tasks"
 Cohesion: 0.09
@@ -1067,12 +1080,12 @@ Cohesion: 0.19
 Nodes (15): NODE_PROPERTIES, schemaGrounding(), systemPrompt(), ChatMessage, createLlmClient(), LlmClient, responseSchema, ALLOWED_PARAMETERS (+7 more)
 
 ### Community 130 - "DependenciesView.tsx"
-Cohesion: 0.15
-Nodes (18): ObservedCi, Emit(), Fetch(), firstNonEmpty(), Context, Credential, Manifest, Target (+10 more)
+Cohesion: 0.12
+Nodes (21): ObservedCi, Context, Credential, Target, Emit(), Fetch(), firstNonEmpty(), Context (+13 more)
 
 ### Community 131 - "enum"
-Cohesion: 0.13
-Nodes (18): Detect(), Emit(), firstNonEmpty(), Context, Credential, Manifest, Target, Time (+10 more)
+Cohesion: 0.10
+Nodes (37): atoi(), ParseBrocade(), parseBrocadeVersion(), parseChassisshow(), parseFabricshow(), parseNsshow(), parseSwitchshow(), parseZoneshow() (+29 more)
 
 ### Community 132 - "type"
 Cohesion: 0.09
@@ -1087,16 +1100,16 @@ Cohesion: 0.09
 Nodes (21): dependencies, @openmap/config, @openmap/constants, devDependencies, typescript, vitest, exports, @openmap/config (+13 more)
 
 ### Community 135 - "id"
-Cohesion: 0.31
-Nodes (18): Bar(), Card(), Dot(), GlassPanel(), Pill(), variantAccent, SectionTitle(), Tag() (+10 more)
+Cohesion: 0.27
+Nodes (21): Bar(), Card(), Dot(), GlassPanel(), Pill(), variantAccent, SectionTitle(), Tag() (+13 more)
 
 ### Community 136 - "required"
 Cohesion: 0.14
 Nodes (12): DateTimeScalar, iso, parseDateTime(), Scalar, assertJson(), jsonFromAst(), JsonScalar, JsonValue (+4 more)
 
 ### Community 137 - "CiFieldsResolver"
-Cohesion: 0.22
-Nodes (19): atoi(), ParseBrocade(), parseBrocadeVersion(), parseChassisshow(), parseFabricshow(), parseNsshow(), parseSwitchshow(), parseZoneshow() (+11 more)
+Cohesion: 0.17
+Nodes (18): router, pathname, Probe(), realSetTimeout, settle(), cache, resetDiscoveryCache(), createIdpStub() (+10 more)
 
 ### Community 138 - "azure.go"
 Cohesion: 0.18
@@ -1111,8 +1124,8 @@ Cohesion: 0.10
 Nodes (20): $id, collectorId, contractVersion, jobId, nodeId, runId, status, tenantId (+12 more)
 
 ### Community 141 - "id"
-Cohesion: 0.10
-Nodes (21): const, type, minLength, type, properties, datacontenttype, dataschema, source (+13 more)
+Cohesion: 0.12
+Nodes (17): const, type, minLength, type, properties, datacontenttype, dataschema, source (+9 more)
 
 ### Community 142 - "required"
 Cohesion: 0.10
@@ -1123,20 +1136,20 @@ Cohesion: 0.10
 Nodes (20): ^build, coverage/**, DEFAULT_LOCALE, KEYCLOAK_CLIENT_ID, KEYCLOAK_REALM, PUBLIC_API_URL, PUBLIC_CONSOLE_URL, PUBLIC_KEYCLOAK_URL (+12 more)
 
 ### Community 144 - "properties"
-Cohesion: 0.17
-Nodes (14): claimsSchema, Inject, baseUrl(), JWKS, jwksUrl(), KeyResolver, realmUrl(), TenantDirectory (+6 more)
+Cohesion: 0.18
+Nodes (12): claimsSchema, Inject, baseUrl(), JWKS, jwksProvider, jwksUrl(), KeyResolver, realmUrl() (+4 more)
 
 ### Community 145 - "organization.ts"
-Cohesion: 0.16
-Nodes (11): Public(), HealthController, HealthModule, Module, DependencyCheck, HealthService, Readiness, Injectable (+3 more)
+Cohesion: 0.17
+Nodes (10): Public(), HealthController, HealthModule, Module, HealthService, Readiness, Injectable, Controller (+2 more)
 
 ### Community 146 - "i18n/tsconfig.json"
-Cohesion: 0.19
-Nodes (18): Secret, GUARD_CONFIG_BOUNDARIES, ALL_RULES, ALLOWED_IPV4, ANY_PATTERNS, FileInput, forbiddenRegex, forbiddenTokens() (+10 more)
+Cohesion: 0.18
+Nodes (19): Secret, GUARD_CONFIG_BOUNDARIES, ALL_RULES, ALLOWED_IPV4, ANY_PATTERNS, FileInput, forbiddenRegex, forbiddenTokens() (+11 more)
 
 ### Community 147 - "Errorf"
-Cohesion: 0.17
-Nodes (14): T, plusServer(), TestPlusWalkAndEmit(), TestStubOnly(), Classify(), Context, Duration, Mutex (+6 more)
+Cohesion: 0.18
+Nodes (13): Credential, Target, BoolOption(), Classify(), Context, Duration, Mutex, URL (+5 more)
 
 ### Community 148 - "api/package.json"
 Cohesion: 0.18
@@ -1163,12 +1176,12 @@ Cohesion: 0.10
 Nodes (20): minLength, type, type, format, type, minLength, type, properties (+12 more)
 
 ### Community 154 - "concurrency"
-Cohesion: 0.11
-Nodes (17): infraPlanSchema, vendorContactSchema, ciSchema, observedRelationshipSchema, relationshipSchema, collectorJobSchema, collectorManifestSchema, entries (+9 more)
+Cohesion: 0.12
+Nodes (16): infraPlanSchema, vendorContactSchema, ciSchema, observedRelationshipSchema, relationshipSchema, collectorJobSchema, collectorManifestSchema, entries (+8 more)
 
 ### Community 155 - "enum"
 Cohesion: 0.11
-Nodes (19): dependencies, jose, @nestjs/common, @nestjs/platform-fastify, @openmap/bsm-engine, @openmap/graph, @opentelemetry/api, @opentelemetry/auto-instrumentations-node (+11 more)
+Nodes (19): dependencies, jose, @nestjs/common, @nestjs/platform-fastify, @openmap/bsm-engine, @openmap/config, @opentelemetry/api, @opentelemetry/auto-instrumentations-node (+11 more)
 
 ### Community 156 - "required"
 Cohesion: 0.15
@@ -1180,7 +1193,7 @@ Nodes (11): agentEnrolSchema, agentReportSchema, AppDeps, credentialSchema, enro
 
 ### Community 158 - "type"
 Cohesion: 0.11
-Nodes (19): maximum, minimum, type, type, format, pattern, type, properties (+11 more)
+Nodes (19): type, format, pattern, type, properties, affectedApplicationCiIds, id, ranAt (+11 more)
 
 ### Community 159 - "items"
 Cohesion: 0.11
@@ -1239,8 +1252,8 @@ Cohesion: 0.23
 Nodes (16): datastoreName(), datastoreRef(), Emit(), firstNonEmpty(), firstPositive(), Time, ClusterSummary, DatastoreSummary (+8 more)
 
 ### Community 173 - "ImpactView.test.tsx"
-Cohesion: 0.15
-Nodes (12): Load(), Parse(), T, TestParseAndLoad(), Job, NewEnrolment(), NewMTLS(), NewWithHTTPClient() (+4 more)
+Cohesion: 0.12
+Nodes (14): Load(), Parse(), T, TestParseAndLoad(), Job, Time, NewMTLS(), NewWithHTTPClient() (+6 more)
 
 ### Community 174 - "OpenMap capability map — Device42 parity and beyond"
 Cohesion: 0.17
@@ -1270,21 +1283,25 @@ Nodes (17): costCentreCiId, createdAt, kind, name, number, status, tenantId, upd
 Cohesion: 0.12
 Nodes (17): items, type, items, type, minLength, required, type, direction (+9 more)
 
+### Community 181 - "useDirection"
+Cohesion: 0.17
+Nodes (24): userFromTokens(), AuthorizeRequest, baseUrl(), buildAuthorizeUrl(), buildEndSessionUrl(), decodeJwtPayload(), discoveryDocumentUrl(), displayName() (+16 more)
+
 ### Community 182 - "scalars.module.ts"
-Cohesion: 0.28
-Nodes (15): Server, assertInventory(), clientFor(), countType(), documents(), Client, ObservedCi, ResponseWriter (+7 more)
+Cohesion: 0.29
+Nodes (14): assertInventory(), clientFor(), countType(), documents(), Client, ObservedCi, ResponseWriter, T (+6 more)
 
 ### Community 183 - "scripts"
-Cohesion: 0.28
-Nodes (14): Errorf(), AuthMethods(), Exec(), Fingerprint(), Context, Credential, PublicKey, Target (+6 more)
+Cohesion: 0.21
+Nodes (18): Errorf(), aggregatedList(), Client, T, listAll(), AuthMethods(), Exec(), Fingerprint() (+10 more)
 
 ### Community 184 - "type"
 Cohesion: 0.28
 Nodes (15): CiRef, CollectorError, Credential, Evidence, ExternalID, Invocation, Job, Manifest (+7 more)
 
 ### Community 185 - "enum"
-Cohesion: 0.26
-Nodes (12): DcimView(), DcimViewProps, groupRooms(), heatAccent(), percentOf(), plateLabel(), RackElevation(), RackPanel() (+4 more)
+Cohesion: 0.22
+Nodes (14): DcimView(), DcimViewProps, groupRooms(), heatAccent(), percentOf(), plateLabel(), RackElevation(), RackPanel() (+6 more)
 
 ### Community 186 - "required"
 Cohesion: 0.28
@@ -1323,8 +1340,8 @@ Cohesion: 0.18
 Nodes (12): ServiceState, describe(), IncidentAction, incidentActions(), IncidentSeverity, MitigateAction, OpenAction, OpenIncident (+4 more)
 
 ### Community 195 - "emit-json-schema.ts"
-Cohesion: 0.20
-Nodes (13): Execute(), Context, Reader, Result, Run(), StoreEvidence(), T, TestExecuteAllFailedIsFailed() (+5 more)
+Cohesion: 0.16
+Nodes (15): Execute(), Context, Reader, Result, Run(), StoreEvidence(), Manifest, T (+7 more)
 
 ### Community 196 - "json.scalar.ts"
 Cohesion: 0.30
@@ -1332,7 +1349,7 @@ Nodes (6): Context, Credential, RawMessage, Result, URL, Client
 
 ### Community 197 - "dependencies"
 Cohesion: 0.13
-Nodes (15): dependencies, bullmq, @clickhouse/client, @openmap/db, @openmap/graph, @opentelemetry/api, @opentelemetry/instrumentation, prom-client (+7 more)
+Nodes (15): dependencies, @clickhouse/client, @openmap/contracts, @openmap/db, @openmap/graph, @opentelemetry/api, @opentelemetry/instrumentation, prom-client (+7 more)
 
 ### Community 198 - "OpenMap-Tracker_d0198e2e.md"
 Cohesion: 0.15
@@ -1340,7 +1357,7 @@ Nodes (20): English and Arabic with RTL, Capability area 10: Platform, Object me
 
 ### Community 199 - "enum"
 Cohesion: 0.13
-Nodes (15): dependencies, bullmq, fastify, @openmap/contracts, @opentelemetry/api, @opentelemetry/instrumentation, prom-client, zod (+7 more)
+Nodes (15): dependencies, fastify, @openmap/config, @openmap/contracts, @opentelemetry/api, @opentelemetry/instrumentation, prom-client, zod (+7 more)
 
 ### Community 200 - "required"
 Cohesion: 0.13
@@ -1367,24 +1384,24 @@ Cohesion: 0.13
 Nodes (15): costCentreCiId, externalIds, tenantId, title, vendorCiId, required, annualCost, autoRenews (+7 more)
 
 ### Community 206 - "tracker/tsconfig.json"
-Cohesion: 0.13
-Nodes (15): dependencies, @clickhouse/client, neo4j-driver, @openmap/config, @openmap/constants, @openmap/contracts, pg, @prisma/client (+7 more)
+Cohesion: 0.08
+Nodes (13): EmbedFn, state, HEALTH_STATE, base, deliveries, detail, roles, state (+5 more)
 
 ### Community 207 - "BatchLoader"
 Cohesion: 0.18
 Nodes (13): arrow(), defaultDeltaLabel(), Kpi(), kpiTone, toneColor, displayLetterSpacing(), fontFamily, FontFamilyName (+5 more)
 
 ### Community 208 - "constants/tsconfig.json"
-Cohesion: 0.26
-Nodes (9): DEGRADED_WORDS, deriveHealth(), DOWN_LINK, DOWN_POWER, HEALTHY_WORDS, LIVENESS_TYPES, num(), statusAttributes() (+1 more)
+Cohesion: 0.24
+Nodes (10): DEGRADED_WORDS, deriveHealth(), DOWN_LINK, DOWN_POWER, HealthVerdict, HEALTHY_WORDS, LIVENESS_TYPES, num() (+2 more)
 
 ### Community 209 - "required"
-Cohesion: 0.27
-Nodes (12): T, roaServer(), rpcServer(), TestBadSecret(), TestWalkAndEmit(), count(), ObservedCi, T (+4 more)
+Cohesion: 0.30
+Nodes (13): Server, T, roaServer(), rpcServer(), TestBadSecret(), TestWalkAndEmit(), clientFor(), Client (+5 more)
 
 ### Community 210 - "enum"
-Cohesion: 0.22
-Nodes (11): Logger, runAsServiceIfNeeded(), Logger, runAsServiceIfNeeded(), env(), EnvFilePath(), envInt(), Duration (+3 more)
+Cohesion: 0.11
+Nodes (23): certificateExpiry(), enrol(), Context, Level, Logger, Time, level(), main() (+15 more)
 
 ### Community 211 - "properties"
 Cohesion: 0.14
@@ -1435,32 +1452,32 @@ Cohesion: 0.15
 Nodes (13): devDependencies, neo4j-driver, @nestjs/testing, tsx, @types/node, typescript, vitest, neo4j-driver (+5 more)
 
 ### Community 223 - "enum"
-Cohesion: 0.23
-Nodes (10): T, reachable(), TestEmit(), TestLivePostgres(), TestLiveRedis(), TestParseRedisInfo(), Context, Inventory (+2 more)
+Cohesion: 0.52
+Nodes (6): T, reachable(), TestEmit(), TestLivePostgres(), TestLiveRedis(), TestParseRedisInfo()
 
 ### Community 224 - "type"
 Cohesion: 0.24
 Nodes (11): canonicalQuery(), Request, Time, Values, hmacSHA256(), sha256Hex(), Sign(), T (+3 more)
 
 ### Community 225 - "event.ts"
-Cohesion: 0.23
-Nodes (11): certificateExpiry(), enrol(), Context, Level, Logger, Time, level(), main() (+3 more)
+Cohesion: 0.17
+Nodes (9): AuthGuard, Injectable, AuthService, Injectable, buildContext(), ConnectionInit, graphqlOptions(), headerOf() (+1 more)
 
 ### Community 226 - "check.ts"
-Cohesion: 0.29
-Nodes (12): identityKeyOf, insertCisBatch(), insertOutboxBatch(), insertRelationshipsBatch(), json(), nullable(), OUTBOX_TARGETS, persist() (+4 more)
+Cohesion: 0.22
+Nodes (15): ReconcileOutput, identityKeyOf, insertCisBatch(), insertOutboxBatch(), insertRelationshipsBatch(), json(), nullable(), OUTBOX_TARGETS (+7 more)
 
 ### Community 227 - "@openmap/api"
-Cohesion: 0.15
-Nodes (14): API auth model (Keycloak JWT), Realm role hierarchy, TenantContext, TenantDirectory, Fully functional, no dummy sections, tools/synth-estate, keycloak (26.2, realm import), postgres (postgres:17) (+6 more)
+Cohesion: 0.20
+Nodes (10): API auth model (Keycloak JWT), Realm role hierarchy, TenantContext, TenantDirectory, Fully functional, no dummy sections, tools/synth-estate, keycloak (26.2, realm import), postgres (postgres:17) (+2 more)
 
 ### Community 228 - "OpenMap — build state"
 Cohesion: 0.28
 Nodes (9): ADR-009 Postgres migrations run by pg, not the Prisma CLI (Proposed), Multi-statement migration files run as one query; per-statement transaction control needs separate migrations, packages/db/src/migrate-postgres.ts applies prisma/migrations/*/migration.sql over pg, Prisma remains the schema language and migration SQL generator in development; not required at runtime, deploy/: node-service and distroless Node images, compose apps overlay with migrations job, air-gap bundle, Helm chart, PostgreSQL 17 (system of record), Prisma 6.x (ORM and migrations), REQ-CORE-009 Prisma schema and migrations (packages/db) (+1 more)
 
 ### Community 229 - "OpenMap tracker summary"
-Cohesion: 0.23
-Nodes (10): RTL_LOCALES, DIRS, Direction, DirectionContext, directionForLocale(), DirectionProvider(), DirectionProviderProps, documentDirection() (+2 more)
+Cohesion: 0.26
+Nodes (9): DIRS, Direction, DirectionContext, directionForLocale(), DirectionProvider(), DirectionProviderProps, documentDirection(), isDirection() (+1 more)
 
 ### Community 230 - "enum"
 Cohesion: 0.15
@@ -1492,7 +1509,7 @@ Nodes (13): anyOf, minLength, type, additionalProperties, propertyNames, type, a
 
 ### Community 237 - "enum"
 Cohesion: 0.21
-Nodes (13): items, type, items, format, pattern, type, items, type (+5 more)
+Nodes (13): items, items, type, format, pattern, type, items, type (+5 more)
 
 ### Community 238 - "ClickHouse DDL (REQ-CORE-010)"
 Cohesion: 0.16
@@ -1547,12 +1564,12 @@ Cohesion: 0.15
 Nodes (13): format, pattern, type, properties, id, tenantId, type, validTo (+5 more)
 
 ### Community 251 - "impact-scenario.schema.json"
-Cohesion: 0.15
-Nodes (13): type, properties, affectedServiceCiIds, remoteId, tenantId, title, minLength, type (+5 more)
+Cohesion: 0.12
+Nodes (17): format, pattern, type, properties, observedAt, remoteId, severity, tenantId (+9 more)
 
 ### Community 252 - "infra-plan.schema.json"
 Cohesion: 0.15
-Nodes (13): format, pattern, type, properties, minLength, type, integrationId, playbook (+5 more)
+Nodes (13): format, pattern, type, properties, type, minLength, type, integrationId (+5 more)
 
 ### Community 253 - "integration-config.schema.json"
 Cohesion: 0.15
@@ -1571,12 +1588,12 @@ Cohesion: 0.15
 Nodes (12): compilerOptions, composite, outDir, rootDir, exclude, extends, include, src (+4 more)
 
 ### Community 257 - "security-alert.schema.json"
-Cohesion: 0.18
-Nodes (12): BUSINESS_UNITS, REGULATORY_SCOPE, SITES, FACILITY_KW, generateSites(), LinkDef, LinkKind, LINKS (+4 more)
+Cohesion: 0.26
+Nodes (14): AuthProvider(), currentOrigin(), loadDiscovery(), clearPending(), PendingAuth, readPending(), readRefreshToken(), readSession() (+6 more)
 
 ### Community 258 - "support-contract.schema.json"
-Cohesion: 0.26
-Nodes (6): isUuid(), uuid, parseUuid(), RFC-4122, Scalar, UuidScalar
+Cohesion: 0.23
+Nodes (7): ciIdsIn(), isUuid(), uuid, parseUuid(), RFC-4122, Scalar, UuidScalar
 
 ### Community 259 - "vendor-contact.schema.json"
 Cohesion: 0.17
@@ -1591,16 +1608,16 @@ Cohesion: 0.26
 Nodes (7): telemetry, createSchedulerMetrics(), main(), createResultsQueue(), createOpenBaoReader(), kvResponseSchema, ResolvedCredential
 
 ### Community 262 - "ADR-001 — Monorepo tooling"
-Cohesion: 0.22
-Nodes (16): OpenBao KV v2 credential resolution, No hardcoding rule, Open source only, no product dependency, OpenMap, Sovereign by default, Air-gap compose overlay, meilisearch (v1.15), openbao (2.3, dev server) (+8 more)
+Cohesion: 0.12
+Nodes (26): OpenBao KV v2 credential resolution, No hardcoding rule, Open source only, no product dependency, OpenMap, Sovereign by default, Air-gap compose overlay, llm-cpu (llama.cpp server, profile cpu), llm-gpu (vLLM, profile gpu) (+18 more)
 
 ### Community 263 - "ADR-002 — Contracts drafted at 0.1.0 while docs/SPEC.md is pending"
-Cohesion: 0.20
-Nodes (14): runDiscovery mutation, x-app-env shared environment anchor, node service (profile node), pki-init.js, scheduler service, scheduler-pki volume, llm-cpu (llama.cpp server, profile cpu), llm-gpu (vLLM, profile gpu) (+6 more)
+Cohesion: 0.24
+Nodes (12): runDiscovery mutation, x-app-env shared environment anchor, node service (profile node), pki-init.js, scheduler service, scheduler-pki volume, valkey (valkey:8), openmap.appEnv template helper (+4 more)
 
 ### Community 264 - "ADR-003 — Go for the Discovery Node and collectors"
-Cohesion: 0.36
-Nodes (10): migrate service (db cli all), clickhouse (clickhouse-server:25.3), memgraph (memgraph-mage:3.4), prometheus service, Prometheus scrape config, Helm migrate Job (pre-install/pre-upgrade hook), migrate-clickhouse.ts runner, ClickHouse DDL substitution tokens (+2 more)
+Cohesion: 0.31
+Nodes (11): API Prometheus metrics, migrate service (db cli all), clickhouse (clickhouse-server:25.3), memgraph (memgraph-mage:3.4), prometheus service, Prometheus scrape config, Helm migrate Job (pre-install/pre-upgrade hook), migrate-clickhouse.ts runner (+3 more)
 
 ### Community 265 - "ADR-004 — Twelve-layer model with user-labelled unknowns"
 Cohesion: 0.17
@@ -1615,12 +1632,12 @@ Cohesion: 0.17
 Nodes (11): compilerOptions, composite, outDir, rootDir, exclude, extends, include, src (+3 more)
 
 ### Community 268 - "Design cues taken from the AetherTwin prototype (Gemini / AI Studio)"
-Cohesion: 0.29
-Nodes (8): @openmap/api, API Prometheus metrics, /healthz and /readyz probes, src/lib/graphql.ts client, Console routes: dashboard, layers, cmdb, api service, Helm api Deployment, node-service.Dockerfile
+Cohesion: 0.33
+Nodes (7): @openmap/api, /healthz and /readyz probes, src/lib/graphql.ts client, Console routes: dashboard, layers, cmdb, api service, Helm api Deployment, node-service.Dockerfile
 
 ### Community 269 - "tags"
-Cohesion: 0.30
-Nodes (10): Catalogue, catalogues, createTranslator(), direction(), format(), isLocale(), isRtl(), MessageKey (+2 more)
+Cohesion: 0.27
+Nodes (11): RTL_LOCALES, Catalogue, catalogues, createTranslator(), direction(), format(), isLocale(), isRtl() (+3 more)
 
 ### Community 270 - "options"
 Cohesion: 0.17
@@ -1647,8 +1664,8 @@ Cohesion: 0.18
 Nodes (11): enum, type, code, auth_failed, internal, parse_error, permission_denied, rate_limited (+3 more)
 
 ### Community 276 - "stageChangedAt"
-Cohesion: 0.18
-Nodes (11): data, datacontenttype, dataschema, id, source, specversion, subject, tenantid (+3 more)
+Cohesion: 0.12
+Nodes (16): $id, data, datacontenttype, dataschema, id, source, specversion, subject (+8 more)
 
 ### Community 277 - "tenantId"
 Cohesion: 0.18
@@ -1683,8 +1700,8 @@ Cohesion: 0.36
 Nodes (9): committedSchema(), compareSchemas(), git(), main(), schemaVersion(), semver(), here, schemaPath (+1 more)
 
 ### Community 285 - "createdAt"
-Cohesion: 0.27
-Nodes (9): LayerBadge(), LayerBadgeProps, tagAccent(), TagBaseProps, TagProps, TagVariant, layerColor(), LayerName (+1 more)
+Cohesion: 0.53
+Nodes (4): LayerBadge(), LayerBadgeProps, layerColor(), LayerName
 
 ### Community 286 - "id"
 Cohesion: 0.29
@@ -1719,8 +1736,8 @@ Cohesion: 0.20
 Nodes (10): enum, type, clickhouse, memgraph, items, type, pending, bsm (+2 more)
 
 ### Community 294 - "createdAt"
-Cohesion: 0.24
-Nodes (10): items, format, pattern, type, resolvedCiIds, responseActions, items, type (+2 more)
+Cohesion: 0.20
+Nodes (12): items, type, format, pattern, type, affectedServiceCiIds, resolvedCiIds, responseActions (+4 more)
 
 ### Community 295 - "id"
 Cohesion: 0.20
@@ -1767,8 +1784,8 @@ Cohesion: 0.22
 Nodes (9): items, type, required, integrationId, kind, state, value, indicators (+1 more)
 
 ### Community 306 - "documentRefs"
-Cohesion: 0.22
-Nodes (9): url, enum, type, kind, hash, hostname, ip, mac (+1 more)
+Cohesion: 0.29
+Nodes (7): url, enum, hash, hostname, ip, mac, user
 
 ### Community 307 - "endsAt"
 Cohesion: 0.22
@@ -1799,8 +1816,8 @@ Cohesion: 0.25
 Nodes (7): Defects found by this test and fixed, End-to-end suite against the air-gapped stack, Host, Load, REQ-INT-002 REQ-SEC-003 — offline bundle loaded on an isolated host with egress blocked (2026-10-22), Result, Smoke (from the laptop, through the published ports)
 
 ### Community 314 - "next.config.mjs"
-Cohesion: 0.25
-Nodes (7): Data behind the screens, End to end (Playwright, en and ar, `e2e/screens.spec.ts` T-106 and the walkthrough T-087), Lighthouse (desktop flow, `docs/evidence/perf/lighthouse.json`, re-measured 2026-11-01 on the rebuilt console), REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-017 REQ-UI-018 — the six estate screens (2026-10-22), Screenshots, Software and licences, Vulnerabilities, dependency map isolation (2026-11-01), Unit tests (Vitest, en and ar)
+Cohesion: 0.22
+Nodes (8): Data behind the screens, Discovery scopes (REQ-DISC-029, 2026-11-01), End to end (Playwright, en and ar, `e2e/screens.spec.ts` T-106 and the walkthrough T-087), Lighthouse (desktop flow, `docs/evidence/perf/lighthouse.json`, re-measured 2026-11-01 on the rebuilt console), REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-017 REQ-UI-018 — the six estate screens (2026-10-22), Screenshots, Software and licences, Vulnerabilities, dependency map isolation (2026-11-01), Unit tests (Vitest, en and ar)
 
 ### Community 315 - "gen-theme.ts"
 Cohesion: 0.25
@@ -1839,8 +1856,8 @@ Cohesion: 0.25
 Nodes (8): dead_letter, delivered, failed, pending, retrying, state, enum, type
 
 ### Community 324 - "@nestjs/core"
-Cohesion: 0.25
-Nodes (8): severity, enum, type, critical, high, informational, low, medium
+Cohesion: 0.33
+Nodes (6): enum, critical, high, informational, low, medium
 
 ### Community 325 - "@nestjs/graphql"
 Cohesion: 0.32
@@ -1863,12 +1880,12 @@ Cohesion: 0.52
 Nodes (6): count(), ObservedCi, T, server(), TestAuthFailure(), TestWalkAndEmit()
 
 ### Community 330 - "@openmap/graph"
-Cohesion: 0.29
-Nodes (5): Context, Credential, Manifest, Target, echo
+Cohesion: 0.20
+Nodes (11): Emit(), firstNonEmpty(), Context, Credential, Manifest, Target, Time, osFamily() (+3 more)
 
 ### Community 331 - "@openmap/scheduler"
-Cohesion: 0.62
-Nodes (6): clientFor(), Client, T, TestAuthFailureIsNotRetryable(), testServer(), TestWalkAndEmit()
+Cohesion: 0.18
+Nodes (8): firstNonEmpty(), Context, Inventory, Context, Inventory, ParseRedisInfo(), mssqlProber, redisProber
 
 ### Community 332 - "@opentelemetry/api"
 Cohesion: 0.29
@@ -1947,12 +1964,12 @@ Cohesion: 0.33
 Nodes (5): $id, $schema, title, type, version
 
 ### Community 352 - "reconciler/vitest.config.ts"
-Cohesion: 0.33
-Nodes (6): failed, status, enum, type, partial, success
+Cohesion: 0.35
+Nodes (10): base64UrlDecode(), base64UrlEncode(), codeChallenge(), createCodeVerifier(), createNonce(), createState(), randomUrlSafe(), RFC-7636 (+2 more)
 
 ### Community 353 - "reconciler/vitest.integration.config.ts"
-Cohesion: 0.33
-Nodes (5): $id, $schema, title, type, version
+Cohesion: 0.27
+Nodes (10): Script(), contains(), count(), ObservedCi, T, TestAssembleAndEmit(), TestScriptMarkersRoundTrip(), BytesOf() (+2 more)
 
 ### Community 354 - "scheduler/vitest.config.ts"
 Cohesion: 0.33
@@ -1975,12 +1992,12 @@ Cohesion: 0.40
 Nodes (6): type, null, string, error, remoteId, type
 
 ### Community 359 - "graph/vitest.integration.config.ts"
-Cohesion: 0.33
-Nodes (5): $id, $schema, title, type, version
+Cohesion: 0.17
+Nodes (11): $id, attributes, from, observedAt, to, type, required, $schema (+3 more)
 
 ### Community 360 - "ui/vitest.config.ts"
-Cohesion: 0.33
-Nodes (6): attributes, from, observedAt, to, type, required
+Cohesion: 0.42
+Nodes (10): NewDecoder(), T, ip4(), TestDecodeV5AndAggregate(), TestDecodeV9Templates(), TestLoopbackCapture(), TestSFlowRawHeader(), v5Packet() (+2 more)
 
 ### Community 361 - "github.com/openmap/openmap/apps/collectors"
 Cohesion: 0.33
@@ -1991,8 +2008,8 @@ Cohesion: 0.33
 Nodes (5): $id, $schema, title, type, version
 
 ### Community 363 - "synth-estate/vitest.config.ts"
-Cohesion: 0.33
-Nodes (6): dead_letter, delivered, failed, pending, retrying, enum
+Cohesion: 0.25
+Nodes (8): dead_letter, delivered, failed, pending, retrying, state, enum, type
 
 ### Community 364 - "ovirt.go"
 Cohesion: 0.33
@@ -2063,8 +2080,8 @@ Cohesion: 0.40
 Nodes (5): settings, type, additionalProperties, propertyNames, type
 
 ### Community 381 - "planner.ts"
-Cohesion: 0.50
-Nodes (4): otel-collector service, OTLP receiver (grpc 4317 / http 4318), OTel pipelines (traces/metrics/logs), Collector Prometheus exporter (8889, namespace openmap)
+Cohesion: 0.38
+Nodes (9): count(), documents(), ObservedCi, T, ns(), server(), TestBadTokenIsAuthFailed(), TestRegistryParsing() (+1 more)
 
 ### Community 382 - "fakeScheduler"
 Cohesion: 0.40
@@ -2111,8 +2128,8 @@ Cohesion: 0.50
 Nodes (4): tenantId, format, pattern, type
 
 ### Community 393 - "health-rules.ts"
-Cohesion: 0.50
-Nodes (4): timeoutMs, exclusiveMinimum, maximum, type
+Cohesion: 0.33
+Nodes (8): contractTarget(), Target, T, listenBanner(), portOf(), TestClassifyHttpBanner(), TestCollectNothingOpen(), TestScanAndEmit()
 
 ### Community 394 - "Emit"
 Cohesion: 0.50
@@ -2135,8 +2152,8 @@ Cohesion: 0.50
 Nodes (4): tenantId, format, pattern, type
 
 ### Community 399 - "scheduler/src/main.ts"
-Cohesion: 0.50
-Nodes (4): scenarioId, format, pattern, type
+Cohesion: 0.22
+Nodes (6): app, calls, host, pg, simulation, svc
 
 ### Community 400 - "server"
 Cohesion: 0.50
@@ -2203,8 +2220,8 @@ Cohesion: 0.50
 Nodes (4): format, pattern, type, id
 
 ### Community 416 - "enum"
-Cohesion: 0.50
-Nodes (4): format, pattern, type, observedAt
+Cohesion: 0.29
+Nodes (3): roles, server, state
 
 ### Community 417 - "Domain"
 Cohesion: 0.50
@@ -2262,18 +2279,62 @@ Nodes (3): services, items, type
 Cohesion: 0.67
 Nodes (3): title, minLength, type
 
+### Community 442 - "main"
+Cohesion: 0.40
+Nodes (4): Context, Inventory, pgVersion(), postgresProber
+
 ### Community 446 - "main"
 Cohesion: 0.10
 Nodes (38): In-repo internal/restjson and internal/sigv4 over net/http instead of cloud SDKs, github.com/masterzen/winrm (+ ntlmssp, gokrb5), Apache-2.0, Autodiscovery of unknown devices: unknown CI type with label-and-promote flow, Collector a10_thunder (load_balancer, https, aXAPI), Collector certificate (tls, no credentials), Collector cisco_ucs (ipmi_redfish family, UCS Manager XML API), Collector citrix_adc (load_balancer, NITRO), Collector cloud_aws (api_token, cloud_role) (+30 more)
+
+### Community 478 - "install-node.sh script"
+Cohesion: 0.60
+Nodes (4): AppModule, Module, bootstrap(), createApp()
+
+### Community 482 - "oids.go"
+Cohesion: 0.60
+Nodes (4): T, TestIsc(), TestKea(), TestWindows()
+
+### Community 512 - "ADR-015 — Discovery scopes in the contract: `discoveryScopes`, `updateDiscoveryScope` (GraphQL 0.7.0)"
+Cohesion: 0.40
+Nodes (4): ADR-015 — Discovery scopes in the contract: `discoveryScopes`, `updateDiscoveryScope` (GraphQL 0.7.0), Consequences, Context, Decision
+
+### Community 513 - "Domain"
+Cohesion: 0.50
+Nodes (4): Address, Disk, Interface, Domain
+
+### Community 514 - "scheduledAt"
+Cohesion: 0.50
+Nodes (4): scheduledAt, format, pattern, type
+
+### Community 515 - "time"
+Cohesion: 0.50
+Nodes (4): time, format, pattern, type
+
+### Community 516 - "durationMs"
+Cohesion: 0.50
+Nodes (4): maximum, minimum, type, durationMs
+
+### Community 517 - "serviceCiId"
+Cohesion: 0.50
+Nodes (4): serviceCiId, format, pattern, type
+
+### Community 518 - "AuthModule"
+Cohesion: 0.67
+Nodes (3): AuthModule, Global, Module
+
+### Community 519 - "EnvModule"
+Cohesion: 0.67
+Nodes (3): EnvModule, Global, Module
 
 ## Ambiguous Edges - Review These
 - `scheduler service` → `Prometheus scrape config`  [AMBIGUOUS]
   deploy/compose/prometheus/prometheus.yml · relation: calls
 
 ## Knowledge Gaps
-- **3159 isolated node(s):** `name`, `version`, `private`, `type`, `main` (+3154 more)
+- **3172 isolated node(s):** `name`, `version`, `private`, `type`, `main` (+3167 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **63 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -2281,14 +2342,14 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `scheduler service` and `Prometheus scrape config`?**
   _Edge tagged AMBIGUOUS (relation: calls) - confidence is low._
 - **Why does `EstateBuilder` connect `tenantId` to `requireLocale`, `Observation`, `contracts/package.json`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
-- **Why does `useT()` connect `rules.ts` to `run`, `CiRecord`, `enum`, `requireLocale`, `enum`, `properties`, `properties`, `required`, `enum`, `devDependencies`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
-- **Why does `reconcile()` connect `required` to `tenantId`, `enum`, `required`, `validFrom`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
+  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+- **Why does `Observation` connect `DependenciesView.tsx` to `enum`, `Node`, `parseInput`, `Errorf`, `api/package.json`, `required`, `enum`, `enum`, `CiService`, `enum`, `components/index.ts`, `subscriptions.resolver.ts`, `graph/tsconfig.json`, `CiDetailView.tsx`, `bsm-engine/tsconfig.json`, `useT`, `assistant/package.json`, `graphql-metrics.hook.ts`, `workbook.ts`, `properties`, `graph/package.json`, `compose.ts`, `tracker/package.json`, `emit-json-schema.ts`, `compilerOptions`, `seed.ts`, `reconcile.ts`, `@openmap/graph`, `i18n/package.json`, `compilerOptions`, `graph-layout.ts`, `config/package.json`, `dispatcher.ts`, `config/src/index.ts`, `compilerOptions`, `auth.service.ts`, `properties`, `properties`, `reconciler/tsconfig.json`, `scheduler/tsconfig.json`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `useT()` connect `rules.ts` to `run`, `CiRecord`, `enum`, `requireLocale`, `enum`, `enum`, `properties`, `properties`, `required`, `db/package.json`, `enum`, `devDependencies`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
 - **Are the 103 inferred relationships involving `Errorf()` (e.g. with `.Collect()` and `.classify()`) actually correct?**
   _`Errorf()` has 103 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `name`, `version`, `private` to the rest of the system?**
-  _3159 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3172 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `enum` be split into smaller, more focused modules?**
-  _Cohesion score 0.026961116379894325 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03115423901940756 - nodes in this community are weakly interconnected._

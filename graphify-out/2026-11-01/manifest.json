@@ -60,8 +60,8 @@
     "semantic_hash": "48edb1a904105edd8f7377430f94d8ff"
   },
   "packages/constants/src/index.ts": {
-    "mtime": 1793541059.074708,
-    "ast_hash": "fbd78ac3dc1398d71566b4e8645db95c",
+    "mtime": 1793542936.6093752,
+    "ast_hash": "e927639114e8f098ddb779cdf4f3015c",
     "semantic_hash": ""
   },
   "packages/constants/tsconfig.json": {
@@ -220,13 +220,13 @@
     "semantic_hash": "29a4084872687b5fa209b236589b65c6"
   },
   "packages/i18n/locales/ar.json": {
-    "mtime": 1793541421.7306716,
-    "ast_hash": "19fa5ed00ef21f7896ac3753f3b87601",
+    "mtime": 1793543009.9220526,
+    "ast_hash": "1b17ed0c4717108da5730cb7c969827c",
     "semantic_hash": ""
   },
   "packages/i18n/locales/en.json": {
-    "mtime": 1793541421.7306716,
-    "ast_hash": "1b76fd8665b76507832353a6572dacfc",
+    "mtime": 1793543009.9210474,
+    "ast_hash": "198b12b52aa92152d6db14be6ef61384",
     "semantic_hash": ""
   },
   "packages/i18n/package.json": {
@@ -360,13 +360,13 @@
     "semantic_hash": "ad47e07ba669e60a1323bcd6e0fc9ade"
   },
   "docs/CONTRACTS.md": {
-    "mtime": 1793541101.2292514,
-    "ast_hash": "798746a47901796e60ab290c03e9213e",
+    "mtime": 1793542936.62014,
+    "ast_hash": "186b242a039c8777f8d0878996e8c7ac",
     "semantic_hash": ""
   },
   "docs/STATE.md": {
-    "mtime": 1793542471.2854805,
-    "ast_hash": "ef80cbc60cd6aed2d101af6255d8517c",
+    "mtime": 1793543408.5174232,
+    "ast_hash": "6d7258644e07f9e0d635f2893ae26de9",
     "semantic_hash": ""
   },
   "docs/adr/ADR-001-monorepo-tooling.md": {
@@ -415,8 +415,8 @@
     "semantic_hash": ""
   },
   "apps/api/src/api.integration.test.ts": {
-    "mtime": 1793541453.0204368,
-    "ast_hash": "69bb9a95c73e1f9ab675a783f47813d1",
+    "mtime": 1793543156.6105895,
+    "ast_hash": "b0d12fac1350a962f34e900997e879d8",
     "semantic_hash": ""
   },
   "apps/api/src/app.module.ts": {
@@ -655,29 +655,29 @@
     "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.module.ts": {
-    "mtime": 1792651160.441136,
-    "ast_hash": "aec5d6a59bc22d2f6de3eddb68671cc3",
-    "semantic_hash": "aec5d6a59bc22d2f6de3eddb68671cc3"
+    "mtime": 1793542959.26232,
+    "ast_hash": "f073b6c3f0f443caf5852ab969520524",
+    "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.repository.ts": {
-    "mtime": 1792651116.380441,
-    "ast_hash": "e15ffaa24c36f3dd184408716e70aaaf",
-    "semantic_hash": "e15ffaa24c36f3dd184408716e70aaaf"
+    "mtime": 1793542959.30735,
+    "ast_hash": "86ee551ed04c8bcb497fee1c5e28c099",
+    "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.resolver.ts": {
-    "mtime": 1792651157.1428807,
-    "ast_hash": "1ec8612d2ed2db4f2105165a4cfe535f",
-    "semantic_hash": "1ec8612d2ed2db4f2105165a4cfe535f"
+    "mtime": 1793543132.6821795,
+    "ast_hash": "dc77da84971941f8ebec0482a42e4de0",
+    "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.service.ts": {
-    "mtime": 1793541981.8559923,
-    "ast_hash": "562bf9bb06f44175d663b8eb3f7b4c97",
+    "mtime": 1793542959.3799784,
+    "ast_hash": "bfac7de800dfcd73f60e6f66a3d5e37e",
     "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.types.ts": {
-    "mtime": 1792651085.6319308,
-    "ast_hash": "c5d01fac1373ee0edc10cab91d0cce61",
-    "semantic_hash": "c5d01fac1373ee0edc10cab91d0cce61"
+    "mtime": 1793542999.545321,
+    "ast_hash": "4d63465b866ed358432fd0f8dd96fd79",
+    "semantic_hash": ""
   },
   "apps/api/src/graph/graph.module.ts": {
     "mtime": 1793537121.3553822,
@@ -1335,8 +1335,8 @@
     "semantic_hash": "8eedb9f4352c758029eb77465ee32923"
   },
   "apps/console/src/lib/queries.ts": {
-    "mtime": 1793541555.273942,
-    "ast_hash": "82a04649405a5a896a94bce4de13f1d2",
+    "mtime": 1793543012.2446282,
+    "ast_hash": "d18a0d1552e2751e9f12fbc23be5927f",
     "semantic_hash": ""
   },
   "apps/console/src/middleware.ts": {
@@ -2600,13 +2600,13 @@
     "semantic_hash": ""
   },
   "apps/console/src/components/discovery/DiscoveryView.test.tsx": {
-    "mtime": 1792672547.212378,
-    "ast_hash": "8a0cf22fa1e4ff162f18b91a5dfbd0d6",
+    "mtime": 1793543091.1110942,
+    "ast_hash": "6b7e3318aba8ba18d2e85fe35800f454",
     "semantic_hash": ""
   },
   "apps/console/src/components/discovery/DiscoveryView.tsx": {
-    "mtime": 1792672323.0807397,
-    "ast_hash": "ba15e9571a4c06898fc08563275a4c6f",
+    "mtime": 1793543012.1968877,
+    "ast_hash": "3686283d3646dabec07b34a163a5b7df",
     "semantic_hash": ""
   },
   "apps/console/src/components/impact/ImpactView.test.tsx": {
@@ -3100,13 +3100,13 @@
     "semantic_hash": ""
   },
   "docs/evidence/console/discovery-ar.png": {
-    "mtime": 1793542567.0112238,
-    "ast_hash": "71c628806f9221c8f315fced739ddb19",
+    "mtime": 1793543396.7380722,
+    "ast_hash": "d4da524c58a178f5889114b2be64d731",
     "semantic_hash": ""
   },
   "docs/evidence/console/discovery-en.png": {
-    "mtime": 1793542566.9807935,
-    "ast_hash": "11a80b5176ec08aff56bcc09dec87cee",
+    "mtime": 1793543396.7225544,
+    "ast_hash": "08b6696d5dbc2f1c73795000abdd072b",
     "semantic_hash": ""
   },
   "docs/evidence/console/impact-ar.png": {
@@ -3415,8 +3415,8 @@
     "semantic_hash": ""
   },
   "docs/evidence/perf/lighthouse.json": {
-    "mtime": 1793542447.5842454,
-    "ast_hash": "7fe298e6e613f9dd8730816f609624fb",
+    "mtime": 1793543541.4174232,
+    "ast_hash": "9a2cf7623d84f1074d02a3d6431cbe16",
     "semantic_hash": ""
   },
   "docs/evidence/perf/screen-interaction.json": {
@@ -3570,8 +3570,8 @@
     "semantic_hash": ""
   },
   "apps/console/e2e/screens.spec.ts": {
-    "mtime": 1793541040.247852,
-    "ast_hash": "20145bd34b6073e00662ad914b1eda41",
+    "mtime": 1793543012.2721782,
+    "ast_hash": "aeb9e1df43fd085c9cdcc9b81dfde5e1",
     "semantic_hash": ""
   },
   "apps/console/src/app/[locale]/(app)/analytics/page.tsx": {
@@ -3680,8 +3680,8 @@
     "semantic_hash": ""
   },
   "docs/evidence/console/screens.md": {
-    "mtime": 1793542567.1364763,
-    "ast_hash": "0f38d228a3fae12bfad8e456f888372e",
+    "mtime": 1793543541.4813867,
+    "ast_hash": "b64c134fa2747bdc1379cd6fb0f4f8e7",
     "semantic_hash": ""
   },
   "docs/evidence/console/analytics-ar.png": {
@@ -3882,6 +3882,11 @@
   "docs/evidence/console/vulnerabilities-en.png": {
     "mtime": 1793541040.324522,
     "ast_hash": "4ce509e91575c36d94bd9fd087d98a11",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-015-discovery-scopes.md": {
+    "mtime": 1793542947.3087678,
+    "ast_hash": "8d9fe2adcfb5902e2148cf15b46113fa",
     "semantic_hash": ""
   }
 }

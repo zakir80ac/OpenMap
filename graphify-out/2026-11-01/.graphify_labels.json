@@ -510,5 +510,18 @@
   "508": "ui/vitest.config.ts",
   "509": "github.com/openmap/openmap/apps/collectors",
   "510": "github.com/openmap/openmap/apps/node",
-  "511": "synth-estate/vitest.config.ts"
+  "511": "synth-estate/vitest.config.ts",
+  "512": "ADR-015 — Discovery scopes in the contract: `discoveryScopes`, `updateDiscoveryScope` (GraphQL 0.7.0)",
+  "513": "Domain",
+  "514": "scheduledAt",
+  "515": "time",
+  "516": "durationMs",
+  "517": "serviceCiId",
+  "518": "AuthModule",
+  "519": "EnvModule",
+  "520": "Collector",
+  "521": "@openmap/graph",
+  "522": "main",
+  "523": "bullmq",
+  "524": "bullmq"
 }

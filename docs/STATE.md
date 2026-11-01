@@ -2,7 +2,26 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-01 (finish-everything marathon, checkpoint 8)
+## Last session · 2026-11-01 (finish-everything marathon, checkpoint 9: the assistant)
+
+Syed reported the assistant answering every question with `the query failed to run: Unbound variable: n`. Root cause:
+the grounding prompt carried the fragment `WHERE n.tenantId = $tenantId` and an impact pattern with `{name:$name}`;
+the 1.5B model copied both verbatim. Fixed in REQ-AI-001 (`docs/evidence/assistant.md`): the prompt teaches from six
+complete, validator-checked examples and the stored relationship directions; `prepareCypher` normalises hops (a
+reversed known hop is turned round, a wrong type between two labels linked by one type is replaced), scopes every
+MATCH-bound node variable to `$tenantId` and `validTo IS NULL` deterministically, adds the LIMIT; the validator rejects
+unbound variables, unknown labels / relationship types / node properties, backwards hops and health literals outside
+`HEALTH_STATES` (new in `@openmap/contracts`, mirroring the GraphQL enum) with a message that names the fix. Golden set
+(T-113, `pnpm --filter @openmap/assistant test:integration`, picks the most populated tenant): 12/12 on
+Qwen2.5-Coder-1.5B — 10 answered, 2 refused because utilisation and power draw are not graph properties. The e2e
+Assistant test answers in en and ar on the rebuilt API image (`docs/evidence/console/assistant-{en,ar}.png`). The
+console's example prompts for subnets and power now ask graph-answerable questions. `llm-cpu` in compose had the
+image's health check on the wrong port (unhealthy for 499 checks); it has its own check now and reports healthy.
+Observation for BSM: all 15 business services are `unknown` in the graph and in the API's `services` query on this
+stack — the engine has had no CI health events since the estate replay (REQ-BSM-001/002 behaviour to revisit with a
+synthetic event feed; not an assistant defect).
+
+## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 8)
 
 Syed asked for every Not started / In progress / In review row to be finished, dependencies on his side listed first,
 easiest rows first. Commits this session: `6e6a055` (telemetry in every service, layer visibility on every list),
@@ -46,9 +65,9 @@ scopes: GraphQL 0.7.0, ADR-015; scopes card on the Discovery screen; knowledge g
 lock file; every `pnpm tracker set` failed with EBUSY), so no row moved. The closures with their test ids and evidence
 are queued in `.local/tracker-closures.sh` (gitignored, on this machine): CORE-014/015/016/017/018, SEC-002/006/007/010,
 IPAM-001/002/006, DCIM-002/009, PERF-001/003, INT-003/004/005/006/007/008, CMDB-001…012, CMDB-030/031/035/037,
-SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002. **Close Excel, then run
-`bash .local/tracker-closures.sh && pnpm tracker report && pnpm tracker session --summary "..."`** — 55 rows go Done
-(38 → 93 of 188).
+SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002, and (checkpoint 9) AI-001. **Close Excel, then run
+`bash .local/tracker-closures.sh && pnpm tracker report && pnpm tracker session --summary "..."`** — 56 rows go Done
+(38 → 94 of 188). Set `C5` in the script to the checkpoint-9 commit first.
 
 ## Dependencies on Syed (nothing below can be finished without them)
 
@@ -71,8 +90,9 @@ SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002. **Close Excel
   identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
 - REQ-CMDB-038: `LAYER_HEADLINE_METRIC` per layer card from ClickHouse — not started in code.
 - REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
-- REQ-AI-001: a golden question set over the synthetic estate with the validator (the 1.5B CPU model answers two of
-  the four example questions; quality is the model's, the product behaviour is refusal with reason).
+- REQ-AI-001 is complete in code (golden set 12/12, T-011/T-113/T-104/T-106); it moves to Done with the queued
+  tracker closures. Test files of apps/assistant and apps/api are excluded from their tsconfig, so the root ESLint
+  project service cannot parse them (`pnpm exec eslint apps/assistant/src` reports only that); part of the lint item.
 - REQ-SEC-009 (in review): SAML brokering and MFA need a corporate IdP.
 - REQ-DISC-031 / REQ-DISC-004 (in review): signed release tarballs.
 - Lint debt outside the console: add `lint` scripts to every package and clear the root-config findings.
@@ -87,8 +107,8 @@ SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002. **Close Excel
 2. REQ-DISC-029 scopes card and e2e; REQ-CMDB-038 headline metrics; REQ-CORE-019 (OpenAPI for the REST surface and a
    generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
    Prometheus metrics that now exist).
-3. REQ-CORE-013 scale-1 replay; REQ-AI-001 golden set; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard;
-   REQ-UI-021/022/023 reports, DOQL, BI.
+3. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard; REQ-UI-021/022/023 reports, DOQL,
+   BI; a synthetic CI health event feed so the BSM engine propagates service health on the dev estate.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
 profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migration 0010

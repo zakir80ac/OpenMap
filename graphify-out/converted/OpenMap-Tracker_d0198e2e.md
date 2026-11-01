@@ -344,7 +344,7 @@
 | 2026-10-22 | Checkpoint 6 (continued): air-gap e2e green on the isolated host (INT-002, SEC-003 Done), bundle rebuilt with the fixed console image; screens Dashboard, Layers, Discovery, Dependency map, CMDB, Business services, Impact, English UI Done on existing e2e/Lighthouse/p95 evidence; tenant settings editor shipped (GraphQL 0.3.0, ADR-011, UI-019 Done) with unit, integration and e2e tests; e2e suite now serial with a setup project because the realm's brute-force policy disables an account hammered by parallel sign-ins. |  |  |  |
 | 2026-10-22 | Checkpoint 7: the six missing screens (Assets, IPAM, DCIM, Integrations, Analytics, Assistant) built and verified on the shipped images in en and ar — unit tests T-100..T-105, e2e T-106, Lighthouse all screens (accessibility and best practices 1.0; analytics 0.82 against the documented embedded-screen floor); GraphQL 0.4.0 (ADR-012: integration detail/deliveries, analyticsEmbed, Rack.row/room); API fixes for IPAM identity keys and DCIM placement attributes; Superset dashboard provisioned by the API with RLS guest tokens; CPU LLM profile running with a self-correcting NL→Cypher loop; compose LLM variable mismatch fixed. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-10-22T19:27:00.358Z |  |  |  |  |  |  |
+| Generated | 2026-11-01T16:41:18.872Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
 | All | 96 | 45 | 0 | 9 | 38 |  |  |

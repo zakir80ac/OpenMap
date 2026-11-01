@@ -166,6 +166,13 @@ services:
     command: ["-m", "/models/${LLM_GGUF:-qwen2.5-7b-instruct-q4_k_m.gguf}", "--port", "8000", "--host", "0.0.0.0", "-c", "8192", "--alias", "${LLM_MODEL:-Qwen/Qwen2.5-7B-Instruct}"]
     ports: ["${LLM_PORT:-8000}:8000"]
     volumes: ["${LLM_MODELS_DIR:-./models}:/models:ro"]
+    # The image's own check probes llama.cpp's default port; the server is told to listen on 8000 above.
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
 
   otel-collector:
     <<: *restart
