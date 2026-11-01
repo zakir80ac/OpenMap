@@ -10,8 +10,8 @@ easiest rows first. Commits this session: `6e6a055` (telemetry in every service,
 Vulnerabilities screens; the services' missing OpenTelemetry dependency), `bb5e5b9` (dependency map force layout and
 blast-radius isolation; licence dates as ISO instants; console lint debt cleared and linted in CI), `0d660e0` (CI short
 codes unique in Postgres and editable, GraphQL 0.6.0, ADR-014; ClickHouse and Prometheus scrape fixes; layout-shift
-fixes on Assets and Software; per-scope discovery rate limits honoured by the planner) and the discovery-scopes commit
-at HEAD (GraphQL 0.7.0, ADR-015; scopes card on the Discovery screen; knowledge graph refreshed).
+fixes on Assets and Software; per-scope discovery rate limits honoured by the planner) and `3b6b9e8` (discovery
+scopes: GraphQL 0.7.0, ADR-015; scopes card on the Discovery screen; knowledge graph refreshed).
 
 **What exists and runs** (everything from checkpoint 7, plus):
 
