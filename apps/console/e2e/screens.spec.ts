@@ -52,12 +52,19 @@ test('Assets: a new plan creates planned assets in the register', async ({ page 
   const stamp = Date.now().toString();
   await form.getByLabel(translate(locale, 'assets.plans.name')).fill('E2E plan ' + stamp);
   await form.getByLabel(translate(locale, 'assets.plans.description')).fill('Created by the e2e suite');
-  await form.getByLabel(translate(locale, 'assets.plans.bom.description')).first().fill('Leaf switch ' + stamp);
+  await form
+    .getByLabel(translate(locale, 'assets.plans.bom.description'))
+    .first()
+    .fill('Leaf switch ' + stamp);
   await form.getByLabel(translate(locale, 'assets.plans.bom.quantity')).first().fill('1');
   await form.getByRole('button', { name: translate(locale, 'assets.plans.create') }).click();
   await expect(form.getByRole('status')).toBeVisible();
   await expect(page.getByRole('article', { name: /E2E plan/ }).first()).toBeVisible();
-  await expect(page.getByRole('combobox', { name: new RegExp(translate(locale, 'assets.setStage', { tag: '' }).trim()) }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole('combobox', { name: new RegExp(translate(locale, 'assets.setStage', { tag: '' }).trim()) })
+      .first(),
+  ).toBeVisible();
 });
 
 test('Integrations: an integration is created and probed', async ({ page }, testInfo) => {
@@ -70,14 +77,24 @@ test('Integrations: an integration is created and probed', async ({ page }, test
   await form.getByLabel(translate(locale, 'integrations.table.name')).fill(name);
   await form.getByLabel(translate(locale, 'integrations.form.category')).selectOption('notification');
   await form.getByLabel(translate(locale, 'integrations.table.vendor')).selectOption('webhook');
-  await form.getByLabel(translate(locale, 'integrations.form.endpoint')).fill(env.PUBLIC_API_URL.replace(/\/$/, '') + '/healthz');
-  await form.getByLabel(translate(locale, 'integrations.form.credentialRef')).fill('secret/openmap/e2e-webhook');
+  await form
+    .getByLabel(translate(locale, 'integrations.form.endpoint'))
+    .fill(env.PUBLIC_API_URL.replace(/\/$/, '') + '/healthz');
+  await form
+    .getByLabel(translate(locale, 'integrations.form.credentialRef'))
+    .fill('secret/openmap/e2e-webhook');
   await form.getByRole('button', { name: translate(locale, 'integrations.save') }).click();
   const panel = page.getByRole('region', { name });
   await expect(panel).toBeVisible();
   await panel.getByRole('button', { name: translate(locale, 'integrations.test') }).click();
   // Either the probe ran (healthy / failing with a last error) or the tenant forbids outbound calls: both are shown.
-  await expect(panel.getByText(translate(locale, 'integrations.detail.lastError')).or(panel.getByText(translate(locale, 'integrations.health.healthy'))).or(page.getByRole('alert')).first()).toBeVisible({ timeout: 20_000 });
+  await expect(
+    panel
+      .getByText(translate(locale, 'integrations.detail.lastError'))
+      .or(panel.getByText(translate(locale, 'integrations.health.healthy')))
+      .or(page.getByRole('alert'))
+      .first(),
+  ).toBeVisible({ timeout: 20_000 });
 });
 
 test('Analytics: the tenant dashboard is embedded from Superset', async ({ page }, testInfo) => {
@@ -86,7 +103,9 @@ test('Analytics: the tenant dashboard is embedded from Superset', async ({ page 
   await signIn(page, locale);
   const frame = page.getByTestId('analytics-mount').locator('iframe');
   await expect(frame).toHaveAttribute('src', /\/embedded\//, { timeout: 30_000 });
-  await expect(page.getByText(translate(locale, 'analytics.live'), { exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(translate(locale, 'analytics.live'), { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
 });
 
 test('Assistant: an example question is answered or explicitly refused', async ({ page }, testInfo) => {
@@ -100,32 +119,76 @@ test('Assistant: an example question is answered or explicitly refused', async (
   const answered = conversation.getByText(translate(locale, 'assistant.cypher'));
   const refused = conversation.getByRole('alert');
   await expect(answered.or(refused).first()).toBeVisible({ timeout: ASSISTANT_TIMEOUT_MS });
-  const outcome = (await answered.count()) > 0 ? 'answered' : 'refused: ' + ((await refused.first().textContent()) ?? '');
+  const outcome =
+    (await answered.count()) > 0 ? 'answered' : 'refused: ' + ((await refused.first().textContent()) ?? '');
   testInfo.annotations.push({ type: 'assistant', description: outcome });
 });
 
-test('Software: the catalogue lists discovered products with their licence position', async ({ page }, testInfo) => {
+test('Software: the catalogue lists discovered products with their licence position', async ({
+  page,
+}, testInfo) => {
   const locale = localeOf(testInfo.project.name);
   await page.goto('/' + locale + '/software');
   await signIn(page, locale);
   const table = page.getByRole('table').first();
   await expect(table.getByRole('row').nth(1)).toBeVisible();
-  await expect(table.getByRole('columnheader', { name: translate(locale, 'software.table.licence') })).toBeVisible();
-  await expect(page.getByRole('region', { name: translate(locale, 'software.posture.overDeployed') })).toBeVisible();
+  await expect(
+    table.getByRole('columnheader', { name: translate(locale, 'software.table.licence') }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: translate(locale, 'software.posture.overDeployed') }),
+  ).toBeVisible();
   await page.getByLabel(translate(locale, 'software.filter.licensedOnly')).check();
   await expect(table.getByRole('row').nth(1)).toBeVisible();
   await expect(table.getByText(translate(locale, 'software.licence.none'))).toHaveCount(0);
 });
 
-test('Vulnerabilities: the highest CVE opens its blast radius through the graph', async ({ page }, testInfo) => {
+test('Vulnerabilities: the highest CVE opens its blast radius through the graph', async ({
+  page,
+}, testInfo) => {
   const locale = localeOf(testInfo.project.name);
   await page.goto('/' + locale + '/vulnerabilities');
   await signIn(page, locale);
-  const cves = page.getByRole('button', { name: new RegExp(translate(locale, 'vulnerabilities.select', { cve: 'CVE-' })) });
+  const cves = page.getByRole('button', {
+    name: new RegExp(translate(locale, 'vulnerabilities.select', { cve: 'CVE-' })),
+  });
   await expect(cves.first()).toBeVisible();
   await cves.first().click();
   const panel = page.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.title') });
   await expect(panel.getByRole('heading', { level: 3 })).toBeVisible();
-  await expect(panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.hosts') })).toBeVisible();
-  await expect(panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.services') })).toBeVisible();
+  await expect(
+    panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.hosts') }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole('region', { name: translate(locale, 'vulnerabilities.detail.services') }),
+  ).toBeVisible();
+});
+
+test('Discovery: a scope keeps the exclusions, credential set and rate limit an operator saves', async ({
+  page,
+}, testInfo) => {
+  const locale = localeOf(testInfo.project.name);
+  await page.goto('/' + locale + '/discovery');
+  await signIn(page, locale);
+  const card = page.getByRole('region', { name: translate(locale, 'discovery.scopes.title') });
+  await expect(card.getByRole('row').nth(1)).toBeVisible();
+  const edit = card
+    .getByRole('button', {
+      name: new RegExp(translate(locale, 'discovery.scopes.editOf', { cidr: '' }).trim()),
+    })
+    .first();
+  const cidr = (await edit.getAttribute('aria-label'))?.split(' ').pop() ?? '';
+  await edit.click();
+  const form = card.getByRole('form', { name: translate(locale, 'discovery.scopes.form', { cidr }) });
+  await expect(form).toBeVisible();
+  await form.getByLabel(translate(locale, 'discovery.scopes.exclusions')).fill('10.0.0.250/32');
+  await form.getByLabel(translate(locale, 'discovery.scopes.credentialType')).selectOption('snmp_v3');
+  await form.getByLabel(translate(locale, 'discovery.scopes.credentialRef')).fill('secret/openmap/e2e-snmp');
+  await form.getByLabel(translate(locale, 'discovery.scopes.concurrency')).fill('4');
+  await form.getByLabel(translate(locale, 'discovery.scopes.rps')).fill('25');
+  await form.getByRole('button', { name: translate(locale, 'action.save') }).click();
+  await expect(form).toBeHidden();
+  const row = card.getByRole('row').filter({ hasText: cidr }).first();
+  await expect(row.getByText('10.0.0.250/32')).toBeVisible();
+  await expect(row.getByText('secret/openmap/e2e-snmp')).toBeVisible();
 });

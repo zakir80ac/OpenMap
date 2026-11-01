@@ -8,9 +8,10 @@ Syed asked for every Not started / In progress / In review row to be finished, d
 easiest rows first. Commits this session: `6e6a055` (telemetry in every service, layer visibility on every list),
 `12dab7e` (software, licence and vulnerability queries, GraphQL 0.5.0, ADR-013), `46aeaae` (Software and
 Vulnerabilities screens; the services' missing OpenTelemetry dependency), `bb5e5b9` (dependency map force layout and
-blast-radius isolation; licence dates as ISO instants; console lint debt cleared and linted in CI) and the short-code
-commit at HEAD (CI short codes unique in Postgres and editable, GraphQL 0.6.0, ADR-014; ClickHouse and Prometheus
-scrape fixes; layout-shift fixes on Assets and Software; per-scope discovery rate limits honoured by the planner).
+blast-radius isolation; licence dates as ISO instants; console lint debt cleared and linted in CI), `0d660e0` (CI short
+codes unique in Postgres and editable, GraphQL 0.6.0, ADR-014; ClickHouse and Prometheus scrape fixes; layout-shift
+fixes on Assets and Software; per-scope discovery rate limits honoured by the planner) and the discovery-scopes commit
+at HEAD (GraphQL 0.7.0, ADR-015; scopes card on the Discovery screen; knowledge graph refreshed).
 
 **What exists and runs** (everything from checkpoint 7, plus):
 
@@ -37,7 +38,7 @@ scrape fixes; layout-shift fixes on Assets and Software; per-scope discovery rat
   script added, `pnpm lint` added to the CI verify job, Next/Playwright output ignored by ESLint. Other packages still
   lint only under the root config (apps/api has 65 findings under it, mostly the Nest empty-class rule) — see Next three.
 - Evidence: `docs/evidence/console/{software,vulnerabilities,dependencies}-{en,ar}.png` and `screens.md`;
-  `docs/evidence/telemetry.md`; e2e `27 passed, 1 skipped` on the rebuilt images; Lighthouse on the final images: 1.0 on
+  `docs/evidence/telemetry.md`; e2e `30 passed, 1 skipped` on the final images (the scope test included); Lighthouse: 1.0 on
   every screen except dcim 0.91 and analytics 0.76 (embedded floor 0.7), CLS 0 on Assets and Software after the fix
   (`docs/evidence/perf/lighthouse.json` now records FCP, LCP, TBT, CLS, speed index and TTI per screen).
 
@@ -64,8 +65,10 @@ SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002. **Close Excel
 
 ## In progress
 
-- REQ-DISC-029: per-scope rate limits are in the planner and the API scope builder; the Discovery screen still needs
-  the scopes card (exclusions, credential set, rate limit per subnet) over `updateCiAttributes`, with e2e.
+- REQ-DISC-029 is complete in code (per-scope rate limits in the planner, `discoveryScopes` / `updateDiscoveryScope`
+  in GraphQL 0.7.0 per ADR-015, the Discovery screen's scopes card with inline editing, T-010/T-067/T-112 and the e2e
+  scope test); it moves to Done with the queued tracker closures. The scope builder now reads the CIDR from the subnet
+  identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
 - REQ-CMDB-038: `LAYER_HEADLINE_METRIC` per layer card from ClickHouse — not started in code.
 - REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
 - REQ-AI-001: a golden question set over the synthetic estate with the validator (the 1.5B CPU model answers two of

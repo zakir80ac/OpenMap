@@ -657,6 +657,59 @@ export function currentSweepQuery() {
   });
 }
 
+export interface DiscoveryScope {
+  ci: CiSummary;
+  cidr: string;
+  site: CiSummary | null;
+  exclusions: string[];
+  credentialRef: string | null;
+  credentialType: string;
+  rateLimitConcurrency: number | null;
+  rateLimitRps: number | null;
+}
+
+export interface DiscoveryScopeInput {
+  exclusions?: string[];
+  credentialRef?: string | null;
+  credentialType?: string;
+  rateLimitConcurrency?: number | null;
+  rateLimitRps?: number | null;
+}
+
+const SCOPE_FIELDS =
+  'ci { ' +
+  CI_SUMMARY_FIELDS +
+  ' } cidr site { ' +
+  CI_SUMMARY_FIELDS +
+  ' } exclusions credentialRef credentialType rateLimitConcurrency rateLimitRps';
+const DISCOVERY_SCOPES_QUERY = [
+  'query DiscoveryScopes {',
+  '  discoveryScopes { ' + SCOPE_FIELDS + ' }',
+  '}',
+].join('\n');
+
+// REQ-DISC-029 — subnets as discovery scopes with their exclusions, credential set and rate limit (ADR-015).
+export function discoveryScopesQuery() {
+  return queryOptions({
+    queryKey: ['discovery-scopes'] as const,
+    queryFn: ({ signal }) =>
+      gql<{ discoveryScopes: DiscoveryScope[] }>(DISCOVERY_SCOPES_QUERY, undefined, signal),
+    select: (data) => data.discoveryScopes,
+  });
+}
+
+const UPDATE_SCOPE_MUTATION = [
+  'mutation UpdateDiscoveryScope($ciId: UUID!, $input: DiscoveryScopeInput!) {',
+  '  updateDiscoveryScope(ciId: $ciId, input: $input) { ' + SCOPE_FIELDS + ' }',
+  '}',
+].join('\n');
+
+export function updateDiscoveryScope(ciId: string, input: DiscoveryScopeInput): Promise<DiscoveryScope> {
+  return gql<{ updateDiscoveryScope: DiscoveryScope }>(UPDATE_SCOPE_MUTATION, { ciId, input }).then(
+    (data) => data.updateDiscoveryScope,
+  );
+}
+
 const RUN_DISCOVERY_MUTATION = [
   'mutation RunDiscovery($collectorIds: [String!], $siteId: UUID) {',
   '  runDiscovery(collectorIds: $collectorIds, siteId: $siteId) { ' + SWEEP_FIELDS + ' }',

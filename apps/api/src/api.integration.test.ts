@@ -880,6 +880,75 @@ describe('OpenMap API (integration)', () => {
     expect(stillDb.data?.ci.code).toMatch(/^[A-Z]+-/);
   });
 
+  it('lists discovery scopes from subnets and lets an operator set exclusions, credential set and rate limit', async () => {
+    // T-112 REQ-DISC-029
+    const scopes = await gql<{
+      discoveryScopes: Array<{
+        ci: { id: string };
+        cidr: string;
+        exclusions: string[];
+        credentialType: string;
+      }>;
+    }>('{ discoveryScopes { ci { id } cidr exclusions credentialType } }');
+    expect(scopes.errors).toBeUndefined();
+    const scope = scopes.data?.discoveryScopes.find((s) => s.ci.id === ids.subnet);
+    expect(scope).toEqual({
+      ci: { id: ids.subnet },
+      cidr: '10.42.0.0/29',
+      exclusions: [],
+      credentialType: 'none',
+    });
+    const mutation =
+      'mutation Scope($ciId: UUID!, $input: DiscoveryScopeInput!) { updateDiscoveryScope(ciId: $ciId, input: $input) { cidr exclusions credentialRef credentialType rateLimitConcurrency rateLimitRps } }';
+    const updated = await gql<{
+      updateDiscoveryScope: {
+        cidr: string;
+        exclusions: string[];
+        credentialRef: string | null;
+        credentialType: string;
+        rateLimitConcurrency: number | null;
+        rateLimitRps: number | null;
+      };
+    }>(mutation, {
+      ciId: ids.subnet,
+      input: {
+        exclusions: ['10.42.0.4/30'],
+        credentialRef: 'secret/openmap/snmp-core',
+        credentialType: 'snmp_v3',
+        rateLimitConcurrency: 4,
+        rateLimitRps: 50,
+      },
+    });
+    expect(updated.errors).toBeUndefined();
+    expect(updated.data?.updateDiscoveryScope).toEqual({
+      cidr: '10.42.0.0/29',
+      exclusions: ['10.42.0.4/30'],
+      credentialRef: 'secret/openmap/snmp-core',
+      credentialType: 'snmp_v3',
+      rateLimitConcurrency: 4,
+      rateLimitRps: 50,
+    });
+    const again = await gql<{
+      discoveryScopes: Array<{ ci: { id: string }; exclusions: string[]; rateLimitRps: number | null }>;
+    }>('{ discoveryScopes { ci { id } exclusions rateLimitRps } }');
+    expect(again.data?.discoveryScopes.find((s) => s.ci.id === ids.subnet)).toEqual({
+      ci: { id: ids.subnet },
+      exclusions: ['10.42.0.4/30'],
+      rateLimitRps: 50,
+    });
+    const malformed = await gql<{ updateDiscoveryScope: unknown }>(mutation, {
+      ciId: ids.subnet,
+      input: { exclusions: ['not-a-cidr'] },
+    });
+    expect(malformed.errors?.[0]?.message).toMatch(/updateDiscoveryScope arguments/);
+    const denied = await gql<{ updateDiscoveryScope: unknown }>(
+      mutation,
+      { ciId: ids.subnet, input: { rateLimitRps: 1 } },
+      viewerToken,
+    );
+    expect(denied.errors?.[0]?.message).toMatch(/roles/i);
+  });
+
   it('exposes Prometheus metrics for the GraphQL operations served', async () => {
     const res = await app.inject({ method: 'GET', url: env.METRICS_PATH });
     expect(res.statusCode).toBe(200);

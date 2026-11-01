@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.6.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.7.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -157,6 +157,10 @@ type AnalyticsEmbed { supersetUrl: String! dashboardId: String! token: String! e
 type DiscoveryNode { id: String! site: Ci status: String! lastHeartbeat: DateTime! activeJobs: Int! certificateExpiresAt: DateTime! }
 type DiscoveryJob { id: UUID! collectorId: String! node: DiscoveryNode! status: String! targets: Int! scheduledAt: DateTime! startedAt: DateTime finishedAt: DateTime cisEmitted: Int! errors: Int! }
 type Sweep { id: UUID! startedAt: DateTime! finishedAt: DateTime targetsTotal: Int! targetsDone: Int! devicesDiscovered: Int! budgetMinutes: Int! }
+"""One discovery scope per subnet CI (REQ-DISC-029, ADR-015): its CIDR, site, exclusions, credential set and rate limit."""
+type DiscoveryScope { ci: Ci! cidr: String! site: Ci exclusions: [String!]! credentialRef: String credentialType: String! rateLimitConcurrency: Int rateLimitRps: Float }
+"""Fields omitted or null stay unchanged, except credentialRef and the rate limits where null clears the value."""
+input DiscoveryScopeInput { exclusions: [String!] credentialRef: String credentialType: String rateLimitConcurrency: Int rateLimitRps: Float }
 
 type LayerSummary { layer: CiLayer! count: Int! healthy: Int! degraded: Int! down: Int! visible: Boolean! }
 
@@ -200,6 +204,7 @@ type Query {
   discoveryNodes: [DiscoveryNode!]!
   discoveryJobs(status: String, first: Int = 50): [DiscoveryJob!]!
   currentSweep: Sweep
+  discoveryScopes(siteId: UUID): [DiscoveryScope!]!
   layers: [LayerSummary!]!
   unknownCis(first: Int = 50, after: String): CiConnection!
   auditLog(subjectType: String, subjectId: String, actor: String, action: String, first: Int = 50, after: String): AuditConnection!
@@ -221,6 +226,7 @@ type Mutation {
   retireRelationship(id: UUID!): Relationship!
   setLayerVisibility(layer: CiLayer!, visible: Boolean!): [LayerSummary!]!
   runDiscovery(collectorIds: [String!], siteId: UUID): Sweep!
+  updateDiscoveryScope(ciId: UUID!, input: DiscoveryScopeInput!): DiscoveryScope!
   saveScenario(input: ScenarioInput!): ImpactScenario!
   runSimulation(scenarioId: UUID!): ImpactSimulation!
   createPlan(input: PlanInput!): InfraPlan!

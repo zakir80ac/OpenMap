@@ -1,17 +1,24 @@
 // REQ-DISC-029 — discovery use cases: nodes, jobs, the current sweep, and runDiscovery which plans a
 // sweep from subnet CIs and online Nodes through the scheduler planner and persists its jobs.
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DISCOVERY, PERF_BUDGETS, TIME } from '@openmap/constants';
 import { CREDENTIAL_TYPES, type CollectorJob, type RelationshipType } from '@openmap/contracts';
 import { plan, type NodeInfo, type Scope } from '@openmap/scheduler';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
+import { CiService, type Actor } from '../ci/ci.service.js';
 import type { CiRecord } from '../ci/ci.types.js';
 import { clampPageSize } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { numberAttribute, stringArrayAttribute, stringAttribute } from '../common/validation.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { DISCOVERY_REPOSITORY, type DiscoveryRepository } from './discovery.repository.js';
-import type { DiscoveryJobView, DiscoveryNodeView, SweepView } from './discovery.types.js';
+import type {
+  DiscoveryJobView,
+  DiscoveryNodeView,
+  DiscoveryScopeInput,
+  DiscoveryScopeView,
+  SweepView,
+} from './discovery.types.js';
 
 export const LOCATED_IN: RelationshipType = 'located_in';
 
@@ -19,19 +26,36 @@ export const LOCATED_IN: RelationshipType = 'located_in';
 export const NODE_OFFLINE_AFTER_MS = DISCOVERY.defaultJobTimeoutMs;
 
 /** Planner estimate when no past run exists: a job that uses its whole timeout for a full chunk. */
-export const DEFAULT_SECONDS_PER_TARGET = DISCOVERY.defaultJobTimeoutMs / DISCOVERY.targetsPerJob / TIME.msPerSecond;
+export const DEFAULT_SECONDS_PER_TARGET =
+  DISCOVERY.defaultJobTimeoutMs / DISCOVERY.targetsPerJob / TIME.msPerSecond;
 
 /** Subnet CI attributes that drive discovery scoping. */
-export const SCOPE_ATTRIBUTES = { cidr: 'cidr', credentialRef: 'credentialRef', credentialType: 'credentialType', exclusions: 'exclusions', rateLimitConcurrency: 'rateLimitConcurrency', rateLimitRps: 'rateLimitRps' } as const;
+export const SCOPE_ATTRIBUTES = {
+  cidr: 'cidr',
+  credentialRef: 'credentialRef',
+  credentialType: 'credentialType',
+  exclusions: 'exclusions',
+  rateLimitConcurrency: 'rateLimitConcurrency',
+  rateLimitRps: 'rateLimitRps',
+} as const;
 
 export function budgetMinutesFor(targets: number): number {
-  return Math.ceil(PERF_BUDGETS.discoverySweepMinutes * Math.max(1, targets / PERF_BUDGETS.discoverySweepDevices));
+  return Math.ceil(
+    PERF_BUDGETS.discoverySweepMinutes * Math.max(1, targets / PERF_BUDGETS.discoverySweepDevices),
+  );
 }
 
 export function sweepFromJobs(sweepId: string, jobs: readonly DiscoveryJobView[]): SweepView {
   const done = jobs.filter((j) => j.status === 'completed' || j.status === 'failed');
   const started = jobs.map((j) => j.scheduledAt).sort()[0] ?? nowIso();
-  const finished = done.length === jobs.length && jobs.length > 0 ? (jobs.map((j) => j.finishedAt).filter((f): f is string => f !== null).sort().at(-1) ?? null) : null;
+  const finished =
+    done.length === jobs.length && jobs.length > 0
+      ? (jobs
+          .map((j) => j.finishedAt)
+          .filter((f): f is string => f !== null)
+          .sort()
+          .at(-1) ?? null)
+      : null;
   const targetsTotal = jobs.reduce((s, j) => s + j.targets, 0);
   return {
     id: sweepId,
@@ -46,13 +70,83 @@ export function sweepFromJobs(sweepId: string, jobs: readonly DiscoveryJobView[]
 
 const CREDENTIAL_TYPE_SET = new Set<string>(CREDENTIAL_TYPES);
 
+/** The subnet's CIDR: the identity key for discovered subnets, an attribute on rows written before that convention. */
+export function scopeCidr(ci: Pick<CiRecord, 'identity' | 'attributes'>): string | null {
+  return (
+    stringAttribute(ci.identity, SCOPE_ATTRIBUTES.cidr) ??
+    stringAttribute(ci.attributes, SCOPE_ATTRIBUTES.cidr)
+  );
+}
+
+export function toScopeView(ci: CiRecord, siteCiId: string | null): DiscoveryScopeView | null {
+  const cidr = scopeCidr(ci);
+  if (cidr === null) return null;
+  const credentialType = stringAttribute(ci.attributes, SCOPE_ATTRIBUTES.credentialType);
+  return {
+    ciId: ci.id,
+    cidr,
+    siteCiId,
+    exclusions: stringArrayAttribute(ci.attributes, SCOPE_ATTRIBUTES.exclusions),
+    credentialRef: stringAttribute(ci.attributes, SCOPE_ATTRIBUTES.credentialRef),
+    credentialType:
+      credentialType !== null && CREDENTIAL_TYPE_SET.has(credentialType) ? credentialType : 'none',
+    rateLimitConcurrency: numberAttribute(ci.attributes, SCOPE_ATTRIBUTES.rateLimitConcurrency),
+    rateLimitRps: numberAttribute(ci.attributes, SCOPE_ATTRIBUTES.rateLimitRps),
+  };
+}
+
 @Injectable()
 export class DiscoveryService {
   constructor(
     @Inject(DISCOVERY_REPOSITORY) private readonly repo: DiscoveryRepository,
     @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
     private readonly outbox: OutboxService,
+    private readonly ciService: CiService,
   ) {}
+
+  /** REQ-DISC-029 — every subnet with a CIDR as an editable scope, optionally only those housed at one site. */
+  async scopes(tenantId: string, siteId: string | null): Promise<DiscoveryScopeView[]> {
+    const subnets = await this.cis.byType(tenantId, 'subnet');
+    const located = await this.cis.relationshipsOfMany(
+      tenantId,
+      subnets.map((s) => s.id),
+      [LOCATED_IN],
+      'downstream',
+    );
+    const siteCiOf = new Map(located.map((r) => [r.fromCiId, r.toCiId]));
+    const siteByCi = new Map(
+      (await this.repo.sitesByCiIds([...new Set(located.map((r) => r.toCiId))])).map((s) => [s.ciId, s.id]),
+    );
+    const views: DiscoveryScopeView[] = [];
+    for (const subnet of subnets) {
+      const view = toScopeView(subnet, siteCiOf.get(subnet.id) ?? null);
+      if (view === null) continue;
+      if (siteId !== null && (view.siteCiId === null || siteByCi.get(view.siteCiId) !== siteId)) continue;
+      views.push(view);
+    }
+    return views.sort((a, b) => a.cidr.localeCompare(b.cidr));
+  }
+
+  /** Writes the scope settings as subnet attributes through the audited, outboxed attribute update. */
+  async updateScope(actor: Actor, ciId: string, input: DiscoveryScopeInput): Promise<DiscoveryScopeView> {
+    const current = await this.cis.findById(actor.tenantId, ciId, null);
+    if (!current || current.type !== 'subnet' || scopeCidr(current) === null)
+      throw new NotFoundException('subnet ' + ciId + ' not found');
+    const attributes: Record<string, unknown> = {};
+    if (input.exclusions !== undefined && input.exclusions !== null)
+      attributes[SCOPE_ATTRIBUTES.exclusions] = input.exclusions;
+    if (input.credentialRef !== undefined) attributes[SCOPE_ATTRIBUTES.credentialRef] = input.credentialRef;
+    if (input.credentialType !== undefined && input.credentialType !== null)
+      attributes[SCOPE_ATTRIBUTES.credentialType] = input.credentialType;
+    if (input.rateLimitConcurrency !== undefined)
+      attributes[SCOPE_ATTRIBUTES.rateLimitConcurrency] = input.rateLimitConcurrency;
+    if (input.rateLimitRps !== undefined) attributes[SCOPE_ATTRIBUTES.rateLimitRps] = input.rateLimitRps;
+    const updated = await this.ciService.updateAttributes(actor, ciId, attributes);
+    const located = await this.cis.relationshipsOfMany(actor.tenantId, [ciId], [LOCATED_IN], 'downstream');
+    const view = toScopeView(updated, located[0]?.toCiId ?? null);
+    if (view === null) throw new NotFoundException('subnet ' + ciId + ' has no CIDR');
+    return view;
+  }
 
   nodes(tenantId: string): Promise<DiscoveryNodeView[]> {
     return this.repo.nodes(tenantId);
@@ -62,7 +156,11 @@ export class DiscoveryService {
     return this.repo.node(tenantId, id);
   }
 
-  jobs(tenantId: string, status: string | null, first: number | null | undefined): Promise<DiscoveryJobView[]> {
+  jobs(
+    tenantId: string,
+    status: string | null,
+    first: number | null | undefined,
+  ): Promise<DiscoveryJobView[]> {
     return this.repo.jobs(tenantId, status, clampPageSize(first));
   }
 
@@ -75,35 +173,110 @@ export class DiscoveryService {
     return sweepFromJobs(sweepId, await this.repo.jobsBySweep(tenantId, sweepId));
   }
 
-  async runDiscovery(tenantId: string, actor: string, collectorIds: readonly string[] | null, siteId: string | null): Promise<SweepView> {
+  async runDiscovery(
+    tenantId: string,
+    actor: string,
+    collectorIds: readonly string[] | null,
+    siteId: string | null,
+  ): Promise<SweepView> {
     const now = nowIso();
-    const [nodes, manifests, subnets, secondsPerTarget] = await Promise.all([this.repo.nodes(tenantId), this.repo.manifests(), this.cis.byType(tenantId, 'subnet'), this.repo.secondsPerTarget(tenantId)]);
-    const wanted = collectorIds && collectorIds.length > 0 ? manifests.filter((m) => collectorIds.includes(m.id)) : manifests;
+    const [nodes, manifests, subnets, secondsPerTarget] = await Promise.all([
+      this.repo.nodes(tenantId),
+      this.repo.manifests(),
+      this.cis.byType(tenantId, 'subnet'),
+      this.repo.secondsPerTarget(tenantId),
+    ]);
+    const wanted =
+      collectorIds && collectorIds.length > 0
+        ? manifests.filter((m) => collectorIds.includes(m.id))
+        : manifests;
     const nodeInfos: NodeInfo[] = nodes
       .filter((n) => siteId === null || n.siteId === siteId)
-      .map((n) => ({ nodeId: n.id, siteId: n.siteId, online: Date.parse(now) - Date.parse(n.lastHeartbeat) <= NODE_OFFLINE_AFTER_MS, maxConcurrency: DISCOVERY.defaultConcurrency }));
-    const scopes = await this.scopesFor(tenantId, subnets, wanted.map((m) => m.id), nodeInfos, siteId);
-    const planned = plan({ tenantId, scopes, nodes: nodeInfos, manifests: wanted, secondsPerTarget, defaultSecondsPerTarget: DEFAULT_SECONDS_PER_TARGET, now });
+      .map((n) => ({
+        nodeId: n.id,
+        siteId: n.siteId,
+        online: Date.parse(now) - Date.parse(n.lastHeartbeat) <= NODE_OFFLINE_AFTER_MS,
+        maxConcurrency: DISCOVERY.defaultConcurrency,
+      }));
+    const scopes = await this.scopesFor(
+      tenantId,
+      subnets,
+      wanted.map((m) => m.id),
+      nodeInfos,
+      siteId,
+    );
+    const planned = plan({
+      tenantId,
+      scopes,
+      nodes: nodeInfos,
+      manifests: wanted,
+      secondsPerTarget,
+      defaultSecondsPerTarget: DEFAULT_SECONDS_PER_TARGET,
+      now,
+    });
     await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
       await this.repo.createJobs(tx, planned.jobs);
       for (const job of planned.jobs) {
-        await emit({ type: 'openmap.discovery.job.scheduled', subject: job.jobId, data: { jobId: job.jobId, sweepId: planned.sweepId, collectorId: job.collectorId, nodeId: job.nodeId, targets: job.targets.length, scheduledAt: job.scheduledAt, by: actor } });
+        await emit({
+          type: 'openmap.discovery.job.scheduled',
+          subject: job.jobId,
+          data: {
+            jobId: job.jobId,
+            sweepId: planned.sweepId,
+            collectorId: job.collectorId,
+            nodeId: job.nodeId,
+            targets: job.targets.length,
+            scheduledAt: job.scheduledAt,
+            by: actor,
+          },
+        });
       }
-      await emit({ type: 'openmap.audit.action', subject: planned.sweepId, data: { action: 'discovery.sweep.planned', sweepId: planned.sweepId, jobs: planned.jobs.length, targetsTotal: planned.targetsTotal, unassignedScopeIds: planned.unassignedScopeIds, estimatedMinutes: planned.estimatedMinutes, by: actor } });
+      await emit({
+        type: 'openmap.audit.action',
+        subject: planned.sweepId,
+        data: {
+          action: 'discovery.sweep.planned',
+          sweepId: planned.sweepId,
+          jobs: planned.jobs.length,
+          targetsTotal: planned.targetsTotal,
+          unassignedScopeIds: planned.unassignedScopeIds,
+          estimatedMinutes: planned.estimatedMinutes,
+          by: actor,
+        },
+      });
     });
-    return { id: planned.sweepId, startedAt: now, finishedAt: null, targetsTotal: planned.targetsTotal, targetsDone: 0, devicesDiscovered: 0, budgetMinutes: budgetMinutesFor(planned.targetsTotal) };
+    return {
+      id: planned.sweepId,
+      startedAt: now,
+      finishedAt: null,
+      targetsTotal: planned.targetsTotal,
+      targetsDone: 0,
+      devicesDiscovered: 0,
+      budgetMinutes: budgetMinutesFor(planned.targetsTotal),
+    };
   }
 
   /** One scope per subnet CI with a CIDR, assigned to the site that houses it (or the only site with online Nodes). */
-  private async scopesFor(tenantId: string, subnets: readonly CiRecord[], collectorIds: string[], nodes: readonly NodeInfo[], siteId: string | null): Promise<Scope[]> {
-    const located = await this.cis.relationshipsOfMany(tenantId, subnets.map((s) => s.id), [LOCATED_IN], 'downstream');
+  private async scopesFor(
+    tenantId: string,
+    subnets: readonly CiRecord[],
+    collectorIds: string[],
+    nodes: readonly NodeInfo[],
+    siteId: string | null,
+  ): Promise<Scope[]> {
+    const located = await this.cis.relationshipsOfMany(
+      tenantId,
+      subnets.map((s) => s.id),
+      [LOCATED_IN],
+      'downstream',
+    );
     const siteCiIds = [...new Set(located.map((r) => r.toCiId))];
     const siteByCi = new Map((await this.repo.sitesByCiIds(siteCiIds)).map((s) => [s.ciId, s.id]));
     const onlineSites = [...new Set(nodes.filter((n) => n.online).map((n) => n.siteId))];
     const fallbackSite = siteId ?? (onlineSites.length === 1 ? onlineSites[0] : undefined);
     const scopes: Scope[] = [];
     for (const subnet of subnets) {
-      const cidr = stringAttribute(subnet.attributes, SCOPE_ATTRIBUTES.cidr);
+      const cidr = scopeCidr(subnet);
       if (cidr === null) continue;
       const siteCi = located.find((r) => r.fromCiId === subnet.id)?.toCiId;
       const scopeSite = (siteCi !== undefined ? siteByCi.get(siteCi) : undefined) ?? fallbackSite;
@@ -117,8 +290,14 @@ export class DiscoveryService {
         targets: [{ kind: 'cidr', value: cidr, label: subnet.displayName }],
         exclusions: stringArrayAttribute(subnet.attributes, SCOPE_ATTRIBUTES.exclusions),
         credentialRef: stringAttribute(subnet.attributes, SCOPE_ATTRIBUTES.credentialRef),
-        credentialType: credentialType !== null && CREDENTIAL_TYPE_SET.has(credentialType) ? (credentialType as CollectorJob['credentialType']) : 'none',
-        rateLimit: { concurrency: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitConcurrency), requestsPerSecond: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitRps) },
+        credentialType:
+          credentialType !== null && CREDENTIAL_TYPE_SET.has(credentialType)
+            ? (credentialType as CollectorJob['credentialType'])
+            : 'none',
+        rateLimit: {
+          concurrency: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitConcurrency),
+          requestsPerSecond: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitRps),
+        },
         options: {},
       });
     }

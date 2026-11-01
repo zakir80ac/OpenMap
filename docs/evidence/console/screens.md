@@ -34,6 +34,7 @@ Console suite: 25 files, 156 tests green. API integration suite (T-032, T-097): 
 
 | Screen | Performance | Accessibility | Best practices |
 | --- | --- | --- | --- |
+| discovery | 0.98 | 1 | 1 |
 | assets | 1 | 1 | 1 |
 | software | 1 | 1 | 1 |
 | vulnerabilities | 1 | 1 | 1 |
@@ -41,7 +42,7 @@ Console suite: 25 files, 156 tests green. API integration suite (T-032, T-097): 
 | integrations | 1 | 1 | 1 |
 | ipam | 1 | 1 | 1 |
 | dcim | 0.91 | 1 | 1 |
-| analytics | 0.76 | 1 | 1 |
+| analytics | 0.81 | 1 | 1 |
 | assistant | 1 | 1 | 1 |
 
 Analytics hosts Superset's own application inside the page; its blocking time is Superset's bundle executing in a
@@ -89,3 +90,13 @@ A real defect surfaced on the shipped image: the estate stores licence expiry as
 the contract's `DateTime` scalar rejected, so the Software screen showed an error while the direct API probe (which did
 not select `expiresAt`) looked fine. The API now normalises date attributes to ISO instants (`isoAttribute`), and T-108
 asserts the stored value.
+
+## Discovery scopes (REQ-DISC-029, 2026-11-01)
+
+Every subnet is a discovery scope: exclusions, credential set (OpenBao reference and type) and rate limit live as
+subnet attributes, the planner honours them (T-010), `discoveryScopes` / `updateDiscoveryScope` expose and validate
+them (GraphQL 0.7.0, ADR-015; T-112 in the API integration suite) and the Discovery screen's scopes card edits them in
+place (T-067). The scope builder reads the CIDR from the subnet identity first: on the dev estate 106 of 107 subnets
+were invisible to a sweep before. e2e (`screens.spec.ts`, en and ar): `30 passed, 1 skipped (perf in ar, by design)`; the scope test edits the
+first scope's exclusions, credential set and rate limit and reads them back from the table (`discovery-{en,ar}.png`).
+
