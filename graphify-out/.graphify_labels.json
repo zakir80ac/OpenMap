@@ -523,5 +523,6 @@
   "521": "@openmap/graph",
   "522": "main",
   "523": "bullmq",
-  "524": "bullmq"
+  "524": "bullmq",
+  "525": "synth-estate/vitest.config.ts"
 }

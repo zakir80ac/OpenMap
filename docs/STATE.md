@@ -61,13 +61,13 @@ scopes: GraphQL 0.7.0, ADR-015; scopes card on the Discovery screen; knowledge g
   every screen except dcim 0.91 and analytics 0.76 (embedded floor 0.7), CLS 0 on Assets and Software after the fix
   (`docs/evidence/perf/lighthouse.json` now records FCP, LCP, TBT, CLS, speed index and TTI per screen).
 
-**Tracker.** `tracker/OpenMap-Tracker.xlsx` was open in Excel for the whole session (`tracker/~$OpenMap-Tracker.xlsx`
-lock file; every `pnpm tracker set` failed with EBUSY), so no row moved. The closures with their test ids and evidence
-are queued in `.local/tracker-closures.sh` (gitignored, on this machine): CORE-014/015/016/017/018, SEC-002/006/007/010,
-IPAM-001/002/006, DCIM-002/009, PERF-001/003, INT-003/004/005/006/007/008, CMDB-001…012, CMDB-030/031/035/037,
-SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002, and (checkpoint 9) AI-001. **Close Excel, then run
-`bash .local/tracker-closures.sh && pnpm tracker report && pnpm tracker session --summary "..."`** — 56 rows go Done
-(38 → 94 of 188). Set `C5` in the script to the checkpoint-9 commit first.
+**Tracker.** The workbook was locked by Excel through checkpoints 4–9, so the closures were queued in
+`.local/tracker-closures.sh` (gitignored) with their test ids and evidence. Syed closed Excel after checkpoint 9 and the
+script ran: 50 rows moved to Done (CORE-014/015/016/017/018, SEC-002/006/007/008/010, IPAM-001/002/006, DCIM-002/009,
+PERF-001/003, INT-003/004/005/006/007/008, CMDB-001…012, CMDB-030/031/035/037, DISC-029, UI-015/016, BSM-001/002/003,
+DEP-003/005, AI-001/004, QA-002). `pnpm tracker status`: 88 of 188 Done (47%), 28 In progress, 4 In review, 68 Not
+started, 0 Blocked; `pnpm tracker verify` ok. The earlier "56 rows / 94" figure in this file was an over-count; the
+tracker is the truth.
 
 ## Dependencies on Syed (nothing below can be finished without them)
 
@@ -103,12 +103,14 @@ SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002, and (checkpoi
 
 ## Next three
 
-1. Close Excel → run the queued tracker closures, `pnpm tracker report`, commit the workbook.
-2. REQ-DISC-029 scopes card and e2e; REQ-CMDB-038 headline metrics; REQ-CORE-019 (OpenAPI for the REST surface and a
+1. REQ-CMDB-038 headline metrics; REQ-CORE-019 (OpenAPI for the REST surface and a
    generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
    Prometheus metrics that now exist).
-3. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard; REQ-UI-021/022/023 reports, DOQL,
+2. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard; REQ-UI-021/022/023 reports, DOQL,
    BI; a synthetic CI health event feed so the BSM engine propagates service health on the dev estate.
+3. Lint scripts for apps/api, apps/assistant and the remaining packages (their test files sit outside tsconfig, so the
+   root ESLint project service cannot parse them); then the DISC rows that need no vendor lab (REQ-DISC-001 SNMP against
+   the recorded fixtures already in packages/testing/fixtures).
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
 profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migration 0010

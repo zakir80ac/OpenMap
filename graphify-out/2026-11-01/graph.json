@@ -10089,11 +10089,19 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_assistant_package_scripts_test_integration",
+      "label": "test:integration",
+      "file_type": "code",
+      "source_file": "apps/assistant/package.json",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_assistant_package_dependencies",
       "label": "dependencies",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -10101,7 +10109,7 @@
       "label": "@openmap/config",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -10109,7 +10117,7 @@
       "label": "@openmap/config",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -10117,7 +10125,7 @@
       "label": "@openmap/constants",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -10125,7 +10133,7 @@
       "label": "@openmap/constants",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -10133,7 +10141,7 @@
       "label": "@openmap/contracts",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -10141,7 +10149,7 @@
       "label": "@openmap/contracts",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -10149,7 +10157,7 @@
       "label": "@openmap/graph",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -10157,7 +10165,7 @@
       "label": "@openmap/graph",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -10165,7 +10173,7 @@
       "label": "zod",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -10173,7 +10181,7 @@
       "label": "zod",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -10181,7 +10189,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -10189,7 +10197,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -10197,7 +10205,7 @@
       "label": "typescript",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -10205,7 +10213,7 @@
       "label": "vitest",
       "file_type": "code",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -10213,7 +10221,7 @@
       "label": "vitest",
       "file_type": "concept",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -10222,6 +10230,46 @@
       "file_type": "code",
       "source_file": "apps/assistant/src/core/assistant.test.ts",
       "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_golden_integration_test",
+      "label": "golden.integration.test.ts",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_golden_integration_test_goldenquestion",
+      "label": "GoldenQuestion",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_golden_integration_test_golden",
+      "label": "GOLDEN",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_golden_integration_test_env",
+      "label": "env",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L34",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_golden_integration_test_outcomes",
+      "label": "outcomes",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -10237,7 +10285,47 @@
       "label": "NODE_PROPERTIES",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L6",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_grounding_workedexample",
+      "label": "WorkedExample",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_grounding_scope",
+      "label": "SCOPE()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_grounding_impact_edges",
+      "label": "IMPACT_EDGES",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_grounding_workedexamples",
+      "label": "workedExamples()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_grounding_known_directions",
+      "label": "KNOWN_DIRECTIONS",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -10245,7 +10333,7 @@
       "label": "schemaGrounding()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L8",
+      "source_location": "L116",
       "_origin": "ast"
     },
     {
@@ -10253,7 +10341,7 @@
       "label": "systemPrompt()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L21",
+      "source_location": "L130",
       "_origin": "ast"
     },
     {
@@ -10317,7 +10405,7 @@
       "label": "AssistantAnswer",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L8",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -10325,7 +10413,7 @@
       "label": "AssistantError",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L16",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -10333,7 +10421,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L17",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -10341,15 +10429,143 @@
       "label": "extractCypher()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L24",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
-      "id": "apps_assistant_src_core_nl2cypher_validatecypher",
-      "label": "validateCypher()",
+      "id": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "label": "maskStrings()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L32",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_clause",
+      "label": "Clause",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L49",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_clauses",
+      "label": "clauses()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L57",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_names",
+      "label": "names()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "label": "boundVariables()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L72",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "label": "referencedVariables()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L78",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_matchednodevariables",
+      "label": "matchedNodeVariables()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L83",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_istenantscoped",
+      "label": "isTenantScoped()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L97",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "label": "scopeToTenant()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L106",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_known_labels",
+      "label": "KNOWN_LABELS",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L137",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_known_relationships",
+      "label": "KNOWN_RELATIONSHIPS",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L138",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_known_properties",
+      "label": "KNOWN_PROPERTIES",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L139",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_labelsof",
+      "label": "labelsOf()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L148",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_propertyafter",
+      "label": "propertyAfter()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L152",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_hopfix",
+      "label": "HopFix",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L156",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_normalisehops",
+      "label": "normaliseHops()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L191",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_checkschema",
+      "label": "checkSchema()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L211",
       "_origin": "ast"
     },
     {
@@ -10357,7 +10573,15 @@
       "label": "ALLOWED_PARAMETERS",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L44",
+      "source_location": "L252",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "label": "validateCypher()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L256",
       "_origin": "ast"
     },
     {
@@ -10365,7 +10589,15 @@
       "label": "enforceLimit()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L47",
+      "source_location": "L283",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "label": "prepareCypher()",
+      "file_type": "code",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L289",
       "_origin": "ast"
     },
     {
@@ -10373,7 +10605,7 @@
       "label": "summarise()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L52",
+      "source_location": "L293",
       "_origin": "ast"
     },
     {
@@ -10381,7 +10613,7 @@
       "label": "ask()",
       "file_type": "code",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L71",
+      "source_location": "L312",
       "_origin": "ast"
     },
     {
@@ -10510,6 +10742,22 @@
       "file_type": "code",
       "source_file": "apps/assistant/tsconfig.json",
       "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_vitest_config",
+      "label": "vitest.config.ts",
+      "file_type": "code",
+      "source_file": "apps/assistant/vitest.config.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_assistant_vitest_integration_config",
+      "label": "vitest.integration.config.ts",
+      "file_type": "code",
+      "source_file": "apps/assistant/vitest.integration.config.ts",
+      "source_location": "L1",
       "_origin": "ast"
     },
     {
@@ -25071,7 +25319,15 @@
       "label": "env",
       "file_type": "code",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L11",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_e2e_screens_spec_screenshotsdir",
+      "label": "screenshotsDir",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/screens.spec.ts",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -25079,7 +25335,7 @@
       "label": "localeOf()",
       "file_type": "code",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L14",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -56953,11 +57209,35 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_contracts_src_ci_health_states",
+      "label": "HEALTH_STATES",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L287",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_ci_healthstateschema",
+      "label": "healthStateSchema",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L288",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_ci_healthstate",
+      "label": "HealthState",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L289",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_contracts_src_ci_scalarschema",
       "label": "scalarSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L287",
+      "source_location": "L292",
       "_origin": "ast"
     },
     {
@@ -56965,7 +57245,7 @@
       "label": "attributeValueSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L288",
+      "source_location": "L293",
       "_origin": "ast"
     },
     {
@@ -56973,7 +57253,7 @@
       "label": "attributesSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L289",
+      "source_location": "L294",
       "_origin": "ast"
     },
     {
@@ -56981,7 +57261,7 @@
       "label": "Attributes",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L290",
+      "source_location": "L295",
       "_origin": "ast"
     },
     {
@@ -56989,7 +57269,7 @@
       "label": "provenanceSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L293",
+      "source_location": "L298",
       "_origin": "ast"
     },
     {
@@ -56997,7 +57277,7 @@
       "label": "Provenance",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L299",
+      "source_location": "L304",
       "_origin": "ast"
     },
     {
@@ -57005,7 +57285,7 @@
       "label": "externalIdSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L301",
+      "source_location": "L306",
       "_origin": "ast"
     },
     {
@@ -57013,7 +57293,7 @@
       "label": "GLOBAL_IDENTITY_KEYS",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L310",
+      "source_location": "L315",
       "_origin": "ast"
     },
     {
@@ -57021,7 +57301,7 @@
       "label": "DCIM_ATTRIBUTES",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L345",
+      "source_location": "L350",
       "_origin": "ast"
     },
     {
@@ -57029,7 +57309,7 @@
       "label": "CI_IDENTITY_KEYS",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L364",
+      "source_location": "L369",
       "_origin": "ast"
     },
     {
@@ -57037,7 +57317,7 @@
       "label": "observedCiSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L436",
+      "source_location": "L441",
       "_origin": "ast"
     },
     {
@@ -57045,7 +57325,7 @@
       "label": "ObservedCi",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L448",
+      "source_location": "L453",
       "_origin": "ast"
     },
     {
@@ -57053,7 +57333,7 @@
       "label": "ciSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L451",
+      "source_location": "L456",
       "_origin": "ast"
     },
     {
@@ -57061,7 +57341,7 @@
       "label": "Ci",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L467",
+      "source_location": "L472",
       "_origin": "ast"
     },
     {
@@ -57069,7 +57349,7 @@
       "label": "ciRefSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L470",
+      "source_location": "L475",
       "_origin": "ast"
     },
     {
@@ -57077,7 +57357,7 @@
       "label": "CiRef",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L474",
+      "source_location": "L479",
       "_origin": "ast"
     },
     {
@@ -57085,7 +57365,7 @@
       "label": "observedRelationshipSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L476",
+      "source_location": "L481",
       "_origin": "ast"
     },
     {
@@ -57093,7 +57373,7 @@
       "label": "ObservedRelationship",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L483",
+      "source_location": "L488",
       "_origin": "ast"
     },
     {
@@ -57101,7 +57381,7 @@
       "label": "relationshipSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L485",
+      "source_location": "L490",
       "_origin": "ast"
     },
     {
@@ -57109,7 +57389,7 @@
       "label": "Relationship",
       "file_type": "code",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L497",
+      "source_location": "L502",
       "_origin": "ast"
     },
     {
@@ -68633,6 +68913,54 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_evidence_assistant",
+      "label": "assistant.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "label": "Assistant — NL→Cypher golden set (REQ-AI-001)",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_assistant_why_the_assistant_was_failing",
+      "label": "Why the assistant was failing",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_assistant_what_changed",
+      "label": "What changed",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_assistant_golden_set_12_of_12_pass_run_4_39_6_s",
+      "label": "Golden set — 12 of 12 pass (run 4, 39.6 s)",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L34",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_assistant_console",
+      "label": "Console",
+      "file_type": "document",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L59",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_evidence_cmdb_layer_counts",
       "label": "layer-counts.md",
       "file_type": "document",
@@ -68701,7 +69029,7 @@
       "label": "Screenshots",
       "file_type": "document",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L67",
+      "source_location": "L66",
       "_origin": "ast"
     },
     {
@@ -68709,7 +69037,7 @@
       "label": "Software and licences, Vulnerabilities, dependency map isolation (2026-11-01)",
       "file_type": "document",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L72",
+      "source_location": "L71",
       "_origin": "ast"
     },
     {
@@ -68717,7 +69045,7 @@
       "label": "Discovery scopes (REQ-DISC-029, 2026-11-01)",
       "file_type": "document",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L94",
+      "source_location": "L93",
       "_origin": "ast"
     },
     {
@@ -69324,8 +69652,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Served at METRICS_PATH: Node defaults, openmap_graphql_requests_total{operation,status}, openmap_graphql_duration_seconds.",
-      "community": 264,
-      "community_name": "ADR-003 — Go for the Discovery Node and collectors",
+      "community": 268,
+      "community_name": "Design cues taken from the AetherTwin prototype (Gemini / AI Studio)",
       "norm_label": "api prometheus metrics",
       "id": "apps_api_readme_prometheus_metrics"
     },
@@ -69863,8 +70191,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 263,
+      "community_name": "ADR-002 — Contracts drafted at 0.1.0 while docs/SPEC.md is pending",
       "norm_label": "llm-gpu (vllm, profile gpu)",
       "id": "deploy_compose_docker_compose_llm_gpu"
     },
@@ -69878,8 +70206,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Documented CPU fallback for vLLM: serves a local GGUF under the same model alias so the assistant does not change between profiles.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 263,
+      "community_name": "ADR-002 — Contracts drafted at 0.1.0 while docs/SPEC.md is pending",
       "norm_label": "llm-cpu (llama.cpp server, profile cpu)",
       "id": "deploy_compose_docker_compose_llm_cpu"
     },
@@ -69892,8 +70220,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 396,
+      "community_name": "TestAssembleAndEmit",
       "norm_label": "otel-collector service",
       "id": "deploy_compose_docker_compose_otel_collector"
     },
@@ -69935,8 +70263,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 396,
+      "community_name": "TestAssembleAndEmit",
       "norm_label": "otlp receiver (grpc 4317 / http 4318)",
       "id": "deploy_compose_otel_collector_otlp_receiver"
     },
@@ -69949,8 +70277,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 396,
+      "community_name": "TestAssembleAndEmit",
       "norm_label": "collector prometheus exporter (8889, namespace openmap)",
       "id": "deploy_compose_otel_collector_prometheus_exporter"
     },
@@ -69964,8 +70292,8 @@
       "author": null,
       "contributor": null,
       "rationale": "REQ-CORE-014: metrics go to the Prometheus exporter, traces and logs to the debug exporter so nothing leaves the host in the single-node profile; memory_limiter and batch processors on every pipeline.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 396,
+      "community_name": "TestAssembleAndEmit",
       "norm_label": "otel pipelines (traces/metrics/logs)",
       "id": "deploy_compose_otel_collector_pipelines"
     },
@@ -70037,8 +70365,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm console deployment",
       "id": "deploy_helm_openmap_templates_apps_console_deployment"
     },
@@ -70081,8 +70409,8 @@
       "author": null,
       "contributor": null,
       "rationale": "start --import-realm with proxy-headers=xforwarded and hostname-strict=false behind the Ingress; DB on the Postgres StatefulSet with currentSchema=keycloak; KC_HOSTNAME from keycloak.publicUrl.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm keycloak deployment",
       "id": "deploy_helm_openmap_templates_auth_keycloak_deployment"
     },
@@ -70095,8 +70423,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "keycloak realm configmap (files/realm-openmap.json)",
       "id": "deploy_helm_openmap_templates_auth_realm_configmap"
     },
@@ -70154,8 +70482,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Hosts are parsed from api.publicUrl, console.publicUrl and keycloak.publicUrl with urlParse; /graphql, /healthz, /readyz route to the API and / to the console, with a separate console host rule only when it differs from the API host.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm ingress (api, console, keycloak hosts)",
       "id": "deploy_helm_openmap_templates_ingress_ingress"
     },
@@ -105670,12 +105998,22 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_assistant_package_scripts",
+      "target": "apps_assistant_package_scripts_test_integration",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_assistant_package",
       "target": "apps_assistant_package_dependencies",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105685,7 +106023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105695,7 +106033,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105706,7 +106044,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105716,7 +106054,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105727,7 +106065,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105737,7 +106075,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105748,7 +106086,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105758,7 +106096,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105769,7 +106107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105779,7 +106117,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105790,7 +106128,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105800,7 +106138,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105810,7 +106148,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105821,7 +106159,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -105831,7 +106169,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -105981,6 +106319,17 @@
     },
     {
       "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_assistant_test",
       "target": "apps_assistant_src_core_nl2cypher_enforcelimit",
       "relation": "imports",
       "context": "import",
@@ -106003,6 +106352,50 @@
     },
     {
       "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_nl2cypher_normalisehops",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_assistant_test",
       "target": "apps_assistant_src_core_nl2cypher_validatecypher",
       "relation": "imports",
       "context": "import",
@@ -106013,13 +106406,229 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_assistant_src_core_assistant_test",
+      "target": "apps_assistant_src_core_grounding_workedexamples",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/assistant.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "e_openmap_packages_config_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "e_openmap_packages_config_dist_index_loadenv",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "e_openmap_packages_graph_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "e_openmap_packages_graph_dist_index_creategraphrepository",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "e_openmap_packages_graph_dist_index_graphrepository",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_llm",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_llm_createllmclient",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_llm_llmclient",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_nl2cypher",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_nl2cypher_ask",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_nl2cypher_assistanterror",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_golden_integration_test_goldenquestion",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_golden_integration_test_golden",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_golden_integration_test_env",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_golden_integration_test",
+      "target": "apps_assistant_src_core_golden_integration_test_outcomes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/golden.integration.test.ts",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "e_openmap_packages_constants_dist_index_assistant",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "e_openmap_packages_constants_dist_index_graph",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_assistant_src_core_grounding",
       "target": "e_openmap_packages_contracts_dist_index_js",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106030,7 +106639,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106041,7 +106650,18 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L3",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "e_openmap_packages_contracts_dist_index_health_states",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106052,7 +106672,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L3",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106063,7 +106683,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106074,7 +106694,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106084,7 +106704,57 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L6",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "apps_assistant_src_core_grounding_workedexample",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "apps_assistant_src_core_grounding_scope",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "apps_assistant_src_core_grounding_impact_edges",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "apps_assistant_src_core_grounding_workedexamples",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding",
+      "target": "apps_assistant_src_core_grounding_known_directions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106094,7 +106764,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L8",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106104,7 +106774,29 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L21",
+      "source_location": "L130",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding_workedexamples",
+      "target": "apps_assistant_src_core_grounding_scope",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_grounding_systemprompt",
+      "target": "apps_assistant_src_core_grounding_workedexamples",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/grounding.ts",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106115,7 +106807,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L27",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106231,7 +106923,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L3",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106242,7 +106934,51 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L3",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "e_openmap_packages_contracts_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "e_openmap_packages_contracts_dist_index_ci_types",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "e_openmap_packages_contracts_dist_index_health_states",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "e_openmap_packages_contracts_dist_index_relationship_types",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106253,7 +106989,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106264,7 +107000,18 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L4",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "e_openmap_packages_graph_dist_index_typelabel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106275,7 +107022,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L4",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106286,7 +107033,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106297,7 +107044,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106308,7 +107055,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106319,7 +107066,29 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L6",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_grounding_known_directions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_grounding_node_properties",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106330,7 +107099,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L6",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106340,7 +107109,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L8",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106350,7 +107119,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106360,7 +107129,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L17",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106370,17 +107139,177 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L24",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_assistant_src_core_nl2cypher",
-      "target": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L32",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_clause",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L49",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_clauses",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_names",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L78",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_matchednodevariables",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_istenantscoped",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_known_labels",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L137",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_known_relationships",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_known_properties",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_labelsof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_propertyafter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_hopfix",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L156",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_normalisehops",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L191",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_checkschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106390,7 +107319,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L44",
+      "source_location": "L252",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L256",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106400,7 +107339,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L47",
+      "source_location": "L283",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher",
+      "target": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L289",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106410,7 +107359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L52",
+      "source_location": "L293",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106420,29 +107369,282 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L71",
+      "source_location": "L312",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_assistant_src_core_nl2cypher_ask",
+      "source": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "target": "apps_assistant_src_core_nl2cypher_names",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "target": "apps_assistant_src_core_nl2cypher_names",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_matchednodevariables",
+      "target": "apps_assistant_src_core_nl2cypher_names",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "target": "apps_assistant_src_core_nl2cypher_clauses",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L109",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "target": "apps_assistant_src_core_nl2cypher_matchednodevariables",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "target": "apps_assistant_src_core_nl2cypher_istenantscoped",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L112",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_normalisehops",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L192",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L212",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_labelsof",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L218",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_names",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L221",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_propertyafter",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L234",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_boundvariables",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L264",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_referencedvariables",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L265",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_maskstrings",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L270",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_matchednodevariables",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L271",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_istenantscoped",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L271",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_validatecypher",
+      "target": "apps_assistant_src_core_nl2cypher_checkschema",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L274",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_preparecypher",
       "target": "apps_assistant_src_core_nl2cypher_enforcelimit",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L80",
+      "source_location": "L290",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_assistant_src_core_nl2cypher_ask",
+      "source": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "target": "apps_assistant_src_core_nl2cypher_scopetotenant",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "target": "apps_assistant_src_core_nl2cypher_normalisehops",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_preparecypher",
       "target": "apps_assistant_src_core_nl2cypher_extractcypher",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L80",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_ask",
+      "target": "apps_assistant_src_core_nl2cypher_preparecypher",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L321",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106453,7 +107655,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L82",
+      "source_location": "L323",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106464,7 +107666,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L85",
+      "source_location": "L326",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -106643,6 +107845,50 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/assistant/tsconfig.json",
       "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_vitest_config",
+      "target": "ref_vitest_config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/vitest.config.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_vitest_integration_config",
+      "target": "ref_vitest_config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/vitest.integration.config.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_vitest_integration_config",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/vitest.integration.config.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_vitest_integration_config",
+      "target": "e_openmap_packages_constants_dist_index_time",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/assistant/vitest.integration.config.ts",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152500,7 +153746,7 @@
     },
     {
       "source": "apps_console_e2e_screens_spec",
-      "target": "ref_playwright_test",
+      "target": "ref_node_url",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -152511,12 +153757,23 @@
     },
     {
       "source": "apps_console_e2e_screens_spec",
-      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "target": "ref_playwright_test",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
       "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_screens_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/screens.spec.ts",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152527,7 +153784,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152538,7 +153795,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152549,7 +153806,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152560,7 +153817,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152571,7 +153828,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152582,7 +153839,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152593,7 +153850,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152603,7 +153860,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L11",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_screens_spec",
+      "target": "apps_console_e2e_screens_spec_screenshotsdir",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/screens.spec.ts",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -152613,7 +153880,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/e2e/screens.spec.ts",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -223941,7 +225208,7 @@
     },
     {
       "source": "packages_contracts_src_ci",
-      "target": "packages_contracts_src_ci_scalarschema",
+      "target": "packages_contracts_src_ci_health_states",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
@@ -223951,7 +225218,7 @@
     },
     {
       "source": "packages_contracts_src_ci",
-      "target": "packages_contracts_src_ci_attributevalueschema",
+      "target": "packages_contracts_src_ci_healthstateschema",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
@@ -223961,7 +225228,7 @@
     },
     {
       "source": "packages_contracts_src_ci",
-      "target": "packages_contracts_src_ci_attributesschema",
+      "target": "packages_contracts_src_ci_healthstate",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
@@ -223971,17 +225238,17 @@
     },
     {
       "source": "packages_contracts_src_ci",
-      "target": "packages_contracts_src_ci_attributes",
+      "target": "packages_contracts_src_ci_scalarschema",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L290",
+      "source_location": "L292",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "packages_contracts_src_ci",
-      "target": "packages_contracts_src_ci_provenanceschema",
+      "target": "packages_contracts_src_ci_attributevalueschema",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
@@ -223991,11 +225258,41 @@
     },
     {
       "source": "packages_contracts_src_ci",
+      "target": "packages_contracts_src_ci_attributesschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L294",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_ci",
+      "target": "packages_contracts_src_ci_attributes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_ci",
+      "target": "packages_contracts_src_ci_provenanceschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/ci.ts",
+      "source_location": "L298",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_ci",
       "target": "packages_contracts_src_ci_provenance",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L299",
+      "source_location": "L304",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224005,7 +225302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L301",
+      "source_location": "L306",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224015,7 +225312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L310",
+      "source_location": "L315",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224025,7 +225322,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L345",
+      "source_location": "L350",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224035,7 +225332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L364",
+      "source_location": "L369",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224045,7 +225342,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L436",
+      "source_location": "L441",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224055,7 +225352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L448",
+      "source_location": "L453",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224065,7 +225362,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L451",
+      "source_location": "L456",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224075,7 +225372,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L467",
+      "source_location": "L472",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224085,7 +225382,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L470",
+      "source_location": "L475",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224095,7 +225392,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L474",
+      "source_location": "L479",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224105,7 +225402,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L476",
+      "source_location": "L481",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224115,7 +225412,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L483",
+      "source_location": "L488",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224125,7 +225422,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L485",
+      "source_location": "L490",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -224135,7 +225432,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/ci.ts",
-      "source_location": "L497",
+      "source_location": "L502",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254251,6 +255548,56 @@
       "_origin": "ast"
     },
     {
+      "source": "docs_evidence_assistant",
+      "target": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "target": "docs_evidence_assistant_why_the_assistant_was_failing",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "target": "docs_evidence_assistant_what_changed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "target": "docs_evidence_assistant_golden_set_12_of_12_pass_run_4_39_6_s",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_assistant_assistant_nl_cypher_golden_set_req_ai_001",
+      "target": "docs_evidence_assistant_console",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/assistant.md",
+      "source_location": "L59",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "docs_evidence_cmdb_layer_counts",
       "target": "docs_evidence_cmdb_layer_counts_req_cmdb_001_req_cmdb_012_layer_counts_match_the_synthetic_estate_2026_11_01",
       "relation": "contains",
@@ -254316,7 +255663,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L67",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254326,7 +255673,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L72",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -254336,7 +255683,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/console/screens.md",
-      "source_location": "L94",
+      "source_location": "L93",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268359,7 +269706,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L74",
+      "source_location": "L315",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -282452,18 +283799,6 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_api_src_services_services_repository_tohealthevent",
-      "target": "apps_api_src_services_services_repository_health_states",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/api/src/services/services.repository.ts",
-      "source_location": "L58",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "apps_api_src_services_services_resolver_servicesresolver_services",
       "target": "apps_api_src_services_services_service_servicesservice_services",
       "relation": "calls",
@@ -282759,7 +284094,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L14",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -282771,7 +284106,55 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/assistant/src/core/grounding.ts",
-      "source_location": "L14",
+      "source_location": "L122",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_known_labels",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L219",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_known_properties",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L222",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_nl2cypher_known_relationships",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L227",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_assistant_src_core_nl2cypher_checkschema",
+      "target": "apps_assistant_src_core_grounding_known_directions",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/assistant/src/core/nl2cypher.ts",
+      "source_location": "L243",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -282783,7 +284166,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L39",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -282795,7 +284178,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/assistant/src/core/nl2cypher.ts",
-      "source_location": "L79",
+      "source_location": "L320",
       "weight": 1.0,
       "_origin": "ast"
     },

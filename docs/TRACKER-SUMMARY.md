@@ -1,41 +1,37 @@
 # OpenMap tracker summary
 
-Generated 2026-10-22T19:27:00.405Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-01T19:53:28.514Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 96 |
-| In progress | 45 |
+| Not started | 68 |
+| In progress | 28 |
 | Blocked | 0 |
-| In review | 9 |
-| Done | 38 |
+| In review | 4 |
+| Done | 88 |
 | **Total** | **188** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 19 | 12 | 1 | 0 | 63% |
-| DISC | 31 | 1 | 27 | 0 | 3% |
-| DEP | 5 | 0 | 2 | 0 | 0% |
-| CMDB | 38 | 0 | 3 | 0 | 0% |
-| IPAM | 7 | 0 | 2 | 0 | 0% |
-| DCIM | 9 | 0 | 1 | 0 | 0% |
-| BSM | 5 | 0 | 3 | 0 | 0% |
-| UI | 27 | 18 | 0 | 0 | 67% |
-| AI | 6 | 0 | 2 | 0 | 0% |
-| INT | 19 | 2 | 3 | 0 | 11% |
-| QA | 4 | 1 | 0 | 0 | 25% |
-| PERF | 5 | 0 | 0 | 0 | 0% |
-| SEC | 13 | 4 | 1 | 0 | 31% |
+| CORE | 19 | 17 | 1 | 0 | 89% |
+| DISC | 31 | 2 | 26 | 0 | 6% |
+| DEP | 5 | 2 | 0 | 0 | 40% |
+| CMDB | 38 | 16 | 1 | 0 | 42% |
+| IPAM | 7 | 3 | 0 | 0 | 43% |
+| DCIM | 9 | 2 | 0 | 0 | 22% |
+| BSM | 5 | 3 | 0 | 0 | 60% |
+| UI | 27 | 20 | 0 | 0 | 74% |
+| AI | 6 | 2 | 0 | 0 | 33% |
+| INT | 19 | 8 | 0 | 0 | 42% |
+| QA | 4 | 2 | 0 | 0 | 50% |
+| PERF | 5 | 2 | 0 | 0 | 40% |
+| SEC | 13 | 9 | 0 | 0 | 69% |
 
 ## In progress
 
 - REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
-- REQ-SEC-002 · OpenBao for collector and integration credentials
-- REQ-AI-001 · NL to Cypher with schema grounding and read-only execution
-- REQ-AI-004 · Recommended actions in impact modeling and incidents
-- REQ-CMDB-012 · Layer · unknown populated and filterable
 - REQ-DISC-001 · Agentless discovery: SNMP v1/v2c/v3
 - REQ-DISC-002 · WMI / WinRM Windows discovery
 - REQ-DISC-003 · SSH Linux/Unix discovery
@@ -62,20 +58,7 @@ Generated 2026-10-22T19:27:00.405Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DISC-025 · TLS certificate discovery and expiry
 - REQ-DISC-026 · PDU / UPS / CRAC monitoring over SNMP
 - REQ-DISC-027 · Vulnerability feed ingestion (NVD, vendor advisories, Tenable/Qualys/Rapid7 imports)
-- REQ-DISC-029 · Discovery scheduling, exclusions, rate limits, credential sets
 - REQ-CMDB-022 · SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows
-- REQ-IPAM-001 · Subnets, supernets, VRFs, VLANs, utilisation
-- REQ-IPAM-002 · IP addresses, reservations, DHCP ranges, conflicts
-- REQ-DCIM-002 · Buildings, rooms, rows, racks, rack layouts (front/rear)
-- REQ-DEP-003 · Service dependency and impact charts
-- REQ-BSM-001 · Business applications / affinity groups
-- REQ-BSM-002 · Service health, SLA/SLO, incident correlation, cost allocation
-- REQ-BSM-003 · Change impact (planned maintenance "what if")
-- REQ-INT-005 · Incident reporting to ITSM
-- REQ-INT-006 · SIEM and SOAR integration
-- REQ-INT-007 · Delivery audit and replay for every integration message
-- REQ-DEP-005 · Lane layout mode: layers as horizontal lanes with blast-radius isolation on click
-- REQ-CMDB-037 · CI short codes (layer prefix plus slug) generated, unique per tenant and editable
 
 ## Blocked
 
@@ -83,15 +66,15 @@ Generated 2026-10-22T19:27:00.405Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## Next up
 
 - REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
-- REQ-SEC-002 [P0] OpenBao for collector and integration credentials
-- REQ-AI-001 [P0] NL to Cypher with schema grounding and read-only execution
-- REQ-AI-004 [P1] Recommended actions in impact modeling and incidents
-- REQ-CMDB-012 [P0] Layer · unknown populated and filterable
 - REQ-DISC-001 [P0] Agentless discovery: SNMP v1/v2c/v3
 - REQ-DISC-002 [P0] WMI / WinRM Windows discovery
 - REQ-DISC-003 [P0] SSH Linux/Unix discovery
 - REQ-DISC-005 [P0] Hypervisor: VMware vCenter/ESXi
 - REQ-DISC-006 [P0] Hypervisor: Hyper-V / SCVMM
+- REQ-DISC-007 [P0] Hypervisor: KVM / libvirt, oVirt, Proxmox
+- REQ-DISC-008 [P0] Hypervisor: Nutanix AHV (Prism)
+- REQ-DISC-009 [P0] Hypervisor: Oracle VM / OLVM
+- REQ-DISC-010 [P0] Cloud: AWS, Azure, GCP, OCI, Alibaba
 
 ## Open risks
 
