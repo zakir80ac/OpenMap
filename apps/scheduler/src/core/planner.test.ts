@@ -23,7 +23,7 @@ describe('cidr', () => {
 describe('planner', () => {
   const base: PlannerInput = {
     tenantId,
-    scopes: [{ id: 's1', siteId: 'ryd', collectorIds: ['snmp', 'ssh_agentless'], targets: [{ kind: 'cidr', value: '10.20.0.0/22' }], exclusions: ['10.20.3.0/24'], credentialRef: 'openmap/creds/snmp', credentialType: 'snmp_v3', options: {} }],
+    scopes: [{ id: 's1', siteId: 'ryd', collectorIds: ['snmp', 'ssh_agentless'], targets: [{ kind: 'cidr', value: '10.20.0.0/22' }], exclusions: ['10.20.3.0/24'], credentialRef: 'openmap/creds/snmp', credentialType: 'snmp_v3', rateLimit: { concurrency: null, requestsPerSecond: null }, options: {} }],
     nodes: [{ nodeId: 'node-ryd-01', siteId: 'ryd', online: true, maxConcurrency: 64 }, { nodeId: 'node-ryd-02', siteId: 'ryd', online: true, maxConcurrency: 64 }],
     manifests: [manifest('snmp', ['host', 'cidr']), manifest('ssh_agentless', ['host'])],
     secondsPerTarget: { snmp: 2, ssh_agentless: 6 },
@@ -39,6 +39,14 @@ describe('planner', () => {
     expect(new Set(p.jobs.map((j) => j.nodeId)).size).toBe(2);
     expect(p.jobs.every((j) => j.options['sweepId'] === p.sweepId)).toBe(true);
     expect(p.unassignedScopeIds).toEqual([]);
+  });
+  it('applies per-scope rate limits under the Node ceiling and falls back to the defaults', () => {
+    const limited = plan({ ...base, scopes: [{ ...base.scopes[0]!, rateLimit: { concurrency: 4, requestsPerSecond: 20 } }] });
+    expect(limited.jobs.every((j) => j.rateLimit.concurrency === 4 && j.rateLimit.requestsPerSecond === 20)).toBe(true);
+    const capped = plan({ ...base, nodes: [{ nodeId: 'small', siteId: 'ryd', online: true, maxConcurrency: 2 }], scopes: [{ ...base.scopes[0]!, rateLimit: { concurrency: 16, requestsPerSecond: null } }] });
+    expect(capped.jobs.every((j) => j.rateLimit.concurrency === 2 && j.rateLimit.requestsPerSecond === DISCOVERY.defaultRequestsPerSecond)).toBe(true);
+    const defaults = plan(base);
+    expect(defaults.jobs[0]?.rateLimit).toEqual({ concurrency: DISCOVERY.defaultConcurrency, requestsPerSecond: DISCOVERY.defaultRequestsPerSecond });
   });
   it('reports scopes with no online node and leaves large CIDRs to the collector', () => {
     const p = plan({ ...base, nodes: [{ nodeId: 'n', siteId: 'jed', online: true, maxConcurrency: 8 }], scopes: [{ ...base.scopes[0]!, targets: [{ kind: 'cidr', value: '10.0.0.0/8' }] }, { ...base.scopes[0]!, id: 's2', siteId: 'jed', collectorIds: ['snmp'], targets: [{ kind: 'cidr', value: '10.0.0.0/8' }] }] });

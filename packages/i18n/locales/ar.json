@@ -889,5 +889,11 @@
   "dependencies.layout.force": "قوى",
   "dependencies.layout.forceUnavailable": "تخطيط القوى متاح حتى {count} عقدة؛ الخرائط الأكبر تبقى في المسارات.",
   "dependencies.isolate.active": "نطاق تأثير {name}: {count} عقدة مضاءة والبقية معتمة",
-  "dependencies.isolate.clear": "عرض الكل"
+  "dependencies.isolate.clear": "عرض الكل",
+  "cmdb.detail.code.edit": "تعديل الرمز",
+  "cmdb.detail.code.form": "إعادة تسمية الرمز المختصر",
+  "cmdb.detail.code.label": "الرمز المختصر",
+  "cmdb.detail.code.hint": "بادئة الطبقة ثم شرطة ثم مقطع من حروف وأرقام وشرطات؛ فريد ضمن هذا المستأجر.",
+  "cmdb.detail.code.saving": "جارٍ الحفظ…",
+  "cmdb.detail.code.error": "لم يُحفظ الرمز: صيغته غير صحيحة أو يسمّي عنصرًا آخر بالفعل."
 }

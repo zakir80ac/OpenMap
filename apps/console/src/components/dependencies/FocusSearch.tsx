@@ -73,7 +73,9 @@ export function FocusSearch({ current, onPick, className }: FocusSearchProps): R
   return (
     <div className={cx('relative', className)}>
       <label className="flex flex-col gap-om-4">
-        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('dependencies.focus.label')}</span>
+        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+          {t('dependencies.focus.label')}
+        </span>
         <span className="relative flex items-center">
           <Icon name="search" className="pointer-events-none absolute start-3 size-4 text-om-muted" />
           <input
@@ -83,7 +85,9 @@ export function FocusSearch({ current, onPick, className }: FocusSearchProps): R
             aria-expanded={showList}
             aria-controls={listId}
             aria-autocomplete="list"
-            aria-activedescendant={showList && hits[active] !== undefined ? listId + '-' + String(active) : undefined}
+            aria-activedescendant={
+              showList && hits[active] !== undefined ? listId + '-' + String(active) : undefined
+            }
             value={text}
             autoComplete="off"
             spellCheck={false}
@@ -105,7 +109,10 @@ export function FocusSearch({ current, onPick, className }: FocusSearchProps): R
             className="h-10 w-full rounded-om-control-lg border border-om-border-glass bg-om-surface1/80 ps-9 pe-3 text-om-sm text-om-primary outline-none transition-[border-color,box-shadow] duration-om-base ease-om-standard focus:border-om-cyan/40 focus:shadow-om-glow-bar-cyan"
           />
           {text === '' ? (
-            <span aria-hidden="true" className="pointer-events-none absolute start-9 truncate text-om-sm text-om-muted">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute start-9 truncate text-om-sm text-om-muted"
+            >
               {current === undefined ? t('dependencies.focus.hint') : current.displayName}
             </span>
           ) : null}
@@ -148,6 +155,7 @@ export function FocusSearch({ current, onPick, className }: FocusSearchProps): R
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-om-primary">{hit.ci.displayName}</span>
+                  <span className="block truncate font-om-mono text-om-2xs text-om-muted">{hit.ci.code}</span>
                   <span className="block truncate font-om-mono text-om-2xs text-om-muted">{hit.ci.type}</span>
                 </span>
                 <LayerBadge layer={hit.ci.layer} label={t(layerKey(hit.ci.layer))} />

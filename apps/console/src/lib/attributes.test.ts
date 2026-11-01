@@ -47,7 +47,7 @@ describe('diffAttributes', () => {
 });
 
 describe('groupRelationships', () => {
-  const me = { id: 'me', name: 'me', displayName: 'Me', type: 'host', layer: 'hardware' as const, health: 'healthy' as const };
+  const me = { id: 'me', name: 'me', displayName: 'Me', code: 'SRV-ME', type: 'host', layer: 'hardware' as const, health: 'healthy' as const };
   const other = (id: string) => ({ ...me, id, displayName: id });
   it('groups by type, largest group first, and resolves the other end and direction', () => {
     const groups = groupRelationships(

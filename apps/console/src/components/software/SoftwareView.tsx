@@ -180,86 +180,88 @@ export function SoftwareView({ locale }: SoftwareViewProps): ReactNode {
         >
           {t('software.catalogue.title')}
         </SectionTitle>
-        {products.isPending ? (
-          <QueryState status="pending" />
-        ) : products.isError ? (
-          <QueryState
-            status="error"
-            onRetry={() => {
-              void products.refetch();
-            }}
-          />
-        ) : list.length === 0 ? (
-          <p className="text-om-sm text-om-secondary">{t('software.catalogue.empty')}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tableClass}>
-              <thead className={theadClass}>
-                <tr>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.product')}
-                  </th>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.category')}
-                  </th>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.endOfSupport')}
-                  </th>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.footprint')}
-                  </th>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.licence')}
-                  </th>
-                  <th scope="col" className={thClass}>
-                    {t('software.table.vulnerabilities')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((p) => (
-                  <tr key={p.ci.id} className={rowClass}>
-                    <td className={tdClass}>
-                      <Link href={ciHref(p.ci.id)} className="text-om-cyan hover:underline">
-                        {p.vendor + ' ' + p.name}
-                      </Link>
-                      <span className="block font-om-mono text-om-2xs text-om-muted">{p.version}</span>
-                    </td>
-                    <td className={tdClass + ' text-om-secondary'}>
-                      {p.category === null ? t('common.none') : p.category}
-                    </td>
-                    <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>
-                      {p.endOfSupport === null ? t('common.none') : format.dateTime(p.endOfSupport)}
-                    </td>
-                    <td className={tdClass + ' text-om-secondary'}>
-                      {t('software.footprint', {
-                        instances: format.integer(p.instances),
-                        hosts: format.integer(p.hosts),
-                        running: format.integer(p.running),
-                      })}
-                    </td>
-                    <td className={tdClass}>
-                      {p.licence === null ? (
-                        <span className="text-om-muted">{t('software.licence.none')}</span>
-                      ) : (
-                        <LicenceCell licence={p.licence} />
-                      )}
-                    </td>
-                    <td className={tdClass}>
-                      {p.vulnerabilities === 0 ? (
-                        <span className="text-om-muted">{t('common.none')}</span>
-                      ) : (
-                        <Link href={vulnerabilitiesHref} className="text-om-rose hover:underline">
-                          {t('software.vulnerabilities.open', { count: format.integer(p.vulnerabilities) })}
-                        </Link>
-                      )}
-                    </td>
+        <div className="h-[32rem] overflow-y-auto">
+          {products.isPending ? (
+            <QueryState status="pending" />
+          ) : products.isError ? (
+            <QueryState
+              status="error"
+              onRetry={() => {
+                void products.refetch();
+              }}
+            />
+          ) : list.length === 0 ? (
+            <p className="text-om-sm text-om-secondary">{t('software.catalogue.empty')}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tableClass}>
+                <thead className={theadClass}>
+                  <tr>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.product')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.category')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.endOfSupport')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.footprint')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.licence')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('software.table.vulnerabilities')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {list.map((p) => (
+                    <tr key={p.ci.id} className={rowClass}>
+                      <td className={tdClass}>
+                        <Link href={ciHref(p.ci.id)} className="text-om-cyan hover:underline">
+                          {p.vendor + ' ' + p.name}
+                        </Link>
+                        <span className="block font-om-mono text-om-2xs text-om-muted">{p.version}</span>
+                      </td>
+                      <td className={tdClass + ' text-om-secondary'}>
+                        {p.category === null ? t('common.none') : p.category}
+                      </td>
+                      <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>
+                        {p.endOfSupport === null ? t('common.none') : format.dateTime(p.endOfSupport)}
+                      </td>
+                      <td className={tdClass + ' text-om-secondary'}>
+                        {t('software.footprint', {
+                          instances: format.integer(p.instances),
+                          hosts: format.integer(p.hosts),
+                          running: format.integer(p.running),
+                        })}
+                      </td>
+                      <td className={tdClass}>
+                        {p.licence === null ? (
+                          <span className="text-om-muted">{t('software.licence.none')}</span>
+                        ) : (
+                          <LicenceCell licence={p.licence} />
+                        )}
+                      </td>
+                      <td className={tdClass}>
+                        {p.vulnerabilities === 0 ? (
+                          <span className="text-om-muted">{t('common.none')}</span>
+                        ) : (
+                          <Link href={vulnerabilitiesHref} className="text-om-rose hover:underline">
+                            {t('software.vulnerabilities.open', { count: format.integer(p.vulnerabilities) })}
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Card padding="24" className="flex flex-col gap-om-16">

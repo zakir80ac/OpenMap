@@ -2,72 +2,102 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-10-22 (marathon, checkpoint 7)
+## Last session · 2026-11-01 (finish-everything marathon, checkpoint 8)
 
-**What exists and runs**
+Syed asked for every Not started / In progress / In review row to be finished, dependencies on his side listed first,
+easiest rows first. Commits this session: `6e6a055` (telemetry in every service, layer visibility on every list),
+`12dab7e` (software, licence and vulnerability queries, GraphQL 0.5.0, ADR-013), `46aeaae` (Software and
+Vulnerabilities screens; the services' missing OpenTelemetry dependency), `bb5e5b9` (dependency map force layout and
+blast-radius isolation; licence dates as ISO instants; console lint debt cleared and linted in CI) and the short-code
+commit at HEAD (CI short codes unique in Postgres and editable, GraphQL 0.6.0, ADR-014; ClickHouse and Prometheus
+scrape fixes; layout-shift fixes on Assets and Software; per-scope discovery rate limits honoured by the planner).
 
-- Monorepo per CLAUDE.md §5 (pnpm, Turborepo, strict TS, lefthook), Go workspace for `apps/node` and `apps/collectors` (Go 1.27).
-- `packages/constants`, `packages/config`, `packages/i18n` (en + ar, parity-checked), `packages/contracts` (CI, collector, event, asset, impact, integration, organization; 18 JSON Schemas; GraphQL 0.1.0; twelve layers; CI short codes; `GLOBAL_IDENTITY_KEYS`), `packages/ui` (Obsidian Pro tokens and RTL components), `packages/db` (Prisma 6, 35 models, migrations 0001–0005 applied (0005 seeds the bootstrap organization and the `default` tenant the realm's seeded administrator belongs to); **native Postgres migration runner** on `pg` with Prisma-compatible bookkeeping, so images and air-gapped hosts migrate without the Prisma CLI; ClickHouse DDL; Memgraph schema and triggers; 80 tests), `packages/graph` (Cypher repository on managed transactions with transient-error retry, `purgeTenant`; impact and time-travel verified live), `packages/testing`.
-- `tools/tracker` (188 rows), `tools/guard`, `tools/synth-estate`, `tools/perf` (k6 impact-query budget test).
-- `apps/api`: NestJS on Fastify, Mercurius; Keycloak JWKS auth with the token issuer verified against `PUBLIC_KEYCLOAK_URL` (the origin the browser uses and `KC_HOSTNAME` writes into tokens) while the key set is fetched over the backchannel `KEYCLOAK_URL`; 26 unit + 12 integration tests; container image verified (`/healthz` ok, `/readyz` ready against the compose stack).
-- `apps/console`: Next.js 15, en/ar, RTL. Screens: dashboard, layers, CMDB list, **dependency map** (Sigma.js + graphology WebGL, lane layout in a Web Worker, layer chips, time travel; ADR-007), **CI detail** (identity, attributes, relationships, impact, history diff, "Label this CI"), **impact modeling** (component explorer → conditions → `saveScenario`/`runSimulation` → affected services → `askAssistant`), **services** (propagated health, SLA budgets, incidents), **discovery** (Nodes, jobs, sweep, Run discovery), **sign-in** (OIDC Authorization Code + PKCE against the Keycloak realm: tokens in memory, refresh token mirrored to sessionStorage with silent renewal, RP-initiated logout, sign-in gate around the shell that starts in `restoring` on server and client alike, account menu with identity, tenant and realm roles, bearer on every GraphQL call; a rejected token ends the session with the API's wording and never restarts sign-in by itself, because a live SSO session would otherwise loop silently). 116 unit tests, 20 routes build, Playwright e2e in en and ar (sign-in, dashboard, every primary screen, CI detail) green against the live stack with screenshots in `docs/evidence/console/`.
-- `apps/scheduler`: planner, Node API (mTLS enrolment with CSR signing, heartbeat, atomic job pull, result intake with evidence, OpenBao credential resolution, results queue), `pki:init`, **`node:register`** (one-time enrolment token) and **`job:submit`** CLIs.
-- `apps/reconciler`: identity resolution, confidence merge, control-character sanitising, array-based persistence (`INSERT … SELECT FROM unnest` per table), pending-relationship sweeps, outbox dispatcher (1000-row batches, bulk stream publish, ClickHouse async inserts); `replay` and `bench` tools.
-- `apps/bsm-engine`: **running service** (`main.ts`): CI health rules from observations (power, link, replicas, certificates, staleness), redundancy-group propagation to business services, `openmap.bsm.health.changed` events, incidents opened / updated / mitigated / resolved, delivery to ITSM, SIEM and on-call integrations with OpenBao credentials; verified live (fault injected in Memgraph → 3 incidents → cleared → mitigated).
-- `apps/assistant`, `apps/node` (Go) as before; Node now passes `evidenceDir` so collectors store raw evidence by digest.
-- `apps/collectors` (Go), **37 families** plus the host agent, all unit-tested against protocol-shaped fixtures served in-process or typed transcripts: `snmp` (MIB-II, IF, ENTITY, LLDP, Q-BRIDGE, **UPS-MIB, APC PowerNet, Raritan PDU**), `ssh_agentless`, `ipmi_redfish`, `vmware`, `kubernetes`, `nutanix_ahv`, `kvm_libvirt`, `wmi`, `hyperv`, `port_scan`, `dns` (AXFR), `certificate`, `vulnerability_feed` (NVD 2.0), `cloud_azure` (ARM), `cloud_aws` (signed Query/REST: STS, EC2, VPC, RDS, ELBv2, EKS), `storage_pure`, `storage_ontap`, `fc_fabric` (Brocade FOS, Cisco MDS), `dhcp` (Windows, ISC, Kea), `ldap` (AD/LDAP), `database` (PostgreSQL, MySQL, SQL Server, MongoDB, Redis; live-probed against the compose Postgres and Valkey), `object_storage` (S3-compatible, SigV4 known-answer tested), load balancers `load_balancer` (F5 iControl REST), `haproxy` (stats CSV), `citrix_adc` (NITRO), `nginx` (Plus API + stub_status), `a10_thunder` (aXAPI v3), `oracle_vm` (oVirt/OLVM/RHV), `netflow` (v5, v9, IPFIX, sFlow), `hpe_oneview`, `cisco_ucs` (UCS Manager XML API), `nas` (SMB over WinRM, Samba/NFS exports over SSH, NFS MOUNT protocol agentlessly), `cloud_gcp` (service-account JWT), `cloud_oci` (HTTP Signature), `cloud_alibaba` (RPC and ROA signatures), `saas` (Microsoft 365, Google Workspace, Salesforce, ServiceNow, Workday), CRAC units inside `snmp` (Liebert/Vertiv, ENTITY-SENSOR). **Host agent** `openmap-agent` (REQ-DISC-004): Linux/Windows/macOS inventory (DMI identity, OS, addresses, listeners with processes, software) reporting through the Node's mTLS agent gateway; the scheduler enrols agents with one-time tokens and files reports as runs of a standing `agent` job — verified live on compose. `docs/COLLECTORS.md` is generated from the binaries' `--manifest` by `apps/collectors/scripts/gen-docs.sh`. Shared runners: `sshexec`, `winrmexec`, `restjson`, `sigv4`.
-- **End-to-end discovery verified on the dev stack**: `pki:init` → scheduler → `node:register` → Go Node enrolled over mTLS → `job:submit` port_scan and certificate → results through the queue → reconciler → Postgres and Memgraph (SECURED_BY edge visible), evidence stored on the Node.
-- `deploy/`: `docker/node-service.Dockerfile` (api, scheduler, reconciler, bsm-engine; all build) and `docker/node.Dockerfile` (Node + 25 collectors, distroless, 190 MB); `compose/docker-compose.apps.yml` overlay with a migrations job; air-gap overlay and `airgap-bundle/` build/load scripts; `helm/openmap` chart (in-chart datastores, Keycloak, OpenBao or external, services, migrations hook, ingress; lints and renders). `deploy/README.md` documents all three profiles.
-- **Security and audit**: role-gated console actions from the shared role table (REQ-SEC-001 Done), API tokens through the `openmap-automation` service account, realm TOTP and lockout policy, SSO brokering documented (REQ-SEC-009 in review); every mutation audited through the outbox into append-only `audit_logs` and ClickHouse, `auditLog` in GraphQL 0.2.0 (ADR-010), Settings screen (REQ-SEC-005 in review).
-- **Performance**: Lighthouse 1.0 (performance, accessibility, best practices) on every screen, p95 interaction 32 ms, dependency map 60 fps on the production build (`docs/evidence/perf`); `tools/perf` holds the Lighthouse flow runner and guard enforces the budgets.
-- **Deployment**: console image with run-time public settings, `helm install` green on kind (13 pods, migrations job, API ready, console 200 — `docs/evidence/helm`), chart fixes (migrations as a plain job with readiness waits, Memgraph volume ownership, Postgres schema init), `deploy/kind/cluster.yaml`.
-- **Contracts frozen (REQ-CORE-001…006 Done)**: `pnpm contracts:check` (CI) compares `schema.graphql` with its committed base using graphql's breaking-change analysis — additions need a minor bump, breaking changes a major bump, the header version is pinned to `CONTRACT_VERSIONS.graphql`; the Go contract view in `apps/node` and `apps/collectors` is checked by reflection against the emitted JSON Schemas; the outbox dispatcher fan-out is unit-tested.
-- **Audit log (REQ-SEC-005 Done)**: a real bug was found and fixed on the rebuilt image — the entry's follow-up UPDATE of the trace id hit the append-only trigger and aborted the transaction, so no mutation was audited while tracing was on; the event is now emitted first and the row written once. `openmap_audit_entries_total{action}` metric; tenant setting `auditRetentionDays` (seven years) drives the ClickHouse `audit_log` TTL (Postgres 0009, ClickHouse 0002); Settings screenshots with live entries in `docs/evidence/console`.
-- **Services on bare metal (REQ-DISC-031, REQ-DISC-004 in review)**: both Go binaries read an environment file and host themselves as Windows services; `deploy/install/` has systemd units, a launchd daemon and sh/PowerShell installers that enrol once with the one-time token.
-- **Offline bundle (REQ-INT-002)**: `build-bundle.sh` produced a 2.7 GB bundle with 17 images and checksums (`docs/evidence/airgap/bundle-build.md`); the realm import now takes the console's public URL from `CONSOLE_PUBLIC_URL`, so an air-gapped host at any hostname can sign in; the loader's checksum step works on BusyBox.
-- **Three deployment defects found by the air-gap test and fixed**: the bundle loader's `sha256sum --quiet` (absent on BusyBox); the realm import pinned the console client to `localhost:3000` (now `${CONSOLE_PUBLIC_URL:…}`, substituted by Keycloak from the environment — `${env.NAME}` is rejected); and the console image carried `localhost:4000`/`localhost:8080` baked into the client bundle because Turborepo's strict env mode hid the sentinel variables from the build — `turbo.json` now declares them and the Dockerfile fails without the sentinels. Every non-default-origin deployment (Helm with real hostnames included) was affected.
-- **Tenant settings editor (REQ-UI-019)**: GraphQL 0.3.0 (ADR-011) adds `tenantSettings` and `updateTenantSettings` (admin only, partial input validated by the config package's zod schema, audited); the Settings screen gained the editor (read-only for other roles) with en/ar strings, unit tests (T-098) and an integration test (T-097).
-- **Every sidebar entry resolves to a working screen (REQ-UI-009/010/011/014/017/018 Done)**: Assets (attention table, register with stage changes, plans with BOM), IPAM (subnet tree with utilisation, addresses, next free IP, DNS, DHCP), DCIM (room heat map, isometric SVG rack elevation, devices, PDUs), Integrations (catalogue, configured list, detail with mappings and deliveries, probe, admin editor), Analytics (Superset embedded SDK, dashboard provisioned by the API, tenant RLS guest tokens), Assistant (conversation over `askAssistant` with the Cypher shown). GraphQL 0.4.0 (ADR-012). Building them fixed IPAM (cidr from identity) and DCIM (heightU/uPosition, PDUs in rack, row/room) against the real estate, found the compose LLM variable mismatch (`LLM_URL` was never read) and gave the NL→Cypher pipeline a self-correction loop. Evidence: `docs/evidence/console/screens.md`.
-- **Release packaging**: `deploy/install/build-release.sh` produces per-target tarballs (linux/amd64, windows/amd64, darwin/arm64 built; `docs/evidence/release`).
-- **CI**: `verify` (guard, tracker, typecheck, unit, contracts check, i18n), `integration` (compose datastores), `e2e` (full compose stack, Playwright en+ar) and `kind` (helm install smoke) jobs — the last two await their first GitHub Actions run (REQ-QA-002/004 in review).
-- Design: 13 screens on the Obsidian Pro canvas: https://claude.ai/artifact/VcFmJuAaHCmrvgpPMmTzrf.
+**What exists and runs** (everything from checkpoint 7, plus):
 
-**Throughput (REQ-CORE-013 / REQ-PERF-003), scale-0.05 estate = 28,200 CIs, 66,332 relationships, 2,246 devices, serial replay on the dev laptop:**
+- `apps/console`: **Software and licences** (`/software`: catalogue with footprint, licence usage and posture groups,
+  text and licensed-only filter) and **Vulnerabilities** (`/vulnerabilities`: CVSS-ranked CVEs with exploited /
+  exposure / CVSS filters and a blast-radius panel: affected software, hosts, business services with predicted
+  state). Dependency map: lane/force layout toggle in the URL (`?layout=force`, deterministic Fruchterman-Reingold in
+  the layout worker up to `DEPENDENCY_MAP.forceMaxNodes`), click isolates a node's impact closure (Sigma reducers dim
+  the rest), double-click opens the CI. CI short codes come from the API (`Ci.code`), show on CMDB rows, focus-search
+  hits and the CI detail header, where operators rename them (`setCiCode`). Assets and Software tables sit in
+  fixed-height scroll regions (CLS was 0.31 / 0.27; Lighthouse under 0.9 on both until this change).
+- `apps/api`: `software`, `vulnerabilitySummaries`, `vulnerability` (ADR-013); `Ci.code` and `setCiCode` (ADR-014,
+  409 on a taken code); date attributes normalised with `isoAttribute()` (the estate stores calendar dates; the
+  DateTime scalar rejected them and emptied the Software screen on the shipped image); discovery scopes carry
+  `rateLimitConcurrency` / `rateLimitRps` subnet attributes that the planner honours under the Node ceiling.
+- `packages/db`: migration `0010_ci_code_unique` renumbers duplicate codes (499 groups on the dev estate, every IP
+  address had collapsed to `NET-10`), adds a BEFORE INSERT/UPDATE trigger that suffixes a taken code and a partial
+  unique index on `("tenantId", code) WHERE "validTo" IS NULL`. `ciCode()` now keeps dotted non-domain names apart.
+- `packages/telemetry` on every Node service; Prometheus scrapes api:4000, reconciler:4100, scheduler:4201,
+  bsm-engine:4400 (all `up` after the container picked up the current scrape file); ClickHouse metrics on 9363 through
+  `deploy/compose/clickhouse/prometheus.xml`; Memgraph Community has no Prometheus endpoint (target removed, documented).
+  `docs/evidence/telemetry.md`.
+- Lint: the console had 48 pre-existing lint errors that broke `next build` (the Docker console image); fixed, a `lint`
+  script added, `pnpm lint` added to the CI verify job, Next/Playwright output ignored by ESLint. Other packages still
+  lint only under the root config (apps/api has 65 findings under it, mostly the Nest empty-class rule) — see Next three.
+- Evidence: `docs/evidence/console/{software,vulnerabilities,dependencies}-{en,ar}.png` and `screens.md`;
+  `docs/evidence/telemetry.md`; e2e `27 passed, 1 skipped` on the rebuilt images; Lighthouse on the final images: 1.0 on
+  every screen except dcim 0.91 and analytics 0.76 (embedded floor 0.7), CLS 0 on Assets and Software after the fix
+  (`docs/evidence/perf/lighthouse.json` now records FCP, LCP, TBT, CLS, speed index and TTI per screen).
 
-| Phase | Session start | Now |
-| --- | --- | --- |
-| Reconcile phase (lookup + persist + pending sweeps) | 463 s | 45 s (620 CIs/s; in-memory core ≈ 1 s) |
-| Outbox dispatch | 465 s | 62 s |
+**Tracker.** `tracker/OpenMap-Tracker.xlsx` was open in Excel for the whole session (`tracker/~$OpenMap-Tracker.xlsx`
+lock file; every `pnpm tracker set` failed with EBUSY), so no row moved. The closures with their test ids and evidence
+are queued in `.local/tracker-closures.sh` (gitignored, on this machine): CORE-014/015/016/017/018, SEC-002/006/007/010,
+IPAM-001/002/006, DCIM-002/009, PERF-001/003, INT-003/004/005/006/007/008, CMDB-001…012, CMDB-030/031/035/037,
+SEC-008, UI-015/016, BSM-001/002/003, DEP-003/005, AI-004, QA-002. **Close Excel, then run
+`bash .local/tracker-closures.sh && pnpm tracker report && pnpm tracker session --summary "..."`** — 55 rows go Done
+(38 → 93 of 188).
 
-10k devices extrapolate to about 8 minutes serially, inside the 15-minute budget before worker concurrency.
+## Dependencies on Syed (nothing below can be finished without them)
 
-**Decisions this session:** ADR-001…007. Collector endpoints that vary by cloud or deployment (Azure authority/ARM, NVD mirror, AWS partition suffix) are job options or the target, never literals. Unobserved members leave a redundancy group `unknown`, never `down`; an incident whose service drops to `unknown` is mitigated, not resolved.
+| Need | Rows blocked |
+| --- | --- |
+| `docs/SPEC.md` (the planning document exported as Markdown) | re-seeding the tracker; frozen contracts checked against it; every "per SPEC" acceptance criterion |
+| Vendor lab or recorded transcripts (snmpwalk, SSH/CLI, WinRM, REST) for Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert | REQ-DISC-001…027 Done (collectors exist, tested against protocol-shaped fixtures; R-004 forbids fabricating vendor data), REQ-QA-003 |
+| Read-only cloud and SaaS credentials (AWS, Azure, GCP, OCI, Alibaba, Microsoft 365, Google Workspace, Salesforce, ServiceNow, Workday) | REQ-DISC-010, REQ-CMDB-022 Done |
+| A GitHub remote (or other CI runner) so the `verify`, `integration`, `e2e` and `kind` jobs run | REQ-QA-002/004, REQ-INT-003 evidence from CI, REQ-PERF-002/004 thresholds "enforced in CI" |
+| Warranty / EoX API credentials (Dell TechDirect, HPE, Lenovo, Cisco, IBM) | REQ-CMDB-024, REQ-INT-014 |
+| Integration sandboxes (ServiceNow, Jira SM, Splunk/Sentinel, PagerDuty, Slack/Teams webhooks) | REQ-INT-009…017 Done beyond the recorded-fixture level |
+| Corporate IdP (SAML/OIDC) and the MFA decision | REQ-SEC-009 Done |
+| Decisions: ADR-006 (@peculiar/x509), ADR-007 (Sigma.js + graphology), per-business-unit tenancy, code-signing certificate for the release tarballs | REQ-SEC-013, REQ-SEC-010 scope, REQ-DISC-031/004 Done |
 
 ## In progress
 
-- REQ-INT-002 / REQ-SEC-003 are **Done**: the bundle loaded inside a Docker-in-Docker host whose new outbound connections are dropped by iptables, the stack came up healthy, was seeded with the scale-0.05 estate, and the full e2e suite passed against it (`docs/evidence/airgap/load-airgap.md`). The bundle is being rebuilt with the fixed console image, realm and loader. The e2e suite now has a `setup` project (first-use password change of seeded users) and runs with one worker because the realm's brute-force quick-login check disables an account several workers sign into within a second.
-- REQ-DISC-031 / REQ-DISC-004 (in review): installers exist; a packaged release (signed binaries, tarball with `bin/`, `collectors/`, `install/`) is still to produce.
-- REQ-SEC-009: SAML brokering and MFA are realm policy still to capture in `realm-openmap.json`; API tokens done.
-- Collectors: every planned family exists; none is Done without recorded vendor transcripts (risk R-004).
-- REQ-CORE-013: scale-1 replay (550k CIs) and the concurrent-worker measurement still to run.
-- REQ-UI-007: force-layout toggle and the graph fps capture in tools/perf are outstanding.
+- REQ-DISC-029: per-scope rate limits are in the planner and the API scope builder; the Discovery screen still needs
+  the scopes card (exclusions, credential set, rate limit per subnet) over `updateCiAttributes`, with e2e.
+- REQ-CMDB-038: `LAYER_HEADLINE_METRIC` per layer card from ClickHouse — not started in code.
+- REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
+- REQ-AI-001: a golden question set over the synthetic estate with the validator (the 1.5B CPU model answers two of
+  the four example questions; quality is the model's, the product behaviour is refusal with reason).
+- REQ-SEC-009 (in review): SAML brokering and MFA need a corporate IdP.
+- REQ-DISC-031 / REQ-DISC-004 (in review): signed release tarballs.
+- Lint debt outside the console: add `lint` scripts to every package and clear the root-config findings.
 
 ## Blocked
 
-- docs/SPEC.md still missing (risk R-001).
-- Vendor lab fixtures (risk R-004).
+- docs/SPEC.md still missing (risk R-001). Vendor lab fixtures (risk R-004). CI never ran (no remote).
 
 ## Next three
 
-1. Push so the new CI jobs run (REQ-QA-002/004 → Done, REQ-INT-003 → Done); exercise the CPU LLM profile offline (REQ-INT-004, REQ-INT-008).
-2. Release packaging signed and published (REQ-DISC-031/004 → Done); the SaaS layer screen (REQ-CMDB-011); Helm values for Superset and the LLM (the chart does not deploy either yet, so Analytics and the Assistant on Kubernetes need external `SUPERSET_URL`/`LLM_BASE_URL`); cross-check the Superset chart figures against the API.
-3. Scale-1 replay for the 15-minute budget; then the remaining collector families and the Device42 agent import.
+1. Close Excel → run the queued tracker closures, `pnpm tracker report`, commit the workbook.
+2. REQ-DISC-029 scopes card and e2e; REQ-CMDB-038 headline metrics; REQ-CORE-019 (OpenAPI for the REST surface and a
+   generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
+   Prometheus metrics that now exist).
+3. REQ-CORE-013 scale-1 replay; REQ-AI-001 golden set; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard;
+   REQ-UI-021/022/023 reports, DOQL, BI.
 
-**Dev-stack notes (also in project memory):** the stack was stopped (not removed) at the end of checkpoint 7; resume with  in  and openmap-control-plane for the kind cluster; all volumes and the loaded estate persist. the `cpu` LLM profile runs `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` from `deploy/compose/models` (gitignored); `.env.example` names the 7B model for deployments. Superset's guest role and dashboard are created by the API on first `analyticsEmbed`. the Keycloak realm import runs with IGNORE_EXISTING, so realm-file edits reach an existing realm only through the admin REST API (user profile first, then user attributes); the local `admin` user's `tenant` attribute points at the synthetic tenant so the console shows the estate, while a fresh install keeps `default` (migration 0005). The browser console error buffer in the desktop app accumulates across navigations; the Next dev-server log is the clean signal.
+**Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migration 0010
+is applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
+Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
 1. Export the planning document to `docs/SPEC.md` so the tracker can be re-seeded and the contracts frozen against it.
-2. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.
-3. Confirm ADR-006 (`@peculiar/x509`) and ADR-007 (Sigma.js + graphology, MIT) as accepted dependencies.
+2. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE
+   iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.
+3. Confirm ADR-006 (`@peculiar/x509`) and ADR-007 (Sigma.js + graphology, MIT) as accepted dependencies; ADR-013 and
+   ADR-014 are additive contract bumps (0.5.0, 0.6.0) recorded for review.
 4. Confirm multi-tenancy is per business unit as drawn in onboarding.
+5. Close the tracker workbook in Excel while sessions run (or we switch the tracker to a copy-on-write flow).

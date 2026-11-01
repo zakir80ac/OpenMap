@@ -32,7 +32,7 @@ const allVisible = Object.fromEntries(CI_LAYERS.map((layer) => [layer, true])) a
 >;
 
 function ci(id: string, layer: (typeof CI_LAYERS)[number], type = 'host') {
-  return { id, name: id, displayName: id.toUpperCase(), type, layer, health: 'healthy' as const };
+  return { id, name: id, displayName: id.toUpperCase(), code: 'X-' + id.toUpperCase(), type, layer, health: 'healthy' as const };
 }
 
 const result: ImpactResult = {

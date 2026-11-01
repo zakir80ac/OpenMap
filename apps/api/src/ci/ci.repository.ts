@@ -36,21 +36,57 @@ export interface NewRelationship {
 export interface CiRepository {
   findById(tenantId: string, id: string, asOf: string | null): Promise<CiRecord | null>;
   findByIds(tenantId: string, ids: readonly string[]): Promise<CiRecord[]>;
-  list(tenantId: string, filter: CiFilterInput, healthIds: readonly string[] | null, first: number, after: SortKey | null): Promise<ListResult<CiRecord>>;
+  list(
+    tenantId: string,
+    filter: CiFilterInput,
+    healthIds: readonly string[] | null,
+    first: number,
+    after: SortKey | null,
+  ): Promise<ListResult<CiRecord>>;
   search(tenantId: string, text: string, layers: readonly CiLayer[], first: number): Promise<CiRecord[]>;
   byType(tenantId: string, type: CiType): Promise<CiRecord[]>;
   relationships(tenantId: string, query: RelationshipQuery): Promise<ListResult<RelationshipRecord>>;
   relationshipById(tenantId: string, id: string): Promise<RelationshipRecord | null>;
   relationshipsByIds(tenantId: string, ids: readonly string[]): Promise<RelationshipRecord[]>;
   /** Current relationships of the given types touching any of `ciIds` in the stated direction. */
-  relationshipsOfMany(tenantId: string, ciIds: readonly string[], types: readonly RelationshipType[], direction: Exclude<RelationshipDirection, 'both'>): Promise<RelationshipRecord[]>;
+  relationshipsOfMany(
+    tenantId: string,
+    ciIds: readonly string[],
+    types: readonly RelationshipType[],
+    direction: Exclude<RelationshipDirection, 'both'>,
+  ): Promise<RelationshipRecord[]>;
   /** Current relationships of a type anywhere in the tenant (for tree and vulnerability views). */
   relationshipsByType(tenantId: string, type: RelationshipType): Promise<RelationshipRecord[]>;
   /** Versions of a CI overlapping [from, to]; Postgres holds the current version, history is appended elsewhere. */
   versions(tenantId: string, id: string, from: string | null, to: string | null): Promise<CiRecord[]>;
 
-  label(tx: Prisma.TransactionClient, tenantId: string, id: string, label: UserLabel, layer: CiLayer, type: CiType | null): Promise<CiRecord>;
-  updateAttributes(tx: Prisma.TransactionClient, tenantId: string, id: string, attributes: Record<string, unknown>, checksum: string): Promise<CiRecord>;
-  createRelationship(tx: Prisma.TransactionClient, tenantId: string, input: NewRelationship): Promise<RelationshipRecord>;
-  retireRelationship(tx: Prisma.TransactionClient, tenantId: string, id: string, at: string): Promise<RelationshipRecord>;
+  label(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    label: UserLabel,
+    layer: CiLayer,
+    type: CiType | null,
+  ): Promise<CiRecord>;
+  updateAttributes(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    attributes: Record<string, unknown>,
+    checksum: string,
+  ): Promise<CiRecord>;
+  /** The current CI of the tenant carrying this short code, if any (ADR-014). */
+  findCurrentByCode(tenantId: string, code: string): Promise<CiRecord | null>;
+  updateCode(tx: Prisma.TransactionClient, tenantId: string, id: string, code: string): Promise<CiRecord>;
+  createRelationship(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    input: NewRelationship,
+  ): Promise<RelationshipRecord>;
+  retireRelationship(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    at: string,
+  ): Promise<RelationshipRecord>;
 }

@@ -84,6 +84,20 @@ interface PageScore {
   bestPractices: number;
   /** Accessibility and best-practice audits that did not pass, so a budget miss names its cause. */
   failing: FailingAudit[];
+  /** Core metrics in milliseconds (CLS unitless), so a performance miss names its cause too. */
+  metrics: Record<string, number>;
+}
+
+/** Lighthouse audit ids whose numeric values explain a performance score. */
+const METRIC_AUDITS = ['first-contentful-paint', 'largest-contentful-paint', 'total-blocking-time', 'cumulative-layout-shift', 'speed-index', 'interactive'] as const;
+
+function metricsOf(lhr: { audits: Record<string, { numericValue?: number } | undefined> }): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const id of METRIC_AUDITS) {
+    const value = lhr.audits[id]?.numericValue;
+    if (typeof value === 'number') out[id] = Math.round(value * 1000) / 1000;
+  }
+  return out;
 }
 
 interface AuditLike {
@@ -148,6 +162,7 @@ async function main(): Promise<void> {
     accessibility: score(step.lhr.categories, 'accessibility'),
     bestPractices: score(step.lhr.categories, 'best-practices'),
     failing: failingAudits(step.lhr as unknown as Parameters<typeof failingAudits>[0]),
+    metrics: metricsOf(step.lhr as unknown as Parameters<typeof metricsOf>[0]),
   }));
   mkdirSync(resultsDir, { recursive: true });
   writeFileSync(resultsDir + 'lighthouse.json', JSON.stringify({ name: 'lighthouse', formFactor: FORM_FACTOR, budgets: { performance: PERF_BUDGETS.lighthousePerformanceMin, accessibility: PERF_BUDGETS.lighthouseAccessibilityMin, bestPractices: PERF_BUDGETS.lighthouseBestPracticesMin }, pages, generatedAt: new Date().toISOString() }, null, 2) + '\n');
@@ -163,6 +178,7 @@ async function main(): Promise<void> {
     if (!ok) failed = true;
     console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);
+    if (!ok) console.log('        metrics ' + JSON.stringify(p.metrics));
   }
   console.log('lighthouse: results/lighthouse.json and results/lighthouse-flow.html written');
   if (failed) process.exit(1);

@@ -30,15 +30,18 @@ Console suite: 25 files, 156 tests green. API integration suite (T-032, T-097): 
 - Analytics: the Superset iframe mounts at `/embedded/<uuid>` with a tenant-scoped guest token.
 - Assistant: the example question resolves to an answer with its Cypher, or to an explicit refusal with the reason.
 
-## Lighthouse (desktop flow, `docs/evidence/perf/lighthouse.json`)
+## Lighthouse (desktop flow, `docs/evidence/perf/lighthouse.json`, re-measured 2026-11-01 on the rebuilt console)
 
 | Screen | Performance | Accessibility | Best practices |
 | --- | --- | --- | --- |
-| assets | 0.91 | 1 | 1 |
+| assets | 1 | 1 | 1 |
+| software | 1 | 1 | 1 |
+| vulnerabilities | 1 | 1 | 1 |
+| dependencies | 1 | 1 | 1 |
 | integrations | 1 | 1 | 1 |
 | ipam | 1 | 1 | 1 |
-| dcim | 0.92 | 1 | 1 |
-| analytics | 0.82 | 1 | 1 |
+| dcim | 0.91 | 1 | 1 |
+| analytics | 0.76 | 1 | 1 |
 | assistant | 1 | 1 | 1 |
 
 Analytics hosts Superset's own application inside the page; its blocking time is Superset's bundle executing in a
@@ -64,3 +67,25 @@ screens; the standard 0.9 applies to everything else and the accessibility and b
 
 `assets-en/ar.png`, `integrations-en/ar.png`, `ipam-en/ar.png`, `dcim-en/ar.png`, `analytics-en/ar.png`,
 `assistant-en/ar.png` in this directory, captured by the walkthrough on the shipped image.
+
+## Software and licences, Vulnerabilities, dependency map isolation (2026-11-01)
+
+REQ-UI-015, REQ-UI-016, REQ-CMDB-030, REQ-CMDB-031, REQ-CMDB-035, REQ-SEC-008, REQ-DEP-005. Verified on the rebuilt
+images (`openmap/api:dev`, `openmap/console:dev`) with the scale-0.05 estate: 31 software products, 3,098 installed
+instances, 26 licences, 16 CVEs.
+
+| Test id | File | Covers |
+| --- | --- | --- |
+| T-108 | `apps/api/src/api.integration.test.ts` | `software` with licence usage and the stored expiry, `vulnerabilitySummaries`, `vulnerability` blast radius to hosts and services |
+| T-109 | `apps/console/src/components/software/SoftwareView.test.tsx` | catalogue rows, licence cells, posture groups, filter text and licensedOnly, utilisation helper |
+| T-110 | `apps/console/src/components/vulnerabilities/VulnerabilitiesView.test.tsx` | ranked list, headline counts, CVSS/exposure/exploited filters, blast-radius panel with predicted states and truncation |
+| T-060, T-061 | `graph-layout.test.ts`, `DependenciesView.test.tsx` | deterministic force layout, impact closure, isolation on click, layout toggle in the URL, double-click opens the CI |
+
+End to end (`e2e/screens.spec.ts`, en and ar): `28 passed, 1 skipped (perf in ar, by design)` on the final images; the Analytics assertion
+was made exact (`analytics.live`) after a strict-mode collision with the description text. Screenshots:
+`software-{en,ar}.png`, `vulnerabilities-{en,ar}.png`, `dependencies-{en,ar}.png` beside this file.
+
+A real defect surfaced on the shipped image: the estate stores licence expiry as a calendar date (`2027-01-01`), which
+the contract's `DateTime` scalar rejected, so the Software screen showed an error while the direct API probe (which did
+not select `expiresAt`) looked fine. The API now normalises date attributes to ISO instants (`isoAttribute`), and T-108
+asserts the stored value.

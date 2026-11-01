@@ -5,7 +5,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { BSM, DCIM, POWER } from '@openmap/constants';
 import type { Locale, MessageKey } from '@openmap/i18n';
-import { Bar, Card, Kpi, Pill, SectionTitle, Tag, accents, cx, layerColor, text, type HexColor } from '@openmap/ui';
+import {
+  Bar,
+  Card,
+  Kpi,
+  Pill,
+  SectionTitle,
+  Tag,
+  accents,
+  cx,
+  layerColor,
+  text,
+  type HexColor,
+} from '@openmap/ui';
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
 import { rowClass, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
@@ -31,7 +43,13 @@ export interface RoomGroup {
 }
 
 export function rackPower(rack: Rack): { ratedWatts: number; currentWatts: number } {
-  return rack.powerFeeds.reduce((acc, f) => ({ ratedWatts: acc.ratedWatts + f.ratedWatts, currentWatts: acc.currentWatts + f.currentWatts }), { ratedWatts: 0, currentWatts: 0 });
+  return rack.powerFeeds.reduce(
+    (acc, f) => ({
+      ratedWatts: acc.ratedWatts + f.ratedWatts,
+      currentWatts: acc.currentWatts + f.currentWatts,
+    }),
+    { ratedWatts: 0, currentWatts: 0 },
+  );
 }
 
 export function percentOf(part: number, whole: number): number {
@@ -43,7 +61,17 @@ export function groupRooms(racks: ReadonlyArray<Rack>, unplacedLabel: string): R
   const map = new Map<string, RoomGroup>();
   for (const rack of racks) {
     const key = rack.room?.id ?? '';
-    const group = map.get(key) ?? { id: key, name: rack.room?.displayName ?? unplacedLabel, designKw: typeof rack.room?.attributes['designKw'] === 'number' ? (rack.room.attributes['designKw']) : null, racks: [], ratedWatts: 0, currentWatts: 0, units: 0, occupiedUnits: 0 };
+    const group = map.get(key) ?? {
+      id: key,
+      name: rack.room?.displayName ?? unplacedLabel,
+      designKw:
+        typeof rack.room?.attributes['designKw'] === 'number' ? rack.room.attributes['designKw'] : null,
+      racks: [],
+      ratedWatts: 0,
+      currentWatts: 0,
+      units: 0,
+      occupiedUnits: 0,
+    };
     const power = rackPower(rack);
     group.racks.push(rack);
     group.ratedWatts += power.ratedWatts;
@@ -52,7 +80,9 @@ export function groupRooms(racks: ReadonlyArray<Rack>, unplacedLabel: string): R
     group.occupiedUnits += rack.occupiedUnits;
     map.set(key, group);
   }
-  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name)).map((g) => ({ ...g, racks: [...g.racks].sort((a, b) => a.ci.name.localeCompare(b.ci.name)) }));
+  return [...map.values()]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((g) => ({ ...g, racks: [...g.racks].sort((a, b) => a.ci.name.localeCompare(b.ci.name)) }));
 }
 
 /** Heat colour from power utilisation thresholds; occupancy only when no power is reported. */
@@ -72,7 +102,20 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
   const rooms = useMemo(() => groupRooms(racks.data ?? [], t('dcim.unplaced')), [racks.data, t]);
   const room = rooms.find((r) => r.id === roomId) ?? rooms[0] ?? null;
   const rack = room?.racks.find((r) => r.ci.id === rackId) ?? room?.racks[0] ?? null;
-  const totals = useMemo(() => rooms.reduce((acc, r) => ({ racks: acc.racks + r.racks.length, rated: acc.rated + r.ratedWatts, current: acc.current + r.currentWatts, units: acc.units + r.units, occupied: acc.occupied + r.occupiedUnits }), { racks: 0, rated: 0, current: 0, units: 0, occupied: 0 }), [rooms]);
+  const totals = useMemo(
+    () =>
+      rooms.reduce(
+        (acc, r) => ({
+          racks: acc.racks + r.racks.length,
+          rated: acc.rated + r.ratedWatts,
+          current: acc.current + r.currentWatts,
+          units: acc.units + r.units,
+          occupied: acc.occupied + r.occupiedUnits,
+        }),
+        { racks: 0, rated: 0, current: 0, units: 0, occupied: 0 },
+      ),
+    [rooms],
+  );
 
   return (
     <div className="flex flex-col gap-om-24">
@@ -82,8 +125,16 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
       <div className="grid grid-cols-2 gap-om-12 md:grid-cols-4">
         <Kpi label={t('dcim.kpi.rooms')} value={format.integer(rooms.length)} />
         <Kpi label={t('dcim.kpi.racks')} value={format.integer(totals.racks)} />
-        <Kpi label={t('dcim.kpi.power')} value={format.number(totals.current / POWER.wattsPerKilowatt)} unit={t('dcim.unit.kw')} />
-        <Kpi label={t('dcim.kpi.occupancy')} value={format.number(percentOf(totals.occupied, totals.units))} unit="%" />
+        <Kpi
+          label={t('dcim.kpi.power')}
+          value={format.number(totals.current / POWER.wattsPerKilowatt)}
+          unit={t('dcim.unit.kw')}
+        />
+        <Kpi
+          label={t('dcim.kpi.occupancy')}
+          value={format.number(percentOf(totals.occupied, totals.units))}
+          unit="%"
+        />
       </div>
       {racks.isPending ? (
         <QueryState status="pending" />
@@ -128,11 +179,26 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
               <>
                 <div className="flex flex-wrap gap-om-12 text-om-xs text-om-secondary">
                   <span>{t('dcim.room.racks', { count: format.integer(room.racks.length) })}</span>
-                  <span>{t('dcim.room.power', { current: format.number(room.currentWatts / POWER.wattsPerKilowatt), rated: format.number(room.ratedWatts / POWER.wattsPerKilowatt) })}</span>
-                  {room.designKw !== null ? <span>{t('dcim.room.design', { kw: format.number(room.designKw) })}</span> : null}
-                  <span>{t('dcim.room.occupancy', { percent: format.number(percentOf(room.occupiedUnits, room.units)) })}</span>
+                  <span>
+                    {t('dcim.room.power', {
+                      current: format.number(room.currentWatts / POWER.wattsPerKilowatt),
+                      rated: format.number(room.ratedWatts / POWER.wattsPerKilowatt),
+                    })}
+                  </span>
+                  {room.designKw !== null ? (
+                    <span>{t('dcim.room.design', { kw: format.number(room.designKw) })}</span>
+                  ) : null}
+                  <span>
+                    {t('dcim.room.occupancy', {
+                      percent: format.number(percentOf(room.occupiedUnits, room.units)),
+                    })}
+                  </span>
                 </div>
-                <div className="grid grid-cols-4 gap-om-6 sm:grid-cols-6 md:grid-cols-10 xl:grid-cols-12" role="listbox" aria-label={t('dcim.heatmap.title')}>
+                <div
+                  className="grid grid-cols-4 gap-om-6 sm:grid-cols-6 md:grid-cols-10 xl:grid-cols-12"
+                  role="listbox"
+                  aria-label={t('dcim.heatmap.title')}
+                >
                   {room.racks.map((r) => {
                     const power = rackPower(r);
                     const powerPercent = percentOf(power.currentWatts, power.ratedWatts);
@@ -146,16 +212,29 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
                         type="button"
                         role="option"
                         aria-selected={selected}
-                        aria-label={short + ' ' + percentLabel + ' · ' + r.ci.displayName}
-                        title={r.ci.displayName + ' · ' + format.number(powerPercent) + '% · ' + format.number(occupancy) + '%'}
+                        title={
+                          r.ci.displayName +
+                          ' · ' +
+                          format.number(powerPercent) +
+                          '% · ' +
+                          format.number(occupancy) +
+                          '%'
+                        }
                         onClick={() => {
                           setRackId(r.ci.id);
                         }}
-                        className={cx('flex aspect-square flex-col items-center justify-center rounded-om-control border text-om-2xs font-om-mono transition-transform duration-om-base ease-om-standard hover:scale-105', selected ? 'border-om-cyan' : 'border-om-border-glass')}
-                        style={{ background: heatAccent(powerPercent, occupancy) + '33', color: heatAccent(powerPercent, occupancy) }}
+                        className={cx(
+                          'flex aspect-square flex-col items-center justify-center rounded-om-control border text-om-2xs font-om-mono transition-transform duration-om-base ease-om-standard hover:scale-105',
+                          selected ? 'border-om-cyan' : 'border-om-border-glass',
+                        )}
+                        style={{
+                          background: heatAccent(powerPercent, occupancy) + '33',
+                          color: heatAccent(powerPercent, occupancy),
+                        }}
                       >
                         <span className="truncate px-om-4">{short}</span>
                         <span>{percentLabel}</span>
+                        <span className="sr-only">{r.ci.displayName}</span>
                       </button>
                     );
                   })}
@@ -177,21 +256,57 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
   return (
     <div className="grid grid-cols-1 gap-om-16 xl:grid-cols-[1fr_2fr]">
       <section aria-label={t('dcim.elevation.title')}>
-      <Card padding="24" className="flex flex-col gap-om-12">
-        <SectionTitle as="h2" size="sm" description={[rack.room?.displayName, rack.row?.displayName].filter((x): x is string => typeof x === 'string').join(' · ')} action={<Icon name="dcim" className="size-5 text-om-violet" />}>
-          {rack.ci.displayName}
-        </SectionTitle>
-        <RackElevation rack={rack} />
-        <div className="flex flex-col gap-om-6 text-om-xs text-om-secondary">
-          <span>{t('dcim.rack.units', { occupied: format.integer(rack.occupiedUnits), total: format.integer(rack.units) })}</span>
-          <Bar value={rack.occupiedUnits} max={rack.units || 1} accent={accents.violet} label={t('dcim.rack.units', { occupied: format.integer(rack.occupiedUnits), total: format.integer(rack.units) })} />
-          <span>{t('dcim.rack.power', { current: format.number(power.currentWatts / POWER.wattsPerKilowatt), rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt) })}</span>
-          <Bar value={power.currentWatts} max={power.ratedWatts || 1} accent={heatAccent(percentOf(power.currentWatts, power.ratedWatts), 0)} label={t('dcim.rack.power', { current: format.number(power.currentWatts / POWER.wattsPerKilowatt), rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt) })} />
-          <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(rack.ci.id))} className="text-om-cyan hover:underline">
-            {t('dcim.rack.openCi')}
-          </Link>
-        </div>
-      </Card>
+        <Card padding="24" className="flex flex-col gap-om-12">
+          <SectionTitle
+            as="h2"
+            size="sm"
+            description={[rack.room?.displayName, rack.row?.displayName]
+              .filter((x): x is string => typeof x === 'string')
+              .join(' · ')}
+            action={<Icon name="dcim" className="size-5 text-om-violet" />}
+          >
+            {rack.ci.displayName}
+          </SectionTitle>
+          <RackElevation rack={rack} />
+          <div className="flex flex-col gap-om-6 text-om-xs text-om-secondary">
+            <span>
+              {t('dcim.rack.units', {
+                occupied: format.integer(rack.occupiedUnits),
+                total: format.integer(rack.units),
+              })}
+            </span>
+            <Bar
+              value={rack.occupiedUnits}
+              max={rack.units || 1}
+              accent={accents.violet}
+              label={t('dcim.rack.units', {
+                occupied: format.integer(rack.occupiedUnits),
+                total: format.integer(rack.units),
+              })}
+            />
+            <span>
+              {t('dcim.rack.power', {
+                current: format.number(power.currentWatts / POWER.wattsPerKilowatt),
+                rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt),
+              })}
+            </span>
+            <Bar
+              value={power.currentWatts}
+              max={power.ratedWatts || 1}
+              accent={heatAccent(percentOf(power.currentWatts, power.ratedWatts), 0)}
+              label={t('dcim.rack.power', {
+                current: format.number(power.currentWatts / POWER.wattsPerKilowatt),
+                rated: format.number(power.ratedWatts / POWER.wattsPerKilowatt),
+              })}
+            />
+            <Link
+              href={localizedHref(locale, '/cmdb/' + encodeURIComponent(rack.ci.id))}
+              className="text-om-cyan hover:underline"
+            >
+              {t('dcim.rack.openCi')}
+            </Link>
+          </div>
+        </Card>
       </section>
       <div className="flex flex-col gap-om-16">
         <Card padding="24" className="flex flex-col gap-om-10">
@@ -205,27 +320,44 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
               <table className={tableClass}>
                 <thead className={theadClass}>
                   <tr>
-                    <th scope="col" className={thClass}>{t('dcim.devices.unit')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.devices.device')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.devices.type')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.devices.face')}</th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.devices.unit')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.devices.device')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.devices.type')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.devices.face')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...rack.devices].sort((a, b) => b.startUnit - a.startUnit).map((d) => (
-                    <tr key={d.ci.id} className={rowClass}>
-                      <td className={tdClass + ' font-om-mono text-om-secondary'}>{unitRange(d.startUnit, d.heightUnits, format.integer)}</td>
-                      <td className={tdClass}>
-                        <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(d.ci.id))} className="text-om-cyan hover:underline">
-                          {d.ci.displayName}
-                        </Link>
-                      </td>
-                      <td className={tdClass}>
-                        <Tag>{d.ci.type}</Tag>
-                      </td>
-                      <td className={tdClass + ' text-om-secondary'}>{t(('dcim.face.' + d.face) as MessageKey)}</td>
-                    </tr>
-                  ))}
+                  {[...rack.devices]
+                    .sort((a, b) => b.startUnit - a.startUnit)
+                    .map((d) => (
+                      <tr key={d.ci.id} className={rowClass}>
+                        <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                          {unitRange(d.startUnit, d.heightUnits, format.integer)}
+                        </td>
+                        <td className={tdClass}>
+                          <Link
+                            href={localizedHref(locale, '/cmdb/' + encodeURIComponent(d.ci.id))}
+                            className="text-om-cyan hover:underline"
+                          >
+                            {d.ci.displayName}
+                          </Link>
+                        </td>
+                        <td className={tdClass}>
+                          <Tag>{d.ci.type}</Tag>
+                        </td>
+                        <td className={tdClass + ' text-om-secondary'}>
+                          {t(('dcim.face.' + d.face) as MessageKey)}
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
@@ -242,10 +374,18 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
               <table className={tableClass}>
                 <thead className={theadClass}>
                   <tr>
-                    <th scope="col" className={thClass}>{t('dcim.power.feed')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.power.rated')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.power.current')}</th>
-                    <th scope="col" className={thClass}>{t('dcim.power.load')}</th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.power.feed')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.power.rated')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.power.current')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('dcim.power.load')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,16 +394,36 @@ function RackPanel({ locale, rack }: { locale: Locale; rack: Rack }): ReactNode 
                     return (
                       <tr key={f.ci.id} className={rowClass}>
                         <td className={tdClass}>
-                          <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(f.ci.id))} className="font-om-mono text-om-cyan hover:underline">
+                          <Link
+                            href={localizedHref(locale, '/cmdb/' + encodeURIComponent(f.ci.id))}
+                            className="font-om-mono text-om-cyan hover:underline"
+                          >
                             {f.ci.displayName}
                           </Link>
                         </td>
-                        <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.number(f.ratedWatts / POWER.wattsPerKilowatt) + ' ' + t('dcim.unit.kw')}</td>
-                        <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.number(f.currentWatts / POWER.wattsPerKilowatt) + ' ' + t('dcim.unit.kw')}</td>
+                        <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                          {format.number(f.ratedWatts / POWER.wattsPerKilowatt) + ' ' + t('dcim.unit.kw')}
+                        </td>
+                        <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                          {format.number(f.currentWatts / POWER.wattsPerKilowatt) + ' ' + t('dcim.unit.kw')}
+                        </td>
                         <td className={tdClass}>
                           <span className="flex w-32 items-center gap-om-6">
-                            <Bar value={load} accent={heatAccent(load, 0)} label={f.ci.displayName + ' ' + t('dcim.power.load') + ' ' + format.integer(load) + '%'} />
-                            <span className="font-om-mono text-om-2xs text-om-secondary">{format.integer(load) + '%'}</span>
+                            <Bar
+                              value={load}
+                              accent={heatAccent(load, 0)}
+                              label={
+                                f.ci.displayName +
+                                ' ' +
+                                t('dcim.power.load') +
+                                ' ' +
+                                format.integer(load) +
+                                '%'
+                              }
+                            />
+                            <span className="font-om-mono text-om-2xs text-om-secondary">
+                              {format.integer(load) + '%'}
+                            </span>
                           </span>
                         </td>
                       </tr>
@@ -292,7 +452,11 @@ export function plateLabel(name: string): string {
 
 export function RackElevation({ rack }: { rack: Rack }): ReactNode {
   const t = useT();
-  const units = Math.max(rack.units, rack.devices.reduce((m, d) => Math.max(m, d.startUnit + d.heightUnits - 1), 0), 1);
+  const units = Math.max(
+    rack.units,
+    rack.devices.reduce((m, d) => Math.max(m, d.startUnit + d.heightUnits - 1), 0),
+    1,
+  );
   const width = DCIM.rackWidthPx;
   const pad = DCIM.rackPaddingPx;
   const depth = DCIM.isoDepthPx;
@@ -301,7 +465,12 @@ export function RackElevation({ rack }: { rack: Rack }): ReactNode {
   const totalH = height + pad + pad + depth;
   const unitTop = (u: number): number => pad + depth + (units - u) * DCIM.unitHeightPx;
   return (
-    <svg viewBox={'0 0 ' + String(totalW) + ' ' + String(totalH)} role="img" aria-label={t('dcim.elevation.aria', { name: rack.ci.displayName, units: String(units) })} className="w-full max-w-md self-center">
+    <svg
+      viewBox={'0 0 ' + String(totalW) + ' ' + String(totalH)}
+      role="img"
+      aria-label={t('dcim.elevation.aria', { name: rack.ci.displayName, units: String(units) })}
+      className="w-full max-w-md self-center"
+    >
       <defs>
         <linearGradient id="om-rack-face" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor={accents.violet} stopOpacity="0.25" />
@@ -309,15 +478,58 @@ export function RackElevation({ rack }: { rack: Rack }): ReactNode {
         </linearGradient>
       </defs>
       {/* depth face (top and side) */}
-      <polygon points={[pad, pad + depth, pad + depth, pad, pad + depth + width, pad, pad + width, pad + depth].join(' ')} fill={accents.violet} fillOpacity="0.18" />
-      <polygon points={[pad + width, pad + depth, pad + depth + width, pad, pad + depth + width, pad + height, pad + width, pad + depth + height].join(' ')} fill={accents.violet} fillOpacity="0.1" />
+      <polygon
+        points={[pad, pad + depth, pad + depth, pad, pad + depth + width, pad, pad + width, pad + depth].join(
+          ' ',
+        )}
+        fill={accents.violet}
+        fillOpacity="0.18"
+      />
+      <polygon
+        points={[
+          pad + width,
+          pad + depth,
+          pad + depth + width,
+          pad,
+          pad + depth + width,
+          pad + height,
+          pad + width,
+          pad + depth + height,
+        ].join(' ')}
+        fill={accents.violet}
+        fillOpacity="0.1"
+      />
       {/* frame */}
-      <rect x={pad} y={pad + depth} width={width} height={height} rx="4" fill="url(#om-rack-face)" stroke={accents.violet} strokeOpacity="0.6" />
+      <rect
+        x={pad}
+        y={pad + depth}
+        width={width}
+        height={height}
+        rx="4"
+        fill="url(#om-rack-face)"
+        stroke={accents.violet}
+        strokeOpacity="0.6"
+      />
       {Array.from({ length: units }, (_, i) => i + 1).map((u) => (
         <g key={u}>
-          <line x1={pad} x2={pad + width} y1={unitTop(u)} y2={unitTop(u)} stroke={accents.cyan} strokeOpacity="0.08" />
+          <line
+            x1={pad}
+            x2={pad + width}
+            y1={unitTop(u)}
+            y2={unitTop(u)}
+            stroke={accents.cyan}
+            strokeOpacity="0.08"
+          />
           {u % DCIM.unitLabelEvery === 0 || u === 1 ? (
-            <text x={pad - DCIM.unitLabelOffsetPx} y={unitTop(u) + DCIM.unitHeightPx - DCIM.unitLabelBaselinePx} textAnchor="end" fontSize="8" fill={accents.cyan} fillOpacity="0.6" fontFamily="monospace">
+            <text
+              x={pad - DCIM.unitLabelOffsetPx}
+              y={unitTop(u) + DCIM.unitHeightPx - DCIM.unitLabelBaselinePx}
+              textAnchor="end"
+              fontSize="8"
+              fill={accents.cyan}
+              fillOpacity="0.6"
+              fontFamily="monospace"
+            >
               {u}
             </text>
           ) : null}
@@ -329,8 +541,24 @@ export function RackElevation({ rack }: { rack: Rack }): ReactNode {
         const colour = layerColor(d.ci.layer);
         return (
           <g key={d.ci.id}>
-            <rect x={pad + DCIM.plateInsetPx} y={top + 1} width={width - DCIM.plateInsetPx * DCIM.unitGapPx} height={h} rx="2" fill={colour} fillOpacity="0.35" stroke={colour} strokeOpacity="0.9" />
-            <text x={pad + DCIM.plateTextInsetPx} y={top + h / DCIM.unitGapPx + DCIM.unitLabelBaselinePx} fontSize="8" fill={text.primary} fontFamily="monospace">
+            <rect
+              x={pad + DCIM.plateInsetPx}
+              y={top + 1}
+              width={width - DCIM.plateInsetPx * DCIM.unitGapPx}
+              height={h}
+              rx="2"
+              fill={colour}
+              fillOpacity="0.35"
+              stroke={colour}
+              strokeOpacity="0.9"
+            />
+            <text
+              x={pad + DCIM.plateTextInsetPx}
+              y={top + h / DCIM.unitGapPx + DCIM.unitLabelBaselinePx}
+              fontSize="8"
+              fill={text.primary}
+              fontFamily="monospace"
+            >
               {plateLabel(d.ci.name)}
             </text>
           </g>

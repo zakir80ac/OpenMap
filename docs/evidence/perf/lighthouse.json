@@ -13,7 +13,15 @@
       "performance": 0.99,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 257.878,
+        "largest-contentful-paint": 893.634,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 257.878,
+        "interactive": 893.634
+      }
     },
     {
       "label": "dashboard",
@@ -21,7 +29,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 187.54,
+        "largest-contentful-paint": 349.27,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 187.54,
+        "interactive": 349.27
+      }
     },
     {
       "label": "layers",
@@ -29,7 +45,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.056,
+        "largest-contentful-paint": 309.998,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 170.056,
+        "interactive": 309.998
+      }
     },
     {
       "label": "discovery",
@@ -37,7 +61,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.865,
+        "largest-contentful-paint": 340.996,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0.006,
+        "speed-index": 194.909,
+        "interactive": 340.996
+      }
     },
     {
       "label": "dependencies",
@@ -45,7 +77,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.131,
+        "largest-contentful-paint": 470.441,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 175.53,
+        "interactive": 470.441
+      }
     },
     {
       "label": "cmdb",
@@ -53,15 +93,47 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.574,
+        "largest-contentful-paint": 268.196,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0.026,
+        "speed-index": 253.74,
+        "interactive": 268.196
+      }
     },
     {
       "label": "assets",
       "url": "http://localhost:3000/en/assets",
-      "performance": 0.91,
+      "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.191,
+        "largest-contentful-paint": 323.893,
+        "total-blocking-time": 9,
+        "cumulative-layout-shift": 0,
+        "speed-index": 219.86,
+        "interactive": 323.893
+      }
+    },
+    {
+      "label": "software",
+      "url": "http://localhost:3000/en/software",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.316,
+        "largest-contentful-paint": 509.47,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 230.783,
+        "interactive": 509.47
+      }
     },
     {
       "label": "services",
@@ -69,7 +141,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.969,
+        "largest-contentful-paint": 262.491,
+        "total-blocking-time": 6,
+        "cumulative-layout-shift": 0,
+        "speed-index": 201.927,
+        "interactive": 262.491
+      }
     },
     {
       "label": "impact",
@@ -77,7 +157,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 200.32,
+        "largest-contentful-paint": 346.239,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0.027,
+        "speed-index": 207.271,
+        "interactive": 346.239
+      }
     },
     {
       "label": "integrations",
@@ -85,7 +173,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.767,
+        "largest-contentful-paint": 290.134,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 169.767,
+        "interactive": 290.134
+      }
     },
     {
       "label": "ipam",
@@ -93,29 +189,63 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.169,
+        "largest-contentful-paint": 757.384,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 300.618,
+        "interactive": 757.384
+      }
     },
     {
       "label": "dcim",
       "url": "http://localhost:3000/en/dcim",
-      "performance": 0.92,
+      "performance": 0.91,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": [
-        {
-          "id": "label-content-name-mismatch",
-          "title": "Elements with visible text labels do not have matching accessible names.",
-          "items": 54
-        }
-      ]
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.142,
+        "largest-contentful-paint": 1971.547,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 754.312,
+        "interactive": 1971.547
+      }
+    },
+    {
+      "label": "vulnerabilities",
+      "url": "http://localhost:3000/en/vulnerabilities",
+      "performance": 1,
+      "accessibility": 1,
+      "bestPractices": 1,
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.754,
+        "largest-contentful-paint": 402.425,
+        "total-blocking-time": 0,
+        "cumulative-layout-shift": 0,
+        "speed-index": 214.179,
+        "interactive": 402.425
+      }
     },
     {
       "label": "analytics",
       "url": "http://localhost:3000/en/analytics",
-      "performance": 0.82,
+      "performance": 0.76,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 170.273,
+        "largest-contentful-paint": 424.197,
+        "total-blocking-time": 461.5,
+        "cumulative-layout-shift": 0.02,
+        "speed-index": 2049.153,
+        "interactive": 3541.334
+      }
     },
     {
       "label": "assistant",
@@ -123,7 +253,15 @@
       "performance": 1,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.808,
+        "largest-contentful-paint": 280.215,
+        "total-blocking-time": 40,
+        "cumulative-layout-shift": 0,
+        "speed-index": 242.038,
+        "interactive": 280.215
+      }
     },
     {
       "label": "settings",
@@ -131,8 +269,16 @@
       "performance": 0.99,
       "accessibility": 1,
       "bestPractices": 1,
-      "failing": []
+      "failing": [],
+      "metrics": {
+        "first-contentful-paint": 169.558,
+        "largest-contentful-paint": 278.715,
+        "total-blocking-time": 54,
+        "cumulative-layout-shift": 0.065,
+        "speed-index": 278.758,
+        "interactive": 289.708
+      }
     }
   ],
-  "generatedAt": "2026-10-22T19:24:05.128Z"
+  "generatedAt": "2026-11-01T14:13:23.471Z"
 }

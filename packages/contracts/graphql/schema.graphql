@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.5.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.6.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -25,6 +25,8 @@ type Ci {
   layer: CiLayer!
   name: String!
   displayName: String!
+  """Short code spoken in incidents and printed on cards (layer prefix plus slug); unique per tenant, editable by operators."""
+  code: String!
   identity: JSON!
   attributes: JSON!
   tags: [String!]!
@@ -213,6 +215,8 @@ input IntegrationInput { category: String! vendor: String! name: String! endpoin
 type Mutation {
   labelCi(input: LabelCiInput!): Ci!
   updateCiAttributes(ciId: UUID!, attributes: JSON!): Ci!
+  """Rename a CI's short code; the new code must match the code pattern and be free within the tenant."""
+  setCiCode(ciId: UUID!, code: String!): Ci!
   createRelationship(type: String!, fromCiId: UUID!, toCiId: UUID!, attributes: JSON): Relationship!
   retireRelationship(id: UUID!): Relationship!
   setLayerVisibility(layer: CiLayer!, visible: Boolean!): [LayerSummary!]!

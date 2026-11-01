@@ -24,7 +24,8 @@ export interface CmdbViewProps {
   text: string;
 }
 
-const columns = 'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
+const columns =
+  'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
 
 export function CmdbView({ text }: CmdbViewProps): ReactNode {
   const t = useT();
@@ -42,7 +43,10 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
   }, [text, selected, visibility, visibleCount]);
 
   const query = useInfiniteQuery(cisInfiniteQuery(filter));
-  const rows = useMemo(() => query.data?.pages.flatMap((page) => page.cis.edges.map((edge) => edge.node)) ?? [], [query.data]);
+  const rows = useMemo(
+    () => query.data?.pages.flatMap((page) => page.cis.edges.map((edge) => edge.node)) ?? [],
+    [query.data],
+  );
   const totalCount = query.data?.pages[0]?.cis.totalCount;
 
   const parentRef = useRef<HTMLDivElement>(null);
@@ -65,7 +69,12 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
 
   return (
     <div className="flex flex-col gap-om-24">
-      <SectionTitle as="h1" size="lg" eyebrow={t('app.name')} description={text === '' ? t('cmdb.subtitle') : t('cmdb.searchFor', { text })}>
+      <SectionTitle
+        as="h1"
+        size="lg"
+        eyebrow={t('app.name')}
+        description={text === '' ? t('cmdb.subtitle') : t('cmdb.searchFor', { text })}
+      >
         {t('nav.cmdb')}
       </SectionTitle>
 
@@ -88,7 +97,13 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
               variant={active ? 'primary' : 'default'}
               selected={active}
               glowing={active}
-              icon={<span aria-hidden="true" className="inline-block size-2 rounded-om-pill" style={{ background: layerColor(layer) }} />}
+              icon={
+                <span
+                  aria-hidden="true"
+                  className="inline-block size-2 rounded-om-pill"
+                  style={{ background: layerColor(layer) }}
+                />
+              }
               className={cx(!visibility[layer] && !active && 'opacity-60')}
               onClick={() => {
                 setSelected(active ? undefined : layer);
@@ -101,8 +116,19 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
       </div>
 
       <Card padding="4" className="overflow-hidden">
-        <div role="table" aria-rowcount={totalCount ?? -1} aria-busy={query.isPending || query.isFetchingNextPage} className="flex flex-col">
-          <div role="row" className={cx(columns, 'h-10 border-b border-om-border-glass text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted')}>
+        <div
+          role="table"
+          aria-rowcount={totalCount ?? -1}
+          aria-busy={query.isPending || query.isFetchingNextPage}
+          className="flex flex-col"
+        >
+          <div
+            role="row"
+            className={cx(
+              columns,
+              'h-10 border-b border-om-border-glass text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted',
+            )}
+          >
             <span role="columnheader">{t('cmdb.column.name')}</span>
             <span role="columnheader">{t('cmdb.column.type')}</span>
             <span role="columnheader">{t('cmdb.column.layer')}</span>
@@ -123,7 +149,11 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
           ) : rows.length === 0 ? (
             <QueryState status="empty" className="m-om-12" />
           ) : (
-            <div ref={parentRef} onScroll={onScroll} className="relative h-[min(60dvh,40rem)] overflow-y-auto">
+            <div
+              ref={parentRef}
+              onScroll={onScroll}
+              className="relative h-[min(60dvh,40rem)] overflow-y-auto"
+            >
               <div role="rowgroup" className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
                 {virtualizer.getVirtualItems().map((item) => {
                   const row = rows[item.index];
@@ -133,14 +163,22 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
                       key={row.id}
                       role="row"
                       aria-rowindex={item.index + 1}
-                      className={cx(columns, 'absolute inset-x-0 top-0 border-b border-om-border-glass text-om-sm transition-colors duration-om-fast hover:bg-om-surface2/60')}
+                      className={cx(
+                        columns,
+                        'absolute inset-x-0 top-0 border-b border-om-border-glass text-om-sm transition-colors duration-om-fast hover:bg-om-surface2/60',
+                      )}
                       style={{ height: item.size, transform: 'translateY(' + String(item.start) + 'px)' }}
                     >
                       <span role="cell" className="min-w-0">
-                        <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(row.id))} className="block truncate font-medium text-om-primary hover:text-om-cyan">
+                        <Link
+                          href={localizedHref(locale, '/cmdb/' + encodeURIComponent(row.id))}
+                          className="block truncate font-medium text-om-primary hover:text-om-cyan"
+                        >
                           {row.displayName}
                         </Link>
-                        <span className="block truncate font-om-mono text-om-2xs text-om-muted">{row.id}</span>
+                        <span className="block truncate font-om-mono text-om-2xs text-om-muted">
+                          {row.code}
+                        </span>
                       </span>
                       <span role="cell" className="truncate font-om-mono text-om-xs text-om-secondary">
                         {row.type}
@@ -163,19 +201,23 @@ export function CmdbView({ text }: CmdbViewProps): ReactNode {
         </div>
 
         <div className="flex items-center justify-between gap-om-12 border-t border-om-border-glass px-om-16 py-om-10 text-om-xs text-om-secondary">
-            <span>{totalCount === undefined ? t('common.loading') : t('cmdb.total', { count: format.integer(totalCount) })}</span>
-            {query.hasNextPage ? (
-              <button
-                type="button"
-                onClick={loadMore}
-                disabled={query.isFetchingNextPage}
-                className="rounded-om-control border border-om-cyan/30 bg-om-cyan/10 px-om-10 py-om-4 font-medium text-om-cyan transition-colors duration-om-base ease-om-standard hover:bg-om-cyan/20 disabled:opacity-60"
-              >
-                {query.isFetchingNextPage ? t('common.loading') : t('cmdb.loadMore')}
-              </button>
-            ) : rows.length > 0 ? (
-              <span className="text-om-muted">{t('cmdb.endOfList')}</span>
-            ) : null}
+          <span>
+            {totalCount === undefined
+              ? t('common.loading')
+              : t('cmdb.total', { count: format.integer(totalCount) })}
+          </span>
+          {query.hasNextPage ? (
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={query.isFetchingNextPage}
+              className="rounded-om-control border border-om-cyan/30 bg-om-cyan/10 px-om-10 py-om-4 font-medium text-om-cyan transition-colors duration-om-base ease-om-standard hover:bg-om-cyan/20 disabled:opacity-60"
+            >
+              {query.isFetchingNextPage ? t('common.loading') : t('cmdb.loadMore')}
+            </button>
+          ) : rows.length > 0 ? (
+            <span className="text-om-muted">{t('cmdb.endOfList')}</span>
+          ) : null}
         </div>
       </Card>
     </div>

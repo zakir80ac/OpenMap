@@ -40,6 +40,7 @@ export interface ServiceHealth {
 
 export interface CiRow {
   id: string;
+  code: string;
   type: string;
   layer: CiLayer;
   displayName: string;
@@ -58,7 +59,9 @@ export interface CiFilterInput {
   text?: string;
 }
 
-const LAYERS_QUERY = ['query Layers {', '  layers { layer count healthy degraded down visible }', '}'].join('\n');
+const LAYERS_QUERY = ['query Layers {', '  layers { layer count healthy degraded down visible }', '}'].join(
+  '\n',
+);
 
 const SERVICES_QUERY = [
   'query Services {',
@@ -75,7 +78,7 @@ const CIS_QUERY = [
   '  cis(filter: $filter, first: $first, after: $after) {',
   '    totalCount',
   '    pageInfo { endCursor hasNextPage }',
-  '    edges { cursor node { id type layer displayName health observedAt } }',
+  '    edges { cursor node { id code type layer displayName health observedAt } }',
   '  }',
   '}',
 ].join('\n');
@@ -106,7 +109,11 @@ export function cisInfiniteQuery(filter: CiFilterInput) {
   return infiniteQueryOptions({
     queryKey: queryKeys.cis(filter),
     queryFn: ({ pageParam, signal }) =>
-      gql<{ cis: CiConnection }>(CIS_QUERY, { filter, first: GRAPH.defaultPageSize, after: pageParam }, signal),
+      gql<{ cis: CiConnection }>(
+        CIS_QUERY,
+        { filter, first: GRAPH.defaultPageSize, after: pageParam },
+        signal,
+      ),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.cis.pageInfo.hasNextPage ? last.cis.pageInfo.endCursor : undefined),
   });
@@ -120,12 +127,14 @@ export interface CiSummary {
   id: string;
   name: string;
   displayName: string;
+  /** Short code (ADR-014), unique per tenant, editable by operators. */
+  code: string;
   type: string;
   layer: CiLayer;
   health: HealthState;
 }
 
-export const CI_SUMMARY_FIELDS = 'id name displayName type layer health';
+export const CI_SUMMARY_FIELDS = 'id name displayName code type layer health';
 
 export interface SearchHit {
   ci: CiSummary;
@@ -149,7 +158,11 @@ export interface SearchInput {
 }
 
 export function searchQuery(input: SearchInput) {
-  const variables = { text: input.text, layers: input.layers ?? null, first: input.first ?? CONSOLE.searchResultLimit };
+  const variables = {
+    text: input.text,
+    layers: input.layers ?? null,
+    first: input.first ?? CONSOLE.searchResultLimit,
+  };
   return queryOptions({
     queryKey: ['search', variables] as const,
     queryFn: ({ signal }) => gql<{ search: SearchHit[] }>(SEARCH_QUERY, variables, signal),
@@ -172,7 +185,11 @@ export function cisPageQuery(filter: CiFilterInput, first: number = CONSOLE.expl
   return queryOptions({
     queryKey: ['cis-page', filter, first] as const,
     queryFn: ({ signal }) =>
-      gql<{ cis: { totalCount: number; edges: Array<{ node: CiSummary }> } }>(CIS_PAGE_QUERY, { filter, first }, signal),
+      gql<{ cis: { totalCount: number; edges: Array<{ node: CiSummary }> } }>(
+        CIS_PAGE_QUERY,
+        { filter, first },
+        signal,
+      ),
     select: (data) => ({ totalCount: data.cis.totalCount, items: data.cis.edges.map((edge) => edge.node) }),
   });
 }
@@ -311,7 +328,11 @@ const CI_DETAIL_QUERY = [
   '    source { collectorId nodeId runId confidence }',
   '    relationships(first: $first) {',
   '      totalCount',
-  '      edges { node { id type validFrom validTo from { ' + CI_SUMMARY_FIELDS + ' } to { ' + CI_SUMMARY_FIELDS + ' } } }',
+  '      edges { node { id type validFrom validTo from { ' +
+    CI_SUMMARY_FIELDS +
+    ' } to { ' +
+    CI_SUMMARY_FIELDS +
+    ' } } }',
   '    }',
   '  }',
   '}',
@@ -321,7 +342,11 @@ export function ciDetailQuery(id: string, asOf: string | null = null) {
   return queryOptions({
     queryKey: ['ci', id, asOf] as const,
     queryFn: ({ signal }) =>
-      gql<{ ci: CiDetail | null }>(CI_DETAIL_QUERY, { id, asOf, first: CONSOLE.relationshipsPageSize }, signal),
+      gql<{ ci: CiDetail | null }>(
+        CI_DETAIL_QUERY,
+        { id, asOf, first: CONSOLE.relationshipsPageSize },
+        signal,
+      ),
     select: (data) => data.ci,
   });
 }
@@ -334,10 +359,25 @@ export interface LabelCiInput {
   type?: string;
 }
 
-const LABEL_CI_MUTATION = ['mutation LabelCi($input: LabelCiInput!) {', '  labelCi(input: $input) { ' + CI_SUMMARY_FIELDS + ' }', '}'].join('\n');
+const LABEL_CI_MUTATION = [
+  'mutation LabelCi($input: LabelCiInput!) {',
+  '  labelCi(input: $input) { ' + CI_SUMMARY_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function labelCi(input: LabelCiInput): Promise<CiSummary> {
   return gql<{ labelCi: CiSummary }>(LABEL_CI_MUTATION, { input }).then((data) => data.labelCi);
+}
+
+// REQ-CMDB-037 — rename a short code (ADR-014); the server upper-cases, validates the pattern and refuses a taken code.
+const SET_CI_CODE_MUTATION = [
+  'mutation SetCiCode($ciId: UUID!, $code: String!) {',
+  '  setCiCode(ciId: $ciId, code: $code) { ' + CI_SUMMARY_FIELDS + ' }',
+  '}',
+].join('\n');
+
+export function setCiCode(ciId: string, code: string): Promise<CiSummary> {
+  return gql<{ setCiCode: CiSummary }>(SET_CI_CODE_MUTATION, { ciId, code }).then((data) => data.setCiCode);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -391,7 +431,11 @@ const SIMULATION_FIELDS = [
   'recommendations { title rationale estimatedMinutes }',
 ].join(' ');
 
-const SCENARIOS_QUERY = ['query ImpactScenarios {', '  impactScenarios { ' + SCENARIO_FIELDS + ' }', '}'].join('\n');
+const SCENARIOS_QUERY = [
+  'query ImpactScenarios {',
+  '  impactScenarios { ' + SCENARIO_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function impactScenariosQuery() {
   return queryOptions({
@@ -401,12 +445,17 @@ export function impactScenariosQuery() {
   });
 }
 
-const SIMULATION_QUERY = ['query ImpactSimulation($id: UUID!) {', '  impactSimulation(id: $id) { ' + SIMULATION_FIELDS + ' }', '}'].join('\n');
+const SIMULATION_QUERY = [
+  'query ImpactSimulation($id: UUID!) {',
+  '  impactSimulation(id: $id) { ' + SIMULATION_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function impactSimulationQuery(id: string) {
   return queryOptions({
     queryKey: ['impact-simulation', id] as const,
-    queryFn: ({ signal }) => gql<{ impactSimulation: ImpactSimulation | null }>(SIMULATION_QUERY, { id }, signal),
+    queryFn: ({ signal }) =>
+      gql<{ impactSimulation: ImpactSimulation | null }>(SIMULATION_QUERY, { id }, signal),
     select: (data) => data.impactSimulation,
   });
 }
@@ -421,16 +470,28 @@ export interface ScenarioInput {
   at?: string;
 }
 
-const SAVE_SCENARIO_MUTATION = ['mutation SaveScenario($input: ScenarioInput!) {', '  saveScenario(input: $input) { ' + SCENARIO_FIELDS + ' }', '}'].join('\n');
+const SAVE_SCENARIO_MUTATION = [
+  'mutation SaveScenario($input: ScenarioInput!) {',
+  '  saveScenario(input: $input) { ' + SCENARIO_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function saveScenario(input: ScenarioInput): Promise<ImpactScenario> {
-  return gql<{ saveScenario: ImpactScenario }>(SAVE_SCENARIO_MUTATION, { input }).then((data) => data.saveScenario);
+  return gql<{ saveScenario: ImpactScenario }>(SAVE_SCENARIO_MUTATION, { input }).then(
+    (data) => data.saveScenario,
+  );
 }
 
-const RUN_SIMULATION_MUTATION = ['mutation RunSimulation($scenarioId: UUID!) {', '  runSimulation(scenarioId: $scenarioId) { ' + SIMULATION_FIELDS + ' }', '}'].join('\n');
+const RUN_SIMULATION_MUTATION = [
+  'mutation RunSimulation($scenarioId: UUID!) {',
+  '  runSimulation(scenarioId: $scenarioId) { ' + SIMULATION_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function runSimulation(scenarioId: string): Promise<ImpactSimulation> {
-  return gql<{ runSimulation: ImpactSimulation }>(RUN_SIMULATION_MUTATION, { scenarioId }).then((data) => data.runSimulation);
+  return gql<{ runSimulation: ImpactSimulation }>(RUN_SIMULATION_MUTATION, { scenarioId }).then(
+    (data) => data.runSimulation,
+  );
 }
 
 export interface AssistantAnswer {
@@ -447,7 +508,9 @@ const ASK_ASSISTANT_MUTATION = [
 ].join('\n');
 
 export function askAssistant(question: string): Promise<AssistantAnswer> {
-  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question }).then((data) => data.askAssistant);
+  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question }).then(
+    (data) => data.askAssistant,
+  );
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -479,7 +542,11 @@ const INCIDENT_FIELDS = [
   'links { integration { id vendor name } remoteId remoteUrl remoteState syncedAt }',
 ].join(' ');
 
-const INCIDENTS_QUERY = ['query Incidents($open: Boolean) {', '  incidents(open: $open) { ' + INCIDENT_FIELDS + ' }', '}'].join('\n');
+const INCIDENTS_QUERY = [
+  'query Incidents($open: Boolean) {',
+  '  incidents(open: $open) { ' + INCIDENT_FIELDS + ' }',
+  '}',
+].join('\n');
 
 export function incidentsQuery(open: boolean = true) {
   return queryOptions({
@@ -496,7 +563,9 @@ const ACKNOWLEDGE_MUTATION = [
 ].join('\n');
 
 export function acknowledgeIncident(incidentId: string): Promise<Incident> {
-  return gql<{ acknowledgeIncident: Incident }>(ACKNOWLEDGE_MUTATION, { incidentId }).then((data) => data.acknowledgeIncident);
+  return gql<{ acknowledgeIncident: Incident }>(ACKNOWLEDGE_MUTATION, { incidentId }).then(
+    (data) => data.acknowledgeIncident,
+  );
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -546,7 +615,8 @@ const DISCOVERY_NODES_QUERY = [
 export function discoveryNodesQuery() {
   return queryOptions({
     queryKey: ['discovery-nodes'] as const,
-    queryFn: ({ signal }) => gql<{ discoveryNodes: DiscoveryNode[] }>(DISCOVERY_NODES_QUERY, undefined, signal),
+    queryFn: ({ signal }) =>
+      gql<{ discoveryNodes: DiscoveryNode[] }>(DISCOVERY_NODES_QUERY, undefined, signal),
     select: (data) => data.discoveryNodes,
     refetchInterval: CONSOLE.livePollMs,
   });
@@ -564,13 +634,19 @@ export function discoveryJobsQuery(status: string | null = null) {
   return queryOptions({
     queryKey: ['discovery-jobs', status] as const,
     queryFn: ({ signal }) =>
-      gql<{ discoveryJobs: DiscoveryJob[] }>(DISCOVERY_JOBS_QUERY, { status, first: CONSOLE.discoveryJobsLimit }, signal),
+      gql<{ discoveryJobs: DiscoveryJob[] }>(
+        DISCOVERY_JOBS_QUERY,
+        { status, first: CONSOLE.discoveryJobsLimit },
+        signal,
+      ),
     select: (data) => data.discoveryJobs,
     refetchInterval: CONSOLE.livePollMs,
   });
 }
 
-const CURRENT_SWEEP_QUERY = ['query CurrentSweep {', '  currentSweep { ' + SWEEP_FIELDS + ' }', '}'].join('\n');
+const CURRENT_SWEEP_QUERY = ['query CurrentSweep {', '  currentSweep { ' + SWEEP_FIELDS + ' }', '}'].join(
+  '\n',
+);
 
 export function currentSweepQuery() {
   return queryOptions({
@@ -587,8 +663,13 @@ const RUN_DISCOVERY_MUTATION = [
   '}',
 ].join('\n');
 
-export function runDiscovery(collectorIds: string[] | null = null, siteId: string | null = null): Promise<Sweep> {
-  return gql<{ runDiscovery: Sweep }>(RUN_DISCOVERY_MUTATION, { collectorIds, siteId }).then((data) => data.runDiscovery);
+export function runDiscovery(
+  collectorIds: string[] | null = null,
+  siteId: string | null = null,
+): Promise<Sweep> {
+  return gql<{ runDiscovery: Sweep }>(RUN_DISCOVERY_MUTATION, { collectorIds, siteId }).then(
+    (data) => data.runDiscovery,
+  );
 }
 
 // REQ-SEC-005 — the tenant's immutable audit log, newest first, paged by cursor.
@@ -629,7 +710,12 @@ const AUDIT_LOG_QUERY = [
 export function auditLogInfiniteQuery(filter: AuditFilterInput) {
   return infiniteQueryOptions({
     queryKey: ['auditLog', filter] as const,
-    queryFn: ({ pageParam, signal }) => gql<{ auditLog: AuditPage }>(AUDIT_LOG_QUERY, { ...filter, first: CONSOLE.explorerPageSize, after: pageParam }, signal).then((d) => d.auditLog),
+    queryFn: ({ pageParam, signal }) =>
+      gql<{ auditLog: AuditPage }>(
+        AUDIT_LOG_QUERY,
+        { ...filter, first: CONSOLE.explorerPageSize, after: pageParam },
+        signal,
+      ).then((d) => d.auditLog),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.pageInfo.hasNextPage ? last.pageInfo.endCursor : null),
   });
@@ -652,17 +738,26 @@ export interface TenantSettingsView {
 
 export type TenantSettingsPatch = Partial<TenantSettingsView>;
 
-const TENANT_SETTINGS_FIELDS = 'locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled';
+const TENANT_SETTINGS_FIELDS =
+  'locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled';
 const TENANT_SETTINGS_QUERY = 'query TenantSettings { tenantSettings { ' + TENANT_SETTINGS_FIELDS + ' } }';
-const UPDATE_TENANT_SETTINGS_MUTATION = 'mutation UpdateTenantSettings($input: TenantSettingsInput!) { updateTenantSettings(input: $input) { ' + TENANT_SETTINGS_FIELDS + ' } }';
+const UPDATE_TENANT_SETTINGS_MUTATION =
+  'mutation UpdateTenantSettings($input: TenantSettingsInput!) { updateTenantSettings(input: $input) { ' +
+  TENANT_SETTINGS_FIELDS +
+  ' } }';
 
 export function tenantSettingsQuery() {
   return queryOptions({
     queryKey: ['tenantSettings'] as const,
-    queryFn: ({ signal }) => gql<{ tenantSettings: TenantSettingsView }>(TENANT_SETTINGS_QUERY, {}, signal).then((d) => d.tenantSettings),
+    queryFn: ({ signal }) =>
+      gql<{ tenantSettings: TenantSettingsView }>(TENANT_SETTINGS_QUERY, {}, signal).then(
+        (d) => d.tenantSettings,
+      ),
   });
 }
 
 export function updateTenantSettings(input: TenantSettingsPatch): Promise<TenantSettingsView> {
-  return gql<{ updateTenantSettings: TenantSettingsView }>(UPDATE_TENANT_SETTINGS_MUTATION, { input }).then((d) => d.updateTenantSettings);
+  return gql<{ updateTenantSettings: TenantSettingsView }>(UPDATE_TENANT_SETTINGS_MUTATION, { input }).then(
+    (d) => d.updateTenantSettings,
+  );
 }

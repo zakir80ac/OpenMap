@@ -19,6 +19,8 @@ export interface CiRecord {
   layer: CiLayer;
   name: string;
   displayName: string;
+  /** Short code (ADR-014): stored value, or ciCode() of the row for rows written before the column was filled. */
+  code: string;
   identity: Record<string, string>;
   attributes: Record<string, unknown>;
   tags: string[];

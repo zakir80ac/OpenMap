@@ -49,8 +49,18 @@ const ids = {
   vuln: randomUUID(),
 };
 
-async function mint(roles: string[], privateKey: CryptoKey, client: { azp: string; aud?: string[] } = { azp: env.KEYCLOAK_CLIENT_ID }): Promise<string> {
-  return new SignJWT({ tenant: tenantId, preferred_username: 'tester', realm_access: { roles }, azp: client.azp, ...(client.aud === undefined ? {} : { aud: client.aud }) })
+async function mint(
+  roles: string[],
+  privateKey: CryptoKey,
+  client: { azp: string; aud?: string[] } = { azp: env.KEYCLOAK_CLIENT_ID },
+): Promise<string> {
+  return new SignJWT({
+    tenant: tenantId,
+    preferred_username: 'tester',
+    realm_access: { roles },
+    azp: client.azp,
+    ...(client.aud === undefined ? {} : { aud: client.aud }),
+  })
     .setProtectedHeader({ alg: SIGNING_ALGORITHM, kid: KID })
     .setIssuer(realmUrl(env).toString())
     .setSubject(userId)
@@ -59,7 +69,14 @@ async function mint(roles: string[], privateKey: CryptoKey, client: { azp: strin
     .sign(privateKey);
 }
 
-function ciRow(id: string, type: GraphCi['type'], layer: GraphCi['layer'], name: string, attributes: Record<string, unknown> = {}, identity: Record<string, string> = { name }): Prisma.CiUncheckedCreateInput {
+function ciRow(
+  id: string,
+  type: GraphCi['type'],
+  layer: GraphCi['layer'],
+  name: string,
+  attributes: Record<string, unknown> = {},
+  identity: Record<string, string> = { name },
+): Prisma.CiUncheckedCreateInput {
   return {
     id,
     tenantId,
@@ -82,15 +99,54 @@ function ciRow(id: string, type: GraphCi['type'], layer: GraphCi['layer'], name:
   };
 }
 
-function relRow(type: GraphRelationship['type'], fromCiId: string, toCiId: string): Prisma.RelationshipUncheckedCreateInput {
-  return { id: randomUUID(), tenantId, type, fromCiId, toCiId, attributes: {}, sourceCollectorId: 'test', sourceNodeId: 'test', sourceRunId: 'test', sourceConfidence: 0.9, observedAt: createdAt, validFrom: createdAt };
+function relRow(
+  type: GraphRelationship['type'],
+  fromCiId: string,
+  toCiId: string,
+): Prisma.RelationshipUncheckedCreateInput {
+  return {
+    id: randomUUID(),
+    tenantId,
+    type,
+    fromCiId,
+    toCiId,
+    attributes: {},
+    sourceCollectorId: 'test',
+    sourceNodeId: 'test',
+    sourceRunId: 'test',
+    sourceConfidence: 0.9,
+    observedAt: createdAt,
+    validFrom: createdAt,
+  };
 }
 
-function graphCi(id: string, type: GraphCi['type'], layer: GraphCi['layer'], name: string, tier: number | null = null): GraphCi {
-  return { id, tenantId, type, layer, name, displayName: name, lifecycle: 'managed', health: 'healthy', tier, validFrom: createdAt.toISOString(), validTo: null };
+function graphCi(
+  id: string,
+  type: GraphCi['type'],
+  layer: GraphCi['layer'],
+  name: string,
+  tier: number | null = null,
+): GraphCi {
+  return {
+    id,
+    tenantId,
+    type,
+    layer,
+    name,
+    displayName: name,
+    lifecycle: 'managed',
+    health: 'healthy',
+    tier,
+    validFrom: createdAt.toISOString(),
+    validTo: null,
+  };
 }
 
-async function gql<T>(query: string, variables: Record<string, unknown> = {}, token: string | null = operatorToken): Promise<GraphQLResponse<T>> {
+async function gql<T>(
+  query: string,
+  variables: Record<string, unknown> = {},
+  token: string | null = operatorToken,
+): Promise<GraphQLResponse<T>> {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (token !== null) headers['authorization'] = 'Bearer ' + token;
   const res = await app.inject({ method: 'POST', url: '/graphql', headers, payload: { query, variables } });
@@ -108,26 +164,100 @@ describe('OpenMap API (integration)', () => {
       .overrideProvider(JWKS)
       .useValue(createLocalJWKSet({ keys: [jwk] }))
       .compile();
-    app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter(), { logger: ['error', 'warn'] });
+    app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter(), {
+      logger: ['error', 'warn'],
+    });
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
-    await prisma.organization.create({ data: { id: organizationId, name: 'Integration Org', industry: 'testing', timeZone: 'UTC', defaultLocale: 'en', regulatoryScope: [], airGapped: true } });
-    await prisma.tenant.create({ data: { id: tenantId, organizationId, name: 'Integration BU', slug: 'it-' + tenantId.slice(0, 8) } });
+    await prisma.organization.create({
+      data: {
+        id: organizationId,
+        name: 'Integration Org',
+        industry: 'testing',
+        timeZone: 'UTC',
+        defaultLocale: 'en',
+        regulatoryScope: [],
+        airGapped: true,
+      },
+    });
+    await prisma.tenant.create({
+      data: { id: tenantId, organizationId, name: 'Integration BU', slug: 'it-' + tenantId.slice(0, 8) },
+    });
     await prisma.ci.createMany({
       data: [
         ciRow(ids.pdu, 'pdu', 'dc', 'PDU-R12-B'),
         ciRow(ids.host, 'host', 'hardware', 'db-ryd-pg-core-01', { vendor: 'Dell' }),
-        ciRow(ids.db, 'database_cluster', 'databases', 'Ledger DB', { redundancyGroup: 'ledger-db', minHealthy: 1 }),
+        ciRow(ids.db, 'database_cluster', 'databases', 'Ledger DB', {
+          redundancyGroup: 'ledger-db',
+          minHealthy: 1,
+        }),
         ciRow(ids.app, 'application', 'applications', 'app-ledger'),
-        ciRow(ids.service, 'business_service', 'applications', 'Online banking', { tier: 1, usersAffected: 2_100_000, revenuePerHour: 1_400_000, revenueCurrency: 'SAR', slaTargetPercent: 99.95 }),
+        ciRow(ids.service, 'business_service', 'applications', 'Online banking', {
+          tier: 1,
+          usersAffected: 2_100_000,
+          revenuePerHour: 1_400_000,
+          revenueCurrency: 'SAR',
+          slaTargetPercent: 99.95,
+        }),
         ciRow(ids.subnet, 'subnet', 'network_security', 'core-db-net', { cidr: '10.42.0.0/29', vrf: 'prod' }),
         ciRow(ids.ip1, 'ip_address', 'network_security', '10.42.0.1', { address: '10.42.0.1' }),
         ciRow(ids.ip2, 'ip_address', 'network_security', '10.42.0.2', { address: '10.42.0.2' }),
-        ciRow(ids.software, 'software', 'applications', 'PostgreSQL 16.4', { category: 'database', licensed: true }, { vendor: 'PostgreSQL', name: 'PostgreSQL', version: '16.4' }),
-        ciRow(ids.instance, 'software_instance', 'applications', 'PostgreSQL 16.4 on db-ryd-pg-core-01', { running: true, version: '16.4' }, { hostRef: ids.host, softwareRef: 'PostgreSQL/PostgreSQL/16.4', installPath: '/usr/lib/postgresql/16' }),
-        ciRow(ids.licence, 'licence', 'applications', 'PostgreSQL support licence', { metric: 'core', licenceType: 'subscription', entitlement: 32, consumed: 40, overDeployed: true, expiresAt: '2027-01-01', expired: false, annualCost: 12000, currency: 'SAR' }, { softwareRef: 'PostgreSQL/PostgreSQL/16.4', licenceKeyDigest: 'f'.repeat(64) }),
-        ciRow(ids.vuln, 'vulnerability', 'applications', 'CVE-2026-0001', { cveId: 'CVE-2026-0001', title: 'PostgreSQL remote code execution', severity: 'critical', cvssScore: 9.8, exploitedInWild: true, cisaKev: true, patchAvailable: true, publishedAt: '2026-01-10T00:00:00.000Z' }, { cveId: 'CVE-2026-0001' }),
+        ciRow(
+          ids.software,
+          'software',
+          'applications',
+          'PostgreSQL 16.4',
+          { category: 'database', licensed: true },
+          { vendor: 'PostgreSQL', name: 'PostgreSQL', version: '16.4' },
+        ),
+        ciRow(
+          ids.instance,
+          'software_instance',
+          'applications',
+          'PostgreSQL 16.4 on db-ryd-pg-core-01',
+          { running: true, version: '16.4' },
+          {
+            hostRef: ids.host,
+            softwareRef: 'PostgreSQL/PostgreSQL/16.4',
+            installPath: '/usr/lib/postgresql/16',
+          },
+        ),
+        ciRow(
+          ids.licence,
+          'licence',
+          'applications',
+          'PostgreSQL support licence',
+          {
+            metric: 'core',
+            licenceType: 'subscription',
+            entitlement: 32,
+            consumed: 40,
+            overDeployed: true,
+            expiresAt: '2027-01-01',
+            expired: false,
+            annualCost: 12000,
+            currency: 'SAR',
+          },
+          { softwareRef: 'PostgreSQL/PostgreSQL/16.4', licenceKeyDigest: 'f'.repeat(64) },
+        ),
+        ciRow(
+          ids.vuln,
+          'vulnerability',
+          'applications',
+          'CVE-2026-0001',
+          {
+            cveId: 'CVE-2026-0001',
+            title: 'PostgreSQL remote code execution',
+            severity: 'critical',
+            cvssScore: 9.8,
+            exploitedInWild: true,
+            cisaKev: true,
+            patchAvailable: true,
+            publishedAt: '2026-01-10T00:00:00.000Z',
+          },
+          { cveId: 'CVE-2026-0001' },
+        ),
       ],
     });
     const rels = [
@@ -156,7 +286,17 @@ describe('OpenMap API (integration)', () => {
       graphCi(ids.ip1, 'ip_address', 'network_security', '10.42.0.1'),
       graphCi(ids.ip2, 'ip_address', 'network_security', '10.42.0.2'),
     ]);
-    await graph.upsertRelationships(rels.map((r): GraphRelationship => ({ id: r.id as string, tenantId, type: r.type, fromCiId: r.fromCiId, toCiId: r.toCiId, validFrom: createdAt.toISOString(), validTo: null })));
+    await graph.upsertRelationships(
+      rels.map((r): GraphRelationship => ({
+        id: r.id as string,
+        tenantId,
+        type: r.type,
+        fromCiId: r.fromCiId,
+        toCiId: r.toCiId,
+        validFrom: createdAt.toISOString(),
+        validTo: null,
+      })),
+    );
   });
 
   afterAll(async () => {
@@ -199,39 +339,68 @@ describe('OpenMap API (integration)', () => {
       .setSubject(userId)
       .setExpirationTime('1h')
       .sign(keys.privateKey);
-    const res = await app.inject({ method: 'POST', url: '/graphql', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + foreign }, payload: { query: '{ layers { layer } }' } });
+    const res = await app.inject({
+      method: 'POST',
+      url: '/graphql',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + foreign },
+      payload: { query: '{ layers { layer } }' },
+    });
     expect(JSON.parse(res.body).errors[0].message).toMatch(/client/i);
   });
 
   it('accepts a service-account token addressed to the API client and refuses one from a foreign client', async () => {
-    const automation = await mint([ROLES.operator], keys.privateKey, { azp: 'openmap-automation', aud: [env.KEYCLOAK_API_CLIENT_ID] });
+    const automation = await mint([ROLES.operator], keys.privateKey, {
+      azp: 'openmap-automation',
+      aud: [env.KEYCLOAK_API_CLIENT_ID],
+    });
     const ok = await gql<{ layers: unknown[] }>('query { layers { layer } }', {}, automation);
     expect(ok.errors).toBeUndefined();
     expect(Array.isArray(ok.data?.layers)).toBe(true);
 
-    const foreign = await mint([ROLES.operator], keys.privateKey, { azp: 'some-other-app', aud: ['some-other-api'] });
+    const foreign = await mint([ROLES.operator], keys.privateKey, {
+      azp: 'some-other-app',
+      aud: ['some-other-api'],
+    });
     const denied = await gql<{ layers: unknown[] }>('query { layers { layer } }', {}, foreign);
     expect(denied.errors?.[0]?.message).toContain('not issued for this client');
   });
 
   it('pages CIs with a cursor and applies CiFilter', async () => {
-    type Page = { cis: { totalCount: number; pageInfo: { endCursor: string | null; hasNextPage: boolean }; edges: Array<{ cursor: string; node: { id: string; name: string; type: string; health: string; source: { collectorId: string } } }> } };
-    const query = 'query Cis($filter: CiFilter, $first: Int, $after: String) { cis(filter: $filter, first: $first, after: $after) { totalCount pageInfo { endCursor hasNextPage } edges { cursor node { id name type health source { collectorId } } } } }';
+    type Page = {
+      cis: {
+        totalCount: number;
+        pageInfo: { endCursor: string | null; hasNextPage: boolean };
+        edges: Array<{
+          cursor: string;
+          node: { id: string; name: string; type: string; health: string; source: { collectorId: string } };
+        }>;
+      };
+    };
+    const query =
+      'query Cis($filter: CiFilter, $first: Int, $after: String) { cis(filter: $filter, first: $first, after: $after) { totalCount pageInfo { endCursor hasNextPage } edges { cursor node { id name type health source { collectorId } } } } }';
     const first = await gql<Page>(query, { filter: { tags: ['integration-test'] }, first: 3 });
     expect(first.errors).toBeUndefined();
     expect(first.data?.cis.totalCount).toBe(12);
     expect(first.data?.cis.edges).toHaveLength(3);
     expect(first.data?.cis.pageInfo.hasNextPage).toBe(true);
     expect(first.data?.cis.edges[0]?.node.health).toBe('healthy');
-    const second = await gql<Page>(query, { filter: { tags: ['integration-test'] }, first: 10, after: first.data?.cis.pageInfo.endCursor });
+    const second = await gql<Page>(query, {
+      filter: { tags: ['integration-test'] },
+      first: 10,
+      after: first.data?.cis.pageInfo.endCursor,
+    });
     expect(second.data?.cis.edges).toHaveLength(9);
     expect(second.data?.cis.pageInfo.hasNextPage).toBe(false);
-    const names = [...(first.data?.cis.edges ?? []), ...(second.data?.cis.edges ?? [])].map((e) => e.node.name);
+    const names = [...(first.data?.cis.edges ?? []), ...(second.data?.cis.edges ?? [])].map(
+      (e) => e.node.name,
+    );
     expect(new Set(names).size).toBe(12);
     // Pages follow the database collation (case-insensitive), which matches locale-aware ordering.
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'en')));
 
-    const hosts = await gql<Page>(query, { filter: { types: ['host'], attributeEquals: { vendor: 'Dell' } } });
+    const hosts = await gql<Page>(query, {
+      filter: { types: ['host'], attributeEquals: { vendor: 'Dell' } },
+    });
     expect(hosts.data?.cis.edges.map((e) => e.node.id)).toEqual([ids.host]);
     const text = await gql<Page>(query, { filter: { text: 'ledger', layers: ['databases'] } });
     expect(text.data?.cis.edges.map((e) => e.node.name)).toEqual(['Ledger DB']);
@@ -240,10 +409,17 @@ describe('OpenMap API (integration)', () => {
   });
 
   it('reads a CI as of a point in time', async () => {
-    const query = 'query Ci($id: UUID!, $asOf: DateTime) { ci(id: $id, asOf: $asOf) { id name validFrom validTo } }';
-    const before = await gql<{ ci: unknown }>(query, { id: ids.host, asOf: new Date(createdAt.getTime() - 60_000).toISOString() });
+    const query =
+      'query Ci($id: UUID!, $asOf: DateTime) { ci(id: $id, asOf: $asOf) { id name validFrom validTo } }';
+    const before = await gql<{ ci: unknown }>(query, {
+      id: ids.host,
+      asOf: new Date(createdAt.getTime() - 60_000).toISOString(),
+    });
     expect(before.data?.ci).toBeNull();
-    const now = await gql<{ ci: { id: string; validTo: string | null } }>(query, { id: ids.host, asOf: new Date().toISOString() });
+    const now = await gql<{ ci: { id: string; validTo: string | null } }>(query, {
+      id: ids.host,
+      asOf: new Date().toISOString(),
+    });
     expect(now.data?.ci.id).toBe(ids.host);
     expect(now.data?.ci.validTo).toBeNull();
     const current = await gql<{ ci: { id: string } }>(query, { id: ids.host });
@@ -253,19 +429,37 @@ describe('OpenMap API (integration)', () => {
   });
 
   it('labels a CI through the outbox and enforces the operator role', async () => {
-    const mutation = 'mutation Label($input: LabelCiInput!) { labelCi(input: $input) { id layer userLabel { title layer labelledBy } } }';
-    const input = { ciId: ids.host, title: 'Ledger primary', description: 'Primary Postgres node for the ledger', layer: 'databases' };
+    const mutation =
+      'mutation Label($input: LabelCiInput!) { labelCi(input: $input) { id layer userLabel { title layer labelledBy } } }';
+    const input = {
+      ciId: ids.host,
+      title: 'Ledger primary',
+      description: 'Primary Postgres node for the ledger',
+      layer: 'databases',
+    };
     const denied = await gql<{ labelCi: unknown }>(mutation, { input }, viewerToken);
     expect(denied.errors?.[0]?.message).toMatch(/roles/i);
-    const res = await gql<{ labelCi: { id: string; layer: string; userLabel: { title: string; layer: string; labelledBy: string } } }>(mutation, { input });
+    const res = await gql<{
+      labelCi: { id: string; layer: string; userLabel: { title: string; layer: string; labelledBy: string } };
+    }>(mutation, { input });
     expect(res.errors).toBeUndefined();
     expect(res.data?.labelCi.layer).toBe('databases');
-    expect(res.data?.labelCi.userLabel).toEqual({ title: 'Ledger primary', layer: 'databases', labelledBy: 'tester' });
-    const outbox = await prisma.outboxEvent.findMany({ where: { tenantId, type: 'openmap.ci.labelled', subject: ids.host } });
+    expect(res.data?.labelCi.userLabel).toEqual({
+      title: 'Ledger primary',
+      layer: 'databases',
+      labelledBy: 'tester',
+    });
+    const outbox = await prisma.outboxEvent.findMany({
+      where: { tenantId, type: 'openmap.ci.labelled', subject: ids.host },
+    });
     expect(outbox).toHaveLength(1);
     expect(outbox[0]?.pending).toContain('memgraph');
     expect(outbox[0]?.deliveredAt).toBeNull();
-    const envelope = outbox[0]?.envelope as { specversion: string; tenantid: string; data: { label: { title: string } } };
+    const envelope = outbox[0]?.envelope as {
+      specversion: string;
+      tenantid: string;
+      data: { label: { title: string } };
+    };
     expect(envelope.specversion).toBe('1.0');
     expect(envelope.tenantid).toBe(tenantId);
     expect(envelope.data.label.title).toBe('Ledger primary');
@@ -273,19 +467,46 @@ describe('OpenMap API (integration)', () => {
 
   it('records every mutation in the immutable audit log and serves it to auditors only', async () => {
     const before = await prisma.auditLog.count({ where: { tenantId } });
-    const input = { ciId: ids.subnet, title: 'Audited subnet', description: 'audit trail check', layer: 'network_security' };
-    const labelled = await gql<{ labelCi: { id: string } }>('mutation LabelForAudit($input: LabelCiInput!) { labelCi(input: $input) { id } }', { input });
+    const input = {
+      ciId: ids.subnet,
+      title: 'Audited subnet',
+      description: 'audit trail check',
+      layer: 'network_security',
+    };
+    const labelled = await gql<{ labelCi: { id: string } }>(
+      'mutation LabelForAudit($input: LabelCiInput!) { labelCi(input: $input) { id } }',
+      { input },
+    );
     expect(labelled.errors).toBeUndefined();
     const rows = await prisma.auditLog.findMany({ where: { tenantId }, orderBy: { at: 'desc' } });
     expect(rows.length).toBe(before + 1);
-    expect(rows[0]).toMatchObject({ actor: 'tester', action: 'labelCi', subjectType: 'Ci', subjectId: ids.subnet });
-    expect((rows[0]!.details as { arguments: { input: { title: string } } }).arguments.input.title).toBe('Audited subnet');
+    expect(rows[0]).toMatchObject({
+      actor: 'tester',
+      action: 'labelCi',
+      subjectType: 'Ci',
+      subjectId: ids.subnet,
+    });
+    expect((rows[0]!.details as { arguments: { input: { title: string } } }).arguments.input.title).toBe(
+      'Audited subnet',
+    );
     await expect(prisma.auditLog.delete({ where: { id: rows[0]!.id } })).rejects.toThrow(/append-only/);
 
-    const asOperator = await gql<{ auditLog: { totalCount: number; edges: Array<{ node: { action: string } }> } }>('{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }', {}, operatorToken);
+    const asOperator = await gql<{
+      auditLog: { totalCount: number; edges: Array<{ node: { action: string } }> };
+    }>(
+      '{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }',
+      {},
+      operatorToken,
+    );
     expect(asOperator.errors?.[0]?.message).toMatch(/roles/);
     const auditorToken = await mint([ROLES.auditor], keys.privateKey);
-    const asAuditor = await gql<{ auditLog: { totalCount: number; edges: Array<{ node: { action: string; subjectId: string } }> } }>('{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }', {}, auditorToken);
+    const asAuditor = await gql<{
+      auditLog: { totalCount: number; edges: Array<{ node: { action: string; subjectId: string } }> };
+    }>(
+      '{ auditLog(action: "labelCi", first: 5) { totalCount edges { node { action actor subjectId } } } }',
+      {},
+      auditorToken,
+    );
     expect(asAuditor.errors).toBeUndefined();
     expect(asAuditor.data?.auditLog.totalCount).toBeGreaterThanOrEqual(1);
     expect(asAuditor.data?.auditLog.edges[0]?.node.subjectId).toBe(ids.subnet);
@@ -293,37 +514,63 @@ describe('OpenMap API (integration)', () => {
 
   it('serves tenant settings to every signed-in role and lets only administrators change them', async () => {
     // T-097 REQ-UI-019 REQ-CORE-012
-    const fields = '{ locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled }';
+    const fields =
+      '{ locale timeZone discoveryIntervalMinutes historyRetentionDays staleAfterDays auditRetentionDays assistantEnabled outboundIntegrationsEnabled }';
     const read = await gql<{ tenantSettings: TenantSettings }>('{ tenantSettings ' + fields + ' }');
     expect(read.errors).toBeUndefined();
     expect(read.data?.tenantSettings).toEqual(TENANT_SETTINGS_DEFAULTS);
 
-    const denied = await gql('mutation { updateTenantSettings(input: { staleAfterDays: 14 }) { staleAfterDays } }');
+    const denied = await gql(
+      'mutation { updateTenantSettings(input: { staleAfterDays: 14 }) { staleAfterDays } }',
+    );
     expect(denied.errors?.[0]?.message).toMatch(/roles/);
 
     const adminToken = await mint([ROLES.admin], keys.privateKey);
-    const updated = await gql<{ updateTenantSettings: TenantSettings }>('mutation { updateTenantSettings(input: { staleAfterDays: 14, locale: "ar", timeZone: null }) ' + fields + ' }', {}, adminToken);
+    const updated = await gql<{ updateTenantSettings: TenantSettings }>(
+      'mutation { updateTenantSettings(input: { staleAfterDays: 14, locale: "ar", timeZone: null }) ' +
+        fields +
+        ' }',
+      {},
+      adminToken,
+    );
     expect(updated.errors).toBeUndefined();
-    expect(updated.data?.updateTenantSettings).toEqual({ ...TENANT_SETTINGS_DEFAULTS, staleAfterDays: 14, locale: 'ar' });
+    expect(updated.data?.updateTenantSettings).toEqual({
+      ...TENANT_SETTINGS_DEFAULTS,
+      staleAfterDays: 14,
+      locale: 'ar',
+    });
     const again = await gql<{ tenantSettings: TenantSettings }>('{ tenantSettings ' + fields + ' }');
     expect(again.data?.tenantSettings.staleAfterDays).toBe(14);
 
-    const invalid = await gql('mutation { updateTenantSettings(input: { discoveryIntervalMinutes: 0 }) { locale } }', {}, adminToken);
+    const invalid = await gql(
+      'mutation { updateTenantSettings(input: { discoveryIntervalMinutes: 0 }) { locale } }',
+      {},
+      adminToken,
+    );
     expect(invalid.errors?.[0]?.message).toMatch(/updateTenantSettings input/);
     const audited = await prisma.auditLog.findFirst({ where: { tenantId, action: 'updateTenantSettings' } });
     expect(audited).not.toBeNull();
   });
 
   it('creates and retires relationships through the outbox', async () => {
-    const created = await gql<{ createRelationship: { id: string; type: string; from: { id: string }; to: { id: string } } }>(
+    const created = await gql<{
+      createRelationship: { id: string; type: string; from: { id: string }; to: { id: string } };
+    }>(
       'mutation Rel($type: String!, $from: UUID!, $to: UUID!) { createRelationship(type: $type, fromCiId: $from, toCiId: $to, attributes: { note: "test" }) { id type from { id } to { id } } }',
       { type: 'located_in', from: ids.host, to: ids.pdu },
     );
     expect(created.errors).toBeUndefined();
     expect(created.data?.createRelationship.from.id).toBe(ids.host);
-    const retired = await gql<{ retireRelationship: { id: string; validTo: string | null } }>('mutation Retire($id: UUID!) { retireRelationship(id: $id) { id validTo } }', { id: created.data?.createRelationship.id });
+    const retired = await gql<{ retireRelationship: { id: string; validTo: string | null } }>(
+      'mutation Retire($id: UUID!) { retireRelationship(id: $id) { id validTo } }',
+      { id: created.data?.createRelationship.id },
+    );
     expect(retired.data?.retireRelationship.validTo).not.toBeNull();
-    const types = (await prisma.outboxEvent.findMany({ where: { tenantId, subject: created.data?.createRelationship.id } })).map((e) => e.type).sort();
+    const types = (
+      await prisma.outboxEvent.findMany({ where: { tenantId, subject: created.data?.createRelationship.id } })
+    )
+      .map((e) => e.type)
+      .sort();
     expect(types).toEqual(['openmap.relationship.created', 'openmap.relationship.retired']);
   });
 
@@ -335,36 +582,68 @@ describe('OpenMap API (integration)', () => {
     const hardware = res.data?.layers.find((l) => l.layer === 'hardware');
     expect(hardware).toEqual({ layer: 'hardware', count: 1, healthy: 1, visible: true });
     expect(res.data?.layers.find((l) => l.layer === 'network_security')?.count).toBe(3);
-    const toggled = await gql<{ setLayerVisibility: Layers['layers'] }>('mutation { setLayerVisibility(layer: hardware, visible: false) { layer visible } }');
+    const toggled = await gql<{ setLayerVisibility: Layers['layers'] }>(
+      'mutation { setLayerVisibility(layer: hardware, visible: false) { layer visible } }',
+    );
     expect(toggled.data?.setLayerVisibility.find((l) => l.layer === 'hardware')?.visible).toBe(false);
     expect(toggled.data?.setLayerVisibility.filter((l) => l.visible)).toHaveLength(11);
     const pref = await prisma.userPreference.findUnique({ where: { tenantId_userId: { tenantId, userId } } });
     expect(pref?.visibleLayers).not.toContain('hardware');
     // REQ-CMDB-003: a hidden layer leaves every list until it is shown again; an explicit filter still reaches it.
-    const hiddenList = await gql<{ cis: { totalCount: number; edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { totalCount edges { node { layer } } } }');
+    const hiddenList = await gql<{ cis: { totalCount: number; edges: Array<{ node: { layer: string } }> } }>(
+      '{ cis(first: 50) { totalCount edges { node { layer } } } }',
+    );
     expect(hiddenList.data?.cis.edges.some((e) => e.node.layer === 'hardware')).toBe(false);
     // The host was relabelled into the databases layer earlier in this suite, so hide that layer too and reach it explicitly.
     await gql('mutation { setLayerVisibility(layer: databases, visible: false) { layer } }');
-    const bothHidden = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { edges { node { layer } } } }');
+    const bothHidden = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>(
+      '{ cis(first: 50) { edges { node { layer } } } }',
+    );
     expect(bothHidden.data?.cis.edges.some((e) => e.node.layer === 'databases')).toBe(false);
-    const explicit = await gql<{ cis: { totalCount: number } }>('{ cis(filter: { layers: [databases] }, first: 50) { totalCount } }');
+    const explicit = await gql<{ cis: { totalCount: number } }>(
+      '{ cis(filter: { layers: [databases] }, first: 50) { totalCount } }',
+    );
     const databasesRows = await prisma.ci.count({ where: { tenantId, layer: 'databases', validTo: null } });
     expect(databasesRows).toBeGreaterThan(0);
     expect(explicit.data?.cis.totalCount).toBe(databasesRows);
     await gql('mutation { setLayerVisibility(layer: databases, visible: true) { layer } }');
     await gql('mutation { setLayerVisibility(layer: hardware, visible: true) { layer } }');
-    const shownAgain = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>('{ cis(first: 50) { edges { node { layer } } } }');
+    const shownAgain = await gql<{ cis: { edges: Array<{ node: { layer: string } }> } }>(
+      '{ cis(first: 50) { edges { node { layer } } } }',
+    );
     expect(shownAgain.data?.cis.edges.some((e) => e.node.layer === 'databases')).toBe(true);
   });
 
   it('computes impact from a failed PDU up to the business service', async () => {
-    type Impact = { impact: { root: { id: string }; durationMs: number; nodes: Array<{ ci: { name: string }; depth: number; predicted: string; path: string[] }>; services: Array<{ service: { name: string }; tier: number; predicted: string; usersAffected: number | null; revenueAtRiskPerHour: { amount: number; currency: string } | null; slaBudgetRemainingMinutes: number | null }> } };
-    const res = await gql<Impact>('query Impact($id: UUID!) { impact(ciId: $id) { root { id } durationMs nodes { ci { name } depth predicted path } services { service { name } tier predicted usersAffected revenueAtRiskPerHour { amount currency } slaBudgetRemainingMinutes } } }', { id: ids.pdu });
+    type Impact = {
+      impact: {
+        root: { id: string };
+        durationMs: number;
+        nodes: Array<{ ci: { name: string }; depth: number; predicted: string; path: string[] }>;
+        services: Array<{
+          service: { name: string };
+          tier: number;
+          predicted: string;
+          usersAffected: number | null;
+          revenueAtRiskPerHour: { amount: number; currency: string } | null;
+          slaBudgetRemainingMinutes: number | null;
+        }>;
+      };
+    };
+    const res = await gql<Impact>(
+      'query Impact($id: UUID!) { impact(ciId: $id) { root { id } durationMs nodes { ci { name } depth predicted path } services { service { name } tier predicted usersAffected revenueAtRiskPerHour { amount currency } slaBudgetRemainingMinutes } } }',
+      { id: ids.pdu },
+    );
     expect(res.errors).toBeUndefined();
     expect(res.data?.impact.root.id).toBe(ids.pdu);
     const names = res.data?.impact.nodes.map((n) => n.ci.name) ?? [];
-    expect(names).toEqual(expect.arrayContaining(['db-ryd-pg-core-01', 'Ledger DB', 'app-ledger', 'Online banking']));
-    expect(res.data?.impact.nodes.find((n) => n.ci.name === 'db-ryd-pg-core-01')).toMatchObject({ depth: 1, predicted: 'down' });
+    expect(names).toEqual(
+      expect.arrayContaining(['db-ryd-pg-core-01', 'Ledger DB', 'app-ledger', 'Online banking']),
+    );
+    expect(res.data?.impact.nodes.find((n) => n.ci.name === 'db-ryd-pg-core-01')).toMatchObject({
+      depth: 1,
+      predicted: 'down',
+    });
     expect(res.data?.impact.services).toHaveLength(1);
     const svc = res.data?.impact.services[0];
     expect(svc?.service.name).toBe('Online banking');
@@ -377,13 +656,32 @@ describe('OpenMap API (integration)', () => {
   });
 
   it('finds the shortest path between two CIs', async () => {
-    const res = await gql<{ path: Array<{ type: string; from: { name: string }; to: { name: string } }> }>('query P($a: UUID!, $b: UUID!) { path(fromCiId: $a, toCiId: $b) { type from { name } to { name } } }', { a: ids.app, b: ids.pdu });
+    const res = await gql<{ path: Array<{ type: string; from: { name: string }; to: { name: string } }> }>(
+      'query P($a: UUID!, $b: UUID!) { path(fromCiId: $a, toCiId: $b) { type from { name } to { name } } }',
+      { a: ids.app, b: ids.pdu },
+    );
     expect(res.errors).toBeUndefined();
     expect(res.data?.path.map((r) => r.type)).toEqual(['depends_on', 'runs_on', 'powered_by']);
   });
 
   it('creates a plan whose BOM becomes planned assets in one transaction', async () => {
-    type Plan = { createPlan: { id: string; number: string; status: string; estimatedCost: { amount: number; currency: string } | null; bom: Array<{ description: string; quantity: number; received: number }>; assets: Array<{ id: string; assetTag: string; stage: string; manufacturer: string; model: string; purchaseCost: { amount: number; currency: string } | null }> } };
+    type Plan = {
+      createPlan: {
+        id: string;
+        number: string;
+        status: string;
+        estimatedCost: { amount: number; currency: string } | null;
+        bom: Array<{ description: string; quantity: number; received: number }>;
+        assets: Array<{
+          id: string;
+          assetTag: string;
+          stage: string;
+          manufacturer: string;
+          model: string;
+          purchaseCost: { amount: number; currency: string } | null;
+        }>;
+      };
+    };
     const res = await gql<Plan>(
       'mutation Plan($input: PlanInput!) { createPlan(input: $input) { id number status estimatedCost { amount currency } bom { description quantity received } assets { id assetTag stage manufacturer model purchaseCost { amount currency } } } }',
       {
@@ -393,8 +691,25 @@ describe('OpenMap API (integration)', () => {
           kind: 'refresh',
           targetSiteId: ids.pdu,
           bom: [
-            { description: 'Database host', manufacturer: 'Dell', model: 'R760', sku: 'R760-2S', layer: 'hardware', quantity: 2, unitCostAmount: 45_000, unitCostCurrency: 'SAR' },
-            { description: 'Top-of-rack switch', manufacturer: 'Arista', model: '7050X3', layer: 'network_security', quantity: 1, unitCostAmount: 30_000, unitCostCurrency: 'SAR' },
+            {
+              description: 'Database host',
+              manufacturer: 'Dell',
+              model: 'R760',
+              sku: 'R760-2S',
+              layer: 'hardware',
+              quantity: 2,
+              unitCostAmount: 45_000,
+              unitCostCurrency: 'SAR',
+            },
+            {
+              description: 'Top-of-rack switch',
+              manufacturer: 'Arista',
+              model: '7050X3',
+              layer: 'network_security',
+              quantity: 1,
+              unitCostAmount: 30_000,
+              unitCostCurrency: 'SAR',
+            },
           ],
         },
       },
@@ -410,25 +725,55 @@ describe('OpenMap API (integration)', () => {
     ]);
     expect(plan?.assets).toHaveLength(3);
     expect(plan?.assets.every((a) => a.stage === 'planned')).toBe(true);
-    expect(plan?.assets.map((a) => a.assetTag).sort()).toEqual([plan?.number + '-1-1', plan?.number + '-1-2', plan?.number + '-2-1']);
-    expect(plan?.assets.find((a) => a.assetTag.endsWith('-2-1'))).toMatchObject({ manufacturer: 'Arista', model: '7050X3', purchaseCost: { amount: 30_000, currency: 'SAR' } });
+    expect(plan?.assets.map((a) => a.assetTag).sort()).toEqual([
+      plan?.number + '-1-1',
+      plan?.number + '-1-2',
+      plan?.number + '-2-1',
+    ]);
+    expect(plan?.assets.find((a) => a.assetTag.endsWith('-2-1'))).toMatchObject({
+      manufacturer: 'Arista',
+      model: '7050X3',
+      purchaseCost: { amount: 30_000, currency: 'SAR' },
+    });
     const audits = await prisma.assetAudit.count({ where: { tenantId, asset: { planId: plan?.id } } });
     expect(audits).toBe(3);
-    const events = await prisma.outboxEvent.findMany({ where: { tenantId, type: 'openmap.asset.stage.changed' } });
+    const events = await prisma.outboxEvent.findMany({
+      where: { tenantId, type: 'openmap.asset.stage.changed' },
+    });
     expect(events).toHaveLength(3);
 
-    const staged = await gql<{ setAssetStage: { stage: string } }>('mutation S($id: UUID!) { setAssetStage(assetId: $id, stage: in_stock, note: "received") { stage } }', { id: plan?.assets[0]?.id });
+    const staged = await gql<{ setAssetStage: { stage: string } }>(
+      'mutation S($id: UUID!) { setAssetStage(assetId: $id, stage: in_stock, note: "received") { stage } }',
+      { id: plan?.assets[0]?.id },
+    );
     expect(staged.data?.setAssetStage.stage).toBe('in_stock');
-    const approved = await gql<{ setPlanStatus: { status: string } }>('mutation A($id: UUID!) { setPlanStatus(planId: $id, status: approved) { status } }', { id: plan?.id });
+    const approved = await gql<{ setPlanStatus: { status: string } }>(
+      'mutation A($id: UUID!) { setPlanStatus(planId: $id, status: approved) { status } }',
+      { id: plan?.id },
+    );
     expect(approved.data?.setPlanStatus.status).toBe('approved');
-    const listed = await gql<{ assets: Array<{ assetTag: string }>; plans: Array<{ number: string }> }>('{ assets(stage: [in_stock]) { assetTag } plans(status: [approved]) { number } }');
+    const listed = await gql<{ assets: Array<{ assetTag: string }>; plans: Array<{ number: string }> }>(
+      '{ assets(stage: [in_stock]) { assetTag } plans(status: [approved]) { number } }',
+    );
     expect(listed.data?.assets).toHaveLength(1);
     expect(listed.data?.plans.map((p) => p.number)).toEqual([plan?.number]);
   });
 
   it('builds the subnet tree, utilisation and the next free address from stored CIs', async () => {
-    type Subnets = { subnets: Array<{ cidr: string; vrf: string | null; utilisationPercent: number; children: unknown[]; addresses: { totalCount: number; edges: Array<{ node: { name: string } }> } }>; nextFreeIp: string | null };
-    const res = await gql<Subnets>('query N($id: UUID!) { subnets { cidr vrf utilisationPercent children { cidr } addresses(first: 10) { totalCount edges { node { name } } } } nextFreeIp(subnetId: $id) }', { id: ids.subnet });
+    type Subnets = {
+      subnets: Array<{
+        cidr: string;
+        vrf: string | null;
+        utilisationPercent: number;
+        children: unknown[];
+        addresses: { totalCount: number; edges: Array<{ node: { name: string } }> };
+      }>;
+      nextFreeIp: string | null;
+    };
+    const res = await gql<Subnets>(
+      'query N($id: UUID!) { subnets { cidr vrf utilisationPercent children { cidr } addresses(first: 10) { totalCount edges { node { name } } } } nextFreeIp(subnetId: $id) }',
+      { id: ids.subnet },
+    );
     expect(res.errors).toBeUndefined();
     expect(res.data?.subnets).toHaveLength(1);
     const subnet = res.data?.subnets[0];
@@ -440,18 +785,99 @@ describe('OpenMap API (integration)', () => {
 
   it('inventories software with licence compliance and walks a CVE to the services it puts at risk', async () => {
     // T-108 REQ-UI-015 REQ-UI-016 REQ-CMDB-031 REQ-SEC-008
-    const software = await gql<{ software: Array<{ name: string; version: string; instances: number; hosts: number; running: number; vulnerabilities: number; licence: { entitlement: number; consumed: number; overDeployed: boolean; expiresAt: string | null } | null }> }>('{ software(first: 10) { name version instances hosts running vulnerabilities licence { entitlement consumed overDeployed expiresAt } } }');
+    const software = await gql<{
+      software: Array<{
+        name: string;
+        version: string;
+        instances: number;
+        hosts: number;
+        running: number;
+        vulnerabilities: number;
+        licence: {
+          entitlement: number;
+          consumed: number;
+          overDeployed: boolean;
+          expiresAt: string | null;
+        } | null;
+      }>;
+    }>(
+      '{ software(first: 10) { name version instances hosts running vulnerabilities licence { entitlement consumed overDeployed expiresAt } } }',
+    );
     expect(software.errors).toBeUndefined();
-    expect(software.data?.software).toEqual([{ name: 'PostgreSQL', version: '16.4', instances: 1, hosts: 1, running: 1, vulnerabilities: 1, licence: { entitlement: 32, consumed: 40, overDeployed: true, expiresAt: '2027-01-01T00:00:00.000Z' } }]);
+    expect(software.data?.software).toEqual([
+      {
+        name: 'PostgreSQL',
+        version: '16.4',
+        instances: 1,
+        hosts: 1,
+        running: 1,
+        vulnerabilities: 1,
+        licence: { entitlement: 32, consumed: 40, overDeployed: true, expiresAt: '2027-01-01T00:00:00.000Z' },
+      },
+    ]);
 
-    const summaries = await gql<{ vulnerabilitySummaries: Array<{ cveId: string; cvss: number; exploited: boolean; affectedSoftware: number; affectedHosts: number }> }>('{ vulnerabilitySummaries(minCvss: 9) { cveId cvss exploited affectedSoftware affectedHosts } }');
-    expect(summaries.data?.vulnerabilitySummaries).toEqual([{ cveId: 'CVE-2026-0001', cvss: 9.8, exploited: true, affectedSoftware: 1, affectedHosts: 1 }]);
+    const summaries = await gql<{
+      vulnerabilitySummaries: Array<{
+        cveId: string;
+        cvss: number;
+        exploited: boolean;
+        affectedSoftware: number;
+        affectedHosts: number;
+      }>;
+    }>('{ vulnerabilitySummaries(minCvss: 9) { cveId cvss exploited affectedSoftware affectedHosts } }');
+    expect(summaries.data?.vulnerabilitySummaries).toEqual([
+      { cveId: 'CVE-2026-0001', cvss: 9.8, exploited: true, affectedSoftware: 1, affectedHosts: 1 },
+    ]);
 
-    const detail = await gql<{ vulnerability: { hosts: Array<{ id: string }>; services: Array<{ service: { id: string }; predicted: string }>; blastRadiusTruncated: boolean } | null }>('{ vulnerability(cveId: "CVE-2026-0001") { hosts { id } services { service { id } predicted } blastRadiusTruncated } }');
+    const detail = await gql<{
+      vulnerability: {
+        hosts: Array<{ id: string }>;
+        services: Array<{ service: { id: string }; predicted: string }>;
+        blastRadiusTruncated: boolean;
+      } | null;
+    }>(
+      '{ vulnerability(cveId: "CVE-2026-0001") { hosts { id } services { service { id } predicted } blastRadiusTruncated } }',
+    );
     expect(detail.data?.vulnerability?.hosts.map((h) => h.id)).toEqual([ids.host]);
     expect(detail.data?.vulnerability?.services.map((s) => s.service.id)).toEqual([ids.service]);
     expect(detail.data?.vulnerability?.blastRadiusTruncated).toBe(false);
-    expect((await gql<{ vulnerability: unknown }>('{ vulnerability(cveId: "CVE-0000-0000") { blastRadiusTruncated } }')).data?.vulnerability).toBeNull();
+    expect(
+      (
+        await gql<{ vulnerability: unknown }>(
+          '{ vulnerability(cveId: "CVE-0000-0000") { blastRadiusTruncated } }',
+        )
+      ).data?.vulnerability,
+    ).toBeNull();
+  });
+
+  it('renames a short code, refuses a taken or malformed one, and exposes the stored code', async () => {
+    // T-111 REQ-CMDB-037
+    const mutation =
+      'mutation SetCode($ciId: UUID!, $code: String!) { setCiCode(ciId: $ciId, code: $code) { id code } }';
+    const renamed = await gql<{ setCiCode: { id: string; code: string } }>(mutation, {
+      ciId: ids.host,
+      code: 'srv-ledger-primary',
+    });
+    expect(renamed.errors).toBeUndefined();
+    expect(renamed.data?.setCiCode.code).toBe('SRV-LEDGER-PRIMARY');
+    const read = await gql<{ ci: { code: string } }>('query Code($id: UUID!) { ci(id: $id) { code } }', {
+      id: ids.host,
+    });
+    expect(read.data?.ci.code).toBe('SRV-LEDGER-PRIMARY');
+    const taken = await gql<{ setCiCode: unknown }>(mutation, { ciId: ids.db, code: 'SRV-LEDGER-PRIMARY' });
+    expect(taken.errors?.[0]?.message).toContain('already');
+    const malformed = await gql<{ setCiCode: unknown }>(mutation, { ciId: ids.db, code: 'no prefix here' });
+    expect(malformed.errors?.[0]?.message).toMatch(/code/i);
+    const denied = await gql<{ setCiCode: unknown }>(
+      mutation,
+      { ciId: ids.db, code: 'DB-LEDGER' },
+      viewerToken,
+    );
+    expect(denied.errors?.[0]?.message).toMatch(/roles/i);
+    const stillDb = await gql<{ ci: { code: string } }>('query Code($id: UUID!) { ci(id: $id) { code } }', {
+      id: ids.db,
+    });
+    expect(stillDb.data?.ci.code).toMatch(/^[A-Z]+-/);
   });
 
   it('exposes Prometheus metrics for the GraphQL operations served', async () => {

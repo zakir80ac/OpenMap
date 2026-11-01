@@ -10,7 +10,8 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ["api:4000", "reconciler:4100", "scheduler:4201", "bsm-engine:4400"]
+  # ClickHouse serves Prometheus metrics on 9363 through deploy/compose/clickhouse/prometheus.xml (config.d).
   - job_name: clickhouse
     static_configs: [{ targets: ["clickhouse:9363"] }]
-  - job_name: memgraph
-    static_configs: [{ targets: ["memgraph:9091"] }]
+  # Memgraph Community exposes no Prometheus endpoint (the HTTP metrics server is an Enterprise feature); the graph
+  # store's health is observed through the API's readiness probe and the reconciler's outbox delivery counters.

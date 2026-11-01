@@ -15,6 +15,8 @@ export interface Scope {
   exclusions: string[];
   credentialRef: string | null;
   credentialType: CollectorJob['credentialType'];
+  /** Per-scope ceilings (REQ-DISC-029); null falls back to DISCOVERY defaults and the Node's advertised concurrency. */
+  rateLimit: { concurrency: number | null; requestsPerSecond: number | null };
   options: Record<string, unknown>;
 }
 
@@ -100,7 +102,8 @@ export function plan(input: PlannerInput): Plan {
         unassignedScopeIds.push(scope.id);
         break;
       }
-      const concurrency = Math.min(DISCOVERY.defaultConcurrency, node.maxConcurrency);
+      const concurrency = Math.min(scope.rateLimit.concurrency ?? DISCOVERY.defaultConcurrency, node.maxConcurrency);
+      const requestsPerSecond = scope.rateLimit.requestsPerSecond ?? DISCOVERY.defaultRequestsPerSecond;
       const perTarget = input.secondsPerTarget[collectorId] ?? input.defaultSecondsPerTarget;
       for (const targets of chunk(supported, DISCOVERY.targetsPerJob)) {
         jobs.push(
@@ -113,7 +116,7 @@ export function plan(input: PlannerInput): Plan {
             credentialRef: scope.credentialRef,
             credentialType: scope.credentialType,
             timeoutMs: DISCOVERY.defaultJobTimeoutMs,
-            rateLimit: { concurrency, requestsPerSecond: DISCOVERY.defaultRequestsPerSecond },
+            rateLimit: { concurrency, requestsPerSecond },
             options: { ...scope.options, sweepId, scopeId: scope.id },
             scheduledAt: input.now,
             contractVersion: manifest.contractVersion,

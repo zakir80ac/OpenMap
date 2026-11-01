@@ -889,5 +889,11 @@
   "dependencies.layout.force": "Force",
   "dependencies.layout.forceUnavailable": "The force layout is offered up to {count} nodes; larger maps stay in lanes.",
   "dependencies.isolate.active": "Blast radius of {name}: {count} nodes lit, the rest dimmed",
-  "dependencies.isolate.clear": "Show everything"
+  "dependencies.isolate.clear": "Show everything",
+  "cmdb.detail.code.edit": "Edit code",
+  "cmdb.detail.code.form": "Rename the short code",
+  "cmdb.detail.code.label": "Short code",
+  "cmdb.detail.code.hint": "A layer prefix, a dash and a slug of letters, digits and dashes; unique across this tenant.",
+  "cmdb.detail.code.saving": "Saving…",
+  "cmdb.detail.code.error": "The code was not saved: it is malformed or already names another item."
 }

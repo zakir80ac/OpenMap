@@ -1,7 +1,15 @@
 // REQ-CMDB-001 — zod schemas for CMDB GraphQL inputs. Enumerations come from the contract so a
 // filter can never name a type or layer the CMDB does not know.
 import { z } from 'zod';
-import { attributesSchema, ciLayerSchema, ciTypeSchema, lifecycleSchema, relationshipTypeSchema, scalarSchema } from '@openmap/contracts';
+import {
+  CI_CODE_PATTERN,
+  attributesSchema,
+  ciLayerSchema,
+  ciTypeSchema,
+  lifecycleSchema,
+  relationshipTypeSchema,
+  scalarSchema,
+} from '@openmap/contracts';
 import { BSM } from '@openmap/constants';
 
 export const healthStateSchema = z.enum(BSM.healthOrder);
@@ -33,6 +41,24 @@ export const labelCiSchema = z.object({
   type: ciTypeSchema.nullish(),
 });
 export type LabelCiInput = z.infer<typeof labelCiSchema>;
+
+/** REQ-CMDB-037 — a new short code: trimmed, upper-cased, then held to the contract's code pattern. */
+export const setCiCodeSchema = z.object({
+  ciId: z.uuid(),
+  code: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((value) => value.toUpperCase())
+    .pipe(
+      z
+        .string()
+        .regex(
+          CI_CODE_PATTERN,
+          'code must be a layer prefix, a dash and a slug of letters, digits and dashes',
+        ),
+    ),
+});
 
 export const updateAttributesSchema = z.object({
   ciId: z.uuid(),

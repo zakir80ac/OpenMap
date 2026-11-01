@@ -9,7 +9,13 @@ import type { ReconcileOutput } from '../core/reconcile.js';
 
 type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
-const OUTBOX_TARGETS: Array<'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm'> = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
+const OUTBOX_TARGETS: Array<'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm'> = [
+  'memgraph',
+  'clickhouse',
+  'meilisearch',
+  'websocket',
+  'bsm',
+];
 
 function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -17,6 +23,32 @@ function json(value: unknown): Prisma.InputJsonValue {
 
 function nullable(value: string | null | undefined): string | null {
   return value ?? null;
+}
+
+/**
+ * Postgres may suffix a code to keep it unique per tenant (migration 0010, ADR-014). The created CIs and their
+ * `openmap.ci.created` events are patched with the stored codes so Memgraph and Meilisearch carry the same value.
+ */
+async function readBackCodes(tx: Tx, cis: Ci[], events: readonly EventEnvelope[]): Promise<void> {
+  if (cis.length === 0) return;
+  const rows = await tx.$queryRaw<Array<{ id: string; code: string | null }>>(
+    Prisma.sql`SELECT id, code FROM cis WHERE id = ANY(${cis.map((c) => c.id)}::uuid[])`,
+  );
+  const stored = new Map(rows.map((r) => [r.id, r.code]));
+  const created = new Map<string, EventEnvelope[]>();
+  for (const event of events) {
+    if (event.type !== 'openmap.ci.created') continue;
+    created.set(event.subject, [...(created.get(event.subject) ?? []), event]);
+  }
+  for (const ci of cis) {
+    const code = stored.get(ci.id);
+    if (code === undefined || code === null || code === ci.code) continue;
+    ci.code = code;
+    for (const event of created.get(ci.id) ?? []) {
+      const data = event.data as { ci?: { code?: string } };
+      if (data.ci !== undefined) data.ci.code = code;
+    }
+  }
 }
 
 /** One round trip for every created CI. ON CONFLICT mirrors createMany's skipDuplicates. */
@@ -99,20 +131,43 @@ export interface PersistSummary {
   events: number;
 }
 
-export async function persist(prisma: PrismaClient, tenantId: string, out: ReconcileOutput): Promise<PersistSummary> {
+export async function persist(
+  prisma: PrismaClient,
+  tenantId: string,
+  out: ReconcileOutput,
+): Promise<PersistSummary> {
   return prisma.$transaction(async (tx) => {
     await insertCisBatch(tx, out.created);
-    const externalIds = out.created.flatMap((ci) => ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })));
+    await readBackCodes(tx, out.created, out.events);
+    const externalIds = out.created.flatMap((ci) =>
+      ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })),
+    );
     if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
     await updateCisBatch(tx, out.updated);
     await insertRelationshipsBatch(tx, out.relationshipsCreated);
-    if (out.relationshipsSeen.length) await tx.relationship.updateMany({ where: { id: { in: out.relationshipsSeen } }, data: { observedAt: new Date() } });
+    if (out.relationshipsSeen.length)
+      await tx.relationship.updateMany({
+        where: { id: { in: out.relationshipsSeen } },
+        data: { observedAt: new Date() },
+      });
     if (out.conflicts.length) {
       await tx.reconciliationConflict.createMany({
-        data: out.conflicts.map((c) => ({ tenantId, type: c.observed.type, identityKey: identityKeyOf(c.observed.type, c.observed.identity), field: 'identity', candidates: json({ ciIds: c.ciIds, observed: c.observed }) })),
+        data: out.conflicts.map((c) => ({
+          tenantId,
+          type: c.observed.type,
+          identityKey: identityKeyOf(c.observed.type, c.observed.identity),
+          field: 'identity',
+          candidates: json({ ciIds: c.ciIds, observed: c.observed }),
+        })),
       });
     }
     await insertOutboxBatch(tx, out.events);
-    return { created: out.created.length, updated: out.updated.length, relationships: out.relationshipsCreated.length, conflicts: out.conflicts.length, events: out.events.length };
+    return {
+      created: out.created.length,
+      updated: out.updated.length,
+      relationships: out.relationshipsCreated.length,
+      conflicts: out.conflicts.length,
+      events: out.events.length,
+    };
   });
 }

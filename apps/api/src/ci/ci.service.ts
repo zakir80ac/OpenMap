@@ -1,6 +1,6 @@
 // REQ-CMDB-001 — CMDB use cases: paginated and time-travel reads, search, user labelling, attribute
 // edits and relationship writes. Every write goes through the outbox in one Postgres transaction.
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RECONCILIATION } from '@openmap/constants';
 import { CI_TYPE_LAYER, type CiLayer, type RelationshipType, type UserLabel } from '@openmap/contracts';
 import { clampPageSize, decodeCursor, encodeCursor } from '../common/cursor.js';
@@ -14,12 +14,22 @@ import { toVersion } from './ci.mapper.js';
 import { CI_REPOSITORY, type CiRepository } from './ci.repository.js';
 import { LAYER_PREFERENCES, type LayerPreferenceRepository } from '../graph/graph.repository.js';
 import type { CiFilterInput, LabelCiInput } from './ci.schemas.js';
-import type { CiRecord, CiVersionRecord, Connection, HealthState, RelationshipDirection, RelationshipRecord, SearchHitRecord, VulnerabilityRecord } from './ci.types.js';
+import type {
+  CiRecord,
+  CiVersionRecord,
+  Connection,
+  HealthState,
+  RelationshipDirection,
+  RelationshipRecord,
+  SearchHitRecord,
+  VulnerabilityRecord,
+} from './ci.types.js';
 
 /** Relationship type from an affected CI to the vulnerability CI describing the weakness. */
 export const AFFECTED_BY: RelationshipType = 'affected_by';
 
-const HEALTH_IDS_QUERY = 'MATCH (c:Ci {tenantId: $tenantId}) WHERE c.health IN $states AND c.validTo IS NULL RETURN c.id AS id';
+const HEALTH_IDS_QUERY =
+  'MATCH (c:Ci {tenantId: $tenantId}) WHERE c.health IN $states AND c.validTo IS NULL RETURN c.id AS id';
 
 export interface Actor {
   tenantId: string;
@@ -60,24 +70,50 @@ export class CiService {
     return this.repo.findByIds(tenantId, ids);
   }
 
-  async cis(tenantId: string, userId: string, requested: CiFilterInput, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
+  async cis(
+    tenantId: string,
+    userId: string,
+    requested: CiFilterInput,
+    first: number | null | undefined,
+    after: string | null | undefined,
+    loaders: CiLoaders | null,
+  ): Promise<Connection<CiRecord>> {
     const size = clampPageSize(first);
     const cursor = after ? decodeCursor(after) : null;
     const filter = await this.withVisibleLayers(tenantId, userId, requested);
-    const healthIds = filter.health && filter.health.length > 0 ? await this.idsWithHealth(tenantId, filter.health) : null;
+    const healthIds =
+      filter.health && filter.health.length > 0 ? await this.idsWithHealth(tenantId, filter.health) : null;
     const page = await this.repo.list(tenantId, filter, healthIds, size, cursor);
     if (loaders) for (const ci of page.items) loaders.ci.prime(ci.id, ci);
-    const edges = page.items.map((node) => ({ cursor: encodeCursor({ name: node.name, id: node.id }), node }));
+    const edges = page.items.map((node) => ({
+      cursor: encodeCursor({ name: node.name, id: node.id }),
+      node,
+    }));
     const last = edges[edges.length - 1];
-    return { edges, pageInfo: { endCursor: last ? last.cursor : null, hasNextPage: page.hasNextPage }, totalCount: page.totalCount };
+    return {
+      edges,
+      pageInfo: { endCursor: last ? last.cursor : null, hasNextPage: page.hasNextPage },
+      totalCount: page.totalCount,
+    };
   }
 
   /** The unknown layer's CIs for labelling; the explicit layer filter keeps them listed even while the layer is hidden. */
-  unknownCis(tenantId: string, userId: string, first: number | null | undefined, after: string | null | undefined, loaders: CiLoaders | null): Promise<Connection<CiRecord>> {
+  unknownCis(
+    tenantId: string,
+    userId: string,
+    first: number | null | undefined,
+    after: string | null | undefined,
+    loaders: CiLoaders | null,
+  ): Promise<Connection<CiRecord>> {
     return this.cis(tenantId, userId, { types: ['unknown'], layers: ['unknown'] }, first, after, loaders);
   }
 
-  async search(tenantId: string, text: string, layers: readonly CiLayer[], first: number | null | undefined): Promise<SearchHitRecord[]> {
+  async search(
+    tenantId: string,
+    text: string,
+    layers: readonly CiLayer[],
+    first: number | null | undefined,
+  ): Promise<SearchHitRecord[]> {
     const rows = await this.repo.search(tenantId, text, layers, clampPageSize(first));
     const needle = text.toLowerCase();
     return rows
@@ -95,26 +131,60 @@ export class CiService {
       .sort((a, b) => b.score - a.score || a.ci.name.localeCompare(b.ci.name));
   }
 
-  async relationships(tenantId: string, ciId: string, direction: RelationshipDirection, types: readonly RelationshipType[], first: number | null | undefined, after: string | null | undefined, asOf: string | null): Promise<Connection<RelationshipRecord>> {
+  async relationships(
+    tenantId: string,
+    ciId: string,
+    direction: RelationshipDirection,
+    types: readonly RelationshipType[],
+    first: number | null | undefined,
+    after: string | null | undefined,
+    asOf: string | null,
+  ): Promise<Connection<RelationshipRecord>> {
     const size = clampPageSize(first);
     const afterId = after ? decodeCursor(after).id : null;
-    const page = await this.repo.relationships(tenantId, { ciId, direction, types, first: size, afterId, asOf });
-    const edges = page.items.map((node) => ({ cursor: encodeCursor({ name: node.type, id: node.id }), node }));
+    const page = await this.repo.relationships(tenantId, {
+      ciId,
+      direction,
+      types,
+      first: size,
+      afterId,
+      asOf,
+    });
+    const edges = page.items.map((node) => ({
+      cursor: encodeCursor({ name: node.type, id: node.id }),
+      node,
+    }));
     const last = edges[edges.length - 1];
-    return { edges, pageInfo: { endCursor: last ? last.cursor : null, hasNextPage: page.hasNextPage }, totalCount: page.totalCount };
+    return {
+      edges,
+      pageInfo: { endCursor: last ? last.cursor : null, hasNextPage: page.hasNextPage },
+      totalCount: page.totalCount,
+    };
   }
 
-  async history(tenantId: string, ciId: string, from: string | null, to: string | null): Promise<CiVersionRecord[]> {
+  async history(
+    tenantId: string,
+    ciId: string,
+    from: string | null,
+    to: string | null,
+  ): Promise<CiVersionRecord[]> {
     return (await this.repo.versions(tenantId, ciId, from, to)).map(toVersion);
   }
 
   async vulnerabilitiesOf(tenantId: string, ci: CiRecord): Promise<VulnerabilityRecord[]> {
     const rels = await this.repo.relationshipsOfMany(tenantId, [ci.id], [AFFECTED_BY], 'downstream');
-    const vulns = await this.repo.findByIds(tenantId, rels.map((r) => r.toCiId));
+    const vulns = await this.repo.findByIds(
+      tenantId,
+      rels.map((r) => r.toCiId),
+    );
     return vulns.filter((v) => v.type === 'vulnerability').map((v) => toVulnerability(ci, v));
   }
 
-  async vulnerabilities(tenantId: string, minCvss: number | null, internetFacing: boolean | null): Promise<VulnerabilityRecord[]> {
+  async vulnerabilities(
+    tenantId: string,
+    minCvss: number | null,
+    internetFacing: boolean | null,
+  ): Promise<VulnerabilityRecord[]> {
     const rels = await this.repo.relationshipsByType(tenantId, AFFECTED_BY);
     const ids = [...new Set(rels.flatMap((r) => [r.fromCiId, r.toCiId]))];
     const byId = new Map((await this.repo.findByIds(tenantId, ids)).map((c) => [c.id, c]));
@@ -141,8 +211,19 @@ export class CiService {
       ...(input.type ? { type: input.type } : {}),
     };
     return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
-      const ci = await this.repo.label(tx, actor.tenantId, input.ciId, label, input.layer, input.type ?? null);
-      await emit({ type: 'openmap.ci.labelled', subject: ci.id, data: { ciId: ci.id, label, layer: ci.layer, type: ci.type, derivedLayer: CI_TYPE_LAYER[ci.type] } });
+      const ci = await this.repo.label(
+        tx,
+        actor.tenantId,
+        input.ciId,
+        label,
+        input.layer,
+        input.type ?? null,
+      );
+      await emit({
+        type: 'openmap.ci.labelled',
+        subject: ci.id,
+        data: { ciId: ci.id, label, layer: ci.layer, type: ci.type, derivedLayer: CI_TYPE_LAYER[ci.type] },
+      });
       return ci;
     });
   }
@@ -152,16 +233,73 @@ export class CiService {
       const current = await this.repo.findById(actor.tenantId, ciId, null);
       if (!current) throw new NotFoundException('CI ' + ciId + ' not found');
       const merged = { ...current.attributes, ...attributes };
-      const ci = await this.repo.updateAttributes(tx, actor.tenantId, ciId, merged, checksumOf(current.type, current.identity, merged));
-      await emit({ type: 'openmap.ci.updated', subject: ci.id, data: { ciId: ci.id, changed: Object.keys(attributes), attributes: ci.attributes, checksum: ci.checksum, by: actor.username } });
+      const ci = await this.repo.updateAttributes(
+        tx,
+        actor.tenantId,
+        ciId,
+        merged,
+        checksumOf(current.type, current.identity, merged),
+      );
+      await emit({
+        type: 'openmap.ci.updated',
+        subject: ci.id,
+        data: {
+          ciId: ci.id,
+          changed: Object.keys(attributes),
+          attributes: ci.attributes,
+          checksum: ci.checksum,
+          by: actor.username,
+        },
+      });
       return ci;
     });
   }
 
-  async createRelationship(actor: Actor, type: RelationshipType, fromCiId: string, toCiId: string, attributes: Record<string, unknown>): Promise<RelationshipRecord> {
+  /** REQ-CMDB-037 — rename a short code; Postgres keeps the per-tenant invariant, this gives the operator a clear refusal. */
+  async setCode(actor: Actor, ciId: string, code: string): Promise<CiRecord> {
     return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
-      const rel = await this.repo.createRelationship(tx, actor.tenantId, { type, fromCiId, toCiId, attributes, runId: actor.requestId, confidence: RECONCILIATION.userLabelConfidence });
-      await emit({ type: 'openmap.relationship.created', subject: rel.id, data: { relationship: rel, by: actor.username } });
+      const current = await this.repo.findById(actor.tenantId, ciId, null);
+      if (!current) throw new NotFoundException('CI ' + ciId + ' not found');
+      const holder = await this.repo.findCurrentByCode(actor.tenantId, code);
+      if (holder !== null && holder.id !== ciId)
+        throw new ConflictException('code ' + code + ' already names ' + holder.displayName);
+      const ci = await this.repo.updateCode(tx, actor.tenantId, ciId, code);
+      await emit({
+        type: 'openmap.ci.updated',
+        subject: ci.id,
+        data: {
+          ciId: ci.id,
+          changed: ['code'],
+          code: ci.code,
+          previousCode: current.code,
+          by: actor.username,
+        },
+      });
+      return ci;
+    });
+  }
+
+  async createRelationship(
+    actor: Actor,
+    type: RelationshipType,
+    fromCiId: string,
+    toCiId: string,
+    attributes: Record<string, unknown>,
+  ): Promise<RelationshipRecord> {
+    return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
+      const rel = await this.repo.createRelationship(tx, actor.tenantId, {
+        type,
+        fromCiId,
+        toCiId,
+        attributes,
+        runId: actor.requestId,
+        confidence: RECONCILIATION.userLabelConfidence,
+      });
+      await emit({
+        type: 'openmap.relationship.created',
+        subject: rel.id,
+        data: { relationship: rel, by: actor.username },
+      });
       return rel;
     });
   }
@@ -169,13 +307,20 @@ export class CiService {
   async retireRelationship(actor: Actor, id: string): Promise<RelationshipRecord> {
     return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
       const rel = await this.repo.retireRelationship(tx, actor.tenantId, id, nowIso());
-      await emit({ type: 'openmap.relationship.retired', subject: rel.id, data: { relationshipId: rel.id, validTo: rel.validTo, by: actor.username } });
+      await emit({
+        type: 'openmap.relationship.retired',
+        subject: rel.id,
+        data: { relationshipId: rel.id, validTo: rel.validTo, by: actor.username },
+      });
       return rel;
     });
   }
 
   private async idsWithHealth(tenantId: string, states: readonly HealthState[]): Promise<string[]> {
-    const rows = await this.graph.repo.readOnly<{ id: string }>(HEALTH_IDS_QUERY, { tenantId, states: [...states] });
+    const rows = await this.graph.repo.readOnly<{ id: string }>(HEALTH_IDS_QUERY, {
+      tenantId,
+      states: [...states],
+    });
     return rows.map((r) => r.id);
   }
 }

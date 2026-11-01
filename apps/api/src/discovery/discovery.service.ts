@@ -8,7 +8,7 @@ import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord } from '../ci/ci.types.js';
 import { clampPageSize } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
-import { stringArrayAttribute, stringAttribute } from '../common/validation.js';
+import { numberAttribute, stringArrayAttribute, stringAttribute } from '../common/validation.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { DISCOVERY_REPOSITORY, type DiscoveryRepository } from './discovery.repository.js';
 import type { DiscoveryJobView, DiscoveryNodeView, SweepView } from './discovery.types.js';
@@ -22,7 +22,7 @@ export const NODE_OFFLINE_AFTER_MS = DISCOVERY.defaultJobTimeoutMs;
 export const DEFAULT_SECONDS_PER_TARGET = DISCOVERY.defaultJobTimeoutMs / DISCOVERY.targetsPerJob / TIME.msPerSecond;
 
 /** Subnet CI attributes that drive discovery scoping. */
-export const SCOPE_ATTRIBUTES = { cidr: 'cidr', credentialRef: 'credentialRef', credentialType: 'credentialType', exclusions: 'exclusions' } as const;
+export const SCOPE_ATTRIBUTES = { cidr: 'cidr', credentialRef: 'credentialRef', credentialType: 'credentialType', exclusions: 'exclusions', rateLimitConcurrency: 'rateLimitConcurrency', rateLimitRps: 'rateLimitRps' } as const;
 
 export function budgetMinutesFor(targets: number): number {
   return Math.ceil(PERF_BUDGETS.discoverySweepMinutes * Math.max(1, targets / PERF_BUDGETS.discoverySweepDevices));
@@ -118,6 +118,7 @@ export class DiscoveryService {
         exclusions: stringArrayAttribute(subnet.attributes, SCOPE_ATTRIBUTES.exclusions),
         credentialRef: stringAttribute(subnet.attributes, SCOPE_ATTRIBUTES.credentialRef),
         credentialType: credentialType !== null && CREDENTIAL_TYPE_SET.has(credentialType) ? (credentialType as CollectorJob['credentialType']) : 'none',
+        rateLimit: { concurrency: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitConcurrency), requestsPerSecond: numberAttribute(subnet.attributes, SCOPE_ATTRIBUTES.rateLimitRps) },
         options: {},
       });
     }

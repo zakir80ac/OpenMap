@@ -1,6 +1,6 @@
 // REQ-CMDB-001 — Prisma row → domain record mapping. Provenance is flattened in Postgres and
 // re-assembled here; JSON columns are narrowed to the contract shapes.
-import { userLabelSchema, type CiType, type RelationshipType } from '@openmap/contracts';
+import { ciCode, userLabelSchema, type CiType, type RelationshipType } from '@openmap/contracts';
 import type { Prisma, PrismaClient } from '@openmap/db';
 import { isoOf, toIso } from '../common/time.js';
 import { asRecord } from '../common/validation.js';
@@ -25,13 +25,19 @@ export function toCiRecord(row: CiRow): CiRecord {
     layer: row.layer,
     name: row.name,
     displayName: row.displayName,
+    code: row.code ?? ciCode(row.layer, row.type, row.name),
     identity: identityOf(row.identity),
     attributes: asRecord(row.attributes),
     tags: row.tags,
     externalIds: row.externalIds.map((e) => ({ source: e.source, id: e.externalId })),
     lifecycle: row.lifecycle as Lifecycle,
     userLabel: label !== null && label.success ? label.data : null,
-    source: { collectorId: row.sourceCollectorId, nodeId: row.sourceNodeId, runId: row.sourceRunId, confidence: row.sourceConfidence },
+    source: {
+      collectorId: row.sourceCollectorId,
+      nodeId: row.sourceNodeId,
+      runId: row.sourceRunId,
+      confidence: row.sourceConfidence,
+    },
     observedAt: isoOf(row.observedAt),
     validFrom: isoOf(row.validFrom),
     validTo: toIso(row.validTo),
@@ -47,7 +53,12 @@ export function toRelationshipRecord(row: RelationshipRow): RelationshipRecord {
     fromCiId: row.fromCiId,
     toCiId: row.toCiId,
     attributes: asRecord(row.attributes),
-    source: { collectorId: row.sourceCollectorId, nodeId: row.sourceNodeId, runId: row.sourceRunId, confidence: row.sourceConfidence },
+    source: {
+      collectorId: row.sourceCollectorId,
+      nodeId: row.sourceNodeId,
+      runId: row.sourceRunId,
+      confidence: row.sourceConfidence,
+    },
     observedAt: isoOf(row.observedAt),
     validFrom: isoOf(row.validFrom),
     validTo: toIso(row.validTo),
@@ -55,5 +66,11 @@ export function toRelationshipRecord(row: RelationshipRow): RelationshipRecord {
 }
 
 export function toVersion(ci: CiRecord): CiVersionRecord {
-  return { validFrom: ci.validFrom, validTo: ci.validTo, attributes: ci.attributes, lifecycle: ci.lifecycle, source: ci.source };
+  return {
+    validFrom: ci.validFrom,
+    validTo: ci.validTo,
+    attributes: ci.attributes,
+    lifecycle: ci.lifecycle,
+    source: ci.source,
+  };
 }

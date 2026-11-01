@@ -9,11 +9,34 @@ import type { Locale, MessageKey } from '@openmap/i18n';
 import { Card, Kpi, Pill, SectionTitle, StateBadge, Tag, layerColor } from '@openmap/ui';
 import Link from 'next/link';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
-import { Button, Field, Select, TextArea, TextInput, rowClass, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
+import {
+  Button,
+  Field,
+  Select,
+  TextArea,
+  TextInput,
+  rowClass,
+  tableClass,
+  tdClass,
+  thClass,
+  theadClass,
+} from '@/components/common/controls';
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { useCan } from '@/lib/auth';
-import { ASSET_STAGES, assetsQuery, createPlan, plansQuery, setAssetStage, setPlanStatus, type AssetRecord, type AssetStage, type BomLineInput, type InfraPlan, type PlanStatus } from '@/lib/estate-queries';
+import {
+  ASSET_STAGES,
+  assetsQuery,
+  createPlan,
+  plansQuery,
+  setAssetStage,
+  setPlanStatus,
+  type AssetRecord,
+  type AssetStage,
+  type BomLineInput,
+  type InfraPlan,
+  type PlanStatus,
+} from '@/lib/estate-queries';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 
@@ -30,10 +53,18 @@ export const PLAN_NEXT: Record<PlanStatus, readonly PlanStatus[]> = {
   cancelled: [],
 };
 
-const planState = { draft: 'unknown', approved: 'at_risk', building: 'degraded', live: 'healthy', cancelled: 'down' } as const;
+const planState = {
+  draft: 'unknown',
+  approved: 'at_risk',
+  building: 'degraded',
+  live: 'healthy',
+  cancelled: 'down',
+} as const;
 
 function coverDates(a: AssetRecord): number[] {
-  return [a.warrantyEndsAt, a.endOfSupport, a.supportContract?.endsAt ?? null].filter((d): d is string => d !== null).map((d) => new Date(d).getTime());
+  return [a.warrantyEndsAt, a.endOfSupport, a.supportContract?.endsAt ?? null]
+    .filter((d): d is string => d !== null)
+    .map((d) => new Date(d).getTime());
 }
 
 function endsBy(times: ReadonlyArray<number>, limit: number): boolean {
@@ -55,7 +86,10 @@ function statusKey(status: PlanStatus): MessageKey {
   return ('assets.plans.status.' + status) as MessageKey;
 }
 
-function money(format: ReturnType<typeof useFormatters>, m: { amount: number; currency: string } | null): string {
+function money(
+  format: ReturnType<typeof useFormatters>,
+  m: { amount: number; currency: string } | null,
+): string {
   return m === null ? '' : format.number(m.amount) + ' ' + m.currency;
 }
 
@@ -86,7 +120,10 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   });
 
   const list = assets.data ?? [];
-  const attention = useMemo(() => needsAttention(expiring.data ?? [], horizon, new Date()), [expiring.data, horizon]);
+  const attention = useMemo(
+    () => needsAttention(expiring.data ?? [], horizon, new Date()),
+    [expiring.data, horizon],
+  );
   const byStage = useMemo(() => {
     const counts = new Map<AssetStage, number>();
     for (const a of list) counts.set(a.stage, (counts.get(a.stage) ?? 0) + 1);
@@ -104,7 +141,13 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
       <div className="grid grid-cols-2 gap-om-12 md:grid-cols-4">
         <Kpi label={t('assets.kpi.shown')} value={format.integer(list.length)} />
         <Kpi label={t('assets.stage.deployed')} value={format.integer(byStage.get('deployed') ?? 0)} />
-        <Kpi label={t('assets.kpi.attention', { days: format.integer(horizon) })} value={format.integer(attention.length)} delta={attention.length} deltaLabel="" lowerIsBetter />
+        <Kpi
+          label={t('assets.kpi.attention', { days: format.integer(horizon) })}
+          value={format.integer(attention.length)}
+          delta={attention.length}
+          deltaLabel=""
+          lowerIsBetter
+        />
         <Kpi label={t('assets.stage.rma')} value={format.integer(byStage.get('rma') ?? 0)} />
       </div>
 
@@ -134,43 +177,67 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
         >
           {t('assets.attention.title')}
         </SectionTitle>
-        {expiring.isPending ? (
-          <QueryState status="pending" />
-        ) : expiring.isError ? (
-          <QueryState
-            status="error"
-            onRetry={() => {
-              void expiring.refetch();
-            }}
-          />
-        ) : attention.length === 0 ? (
-          <p className="text-om-sm text-om-secondary">{t('assets.attention.empty')}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tableClass}>
-              <thead className={theadClass}>
-                <tr>
-                  <th scope="col" className={thClass}>{t('assets.table.tag')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.hardware')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.warranty')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.endOfSupport')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.contract')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attention.map((a) => (
-                  <tr key={a.id} className={rowClass}>
-                    <td className={tdClass + ' font-om-mono text-om-primary'}>{a.assetTag}</td>
-                    <td className={tdClass + ' text-om-secondary'}>{a.manufacturer + ' ' + a.model}</td>
-                    <td className={tdClass + ' whitespace-nowrap text-om-amber'}>{a.warrantyEndsAt === null ? t('common.none') : format.dateTime(a.warrantyEndsAt)}</td>
-                    <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>{a.endOfSupport === null ? t('common.none') : format.dateTime(a.endOfSupport)}</td>
-                    <td className={tdClass + ' text-om-secondary'}>{a.supportContract === null ? t('common.none') : a.supportContract.contractNumber + ' · ' + a.supportContract.level + ' · ' + format.dateTime(a.supportContract.endsAt)}</td>
+        <div className="h-[14rem] overflow-y-auto">
+          {expiring.isPending ? (
+            <QueryState status="pending" />
+          ) : expiring.isError ? (
+            <QueryState
+              status="error"
+              onRetry={() => {
+                void expiring.refetch();
+              }}
+            />
+          ) : attention.length === 0 ? (
+            <p className="text-om-sm text-om-secondary">{t('assets.attention.empty')}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tableClass}>
+                <thead className={theadClass}>
+                  <tr>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.tag')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.hardware')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.warranty')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.endOfSupport')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.contract')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {attention.map((a) => (
+                    <tr key={a.id} className={rowClass}>
+                      <td className={tdClass + ' font-om-mono text-om-primary'}>{a.assetTag}</td>
+                      <td className={tdClass + ' text-om-secondary'}>{a.manufacturer + ' ' + a.model}</td>
+                      <td className={tdClass + ' whitespace-nowrap text-om-amber'}>
+                        {a.warrantyEndsAt === null ? t('common.none') : format.dateTime(a.warrantyEndsAt)}
+                      </td>
+                      <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>
+                        {a.endOfSupport === null ? t('common.none') : format.dateTime(a.endOfSupport)}
+                      </td>
+                      <td className={tdClass + ' text-om-secondary'}>
+                        {a.supportContract === null
+                          ? t('common.none')
+                          : a.supportContract.contractNumber +
+                            ' · ' +
+                            a.supportContract.level +
+                            ' · ' +
+                            format.dateTime(a.supportContract.endsAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Card padding="24" className="flex flex-col gap-om-16">
@@ -200,80 +267,105 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
         >
           {t('assets.register.title')}
         </SectionTitle>
-        {assets.isPending ? (
-          <QueryState status="pending" />
-        ) : assets.isError ? (
-          <QueryState
-            status="error"
-            onRetry={() => {
-              void assets.refetch();
-            }}
-          />
-        ) : list.length === 0 ? (
-          <p className="text-om-sm text-om-secondary">{t('assets.register.empty')}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tableClass}>
-              <thead className={theadClass}>
-                <tr>
-                  <th scope="col" className={thClass}>{t('assets.table.tag')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.hardware')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.ci')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.stage')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.plan')}</th>
-                  <th scope="col" className={thClass}>{t('assets.table.cost')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.map((a) => (
-                  <tr key={a.id} className={rowClass}>
-                    <td className={tdClass + ' font-om-mono text-om-primary'}>
-                      {a.assetTag}
-                      {a.serialNumber !== null ? <span className="block text-om-2xs text-om-muted">{a.serialNumber}</span> : null}
-                    </td>
-                    <td className={tdClass + ' text-om-secondary'}>{a.manufacturer + ' ' + a.model}</td>
-                    <td className={tdClass}>
-                      {a.ci === null ? (
-                        <span className="text-om-muted">{t('common.none')}</span>
-                      ) : (
-                        <Link href={ciHref(a.ci.id)} className="text-om-cyan hover:underline">
-                          {a.ci.displayName}
-                        </Link>
-                      )}
-                    </td>
-                    <td className={tdClass}>
-                      {canOperate ? (
-                        <Select
-                          aria-label={t('assets.setStage', { tag: a.assetTag })}
-                          value={a.stage}
-                          disabled={stageMutation.isPending}
-                          onChange={(event) => {
-                            stageMutation.mutate({ assetId: a.id, next: event.target.value as AssetStage });
-                          }}
-                          className="w-auto"
-                        >
-                          {ASSET_STAGES.map((s) => (
-                            <option key={s} value={s}>
-                              {t(stageKey(s))}
-                            </option>
-                          ))}
-                        </Select>
-                      ) : (
-                        <Tag>{t(stageKey(a.stage))}</Tag>
-                      )}
-                    </td>
-                    <td className={tdClass + ' text-om-secondary'}>{a.plan === null ? t('common.none') : a.plan.number + ' · ' + a.plan.name}</td>
-                    <td className={tdClass + ' font-om-mono text-om-secondary'}>{money(format, a.purchaseCost)}</td>
+        <div className="h-[24rem] overflow-y-auto">
+          {assets.isPending ? (
+            <QueryState status="pending" />
+          ) : assets.isError ? (
+            <QueryState
+              status="error"
+              onRetry={() => {
+                void assets.refetch();
+              }}
+            />
+          ) : list.length === 0 ? (
+            <p className="text-om-sm text-om-secondary">{t('assets.register.empty')}</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tableClass}>
+                <thead className={theadClass}>
+                  <tr>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.tag')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.hardware')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.ci')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.stage')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.plan')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('assets.table.cost')}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                </thead>
+                <tbody>
+                  {list.map((a) => (
+                    <tr key={a.id} className={rowClass}>
+                      <td className={tdClass + ' font-om-mono text-om-primary'}>
+                        {a.assetTag}
+                        {a.serialNumber !== null ? (
+                          <span className="block text-om-2xs text-om-muted">{a.serialNumber}</span>
+                        ) : null}
+                      </td>
+                      <td className={tdClass + ' text-om-secondary'}>{a.manufacturer + ' ' + a.model}</td>
+                      <td className={tdClass}>
+                        {a.ci === null ? (
+                          <span className="text-om-muted">{t('common.none')}</span>
+                        ) : (
+                          <Link href={ciHref(a.ci.id)} className="text-om-cyan hover:underline">
+                            {a.ci.displayName}
+                          </Link>
+                        )}
+                      </td>
+                      <td className={tdClass}>
+                        {canOperate ? (
+                          <Select
+                            aria-label={t('assets.setStage', { tag: a.assetTag })}
+                            value={a.stage}
+                            disabled={stageMutation.isPending}
+                            onChange={(event) => {
+                              stageMutation.mutate({ assetId: a.id, next: event.target.value as AssetStage });
+                            }}
+                            className="w-auto"
+                          >
+                            {ASSET_STAGES.map((s) => (
+                              <option key={s} value={s}>
+                                {t(stageKey(s))}
+                              </option>
+                            ))}
+                          </Select>
+                        ) : (
+                          <Tag>{t(stageKey(a.stage))}</Tag>
+                        )}
+                      </td>
+                      <td className={tdClass + ' text-om-secondary'}>
+                        {a.plan === null ? t('common.none') : a.plan.number + ' · ' + a.plan.name}
+                      </td>
+                      <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                        {money(format, a.purchaseCost)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Card padding="24" className="flex flex-col gap-om-16">
-        <SectionTitle as="h2" size="sm" description={t('assets.plans.subtitle')} action={<Icon name="assets" className="size-5 text-om-violet" />}>
+        <SectionTitle
+          as="h2"
+          size="sm"
+          description={t('assets.plans.subtitle')}
+          action={<Icon name="assets" className="size-5 text-om-violet" />}
+        >
           {t('assets.plans.title')}
         </SectionTitle>
         {plans.isPending ? (
@@ -329,23 +421,38 @@ function PlanCard({ plan, canOperate, busy, onStatus }: PlanCardProps): ReactNod
   const format = useFormatters();
   const next = PLAN_NEXT[plan.status];
   return (
-    <article className="flex flex-col gap-om-10 rounded-om-panel border border-om-border-glass bg-om-surface2 p-om-16" aria-label={plan.number + ' ' + plan.name}>
+    <article
+      className="flex flex-col gap-om-10 rounded-om-panel border border-om-border-glass bg-om-surface2 p-om-16"
+      aria-label={plan.number + ' ' + plan.name}
+    >
       <div className="flex flex-wrap items-center gap-om-10">
         <span className="font-om-mono text-om-xs text-om-muted">{plan.number}</span>
         <h3 className="font-om-display text-om-sm font-semibold text-om-primary">{plan.name}</h3>
         <Tag>{t(('assets.plans.kind.' + plan.kind) as MessageKey)}</Tag>
         <StateBadge state={planState[plan.status]} label={t(statusKey(plan.status))} />
-        <span className="ms-auto text-om-xs text-om-secondary">{t('assets.plans.assets', { count: format.integer(plan.assets.length) })}</span>
+        <span className="ms-auto text-om-xs text-om-secondary">
+          {t('assets.plans.assets', { count: format.integer(plan.assets.length) })}
+        </span>
       </div>
       <div className="overflow-x-auto">
         <table className={tableClass}>
           <thead className={theadClass}>
             <tr>
-              <th scope="col" className={thClass}>{t('assets.plans.bom.description')}</th>
-              <th scope="col" className={thClass}>{t('assets.plans.bom.layer')}</th>
-              <th scope="col" className={thClass}>{t('assets.plans.bom.quantity')}</th>
-              <th scope="col" className={thClass}>{t('assets.plans.bom.received')}</th>
-              <th scope="col" className={thClass}>{t('assets.plans.bom.unitCost')}</th>
+              <th scope="col" className={thClass}>
+                {t('assets.plans.bom.description')}
+              </th>
+              <th scope="col" className={thClass}>
+                {t('assets.plans.bom.layer')}
+              </th>
+              <th scope="col" className={thClass}>
+                {t('assets.plans.bom.quantity')}
+              </th>
+              <th scope="col" className={thClass}>
+                {t('assets.plans.bom.received')}
+              </th>
+              <th scope="col" className={thClass}>
+                {t('assets.plans.bom.unitCost')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -353,23 +460,48 @@ function PlanCard({ plan, canOperate, busy, onStatus }: PlanCardProps): ReactNod
               <tr key={index} className={rowClass}>
                 <td className={tdClass + ' text-om-primary'}>
                   {line.description}
-                  <span className="block text-om-2xs text-om-muted">{[line.manufacturer, line.model, line.sku].filter((v) => v !== null && v !== '').join(' · ')}</span>
+                  <span className="block text-om-2xs text-om-muted">
+                    {[line.manufacturer, line.model, line.sku]
+                      .filter((v) => v !== null && v !== '')
+                      .join(' · ')}
+                  </span>
                 </td>
                 <td className={tdClass}>
-                  <Pill icon={<span className="inline-block size-2 rounded-full" style={{ background: layerColor(line.layer) }} />}>{t(('layer.' + line.layer) as MessageKey)}</Pill>
+                  <Pill
+                    icon={
+                      <span
+                        className="inline-block size-2 rounded-full"
+                        style={{ background: layerColor(line.layer) }}
+                      />
+                    }
+                  >
+                    {t(('layer.' + line.layer) as MessageKey)}
+                  </Pill>
                 </td>
-                <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.integer(line.quantity)}</td>
-                <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.integer(line.received)}</td>
-                <td className={tdClass + ' font-om-mono text-om-secondary'}>{money(format, line.unitCost)}</td>
+                <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                  {format.integer(line.quantity)}
+                </td>
+                <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                  {format.integer(line.received)}
+                </td>
+                <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                  {money(format, line.unitCost)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <div className="flex flex-wrap items-center gap-om-10 text-om-xs text-om-secondary">
-        <span>{t('assets.plans.estimated', { cost: money(format, plan.estimatedCost) || t('common.none') })}</span>
-        {plan.targetSite !== null ? <span>{t('assets.plans.site', { site: plan.targetSite.displayName })}</span> : null}
-        {plan.plannedLiveAt !== null ? <span>{t('assets.plans.liveAt', { when: format.dateTime(plan.plannedLiveAt) })}</span> : null}
+        <span>
+          {t('assets.plans.estimated', { cost: money(format, plan.estimatedCost) || t('common.none') })}
+        </span>
+        {plan.targetSite !== null ? (
+          <span>{t('assets.plans.site', { site: plan.targetSite.displayName })}</span>
+        ) : null}
+        {plan.plannedLiveAt !== null ? (
+          <span>{t('assets.plans.liveAt', { when: format.dateTime(plan.plannedLiveAt) })}</span>
+        ) : null}
         {canOperate && next.length > 0 ? (
           <span className="ms-auto flex gap-om-6">
             {next.map((status) => (
@@ -406,14 +538,27 @@ interface LineDraft {
   unitCostCurrency: string;
 }
 
-const emptyLine = (): LineDraft => ({ description: '', manufacturer: '', model: '', sku: '', layer: 'hardware', quantity: '1', unitCostAmount: '', unitCostCurrency: '' });
+const emptyLine = (): LineDraft => ({
+  description: '',
+  manufacturer: '',
+  model: '',
+  sku: '',
+  layer: 'hardware',
+  quantity: '1',
+  unitCostAmount: '',
+  unitCostCurrency: '',
+});
 
 /** Form lines → contract input; blank optional fields are omitted rather than sent empty. */
 export function toBomInput(lines: ReadonlyArray<LineDraft>): BomLineInput[] {
   return lines
     .filter((l) => l.description.trim() !== '')
     .map((l) => {
-      const out: BomLineInput = { description: l.description.trim(), layer: l.layer, quantity: Math.max(1, Math.floor(Number(l.quantity) || 1)) };
+      const out: BomLineInput = {
+        description: l.description.trim(),
+        layer: l.layer,
+        quantity: Math.max(1, Math.floor(Number(l.quantity) || 1)),
+      };
       if (l.manufacturer.trim() !== '') out.manufacturer = l.manufacturer.trim();
       if (l.model.trim() !== '') out.model = l.model.trim();
       if (l.sku.trim() !== '') out.sku = l.sku.trim();
@@ -432,7 +577,9 @@ function NewPlanForm({ onCreated }: NewPlanFormProps): ReactNode {
   const [description, setDescription] = useState('');
   const [kind, setKind] = useState<(typeof PLAN_KINDS)[number]>(PLAN_KINDS[0]);
   const [liveAt, setLiveAt] = useState('');
-  const [lines, setLines] = useState<LineDraft[]>(() => Array.from({ length: ASSETS.initialBomLines }, emptyLine));
+  const [lines, setLines] = useState<LineDraft[]>(() =>
+    Array.from({ length: ASSETS.initialBomLines }, emptyLine),
+  );
   const [created, setCreated] = useState<string | null>(null);
   const mutation = useMutation({
     mutationFn: createPlan,
@@ -452,7 +599,12 @@ function NewPlanForm({ onCreated }: NewPlanFormProps): ReactNode {
     event.preventDefault();
     if (!valid) return;
     setCreated(null);
-    const input: Parameters<typeof createPlan>[0] = { name: name.trim(), description: description.trim(), kind, bom };
+    const input: Parameters<typeof createPlan>[0] = {
+      name: name.trim(),
+      description: description.trim(),
+      kind,
+      bom,
+    };
     if (liveAt !== '') input.plannedLiveAt = new Date(liveAt).toISOString();
     mutation.mutate(input);
   };
@@ -461,7 +613,11 @@ function NewPlanForm({ onCreated }: NewPlanFormProps): ReactNode {
   };
 
   return (
-    <form onSubmit={onSubmit} aria-label={t('assets.plans.new')} className="flex flex-col gap-om-12 rounded-om-panel border border-dashed border-om-border-strong p-om-16">
+    <form
+      onSubmit={onSubmit}
+      aria-label={t('assets.plans.new')}
+      className="flex flex-col gap-om-12 rounded-om-panel border border-dashed border-om-border-strong p-om-16"
+    >
       <h3 className="font-om-display text-om-sm font-semibold text-om-primary">{t('assets.plans.new')}</h3>
       <div className="grid grid-cols-1 gap-om-12 md:grid-cols-3">
         <Field id={id + '-name'} label={t('assets.plans.name')}>
@@ -511,7 +667,9 @@ function NewPlanForm({ onCreated }: NewPlanFormProps): ReactNode {
         />
       </Field>
       <div className="flex flex-col gap-om-8">
-        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('assets.plans.bomTitle')}</span>
+        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+          {t('assets.plans.bomTitle')}
+        </span>
         {lines.map((line, index) => (
           <div key={index} className="grid grid-cols-2 gap-om-8 md:grid-cols-8">
             <TextInput

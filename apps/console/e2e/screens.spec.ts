@@ -86,7 +86,7 @@ test('Analytics: the tenant dashboard is embedded from Superset', async ({ page 
   await signIn(page, locale);
   const frame = page.getByTestId('analytics-mount').locator('iframe');
   await expect(frame).toHaveAttribute('src', /\/embedded\//, { timeout: 30_000 });
-  await expect(page.getByText(translate(locale, 'analytics.live'))).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(translate(locale, 'analytics.live'), { exact: true })).toBeVisible({ timeout: 30_000 });
 });
 
 test('Assistant: an example question is answered or explicitly refused', async ({ page }, testInfo) => {
