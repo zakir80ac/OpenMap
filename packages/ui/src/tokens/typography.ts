@@ -5,8 +5,8 @@
  * console's responsibility so this package never performs or references a network fetch.
  */
 export const fontFamily = {
-  /** Horizon (REQ-UI-025): a squared, HUD-like display face for headings and figures; Manrope stays as the fallback. */
-  display: "'Chakra Petch', 'Manrope', 'Inter', system-ui, sans-serif",
+  /** Horizon (REQ-UI-032): Sora, a geometric display face that reads professional at every size; Manrope fallback. */
+  display: "'Sora', 'Manrope', 'Inter', system-ui, sans-serif",
   body: "'Inter', system-ui, sans-serif",
   mono: "'JetBrains Mono', ui-monospace, monospace",
 } as const;

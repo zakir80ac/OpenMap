@@ -57,11 +57,11 @@ export function chartSpecs(): ChartSpec[] {
   const half = ANALYTICS.gridColumns / ANALYTICS.chartsPerWideRow;
   const third = ANALYTICS.gridColumns / ANALYTICS.chartsPerNarrowRow;
   return [
-    { name: 'CIs by layer over time', dataset: 'openmap_layer_counts', vizType: 'echarts_timeseries_bar', width: half, params: { x_axis: 'day', time_grain_sqla: 'P1D', metrics: [sqlMetric('SUM(cis)', 'CIs')], groupby: ['layer'], adhoc_filters: [timeFilter('day')], stack: 'Stack', show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', y_axis_format: 'SMART_NUMBER', color_scheme: 'supersetColors', row_limit: ANALYTICS.chartRowLimit } },
-    { name: 'Discovery runs by outcome', dataset: 'discovery_runs', vizType: 'echarts_timeseries_bar', width: half, params: { x_axis: 'started_at', time_grain_sqla: 'P1D', metrics: [sqlMetric('COUNT(*)', 'Runs')], groupby: ['status'], adhoc_filters: [timeFilter('started_at')], stack: 'Stack', show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', color_scheme: 'supersetColors', row_limit: ANALYTICS.chartRowLimit } },
-    { name: 'Service health states', dataset: 'service_health_history', vizType: 'echarts_timeseries_line', width: third, params: { x_axis: 'ts', time_grain_sqla: 'PT1H', metrics: [sqlMetric('COUNT(*)', 'Services')], groupby: ['health'], adhoc_filters: [timeFilter('ts')], show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', color_scheme: 'supersetColors', row_limit: ANALYTICS.chartRowLimit } },
-    { name: 'Audit actions', dataset: 'audit_log', vizType: 'pie', width: third, params: { metric: sqlMetric('COUNT(*)', 'Entries'), groupby: ['action'], adhoc_filters: [timeFilter('at')], show_labels: true, label_type: 'key_value', donut: true, color_scheme: 'supersetColors', row_limit: ANALYTICS.chartRowLimit } },
-    { name: 'Events by type', dataset: 'events', vizType: 'echarts_timeseries_bar', width: third, params: { x_axis: 'time', time_grain_sqla: 'PT1H', metrics: [sqlMetric('COUNT(*)', 'Events')], groupby: ['type'], adhoc_filters: [timeFilter('time')], stack: 'Stack', show_legend: false, x_axis_time_format: 'smart_date', color_scheme: 'supersetColors', row_limit: ANALYTICS.chartRowLimit } },
+    { name: 'CIs by layer over time', dataset: 'openmap_layer_counts', vizType: 'echarts_timeseries_bar', width: half, params: { x_axis: 'day', time_grain_sqla: 'P1D', metrics: [sqlMetric('SUM(cis)', 'CIs')], groupby: ['layer'], adhoc_filters: [timeFilter('day')], stack: 'Stack', show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', y_axis_format: 'SMART_NUMBER', color_scheme: ANALYTICS.colorScheme, row_limit: ANALYTICS.chartRowLimit } },
+    { name: 'Discovery runs by outcome', dataset: 'discovery_runs', vizType: 'echarts_timeseries_bar', width: half, params: { x_axis: 'started_at', time_grain_sqla: 'P1D', metrics: [sqlMetric('COUNT(*)', 'Runs')], groupby: ['status'], adhoc_filters: [timeFilter('started_at')], stack: 'Stack', show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', color_scheme: ANALYTICS.colorScheme, row_limit: ANALYTICS.chartRowLimit } },
+    { name: 'Service health states', dataset: 'service_health_history', vizType: 'echarts_timeseries_line', width: third, params: { x_axis: 'ts', time_grain_sqla: 'PT1H', metrics: [sqlMetric('COUNT(*)', 'Services')], groupby: ['health'], adhoc_filters: [timeFilter('ts')], show_legend: true, legendOrientation: 'top', x_axis_time_format: 'smart_date', color_scheme: ANALYTICS.colorScheme, row_limit: ANALYTICS.chartRowLimit } },
+    { name: 'Audit actions', dataset: 'audit_log', vizType: 'pie', width: third, params: { metric: sqlMetric('COUNT(*)', 'Entries'), groupby: ['action'], adhoc_filters: [timeFilter('at')], show_labels: true, label_type: 'key_value', donut: true, color_scheme: ANALYTICS.colorScheme, row_limit: ANALYTICS.chartRowLimit } },
+    { name: 'Events by type', dataset: 'events', vizType: 'echarts_timeseries_bar', width: third, params: { x_axis: 'time', time_grain_sqla: 'PT1H', metrics: [sqlMetric('COUNT(*)', 'Events')], groupby: ['type'], adhoc_filters: [timeFilter('time')], stack: 'Stack', show_legend: false, x_axis_time_format: 'smart_date', color_scheme: ANALYTICS.colorScheme, row_limit: ANALYTICS.chartRowLimit } },
   ];
 }
 
@@ -91,6 +91,31 @@ export function positionJson(charts: ReadonlyArray<{ id: number; name: string; w
   }
   (layout['GRID_ID'] as { children: string[] }).children = rows;
   return layout;
+}
+
+/**
+ * The Horizon surfaces inside the embedded dashboard (REQ-UI-031, ADR-020): the dashboard's own CSS, applied by
+ * Superset to the grid, the chart cards, legends, axes and tooltips. Colours mirror packages/ui tokens (ground,
+ * surfaces, text); charts take their series colours from ANALYTICS.colorScheme.
+ */
+export function dashboardCss(): string {
+  const { ground, surface, border, text, muted, accent } = ANALYTICS.theme;
+  return [
+    'body, .dashboard, .dashboard-content, .grid-container, .dashboard-component-tabs, .dashboard-header { background: ' + ground + ' !important; color: ' + text + ' !important; }',
+    '.dashboard-component-chart-holder, .chart-container, .dashboard-component-chart-holder .chart-container { background: ' + surface + ' !important; border: 1px solid ' + border + ' !important; border-radius: ' + String(ANALYTICS.theme.cardRadiusPx) + 'px !important; box-shadow: ' + ANALYTICS.theme.cardShadow + ' !important; }',
+    '.dashboard-component-chart-holder .header-title a, .dashboard-component-chart-holder .header-title, .editable-title, .header-controls, .dashboard-header .editable-title input { color: ' + text + ' !important; font-family: ' + ANALYTICS.theme.fontFamily + ' !important; }',
+    '.dashboard-component-header, .dashboard-header, .dashboard-component-tabs .nav-tabs { background: transparent !important; border-color: ' + border + ' !important; }',
+    '.dashboard-filters-panel, .dashboard-filter-bar, .filter-bar, .ant-collapse, .ant-collapse-content, .ant-collapse-item, .ant-select-selector, .ant-input { background: ' + surface + ' !important; color: ' + text + ' !important; border-color: ' + border + ' !important; }',
+    '.dashboard-component-chart-holder .slice_container, .dashboard-component-chart-holder .chart-container { color: ' + text + ' !important; }',
+    '.echarts-for-react text, .echarts-for-react tspan { fill: ' + muted + ' !important; }',
+    'svg .axis text, svg .legend text, svg .tick text, .nvtooltip, .chart-tooltip { fill: ' + muted + ' !important; color: ' + text + ' !important; }',
+    '.ant-tooltip-inner, .echarts-tooltip, div[style*="background-color: rgb(255, 255, 255)"] { background: ' + surface + ' !important; color: ' + text + ' !important; border: 1px solid ' + border + ' !important; }',
+    '.dashboard-component-chart-holder:hover { border-color: ' + ANALYTICS.theme.hoverBorder + ' !important; }',
+    'a, .ant-btn-link { color: ' + accent + ' !important; }',
+    '.ant-table, .ant-table-thead > tr > th, .ant-table-tbody > tr > td, .table > thead > tr > th, .table > tbody > tr > td { background: transparent !important; color: ' + text + ' !important; border-color: ' + border + ' !important; }',
+    '.grid-row.background--white, .dashboard-component.dashboard-component-row, .dashboard-component-row { background: transparent !important; }',
+    '.resize-drag-handle, .dragdroppable { border-color: ' + border + ' !important; }',
+  ].join('\n');
 }
 
 /** ClickHouse SQLAlchemy URI for Superset, from the API's own ClickHouse settings (same host the API reaches). */
@@ -149,7 +174,7 @@ export class AnalyticsService {
       if (datasetId === undefined) throw new Error('chart ' + spec.name + ' references unknown dataset ' + spec.dataset);
       charts.push({ id: await this.ensureChart(session, dashboard.id, datasetId, spec), name: spec.name, width: spec.width });
     }
-    await this.call(session, 'PUT', '/api/v1/dashboard/' + String(dashboard.id), { position_json: JSON.stringify(positionJson(charts)), published: true, json_metadata: JSON.stringify({ color_scheme: 'supersetColors', refresh_frequency: 0, expanded_slices: {}, label_colors: {} }) });
+    await this.call(session, 'PUT', '/api/v1/dashboard/' + String(dashboard.id), { position_json: JSON.stringify(positionJson(charts)), published: true, css: dashboardCss(), json_metadata: JSON.stringify({ color_scheme: ANALYTICS.colorScheme, refresh_frequency: 0, expanded_slices: {}, label_colors: {} }) });
     await this.ensureGuestRole(session);
     return this.ensureEmbedded(session, dashboard.id);
   }

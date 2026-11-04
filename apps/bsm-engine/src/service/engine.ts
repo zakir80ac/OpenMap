@@ -23,7 +23,9 @@ const CI_EVENT_TYPES: ReadonlySet<string> = new Set(['openmap.ci.created', 'open
 const SERVICE_TYPE = 'business_service';
 const PART_OF_SERVICE = 'part_of_service';
 const ATTR = { tier: 'tier', usersAffected: 'usersAffected', ownerTeams: 'ownerTeams', redundancyGroup: 'redundancyGroup', minHealthy: 'minHealthy' } as const;
-const HEALTH_QUERY = 'MATCH (c:Ci {tenantId: $tenantId}) WHERE c.id IN $ids RETURN c.id AS id, c.health AS health';
+// UNWIND + MATCH by id hits the unique id index once per id; a parameterised `WHERE c.id IN $ids` is evaluated per
+// node over the tenant's CIs in Memgraph (1.0 s for 2,400 ids on a 28k-CI tenant against 80 ms, measured over Bolt).
+const HEALTH_QUERY = 'UNWIND $ids AS id MATCH (c:Ci {id: id, tenantId: $tenantId}) RETURN c.id AS id, c.health AS health';
 const SOURCE_NAME = 'bsm';
 const ACTIVE_INCIDENT_STATES = ['open', 'acknowledged', 'mitigated'] as const;
 

@@ -130,7 +130,7 @@ describe('cssVariables()', () => {
     expect(css).toContain('--om-radius-card: 18px;');
     expect(css).toContain('--om-space-32: 32px;');
     expect(css).toContain('--om-text-size-2xl: 26px;');
-    expect(css).toContain("--om-font-display: 'Chakra Petch'");
+    expect(css).toContain("--om-font-display: 'Sora'");
     expect(css).toContain('--om-shadow-card: 0 30px 60px -30px rgba(0,0,0,.8);');
     expect(css).toContain('--om-glow-bar-cyan: 0 0 14px rgba(34,211,238,0.45);');
   });
@@ -168,7 +168,7 @@ describe('tailwind preset', () => {
     expect(tailwindTheme.borderRadius['om-card']).toBe('18px');
     expect(tailwindTheme.boxShadow['om-card']).toBe('0 30px 60px -30px rgba(0,0,0,.8)');
     expect(tailwindTheme.boxShadow['om-glow-bar-cyan']).toBe('0 0 14px rgba(34,211,238,0.45)');
-    expect(tailwindTheme.fontFamily['om-display']).toContain('Chakra Petch');
+    expect(tailwindTheme.fontFamily['om-display']).toContain('Sora');
     expect(tailwindTheme.fontSize['om-2xl']).toBe('26px');
     expect(tailwindTheme.spacing['om-16']).toBe('16px');
   });

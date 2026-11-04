@@ -1,6 +1,6 @@
 // REQ-UI-001 — emits the `--om-*` CSS custom properties for :root plus the small [dir] blocks that logical CSS cannot cover.
 import { accents, borders, ground, surfaces, text, withAlpha } from './color.js';
-import { aurora, grid, holoBorder, hudBracket, ring, rise, sheen, textGlow, valueGlow } from './effects.js';
+import { aurora, grid, holoBorder, hudBracket, ring, rise, sheen, textGlow, valueGlow, float, floatHoverShadow, floatShadow } from './effects.js';
 import { layerColors } from './layers.js';
 import { duration, easing, pulsePeriod } from './motion.js';
 import { radii } from './radii.js';
@@ -110,6 +110,12 @@ export function cssVariables(): string {
     '  ' + cssVar('rise-duration') + ': ' + rise.duration + ';',
     '  ' + cssVar('ring-scale') + ': ' + String(ring.scaleEnd) + ';',
     '  ' + cssVar('ring-period') + ': ' + ring.period + ';',
+    // Floating surfaces (REQ-UI-032).
+    '  ' + cssVar('float-shadow') + ': ' + floatShadow() + ';',
+    '  ' + cssVar('float-shadow-hover') + ': ' + floatHoverShadow() + ';',
+    '  ' + cssVar('float-lift') + ': ' + String(float.hoverLiftPx) + 'px;',
+    '  ' + cssVar('float-idle-distance') + ': ' + String(float.idleDistancePx) + 'px;',
+    '  ' + cssVar('float-period') + ': ' + float.idlePeriod + ';',
   ];
   const dirBlock = (dir: 'ltr' | 'rtl'): string =>
     '[dir=' + dir + '] {\n' + declarations(directionVariables[dir], 'dir').join('\n') + '\n}';
@@ -126,6 +132,8 @@ export const SHEEN_ANIMATION = 'om-sheen';
 export const RING_ANIMATION = 'om-ring';
 /** Slow drift of the perspective grid ground. */
 export const GRID_DRIFT_ANIMATION = 'om-grid-drift';
+/** Idle drift of a floating tile. */
+export const FLOAT_ANIMATION = 'om-float';
 
 /** The keyframes the components and the console ground need. Opacity and transform only, so they stay cheap. */
 export function keyframesCss(): string {
@@ -136,6 +144,7 @@ export function keyframesCss(): string {
     '@keyframes ' + RISE_ANIMATION + ' {\n  from { transform: translateY(' + varRef('rise-distance') + '); }\n  to { transform: translateY(0); }\n}',
     '@keyframes ' + SHEEN_ANIMATION + ' {\n  from { transform: translateX(calc(-100% * ' + varRef('dir-flow-sign') + ')); }\n  to { transform: translateX(calc(300% * ' + varRef('dir-flow-sign') + ')); }\n}',
     '@keyframes ' + RING_ANIMATION + ' {\n  from { transform: scale(1); opacity: .8; }\n  to { transform: scale(' + varRef('ring-scale') + '); opacity: 0; }\n}',
+    '@keyframes ' + FLOAT_ANIMATION + ' {\n  from { transform: translateY(0); }\n  to { transform: translateY(calc(-1 * ' + varRef('float-idle-distance') + ')); }\n}',
     // Transform only, so the drift runs on the compositor and never repaints the grid layer.
     '@keyframes ' + GRID_DRIFT_ANIMATION + ' {\n  from { transform: perspective(' + varRef('grid-perspective') + ') rotateX(' + varRef('grid-tilt') + ') translateY(0); }\n  to { transform: perspective(' + varRef('grid-perspective') + ') rotateX(' + varRef('grid-tilt') + ') translateY(' + varRef('grid-cell') + '); }\n}',
   ].join('\n') + '\n';
@@ -197,8 +206,22 @@ export function componentRulesCss(): string {
     '  border: 1px solid currentColor;',
     '  animation: ' + RING_ANIMATION + ' ' + varRef('ring-period') + ' ' + varRef('ease-decelerate') + ' infinite;',
     '}',
+    // Floating surfaces (REQ-UI-032): opt-in, because a transform makes a stacking context and a card that holds a
+    // dropdown must not float. Tiles with figures may also drift on an idle float.
+    '.om-float {',
+    '  box-shadow: ' + varRef('float-shadow') + ';',
+    '  transition: transform ' + varRef('duration-base') + ' ' + varRef('ease-standard') + ', box-shadow ' + varRef('duration-base') + ' ' + varRef('ease-standard') + ';',
+    '}',
+    '.om-float:hover {',
+    '  transform: translateY(calc(-1 * ' + varRef('float-lift') + '));',
+    '  box-shadow: ' + varRef('float-shadow-hover') + ';',
+    '}',
+    '.om-float-idle {',
+    '  animation: ' + RISE_ANIMATION + ' ' + varRef('rise-duration') + ' ' + varRef('ease-decelerate') + ' backwards, ' + FLOAT_ANIMATION + ' ' + varRef('float-period') + ' ' + varRef('ease-standard') + ' ' + varRef('rise-duration') + ' infinite alternate;',
+    '}',
     '@media (prefers-reduced-motion: reduce) {',
-    '  .om-card, .om-glass-panel, .om-bar [data-part="sheen"], .om-dot[data-pulse="true"]::after { animation: none; }',
+    '  .om-card, .om-glass-panel, .om-bar [data-part="sheen"], .om-dot[data-pulse="true"]::after, .om-float-idle { animation: none; }',
+    '  .om-float:hover { transform: none; }',
     '}',
   ].join('\n') + '\n';
 }

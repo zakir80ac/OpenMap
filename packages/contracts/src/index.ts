@@ -6,5 +6,6 @@ export * from './asset.js';
 export * from './impact.js';
 export * from './integration.js';
 export * from './organization.js';
+export * from './dashboard.js';
 export { CONTRACT_VERSIONS, CONTRACT_NAMES } from '@openmap/constants';
 export type { ContractName } from '@openmap/constants';

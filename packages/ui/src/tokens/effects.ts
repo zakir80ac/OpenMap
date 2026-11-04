@@ -98,4 +98,44 @@ export const ring = {
   period: '2.4s',
 } as const;
 
-export const effects = { holoAlpha, holoStops, hudBracket, grid, aurora, textGlow, sheen, rise, ring } as const;
+/**
+ * Floating surfaces (REQ-UI-032): a layered ambient + key shadow lifts a card off the ground, hover lifts it further
+ * with an accent halo, and KPI tiles drift slowly on an idle float. Transform only, so it stays on the compositor.
+ */
+export const float = {
+  /** Ambient (wide, soft) and key (tight) shadow layers, px and alpha. */
+  ambientOffsetPx: 24,
+  ambientBlurPx: 48,
+  ambientSpreadPx: -12,
+  ambientAlpha: 0.55,
+  keyOffsetPx: 8,
+  keyBlurPx: 16,
+  keySpreadPx: -8,
+  keyAlpha: 0.4,
+  /** Hover: how far the surface rises and the accent halo around it. */
+  hoverLiftPx: 4,
+  haloAlpha: 0.22,
+  haloBlurPx: 50,
+  haloOffsetPx: 20,
+  haloSpreadPx: -10,
+  outlineAlpha: 0.28,
+  /** Idle drift of KPI tiles: distance and period of one half-cycle. */
+  idleDistancePx: 3,
+  idlePeriod: '3.6s',
+} as const;
+
+function layer(offset: number, blur: number, spread: number, color: string): string {
+  return '0 ' + String(offset) + 'px ' + String(blur) + 'px ' + String(spread) + 'px ' + color;
+}
+
+/** The resting float shadow: ambient under key. */
+export function floatShadow(): string {
+  return layer(float.ambientOffsetPx, float.ambientBlurPx, float.ambientSpreadPx, 'rgba(0,0,0,' + String(float.ambientAlpha) + ')') + ', ' + layer(float.keyOffsetPx, float.keyBlurPx, float.keySpreadPx, 'rgba(0,0,0,' + String(float.keyAlpha) + ')');
+}
+
+/** The hover shadow: the resting layers plus a thin accent outline and a wide accent halo. */
+export function floatHoverShadow(accent: string = accents.cyan): string {
+  return '0 0 0 1px ' + withAlpha(accent, float.outlineAlpha) + ', ' + floatShadow() + ', ' + layer(float.haloOffsetPx, float.haloBlurPx, float.haloSpreadPx, withAlpha(accent, float.haloAlpha));
+}
+
+export const effects = { holoAlpha, holoStops, hudBracket, grid, aurora, textGlow, sheen, rise, ring, float } as const;

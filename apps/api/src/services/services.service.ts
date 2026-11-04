@@ -1,6 +1,6 @@
 // REQ-BSM-002 — business service management use cases: service health from stored states and SLA
 // budgets, incidents, acknowledgement, and reporting an incident to an ITSM or SIEM integration.
-import { Inject, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { deliver, type IncidentView } from '@openmap/bsm-engine';
 import { PERF_BUDGETS } from '@openmap/constants';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
@@ -21,6 +21,8 @@ export const IN_REQUEST_BACKOFF_CAP_MS = PERF_BUDGETS.impactQuery100kP95Ms;
 
 @Injectable()
 export class ServicesService {
+  private readonly logger = new Logger(ServicesService.name);
+
   constructor(
     @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
     @Inject(BSM_REPOSITORY) private readonly bsm: BsmRepository,
@@ -56,8 +58,18 @@ export class ServicesService {
     };
   }
 
-  incidents(tenantId: string, open: boolean): Promise<IncidentRecord[]> {
-    return this.bsm.incidents(tenantId, open);
+  /**
+   * Incidents whose business service still exists. An incident that names a CI the estate no longer has (a replay
+   * reset recreates CIs under new ids) would break the whole list through the non-null `Incident.service`, so it is
+   * left out and counted in the log instead.
+   */
+  async incidents(tenantId: string, open: boolean): Promise<IncidentRecord[]> {
+    const all = await this.bsm.incidents(tenantId, open);
+    const serviceIds = [...new Set(all.map((i) => i.serviceCiId).filter((id): id is string => id !== null))];
+    const present = new Set((await this.cis.findByIds(tenantId, serviceIds)).map((c) => c.id));
+    const kept = all.filter((i) => i.serviceCiId !== null && present.has(i.serviceCiId));
+    if (kept.length !== all.length) this.logger.warn({ tenantId, orphaned: all.length - kept.length }, 'incidents name business services the estate no longer has');
+    return kept;
   }
 
   links(tenantId: string, incidentId: string): Promise<IncidentLinkRecord[]> {

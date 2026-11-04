@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DirectionProvider, directionForLocale, documentDirection, type Direction } from '../direction.js';
 import { accents, layerColors, stateColors, withAlpha } from '../tokens/index.js';
-import { Bar, Card, Dot, GlassPanel, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, Tag, kpiTone } from './index.js';
+import { Bar, Card, Donut, Dot, GlassPanel, Kpi, LayerBadge, Pill, SectionTitle, Segmented, Sparkline, StateBadge, Tag, donutArcs, kpiTone, sparklinePoints } from './index.js';
 
 afterEach(() => {
   cleanup();
@@ -211,5 +211,57 @@ describe('kpiTone', () => {
     expect(kpiTone(-5)).toBe('negative');
     expect(kpiTone(-5, true)).toBe('positive');
     expect(kpiTone(0)).toBe('neutral');
+  });
+});
+
+// REQ-UI-032 — chart primitives behind the dashboard widgets.
+describe('Sparkline', () => {
+  it('maps a series onto the view box, newest at the inline end, and mirrors in rtl', () => {
+    const points = sparklinePoints([1, 3, 2], 100, 36);
+    expect(points.length).toBe(3);
+    expect(points[0]?.[0]).toBeLessThan(points[2]?.[0] ?? 0);
+    expect(points[1]?.[1]).toBeLessThan(points[0]?.[1] ?? 0);
+    for (const dir of DIRS) {
+      renderIn(dir, <Sparkline values={[1, 3, 2]} label="cis" />);
+      const svg = screen.getByRole('img', { name: 'cis' });
+      expect(svg.getAttribute('data-points')).toBe('3');
+      expect(svg.querySelector('polyline')).not.toBeNull();
+      expect(svg.querySelector('polyline')?.getAttribute('transform') !== null).toBe(dir === 'rtl');
+      cleanup();
+    }
+  });
+  it('renders a single point as a dot without a line', () => {
+    renderIn('ltr', <Sparkline values={[5]} label="one" />);
+    const svg = screen.getByRole('img', { name: 'one' });
+    expect(svg.querySelector('polyline')).toBeNull();
+    expect(svg.querySelector('circle')).not.toBeNull();
+  });
+});
+
+describe('Donut', () => {
+  it('shares the ring proportionally and names each segment', () => {
+    const arcs = donutArcs([
+      { value: 1, accent: accents.cyan, label: 'a' },
+      { value: 3, accent: accents.rose, label: 'b' },
+    ]);
+    expect(arcs[0]).toEqual({ start: 0, end: 0.25 });
+    expect(arcs[1]?.end).toBe(1);
+    renderIn('ltr', <Donut segments={[{ value: 2, accent: accents.cyan, label: 'healthy' }, { value: 0, accent: accents.rose, label: 'down' }]} centre="2" caption="services" label="health" />);
+    const svg = screen.getByRole('img', { name: 'health' });
+    expect(svg.querySelector('[data-segment="healthy"]')).not.toBeNull();
+    expect(svg.querySelector('[data-segment="down"]')).toBeNull();
+    expect(screen.getByText('2')).toBeTruthy();
+  });
+});
+
+describe('Segmented', () => {
+  it('is a radiogroup whose selected option is checked and which reports changes', () => {
+    const onChange = vi.fn();
+    renderIn('rtl', <Segmented label="range" value="a" onChange={onChange} options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }]} />);
+    const group = screen.getByRole('radiogroup', { name: 'range' });
+    expect(group.getAttribute('dir')).toBe('rtl');
+    expect(screen.getByRole('radio', { name: 'A' }).getAttribute('aria-checked')).toBe('true');
+    screen.getByRole('radio', { name: 'B' }).click();
+    expect(onChange).toHaveBeenCalledWith('b');
   });
 });

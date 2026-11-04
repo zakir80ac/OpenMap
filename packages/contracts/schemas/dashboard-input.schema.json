@@ -1,0 +1,93 @@
+{
+  "$id": "https://openmap.dev/contracts/dashboard-input/0.10.0",
+  "title": "dashboard-input",
+  "version": "0.10.0",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "persona": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "cto_cio",
+        "ciso",
+        "finance",
+        "custom"
+      ]
+    },
+    "shared": {
+      "default": false,
+      "type": "boolean"
+    },
+    "widgets": {
+      "minItems": 1,
+      "maxItems": 24,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "estate.cis",
+              "estate.layers",
+              "estate.trend",
+              "services.health",
+              "services.sla",
+              "incidents.open",
+              "impact.recent",
+              "discovery.sweep",
+              "discovery.nodes",
+              "discovery.jobs",
+              "security.vulnerabilities",
+              "security.exposure",
+              "software.end_of_support",
+              "software.licences",
+              "assets.stages",
+              "assets.warranty",
+              "finance.licence_cost",
+              "finance.asset_value",
+              "finance.plans",
+              "dcim.power",
+              "ipam.utilisation",
+              "integrations.health",
+              "audit.recent",
+              "platform.settings"
+            ]
+          },
+          "size": {
+            "type": "string",
+            "enum": [
+              "s",
+              "m",
+              "l",
+              "xl"
+            ]
+          },
+          "options": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "kind",
+          "size"
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "persona",
+    "widgets"
+  ]
+}

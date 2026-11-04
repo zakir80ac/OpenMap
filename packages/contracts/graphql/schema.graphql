@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.9.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.10.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -212,7 +212,40 @@ input CredentialSetInput { ref: String! type: String! fields: JSON! }
 input ScopeInput { cidr: String! vrf: String siteId: UUID! credentialRef: String credentialType: String }
 type OnboardingState { organization: Organization! step: OnboardingStep! completedSteps: [OnboardingStep!]! sites: [Site!]! links: [SiteLink!]! nodes: [DiscoveryNode!]! credentials: [CredentialSet!]! scopes: [DiscoveryScope!]! integrations: [Integration!]! generatedAt: DateTime firstSweep: Sweep schedulerUrl: String! }
 
+# REQ-UI-030 (ADR-020) — dashboards: per-tenant, owned by a user, optionally shared; a persona template seeds the widget
+# list and the owner customises it. EstateStats is the aggregate the widgets read in one round trip; the trend series
+# come from ClickHouse over the last DASHBOARD.trendDays days.
+enum DashboardPersona { admin cto_cio ciso finance custom }
+type DashboardWidget { id: String! kind: String! size: String! options: JSON! }
+type Dashboard { id: UUID! name: String! persona: DashboardPersona! owner: String! shared: Boolean! isDefault: Boolean! mine: Boolean! widgets: [DashboardWidget!]! createdAt: DateTime! updatedAt: DateTime! }
+input DashboardWidgetInput { kind: String! size: String! options: JSON }
+input DashboardInput { name: String! persona: DashboardPersona! shared: Boolean = false widgets: [DashboardWidgetInput!]! }
+type StageCount { stage: AssetStage! count: Int! purchaseCost: [Money!]! }
+type LicenceStats { products: Int! licensed: Int! overDeployed: Int! expiringSoon: Int! expired: Int! annualCost: [Money!]! }
+type VulnerabilityStats { total: Int! critical: Int! exploited: Int! cisaKev: Int! internetFacing: Int! patchAvailable: Int! affectedHosts: Int! }
+type PlanStatusCost { status: PlanStatus! count: Int! estimatedCost: [Money!]! }
+type PowerStats { racks: Int! ratedWatts: Int! currentWatts: Int! }
+type IpamStats { subnets: Int! averageUtilisationPercent: Float! critical: Int! }
+type NodeStats { total: Int! online: Int! }
+type IntegrationStats { total: Int! healthy: Int! failedLastHour: Int! }
+type EstateTrend { days: [DateTime!]! cis: [Int!]! discoveryRuns: [Int!]! events: [Int!]! incidents: [Int!]! }
+type EstateStats {
+  assetsByStage: [StageCount!]!
+  licences: LicenceStats!
+  vulnerabilities: VulnerabilityStats!
+  endOfSupport: Int!
+  plans: [PlanStatusCost!]!
+  power: PowerStats!
+  ipam: IpamStats!
+  nodes: NodeStats!
+  integrations: IntegrationStats!
+  incidentsOpen: Int!
+  trend: EstateTrend!
+}
+
 type Query {
+  dashboards: [Dashboard!]!
+  estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
   search(text: String!, layers: [CiLayer!], first: Int = 20): [SearchHit!]!
@@ -253,6 +286,10 @@ input BomLineInput { description: String! manufacturer: String model: String sku
 input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }
 
 type Mutation {
+  createDashboard(input: DashboardInput!): Dashboard!
+  updateDashboard(id: UUID!, input: DashboardInput!): Dashboard!
+  deleteDashboard(id: UUID!): Boolean!
+  setDefaultDashboard(id: UUID!): Dashboard!
   labelCi(input: LabelCiInput!): Ci!
   updateCiAttributes(ciId: UUID!, attributes: JSON!): Ci!
   """Rename a CI's short code; the new code must match the code pattern and be free within the tenant."""

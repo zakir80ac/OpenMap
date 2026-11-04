@@ -543,5 +543,9 @@
   "541": "assistant/vitest.integration.config.ts",
   "542": "oids.go",
   "543": "console/vitest.config.ts",
-  "544": "reconciler/vitest.config.ts"
+  "544": "reconciler/vitest.config.ts",
+  "545": "ui/vitest.config.ts",
+  "546": "github.com/openmap/openmap/apps/collectors",
+  "547": "github.com/openmap/openmap/apps/node",
+  "548": "synth-estate/vitest.config.ts"
 }

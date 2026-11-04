@@ -378,6 +378,23 @@ export const ANALYTICS = {
   chartsPerNarrowRow: 3,
   /** Characters of a Superset error body carried into the API's error message. */
   errorExcerptChars: 300,
+  /** Colour scheme registered in superset_config.py (EXTRA_CATEGORICAL_COLOR_SCHEMES) that charts are provisioned with. */
+  colorScheme: 'openmapHorizon',
+  /** Series colours of that scheme, in the order Superset assigns them: the Horizon accents (packages/ui tokens). */
+  schemeColors: ['#22D3EE', '#8B5CF6', '#2DD4A0', '#F5B82E', '#FB5B7A', '#38BDF8', '#A78BFA', '#F472B6', '#34D399', '#FBBF24'] as const,
+  /** Surfaces the provisioned dashboard CSS paints with; mirrors the console's ground, surface1, glass border and text tokens. */
+  theme: {
+    ground: '#070A12',
+    surface: '#0D1322',
+    border: 'rgba(255,255,255,0.08)',
+    text: '#E6EAF2',
+    muted: '#9AA4B8',
+    accent: '#22D3EE',
+    cardRadiusPx: 14,
+    cardShadow: '0 24px 48px -12px rgba(0,0,0,0.55)',
+    hoverBorder: 'rgba(34,211,238,0.35)',
+    fontFamily: "'Sora', 'Inter', system-ui, sans-serif",
+  },
 } as const;
 
 export const ASSISTANT = {
@@ -588,6 +605,33 @@ export const CONSOLE_ALPHA = {
 } as const;
 
 /** Console-wide interaction constants shared by several screens (REQ-UI-003). */
+/** Dashboards (REQ-UI-030, ADR-020): the widget grid, template sizes and the trend window every dashboard shares. */
+export const DASHBOARD = {
+  /** Widget grid columns on a wide screen; a widget spans 1..columns of them. */
+  columns: 4,
+  /** Widgets a dashboard may hold; the wizard and the API both refuse more. */
+  maxWidgets: 24,
+  /** Dashboards one user may own per tenant. */
+  maxPerOwner: 20,
+  nameMaxChars: 80,
+  /** Days of history behind the trend sparklines and the deltas. */
+  trendDays: 14,
+  /** The short range a trend widget can switch to. */
+  trendShortDays: 7,
+  /** Rows a list widget shows before linking to its screen. */
+  listRows: 6,
+  /** Warranty and support horizon the finance and admin widgets default to, days. */
+  horizonDays: 90,
+  /** Licence renewals within this window count as "expiring", days. */
+  licenceExpiryDays: 60,
+  /** Sparkline height in px inside a KPI tile. */
+  sparklineHeightPx: 36,
+  /** Polling interval for a dashboard's live widgets in milliseconds. */
+  refreshMs: 30_000,
+  /** Upper bound on rows the estate aggregate reads from a list service (software products). */
+  statsRowCap: 10_000,
+} as const;
+
 export const CONSOLE = {
   /** Keystroke-to-request delay for incremental search boxes; one request per pause, not per key. */
   searchDebounceMs: 250,
@@ -725,7 +769,8 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.2.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
   collector: '0.2.0',
-  graphql: '0.9.0',
+  /** 0.10.0 (ADR-020): `Dashboard`, `EstateStats`, the dashboard queries and mutations. */
+  graphql: '0.10.0',
   /** 0.2.0 (ADR-016): `openmap.metric.sampled`. */
   event: '0.2.0',
 };

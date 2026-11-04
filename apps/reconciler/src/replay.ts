@@ -35,6 +35,13 @@ type Sinks = Parameters<typeof dispatchOnce>[1];
 
 /** Removes everything the synthetic tenant wrote, in every store, so a replay starts from an empty estate. */
 async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, sinks: Sinks, database: string, tenantId: string): Promise<void> {
+  // Rows that name CI ids go first: a reset recreates every CI under a new id, and an incident or scenario left
+  // behind would point at an estate that no longer exists (and break the non-null Incident.service).
+  await prisma.incidentLink.deleteMany({ where: { tenantId } });
+  await prisma.incident.deleteMany({ where: { tenantId } });
+  await prisma.impactValidation.deleteMany({ where: { tenantId } });
+  await prisma.impactSimulation.deleteMany({ where: { tenantId } });
+  await prisma.impactScenario.deleteMany({ where: { tenantId } });
   await prisma.pendingRelationship.deleteMany({ where: { tenantId } });
   await prisma.outboxEvent.deleteMany({ where: { tenantId } });
   await prisma.reconciliationConflict.deleteMany({ where: { tenantId } });

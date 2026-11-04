@@ -9,6 +9,7 @@ import { ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, obs
 import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } from './collector.js';
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
+import { dashboardInputSchema, dashboardSchema } from './dashboard.js';
 import { impactScenarioSchema, impactSimulationSchema } from './impact.js';
 import { integrationConfigSchema, integrationDeliverySchema, securityAlertSchema } from './integration.js';
 
@@ -31,6 +32,8 @@ const entries: Array<[string, z.ZodType, string]> = [
   ['infra-plan', infraPlanSchema, CONTRACT_VERSIONS.ci],
   ['support-contract', supportContractSchema, CONTRACT_VERSIONS.ci],
   ['vendor-contact', vendorContactSchema, CONTRACT_VERSIONS.ci],
+  ['dashboard', dashboardSchema, CONTRACT_VERSIONS.graphql],
+  ['dashboard-input', dashboardInputSchema, CONTRACT_VERSIONS.graphql],
   ['impact-scenario', impactScenarioSchema, CONTRACT_VERSIONS.event],
   ['impact-simulation', impactSimulationSchema, CONTRACT_VERSIONS.event],
   ['integration-config', integrationConfigSchema, CONTRACT_VERSIONS.event],

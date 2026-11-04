@@ -246,8 +246,9 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
         >
           {t('discovery.sweep.title')}
         </SectionTitle>
+        {/* The loading state is as tall as the loaded "no sweep" line, so the page below does not jump (CLS). */}
         {sweep.isPending ? (
-          <QueryState status="pending" />
+          <QueryState status="pending" className="min-h-12" />
         ) : sweep.isError ? (
           <QueryState
             status="error"
@@ -256,7 +257,7 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
             }}
           />
         ) : current === null ? (
-          <p className="text-om-sm text-om-secondary">{t('discovery.sweep.none')}</p>
+          <p className="flex min-h-12 items-center text-om-sm text-om-secondary">{t('discovery.sweep.none')}</p>
         ) : (
           <div className="flex flex-col gap-om-10">
             <div className="flex flex-wrap items-center gap-om-10 text-om-sm">

@@ -383,6 +383,15 @@ enum ScenarioKind {
   maintenance
 }
 
+/// DASHBOARD_PERSONAS (dashboard.ts)
+enum DashboardPersona {
+  admin
+  cto_cio
+  ciso
+  finance
+  custom
+}
+
 /// INTEGRATION_CATEGORIES (integration.ts)
 enum IntegrationCategory {
   itsm
@@ -511,6 +520,7 @@ model Tenant {
   securityAlerts          SecurityAlert[]
   auditLogs               AuditLog[]
   userPreferences         UserPreference[]
+  dashboards           Dashboard[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -1387,6 +1397,26 @@ model AuditLog {
 }
 
 /// Per-user console state: which layers are visible, locale and view preferences.
+/// dashboardSchema (ADR-020): widgets is the JSON array of dashboardWidgetSchema.
+model Dashboard {
+  id        String           @id @default(uuid()) @db.Uuid
+  tenantId  String           @db.Uuid
+  name      String
+  persona   DashboardPersona
+  owner     String
+  shared    Boolean          @default(false)
+  isDefault Boolean          @default(false)
+  widgets   Json
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime         @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, owner])
+  @@index([tenantId, shared])
+  @@map("dashboards")
+}
+
 model UserPreference {
   tenantId      String    @db.Uuid
   userId        String

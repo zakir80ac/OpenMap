@@ -2,7 +2,30 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-04 (checkpoint 13: what-if scenarios failed on every run)
+## Last session · 2026-11-04 (checkpoint 14: dashboard wizard, role templates, Horizon refinements)
+
+Syed's next asks after the what-if fix: a dashboard wizard and customisation with real templates for Admin, CTO/CIO,
+CISO and Finance; more professional type and floating effects; a Superset that matches the theme. ADR-020.
+Contract `dashboard` 0.1.0 (five personas, twenty-four widget kinds, four sizes, templates), GraphQL 0.10.0
+(`dashboards`, `estateStats`, create / update / delete / set default), migration 0014 `dashboards`. The API's
+`EstateStatsService` composes the register, licence, vulnerability, plan, power, IPAM, Node, integration and incident
+facts plus ClickHouse daily trends in one query. The console's `/dashboard` opens the wizard on a first visit
+(persona → widgets and sizes → name and sharing → create), then renders the dashboard's widgets on a four-column
+grid from live queries, with a switcher, Customize (add, remove, resize, reorder, save), share, default and delete.
+`packages/ui` gained `Sparkline`, `Donut` and `Segmented`, the floating-surface tokens and rules (`om-float`,
+`om-float-idle`, opt-in because a transform makes a stacking context), and Sora replaces Chakra Petch as the display
+face. Superset is provisioned with the Horizon colour scheme and a dark dashboard CSS (ANALYTICS.theme). Tests:
+T-123 view (en, ar), T-124 e2e (en, ar), ui 44. Three defects found on the way and fixed: the per-CI `health`
+lookup, `WHERE c.id IN $ids` with a Bolt parameter list, is a per-node scan in Memgraph (1.0 s for 2,400 ids) where
+`UNWIND $ids AS id MATCH (c:Ci {id: id})` hits the unique index (80 ms): the racks query went from 1.7 s to under
+0.5 s, and the same query in the BSM facts service and the BSM engine is fixed alike; the `incidents` query failed on three incidents that named CIs a replay reset had
+recreated (orphans are left out and logged; a reset now purges incidents, links and impact rows); the discovery
+sweep card changed height when its query resolved (Lighthouse CLS 0.27 → 0.02). A stray kind cluster on the dev
+machine (`openmap-control-plane`, not ours to remove) eats a core; stop it before a Lighthouse sweep. Queue after this (memory `openmap-requests-2026-11-04`): the
+Layers screen as an isometric stack with 3D holographic icons (REQ-UI-033), the full asset register across every
+layer (REQ-CMDB-017/018 and a new register row), the finance module (costing, ROI, budgeting; new BSM rows).
+
+## Previous session · 2026-11-04 (checkpoint 13: what-if scenarios failed on every run)
 
 Syed reported "Something went wrong" on every what-if run in Business services. Root cause, found by replaying the
 run in the browser pane: the console sends the picked condition (`failed`, `power_loss`, …) as the scenario `kind`,
@@ -20,7 +43,7 @@ runs a model on cbs-db on the real stack in both locales and expects affected se
 unit test stubs the API needs one e2e that exercises its mutation for real, and a "0 affected" result is a finding,
 not a pass.
 
-## Previous session · 2026-11-04 (checkpoint 12: Horizon look and the 3D digital twin)
+## Earlier session · 2026-11-04 (checkpoint 12: Horizon look and the 3D digital twin)
 
 Syed's customer called the console "generic, AI-generated"; he asked for a futuristic look and a real 3D digital twin
 (MFA and the corporate IdP parked). REQ-UI-028 and REQ-UI-029 done (ADR-018, `docs/evidence/horizon-twin.md`).

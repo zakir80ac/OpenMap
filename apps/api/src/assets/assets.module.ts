@@ -6,5 +6,6 @@ import { AssetsService } from './assets.service.js';
 
 @Module({
   providers: [{ provide: ASSETS_REPOSITORY, useClass: PrismaAssetsRepository }, AssetsService, AssetsResolver, AssetRecordFieldsResolver, InfraPlanFieldsResolver, SupportContractFieldsResolver, CiAssetFieldResolver],
+  exports: [AssetsService],
 })
 export class AssetsModule {}

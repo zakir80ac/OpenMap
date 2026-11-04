@@ -1,5 +1,7 @@
-// REQ-CORE-012 — per-request batching loader: collects keys requested during one tick of the event
-// loop and resolves them with a single repository call, so nested GraphQL fields never go N+1.
+// REQ-CORE-012 — per-request batching loader: collects keys requested during one turn of the event loop and
+// resolves them with a single repository call, so nested GraphQL fields never go N+1. The flush waits for the next
+// macrotask (setImmediate), not a microtask: the executor resolves nested lists across several microtasks, and a
+// microtask flush split a 2,400-device racks response into dozens of graph round trips (1.3 s of a 1.7 s query).
 export type BatchFn<K, V> = (keys: readonly K[]) => Promise<ReadonlyMap<K, V>>;
 
 interface Waiter<K, V> {
@@ -22,7 +24,7 @@ export class BatchLoader<K, V> {
       this.pending.push({ key, resolve, reject });
       if (!this.scheduled) {
         this.scheduled = true;
-        queueMicrotask(() => void this.flush());
+        setImmediate(() => void this.flush());
       }
     });
     this.cache.set(key, p);

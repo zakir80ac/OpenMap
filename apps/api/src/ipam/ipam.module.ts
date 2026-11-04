@@ -4,5 +4,5 @@ import { CiModule } from '../ci/ci.module.js';
 import { IpamResolver, SubnetFieldsResolver } from './ipam.resolver.js';
 import { IpamService } from './ipam.service.js';
 
-@Module({ imports: [CiModule], providers: [IpamService, IpamResolver, SubnetFieldsResolver] })
+@Module({ imports: [CiModule], providers: [IpamService, IpamResolver, SubnetFieldsResolver], exports: [IpamService] })
 export class IpamModule {}
