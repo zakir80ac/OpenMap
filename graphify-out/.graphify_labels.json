@@ -556,5 +556,9 @@
   "554": "ui/vitest.config.ts",
   "555": "github.com/openmap/openmap/apps/collectors",
   "556": "github.com/openmap/openmap/apps/node",
-  "557": "synth-estate/vitest.config.ts"
+  "557": "synth-estate/vitest.config.ts",
+  "558": "ui/vitest.config.ts",
+  "559": "github.com/openmap/openmap/apps/collectors",
+  "560": "github.com/openmap/openmap/apps/node",
+  "561": "synth-estate/vitest.config.ts"
 }

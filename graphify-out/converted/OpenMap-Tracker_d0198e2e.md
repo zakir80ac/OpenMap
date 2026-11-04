@@ -37,7 +37,7 @@
 | REQ-UI-017 | UI | Screens | Screen · Analytics: embedded Superset with tenant row-level security | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-100, T-101, T-102, T-103, T-104, T-105, T-106, T-087 | Screen built on the live API (commit 227d918); unit tests en+ar; walkthrough and screens e2e pending the console image; Lighthouse pending; Analytics: docs/evidence/console/screens.md: unit tests en+ar, e2e screens.spec (T-106) + walkthrough (T-087) 24 passed on the shipped images, Lighthouse accessibility 1 / best practices 1 / performance per screen in docs/evidence/perf/lighthouse.json; RTL screenshots in docs/evidence/console; commits 227d918, 52fecdd, 6347854; Superset provisioned by the API, guest tokens with RLS, performance 0.82 against the documented embedded-screen floor 0.7 | 2026-10-22 | 2026-10-22 | Chart figures to be cross-checked against the API on the scale-1 estate; measure with Superset on its own site in CI |
 | REQ-UI-018 | UI | Screens | Screen · Assistant: chat over the graph with generated Cypher shown | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-100, T-101, T-102, T-103, T-104, T-105, T-106, T-087 | Screen built on the live API (commit 227d918); unit tests en+ar; walkthrough and screens e2e pending the console image; Lighthouse pending; Assistant: docs/evidence/console/screens.md: unit tests en+ar, e2e screens.spec (T-106) + walkthrough (T-087) 24 passed on the shipped images, Lighthouse accessibility 1 / best practices 1 / performance per screen in docs/evidence/perf/lighthouse.json; RTL screenshots in docs/evidence/console; commits 227d918, 52fecdd, 6347854; repair loop in the NL→Cypher pipeline; dev stack on a 1.5B CPU model answers 2 of 4 examples, refuses the rest explicitly | 2026-10-22 | 2026-10-22 | Answer quality tracks the model; .env.example names the 7B coder model for deployments (REQ-INT-004 covers the CPU profile end to end) |
 | REQ-UI-019 | UI | Screens | Screen · Settings: tenant, users and roles, audit | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-087, T-090, T-097, T-098, T-099 | Settings screen: session identity, tenant, roles and the audit log (settings-en/ar.png); Settings: identity card, tenant settings editor (GraphQL 0.3.0, ADR-011; admin-only save, read-only otherwise) and the audit log; e2e settings.spec en+ar changes a value, sees it persist and audited, restores it; screenshots docs/evidence/console/settings-en/ar.png; Lighthouse 1.0 on the settings route via walkthrough | 2026-10-22 | 2026-10-22 | User and role management stays in Keycloak (realm admin console, SSO brokering documented in deploy/README.md); the screen links identity, settings and audit |
-| REQ-UI-020 | UI | Screens | Screen · Onboarding wizard: organization, sites, connectivity, nodes and credentials, integrations, generate digital twin | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Not started |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-UI-020 | UI | Screens | Screen · Onboarding wizard: organization, sites, connectivity, nodes and credentials, integrations, generate digital twin | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-116, T-117, T-087 | docs/evidence/setup.md; /setup screen in en and ar (docs/evidence/console/setup-*.png); Lighthouse run in .local/lighthouse-setup.log; commit 99bf90e | 2026-10-22 | 2026-11-04 |  |
 | REQ-PERF-001 | PERF | Budgets | p95 screen interaction under 100 ms | Lighthouse and Playwright timing on every screen. | CI fails when the budget is exceeded. | P0 | Done |  |  | CLAUDE.md §0 | T-089 | p95 32.4 ms over 48 sampled interactions on the production build (docs/evidence/perf/screen-interaction.json); guard fails on a result over budget; p95 interaction 32 ms on the production console build; Lighthouse performance 1.0 on every screen except embedded analytics (0.82 against the documented 0.7 floor); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | CI job that runs the perf spec against the compose stack still to add (REQ-QA-002). |
 | REQ-PERF-002 | PERF | Budgets | Impact query under 1000 ms on 100000 nodes | k6 against the synth estate. | k6 threshold enforced in CI. | P0 | Not started |  |  | CLAUDE.md §0 |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-PERF-003 | PERF | Budgets | Graph rendering at 60 fps | Sigma.js in a Web Worker with WebGL. | Playwright frame timing on the 100k estate. | P0 | Done |  |  | CLAUDE.md §0 | T-089, T-060 | 60.1 fps sustained for 3 s of zoom and pan on the dependency map, synthetic estate (docs/evidence/perf/graph-render.json); dependency map renders at 60 fps on the production build (Sigma.js WebGL in a Web Worker); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | Measured on the scale-0.05 estate focus graph; the 100k-node estate run is pending the scale-1 replay. |
@@ -174,7 +174,7 @@
 | REQ-INT-016 | INT | Integrations | Identity: Active Directory, Entra ID, Okta | OpenMap: Keycloak federation (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-017 | INT | Integrations | Backup/DR awareness: Veeam, Commvault, Rubrik | OpenMap: backed_by relationships via adapters (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CORE-019 | CORE | Integrations | REST and GraphQL API, SDKs, OpenAPI | OpenMap: Mercurius GraphQL, REST, OpenAPI (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-UI-024 | UI | Onboarding and digital twin | Initial setup wizard | OpenMap: Six-step onboarding: organization and business units, sites (data centre, colocation, office, branch, cloud region, edge), inter-site connectivity, Discovery Nodes and credentials, integrations and seed imports, generate twin (organizationSchema, siteSchema, onboardingSchema) (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-UI-024 | UI | Onboarding and digital twin | Initial setup wizard | OpenMap: Six-step onboarding: organization and business units, sites (data centre, colocation, office, branch, cloud region, edge), inter-site connectivity, Discovery Nodes and credentials, integrations and seed imports, generate twin (organizationSchema, siteSchema, onboardingSchema) (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin | T-116, T-117, T-118, T-087 | docs/evidence/setup.md; docs/evidence/console/setup-{organization,sites,nodes,generate}-{en,ar}.png; ADR-017; API integration 20 passed; e2e setup 3 passed (en, ar); commit 99bf90e | 2026-10-22 | 2026-11-04 |  |
 | REQ-DCIM-009 | DCIM | Onboarding and digital twin | Buildings and rooms | OpenMap: Sites with rooms and racks created at onboarding, kept live by discovery (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin | T-103, T-106 | buildings and rooms with power and occupancy heatmap on the DCIM screen; room identity scoped by site and room name in the generator; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-IPAM-007 | IPAM | Onboarding and digital twin | Network circuits | OpenMap: Inter-site links as CIs with kind, provider, bandwidth, diverse paths and role; outages modelled like any component (siteLinkSchema, site_link) (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DISC-031 | DISC | Onboarding and digital twin | Remote Collector install | OpenMap: Per-site Discovery Node enrolment with one-time token over mTLS; cloud regions are cloud-managed; branches agent-only (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | In review | Claude |  | CAPABILITY-MAP.md §9. Onboarding and digital twin | T-067 | deploy/install (systemd unit, install-node.sh/.ps1), Windows service hosting, env file; build-release.sh tarballs for linux/amd64, windows/amd64, darwin/arm64 (docs/evidence/release/build-release.md); commits 43414c3, 0f7d46c | 2026-10-22 | 2026-10-22 | Bare-metal installers: systemd unit + install-node.sh, Windows service hosting + install-node.ps1, env file OPENMAP_NODE_ENV_FILE; node certs carry DNS SAN + serverAuth for the agent gateway |
@@ -201,7 +201,7 @@
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks |  | 5 | 3 | 60 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform |  | 27 | 20 | 74 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform |  | 27 | 22 | 81 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI |  | 6 | 2 | 33 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
@@ -299,7 +299,7 @@
 | T-084 | unit | REQ-SEC-001 | 2026-10-22 | Pass | 0 |
 | T-085 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
 | T-086 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
-| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
+| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038, REQ-UI-024, REQ-UI-020 | 2026-10-22 | Pass | 0 |
 | T-088 | unit | REQ-SEC-001, REQ-SEC-009, REQ-DISC-004, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-006 | 2026-10-22 | Pass | 0 |
 | T-089 | unit | REQ-UI-003, REQ-PERF-001, REQ-PERF-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013 | 2026-10-22 | Pass | 0 |
 | T-045 | unit | REQ-DISC-026 | 2026-10-22 | Pass | 0 |
@@ -350,6 +350,9 @@
 | T-049 | unit | REQ-CORE-016, REQ-CORE-017 | 2026-11-01 | Pass | 0 |
 | T-114 | unit | REQ-CMDB-038 | 2026-11-01 | Pass | 0 |
 | T-115 | unit | REQ-CMDB-038 | 2026-11-01 | Pass | 0 |
+| T-116 | unit | REQ-UI-024, REQ-UI-020 | 2026-11-04 | Pass | 0 |
+| T-117 | unit | REQ-UI-024, REQ-UI-020 | 2026-11-04 | Pass | 0 |
+| T-118 | unit | REQ-UI-024 | 2026-11-04 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -362,11 +365,12 @@
 | 2026-10-22 | Checkpoint 7: the six missing screens (Assets, IPAM, DCIM, Integrations, Analytics, Assistant) built and verified on the shipped images in en and ar — unit tests T-100..T-105, e2e T-106, Lighthouse all screens (accessibility and best practices 1.0; analytics 0.82 against the documented embedded-screen floor); GraphQL 0.4.0 (ADR-012: integration detail/deliveries, analyticsEmbed, Rack.row/room); API fixes for IPAM identity keys and DCIM placement attributes; Superset dashboard provisioned by the API with RLS guest tokens; CPU LLM profile running with a self-correcting NL→Cypher loop; compose LLM variable mismatch fixed. |  |  |  |
 | 2026-11-01 | Checkpoint 9: assistant NL->Cypher fixed (REQ-AI-001, commit 3bdd482; golden set 12/12 on the 1.5B model); 56 queued closures applied (checkpoints 4-9); llm-cpu health check fixed in compose |  |  |  |
 | 2026-11-01 | Checkpoint 10: REQ-CMDB-038 headline metric per layer end to end (ADR-016: ci/collector/event 0.2.0, GraphQL 0.8.0; metric samples via outbox to ClickHouse; API loader; console column and cards); persist transaction budget; commit 01df3cf |  |  |  |
+| 2026-11-04 | Checkpoint 11: initial setup wizard (REQ-UI-020, REQ-UI-024; ADR-017; GraphQL 0.9.0): six real steps from organization to generated twin; OpenBao mount self-created; commit 99bf90e |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-01T20:47:24.020Z |  |  |  |  |  |  |
+| Generated | 2026-11-04T11:21:17.599Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 67 | 28 | 0 | 4 | 89 |  |  |
+| All | 65 | 28 | 0 | 4 | 91 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
@@ -375,19 +379,20 @@
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 2 | 0 | 0 | 0 | 3 | 5 | 60 |
-| UI | 7 | 0 | 0 | 0 | 20 | 27 | 74 |
+| UI | 5 | 0 | 0 | 0 | 22 | 27 | 81 |
 | AI | 4 | 0 | 0 | 0 | 2 | 6 | 33 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 13 | 27 | 0 | 3 | 67 | 110 |  |
-| P1 | 51 | 1 | 0 | 1 | 22 | 75 |  |
+| P0 | 12 | 27 | 0 | 3 | 68 | 110 |  |
+| P1 | 50 | 1 | 0 | 1 | 23 | 75 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 38 |  |  |  |  |  |  |
 | 2026-11-01 | 89 |  |  |  |  |  |  |
+| 2026-11-04 | 91 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
