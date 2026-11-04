@@ -1,19 +1,33 @@
 // REQ-CMDB-001 — Prisma implementation of the CMDB repository over the `cis` and `relationships`
 // tables, including bitemporal reads through the validAt predicate.
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { CiLayer, CiType, RelationshipType, UserLabel } from '@openmap/contracts';
+import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, ciCode, type CiLayer, type CiType, type RelationshipType, type UserLabel } from '@openmap/contracts';
 import { Prisma } from '@openmap/db';
+import { checksumOf } from './checksum.js';
 import type { SortKey } from '../common/cursor.js';
 import { relationshipValidAt, validAt } from '../common/time.js';
 import { PrismaService } from '../db/prisma.service.js';
 import { CI_INCLUDE, toCiRecord, toRelationshipRecord } from './ci.mapper.js';
 import { buildCiWhere, CI_ORDER, textClause } from './ci.filter.js';
-import type { CiRepository, ListResult, NewRelationship, RelationshipQuery } from './ci.repository.js';
+import type { CiRepository, ListResult, NewCi, NewRelationship, RelationshipQuery } from './ci.repository.js';
 import type { CiFilterInput } from './ci.schemas.js';
 import type { CiRecord, RelationshipDirection, RelationshipRecord } from './ci.types.js';
 
 /** Provenance recorded for user-made changes through the API. */
 export const API_SOURCE = { collectorId: 'api', nodeId: 'api' } as const;
+
+/**
+ * The reconciler's identity key (apps/reconciler/src/core/identity.ts): identity values in CI_IDENTITY_KEYS order,
+ * trimmed and lower-cased, joined by '|'. A CI the wizard creates must carry the same key so a later sweep
+ * reconciles onto it instead of creating a duplicate.
+ */
+export function identityKeyOf(type: CiType, identity: Record<string, string>): string {
+  return CI_IDENTITY_KEYS[type]
+    .map((k) => identity[k])
+    .filter((v): v is string => v !== undefined && v !== '')
+    .map((v) => v.trim().toLowerCase())
+    .join('|');
+}
 
 @Injectable()
 export class PrismaCiRepository implements CiRepository {
@@ -29,6 +43,53 @@ export class PrismaCiRepository implements CiRepository {
       include: CI_INCLUDE,
     });
     return row ? toCiRecord(row) : null;
+  }
+
+  async findCurrentByIdentity(tenantId: string, type: CiType, identity: Record<string, string>): Promise<CiRecord | null> {
+    const row = await this.db.ci.findFirst({
+      where: { tenantId, type, identityKey: identityKeyOf(type, identity), validTo: null },
+      include: CI_INCLUDE,
+    });
+    return row ? toCiRecord(row) : null;
+  }
+
+  async create(tx: Prisma.TransactionClient, tenantId: string, input: NewCi): Promise<CiRecord> {
+    const layer = CI_TYPE_LAYER[input.type];
+    const now = new Date();
+    const row = await tx.ci.create({
+      data: {
+        ...(input.id === undefined ? {} : { id: input.id }),
+        tenantId,
+        type: input.type,
+        identity: input.identity,
+        identityKey: identityKeyOf(input.type, input.identity),
+        name: input.name,
+        displayName: input.name,
+        code: ciCode(layer, input.type, input.name),
+        layer,
+        lifecycle: input.lifecycle,
+        attributes: input.attributes as Prisma.InputJsonObject,
+        tags: input.tags,
+        sourceCollectorId: API_SOURCE.collectorId,
+        sourceNodeId: API_SOURCE.nodeId,
+        sourceRunId: input.runId,
+        sourceConfidence: input.confidence,
+        observedAt: now,
+        validFrom: now,
+        checksum: checksumOf(input.type, input.identity, input.attributes),
+      },
+      include: CI_INCLUDE,
+    });
+    return toCiRecord(row);
+  }
+
+  async retire(tx: Prisma.TransactionClient, tenantId: string, id: string): Promise<CiRecord> {
+    const existing = await tx.ci.findFirst({ where: { id, tenantId, validTo: null } });
+    if (!existing) throw new NotFoundException('CI ' + id + ' not found');
+    const now = new Date();
+    await tx.relationship.updateMany({ where: { tenantId, validTo: null, OR: [{ fromCiId: id }, { toCiId: id }] }, data: { validTo: now } });
+    const row = await tx.ci.update({ where: { id }, data: { validTo: now }, include: CI_INCLUDE });
+    return toCiRecord(row);
   }
 
   async findByIds(tenantId: string, ids: readonly string[]): Promise<CiRecord[]> {

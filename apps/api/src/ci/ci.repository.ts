@@ -4,7 +4,7 @@ import type { CiLayer, CiType, RelationshipType, UserLabel } from '@openmap/cont
 import type { Prisma } from '@openmap/db';
 import type { SortKey } from '../common/cursor.js';
 import type { CiFilterInput } from './ci.schemas.js';
-import type { CiRecord, RelationshipDirection, RelationshipRecord } from './ci.types.js';
+import type { CiRecord, Lifecycle, RelationshipDirection, RelationshipRecord } from './ci.types.js';
 
 export const CI_REPOSITORY = Symbol('CI_REPOSITORY');
 
@@ -33,8 +33,27 @@ export interface NewRelationship {
   confidence: number;
 }
 
+/** A CI the API creates itself (setup wizard, ADR-017): identity as the collectors would observe it. */
+export interface NewCi {
+  id?: string;
+  type: CiType;
+  identity: Record<string, string>;
+  name: string;
+  attributes: Record<string, unknown>;
+  tags: string[];
+  lifecycle: Lifecycle;
+  runId: string;
+  confidence: number;
+}
+
 export interface CiRepository {
   findById(tenantId: string, id: string, asOf: string | null): Promise<CiRecord | null>;
+  /** The current CI with this type and identity, by the reconciler's identity key, if any. */
+  findCurrentByIdentity(tenantId: string, type: CiType, identity: Record<string, string>): Promise<CiRecord | null>;
+  /** Inserts a current CI; the code comes from ciCode() and the database keeps it unique (ADR-014). */
+  create(tx: Prisma.TransactionClient, tenantId: string, input: NewCi): Promise<CiRecord>;
+  /** Closes the current version (validTo = now) and its current relationships. */
+  retire(tx: Prisma.TransactionClient, tenantId: string, id: string): Promise<CiRecord>;
   findByIds(tenantId: string, ids: readonly string[]): Promise<CiRecord[]>;
   list(
     tenantId: string,

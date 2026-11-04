@@ -566,6 +566,10 @@ model Site {
   cloudProvider  CloudProvider?
   cloudRegion    String?
   locationCount  Int            @default(1)
+  /// siteSchema.facility (ADR-017): null for cloud regions.
+  powerCapacityKw Float?
+  rackCount       Int?
+  designPue       Float?
   ciId           String?        @db.Uuid
   createdAt      DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime       @updatedAt @db.Timestamptz(3)

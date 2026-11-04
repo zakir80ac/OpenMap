@@ -40,7 +40,7 @@ export interface AuditPage {
 }
 
 /** Argument names whose values must never reach the log; matched case-insensitively as substrings. */
-const REDACTED_FRAGMENTS = ['password', 'secret', 'token', 'credential', 'privatekey', 'apikey'] as const;
+const REDACTED_FRAGMENTS = ['password', 'secret', 'token', 'credential', 'privatekey', 'apikey', 'passphrase', 'community', 'kubeconfig', 'fields'] as const;
 const REDACTED = '[redacted]';
 
 /** Returns a copy of the mutation arguments with credential-like fields replaced, recursively. */

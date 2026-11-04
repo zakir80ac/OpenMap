@@ -1,6 +1,6 @@
 // T-032 REQ-CORE-012 REQ-CMDB-001 REQ-DEP-001 REQ-CMDB-002 REQ-IPAM-001 — the Nest application against
 // the compose stack: a test RS256 key stands in for Keycloak's JWKS through a provider override.
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -984,6 +984,132 @@ describe('OpenMap API (integration)', () => {
       viewerToken,
     );
     expect(denied.errors?.[0]?.message).toMatch(/roles/i);
+  });
+
+  it('runs the initial setup end to end: organization, site CI, link CI, Node token, vault credential, scope and twin (REQ-UI-024)', async () => {
+    type Onboarding = {
+      onboarding: {
+        organization: { id: string; name: string; businessUnits: Array<{ tenantId: string; name: string; slug: string }> };
+        step: string;
+        completedSteps: string[];
+        sites: Array<{ id: string; code: string; ci: { id: string; code: string; type: string } | null; nodes: Array<{ id: string; status: string }> }>;
+        links: Array<{ id: string; ci: { type: string } | null }>;
+        credentials: Array<{ ref: string; type: string; fields: string[] }>;
+        scopes: Array<{ cidr: string; credentialRef: string | null; credentialType: string; site: { id: string } | null }>;
+        generatedAt: string | null;
+        firstSweep: { id: string } | null;
+        schedulerUrl: string;
+      };
+    };
+    const stateQuery = 'query { onboarding { organization { id name businessUnits { tenantId name slug } } step completedSteps sites { id code ci { id code type } nodes { id status } } links { id ci { type } } credentials { ref type fields } scopes { cidr credentialRef credentialType site { id } } generatedAt firstSweep { id } schedulerUrl } }';
+    // The setup mutations are administrator-only; the operator token used by the other tests must be refused.
+    const operatorOnly = operatorToken;
+    const refusedOperator = await gql<{ generateTwin: unknown }>('mutation { generateTwin { step } }', {}, operatorOnly);
+    expect(refusedOperator.errors?.[0]?.message).toContain(ROLES.admin);
+    operatorToken = await mint([ROLES.admin], keys.privateKey);
+    const initial = await gql<Onboarding>(stateQuery);
+    expect(initial.errors).toBeUndefined();
+    expect(initial.data?.onboarding.organization.id).toBe(organizationId);
+    expect(initial.data?.onboarding.step).toBe('organization');
+    expect(initial.data?.onboarding.organization.businessUnits.map((u) => u.tenantId)).toContain(tenantId);
+    expect(initial.data?.onboarding.schedulerUrl).toBe(env.PUBLIC_SCHEDULER_URL);
+
+    // Organization: rename, keep the signed-in unit, add one (a new tenant with a derived slug); viewers are refused.
+    const orgMutation = 'mutation($input: OrganizationInput!) { updateOrganization(input: $input) { name industry businessUnits { tenantId name slug } } }';
+    const orgInput = { name: 'Horizon Bank', industry: 'Banking', timeZone: 'Asia/Riyadh', defaultLocale: 'en', regulatoryScope: ['SAMA CSF'], airGapped: true, businessUnits: [{ tenantId, name: 'Group Technology' }, { tenantId: null, name: 'Retail Banking' }] };
+    const denied = await gql<{ updateOrganization: unknown }>(orgMutation, { input: orgInput }, viewerToken);
+    expect(denied.errors?.[0]?.message).toMatch(/forbidden|role/i);
+    const org = await gql<{ updateOrganization: { name: string; businessUnits: Array<{ tenantId: string; name: string; slug: string }> } }>(orgMutation, { input: orgInput });
+    expect(org.errors).toBeUndefined();
+    expect(org.data?.updateOrganization.name).toBe('Horizon Bank');
+    const retail = org.data?.updateOrganization.businessUnits.find((u) => u.name === 'Retail Banking');
+    expect(retail?.slug).toBe('retail-banking');
+    expect(org.data?.updateOrganization.businessUnits.find((u) => u.tenantId === tenantId)?.name).toBe('Group Technology');
+
+    // Sites: saving creates the site CI (identity = code) through the outbox; the code cannot change; duplicates are refused.
+    const siteMutation = 'mutation($id: UUID, $input: SiteInput!) { upsertSite(id: $id, input: $input) { id code name ci { id code type } } }';
+    const siteInput = { code: 'ryd', name: 'Riyadh DC', kind: 'datacenter', tier: 3, address: 'King Fahd Rd', city: 'Riyadh', countryCode: 'sa', geo: { lat: 24.7, lon: 46.7 }, cloud: null, locationCount: 1, facility: { powerCapacityKw: 800, rackCount: 40, designPue: 1.4 } };
+    const ryd = await gql<{ upsertSite: { id: string; code: string; ci: { id: string; code: string; type: string } } }>(siteMutation, { id: null, input: siteInput });
+    expect(ryd.errors).toBeUndefined();
+    expect(ryd.data?.upsertSite.code).toBe('RYD');
+    expect(ryd.data?.upsertSite.ci.type).toBe('site');
+    const siteCi = await prisma.ci.findUnique({ where: { id: ryd.data?.upsertSite.ci.id } });
+    expect(siteCi?.identityKey).toBe('ryd');
+    expect(siteCi?.sourceCollectorId).toBe('api');
+    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.ci.created', subject: siteCi?.id } })).toBe(1);
+    const duplicate = await gql<{ upsertSite: unknown }>(siteMutation, { id: null, input: { ...siteInput, name: 'Other' } });
+    expect(duplicate.errors?.[0]?.message).toContain('already used');
+    const renamed = await gql<{ upsertSite: unknown }>(siteMutation, { id: ryd.data?.upsertSite.id, input: { ...siteInput, code: 'RYD2' } });
+    expect(renamed.errors?.[0]?.message).toContain('cannot change');
+    const updated = await gql<{ upsertSite: { ci: { id: string } } }>(siteMutation, { id: ryd.data?.upsertSite.id, input: { ...siteInput, facility: { powerCapacityKw: 900, rackCount: 40, designPue: 1.4 } } });
+    expect(updated.data?.upsertSite.ci.id).toBe(ryd.data?.upsertSite.ci.id);
+    const dmm = await gql<{ upsertSite: { id: string } }>(siteMutation, { id: null, input: { ...siteInput, code: 'DMM', name: 'Dammam DR', city: 'Dammam' } });
+    expect(dmm.errors).toBeUndefined();
+    const cloudMissing = await gql<{ upsertSite: unknown }>(siteMutation, { id: null, input: { ...siteInput, code: 'AZ1', kind: 'cloud_region', cloud: null } });
+    expect(cloudMissing.errors?.[0]?.message).toContain('cloud region');
+
+    // Link: a site_link CI connected to both site CIs.
+    const linkMutation = 'mutation($input: SiteLinkInput!) { upsertSiteLink(input: $input) { id fromSite { code } toSite { code } ci { id type } } }';
+    const link = await gql<{ upsertSiteLink: { id: string; fromSite: { code: string }; ci: { id: string; type: string } } }>(linkMutation, { input: { fromSiteId: ryd.data?.upsertSite.id, toSiteId: dmm.data?.upsertSite.id, kind: 'dwdm', provider: 'stc', circuitId: 'STC-DWDM-1', bandwidthMbps: 10000, diversePaths: 2, role: 'primary', latencyMs: 4.2 } });
+    expect(link.errors).toBeUndefined();
+    expect(link.data?.upsertSiteLink.ci.type).toBe('site_link');
+    expect(await prisma.relationship.count({ where: { tenantId, fromCiId: link.data?.upsertSiteLink.ci.id, type: 'connected_to', validTo: null } })).toBe(2);
+    const selfLink = await gql<{ upsertSiteLink: unknown }>(linkMutation, { input: { fromSiteId: ryd.data?.upsertSite.id, toSiteId: ryd.data?.upsertSite.id, kind: 'mpls', bandwidthMbps: 100, diversePaths: 1, role: 'backup' } });
+    expect(selfLink.errors?.[0]?.message).toContain('two different sites');
+
+    // Node: pending with the digest of the one-time token, as the scheduler's enrol route expects.
+    const registration = await gql<{ registerNode: { node: { id: string; status: string }; siteCode: string; enrolToken: string; schedulerUrl: string } }>('mutation($siteId: UUID!, $nodeId: String!) { registerNode(siteId: $siteId, nodeId: $nodeId) { node { id status } siteCode enrolToken schedulerUrl } }', { siteId: ryd.data?.upsertSite.id, nodeId: 'node-ryd-it-01' });
+    expect(registration.errors).toBeUndefined();
+    expect(registration.data?.registerNode.enrolToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(registration.data?.registerNode.siteCode).toBe('RYD');
+    const nodeRow = await prisma.discoveryNode.findUnique({ where: { id: 'node-ryd-it-01' } });
+    expect(nodeRow?.status).toBe('pending');
+    expect(nodeRow?.enrolTokenDigest).toBe(createHash('sha256').update(registration.data?.registerNode.enrolToken ?? '').digest('hex'));
+
+    // Credential set: written to OpenBao with its type; the API answers with field names only and refuses a wrong field.
+    const credentialMutation = 'mutation($input: CredentialSetInput!) { saveCredentialSet(input: $input) { ref type fields } }';
+    const credentialRef = 'it/snmp-' + tenantId.slice(0, 8);
+    const credential = await gql<{ saveCredentialSet: { ref: string; type: string; fields: string[] } }>(credentialMutation, { input: { ref: credentialRef, type: 'snmp_v2c', fields: { community: 'it-community' } } });
+    expect(credential.errors).toBeUndefined();
+    expect(credential.data?.saveCredentialSet).toEqual({ ref: credentialRef, type: 'snmp_v2c', fields: ['community'] });
+    const vault = await fetch(new URL('v1/' + env.OPENBAO_MOUNT + '/data/' + credentialRef, env.OPENBAO_ADDR.endsWith('/') ? env.OPENBAO_ADDR : env.OPENBAO_ADDR + '/'), { headers: { 'X-Vault-Token': env.OPENBAO_TOKEN } });
+    expect((await vault.json() as { data: { data: Record<string, string> } }).data.data).toEqual({ type: 'snmp_v2c', community: 'it-community' });
+    const wrongField = await gql<{ saveCredentialSet: unknown }>(credentialMutation, { input: { ref: 'it/bad', type: 'password', fields: { username: 'x', password: 'y', community: 'z' } } });
+    expect(wrongField.errors?.[0]?.message).toContain('invalid CredentialSetInput');
+    const auditRow = await prisma.auditLog.findFirst({ where: { tenantId, action: 'saveCredentialSet' }, orderBy: { at: 'desc' } });
+    expect(JSON.stringify(auditRow?.details)).not.toContain('it-community');
+
+    // Scope: a subnet CI located at the site, carrying the credential; the same CIDR again updates instead of duplicating.
+    const scopeMutation = 'mutation($input: ScopeInput!) { addDiscoveryScope(input: $input) { ci { id } cidr credentialRef credentialType site { id } } }';
+    const scope = await gql<{ addDiscoveryScope: { ci: { id: string }; cidr: string; credentialRef: string; credentialType: string; site: { id: string } } }>(scopeMutation, { input: { cidr: '10.77.0.0/24', vrf: null, siteId: ryd.data?.upsertSite.id, credentialRef, credentialType: 'snmp_v2c' } });
+    expect(scope.errors).toBeUndefined();
+    expect(scope.data?.addDiscoveryScope).toMatchObject({ cidr: '10.77.0.0/24', credentialRef, credentialType: 'snmp_v2c', site: { id: ryd.data?.upsertSite.ci.id } });
+    const again = await gql<{ addDiscoveryScope: { ci: { id: string } } }>(scopeMutation, { input: { cidr: '10.77.0.0/24', vrf: null, siteId: ryd.data?.upsertSite.id, credentialRef: null, credentialType: null } });
+    expect(again.data?.addDiscoveryScope.ci.id).toBe(scope.data?.addDiscoveryScope.ci.id);
+    expect(await prisma.ci.count({ where: { tenantId, type: 'subnet', identityKey: '10.77.0.0/24|default', validTo: null } })).toBe(1);
+
+    // Steps and the twin: generate records the moment, completes every step and plans the first sweep.
+    const stepped = await gql<{ setOnboardingStep: { step: string; completedSteps: string[] } }>('mutation { setOnboardingStep(step: nodes_credentials, completed: true) { step completedSteps } }');
+    expect(stepped.data?.setOnboardingStep.completedSteps).toContain('nodes_credentials');
+    const generated = await gql<{ generateTwin: { generatedAt: string | null; completedSteps: string[]; firstSweep: { id: string } | null; links: Array<{ ci: { type: string } | null }> } }>('mutation { generateTwin { generatedAt completedSteps firstSweep { id } links { ci { type } } } }');
+    expect(generated.errors).toBeUndefined();
+    expect(generated.data?.generateTwin.generatedAt).not.toBeNull();
+    expect(generated.data?.generateTwin.completedSteps).toHaveLength(6);
+    expect(generated.data?.generateTwin.firstSweep?.id).toBeTruthy();
+    const final = await gql<Onboarding>(stateQuery);
+    expect(final.data?.onboarding.sites.map((s) => s.code).sort()).toEqual(['DMM', 'RYD']);
+    expect(final.data?.onboarding.sites.find((s) => s.code === 'RYD')?.nodes.map((n) => n.id)).toEqual(['node-ryd-it-01']);
+    expect(final.data?.onboarding.credentials).toEqual([{ ref: credentialRef, type: 'snmp_v2c', fields: ['community'] }]);
+
+    // Removal: a site with a Node is refused; the link and the empty site go, retiring their CIs.
+    const refused = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', { id: ryd.data?.upsertSite.id });
+    expect(refused.errors?.[0]?.message).toContain('Nodes and links');
+    const linkGone = await gql<{ removeSiteLink: boolean }>('mutation($id: UUID!) { removeSiteLink(id: $id) }', { id: link.data?.upsertSiteLink.id });
+    expect(linkGone.data?.removeSiteLink).toBe(true);
+    expect((await prisma.ci.findUnique({ where: { id: link.data?.upsertSiteLink.ci.id } }))?.validTo).not.toBeNull();
+    const siteGone = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', { id: dmm.data?.upsertSite.id });
+    expect(siteGone.data?.removeSite).toBe(true);
+    operatorToken = operatorOnly;
   });
 
   it('exposes Prometheus metrics for the GraphQL operations served', async () => {

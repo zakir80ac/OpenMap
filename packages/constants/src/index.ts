@@ -217,6 +217,41 @@ export const PKI = {
   serverValidityDays: 825,
 } as const;
 
+/**
+ * Environment the Discovery Node binary reads (apps/node/internal/config/config.go, kept in step by hand): the setup
+ * wizard prints the enrol command from these so an operator can paste it on the site's host (REQ-UI-024, ADR-017).
+ */
+export const DISCOVERY_NODE_ENV = {
+  binary: 'openmap-node',
+  enrolToken: 'OPENMAP_ENROL_TOKEN',
+  schedulerUrl: 'OPENMAP_SCHEDULER_URL',
+  nodeId: 'OPENMAP_NODE_ID',
+  siteCode: 'OPENMAP_SITE_CODE',
+} as const;
+
+/**
+ * Input syntax of the initial setup (REQ-UI-024, ADR-017): a site code as siteSchema spells it, a Discovery Node id
+ * (DNS-label-like, the common name of its certificate), an IPv4 CIDR and an ISO 3166-1 alpha-2 country code.
+ */
+export const SETUP_PATTERNS = {
+  siteCode: /^[A-Z0-9][A-Z0-9-]{0,11}$/,
+  nodeId: /^[a-z0-9][a-z0-9-]{1,62}$/,
+  /** Runs of characters a tenant slug cannot carry; each run becomes one dash. */
+  slugSeparator: /[^a-z0-9]+/gu,
+  cidrV4: /^(?:\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/,
+  countryCode: /^[A-Z]{2}$/,
+} as const;
+
+/** Bounds of the setup inputs: Uptime Institute tiers, WGS 84 coordinates, ISO 3166-1 alpha-2 length. */
+export const SETUP_LIMITS = {
+  maxTier: 4,
+  latitudeMax: 90,
+  longitudeMax: 180,
+  countryCodeLength: 2,
+  /** Rows of a multi-line secret field (PEM, kubeconfig) in the credential form. */
+  secretTextareaRows: 4,
+} as const;
+
 /** Credential reference syntax accepted by the secrets reader: path segments, no traversal. */
 export const CREDENTIAL_REF_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/_.-]*$/;
 
@@ -591,7 +626,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.2.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
   collector: '0.2.0',
-  graphql: '0.8.0',
+  graphql: '0.9.0',
   /** 0.2.0 (ADR-016): `openmap.metric.sampled`. */
   event: '0.2.0',
 };

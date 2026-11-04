@@ -372,7 +372,7 @@ function IntegrationDetailPanel({ id, canAdmin, onEdit, onChanged }: DetailProps
   );
 }
 
-interface FormProps {
+export interface FormProps {
   existing: IntegrationDetail | null;
   onDone: (saved: Integration | null) => void;
 }
@@ -412,7 +412,7 @@ export function toIntegrationInput(state: FormState): IntegrationInput {
   };
 }
 
-function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
+export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
   const t = useT();
   const id = useId();
   const [state, setState] = useState<FormState>(() => initialState(existing));

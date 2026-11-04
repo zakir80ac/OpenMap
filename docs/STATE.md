@@ -2,7 +2,27 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
+## Last session · 2026-11-04 (checkpoint 11: initial setup wizard)
+
+Syed asked whether a fresh deployment has an onboarding wizard; it had none (CLI node registration, no way to create a
+subnet or a credential from the console), and he called that vaporware. REQ-UI-020 and REQ-UI-024 are now done end to
+end (ADR-017, `docs/evidence/setup.md`): GraphQL 0.9.0 adds `onboarding` and ten administrator mutations; `/setup`
+walks six steps, each a real write. Organization and business units (tenants with derived slugs); sites (row plus the
+site CI through the outbox, facility columns in migration 0011, code immutable as the CI identity, removal retires
+the CI); inter-site links (`site_link` CI `connected_to` both ends); Discovery Nodes (one-time token minted like the
+CLI, enrol command printed from `DISCOVERY_NODE_ENV`); credential sets (validated against the new
+`CREDENTIAL_FIELDS` in the collector contract, written to OpenBao KV v2, reference kept, values redacted in the
+audit log; the API creates the `openmap` mount on first use because `openbao server -dev` only mounts `secret/`);
+discovery scopes (subnet CI `located_in` the site with the credential as scope attributes, same CIDR updates);
+integrations (existing editor embedded); generate (CIs completed, `generatedAt`, first sweep). The CI repository gained
+`create`/`retire`/`findCurrentByIdentity` with the reconciler's identity key. Tests: T-118 (API integration, 20
+passed), T-116 (SetupView unit, en+ar), T-117 (e2e setup, 3 passed on the rebuilt images), walkthrough captures
+`/setup`. The dashboard shows a setup call to action until the twin is generated.
+Observations: a sweep with no assignable targets stays "running" in the sweep view (no jobs, so no finishedAt);
+the scopes table lists every subnet of the estate (111 on the synthetic tenant) and will need paging on large estates;
+business-unit tenants still need their Keycloak tenant claim set by hand (REQ-SEC-009).
+
+## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
 
 REQ-CMDB-038 done end to end (ADR-016, `docs/evidence/cmdb/headline-metrics.md`). Metric samples now have a path:
 `CollectorResult.samples` (collector contract 0.2.0, Go `Samples` with omitempty on node and collectors) → the
@@ -20,7 +40,7 @@ Observations: the headline is per layer, so subnets and IPs show device traffic 
 `power_by_rack_hourly` keys on the rack CI id in `labels['rack_id']`, which collectors cannot know, so the view stays
 empty until the reconciler resolves CI references inside sample labels (follow-up for REQ-DCIM power from telemetry).
 
-## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 9: the assistant)
+## Earlier session · 2026-11-01 (finish-everything marathon, checkpoint 9: the assistant)
 
 Syed reported the assistant answering every question with `the query failed to run: Unbound variable: n`. Root cause:
 the grounding prompt carried the fragment `WHERE n.tenantId = $tenantId` and an impact pattern with `{name:$name}`;
@@ -122,8 +142,8 @@ tracker is the truth.
 
 1. REQ-CORE-019 (OpenAPI for the REST surface and a generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
    Prometheus metrics that now exist).
-2. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-020/024 onboarding wizard; REQ-UI-021/022/023 reports, DOQL,
-   BI; a synthetic CI health event feed so the BSM engine propagates service health on the dev estate.
+2. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-021/022/023 reports, DOQL, BI; a synthetic CI health event
+   feed so the BSM engine propagates service health on the dev estate; paging for the setup scopes table.
 3. Lint scripts for apps/api, apps/assistant and the remaining packages (their test files sit outside tsconfig, so the
    root ESLint project service cannot parse them); then the DISC rows that need no vendor lab (REQ-DISC-001 SNMP against
    the recorded fixtures already in packages/testing/fixtures).

@@ -48,7 +48,7 @@ export const siteSchema = z.object({
       designPue: z.number().min(1).nullable(),
     })
     .nullable(),
-  /** The site CI created in the CMDB once the twin is generated. */
+  /** The site CI in the CMDB: created when the site is saved in setup (ADR-017), kept live by discovery. */
   ciId: z.uuid().nullable(),
 });
 export type Site = z.infer<typeof siteSchema>;

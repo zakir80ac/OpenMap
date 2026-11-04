@@ -8,6 +8,7 @@ import { AssistantModule } from './assistant/assistant.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { SoftwareModule } from './software/software.module.js';
 import { AuditModule } from './audit/audit.module.js';
+import { OnboardingModule } from './onboarding/onboarding.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AuthService } from './auth/auth.service.js';
 import { CiLoaderFactory } from './ci/ci.loaders.js';
@@ -48,6 +49,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     DcimModule,
     DiscoveryModule,
     IntegrationsModule,
+    OnboardingModule,
     AssistantModule,
     SubscriptionsModule,
     AuditModule,

@@ -19,6 +19,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
   {
     items: [
       { key: 'nav.dashboard', href: '/dashboard', icon: 'dashboard' },
+      { key: 'nav.setup', href: '/setup', icon: 'play' },
       { key: 'nav.layers', href: '/layers', icon: 'layers' },
     ],
   },

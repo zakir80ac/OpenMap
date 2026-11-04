@@ -58,6 +58,26 @@ export const CREDENTIAL_TYPES = [
   'cloud_role',
 ] as const;
 export const credentialTypeSchema = z.enum(CREDENTIAL_TYPES);
+export type CredentialType = z.infer<typeof credentialTypeSchema>;
+
+/**
+ * Field names a credential of each type carries in OpenBao (ADR-017). They are the keys the Go collectors read
+ * (apps/collectors/internal/*: community, username/password, authProtocol…), so the setup wizard can validate a
+ * credential set before storing it and a collector finds what it expects at dispatch. Values never leave the vault
+ * except as the short-lived copy a Node receives with a job.
+ */
+export const CREDENTIAL_FIELDS: Record<CredentialType, { required: readonly string[]; optional: readonly string[]; secret: readonly string[] }> = {
+  none: { required: [], optional: [], secret: [] },
+  snmp_v2c: { required: ['community'], optional: [], secret: ['community'] },
+  snmp_v3: { required: ['username', 'authProtocol', 'authPassphrase', 'privProtocol', 'privPassphrase'], optional: ['contextName'], secret: ['authPassphrase', 'privPassphrase'] },
+  password: { required: ['username', 'password'], optional: ['domain'], secret: ['password'] },
+  ssh_key: { required: ['username', 'privateKey'], optional: ['passphrase'], secret: ['privateKey', 'passphrase'] },
+  api_token: { required: ['token'], optional: [], secret: ['token'] },
+  oauth_client: { required: ['clientId', 'clientSecret'], optional: ['tenantId', 'tokenUrl', 'scope'], secret: ['clientSecret'] },
+  certificate: { required: ['certificatePem', 'privateKeyPem'], optional: ['passphrase'], secret: ['privateKeyPem', 'passphrase'] },
+  kubeconfig: { required: ['kubeconfig'], optional: [], secret: ['kubeconfig'] },
+  cloud_role: { required: ['accessKeyId', 'accessKeySecret'], optional: ['roleArn', 'clientEmail', 'privateKeyPem', 'adminEmail', 'subscriptionId'], secret: ['accessKeySecret', 'privateKeyPem'] },
+};
 
 export const TARGET_KINDS = ['host', 'cidr', 'url', 'cluster', 'account', 'zone', 'flow_source'] as const;
 export const targetSchema = z.object({

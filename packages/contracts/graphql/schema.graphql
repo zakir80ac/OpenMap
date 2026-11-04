@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.8.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 0.9.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -183,6 +183,35 @@ type AuditConnection { edges: [AuditEdge!]! pageInfo: PageInfo! totalCount: Int!
 type TenantSettings { locale: String! timeZone: String! discoveryIntervalMinutes: Int! historyRetentionDays: Int! staleAfterDays: Int! auditRetentionDays: Int! assistantEnabled: Boolean! outboundIntegrationsEnabled: Boolean! }
 input TenantSettingsInput { locale: String timeZone: String discoveryIntervalMinutes: Int historyRetentionDays: Int staleAfterDays: Int auditRetentionDays: Int assistantEnabled: Boolean outboundIntegrationsEnabled: Boolean }
 
+# REQ-UI-020 REQ-UI-024 (ADR-017) — initial setup: the organization and its business units (tenants), sites, inter-site
+# links, Discovery Node registrations with one-time enrolment tokens, credential sets (OpenBao references; values are
+# written to the vault and never read back), discovery scopes and the generated twin. Every signed-in role reads the
+# state; administrators change it. Saving a site creates its CI; generating the twin creates link CIs and starts the
+# first sweep.
+enum OnboardingStep { organization sites connectivity nodes_credentials integrations generate }
+enum SiteKind { datacenter colocation office branch cloud_region edge }
+type BusinessUnit { tenantId: UUID! name: String! slug: String! }
+type Organization { id: UUID! name: String! industry: String! timeZone: String! defaultLocale: String! regulatoryScope: [String!]! airGapped: Boolean! businessUnits: [BusinessUnit!]! createdAt: DateTime! }
+input BusinessUnitInput { tenantId: UUID name: String! }
+input OrganizationInput { name: String! industry: String! timeZone: String! defaultLocale: String! regulatoryScope: [String!]! airGapped: Boolean! businessUnits: [BusinessUnitInput!]! }
+type GeoPoint { lat: Float! lon: Float! }
+type CloudRegion { provider: String! region: String! }
+type Facility { powerCapacityKw: Float! rackCount: Int! designPue: Float }
+type Site { id: UUID! code: String! name: String! kind: SiteKind! tier: Int address: String! city: String! countryCode: String! geo: GeoPoint cloud: CloudRegion locationCount: Int! facility: Facility ci: Ci nodes: [DiscoveryNode!]! }
+input GeoPointInput { lat: Float! lon: Float! }
+input CloudRegionInput { provider: String! region: String! }
+input FacilityInput { powerCapacityKw: Float! rackCount: Int! designPue: Float }
+input SiteInput { code: String! name: String! kind: SiteKind! tier: Int address: String! city: String! countryCode: String! geo: GeoPointInput cloud: CloudRegionInput locationCount: Int! facility: FacilityInput }
+type SiteLink { id: UUID! fromSite: Site! toSite: Site! kind: String! provider: String circuitId: String bandwidthMbps: Int! diversePaths: Int! role: String! latencyMs: Float ci: Ci }
+input SiteLinkInput { fromSiteId: UUID! toSiteId: UUID! kind: String! provider: String circuitId: String bandwidthMbps: Int! diversePaths: Int! role: String! latencyMs: Float }
+"""Returned once by registerNode: the clear enrolment token is never stored, only its digest."""
+type NodeRegistration { node: DiscoveryNode! siteCode: String! enrolToken: String! schedulerUrl: String! }
+"""A credential set as the vault holds it: the reference, the contract credential type and the field names, never a value."""
+type CredentialSet { ref: String! type: String! fields: [String!]! }
+input CredentialSetInput { ref: String! type: String! fields: JSON! }
+input ScopeInput { cidr: String! vrf: String siteId: UUID! credentialRef: String credentialType: String }
+type OnboardingState { organization: Organization! step: OnboardingStep! completedSteps: [OnboardingStep!]! sites: [Site!]! links: [SiteLink!]! nodes: [DiscoveryNode!]! credentials: [CredentialSet!]! scopes: [DiscoveryScope!]! integrations: [Integration!]! generatedAt: DateTime firstSweep: Sweep schedulerUrl: String! }
+
 type Query {
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -214,6 +243,7 @@ type Query {
   unknownCis(first: Int = 50, after: String): CiConnection!
   auditLog(subjectType: String, subjectId: String, actor: String, action: String, first: Int = 50, after: String): AuditConnection!
   tenantSettings: TenantSettings!
+  onboarding: OnboardingState!
 }
 
 input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLayer! type: String }
@@ -243,6 +273,21 @@ type Mutation {
   acknowledgeIncident(incidentId: UUID!): Incident!
   askAssistant(question: String!): AssistantAnswer!
   updateTenantSettings(input: TenantSettingsInput!): TenantSettings!
+  updateOrganization(input: OrganizationInput!): Organization!
+  upsertSite(id: UUID, input: SiteInput!): Site!
+  """Removes a site that has no Node and no link; its CI is retired."""
+  removeSite(id: UUID!): Boolean!
+  upsertSiteLink(id: UUID, input: SiteLinkInput!): SiteLink!
+  removeSiteLink(id: UUID!): Boolean!
+  """Registers (or re-registers) a Discovery Node for a site and returns its one-time enrolment token."""
+  registerNode(siteId: UUID!, nodeId: String!): NodeRegistration!
+  """Writes a credential set to the vault under `ref`; the API keeps the reference only."""
+  saveCredentialSet(input: CredentialSetInput!): CredentialSet!
+  """Creates a subnet CI at a site as a discovery scope, through the outbox like any CI."""
+  addDiscoveryScope(input: ScopeInput!): DiscoveryScope!
+  setOnboardingStep(step: OnboardingStep!, completed: Boolean!): OnboardingState!
+  """Creates the CIs the twin still lacks (links), records the generation and starts the first sweep."""
+  generateTwin: OnboardingState!
 }
 
 type Subscription {

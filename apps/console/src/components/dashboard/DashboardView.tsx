@@ -6,16 +6,22 @@ import { Bar, Card, Dot, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, accent
 import { useMemo, type ReactNode } from 'react';
 import { QueryState } from '@/components/common/QueryState';
 import { healthKey, layerKey } from '@/lib/keys';
+import Link from 'next/link';
+import { localizedHref } from '@/lib/locale-path';
 import { layersQuery, servicesQuery } from '@/lib/queries';
-import { useFormatters, useT } from '@/providers';
+import { onboardingQuery } from '@/lib/setup-queries';
+import { useFormatters, useLocale, useT } from '@/providers';
 
 const PENDING_VALUE = '…';
 
 export function DashboardView(): ReactNode {
   const t = useT();
   const format = useFormatters();
+  const locale = useLocale();
   const layers = useQuery(layersQuery());
   const services = useQuery(servicesQuery());
+  const onboarding = useQuery(onboardingQuery());
+  const setupPending = onboarding.isSuccess && onboarding.data.generatedAt === null;
 
   const totals = useMemo(() => {
     const summaries = layers.data ?? [];
@@ -37,6 +43,18 @@ export function DashboardView(): ReactNode {
       <SectionTitle as="h1" size="lg" eyebrow={t('app.name')} description={t('dashboard.subtitle')}>
         {t('nav.dashboard')}
       </SectionTitle>
+
+      {setupPending ? (
+        <Card as="section" padding="16" className="flex flex-wrap items-center justify-between gap-om-12 border-om-cyan/30">
+          <div className="flex min-w-0 flex-col gap-om-4">
+            <span className="font-om-display text-om-lg font-bold text-om-primary">{t('dashboard.setup.title')}</span>
+            <span className="text-om-sm text-om-secondary">{t('dashboard.setup.body')}</span>
+          </div>
+          <Link href={localizedHref(locale, '/setup')}>
+            <Pill variant="primary">{t('dashboard.setup.open')}</Pill>
+          </Link>
+        </Card>
+      ) : null}
 
       <section className="grid grid-cols-1 gap-om-16 sm:grid-cols-2 xl:grid-cols-4" aria-busy={layers.isPending || services.isPending}>
         <Card>
