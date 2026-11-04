@@ -196,7 +196,9 @@
 | REQ-UI-030 | UI | Screen | Dashboard wizard, customization and role templates (Admin, CTO/CIO, CISO, Finance) |  | A first visit with no dashboard opens a wizard: persona template, widget selection, name, sharing, default. Dashboards persist per tenant (owner, shared), render widgets from live queries with sizes, can be customised (add, remove, resize, reorder) and switched; four role templates ship with real widgets; en and ar; e2e creates a dashboard from a template and customises it | P0 | Done |  |  | CAPABILITY-MAP dashboards | T-123, T-124, T-087 | docs/evidence/dashboards.md; ADR-020; contract dashboard 0.1.0, GraphQL 0.10.0, migration 0014; wizard + customization + four persona templates; docs/evidence/console/dashboard-wizard-{en,ar}.png, dashboard-finance-{en,ar}.png | 2026-11-04 | 2026-11-04 |  |
 | REQ-UI-031 | UI | Screen | Embedded Superset carries the Horizon theme |  | The provisioned estate dashboard uses a Horizon colour scheme and dark dashboard CSS (surfaces, text, grid, legends) so the embedded analytics screen matches the console; re-provisioning updates an existing dashboard; screenshot evidence | P1 | Done |  |  | ADR-012 | T-087 | docs/evidence/dashboards.md; ADR-020; superset_config.py EXTRA_CATEGORICAL_COLOR_SCHEMES + THEME_OVERRIDES; analytics.service dashboardCss() from ANALYTICS.theme; verified dark dashboard in the browser | 2026-11-04 | 2026-11-04 |  |
 | REQ-UI-032 | UI | Design system | Horizon refinement: professional display typography, floating surfaces, charts |  | Display face replaced with a professional geometric family; cards float (layered shadow, hover lift) with reduced-motion fallback; sparkline, donut and range-segment primitives in packages/ui with tokens only; Lighthouse floors hold on every screen; walkthrough screenshots refreshed | P1 | Done |  |  | ADR-018 | T-123, T-087 | docs/evidence/dashboards.md; ADR-020; Sora display face; float tokens and rules (om-float, om-float-idle); Sparkline, Donut, Segmented in packages/ui (44 tests); Lighthouse every screen ok | 2026-11-04 | 2026-11-04 |  |
-| REQ-UI-033 | UI | Screen | Layers screen: isometric stack with 3D holographic icons per layer |  | The twelve-layer stack renders as a lit isometric scene with a holographic 3D glyph for every layer (data centre, network and security, hardware, storage, virtualization, cloud, OS, containers, databases, applications, SaaS, unknown), counts and health per layer, hover and click to filter; 60 fps, reduced-motion fallback; en and ar screenshots | P1 | Not started |  |  | ADR-018 |  |  | 2026-11-04 | 2026-11-04 |  |
+| REQ-UI-033 | UI | Screen | Layers screen: isometric stack with 3D holographic icons per layer |  | The twelve-layer stack renders as a lit isometric scene with a holographic 3D glyph for every layer (data centre, network and security, hardware, storage, virtualization, cloud, OS, containers, databases, applications, SaaS, unknown), counts and health per layer, hover and click to filter; 60 fps, reduced-motion fallback; en and ar screenshots | P1 | Done |  |  | ADR-018 | T-125, T-126, T-087 | docs/evidence/layers-stack.md; ADR-021; stack overview in contract order, click-to-focus with equipment, focus panel, CMDB ?layer=; Lighthouse layers 1.00; docs/evidence/console/layers-stack-{en,ar}.png, layers-focus-{en,ar}.png | 2026-11-04 | 2026-11-04 |  |
+| REQ-UI-034 | UI | Design system | Formal profile: remove game-like effects from the Horizon look |  | No holographic card borders, HUD corner brackets, perspective grid floor, aurora washes, bar sheens, dot rings, value glows or entrance rises; plain bordered cards with a layered float shadow and a 2 px hover lift; accent pills and bars glow only on request; sidebar active item is a quiet tint with an indicator bar; Sora display face kept; every screen re-captured in en and ar; Lighthouse floors hold | P0 | Done |  |  | ADR-022 | T-087, T-124, T-126 | docs/evidence/layers-stack.md; ADR-022; effects.ts reduced to float; holographic border, brackets, grid floor, aurora, sheen, ring, value glow, rise removed from packages/ui; ui tests 44; walkthrough re-captured; Lighthouse every screen ok | 2026-11-04 | 2026-11-04 |  |
+| REQ-UI-035 | UI | Design system | Vendor marks catalogue (simple-icons, CC0) for platform badges |  | simple-icons is bundled (no network), used only beside the platform it names; marks the catalogue lacks (Microsoft, Azure, AWS, Oracle, Salesforce, ServiceNow) are typeset names; recorded in the components sheet with licence CC0-1.0 | P1 | Done |  |  | ADR-021 | T-125 | docs/evidence/layers-stack.md; ADR-021; simple-icons 16.36.0 (CC0-1.0) bundled in apps/console; marks only beside the platform they name; names in chips where the catalogue lacks the mark | 2026-11-04 | 2026-11-04 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -207,7 +209,7 @@
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks |  | 5 | 3 | 60 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 33 | 27 | 82 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 35 | 30 | 86 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI |  | 6 | 2 | 33 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
@@ -305,7 +307,7 @@
 | T-084 | unit | REQ-SEC-001 | 2026-10-22 | Pass | 0 |
 | T-085 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
 | T-086 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
-| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038, REQ-UI-024, REQ-UI-020, REQ-UI-028, REQ-UI-029, REQ-UI-030, REQ-UI-031, REQ-UI-032 | 2026-10-22 | Pass | 0 |
+| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038, REQ-UI-024, REQ-UI-020, REQ-UI-028, REQ-UI-029, REQ-UI-030, REQ-UI-031, REQ-UI-032, REQ-UI-033, REQ-UI-034 | 2026-10-22 | Pass | 0 |
 | T-088 | unit | REQ-SEC-001, REQ-SEC-009, REQ-DISC-004, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-006 | 2026-10-22 | Pass | 0 |
 | T-089 | unit | REQ-UI-003, REQ-PERF-001, REQ-PERF-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013 | 2026-10-22 | Pass | 0 |
 | T-045 | unit | REQ-DISC-026 | 2026-10-22 | Pass | 0 |
@@ -364,7 +366,9 @@
 | T-119 | unit | REQ-UI-029 | 2026-11-04 | Pass | 0 |
 | T-122 | unit | REQ-BSM-003, REQ-UI-013 | 2026-11-04 | Pass | 0 |
 | T-123 | unit | REQ-UI-030, REQ-UI-032 | 2026-11-04 | Pass | 0 |
-| T-124 | unit | REQ-UI-030 | 2026-11-04 | Pass | 0 |
+| T-124 | unit | REQ-UI-030, REQ-UI-034 | 2026-11-04 | Pass | 0 |
+| T-125 | unit | REQ-UI-033, REQ-UI-035 | 2026-11-04 | Pass | 0 |
+| T-126 | unit | REQ-UI-033, REQ-UI-034 | 2026-11-04 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -381,11 +385,12 @@
 | 2026-11-04 | Checkpoint 12: Horizon visual language (REQ-UI-028) and the three.js digital twin at /twin (REQ-UI-029, ADR-018). Movement-only card rise fixed the Lighthouse NO_FCP on the cold sign-in step; every screen ok. MFA and corporate IdP parked by Syed. |  |  |  |
 | 2026-11-04 | Checkpoint 13: what-if scenarios failed on every run (kind vocabulary mismatch, missing runbook column, containment never traversed). ADR-019, impact contract 1.0.0, migrations 0012/0013, T-122 e2e on the live stack. |  |  |  |
 | 2026-11-04 | Checkpoint 14: dashboard wizard, customization and Admin/CTO-CIO/CISO/Finance templates (ADR-020, dashboard contract 0.1.0, GraphQL 0.10.0, migration 0014); Sora + floating surfaces + Sparkline/Donut/Segmented; Superset Horizon theme. Fixed on the way: Memgraph parameterised IN scan behind every health lookup (racks 1.7 s → 0.5 s), orphaned incidents after a replay reset, discovery CLS. |  |  |  |
+| 2026-11-04 | Checkpoint 15: Layers screen rebuilt twice on Syed's feedback: holographic stack rejected; realistic equipment scene; final form is the ordered plane stack with click-to-focus onto a layer's equipment (ADR-021). Formal profile sweep removed the game-like effects (ADR-022). simple-icons (CC0) for vendor marks. On-demand frame loop and shared materials fixed the 3D screens' blocking time. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-04T20:56:01.792Z |  |  |  |  |  |  |
+| Generated | 2026-11-04T22:10:38.924Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 66 | 28 | 0 | 4 | 96 |  |  |
+| All | 65 | 28 | 0 | 4 | 99 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
@@ -394,20 +399,20 @@
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 2 | 0 | 0 | 0 | 3 | 5 | 60 |
-| UI | 6 | 0 | 0 | 0 | 27 | 33 | 82 |
+| UI | 5 | 0 | 0 | 0 | 30 | 35 | 86 |
 | AI | 4 | 0 | 0 | 0 | 2 | 6 | 33 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 12 | 27 | 0 | 3 | 71 | 113 |  |
-| P1 | 51 | 1 | 0 | 1 | 25 | 78 |  |
+| P0 | 12 | 27 | 0 | 3 | 72 | 114 |  |
+| P1 | 50 | 1 | 0 | 1 | 27 | 79 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 37 |  |  |  |  |  |  |
 | 2026-11-01 | 87 |  |  |  |  |  |  |
-| 2026-11-04 | 96 |  |  |  |  |  |  |
+| 2026-11-04 | 99 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |

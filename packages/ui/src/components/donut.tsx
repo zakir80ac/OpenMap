@@ -1,4 +1,4 @@
-// REQ-UI-032 — Donut: proportional ring of segments with a centre label; each segment glows in its accent. Pure SVG.
+// REQ-UI-032 — Donut: proportional ring of segments with a centre label. Pure SVG.
 import type { ReactNode } from 'react';
 import { useDirection } from '../direction.js';
 import { cx, mergeStyle, px, type OmStyle } from '../style.js';
@@ -28,8 +28,6 @@ export interface DonutProps {
 const DEFAULT_SIZE = 120;
 const DEFAULT_THICKNESS = 12;
 const TRACK_ALPHA = 0.08;
-const GLOW_ALPHA = 0.5;
-const GLOW_BLUR = 3;
 /** Gap between segments as a fraction of the full circle. */
 const GAP_FRACTION = 0.012;
 const FULL_TURN_DEG = 360;
@@ -77,7 +75,6 @@ export function Donut({ segments, centre, caption, size = DEFAULT_SIZE, thicknes
               strokeDasharray={length.toFixed(2) + ' ' + (circumference - length).toFixed(2)}
               strokeDashoffset={(-offset).toFixed(2)}
               transform={'rotate(' + String(START_DEG) + ' ' + String(centreXY) + ' ' + String(centreXY) + ')'}
-              style={{ filter: 'drop-shadow(0 0 ' + String(GLOW_BLUR) + 'px ' + withAlpha(s.accent, GLOW_ALPHA) + ')' }}
               data-segment={s.label}
             >
               <title>{s.label}</title>

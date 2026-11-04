@@ -1,5 +1,4 @@
-// REQ-UI-032 — Sparkline: a small SVG area line for a KPI tile; soft gradient fill, glowing stroke, a dot on the last
-// point. Pure SVG from tokens; the console formats nothing here, it only hands over the series.
+// REQ-UI-032 — Sparkline: a small SVG area line for a KPI tile; soft gradient fill, a dot on the last point. Pure SVG from tokens; the console formats nothing here, it only hands over the series.
 import type { ReactNode } from 'react';
 import { useDirection } from '../direction.js';
 import { cx, mergeStyle, px, type OmStyle } from '../style.js';
@@ -23,8 +22,6 @@ const STROKE_WIDTH = 1.6;
 const DOT_RADIUS = 2.2;
 const FILL_TOP_ALPHA = 0.35;
 const FILL_BOTTOM_ALPHA = 0.02;
-const GLOW_ALPHA = 0.55;
-const GLOW_BLUR = 2.4;
 /** Padding inside the view box so the stroke and the last dot are never clipped. */
 const PAD = 3;
 
@@ -75,7 +72,6 @@ export function Sparkline({ values, accent = accents.cyan, height = DEFAULT_HEIG
           strokeLinejoin="round"
           strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
-          style={{ filter: 'drop-shadow(0 0 ' + String(GLOW_BLUR) + 'px ' + withAlpha(accent, GLOW_ALPHA) + ')' }}
           transform={dir === 'rtl' ? 'translate(' + String(VIEW_WIDTH) + ' 0) scale(-1 1)' : undefined}
         />
       ) : null}

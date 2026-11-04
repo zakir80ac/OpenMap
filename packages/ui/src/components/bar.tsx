@@ -1,4 +1,4 @@
-// REQ-UI-001 — Bar: progress bar whose glowing fill grows from the inline start, so it flips in rtl.
+// REQ-UI-001 — Bar: progress bar whose fill grows from the inline start, so it flips in rtl; a glow on request.
 import type { ReactNode } from 'react';
 import { useDirection } from '../direction.js';
 import { cx, mergeStyle, percent, px, type OmStyle } from '../style.js';
@@ -29,7 +29,7 @@ export function Bar({
   max = DEFAULT_MAX,
   accent = accents.cyan,
   height = DEFAULT_HEIGHT,
-  glowing = true,
+  glowing = false,
   label,
   className,
   style,
@@ -68,7 +68,6 @@ export function Bar({
       style={mergeStyle(base, style)}
     >
       <span data-part="fill" data-origin={flow['inline-start']} style={fill} />
-      {glowing ? <span data-part="sheen" aria-hidden="true" /> : null}
     </div>
   );
 }

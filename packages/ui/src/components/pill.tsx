@@ -37,7 +37,7 @@ export function Pill({ children, variant = 'default', icon, glowing, onClick, se
   const dir = useDirection();
   const accent = variantAccent[variant];
   const isAccent = variant !== 'default';
-  const showGlow = glowing ?? isAccent;
+  const showGlow = glowing ?? false;
   const base: OmStyle = {
     '--om-pill-accent': accent,
     paddingInline: varRef('space-10'),

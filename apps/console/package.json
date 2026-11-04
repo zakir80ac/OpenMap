@@ -33,6 +33,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "sigma": "4.0.3",
+    "simple-icons": "16.36.0",
     "three": "0.187.0"
   },
   "devDependencies": {

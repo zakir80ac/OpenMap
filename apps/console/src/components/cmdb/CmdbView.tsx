@@ -24,17 +24,19 @@ const OVERSCAN_ROWS = spacing['8'];
 export interface CmdbViewProps {
   /** Text filter from the global search (`?q=`); empty means no text filter. */
   text: string;
+  /** Layer selected on arrival (REQ-UI-033: the Layers screen opens the CMDB filtered to a layer). */
+  initialLayer?: CiLayer;
 }
 
 const columns =
   'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
 
-export function CmdbView({ text }: CmdbViewProps): ReactNode {
+export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const t = useT();
   const locale = useLocale();
   const format = useFormatters();
   const { visibility, visibleCount } = useLayerVisibility();
-  const [selected, setSelected] = useState<CiLayer | undefined>(undefined);
+  const [selected, setSelected] = useState<CiLayer | undefined>(initialLayer);
 
   const filter = useMemo<CiFilterInput>(() => {
     const next: CiFilterInput = {};

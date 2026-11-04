@@ -56,9 +56,10 @@ describe.each(LOCALES)('Sidebar in %s', (locale) => {
     const current = within(nav).getAllByRole('link', { current: 'page' });
     expect(current).toHaveLength(1);
     expect(current[0]?.textContent).toBe(translate(locale, 'nav.cmdb'));
-    expect(current[0]?.className).toContain('shadow-om-glow-nav-cyan');
+    // Formal profile (REQ-UI-034): the active item is a quiet tint with an indicator bar, no glow.
+    expect(current[0]?.className).toContain('bg-om-cyan/8');
     const inactive = within(nav).getByRole('link', { name: translate(locale, 'nav.dashboard') });
     expect(inactive.getAttribute('aria-current')).toBeNull();
-    expect(inactive.className).not.toContain('shadow-om-glow-nav-cyan');
+    expect(inactive.className).not.toContain('bg-om-cyan/8');
   });
 });

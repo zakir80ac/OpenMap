@@ -29,8 +29,6 @@ export function Dot({ state, size = 8, glowing = true, pulse = false, label, cla
     background: accent,
     boxShadow: glowing ? glow('bar', accent) : undefined,
     animation: pulse ? PULSE_ANIMATION + ' ' + varRef('pulse-period') + ' ' + varRef('ease-in-out') + ' infinite' : undefined,
-    position: 'relative',
-    /* The pulse ring (stylesheet rule) borders in currentColor. */
     color: accent,
   };
   return (

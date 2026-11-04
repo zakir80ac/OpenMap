@@ -110,7 +110,7 @@ function EstateCis(): ReactNode {
   const stats = useStats();
   const total = (layers.data ?? []).reduce((sum, l) => sum + l.count, 0);
   const delta = stats.data ? trendDelta(stats.data.trend.cis) : null;
-  return <KpiTile label={t('dashboard.kpi.cis')} value={layers.isSuccess ? format.integer(total) : PENDING} accent={accents.cyan} delta={delta} spark={stats.data?.trend.cis} note={t('dashboard.widget.trendNote', { days: format.integer(DASHBOARD.trendDays) })} />;
+  return <KpiTile label={t('dashboard.widget.estate.cis.kpi')} value={layers.isSuccess ? format.integer(total) : PENDING} accent={accents.cyan} delta={delta} spark={stats.data?.trend.cis} note={t('dashboard.widget.trendNote', { days: format.integer(DASHBOARD.trendDays) })} />;
 }
 
 function EstateLayers(): ReactNode {
@@ -252,7 +252,7 @@ function IncidentsOpen(): ReactNode {
   const open = incidents.data;
   return (
     <div className="flex flex-col gap-om-10">
-      <KpiTile label={t('dashboard.widget.incidents.open.title')} value={format.integer(open.length)} accent={open.length > 0 ? accents.rose : accents.emerald} spark={stats.data?.trend.incidents} />
+      <KpiTile label={t('dashboard.widget.incidents.open.kpi')} value={format.integer(open.length)} accent={open.length > 0 ? accents.rose : accents.emerald} spark={stats.data?.trend.incidents} />
       <ul className="flex flex-col gap-om-4">
         {open.slice(0, DASHBOARD.listRows).map((i) => (
           <li key={i.id} className="flex items-center gap-om-8 text-om-xs">
@@ -299,7 +299,7 @@ function DiscoverySweep(): ReactNode {
   const sweep = useQuery(currentSweepQuery());
   if (!sweep.isSuccess) return <Loading error={sweep.isError} onRetry={() => void sweep.refetch()} />;
   const s = sweep.data;
-  if (s === null) return <KpiTile label={t('dashboard.widget.discovery.sweep.title')} value={t('dashboard.widget.sweepIdle')} />;
+  if (s === null) return <KpiTile label={t('dashboard.widget.discovery.sweep.kpi')} value={t('dashboard.widget.sweepIdle')} />;
   const running = s.finishedAt === null;
   return (
     <div className="flex h-full flex-col justify-between gap-om-10">
@@ -318,7 +318,7 @@ function DiscoveryNodes(): ReactNode {
   const online = nodes.data.filter((n) => n.status === NODE_ONLINE).length;
   return (
     <div className="flex h-full flex-col justify-between gap-om-10">
-      <Kpi label={t('dashboard.widget.discovery.nodes.title')} value={format.integer(online)} unit={t('dashboard.widget.ofTotal', { total: format.integer(nodes.data.length) })} accent={online === nodes.data.length ? accents.emerald : accents.amber} />
+      <Kpi label={t('dashboard.widget.discovery.nodes.kpi')} value={format.integer(online)} unit={t('dashboard.widget.ofTotal', { total: format.integer(nodes.data.length) })} accent={online === nodes.data.length ? accents.emerald : accents.amber} />
       <ul className="flex flex-col gap-om-4">
         {nodes.data.slice(0, DASHBOARD.listRows).map((n) => (
           <li key={n.id} className="flex items-center gap-om-8 text-om-xs">
@@ -364,7 +364,7 @@ function IntegrationsHealth(): ReactNode {
   const failed = integrations.data.reduce((sum, i) => sum + i.failedLastHour, 0);
   return (
     <div className="flex h-full flex-col justify-between gap-om-10">
-      <Kpi label={t('dashboard.widget.integrations.health.title')} value={format.integer(healthy)} unit={t('dashboard.widget.ofTotal', { total: format.integer(integrations.data.length) })} accent={failed > 0 ? accents.amber : accents.emerald} />
+      <Kpi label={t('dashboard.widget.integrations.health.kpi')} value={format.integer(healthy)} unit={t('dashboard.widget.ofTotal', { total: format.integer(integrations.data.length) })} accent={failed > 0 ? accents.amber : accents.emerald} />
       <p className="text-om-2xs text-om-muted">{t('dashboard.widget.failedLastHour', { count: format.integer(failed) })}</p>
     </div>
   );
@@ -466,7 +466,7 @@ function SecurityExposure(): ReactNode {
   const stats = useStats();
   if (!stats.isSuccess) return <Loading error={stats.isError} onRetry={() => void stats.refetch()} />;
   const v = stats.data.vulnerabilities;
-  return <KpiTile label={t('dashboard.widget.security.exposure.title')} value={format.integer(v.internetFacing)} accent={v.internetFacing > 0 ? accents.rose : accents.emerald} note={t('dashboard.widget.exposureNote', { hosts: format.integer(v.affectedHosts) })} />;
+  return <KpiTile label={t('dashboard.widget.security.exposure.kpi')} value={format.integer(v.internetFacing)} accent={v.internetFacing > 0 ? accents.rose : accents.emerald} note={t('dashboard.widget.exposureNote', { hosts: format.integer(v.affectedHosts) })} />;
 }
 
 function SoftwareEndOfSupport(): ReactNode {
@@ -475,7 +475,7 @@ function SoftwareEndOfSupport(): ReactNode {
   const stats = useStats();
   if (!stats.isSuccess) return <Loading error={stats.isError} onRetry={() => void stats.refetch()} />;
   const n = stats.data.endOfSupport;
-  return <KpiTile label={t('dashboard.widget.software.end_of_support.title')} value={format.integer(n)} accent={n > 0 ? accents.amber : accents.emerald} note={t('dashboard.widget.eosNote', { products: format.integer(stats.data.licences.products) })} />;
+  return <KpiTile label={t('dashboard.widget.software.end_of_support.kpi')} value={format.integer(n)} accent={n > 0 ? accents.amber : accents.emerald} note={t('dashboard.widget.eosNote', { products: format.integer(stats.data.licences.products) })} />;
 }
 
 function SoftwareLicences(): ReactNode {
@@ -487,7 +487,7 @@ function SoftwareLicences(): ReactNode {
   const attention = l.overDeployed + l.expired;
   return (
     <div className="flex h-full flex-col justify-between gap-om-8">
-      <Kpi label={t('dashboard.widget.software.licences.title')} value={format.integer(attention)} accent={attention > 0 ? accents.amber : accents.emerald} unit={t('dashboard.widget.ofTotal', { total: format.integer(l.licensed) })} />
+      <Kpi label={t('dashboard.widget.software.licences.kpi')} value={format.integer(attention)} accent={attention > 0 ? accents.amber : accents.emerald} unit={t('dashboard.widget.ofTotal', { total: format.integer(l.licensed) })} />
       <ul className="flex flex-col gap-om-2 text-om-2xs text-om-secondary">
         <li>{t('dashboard.widget.licencesOver', { count: format.integer(l.overDeployed) })}</li>
         <li>{t('dashboard.widget.licencesExpiring', { count: format.integer(l.expiringSoon), days: format.integer(DASHBOARD.licenceExpiryDays) })}</li>
@@ -571,7 +571,7 @@ function FinanceLicenceCost(): ReactNode {
   const stats = useStats();
   if (!stats.isSuccess) return <Loading error={stats.isError} onRetry={() => void stats.refetch()} />;
   const { value, more } = headlineMoney(locale, stats.data.licences.annualCost, t('dashboard.widget.noCost'));
-  return <KpiTile label={t('dashboard.widget.finance.licence_cost.title')} value={value} accent={accents.violet} note={more > 0 ? t('dashboard.widget.moreCurrencies', { count: format.integer(more) }) : t('dashboard.widget.licencedProducts', { count: format.integer(stats.data.licences.licensed) })} />;
+  return <KpiTile label={t('dashboard.widget.finance.licence_cost.kpi')} value={value} accent={accents.violet} note={more > 0 ? t('dashboard.widget.moreCurrencies', { count: format.integer(more) }) : t('dashboard.widget.licencedProducts', { count: format.integer(stats.data.licences.licensed) })} />;
 }
 
 const IN_SERVICE_STAGES: readonly AssetStage[] = ['in_stock', 'deployed', 'spare'];
@@ -591,7 +591,7 @@ function FinanceAssetValue(): ReactNode {
   }
   const money = [...totals.entries()].map(([currency, amount]) => ({ amount, currency })).sort((a, b) => b.amount - a.amount);
   const { value, more } = headlineMoney(locale, money, t('dashboard.widget.noCost'));
-  return <KpiTile label={t('dashboard.widget.finance.asset_value.title')} value={value} accent={accents.emerald} note={more > 0 ? t('dashboard.widget.moreCurrencies', { count: format.integer(more) }) : t('dashboard.widget.assetsInService', { count: format.integer(count) })} />;
+  return <KpiTile label={t('dashboard.widget.finance.asset_value.kpi')} value={value} accent={accents.emerald} note={more > 0 ? t('dashboard.widget.moreCurrencies', { count: format.integer(more) }) : t('dashboard.widget.assetsInService', { count: format.integer(count) })} />;
 }
 
 function FinancePlans(): ReactNode {
@@ -629,7 +629,7 @@ function DcimPower(): ReactNode {
   const load = p.ratedWatts === 0 ? 0 : (p.currentWatts / p.ratedWatts) * BSM.percentScale;
   return (
     <div className="flex h-full flex-col justify-between gap-om-10">
-      <Kpi label={t('dashboard.widget.dcim.power.title')} value={format.number(p.currentWatts / POWER.wattsPerKilowatt)} unit={t('dashboard.widget.ofKw', { total: format.number(p.ratedWatts / POWER.wattsPerKilowatt) })} accent={load >= DCIM.criticalPowerPercent ? accents.rose : load >= DCIM.warnPowerPercent ? accents.amber : accents.cyan} />
+      <Kpi label={t('dashboard.widget.dcim.power.kpi')} value={format.number(p.currentWatts / POWER.wattsPerKilowatt)} unit={t('dashboard.widget.ofKw', { total: format.number(p.ratedWatts / POWER.wattsPerKilowatt) })} accent={load >= DCIM.criticalPowerPercent ? accents.rose : load >= DCIM.warnPowerPercent ? accents.amber : accents.cyan} />
       <Bar value={load} label={t('dashboard.widget.dcim.power.title')} accent={load >= DCIM.criticalPowerPercent ? accents.rose : load >= DCIM.warnPowerPercent ? accents.amber : accents.cyan} />
       <p className="text-om-2xs text-om-muted">{t('dashboard.widget.powerRacks', { count: format.integer(p.racks), percent: format.integer(load) })}</p>
     </div>
@@ -644,7 +644,7 @@ function IpamUtilisation(): ReactNode {
   const i = stats.data.ipam;
   return (
     <div className="flex h-full flex-col justify-between gap-om-10">
-      <Kpi label={t('dashboard.widget.ipam.utilisation.title')} value={format.integer(i.averageUtilisationPercent)} unit="%" accent={i.critical > 0 ? accents.amber : accents.cyan} />
+      <Kpi label={t('dashboard.widget.ipam.utilisation.kpi')} value={format.integer(i.averageUtilisationPercent)} unit="%" accent={i.critical > 0 ? accents.amber : accents.cyan} />
       <Bar value={i.averageUtilisationPercent} label={t('dashboard.widget.ipam.utilisation.title')} accent={i.critical > 0 ? accents.amber : accents.cyan} />
       <p className="text-om-2xs text-om-muted">{t('dashboard.widget.ipamNote', { subnets: format.integer(i.subnets), critical: format.integer(i.critical) })}</p>
     </div>

@@ -632,6 +632,81 @@ export const DASHBOARD = {
   statsRowCap: 10_000,
 } as const;
 
+/**
+ * The Layers stack (REQ-UI-033, ADR-021): twelve planes in contract order under a three-quarter orthographic camera;
+ * click a plane to focus it, when its equipment (schematic, from primitives at plausible proportions: a 42U cabinet
+ * is 0.6 × 2 × 1 m, a 2U server 0.45 × 0.09 × 0.75 m) stands on it. Scene units are metres.
+ */
+export const LAYER_STACK = {
+  halfDivisor: 2,
+  /** Plane footprint, thickness and the vertical step between planes. */
+  planeWidthM: 4.0,
+  planeDepthM: 2.6,
+  planeThicknessM: 0.08,
+  stepM: 0.64,
+  /** Accent strip along a plane's front edge, in the layer colour, and the rest alpha of its edges. */
+  edgeStripM: 0.05,
+  edgeOpacity: 0.45,
+  /** Overview camera: offset from the stack's middle and the orthographic zoom (px per metre). */
+  overviewOffset: [9, 6, 9] as const,
+  overviewZoom: 50,
+  /** Focus camera: offset from the focused plane, zoom, how far above the plane the view centres, and the ease. */
+  focusOffset: [4.2, 3.6, 4.2] as const,
+  focusZoom: 140,
+  focusLiftM: 0.35,
+  focusMs: 380,
+  /** Planes below the focused one recede to this opacity; planes above it step out of the view. */
+  recededOpacity: 0.14,
+  cameraNearM: 0.1,
+  cameraFarM: 200,
+  /** Orbit limits keep the three-quarter reading: azimuth in radians around the start, polar between the two. */
+  orbitAzimuthRad: 0.6,
+  orbitPolarMinRad: 0.55,
+  orbitPolarMaxRad: 1.25,
+  /** Lighting. */
+  hemisphereIntensity: 1.9,
+  keyLightIntensity: 2.6,
+  keyLightPosition: [10, 18, 8] as const,
+  fillLightIntensity: 0.5,
+  fillLightPosition: [-12, 8, -6] as const,
+  shadowMapSize: 2048,
+  /** Materials: graphite chassis, darker bezels, platform slate. */
+  chassisMetalness: 0.3,
+  chassisRoughness: 0.5,
+  bezelRoughness: 0.7,
+  platformRoughness: 0.9,
+  platformMetalness: 0.05,
+  /** Treatment of a hidden layer and a hovered one. */
+  hiddenOpacity: 0.22,
+  /** Translucent parts: VM cards, zone slabs. */
+  glassOpacity: 0.38,
+  hoverEmissive: 0.28,
+  restEmissive: 0.04,
+  /** LED indicators: radius and glow strength. */
+  ledRadiusM: 0.014,
+  ledEmissive: 2.2,
+  /** Equipment proportions, metres: cabinet, 2U server, switch, firewall, disk shelf, SAN switch, database drum. */
+  cabinet: { widthM: 0.52, heightM: 1.05, depthM: 0.7, railInsetM: 0.035, panelM: 0.03, servers: 4 },
+  server: { widthM: 1.1, heightM: 0.14, depthM: 0.8, bays: 8, bayInsetM: 0.012, gapM: 0.04 },
+  switch: { widthM: 1.35, heightM: 0.1, depthM: 0.6, portsPerRow: 16, portRows: 2, portSizeM: 0.04, portGapM: 0.012 },
+  firewall: { widthM: 0.8, heightM: 0.14, depthM: 0.6, stripeM: 0.025 },
+  shelf: { widthM: 1.3, heightM: 0.22, depthM: 0.8, slots: 12, slotInsetM: 0.012 },
+  sanSwitch: { widthM: 1.0, heightM: 0.08, depthM: 0.55 },
+  drum: { radiusM: 0.3, heightM: 0.24, count: 3, gapM: 0.08 },
+  vmCard: { widthM: 0.34, heightM: 0.05, depthM: 0.26, columns: 3, rows: 2, liftM: 0.18, gapM: 0.08 },
+  container: { widthM: 0.42, heightM: 0.2, depthM: 0.22, columns: 3, rows: 2, gapM: 0.05 },
+  zone: { widthM: 1.1, heightM: 0.12, depthM: 0.8, count: 3, gapM: 0.25 },
+  screen: { widthM: 1.2, heightM: 0.7, depthM: 0.04, standM: 0.2 },
+  crate: { sizeM: 0.8 },
+  /** Units of equipment repeated for a focused layer: one at the smallest share, up to this many at the largest. */
+  maxUnits: 2,
+  unitGapM: 0.25,
+  /** Equipment is drawn at life size on the focused plane. */
+  equipmentScale: 1,
+  dprMax: 1.5,
+  curveSegments: 28,
+} as const;
+
 export const CONSOLE = {
   /** Keystroke-to-request delay for incremental search boxes; one request per pause, not per key. */
   searchDebounceMs: 250,

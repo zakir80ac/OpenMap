@@ -146,14 +146,15 @@ describe('cssVariables()', () => {
     expect(stylesheet()).toContain(css);
     expect(stylesheet()).toContain('@keyframes om-pulse');
   });
-  it('emits the Horizon effects: holographic border, brackets, grid, sheen and rise, and honours reduced motion', () => {
-    expect(css).toContain('--om-holo-border: linear-gradient(135deg, rgba(34,211,238,0.55), rgba(139,92,246,0.3) 45%, rgba(34,211,238,0.06) 85%);');
-    expect(css).toContain('--om-grid-cell: 56px;');
-    expect(css).toContain('--om-sheen-period: 2.8s;');
+  it('emits the formal profile: plain cards, a float shadow and lift, the pulse only, reduced motion honoured', () => {
+    expect(css).toContain('--om-float-lift: 2px;');
+    expect(css).not.toContain('--om-holo-border');
+    expect(css).not.toContain('--om-grid-cell');
     const sheet = stylesheet();
-    for (const name of ['om-rise', 'om-sheen', 'om-ring', 'om-grid-drift']) expect(sheet).toContain('@keyframes ' + name);
-    expect(sheet).toContain('.om-card::after');
-    expect(sheet).toContain('background-clip: padding-box, border-box;');
+    expect(sheet).toContain('.om-float:hover');
+    expect(sheet).not.toContain('.om-card::after');
+    expect(sheet).not.toContain('background-clip');
+    for (const name of ['om-rise', 'om-sheen', 'om-ring', 'om-grid-drift']) expect(sheet).not.toContain('@keyframes ' + name);
     expect(sheet).toContain('@media (prefers-reduced-motion: reduce)');
   });
 });

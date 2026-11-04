@@ -2,7 +2,23 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-04 (checkpoint 14: dashboard wizard, role templates, Horizon refinements)
+## Last session · 2026-11-05 (checkpoint 15: the Layers equipment scene and the formal profile)
+
+Syed rejected the first Layers revision (holographic wafers and abstract glyphs, projected labels) as "horrible",
+"game inspired" and unreadable, and asked for realistic objects (switches, firewalls, racks, servers, storage) with
+vendor marks (VMware, Microsoft, Red Hat) and a final sweep to make the console formal. Done as ADR-021 (rewritten)
+and ADR-022: the Layers screen is a three.js stack of twelve planes in contract order (Syed: "the initial layers
+were better"); clicking a plane or its row zooms onto that layer, recedes the others and stands its schematic
+equipment on the plane, with a focus panel (count, health, platforms, CMDB link) and Escape or Back to return;
+equipment built from primitives (cabinets, a switch and firewall, 2U servers, a disk shelf and SAN switch, a hypervisor host with VM
+cards, zone slabs, a console screen, a container host, database drums, an application tier, SaaS cards, a crate),
+vendor marks beside each row of the list from `simple-icons` (CC0; names in chips where a logo is not licensable),
+no text in the canvas, hover synced with the visibility list, an accessible tier list for the e2e (T-125, T-126). The formal
+profile removed the holographic borders, HUD brackets, grid floor, aurora, sheens, rings, value glows and entrance
+rises from `packages/ui`; cards are plain bordered surfaces with an opt-in float shadow; pills and bars glow only
+on request; the sidebar active item is a quiet tint. Memory `ui-direction-obsidian-pro` carries the rules.
+
+## Previous session · 2026-11-04 (checkpoint 14: dashboard wizard, role templates, Horizon refinements)
 
 Syed's next asks after the what-if fix: a dashboard wizard and customisation with real templates for Admin, CTO/CIO,
 CISO and Finance; more professional type and floating effects; a Superset that matches the theme. ADR-020.
@@ -25,7 +41,7 @@ machine (`openmap-control-plane`, not ours to remove) eats a core; stop it befor
 Layers screen as an isometric stack with 3D holographic icons (REQ-UI-033), the full asset register across every
 layer (REQ-CMDB-017/018 and a new register row), the finance module (costing, ROI, budgeting; new BSM rows).
 
-## Previous session · 2026-11-04 (checkpoint 13: what-if scenarios failed on every run)
+## Earlier session · 2026-11-04 (checkpoint 13: what-if scenarios failed on every run)
 
 Syed reported "Something went wrong" on every what-if run in Business services. Root cause, found by replaying the
 run in the browser pane: the console sends the picked condition (`failed`, `power_loss`, …) as the scenario `kind`,

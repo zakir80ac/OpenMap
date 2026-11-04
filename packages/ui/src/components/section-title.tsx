@@ -66,7 +66,6 @@ export function SectionTitle({ children, eyebrow, description, action, size = 'm
                 width: varRef('space-16'),
                 height: px(EYEBROW_LINE_PX),
                 background: 'linear-gradient(' + varRef('dir-flow-angle') + ', ' + varRef('accent-cyan') + ', transparent)',
-                boxShadow: varRef('glow-bar-cyan'),
               }}
             />
             {eyebrow}

@@ -27427,6 +27427,22 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_console_e2e_layers_spec",
+      "label": "layers.spec.ts",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_e2e_layers_spec_screenshotsdir",
+      "label": "screenshotsDir",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_console_e2e_perf_spec",
       "label": "perf.spec.ts",
       "file_type": "code",
@@ -28035,11 +28051,27 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_console_package_dependencies_simple_icons",
+      "label": "simple-icons",
+      "file_type": "code",
+      "source_file": "apps/console/package.json",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "simple_icons",
+      "label": "simple-icons",
+      "file_type": "concept",
+      "source_file": "apps/console/package.json",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_console_package_dependencies_three",
       "label": "three",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -28047,7 +28079,7 @@
       "label": "three",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -28055,7 +28087,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L38",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -28063,7 +28095,7 @@
       "label": "@playwright/test",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -28071,7 +28103,7 @@
       "label": "@playwright/test",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -28079,7 +28111,7 @@
       "label": "@tailwindcss/postcss",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
@@ -28087,7 +28119,7 @@
       "label": "@tailwindcss/postcss",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
@@ -28095,7 +28127,7 @@
       "label": "@testing-library/dom",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "_origin": "ast"
     },
     {
@@ -28103,7 +28135,7 @@
       "label": "@testing-library/dom",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "_origin": "ast"
     },
     {
@@ -28111,7 +28143,7 @@
       "label": "@testing-library/react",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -28119,7 +28151,7 @@
       "label": "@testing-library/react",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -28127,7 +28159,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -28135,7 +28167,7 @@
       "label": "@types/node",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -28143,7 +28175,7 @@
       "label": "@types/react",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "_origin": "ast"
     },
     {
@@ -28151,7 +28183,7 @@
       "label": "@types/react",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "_origin": "ast"
     },
     {
@@ -28159,7 +28191,7 @@
       "label": "@types/react-dom",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L45",
+      "source_location": "L46",
       "_origin": "ast"
     },
     {
@@ -28167,7 +28199,7 @@
       "label": "@types/react-dom",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L45",
+      "source_location": "L46",
       "_origin": "ast"
     },
     {
@@ -28175,7 +28207,7 @@
       "label": "@types/three",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -28183,7 +28215,7 @@
       "label": "@types/three",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -28191,7 +28223,7 @@
       "label": "graphology-types",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -28199,7 +28231,7 @@
       "label": "graphology-types",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -28207,7 +28239,7 @@
       "label": "jsdom",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -28215,7 +28247,7 @@
       "label": "jsdom",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -28223,7 +28255,7 @@
       "label": "tailwindcss",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -28231,7 +28263,7 @@
       "label": "tailwindcss",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -28239,7 +28271,7 @@
       "label": "tsx",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -28247,7 +28279,7 @@
       "label": "tsx",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -28255,7 +28287,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L51",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -28263,7 +28295,7 @@
       "label": "typescript",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L51",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -28271,7 +28303,7 @@
       "label": "vitest",
       "file_type": "code",
       "source_file": "apps/console/package.json",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -28279,7 +28311,7 @@
       "label": "vitest",
       "file_type": "concept",
       "source_file": "apps/console/package.json",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -28527,7 +28559,7 @@
       "label": "PageProps",
       "file_type": "code",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "_origin": "ast"
     },
     {
@@ -28535,7 +28567,7 @@
       "label": "generateMetadata()",
       "file_type": "code",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -28543,7 +28575,7 @@
       "label": "CmdbPage()",
       "file_type": "code",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -29975,7 +30007,7 @@
       "label": "CmdbView()",
       "file_type": "code",
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L32",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -31939,43 +31971,243 @@
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_components_layers_layerstack",
-      "label": "LayerStack.tsx",
+      "id": "apps_console_src_components_layers_layerstack3d",
+      "label": "LayerStack3D.tsx",
       "file_type": "code",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
       "source_location": "L1",
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_components_layers_layerstack_planes",
-      "label": "PLANES",
+      "id": "apps_console_src_components_layers_layerstack3d_layerstack3dprops",
+      "label": "LayerStack3DProps",
       "file_type": "code",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L26",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_components_layers_layerstack_layerstackprops",
-      "label": "LayerStackProps",
+      "id": "apps_console_src_components_layers_layerstack3d_treatment",
+      "label": "Treatment",
       "file_type": "code",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L28",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_components_layers_layerstack_planepoints",
-      "label": "planePoints()",
+      "id": "apps_console_src_components_layers_layerstack3d_materials",
+      "label": "Materials",
       "file_type": "code",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L35",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_components_layers_layerstack_layerstack",
-      "label": "LayerStack()",
+      "id": "apps_console_src_components_layers_layerstack3d_makematerials",
+      "label": "makeMaterials()",
       "file_type": "code",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L44",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L57",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_chassis",
+      "label": "Chassis()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L72",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_led",
+      "label": "Led()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L81",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_cabinet",
+      "label": "Cabinet()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L91",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_server",
+      "label": "Server()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L114",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_switch",
+      "label": "Switch()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L129",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_firewall",
+      "label": "Firewall()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L149",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_shelf",
+      "label": "Shelf()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L164",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_sanswitch",
+      "label": "SanSwitch()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L178",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_drums",
+      "label": "Drums()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L189",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_hypervisor",
+      "label": "Hypervisor()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L204",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_containerhost",
+      "label": "ContainerHost()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L226",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_region",
+      "label": "Region()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L246",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_console",
+      "label": "Console()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L263",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_applicationtier",
+      "label": "ApplicationTier()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L283",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_crate",
+      "label": "Crate()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L295",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_equipment",
+      "label": "Equipment()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L306",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_unitwidth",
+      "label": "unitWidth()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L346",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_plane",
+      "label": "Plane()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L372",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_labeltargets",
+      "label": "LabelTargets",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L423",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_labelprojector",
+      "label": "LabelProjector()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L426",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_camerarig",
+      "label": "CameraRig()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L444",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_layerstack3d",
+      "label": "LayerStack3D()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L478",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3d_tsx_docref_adr_0021",
+      "label": "ADR-0021",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L2",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3dlazy",
+      "label": "LayerStack3DLazy.tsx",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layerstack3dlazy_layerstack3dlazy",
+      "label": "LayerStack3DLazy",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -31991,7 +32223,7 @@
       "label": "VisibilitySwitchProps",
       "file_type": "code",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L17",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -31999,7 +32231,31 @@
       "label": "VisibilitySwitch()",
       "file_type": "code",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L23",
+      "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layersview_iconentry",
+      "label": "IconEntry",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L54",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layersview_iconfor",
+      "label": "iconFor()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L60",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layersview_vendormarks",
+      "label": "VendorMarks()",
+      "file_type": "code",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L66",
       "_origin": "ast"
     },
     {
@@ -32007,7 +32263,15 @@
       "label": "LayersView()",
       "file_type": "code",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L47",
+      "source_location": "L92",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_components_layers_layersview_tsx_docref_adr_0021",
+      "label": "ADR-0021",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L3",
       "_origin": "ast"
     },
     {
@@ -36024,6 +36288,150 @@
       "file_type": "code",
       "source_file": "apps/console/src/lib/keys.ts",
       "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_test",
+      "label": "layer-stack-model.test.ts",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_test_everyvisible",
+      "label": "everyVisible",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model",
+      "label": "layer-stack-model.ts",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_vec3",
+      "label": "Vec3",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_equipmentkind",
+      "label": "EquipmentKind",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_layer_equipment",
+      "label": "LAYER_EQUIPMENT",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_mark",
+      "label": "Mark",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_layer_marks",
+      "label": "LAYER_MARKS",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L35",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_layerplane",
+      "label": "LayerPlane",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L83",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_layercounts",
+      "label": "LayerCounts",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L104",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_camerapose",
+      "label": "CameraPose",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L111",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_stackmodel",
+      "label": "StackModel",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L117",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_stack_order",
+      "label": "STACK_ORDER",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L124",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_unitsfor",
+      "label": "unitsFor()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L131",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_planeposition",
+      "label": "planePosition()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L135",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "label": "buildStackModel()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L139",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_focuspose",
+      "label": "focusPose()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L176",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_layer_stack_model_ts_docref_adr_0021",
+      "label": "ADR-0021",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L1",
       "_origin": "ast"
     },
     {
@@ -43889,11 +44297,19 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_constants_src_index_layer_stack",
+      "label": "LAYER_STACK",
+      "file_type": "code",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L640",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_constants_src_index_console",
       "label": "CONSOLE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L635",
+      "source_location": "L710",
       "_origin": "ast"
     },
     {
@@ -43901,7 +44317,7 @@
       "label": "AUTH",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L657",
+      "source_location": "L732",
       "_origin": "ast"
     },
     {
@@ -43909,7 +44325,7 @@
       "label": "ROLES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L691",
+      "source_location": "L766",
       "_origin": "ast"
     },
     {
@@ -43917,7 +44333,7 @@
       "label": "Role",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L699",
+      "source_location": "L774",
       "_origin": "ast"
     },
     {
@@ -43925,7 +44341,7 @@
       "label": "ROLE_IMPLICATIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L702",
+      "source_location": "L777",
       "_origin": "ast"
     },
     {
@@ -43933,7 +44349,7 @@
       "label": "SYNTH_ESTATE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L711",
+      "source_location": "L786",
       "_origin": "ast"
     },
     {
@@ -43941,7 +44357,7 @@
       "label": "LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L721",
+      "source_location": "L796",
       "_origin": "ast"
     },
     {
@@ -43949,7 +44365,7 @@
       "label": "Locale",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L722",
+      "source_location": "L797",
       "_origin": "ast"
     },
     {
@@ -43957,7 +44373,7 @@
       "label": "RTL_LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L723",
+      "source_location": "L798",
       "_origin": "ast"
     },
     {
@@ -43965,7 +44381,7 @@
       "label": "GUARD_FORBIDDEN_TOKENS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L729",
+      "source_location": "L804",
       "_origin": "ast"
     },
     {
@@ -43973,7 +44389,7 @@
       "label": "GUARD_ALLOWED_IPV4",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L748",
+      "source_location": "L823",
       "_origin": "ast"
     },
     {
@@ -43981,7 +44397,7 @@
       "label": "GUARD_CONFIG_BOUNDARIES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L754",
+      "source_location": "L829",
       "_origin": "ast"
     },
     {
@@ -43989,7 +44405,7 @@
       "label": "GUARD_ALLOWED_NUMERIC_LITERALS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L757",
+      "source_location": "L832",
       "_origin": "ast"
     },
     {
@@ -43997,7 +44413,7 @@
       "label": "CONTRACT_NAMES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L763",
+      "source_location": "L838",
       "_origin": "ast"
     },
     {
@@ -44005,7 +44421,7 @@
       "label": "ContractName",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L764",
+      "source_location": "L839",
       "_origin": "ast"
     },
     {
@@ -44013,7 +44429,7 @@
       "label": "CONTRACT_VERSIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L767",
+      "source_location": "L842",
       "_origin": "ast"
     },
     {
@@ -44065,11 +44481,19 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_constants_src_index_ts_docref_adr_0021",
+      "label": "ADR-0021",
+      "file_type": "doc_ref",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L636",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_constants_src_index_ts_docref_rfc_7636",
       "label": "RFC-7636",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L654",
+      "source_location": "L729",
       "_origin": "ast"
     },
     {
@@ -44077,7 +44501,7 @@
       "label": "RFC-8414",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L676",
+      "source_location": "L751",
       "_origin": "ast"
     },
     {
@@ -68893,7 +69317,7 @@
       "label": "donutArcs()",
       "file_type": "code",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L39",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -68901,7 +69325,7 @@
       "label": "Donut()",
       "file_type": "code",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L51",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -68909,7 +69333,7 @@
       "label": "shareDegrees()",
       "file_type": "code",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L117",
+      "source_location": "L114",
       "_origin": "ast"
     },
     {
@@ -69221,7 +69645,7 @@
       "label": "SparklineProps",
       "file_type": "code",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L8",
+      "source_location": "L7",
       "_origin": "ast"
     },
     {
@@ -69229,7 +69653,7 @@
       "label": "sparklinePoints()",
       "file_type": "code",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L31",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -69237,7 +69661,7 @@
       "label": "Sparkline()",
       "file_type": "code",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L42",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -69709,7 +70133,7 @@
       "label": "keyframesCss()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L139",
+      "source_location": "L103",
       "_origin": "ast"
     },
     {
@@ -69717,7 +70141,7 @@
       "label": "componentRulesCss()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L161",
+      "source_location": "L112",
       "_origin": "ast"
     },
     {
@@ -69725,7 +70149,15 @@
       "label": "stylesheet()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L230",
+      "source_location": "L133",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_ui_src_tokens_css_variables_ts_docref_adr_0022",
+      "label": "ADR-0022",
+      "file_type": "doc_ref",
+      "source_file": "packages/ui/src/tokens/css-variables.ts",
+      "source_location": "L108",
       "_origin": "ast"
     },
     {
@@ -69737,99 +70169,11 @@
       "_origin": "ast"
     },
     {
-      "id": "packages_ui_src_tokens_effects_holoalpha",
-      "label": "holoAlpha",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L7",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_holostops",
-      "label": "holoStops",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L14",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_holoborder",
-      "label": "holoBorder()",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L23",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_hudbracket",
-      "label": "hudBracket",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L42",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_grid",
-      "label": "grid",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L51",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_aurora",
-      "label": "aurora",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L64",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_textglow",
-      "label": "textGlow",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L71",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_valueglow",
-      "label": "valueGlow()",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L76",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_sheen",
-      "label": "sheen",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L81",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_rise",
-      "label": "rise",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L88",
-      "_origin": "ast"
-    },
-    {
-      "id": "packages_ui_src_tokens_effects_ring",
-      "label": "ring",
-      "file_type": "code",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L96",
-      "_origin": "ast"
-    },
-    {
       "id": "packages_ui_src_tokens_effects_float",
       "label": "float",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L105",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -69837,7 +70181,7 @@
       "label": "layer()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L127",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -69845,7 +70189,7 @@
       "label": "floatShadow()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L132",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -69853,7 +70197,7 @@
       "label": "floatHoverShadow()",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L137",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
@@ -69861,7 +70205,15 @@
       "label": "effects",
       "file_type": "code",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L141",
+      "source_location": "L45",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_ui_src_tokens_effects_ts_docref_adr_0022",
+      "label": "ADR-0022",
+      "file_type": "doc_ref",
+      "source_file": "packages/ui/src/tokens/effects.ts",
+      "source_location": "L1",
       "_origin": "ast"
     },
     {
@@ -76297,43 +76649,83 @@
       "_origin": "ast"
     },
     {
-      "id": "docs_adr_adr_021_holographic_layer_stack",
-      "label": "ADR-021-holographic-layer-stack.md",
+      "id": "docs_adr_adr_021_layers_equipment_scene",
+      "label": "ADR-021-layers-equipment-scene.md",
       "file_type": "document",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
       "source_location": "L1",
       "_origin": "ast"
     },
     {
-      "id": "docs_adr_adr_021_holographic_layer_stack_adr_021_the_layers_screen_as_a_lit_3d_stack_with_a_holographic_glyph_per_layer",
-      "label": "ADR-021 — The Layers screen as a lit 3D stack with a holographic glyph per layer",
+      "id": "docs_adr_adr_021_layers_equipment_scene_adr_021_the_layers_screen_as_a_stack_that_zooms_onto_a_layer_s_equipment",
+      "label": "ADR-021 — The Layers screen as a stack that zooms onto a layer's equipment",
       "file_type": "document",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
       "source_location": "L1",
       "_origin": "ast"
     },
     {
-      "id": "docs_adr_adr_021_holographic_layer_stack_context",
+      "id": "docs_adr_adr_021_layers_equipment_scene_context",
       "label": "Context",
       "file_type": "document",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
       "source_location": "L5",
       "_origin": "ast"
     },
     {
-      "id": "docs_adr_adr_021_holographic_layer_stack_decision",
+      "id": "docs_adr_adr_021_layers_equipment_scene_decision",
       "label": "Decision",
       "file_type": "document",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
-      "source_location": "L11",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
-      "id": "docs_adr_adr_021_holographic_layer_stack_consequences",
+      "id": "docs_adr_adr_021_layers_equipment_scene_consequences",
       "label": "Consequences",
       "file_type": "document",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
-      "source_location": "L33",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
+      "source_location": "L51",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_022_formal_profile",
+      "label": "ADR-022-formal-profile.md",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_022_formal_profile_adr_022_the_formal_profile_horizon_without_the_game_like_effects",
+      "label": "ADR-022 — The formal profile: Horizon without the game-like effects",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_022_formal_profile_context",
+      "label": "Context",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_022_formal_profile_decision",
+      "label": "Decision",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_022_formal_profile_consequences",
+      "label": "Consequences",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -76830,6 +77222,54 @@
       "file_type": "document",
       "source_file": "docs/evidence/impact-whatif.md",
       "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack",
+      "label": "layers-stack.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "label": "The Layers screen as an equipment scene, and the formal profile (REQ-UI-033, REQ-UI-034, REQ-UI-035, ADR-021, ADR-022)",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack_what_changed_on_screen",
+      "label": "What changed on screen",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack_measurements",
+      "label": "Measurements",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack_tests",
+      "label": "Tests",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_layers_stack_screenshots",
+      "label": "Screenshots",
+      "file_type": "document",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -77444,8 +77884,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Served at METRICS_PATH: Node defaults, openmap_graphql_requests_total{operation,status}, openmap_graphql_duration_seconds.",
-      "community": 268,
-      "community_name": "Design cues taken from the AetherTwin prototype (Gemini / AI Studio)",
+      "community": 264,
+      "community_name": "ADR-003 — Go for the Discovery Node and collectors",
       "norm_label": "api prometheus metrics",
       "id": "apps_api_readme_prometheus_metrics"
     },
@@ -78157,8 +78597,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 242,
-      "community_name": "@openmap/console",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm console deployment",
       "id": "deploy_helm_openmap_templates_apps_console_deployment"
     },
@@ -78201,8 +78641,8 @@
       "author": null,
       "contributor": null,
       "rationale": "start --import-realm with proxy-headers=xforwarded and hostname-strict=false behind the Ingress; DB on the Postgres StatefulSet with currentSchema=keycloak; KC_HOSTNAME from keycloak.publicUrl.",
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm keycloak deployment",
       "id": "deploy_helm_openmap_templates_auth_keycloak_deployment"
     },
@@ -78215,8 +78655,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 262,
-      "community_name": "ADR-001 — Monorepo tooling",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "keycloak realm configmap (files/realm-openmap.json)",
       "id": "deploy_helm_openmap_templates_auth_realm_configmap"
     },
@@ -78274,8 +78714,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Hosts are parsed from api.publicUrl, console.publicUrl and keycloak.publicUrl with urlParse; /graphql, /healthz, /readyz route to the API and / to the console, with a separate console host rule only when it differs from the API host.",
-      "community": 242,
-      "community_name": "@openmap/console",
+      "community": 227,
+      "community_name": "@openmap/api",
       "norm_label": "helm ingress (api, console, keycloak hosts)",
       "id": "deploy_helm_openmap_templates_ingress_ingress"
     },
@@ -168818,6 +169258,115 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "ref_node_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "ref_playwright_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "e_openmap_packages_contracts_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "e_openmap_packages_contracts_dist_index_ci_layers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_islocale",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_translate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "apps_console_e2e_auth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "apps_console_e2e_auth_signin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_layers_spec",
+      "target": "apps_console_e2e_layers_spec_screenshotsdir",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/layers.spec.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_console_e2e_perf_spec",
       "target": "ref_node_fs",
       "relation": "imports_from",
@@ -170333,11 +170882,32 @@
     },
     {
       "source": "apps_console_package_dependencies",
-      "target": "apps_console_package_dependencies_three",
+      "target": "apps_console_package_dependencies_simple_icons",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
       "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_package_dependencies_simple_icons",
+      "target": "simple_icons",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/package.json",
+      "source_location": "L36",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_package_dependencies",
+      "target": "apps_console_package_dependencies_three",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/package.json",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170347,7 +170917,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170358,7 +170928,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170368,7 +170938,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170378,7 +170948,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170389,7 +170959,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170399,7 +170969,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170410,7 +170980,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170420,7 +170990,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170431,7 +171001,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170441,7 +171011,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170452,7 +171022,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170462,7 +171032,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170473,7 +171043,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170483,7 +171053,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170494,7 +171064,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170504,7 +171074,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170515,7 +171085,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170525,7 +171095,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170536,7 +171106,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170546,7 +171116,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170557,7 +171127,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170567,7 +171137,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170578,7 +171148,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170588,7 +171158,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170599,7 +171169,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170609,7 +171179,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170620,7 +171190,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170630,7 +171200,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -170641,7 +171211,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -170651,7 +171221,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/package.json",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -171353,12 +171923,45 @@
     },
     {
       "source": "apps_console_src_app_locale_app_cmdb_page",
-      "target": "apps_console_src_components_cmdb_cmdbview",
+      "target": "e_openmap_packages_contracts_dist_index_js",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
       "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_app_locale_app_cmdb_page",
+      "target": "e_openmap_packages_contracts_dist_index_ci_layers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_app_locale_app_cmdb_page",
+      "target": "e_openmap_packages_contracts_dist_index_cilayer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_app_locale_app_cmdb_page",
+      "target": "apps_console_src_components_cmdb_cmdbview",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171369,7 +171972,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171380,7 +171983,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171391,7 +171994,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171402,7 +172005,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171412,7 +172015,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171422,7 +172025,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -171432,7 +172035,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178827,7 +179430,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190010,207 +190613,601 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "ref_react_three_drei",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "ref_react_three_fiber",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_constants_dist_index_geometry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_constants_dist_index_layer_stack",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
       "target": "e_openmap_packages_contracts_dist_index_js",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L4",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "e_openmap_packages_contracts_dist_index_ci_layers",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
+      "source": "apps_console_src_components_layers_layerstack3d",
       "target": "e_openmap_packages_contracts_dist_index_cilayer",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_accents",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_cx",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_layercolors",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_surfaces",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "e_openmap_packages_ui_dist_index_text",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "ref_three",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_focuspose",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_camerapose",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_equipmentkind",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_layerplane",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_stackmodel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_layerstack3dprops",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_treatment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_materials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_makematerials",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_chassis",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_led",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L81",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_cabinet",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L91",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_server",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L114",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_switch",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L129",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_firewall",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L149",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_shelf",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L164",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_sanswitch",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L178",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_drums",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L189",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_hypervisor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L204",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_containerhost",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L226",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_region",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L246",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_console",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L263",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_applicationtier",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L283",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_crate",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_equipment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L306",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_unitwidth",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L346",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_plane",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L372",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_labeltargets",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L423",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_labelprojector",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L426",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_camerarig",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L444",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_layerstack3d",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L478",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d_plane",
+      "target": "apps_console_src_components_layers_layerstack3d_makematerials",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L374",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d_plane",
+      "target": "apps_console_src_components_layers_layerstack3d_unitwidth",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L384",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3d",
+      "target": "apps_console_src_components_layers_layerstack3d_tsx_docref_adr_0021",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "ref_next_dynamic",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "ref_react",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
       "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "e_openmap_packages_ui_dist_index_js",
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "apps_console_src_components_common_querystate",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "e_openmap_packages_ui_dist_index_layercolors",
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "apps_console_src_components_common_querystate_querystate",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "e_openmap_packages_ui_dist_index_spacing",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "e_openmap_packages_ui_dist_index_usedirection",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L5",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "ref_react",
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "apps_console_src_components_layers_layerstack3d",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
       "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_hooks_uselayervisibility",
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_hooks_uselayervisibility_layervisibility",
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "apps_console_src_components_layers_layerstack3d_layerstack3dprops",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L7",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_lib_keys",
-      "relation": "imports_from",
-      "context": "import",
+      "source": "apps_console_src_components_layers_layerstack3dlazy",
+      "target": "apps_console_src_components_layers_layerstack3dlazy_layerstack3dlazy",
+      "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
+      "source_file": "apps/console/src/components/layers/LayerStack3DLazy.tsx",
       "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_lib_keys_layerkey",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_providers",
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_providers_uset",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_components_layers_layerstack_planes",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L26",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_components_layers_layerstack_layerstackprops",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L28",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_components_layers_layerstack_planepoints",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L35",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack",
-      "target": "apps_console_src_components_layers_layerstack_layerstack",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L44",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack_layerstack",
-      "target": "apps_console_src_components_layers_layerstack_planepoints",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190221,7 +191218,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190232,7 +191229,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190243,7 +191240,18 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L5",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "e_openmap_packages_contracts_dist_index_cilayer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190254,7 +191262,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190265,7 +191273,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190276,7 +191284,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190287,7 +191295,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190298,18 +191306,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layersview",
-      "target": "e_openmap_packages_ui_dist_index_glow",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190320,7 +191317,29 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L6",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "ref_next_link",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "ref_simple_icons",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190331,7 +191350,51 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L7",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_common_controls",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_common_controls_button",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_icons",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_icons_icon",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190342,7 +191405,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L8",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190353,7 +191416,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L8",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190364,7 +191427,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L9",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190375,7 +191438,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L9",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190386,7 +191449,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L10",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190397,7 +191460,73 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L10",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_layer_stack_model",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_layer_stack_model_layer_marks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_layer_stack_model_mark",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_locale_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_lib_locale_path_localizedhref",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190408,7 +191537,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L11",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190419,7 +191548,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L11",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190430,7 +191559,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L12",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190441,7 +191570,18 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L12",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_providers_uselocale",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190452,29 +191592,29 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L12",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_console_src_components_layers_layersview",
-      "target": "apps_console_src_components_layers_layerstack",
+      "target": "apps_console_src_components_layers_layerstack3dlazy",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L13",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_console_src_components_layers_layersview",
-      "target": "apps_console_src_components_layers_layerstack_layerstack",
+      "target": "apps_console_src_components_layers_layerstack3dlazy_layerstack3dlazy",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L13",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190484,7 +191624,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L17",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190494,7 +191634,37 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L23",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_layers_layersview_iconentry",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_layers_layersview_iconfor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_layers_layersview_vendormarks",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L66",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -190504,7 +191674,28 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L47",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview_vendormarks",
+      "target": "apps_console_src_components_layers_layersview_iconfor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L78",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview",
+      "target": "apps_console_src_components_layers_layersview_tsx_docref_adr_0021",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -206850,6 +208041,397 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/keys.ts",
       "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "e_openmap_packages_constants_dist_index_layer_stack",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "e_openmap_packages_contracts_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "e_openmap_packages_contracts_dist_index_ci_layers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_layer_equipment",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_layer_marks",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_stack_order",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_focuspose",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_planeposition",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_unitsfor",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_test",
+      "target": "apps_console_src_lib_layer_stack_model_test_everyvisible",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.test.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_constants_dist_index_geometry",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_constants_dist_index_layer_stack",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_contracts_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_contracts_dist_index_ci_layers",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "e_openmap_packages_contracts_dist_index_cilayer",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_vec3",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_equipmentkind",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_layer_equipment",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_mark",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_layer_marks",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L35",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_layerplane",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L83",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_layercounts",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_camerapose",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_stackmodel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L117",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_stack_order",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_unitsfor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_planeposition",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L135",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_focuspose",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L176",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "target": "apps_console_src_lib_layer_stack_model_planeposition",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "target": "apps_console_src_lib_layer_stack_model_unitsfor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L152",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_layer_stack_model",
+      "target": "apps_console_src_lib_layer_stack_model_ts_docref_adr_0021",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226463,11 +228045,21 @@
     },
     {
       "source": "packages_constants_src_index",
+      "target": "packages_constants_src_index_layer_stack",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L640",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_constants_src_index",
       "target": "packages_constants_src_index_console",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L635",
+      "source_location": "L710",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226477,7 +228069,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L657",
+      "source_location": "L732",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226487,7 +228079,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L691",
+      "source_location": "L766",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226497,7 +228089,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L699",
+      "source_location": "L774",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226507,7 +228099,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L702",
+      "source_location": "L777",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226517,7 +228109,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L711",
+      "source_location": "L786",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226527,7 +228119,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L721",
+      "source_location": "L796",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226537,7 +228129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L722",
+      "source_location": "L797",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226547,7 +228139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L723",
+      "source_location": "L798",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226557,7 +228149,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L729",
+      "source_location": "L804",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226567,7 +228159,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L748",
+      "source_location": "L823",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226577,7 +228169,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L754",
+      "source_location": "L829",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226587,7 +228179,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L757",
+      "source_location": "L832",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226597,7 +228189,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L763",
+      "source_location": "L838",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226607,7 +228199,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L764",
+      "source_location": "L839",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226617,7 +228209,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L767",
+      "source_location": "L842",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226683,11 +228275,21 @@
     },
     {
       "source": "packages_constants_src_index",
+      "target": "packages_constants_src_index_ts_docref_adr_0021",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L636",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_constants_src_index",
       "target": "packages_constants_src_index_ts_docref_rfc_7636",
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L654",
+      "source_location": "L729",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -226697,7 +228299,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L676",
+      "source_location": "L751",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -264707,7 +266309,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L39",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -264717,7 +266319,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L51",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -264727,7 +266329,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L117",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -264738,7 +266340,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L55",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266799,7 +268401,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L3",
+      "source_location": "L2",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266810,7 +268412,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266821,7 +268423,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L4",
+      "source_location": "L3",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266832,7 +268434,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266843,7 +268445,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266854,7 +268456,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266865,7 +268467,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266876,7 +268478,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L5",
+      "source_location": "L4",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266887,7 +268489,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266898,7 +268500,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266909,7 +268511,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266920,7 +268522,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266930,7 +268532,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L8",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266940,7 +268542,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L31",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266950,7 +268552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L42",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -266961,7 +268563,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L44",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268277,118 +269879,8 @@
     },
     {
       "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_color_withalpha",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L2",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
       "target": "packages_ui_src_tokens_effects",
       "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_aurora",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_grid",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_holoborder",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_hudbracket",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_ring",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_rise",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_sheen",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_textglow",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L3",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables",
-      "target": "packages_ui_src_tokens_effects_valueglow",
-      "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
@@ -268714,7 +270206,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L139",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268724,7 +270216,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L161",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268734,7 +270226,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L230",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268794,24 +270286,13 @@
       "_origin": "ast"
     },
     {
-      "source": "packages_ui_src_tokens_css_variables_keyframescss",
-      "target": "packages_ui_src_tokens_css_variables_varref",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L144",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
       "source": "packages_ui_src_tokens_css_variables_componentrulescss",
       "target": "packages_ui_src_tokens_css_variables_varref",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L162",
+      "source_location": "L118",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268822,7 +270303,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L231",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268833,7 +270314,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L231",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268844,7 +270325,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L231",
+      "source_location": "L134",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_ui_src_tokens_css_variables",
+      "target": "packages_ui_src_tokens_css_variables_ts_docref_adr_0022",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/ui/src/tokens/css-variables.ts",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268855,7 +270346,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268866,7 +270357,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268877,117 +270368,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_holoalpha",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L7",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_holostops",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L14",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_holoborder",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L23",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_hudbracket",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L42",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_grid",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L51",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_aurora",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L64",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_textglow",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L71",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_valueglow",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L76",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_sheen",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L81",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_rise",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L88",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects",
-      "target": "packages_ui_src_tokens_effects_ring",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L96",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -268997,7 +270378,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L105",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269007,7 +270388,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L127",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269017,7 +270398,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L132",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269027,7 +270408,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L137",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269037,7 +270418,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L141",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269048,7 +270429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L133",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269059,7 +270440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L138",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -269070,7 +270451,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L138",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_ui_src_tokens_effects",
+      "target": "packages_ui_src_tokens_effects_ts_docref_adr_0022",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/ui/src/tokens/effects.ts",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -285991,42 +287382,82 @@
       "_origin": "ast"
     },
     {
-      "source": "docs_adr_adr_021_holographic_layer_stack",
-      "target": "docs_adr_adr_021_holographic_layer_stack_adr_021_the_layers_screen_as_a_lit_3d_stack_with_a_holographic_glyph_per_layer",
+      "source": "docs_adr_adr_021_layers_equipment_scene",
+      "target": "docs_adr_adr_021_layers_equipment_scene_adr_021_the_layers_screen_as_a_stack_that_zooms_onto_a_layer_s_equipment",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
       "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "docs_adr_adr_021_holographic_layer_stack_adr_021_the_layers_screen_as_a_lit_3d_stack_with_a_holographic_glyph_per_layer",
-      "target": "docs_adr_adr_021_holographic_layer_stack_context",
+      "source": "docs_adr_adr_021_layers_equipment_scene_adr_021_the_layers_screen_as_a_stack_that_zooms_onto_a_layer_s_equipment",
+      "target": "docs_adr_adr_021_layers_equipment_scene_context",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
       "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "docs_adr_adr_021_holographic_layer_stack_adr_021_the_layers_screen_as_a_lit_3d_stack_with_a_holographic_glyph_per_layer",
-      "target": "docs_adr_adr_021_holographic_layer_stack_decision",
+      "source": "docs_adr_adr_021_layers_equipment_scene_adr_021_the_layers_screen_as_a_stack_that_zooms_onto_a_layer_s_equipment",
+      "target": "docs_adr_adr_021_layers_equipment_scene_decision",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
-      "source_location": "L11",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "docs_adr_adr_021_holographic_layer_stack_adr_021_the_layers_screen_as_a_lit_3d_stack_with_a_holographic_glyph_per_layer",
-      "target": "docs_adr_adr_021_holographic_layer_stack_consequences",
+      "source": "docs_adr_adr_021_layers_equipment_scene_adr_021_the_layers_screen_as_a_stack_that_zooms_onto_a_layer_s_equipment",
+      "target": "docs_adr_adr_021_layers_equipment_scene_consequences",
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/adr/ADR-021-holographic-layer-stack.md",
-      "source_location": "L33",
+      "source_file": "docs/adr/ADR-021-layers-equipment-scene.md",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_022_formal_profile",
+      "target": "docs_adr_adr_022_formal_profile_adr_022_the_formal_profile_horizon_without_the_game_like_effects",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_022_formal_profile_adr_022_the_formal_profile_horizon_without_the_game_like_effects",
+      "target": "docs_adr_adr_022_formal_profile_context",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_022_formal_profile_adr_022_the_formal_profile_horizon_without_the_game_like_effects",
+      "target": "docs_adr_adr_022_formal_profile_decision",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_022_formal_profile_adr_022_the_formal_profile_horizon_without_the_game_like_effects",
+      "target": "docs_adr_adr_022_formal_profile_consequences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-022-formal-profile.md",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -286547,6 +287978,56 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/impact-whatif.md",
       "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_layers_stack",
+      "target": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "target": "docs_evidence_layers_stack_what_changed_on_screen",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "target": "docs_evidence_layers_stack_measurements",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "target": "docs_evidence_layers_stack_tests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_layers_stack_the_layers_screen_as_an_equipment_scene_and_the_formal_profile_req_ui_033_req_ui_034_req_ui_035_adr_021_adr_022",
+      "target": "docs_evidence_layers_stack_screenshots",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/layers-stack.md",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -288416,7 +289897,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -288427,7 +289908,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L6",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -297859,13 +299340,13 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack_layerstackprops",
-      "target": "apps_console_src_hooks_uselayervisibility_layervisibility",
+      "source": "apps_console_src_components_layers_layerstack3d_layerstack3dprops",
+      "target": "apps_console_src_lib_layer_stack_model_stackmodel",
       "relation": "references",
       "context": "field",
       "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L29",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298800,7 +300281,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298811,7 +300292,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L17",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -309572,7 +311053,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -309584,7 +311065,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/app/[locale]/(app)/cmdb/page.tsx",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310928,7 +312409,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310940,7 +312421,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310952,7 +312433,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310964,7 +312445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310976,7 +312457,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -310988,7 +312469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L114",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -311000,7 +312481,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/cmdb/CmdbView.tsx",
-      "source_location": "L177",
+      "source_location": "L179",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313429,38 +314910,14 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_console_src_components_layers_layerstack_layerstack",
-      "target": "apps_console_src_providers_uset",
+      "source": "apps_console_src_components_layers_layerstack3d_layerstack3d",
+      "target": "apps_console_src_lib_layer_stack_model_focuspose",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L45",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack_layerstack",
-      "target": "apps_console_src_lib_keys_layerkey",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L84",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_components_layers_layerstack_layerstack",
-      "target": "tools_synth_estate_src_estate_estatebuilder_count",
-      "relation": "indirect_call",
-      "context": "argument",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "apps/console/src/components/layers/LayerStack.tsx",
-      "source_location": "L87",
+      "source_file": "apps/console/src/components/layers/LayerStack3D.tsx",
+      "source_location": "L481",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313472,7 +314929,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L48",
+      "source_location": "L93",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313484,7 +314941,19 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L49",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview_layersview",
+      "target": "apps_console_src_providers_uselocale",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L95",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313496,7 +314965,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L50",
+      "source_location": "L96",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313508,7 +314977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L51",
+      "source_location": "L97",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313520,7 +314989,19 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L53",
+      "source_location": "L98",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview_layersview",
+      "target": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -313532,7 +315013,19 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/layers/LayersView.tsx",
-      "source_location": "L92",
+      "source_location": "L101",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_components_layers_layersview_layersview",
+      "target": "apps_console_src_lib_locale_path_localizedhref",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/console/src/components/layers/LayersView.tsx",
+      "source_location": "L239",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -315385,6 +316878,18 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_console_src_lib_layer_stack_model_buildstackmodel",
+      "target": "apps_api_src_software_software_service_softwareservice_index",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/console/src/lib/layer-stack-model.ts",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_console_src_lib_queries_layersquery",
       "target": "apps_console_src_lib_graphql_gql",
       "relation": "calls",
@@ -316940,7 +318445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L52",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -316952,7 +318457,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L57",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -316964,7 +318469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L59",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -316976,7 +318481,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L59",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -316988,7 +318493,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L61",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317000,7 +318505,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/donut.tsx",
-      "source_location": "L93",
+      "source_location": "L90",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317060,7 +318565,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/dot.tsx",
-      "source_location": "L43",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317072,7 +318577,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/dot.tsx",
-      "source_location": "L44",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317384,7 +318889,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/section-title.tsx",
-      "source_location": "L83",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317492,7 +318997,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L43",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317504,7 +319009,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L50",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317516,7 +319021,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L58",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317528,7 +319033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L59",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317540,7 +319045,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/components/sparkline.tsx",
-      "source_location": "L64",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317642,7 +319147,7 @@
     },
     {
       "source": "packages_ui_src_tokens_css_variables_cssvariables",
-      "target": "packages_ui_src_tokens_effects_holoborder",
+      "target": "packages_ui_src_tokens_effects_floatshadow",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -317654,73 +319159,13 @@
     },
     {
       "source": "packages_ui_src_tokens_css_variables_cssvariables",
-      "target": "packages_ui_src_tokens_color_withalpha",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L92",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables_cssvariables",
-      "target": "packages_ui_src_tokens_effects_valueglow",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L105",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables_cssvariables",
-      "target": "packages_ui_src_tokens_effects_floatshadow",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L114",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_css_variables_cssvariables",
       "target": "packages_ui_src_tokens_effects_floathovershadow",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/tokens/css-variables.ts",
-      "source_location": "L115",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects_holoborder",
-      "target": "packages_ui_src_tokens_color_withalpha",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L28",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_ui_src_tokens_effects_valueglow",
-      "target": "packages_ui_src_tokens_color_withalpha",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L77",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -317732,7 +319177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/ui/src/tokens/effects.ts",
-      "source_location": "L138",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },

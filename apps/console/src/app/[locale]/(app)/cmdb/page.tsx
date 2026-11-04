@@ -2,6 +2,7 @@
 // optional `q` search parameter (from the global search) becomes the contract's text filter.
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import { CmdbView } from '@/components/cmdb/CmdbView';
 import { getT, requireLocale } from '@/lib/i18n';
 
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: Pick<PageProps, 'params'>): P
 }
 
 export default async function CmdbPage({ searchParams }: PageProps): Promise<ReactNode> {
-  const { q } = await searchParams;
+  const { q, layer } = await searchParams;
   const text = typeof q === 'string' ? q.trim() : '';
-  return <CmdbView text={text} />;
+  const initialLayer = typeof layer === 'string' && (CI_LAYERS as readonly string[]).includes(layer) ? (layer as CiLayer) : undefined;
+  return <CmdbView text={text} {...(initialLayer === undefined ? {} : { initialLayer })} />;
 }

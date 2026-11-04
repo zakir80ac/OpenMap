@@ -80,7 +80,8 @@ describe.each(DIRS)('components render in %s', (dir) => {
     expect((violet as HTMLElement).style.getPropertyValue('--om-pill-accent')).toBe(accents.violet);
     expect((tt as HTMLElement).style.borderStyle).toBe('dashed');
     expect((plain as HTMLElement).style.boxShadow).toBe('');
-    expect((primary as HTMLElement).style.boxShadow).toContain('0 0 14px');
+    // Formal profile (REQ-UI-034): accent pills carry no glow unless asked.
+    expect((primary as HTMLElement).style.boxShadow).toBe('');
     const button = screen.getByRole('button', { pressed: true });
     expect(button.getAttribute('dir')).toBe(dir);
     button.click();
@@ -196,7 +197,8 @@ describe('Bar', () => {
     expect(rtl.style.getPropertyValue('--om-flow-angle')).toBe('270deg');
     expect(rtlFill?.getAttribute('data-origin')).toBe('right');
     expect(rtl.style.getPropertyValue('--om-bar-accent')).toBe(accents.violet);
-    expect(rtlFill?.style.boxShadow).toContain('0 0 14px');
+    // Formal profile (REQ-UI-034): the fill glows only on request.
+    expect(rtlFill?.style.boxShadow).toBe('');
   });
   it('omits the glow when disabled', () => {
     renderIn('ltr', <Bar value={10} glowing={false} />);

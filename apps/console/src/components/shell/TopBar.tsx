@@ -17,7 +17,7 @@ export interface TopBarProps {
 export function TopBar({ locale }: TopBarProps): ReactNode {
   const t = useT();
   return (
-    <header className="sticky top-0 z-10 flex h-(--om-topbar-height) shrink-0 items-center gap-om-12 border-b border-om-border-glass bg-om-ground/70 px-om-24 backdrop-blur-md after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-linear-to-r after:from-transparent after:via-om-cyan/50 after:to-transparent">
+    <header className="sticky top-0 z-10 flex h-(--om-topbar-height) shrink-0 items-center gap-om-12 border-b border-om-border-glass bg-om-ground/70 px-om-24 backdrop-blur-md">
       <GlobalSearch locale={locale} />
 
       <div className="ms-auto flex items-center gap-om-10">

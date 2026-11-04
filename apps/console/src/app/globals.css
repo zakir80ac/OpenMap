@@ -34,48 +34,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Horizon ground (REQ-UI-028): the navy-black ground and three aurora washes are painted on the root, so the grid
-   floor (body::before, behind every element) stays visible above them. */
+/* Ground (REQ-UI-034, formal profile): the navy-black token with one faint cool highlight from the top start corner;
+   no aurora washes, no grid floor. */
 html {
   background-color: var(--om-ground);
-  background-image:
-    radial-gradient(60rem 30rem at 15% -10%, var(--om-aurora-cyan), transparent 70%),
-    radial-gradient(50rem 28rem at 110% 10%, var(--om-aurora-violet), transparent 70%),
-    radial-gradient(40rem 24rem at 50% 110%, var(--om-aurora-fuchsia), transparent 70%);
+  background-image: radial-gradient(70rem 36rem at 0% -20%, color-mix(in srgb, var(--om-accent-cyan) 7%, transparent), transparent 70%);
   background-attachment: fixed;
 }
 
 body {
-  position: relative;
   background: transparent;
-}
-
-/* The perspective grid floor: a tilted plane of token-coloured lines that recedes to the horizon and drifts one cell
-   per period. Fixed and non-interactive; fades to nothing towards the top so content stays legible. */
-body::before {
-  content: '';
-  position: fixed;
-  inset-inline: 0;
-  /* One cell taller than its visible height and shifted down by a cell, so the drift never shows an edge. */
-  bottom: calc(-1 * var(--om-grid-cell));
-  height: calc(var(--om-grid-floor-height) + var(--om-grid-cell));
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--om-grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--om-grid-line) 1px, transparent 1px);
-  background-size: var(--om-grid-cell) var(--om-grid-cell);
-  transform: perspective(var(--om-grid-perspective)) rotateX(var(--om-grid-tilt));
-  transform-origin: bottom center;
-  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-  will-change: transform;
-  animation: om-grid-drift var(--om-grid-drift-period) linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
-  }
 }
 
 ::selection {
