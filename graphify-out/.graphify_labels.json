@@ -543,22 +543,5 @@
   "541": "assistant/vitest.integration.config.ts",
   "542": "oids.go",
   "543": "console/vitest.config.ts",
-  "544": "reconciler/vitest.config.ts",
-  "545": "reconciler/vitest.integration.config.ts",
-  "546": "scheduler/vitest.config.ts",
-  "547": "scheduler/vitest.integration.config.ts",
-  "548": "superset_config.py",
-  "549": "install-agent.ps1",
-  "550": "install-node.ps1",
-  "551": "prisma.config.ts",
-  "552": "graph/vitest.config.ts",
-  "553": "graph/vitest.integration.config.ts",
-  "554": "ui/vitest.config.ts",
-  "555": "github.com/openmap/openmap/apps/collectors",
-  "556": "github.com/openmap/openmap/apps/node",
-  "557": "synth-estate/vitest.config.ts",
-  "558": "ui/vitest.config.ts",
-  "559": "github.com/openmap/openmap/apps/collectors",
-  "560": "github.com/openmap/openmap/apps/node",
-  "561": "synth-estate/vitest.config.ts"
+  "544": "reconciler/vitest.config.ts"
 }

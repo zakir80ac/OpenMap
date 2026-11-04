@@ -191,6 +191,8 @@
 | REQ-CMDB-037 | CMDB | Identity | CI short codes (layer prefix plus slug) generated, unique per tenant and editable |  | ciCode() applied by the reconciler; uniqueness enforced in Postgres; shown on every card and in search | P0 | Done | Claude |  | docs/DESIGN-CUES.md | T-062, T-111, T-063 | ciCode() keeps dotted non-domain names apart (10.0.0.1 -> NET-10-0-0-1); Postgres trigger plus partial unique index keep codes unique per tenant (migration 0010, 499 duplicate groups renumbered on the dev estate); Ci.code and setCiCode in GraphQL 0.6.0 (ADR-014); code on CMDB rows, search hits and the CI detail header with operator editing; commit 0d660e0 | 2026-10-22 | 2026-11-01 | Console derives and shows the short code via ciCode() on the CI detail header; server-side uniqueness and editing remain. |
 | REQ-CMDB-038 | CMDB | Layers | Headline metric per layer on cards and tables (LAYER_HEADLINE_METRIC) |  | Every card shows the layer's headline metric from ClickHouse; unit and label from the contract | P1 | Done |  |  | docs/DESIGN-CUES.md | T-005, T-008, T-025, T-091, T-093, T-094, T-114, T-115, T-087 | docs/evidence/cmdb/headline-metrics.md; docs/evidence/console/cmdb-en.png, cmdb-ar.png, ci-detail-en.png, ci-detail-ar.png; ADR-016; replay 28,501 samples stored / 0 dropped; API 50-row page with headlines 21-76 ms; e2e walkthrough 3 passed; commit 01df3cf | 2026-10-22 | 2026-11-01 |  |
 | REQ-SEC-013 | SEC | Contracts | ADR-006 accepted: @peculiar/x509 for Node certificate issuance |  | ADR status Accepted by Syed; dependency recorded in the Components sheet | P1 | Not started |  |  | docs/adr/ADR-006-node-pki-library.md |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-UI-028 | UI | Added | Horizon visual language: HUD cards, holographic borders, grid ground, display face, motion |  | Every screen renders the Horizon surface language from @openmap/ui tokens and rules (no raw values in apps/); Lighthouse performance, accessibility and best-practice floors hold on every screen; reduced motion disables animation; en and ar screenshots as evidence; unit tests on tokens and components | P0 | Done |  |  | CLAUDE.md §0, DESIGN-CUES.md | T-087, T-120, T-121 | docs/evidence/horizon-twin.md; ADR-018; packages/ui effects tokens + componentRulesCss; Lighthouse every screen ok (sign-in 0.99, twin 0.95, dcim 0.90); docs/evidence/console/*-{en,ar}.png | 2026-11-04 | 2026-11-04 |  |
+| REQ-UI-029 | UI | Added | Screen · 3D digital twin: sites, rooms, racks and devices in WebGL with the dependency layers above |  | A /twin screen renders the estate in real 3D (three.js) from the racks, sites and impact queries: racks and devices as instanced meshes placed by row and position, the twelve layers as stacked planes carrying the focus CI's dependency graph, orbit, hover and click to the CI; 60 fps on the synthetic estate; Lighthouse floors hold; en and ar e2e with screenshots; ADR for the renderer | P0 | Done |  |  | CLAUDE.md §0, DESIGN-CUES.md | T-119, T-120, T-121, T-087 | docs/evidence/horizon-twin.md; ADR-018; apps/console/src/components/twin, lib/twin-model.ts; /twin route; 4 rooms 101 racks 2235 devices, 1707-node focus graph on 8 planes; docs/evidence/console/twin-{en,ar}.png, twin-focus-{en,ar}.png | 2026-11-04 | 2026-11-04 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -201,7 +203,7 @@
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks |  | 5 | 3 | 60 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform |  | 27 | 22 | 81 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added |  | 29 | 24 | 83 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI |  | 6 | 2 | 33 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
@@ -299,7 +301,7 @@
 | T-084 | unit | REQ-SEC-001 | 2026-10-22 | Pass | 0 |
 | T-085 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
 | T-086 | unit | REQ-SEC-001, REQ-UI-003 | 2026-10-22 | Pass | 0 |
-| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038, REQ-UI-024, REQ-UI-020 | 2026-10-22 | Pass | 0 |
+| T-087 | unit | REQ-SEC-001, REQ-UI-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013, REQ-UI-019, REQ-UI-025, REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-038, REQ-UI-024, REQ-UI-020, REQ-UI-028, REQ-UI-029 | 2026-10-22 | Pass | 0 |
 | T-088 | unit | REQ-SEC-001, REQ-SEC-009, REQ-DISC-004, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-006 | 2026-10-22 | Pass | 0 |
 | T-089 | unit | REQ-UI-003, REQ-PERF-001, REQ-PERF-003, REQ-QA-004, REQ-INT-002, REQ-SEC-003, REQ-UI-004, REQ-UI-005, REQ-UI-006, REQ-UI-007, REQ-UI-008, REQ-UI-012, REQ-UI-013 | 2026-10-22 | Pass | 0 |
 | T-045 | unit | REQ-DISC-026 | 2026-10-22 | Pass | 0 |
@@ -353,6 +355,9 @@
 | T-116 | unit | REQ-UI-024, REQ-UI-020 | 2026-11-04 | Pass | 0 |
 | T-117 | unit | REQ-UI-024, REQ-UI-020 | 2026-11-04 | Pass | 0 |
 | T-118 | unit | REQ-UI-024 | 2026-11-04 | Pass | 0 |
+| T-120 | unit | REQ-UI-028, REQ-UI-029 | 2026-11-04 | Pass | 0 |
+| T-121 | unit | REQ-UI-028, REQ-UI-029 | 2026-11-04 | Pass | 0 |
+| T-119 | unit | REQ-UI-029 | 2026-11-04 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -366,11 +371,12 @@
 | 2026-11-01 | Checkpoint 9: assistant NL->Cypher fixed (REQ-AI-001, commit 3bdd482; golden set 12/12 on the 1.5B model); 56 queued closures applied (checkpoints 4-9); llm-cpu health check fixed in compose |  |  |  |
 | 2026-11-01 | Checkpoint 10: REQ-CMDB-038 headline metric per layer end to end (ADR-016: ci/collector/event 0.2.0, GraphQL 0.8.0; metric samples via outbox to ClickHouse; API loader; console column and cards); persist transaction budget; commit 01df3cf |  |  |  |
 | 2026-11-04 | Checkpoint 11: initial setup wizard (REQ-UI-020, REQ-UI-024; ADR-017; GraphQL 0.9.0): six real steps from organization to generated twin; OpenBao mount self-created; commit 99bf90e |  |  |  |
+| 2026-11-04 | Checkpoint 12: Horizon visual language (REQ-UI-028) and the three.js digital twin at /twin (REQ-UI-029, ADR-018). Movement-only card rise fixed the Lighthouse NO_FCP on the cold sign-in step; every screen ok. MFA and corporate IdP parked by Syed. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-04T11:21:17.599Z |  |  |  |  |  |  |
+| Generated | 2026-11-04T12:36:19.894Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 65 | 28 | 0 | 4 | 91 |  |  |
+| All | 65 | 28 | 0 | 4 | 93 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
@@ -379,20 +385,20 @@
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 2 | 0 | 0 | 0 | 3 | 5 | 60 |
-| UI | 5 | 0 | 0 | 0 | 22 | 27 | 81 |
+| UI | 5 | 0 | 0 | 0 | 24 | 29 | 83 |
 | AI | 4 | 0 | 0 | 0 | 2 | 6 | 33 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 12 | 27 | 0 | 3 | 68 | 110 |  |
+| P0 | 12 | 27 | 0 | 3 | 70 | 112 |  |
 | P1 | 50 | 1 | 0 | 1 | 23 | 75 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 38 |  |  |  |  |  |  |
 | 2026-11-01 | 89 |  |  |  |  |  |  |
-| 2026-11-04 | 91 |  |  |  |  |  |  |
+| 2026-11-04 | 93 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
