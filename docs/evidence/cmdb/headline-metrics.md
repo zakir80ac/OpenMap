@@ -87,6 +87,11 @@ with the value block mirrored). Unit tests (T-114, `CmdbView.test.tsx`): column 
 unit, "No sample yet" for a CI without a sample, in both locales. The virtualiser is mocked under jsdom, which gives
 the scroll container no height.
 
+Correction (2026-11-04): selecting the metric in the shared CI summary made every screen that lists summaries pay the
+ClickHouse hop (DCIM racks fell to 0.87–0.88 Lighthouse performance against the 0.9 budget). `CI_SUMMARY_FIELDS` is
+lean again and `CI_SUMMARY_METRIC_FIELDS` is selected only by the CMDB list, search hits, the impact root and the CI
+detail; DCIM is back at 0.91 and setup, cmdb at 1.00.
+
 Observation for a follow-up: the headline is per layer, so subnets and IP addresses (network_security) show device
 traffic; a per-type override (subnet → utilisation) would read better and needs only a contract addition.
 

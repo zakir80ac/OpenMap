@@ -145,10 +145,13 @@ export interface CiSummary {
   type: string;
   layer: CiLayer;
   health: HealthState;
-  headlineMetric: HeadlineMetric;
+  /** Present only where a screen renders it (search hits, the impact root, the CI detail): the other summaries stay lean. */
+  headlineMetric?: HeadlineMetric;
 }
 
-export const CI_SUMMARY_FIELDS = 'id name displayName code type layer health ' + HEADLINE_METRIC_FIELDS;
+export const CI_SUMMARY_FIELDS = 'id name displayName code type layer health';
+/** REQ-CMDB-038 — a summary with its headline metric; selected only where the metric is shown, since it costs a ClickHouse round trip per page. */
+export const CI_SUMMARY_METRIC_FIELDS = CI_SUMMARY_FIELDS + ' ' + HEADLINE_METRIC_FIELDS;
 
 export interface SearchHit {
   ci: CiSummary;
@@ -159,7 +162,7 @@ export interface SearchHit {
 const SEARCH_QUERY = [
   'query Search($text: String!, $layers: [CiLayer!], $first: Int) {',
   '  search(text: $text, layers: $layers, first: $first) {',
-  '    ci { ' + CI_SUMMARY_FIELDS + ' }',
+  '    ci { ' + CI_SUMMARY_METRIC_FIELDS + ' }',
   '    score highlight',
   '  }',
   '}',
@@ -257,7 +260,7 @@ const AFFECTED_SERVICE_FIELDS = [
 const IMPACT_QUERY = [
   'query Impact($ciId: UUID!, $direction: Direction, $maxDepth: Int, $asOf: DateTime) {',
   '  impact(ciId: $ciId, direction: $direction, maxDepth: $maxDepth, asOf: $asOf) {',
-  '    root { ' + CI_SUMMARY_FIELDS + ' }',
+  '    root { ' + CI_SUMMARY_METRIC_FIELDS + ' }',
   '    nodes { ci { ' + CI_SUMMARY_FIELDS + ' } depth predicted path }',
   '    services { ' + AFFECTED_SERVICE_FIELDS + ' }',
   '    durationMs',
@@ -316,6 +319,7 @@ export interface RelationshipRow {
 }
 
 export interface CiDetail extends CiSummary {
+  headlineMetric: HeadlineMetric;
   identity: Record<string, JsonValue>;
   attributes: Record<string, JsonValue>;
   tags: string[];
@@ -335,7 +339,7 @@ export interface CiDetail extends CiSummary {
 const CI_DETAIL_QUERY = [
   'query CiDetail($id: UUID!, $asOf: DateTime, $first: Int) {',
   '  ci(id: $id, asOf: $asOf) {',
-  '    ' + CI_SUMMARY_FIELDS,
+  '    ' + CI_SUMMARY_METRIC_FIELDS,
   '    identity attributes tags lifecycle observedAt validFrom validTo',
   '    externalIds { source id }',
   '    userLabel { title description layer type labelledBy labelledAt }',

@@ -44,6 +44,8 @@ link and empty site removed with their CIs retired.
   `console/setup-nodes-{en,ar}.png`, `console/setup-generate-{en,ar}.png`; the walkthrough (T-087) now captures
   `/setup` with the other screens.
 - The dashboard shows a "Finish the initial setup" card until the twin is generated.
+- Lighthouse (`pnpm --filter @openmap/perf lighthouse`, mobile emulation, throttled): `setup` performance 1.00,
+  accessibility 1.00, best practices 1.00; the dashboard with its new card stays at 1.00.
 
 ## Notes
 

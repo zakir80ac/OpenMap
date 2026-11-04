@@ -20,7 +20,9 @@ passed), T-116 (SetupView unit, en+ar), T-117 (e2e setup, 3 passed on the rebuil
 `/setup`. The dashboard shows a setup call to action until the twin is generated.
 Observations: a sweep with no assignable targets stays "running" in the sweep view (no jobs, so no finishedAt);
 the scopes table lists every subnet of the estate (111 on the synthetic tenant) and will need paging on large estates;
-business-unit tenants still need their Keycloak tenant claim set by hand (REQ-SEC-009).
+business-unit tenants still need their Keycloak tenant claim set by hand (REQ-SEC-009). Lighthouse: setup 1.00; the
+run also caught DCIM at 0.87 because checkpoint 10 had put the headline metric into the shared CI summary selection,
+which every screen fetches; the summary is lean again and the metric is selected only where rendered (DCIM 0.91).
 
 ## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
 
