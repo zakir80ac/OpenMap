@@ -3,8 +3,45 @@
 // predicted state, SLA effect and a recovery path. Accuracy is measured against real incidents.
 import { z } from 'zod';
 
-export const SCENARIO_KINDS = ['component', 'power', 'rack', 'site', 'network', 'storage', 'cloud_region', 'shared_service', 'maintenance'] as const;
+/**
+ * What the scenario assumes happens to its components (ADR-019). The kinds are the conditions the console offers;
+ * each starts the failed components in the predicted state the engine propagates from: `down` kinds take every
+ * dependant without redundancy down, `degraded` kinds degrade them, `at_risk` kinds leave live state alone and flag
+ * the services as at risk.
+ */
+export const SCENARIO_KINDS = [
+  'failed',
+  'degraded',
+  'power_loss',
+  'link_down',
+  'certificate_expired',
+  'warranty_expired',
+  'subscription_expired',
+  'end_of_life',
+  'vulnerability_exploited',
+  'capacity_exhausted',
+  'maintenance',
+] as const;
 export const scenarioKindSchema = z.enum(SCENARIO_KINDS);
+export type ScenarioKind = z.infer<typeof scenarioKindSchema>;
+
+export const SCENARIO_SEVERITIES = ['down', 'degraded', 'at_risk'] as const;
+export type ScenarioSeverity = (typeof SCENARIO_SEVERITIES)[number];
+
+/** The state a kind puts its failed components in; one entry per kind, checked at compile time. */
+export const SCENARIO_KIND_SEVERITY: Record<ScenarioKind, ScenarioSeverity> = {
+  failed: 'down',
+  degraded: 'degraded',
+  power_loss: 'down',
+  link_down: 'down',
+  certificate_expired: 'down',
+  warranty_expired: 'at_risk',
+  subscription_expired: 'at_risk',
+  end_of_life: 'at_risk',
+  vulnerability_exploited: 'degraded',
+  capacity_exhausted: 'degraded',
+  maintenance: 'degraded',
+};
 
 /** A runbook: numbered steps with an optional automation hook (SOAR playbook or Ansible job) per step. */
 export const runbookSchema = z.object({
@@ -32,7 +69,7 @@ export const impactScenarioSchema = z.object({
   tenantId: z.uuid(),
   name: z.string().min(1),
   kind: scenarioKindSchema,
-  /** CIs assumed failed. Power and rack scenarios expand to their contained CIs at run time. */
+  /** CIs the condition is applied to; the simulation expands over their upstream closure at run time. */
   failedCiIds: z.array(z.uuid()).min(1),
   options: z.object({
     /** 0 means unlimited. */

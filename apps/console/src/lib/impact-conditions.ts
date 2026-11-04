@@ -1,25 +1,15 @@
 // REQ-UI-013 REQ-BSM-003 — impact modeling conditions and their applicability. Pure: a condition applies to a
 // component by its CI type or layer, and carries the predicted state the model starts the failed components in.
 import { BSM } from '@openmap/constants';
-import type { CiLayer, CiType } from '@openmap/contracts';
+import { SCENARIO_KINDS, SCENARIO_KIND_SEVERITY, type CiLayer, type CiType, type ScenarioKind, type ScenarioSeverity } from '@openmap/contracts';
 import { isCiType } from './attributes';
-import type { CiSummary, PredictedState } from './queries';
+import type { CiSummary } from './queries';
 
-export const IMPACT_CONDITIONS = [
-  'degraded',
-  'failed',
-  'power_loss',
-  'link_down',
-  'certificate_expired',
-  'warranty_expired',
-  'subscription_expired',
-  'end_of_life',
-  'vulnerability_exploited',
-  'capacity_exhausted',
-] as const;
-export type ImpactCondition = (typeof IMPACT_CONDITIONS)[number];
+/** The conditions are the contract's scenario kinds (ADR-019): what the picker offers is what the API accepts. */
+export const IMPACT_CONDITIONS = SCENARIO_KINDS;
+export type ImpactCondition = ScenarioKind;
 
-export type ConditionSeverity = Exclude<PredictedState, 'unaffected'>;
+export type ConditionSeverity = ScenarioSeverity;
 
 export interface ConditionSpec {
   id: ImpactCondition;
@@ -35,47 +25,47 @@ export interface ConditionSpec {
 
 const PHYSICAL_TYPES: readonly CiType[] = ['network_device', 'load_balancer', 'fc_switch', 'storage_array', 'pdu', 'ups', 'cooling_unit', 'bmc'];
 
+type Applicability = Pick<ConditionSpec, 'layers' | 'types' | 'universal'>;
+
+/** A condition's applicability; its severity comes from the contract so the console and the engine never disagree. */
+function spec(id: ImpactCondition, rule: Applicability): ConditionSpec {
+  return { id, severity: SCENARIO_KIND_SEVERITY[id], ...rule };
+}
+
+const EVERYTHING: Applicability = { layers: [], types: [], universal: true };
+
 export const CONDITION_SPECS: Record<ImpactCondition, ConditionSpec> = {
-  degraded: { id: 'degraded', severity: 'degraded', layers: [], types: [], universal: true },
-  failed: { id: 'failed', severity: 'down', layers: [], types: [], universal: true },
-  power_loss: { id: 'power_loss', severity: 'down', layers: ['dc', 'hardware', 'storage'], types: ['network_device', 'load_balancer', 'fc_switch'], universal: false },
-  link_down: { id: 'link_down', severity: 'down', layers: ['network_security'], types: ['fc_switch', 'fc_fabric', 'cable', 'patch_panel', 'site_link'], universal: false },
-  certificate_expired: {
-    id: 'certificate_expired',
-    severity: 'down',
+  degraded: spec('degraded', EVERYTHING),
+  failed: spec('failed', EVERYTHING),
+  maintenance: spec('maintenance', EVERYTHING),
+  power_loss: spec('power_loss', { layers: ['dc', 'hardware', 'storage'], types: ['network_device', 'load_balancer', 'fc_switch'], universal: false }),
+  link_down: spec('link_down', { layers: ['network_security'], types: ['fc_switch', 'fc_fabric', 'cable', 'patch_panel', 'site_link'], universal: false }),
+  certificate_expired: spec('certificate_expired', {
     layers: [],
     types: ['certificate', 'load_balancer', 'listening_service', 'application', 'application_component', 'saas_application', 'k8s_service'],
     universal: false,
-  },
-  warranty_expired: { id: 'warranty_expired', severity: 'at_risk', layers: ['hardware'], types: PHYSICAL_TYPES, universal: false },
-  subscription_expired: {
-    id: 'subscription_expired',
-    severity: 'at_risk',
+  }),
+  warranty_expired: spec('warranty_expired', { layers: ['hardware'], types: PHYSICAL_TYPES, universal: false }),
+  subscription_expired: spec('subscription_expired', {
     layers: ['saas', 'cloud'],
     types: ['licence', 'software', 'saas_application', 'saas_tenant', 'cloud_account', 'contract'],
     universal: false,
-  },
-  end_of_life: {
-    id: 'end_of_life',
-    severity: 'at_risk',
+  }),
+  end_of_life: spec('end_of_life', {
     layers: ['os'],
     types: ['software', 'software_instance', 'network_device', 'storage_array', 'host', 'hypervisor', 'database', 'fc_switch', 'load_balancer'],
     universal: false,
-  },
-  vulnerability_exploited: {
-    id: 'vulnerability_exploited',
-    severity: 'degraded',
+  }),
+  vulnerability_exploited: spec('vulnerability_exploited', {
     layers: ['os', 'applications', 'databases', 'containers'],
     types: ['host', 'vm', 'network_device', 'load_balancer', 'vulnerability'],
     universal: false,
-  },
-  capacity_exhausted: {
-    id: 'capacity_exhausted',
-    severity: 'degraded',
+  }),
+  capacity_exhausted: spec('capacity_exhausted', {
     layers: ['storage', 'databases'],
     types: ['subnet', 'dhcp_scope', 'pdu', 'power_feed', 'power_circuit', 'ups', 'cooling_unit', 'rack', 'host', 'hypervisor', 'vm_cluster', 'k8s_cluster', 'cloud_account', 'licence', 'saas_tenant'],
     universal: false,
-  },
+  }),
 };
 
 /** Worst first (shared BSM order) so the picker leads with the conditions that take services down. */

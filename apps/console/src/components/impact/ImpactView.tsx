@@ -354,6 +354,7 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
             <Card>
               <QueryState status="error" />
               <p className="mt-om-8 text-om-sm text-om-secondary">{t('impact.result.error')}</p>
+              <p className="mt-om-4 font-om-mono text-om-xs text-om-muted">{(run.error ?? rerun.error)?.message}</p>
             </Card>
           ) : null}
           {outcome === undefined ? (

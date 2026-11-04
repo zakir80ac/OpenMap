@@ -9,7 +9,8 @@ export function parseInput<T extends z.ZodType>(schema: T, value: unknown, what:
     const issues = result.error.issues.map(
       (i) => (i.path.length ? i.path.map(String).join('.') + ': ' : '') + i.message,
     );
-    throw new BadRequestException({ message: 'invalid ' + what, issues });
+    // The issues ride in the message as well: GraphQL clients see only the message, and a rejected input must say why.
+    throw new BadRequestException({ message: 'invalid ' + what + ': ' + issues.join('; '), issues });
   }
   return result.data;
 }

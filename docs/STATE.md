@@ -2,7 +2,25 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-04 (checkpoint 12: Horizon look and the 3D digital twin)
+## Last session · 2026-11-04 (checkpoint 13: what-if scenarios failed on every run)
+
+Syed reported "Something went wrong" on every what-if run in Business services. Root cause, found by replaying the
+run in the browser pane: the console sends the picked condition (`failed`, `power_loss`, …) as the scenario `kind`,
+and the impact contract's `SCENARIO_KINDS` still listed the pre-console scope kinds (`component`, `power`, `rack`,
+…), so `saveScenario` rejected every input with `invalid ScenarioInput` and the screen showed only the generic error.
+Fixed by ADR-019: the scenario kinds are the conditions plus `maintenance`, `SCENARIO_KIND_SEVERITY` gives each its
+starting state, the console's condition table and the API's `severityFor` both read the contract (impact 1.0.0;
+Postgres enum recreated by migration 0012, GraphQL unchanged). Validation errors now carry their zod issues in the
+message, and the impact screen prints the server's reason under the error card. Two more defects sat behind it:
+the scenario `runbook` the contract declares had no column, so every scenario read failed its parse (migration
+0013), and the impact traversal never followed `contains`, so a component's failure never reached its application
+or any business service (`contains` is traversed from logical containers only, `GRAPH.impactContainerTypes`; the
+Memgraph integration test covers a component reaching its service and a port not taking down its switch). T-122
+runs a model on cbs-db on the real stack in both locales and expects affected services. Lesson: a screen whose
+unit test stubs the API needs one e2e that exercises its mutation for real, and a "0 affected" result is a finding,
+not a pass.
+
+## Previous session · 2026-11-04 (checkpoint 12: Horizon look and the 3D digital twin)
 
 Syed's customer called the console "generic, AI-generated"; he asked for a futuristic look and a real 3D digital twin
 (MFA and the corporate IdP parked). REQ-UI-028 and REQ-UI-029 done (ADR-018, `docs/evidence/horizon-twin.md`).
@@ -23,7 +41,7 @@ Lighthouse: twin 0.96, every screen at or above its floor; CMDB-038 summary sele
 Follow-ups: the DCIM elevation still draws its isometric SVG and links to the twin; per-site platforms in the twin
 need the site of a room, which the racks query does not carry yet.
 
-## Previous session · 2026-11-04 (checkpoint 11: initial setup wizard)
+## Earlier session · 2026-11-04 (checkpoint 11: initial setup wizard)
 
 Syed asked whether a fresh deployment has an onboarding wizard; it had none (CLI node registration, no way to create a
 subnet or a credential from the console), and he called that vaporware. REQ-UI-020 and REQ-UI-024 are now done end to

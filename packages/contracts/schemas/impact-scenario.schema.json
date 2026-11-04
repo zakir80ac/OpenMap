@@ -22,14 +22,16 @@
     "kind": {
       "type": "string",
       "enum": [
-        "component",
-        "power",
-        "rack",
-        "site",
-        "network",
-        "storage",
-        "cloud_region",
-        "shared_service",
+        "failed",
+        "degraded",
+        "power_loss",
+        "link_down",
+        "certificate_expired",
+        "warranty_expired",
+        "subscription_expired",
+        "end_of_life",
+        "vulnerability_exploited",
+        "capacity_exhausted",
         "maintenance"
       ]
     },

@@ -25,11 +25,22 @@ describe('Memgraph repository', () => {
   const db = ci('database_cluster', 'databases', 'Ledger DB');
   const app = ci('application', 'applications', 'app-ledger');
   const svc = ci('business_service', 'applications', 'Online banking', 1);
+  // Containment: an application is made of its components; a switch is not made of one interface (ADR-019).
+  const component = ci('application_component', 'applications', 'ledger-api');
+  const toR = ci('network_device', 'network_security', 'tor-r12-a');
+  const port = ci('interface', 'network_security', 'tor-r12-a Ethernet1/1');
 
   beforeAll(async () => {
     await repo.ensureSchema();
-    await repo.upsertCis([pdu, host, db, app, svc]);
-    await repo.upsertRelationships([rel('powered_by', host, pdu), rel('runs_on', db, host), rel('depends_on', app, db), rel('part_of_service', app, svc)]);
+    await repo.upsertCis([pdu, host, db, app, svc, component, toR, port]);
+    await repo.upsertRelationships([
+      rel('powered_by', host, pdu),
+      rel('runs_on', db, host),
+      rel('depends_on', app, db),
+      rel('part_of_service', app, svc),
+      rel('contains', app, component),
+      rel('contains', toR, port),
+    ]);
   });
   afterAll(async () => {
     await repo.close();
@@ -40,6 +51,14 @@ describe('Memgraph repository', () => {
     expect(result.services.map((s) => s.ci.name)).toEqual(['Online banking']);
     expect(result.services[0]?.depth).toBe(4);
     expect(result.services[0]?.path[0]).toBe(pdu.id);
+  });
+  it('reaches the service from a component through its application, but not a switch from its port', async () => {
+    const fromComponent = await repo.impact(tenantId, component.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
+    expect(fromComponent.nodes.map((n) => n.ci.name)).toContain('app-ledger');
+    expect(fromComponent.services.map((s) => s.ci.name)).toEqual(['Online banking']);
+    const fromPort = await repo.impact(tenantId, port.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
+    expect(fromPort.nodes.map((n) => n.ci.name)).not.toContain('tor-r12-a');
+    expect(fromPort.services).toEqual([]);
   });
   it('time-travels: a retired relationship is invisible now but visible before retirement', async () => {
     const before = new Date(Date.now() - 1000).toISOString();
@@ -54,7 +73,8 @@ describe('Memgraph repository', () => {
   });
   it('counts by layer and refuses write Cypher through readOnly', async () => {
     const counts = await repo.layerCounts(tenantId, null);
-    expect(counts.find((c) => c.layer === 'applications')?.count).toBe(2);
+    // app-ledger, Online banking and the ledger-api component.
+    expect(counts.find((c) => c.layer === 'applications')?.count).toBe(3);
     await expect(repo.readOnly('MATCH (n) DETACH DELETE n', {})).rejects.toThrow();
   });
 });

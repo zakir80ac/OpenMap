@@ -2,6 +2,7 @@
 // simulate() with service models, facts and live health loaded from the CMDB and the graph.
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { simulate, type ConditionSeverity } from '@openmap/bsm-engine';
+import { SCENARIO_KIND_SEVERITY } from '@openmap/contracts';
 import type { ImpactScenario, ImpactSimulation } from '@openmap/contracts';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord } from '../ci/ci.types.js';
@@ -13,9 +14,9 @@ import { IMPACT_REPOSITORY, type ImpactRepository } from './impact.repository.js
 import type { ScenarioInput } from './impact.schemas.js';
 import type { ImpactScenarioView, ImpactSimulationView } from './impact.types.js';
 
-/** Maintenance windows degrade the components they touch; every other scenario kind takes them down. */
+/** The state a scenario kind starts its components in, from the contract's kind table (ADR-019). */
 export function severityFor(kind: ImpactScenario['kind']): ConditionSeverity {
-  return kind === 'maintenance' ? 'degraded' : 'down';
+  return SCENARIO_KIND_SEVERITY[kind];
 }
 
 export function toScenarioView(s: ImpactScenario): ImpactScenarioView {

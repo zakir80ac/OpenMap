@@ -1,7 +1,21 @@
 // T-064 REQ-UI-013 REQ-BSM-003 — condition applicability by type and layer, ordering by severity, name summaries.
-import { CI_TYPES, CI_TYPE_LAYER } from '@openmap/contracts';
+import { CI_TYPES, CI_TYPE_LAYER, SCENARIO_KIND_SEVERITY, scenarioKindSchema } from '@openmap/contracts';
 import { describe, expect, it } from 'vitest';
 import { CONDITION_SPECS, IMPACT_CONDITIONS, applicableConditions, conditionApplies, isImpactCondition, summariseNames } from './impact-conditions';
+
+describe('conditions and the scenario contract', () => {
+  it('offers only conditions the API accepts as a scenario kind, at the severity the engine applies', () => {
+    // The picker once sent its own ids as the kind and every save came back "invalid ScenarioInput" (ADR-019).
+    for (const condition of IMPACT_CONDITIONS) {
+      expect(scenarioKindSchema.safeParse(condition).success).toBe(true);
+      expect(CONDITION_SPECS[condition].severity).toBe(SCENARIO_KIND_SEVERITY[condition]);
+    }
+  });
+  it('applies a maintenance window to every component as degraded', () => {
+    expect(conditionApplies('maintenance', { type: 'something-new', layer: 'unknown' })).toBe(true);
+    expect(CONDITION_SPECS.maintenance.severity).toBe('degraded');
+  });
+});
 
 const component = (type: (typeof CI_TYPES)[number]) => ({ type, layer: CI_TYPE_LAYER[type] });
 
@@ -43,12 +57,12 @@ describe('conditionApplies', () => {
 describe('applicableConditions', () => {
   it('returns the intersection over several components, worst severity first', () => {
     const only = applicableConditions([component('host'), component('application')]);
-    expect(only.map((c) => c.id)).toEqual(['failed', 'degraded', 'vulnerability_exploited']);
+    expect(only.map((c) => c.id)).toEqual(['failed', 'degraded', 'vulnerability_exploited', 'maintenance']);
     expect(only[0]?.severity).toBe('down');
   });
   it('lists every condition for a host in severity order and nothing for no selection', () => {
     const host = applicableConditions([component('host')]);
-    expect(host.map((c) => c.id)).toEqual(['failed', 'power_loss', 'degraded', 'vulnerability_exploited', 'capacity_exhausted', 'warranty_expired', 'end_of_life']);
+    expect(host.map((c) => c.id)).toEqual(['failed', 'power_loss', 'degraded', 'vulnerability_exploited', 'capacity_exhausted', 'maintenance', 'warranty_expired', 'end_of_life']);
     expect(applicableConditions([])).toEqual([]);
   });
   it('covers every declared condition with a spec and a type guard', () => {

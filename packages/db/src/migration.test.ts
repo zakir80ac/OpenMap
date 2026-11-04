@@ -40,7 +40,9 @@ describe('prisma/migrations/0001_init', () => {
   it('creates a type for every enum', () => {
     const enums = enumNames();
     for (const e of enums) expect(allMigrations).toContain('CREATE TYPE "' + e + '" AS ENUM (');
-    expect((allMigrations.match(/CREATE TYPE "/g) ?? []).length).toBe(enums.length);
+    // A later migration may recreate a type to change its members (0012 ScenarioKind), so count distinct names.
+    const created = new Set((allMigrations.match(/CREATE TYPE "([A-Za-z]+)"/g) ?? []).map((m) => m.replace(/^CREATE TYPE "|"$/g, '')));
+    expect(created.size).toBe(enums.length);
   });
 
   it('creates the bitemporal and GIN indexes and the outbox bigserial', () => {

@@ -20,6 +20,10 @@ import {
   impactScenarioSchema,
   integrationConfigSchema,
   assetRecordSchema,
+  SCENARIO_KINDS,
+  SCENARIO_KIND_SEVERITY,
+  SCENARIO_SEVERITIES,
+  scenarioKindSchema,
 } from './index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -130,13 +134,20 @@ describe('event contract', () => {
 });
 
 describe('asset, impact and integration contracts', () => {
+  it('accepts every scenario kind with a severity and rejects the pre-ADR-019 scope kinds', () => {
+    for (const kind of SCENARIO_KINDS) {
+      expect(scenarioKindSchema.safeParse(kind).success).toBe(true);
+      expect(SCENARIO_SEVERITIES).toContain(SCENARIO_KIND_SEVERITY[kind]);
+    }
+    for (const legacy of ['component', 'power', 'rack', 'site']) expect(scenarioKindSchema.safeParse(legacy).success).toBe(false);
+  });
   it('validate representative records', () => {
     expect(
       impactScenarioSchema.safeParse({
         id: uuid,
         tenantId: uuid,
         name: 'R12 power',
-        kind: 'power',
+        kind: 'power_loss',
         failedCiIds: [uuid],
         options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null },
         createdBy: 'syed',

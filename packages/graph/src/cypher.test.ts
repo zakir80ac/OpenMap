@@ -25,7 +25,14 @@ describe('cypher builders', () => {
     expect(q.text).toContain('UNION ALL');
     expect(q.text).toContain('*0..4]-(x:Ci {tenantId: $tenantId})-[ps:PART_OF_SERVICE]->(s:Ci');
     expect(q.text.split('PART_OF_SERVICE').length).toBe(2);
-    expect(q.params).toEqual({ tenantId: tenant, rootId: 'root', asOf: null });
+    // Containment is traversed, gated on the container's type (an application's components, not a switch's ports).
+    expect(q.text).toContain('|CONTAINS');
+    expect(q.text).toContain("type(r) <> 'CONTAINS' OR startNode(r).type IN $containerTypes");
+    expect(q.params).toEqual({ tenantId: tenant, rootId: 'root', asOf: null, containerTypes: [...GRAPH.impactContainerTypes] });
+  });
+  it('leaves the containment gate out when the restricted edge set has no contains edge', () => {
+    const q = impactQuery(tenant, 'root', { direction: 'upstream', maxDepth: 2, asOf: null, edgeTypes: ['runs_on'] });
+    expect(q.text).not.toContain('$containerTypes');
   });
   it('builds a downstream query with restricted edge types', () => {
     const q = impactQuery(tenant, 'root', { direction: 'downstream', maxDepth: 2, asOf: '2026-01-01T00:00:00Z', edgeTypes: ['powered_by'] });

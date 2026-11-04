@@ -125,8 +125,14 @@ export const GRAPH = {
   maxPageSize: 500,
   /** Nodes detached and deleted per transaction when a tenant is purged from the graph. */
   purgeBatchSize: 5_000,
-  /** Relationship types that carry failure from a dependency to its dependants (traversed upstream). */
-  impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service'] as const,
+  /**
+   * Relationship types that carry failure from a dependency to its dependants (traversed upstream). `contains` is
+   * traversed only from the containers in `impactContainerTypes`: an application is down when its component is, a
+   * switch is not down when one of its interfaces is (ADR-019).
+   */
+  impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service', 'contains'] as const,
+  /** CI types whose `contains` edge is a dependency on the member: logical containers made of their parts. */
+  impactContainerTypes: ['application', 'k8s_namespace', 'k8s_cluster'] as const,
 } as const;
 
 /**

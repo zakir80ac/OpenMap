@@ -370,14 +370,16 @@ enum PlanStatus {
 
 /// SCENARIO_KINDS (impact.ts)
 enum ScenarioKind {
-  component
-  power
-  rack
-  site
-  network
-  storage
-  cloud_region
-  shared_service
+  failed
+  degraded
+  power_loss
+  link_down
+  certificate_expired
+  warranty_expired
+  subscription_expired
+  end_of_life
+  vulnerability_exploited
+  capacity_exhausted
   maintenance
 }
 
@@ -1146,6 +1148,8 @@ model ImpactScenario {
   createdBy             String
   changeRefSource       String?
   changeRefId           String?
+  /// runbookSchema, or null when no procedure is attached to the scenario.
+  runbook               Json?
   createdAt             DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime     @updatedAt @db.Timestamptz(3)
 

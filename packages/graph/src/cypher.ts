@@ -43,6 +43,18 @@ export function temporal(alias: string): string {
 }
 
 const SERVICE_EDGE: RelationshipType = 'part_of_service';
+const CONTAINS_EDGE: RelationshipType = 'contains';
+
+/**
+ * Containment is a dependency only for logical containers (an application and its components), never for physical
+ * ones (a switch and its interfaces), so a `contains` hop is kept only when the container's type is in the list
+ * (ADR-019).
+ */
+function containmentFilter(types: readonly RelationshipType[]): string {
+  const traversed = types.length ? types : GRAPH.impactEdgeTypes;
+  if (!traversed.includes(CONTAINS_EDGE)) return '';
+  return " AND ALL(r IN relationships(p) WHERE type(r) <> '" + relLabel(CONTAINS_EDGE) + "' OR startNode(r).type IN $containerTypes)";
+}
 
 /** Dependency edges to traverse; the service membership edge is applied as a final forward hop instead. */
 function edgeAlternatives(types: readonly RelationshipType[]): string {
@@ -64,22 +76,23 @@ export function impactQuery(tenantId: string, rootId: string, options: ImpactQue
   const arrow = (dir: ImpactDirection): [string, string] => (dir === 'upstream' ? ['<-', '-'] : dir === 'downstream' ? ['-', '->'] : ['-', '-']);
   const [left, right] = arrow(options.direction);
   const service = relLabel(SERVICE_EDGE);
+  const containment = containmentFilter(options.edgeTypes);
   const closure =
     'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
     'MATCH p = (root)' + left + '[:' + rels + '*1..' + String(depth) + ']' + right + '(x:Ci {tenantId: $tenantId})\n' +
-    'WHERE ' + temporal('x') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')\n' +
+    'WHERE ' + temporal('x') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')' + containment + '\n' +
     'WITH x, p ORDER BY length(p) ASC\n' +
     'WITH x, head(collect(p)) AS sp\n' +
     'RETURN x ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
   const services =
     'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
     'MATCH p = (root)' + left + '[:' + rels + '*0..' + String(depth) + ']' + right + '(x:Ci {tenantId: $tenantId})-[ps:' + service + ']->(s:Ci {tenantId: $tenantId})\n' +
-    'WHERE ' + temporal('s') + ' AND ' + temporal('ps') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')\n' +
+    'WHERE ' + temporal('s') + ' AND ' + temporal('ps') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')' + containment + '\n' +
     'WITH s, p ORDER BY length(p) ASC\n' +
     'WITH s, head(collect(p)) AS sp\n' +
     'RETURN s ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
   const text = closure + '\nUNION ALL\n' + services;
-  return { text, params: { tenantId, rootId, asOf: options.asOf } };
+  return { text, params: { tenantId, rootId, asOf: options.asOf, containerTypes: [...GRAPH.impactContainerTypes] } };
 }
 
 export function shortestPathQuery(tenantId: string, fromId: string, toId: string, asOf: string | null): Query {

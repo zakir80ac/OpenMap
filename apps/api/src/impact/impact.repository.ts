@@ -31,6 +31,7 @@ function toScenario(row: ScenarioRow): ImpactScenario {
     createdBy: row.createdBy,
     createdAt: isoOf(row.createdAt),
     changeRef: row.changeRefSource !== null && row.changeRefId !== null ? { source: row.changeRefSource, id: row.changeRefId } : null,
+    runbook: row.runbook,
   });
 }
 
