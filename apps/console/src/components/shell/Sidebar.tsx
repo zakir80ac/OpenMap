@@ -15,33 +15,35 @@ export interface SidebarProps {
 }
 
 const itemBase =
-  'group flex items-center gap-om-10 rounded-om-control-md border border-transparent px-om-10 py-om-8 text-om-sm font-medium text-om-secondary transition-[color,background-color,box-shadow] duration-om-base ease-om-standard hover:bg-om-surface2 hover:text-om-primary';
-const itemActive = 'border-om-cyan/30 bg-om-cyan/10 text-om-primary shadow-om-glow-nav-cyan';
+  'group relative flex items-center gap-om-10 rounded-om-control-md border border-transparent px-om-10 py-om-8 text-om-sm font-medium text-om-secondary transition-[color,background-color,box-shadow] duration-om-base ease-om-standard hover:bg-om-surface2 hover:text-om-primary';
+/** Active item: tinted, glowing, with a lit indicator bar on the inline start edge (Horizon, REQ-UI-025). */
+const itemActive =
+  'border-om-cyan/30 bg-linear-to-r from-om-cyan/15 to-om-violet/10 text-om-primary shadow-om-glow-nav-cyan before:absolute before:inset-y-om-6 before:-inset-s-om-12 before:w-om-2 before:rounded-om-pill before:bg-om-cyan before:shadow-om-glow-bar-cyan';
 
 export function Sidebar({ locale }: SidebarProps): ReactNode {
   const t = useT();
   const pathname = usePathname();
   const { rest } = splitLocale(pathname);
   return (
-    <aside className="sticky top-0 flex h-dvh w-(--om-sidebar-width) shrink-0 flex-col border-e border-om-border-glass bg-om-surface1/70 shadow-om-inner-highlight backdrop-blur-md">
+    <aside className="sticky top-0 flex h-dvh w-(--om-sidebar-width) shrink-0 flex-col border-e border-om-border-glass bg-om-surface1/70 shadow-om-inner-highlight backdrop-blur-md [background-image:linear-gradient(180deg,color-mix(in_srgb,var(--om-accent-cyan)_6%,transparent),transparent_40%)]">
       <Link
         href={localizedHref(locale, '/dashboard')}
         className="flex h-(--om-topbar-height) items-center gap-om-10 border-b border-om-border-glass px-om-18"
       >
         <span
           aria-hidden="true"
-          className="grid size-8 place-items-center rounded-om-control-lg bg-linear-to-br from-om-cyan to-om-violet text-om-ground shadow-om-glow-button-cyan"
+          className="grid size-8 place-items-center rounded-om-control-lg bg-linear-to-br from-om-cyan to-om-violet text-om-ground shadow-om-glow-button-cyan ring-1 ring-om-cyan/40 ring-offset-2 ring-offset-om-ground"
         >
           <Icon name="layers" className="size-4" />
         </span>
-        <span className="font-om-display text-om-md font-bold tracking-tight text-om-primary">{t('app.name')}</span>
+        <span className="font-om-display text-om-md font-bold uppercase tracking-[0.12em] text-om-primary">{t('app.name')}</span>
       </Link>
 
       <nav aria-label={t('nav.primary')} className="flex flex-1 flex-col gap-om-16 overflow-y-auto px-om-12 py-om-16">
         {NAV_GROUPS.map((group, index) => (
           <div key={group.key ?? String(index)} className={cx('flex flex-col gap-om-4', group.key === undefined && index > 0 && 'mt-auto')}>
             {group.key !== undefined ? (
-              <p className="px-om-10 pb-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t(group.key)}</p>
+              <p className="flex items-center gap-om-8 px-om-10 pb-om-4 font-om-mono text-om-2xs font-semibold uppercase tracking-[0.14em] text-om-muted after:h-px after:flex-1 after:bg-linear-to-r after:from-om-border-strong after:to-transparent">{t(group.key)}</p>
             ) : null}
             {group.items.map((item) => {
               const active = isActiveRoute(rest, item.href);

@@ -7,10 +7,12 @@ export * from './radii.js';
 export * from './spacing.js';
 export * from './shadows.js';
 export * from './motion.js';
+export * from './effects.js';
 export * from './css-variables.js';
 
 import { colors } from './color.js';
 import { directionVariables } from './css-variables.js';
+import { effects } from './effects.js';
 import { layerColors } from './layers.js';
 import { motion } from './motion.js';
 import { radii } from './radii.js';
@@ -30,6 +32,7 @@ export const tokens = {
   shadows,
   glows,
   motion,
+  effects,
   direction: directionVariables,
 } as const;
 

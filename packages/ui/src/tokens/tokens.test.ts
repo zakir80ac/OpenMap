@@ -112,7 +112,7 @@ describe('scale tokens', () => {
   });
   it('exposes every group on the tokens object', () => {
     expect(Object.keys(tokens).sort()).toEqual(
-      ['colors', 'direction', 'glows', 'layers', 'motion', 'radii', 'shadows', 'spacing', 'states', 'typography'].sort(),
+      ['colors', 'direction', 'effects', 'glows', 'layers', 'motion', 'radii', 'shadows', 'spacing', 'states', 'typography'].sort(),
     );
   });
 });
@@ -130,7 +130,7 @@ describe('cssVariables()', () => {
     expect(css).toContain('--om-radius-card: 18px;');
     expect(css).toContain('--om-space-32: 32px;');
     expect(css).toContain('--om-text-size-2xl: 26px;');
-    expect(css).toContain("--om-font-display: 'Manrope'");
+    expect(css).toContain("--om-font-display: 'Chakra Petch'");
     expect(css).toContain('--om-shadow-card: 0 30px 60px -30px rgba(0,0,0,.8);');
     expect(css).toContain('--om-glow-bar-cyan: 0 0 14px rgba(34,211,238,0.45);');
   });
@@ -146,6 +146,16 @@ describe('cssVariables()', () => {
     expect(stylesheet()).toContain(css);
     expect(stylesheet()).toContain('@keyframes om-pulse');
   });
+  it('emits the Horizon effects: holographic border, brackets, grid, sheen and rise, and honours reduced motion', () => {
+    expect(css).toContain('--om-holo-border: linear-gradient(135deg, rgba(34,211,238,0.55), rgba(139,92,246,0.3) 45%, rgba(34,211,238,0.06) 85%);');
+    expect(css).toContain('--om-grid-cell: 56px;');
+    expect(css).toContain('--om-sheen-period: 2.8s;');
+    const sheet = stylesheet();
+    for (const name of ['om-rise', 'om-sheen', 'om-ring', 'om-grid-drift']) expect(sheet).toContain('@keyframes ' + name);
+    expect(sheet).toContain('.om-card::after');
+    expect(sheet).toContain('background-clip: padding-box, border-box;');
+    expect(sheet).toContain('@media (prefers-reduced-motion: reduce)');
+  });
 });
 
 describe('tailwind preset', () => {
@@ -158,7 +168,7 @@ describe('tailwind preset', () => {
     expect(tailwindTheme.borderRadius['om-card']).toBe('18px');
     expect(tailwindTheme.boxShadow['om-card']).toBe('0 30px 60px -30px rgba(0,0,0,.8)');
     expect(tailwindTheme.boxShadow['om-glow-bar-cyan']).toBe('0 0 14px rgba(34,211,238,0.45)');
-    expect(tailwindTheme.fontFamily['om-display']).toContain('Manrope');
+    expect(tailwindTheme.fontFamily['om-display']).toContain('Chakra Petch');
     expect(tailwindTheme.fontSize['om-2xl']).toBe('26px');
     expect(tailwindTheme.spacing['om-16']).toBe('16px');
   });

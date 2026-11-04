@@ -64,4 +64,4 @@ export const tableClass = 'w-full text-start text-om-xs';
 export const theadClass = 'text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted';
 export const thClass = 'py-om-6 pe-om-10 text-start';
 export const tdClass = 'py-om-8 pe-om-10 align-top';
-export const rowClass = 'border-t border-om-border-glass';
+export const rowClass = 'border-t border-om-border-glass transition-colors duration-om-fast hover:bg-om-cyan/5';

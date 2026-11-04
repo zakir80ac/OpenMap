@@ -18,7 +18,7 @@ import puppeteer, { type Page } from 'puppeteer-core';
 const resultsDir = fileURLToPath(new URL('../results/', import.meta.url));
 const realmFile = fileURLToPath(new URL('../../../deploy/compose/keycloak/realm-openmap.json', import.meta.url));
 const LOCALE: Locale = 'en';
-const SCREENS = ['dashboard', 'setup', 'layers', 'discovery', 'dependencies', 'cmdb', 'assets', 'software', 'services', 'impact', 'integrations', 'ipam', 'dcim', 'vulnerabilities', 'analytics', 'assistant', 'settings'] as const;
+const SCREENS = ['dashboard', 'twin', 'setup', 'layers', 'discovery', 'dependencies', 'cmdb', 'assets', 'software', 'services', 'impact', 'integrations', 'ipam', 'dcim', 'vulnerabilities', 'analytics', 'assistant', 'settings'] as const;
 const NAVIGATION_TIMEOUT_MS = 60_000;
 const SCORE_DECIMALS = 100;
 /** Lighthouse's desktop preset: the console is an operator desk, not a phone app. */
@@ -77,6 +77,8 @@ interface FailingAudit {
 }
 
 interface PageScore {
+  runtimeError: string | null;
+  warnings: string[];
   label: string;
   url: string;
   performance: number;
@@ -163,6 +165,9 @@ async function main(): Promise<void> {
     bestPractices: score(step.lhr.categories, 'best-practices'),
     failing: failingAudits(step.lhr as unknown as Parameters<typeof failingAudits>[0]),
     metrics: metricsOf(step.lhr as unknown as Parameters<typeof metricsOf>[0]),
+    // A step Lighthouse could not score says why here (NO_FCP, a navigation that never settled); printed when under budget.
+    runtimeError: step.lhr.runtimeError === undefined ? null : step.lhr.runtimeError.code + ': ' + step.lhr.runtimeError.message,
+    warnings: step.lhr.runWarnings,
   }));
   mkdirSync(resultsDir, { recursive: true });
   writeFileSync(resultsDir + 'lighthouse.json', JSON.stringify({ name: 'lighthouse', formFactor: FORM_FACTOR, budgets: { performance: PERF_BUDGETS.lighthousePerformanceMin, accessibility: PERF_BUDGETS.lighthouseAccessibilityMin, bestPractices: PERF_BUDGETS.lighthouseBestPracticesMin }, pages, generatedAt: new Date().toISOString() }, null, 2) + '\n');
@@ -178,7 +183,11 @@ async function main(): Promise<void> {
     if (!ok) failed = true;
     console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);
-    if (!ok) console.log('        metrics ' + JSON.stringify(p.metrics));
+    if (!ok) {
+      console.log('        metrics ' + JSON.stringify(p.metrics));
+      if (p.runtimeError !== null) console.log('        runtime error ' + p.runtimeError);
+      for (const warning of p.warnings) console.log('        warning ' + warning);
+    }
   }
   console.log('lighthouse: results/lighthouse.json and results/lighthouse-flow.html written');
   if (failed) process.exit(1);

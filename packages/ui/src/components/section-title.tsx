@@ -22,6 +22,9 @@ export interface SectionTitleProps {
   style?: OmStyle;
 }
 
+/** Thickness of the glowing line before an eyebrow. */
+const EYEBROW_LINE_PX = 1;
+
 const sizePx: Record<SectionTitleSize, number> = {
   sm: fontSizePx.md,
   md: fontSizePx.lg,
@@ -44,14 +47,28 @@ export function SectionTitle({ children, eyebrow, description, action, size = 'm
           <span
             data-part="eyebrow"
             style={{
-              fontFamily: varRef('font-body'),
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: varRef('space-8'),
+              fontFamily: varRef('font-mono'),
               fontSize: px(fontSizePx.xs),
               fontWeight: fontWeight.medium,
-              color: varRef('text-muted'),
+              color: varRef('accent-cyan'),
               textTransform: 'uppercase',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.14em',
             }}
           >
+            <span
+              aria-hidden="true"
+              data-part="eyebrow-line"
+              style={{
+                display: 'inline-block',
+                width: varRef('space-16'),
+                height: px(EYEBROW_LINE_PX),
+                background: 'linear-gradient(' + varRef('dir-flow-angle') + ', ' + varRef('accent-cyan') + ', transparent)',
+                boxShadow: varRef('glow-bar-cyan'),
+              }}
+            />
             {eyebrow}
           </span>
         ) : null}

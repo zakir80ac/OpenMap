@@ -2,7 +2,28 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-04 (checkpoint 11: initial setup wizard)
+## Last session · 2026-11-04 (checkpoint 12: Horizon look and the 3D digital twin)
+
+Syed's customer called the console "generic, AI-generated"; he asked for a futuristic look and a real 3D digital twin
+(MFA and the corporate IdP parked). REQ-UI-028 and REQ-UI-029 done (ADR-018, `docs/evidence/horizon-twin.md`).
+Horizon lives in `packages/ui`: an `effects` token group (holographic border, HUD brackets, grid, aurora, glow, sheen,
+rise, ring), `componentRulesCss` rules for cards, panels, KPI values, bars and dots, four new keyframes, Chakra Petch
+as the display face; the console paints the ground on `html` with a perspective grid floor on `body::before`
+(transform-only drift), a lit sidebar indicator, ruled section labels, a top-bar hairline and mono eyebrows with a
+glowing lead line. Every existing screen inherited it. The twin at `/twin` (three.js, react-three-fiber, drei): the
+`racks` query becomes rooms, racks and device plates at true proportions (pure `twin-model.ts`, T-119), a focus CI's
+impact graph is lifted onto stacked layer planes with a node grid per plane and one line batch for the edges
+(1,707 nodes for a host's OS on the dev estate), instanced meshes, on-demand rendering, orbit, hover, click to a rack's
+devices or a node's CI, "Focus here". T-120 unit (en, ar), T-121 e2e (en, ar), walkthrough captures `/twin`.
+Three lessons: a card entrance that fades from opacity 0 leaves Chrome without a first contentful paint on a page
+whose content is all cards (the sign-in gate scored NO_FCP), so the rise moves without fading; a lingering transform
+after the entrance makes a card a stacking context and hides dropdowns under later cards (fill-mode backwards);
+animating background-position on the full-screen grid repaints every frame, so the drift is a transform.
+Lighthouse: twin 0.96, every screen at or above its floor; CMDB-038 summary selection kept lean (checkpoint 10).
+Follow-ups: the DCIM elevation still draws its isometric SVG and links to the twin; per-site platforms in the twin
+need the site of a room, which the racks query does not carry yet.
+
+## Previous session · 2026-11-04 (checkpoint 11: initial setup wizard)
 
 Syed asked whether a fresh deployment has an onboarding wizard; it had none (CLI node registration, no way to create a
 subnet or a credential from the console), and he called that vaporware. REQ-UI-020 and REQ-UI-024 are now done end to
@@ -24,7 +45,7 @@ business-unit tenants still need their Keycloak tenant claim set by hand (REQ-SE
 run also caught DCIM at 0.87 because checkpoint 10 had put the headline metric into the shared CI summary selection,
 which every screen fetches; the summary is lean again and the metric is selected only where rendered (DCIM 0.91).
 
-## Previous session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
+## Earlier session · 2026-11-01 (finish-everything marathon, checkpoint 10: headline metrics)
 
 REQ-CMDB-038 done end to end (ADR-016, `docs/evidence/cmdb/headline-metrics.md`). Metric samples now have a path:
 `CollectorResult.samples` (collector contract 0.2.0, Go `Samples` with omitempty on node and collectors) → the

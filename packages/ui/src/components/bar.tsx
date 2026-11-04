@@ -68,6 +68,7 @@ export function Bar({
       style={mergeStyle(base, style)}
     >
       <span data-part="fill" data-origin={flow['inline-start']} style={fill} />
+      {glowing ? <span data-part="sheen" aria-hidden="true" /> : null}
     </div>
   );
 }

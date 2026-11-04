@@ -34,11 +34,20 @@ export const ICON_NAMES = [
   'signOut',
   'shield',
   'software',
+  'twin',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
 
 const glyphs: Record<IconName, ReactNode> = {
+  twin: (
+    <>
+      <path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5Z" />
+      <path d="M4 7l8 4.5L20 7" />
+      <path d="M12 11.5V21.5" />
+      <path d="M8 4.8l8 4.5" />
+    </>
+  ),
   dashboard: (
     <>
       <rect x="3" y="3" width="7" height="9" rx="1.5" />

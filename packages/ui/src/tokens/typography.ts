@@ -1,11 +1,12 @@
 // REQ-UI-001 — typography tokens: families (names only; the console loads the fonts), weights, scale, tracking.
 
 /**
- * Family names only. Loading Manrope / Inter / JetBrains Mono (Google Fonts or self-hosted) is the
+ * Family names only. Loading Chakra Petch / Manrope / Inter / JetBrains Mono (Google Fonts or self-hosted) is the
  * console's responsibility so this package never performs or references a network fetch.
  */
 export const fontFamily = {
-  display: "'Manrope', 'Inter', system-ui, sans-serif",
+  /** Horizon (REQ-UI-025): a squared, HUD-like display face for headings and figures; Manrope stays as the fallback. */
+  display: "'Chakra Petch', 'Manrope', 'Inter', system-ui, sans-serif",
   body: "'Inter', system-ui, sans-serif",
   mono: "'JetBrains Mono', ui-monospace, monospace",
 } as const;

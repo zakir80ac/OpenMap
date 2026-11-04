@@ -423,6 +423,99 @@ export const RECONCILER = {
   samplesPerEvent: 500,
 } as const;
 
+/** Geometry helpers for the console's scene code: the divisor that halves an extent and the tuple axis indices. */
+export const GEOMETRY = {
+  halfDivisor: 2,
+  axisX: 0,
+  axisY: 1,
+  axisZ: 2,
+} as const;
+
+/**
+ * 3D digital twin (apps/console, REQ-UI-029, ADR-018). World units are metres: a 42U rack is 0.6 m wide, 1.2 m deep
+ * and 42 × 44.45 mm tall, so the scene reads at true proportions. The dependency layers float above the tallest rack
+ * as stacked planes in CI_LAYERS order; graph positions from the 2D layouts are scaled into metres on each plane.
+ */
+export const TWIN = {
+  rackWidthM: 0.6,
+  rackDepthM: 1.2,
+  unitHeightM: 0.04445,
+  /** Gap between racks in a row and between rows (cold aisle). */
+  rackGapM: 0.1,
+  rowGapM: 1.8,
+  /** Room slab: padding around its racks, height of the glass slab, distance between rooms, rooms per grid row. */
+  roomPaddingM: 1.5,
+  roomSlabHeightM: 0.08,
+  roomGapM: 5,
+  roomsPerRow: 3,
+  /** A device plate sits inset from the rack faces and is a touch shorter than its units so slots read as separate. */
+  deviceInsetM: 0.05,
+  deviceHeightShare: 0.82,
+  /** Layer planes: first plane above the ground, spacing, extent and translucency. */
+  planeStartHeightM: 5,
+  planeGapM: 1.6,
+  planeSizeM: 30,
+  planeOpacity: 0.07,
+  planeEdgeOpacity: 0.45,
+  /** Quarter turn that lays a plane geometry flat (radians). */
+  planeRotationRad: -Math.PI / 2,
+  /** Nodes on a plane sit on a square grid at this pitch, the root at the centre; the plane grows to fit plus a margin. */
+  nodeSpacingM: 0.9,
+  planeMarginM: 2,
+  /** Edges on a path to a business service are drawn thick (one object each) up to this many; the rest share one batch. */
+  maxPathLines: 300,
+  nodeRadiusM: 0.22,
+  rootNodeRadiusM: 0.42,
+  /** Node radius shrinks per hop like the 2D map, down to this share of the base radius. */
+  nodeRadiusStep: 0.12,
+  nodeRadiusMinShare: 0.45,
+  /** Sphere tessellation: enough for a smooth node at the sizes shown, cheap enough for hundreds of instances. */
+  sphereSegments: 20,
+  edgeWidthPx: 1.2,
+  pathEdgeWidthPx: 2.4,
+  edgeOpacity: 0.75,
+  /** Camera: field of view in degrees, start position as multiples of the scene radius, orbit limits in metres. */
+  cameraFov: 42,
+  cameraNearM: 0.1,
+  cameraFarM: 600,
+  cameraStartRadiusShare: 1.6,
+  cameraStartElevationShare: 0.8,
+  cameraMinDistanceM: 2,
+  cameraMaxDistanceM: 220,
+  dampingFactor: 0.08,
+  /** Device pixel ratio ceiling; above it the fill cost grows faster than the visible gain. */
+  dprMax: 1.5,
+  /** Lighting. */
+  ambientIntensity: 0.55,
+  keyLightIntensity: 1.3,
+  keyLightPosition: [18, 28, 12] as const,
+  rimLightIntensity: 0.6,
+  rimLightPosition: [-16, 10, -14] as const,
+  /** Emissive share for lit surfaces (racks under load, nodes), and the softer glow of rooms and device plates. */
+  emissiveShare: 0.55,
+  softEmissiveShare: 0.28,
+  selectedEmissiveShare: 1,
+  /** Rack load thresholds (percent of rated power) that change its colour. */
+  loadWarnPercent: 70,
+  loadHotPercent: 90,
+  /** Opacity of the room slab and the rack shell. */
+  roomOpacity: 0.22,
+  rackOpacity: 0.55,
+  /** Ground grid: cell size, section size and fade distance in metres. */
+  gridCellM: 1,
+  gridSectionM: 5,
+  gridFadeDistanceM: 160,
+  /** Characters of a label shown in the scene before it is cut. */
+  labelMaxChars: 24,
+  /** Height above a rack or node at which its floating label sits. */
+  labelOffsetM: 0.5,
+  /** Instances rendered at most; the synthetic estate has 101 racks and 2,000 devices, a 10k-device site fits. */
+  maxRacks: 4_000,
+  maxDevices: 60_000,
+  /** Graphs above this many nodes are laid out in the worker like the 2D map. */
+  workerMinNodes: 200,
+} as const;
+
 /**
  * Dependency map geometry and interaction (apps/console, REQ-UI-007, REQ-DEP-005). Graph units are Sigma's
  * abstract coordinates; the camera fits them to the viewport. Lanes are the twelve CI_LAYERS in contract order,
