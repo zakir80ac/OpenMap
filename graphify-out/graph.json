@@ -4557,7 +4557,7 @@
       "label": "asRecord()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -4565,7 +4565,7 @@
       "label": "stringAttribute()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -4573,7 +4573,7 @@
       "label": "numberAttribute()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -4581,7 +4581,7 @@
       "label": "isoAttribute()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -4589,7 +4589,7 @@
       "label": "booleanAttribute()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L43",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -4597,7 +4597,7 @@
       "label": "stringArrayAttribute()",
       "file_type": "code",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -6485,7 +6485,7 @@
       "label": "toSimulation()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -6493,7 +6493,7 @@
       "label": "PrismaImpactRepository",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -6509,7 +6509,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -6517,7 +6517,7 @@
       "label": ".scenarios()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "_origin": "ast"
     },
     {
@@ -6525,7 +6525,7 @@
       "label": ".scenario()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -6533,7 +6533,7 @@
       "label": ".saveScenario()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "_origin": "ast"
     },
     {
@@ -6541,7 +6541,7 @@
       "label": ".simulation()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -6549,7 +6549,7 @@
       "label": ".saveSimulation()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L93",
+      "source_location": "L94",
       "_origin": "ast"
     },
     {
@@ -6757,7 +6757,7 @@
       "label": "severityFor()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -6765,7 +6765,7 @@
       "label": "toScenarioView()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -6773,7 +6773,7 @@
       "label": "ImpactService",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "_origin": "ast"
     },
     {
@@ -6797,7 +6797,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -6805,7 +6805,7 @@
       "label": ".scenarios()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -6813,7 +6813,7 @@
       "label": ".scenario()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -6821,7 +6821,7 @@
       "label": ".simulation()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "_origin": "ast"
     },
     {
@@ -6829,7 +6829,7 @@
       "label": ".saveScenario()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -6837,7 +6837,7 @@
       "label": ".runSimulation()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -6845,7 +6845,7 @@
       "label": ".toView()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -6853,7 +6853,7 @@
       "label": ".cisByIds()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L111",
+      "source_location": "L112",
       "_origin": "ast"
     },
     {
@@ -6861,7 +6861,15 @@
       "label": "recommendationsFor()",
       "file_type": "code",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L117",
+      "source_location": "L118",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_impact_impact_service_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "apps/api/src/impact/impact.service.ts",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -26699,6 +26707,30 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_console_e2e_impact_spec",
+      "label": "impact.spec.ts",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_e2e_impact_spec_screenshotsdir",
+      "label": "screenshotsDir",
+      "file_type": "code",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_e2e_impact_spec_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L4",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_console_e2e_perf_spec",
       "label": "perf.spec.ts",
       "file_type": "code",
@@ -30247,7 +30279,7 @@
       "label": "AssistantAnswerBlock()",
       "file_type": "code",
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L578",
+      "source_location": "L579",
       "_origin": "ast"
     },
     {
@@ -34383,7 +34415,15 @@
       "label": "component()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.test.ts",
-      "source_location": "L6",
+      "source_location": "L20",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_test_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/lib/impact-conditions.test.ts",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -34395,19 +34435,11 @@
       "_origin": "ast"
     },
     {
-      "id": "apps_console_src_lib_impact_conditions_impact_conditions",
-      "label": "IMPACT_CONDITIONS",
-      "file_type": "code",
-      "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L8",
-      "_origin": "ast"
-    },
-    {
       "id": "apps_console_src_lib_impact_conditions_impactcondition",
       "label": "ImpactCondition",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L20",
+      "source_location": "L10",
       "_origin": "ast"
     },
     {
@@ -34415,7 +34447,7 @@
       "label": "ConditionSeverity",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L22",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -34423,7 +34455,7 @@
       "label": "ConditionSpec",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L24",
+      "source_location": "L14",
       "_origin": "ast"
     },
     {
@@ -34431,7 +34463,31 @@
       "label": "PHYSICAL_TYPES",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L36",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_applicability",
+      "label": "Applicability",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_spec",
+      "label": "spec()",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_everything",
+      "label": "EVERYTHING",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L35",
       "_origin": "ast"
     },
     {
@@ -34439,7 +34495,7 @@
       "label": "CONDITION_SPECS",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L38",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -34447,7 +34503,7 @@
       "label": "severityRank()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L82",
+      "source_location": "L72",
       "_origin": "ast"
     },
     {
@@ -34455,7 +34511,7 @@
       "label": "Component",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L86",
+      "source_location": "L76",
       "_origin": "ast"
     },
     {
@@ -34463,7 +34519,7 @@
       "label": "conditionApplies()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L88",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -34471,7 +34527,7 @@
       "label": "applicableConditions()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L96",
+      "source_location": "L86",
       "_origin": "ast"
     },
     {
@@ -34479,7 +34535,7 @@
       "label": "isImpactCondition()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L103",
+      "source_location": "L93",
       "_origin": "ast"
     },
     {
@@ -34487,7 +34543,15 @@
       "label": "summariseNames()",
       "file_type": "code",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L108",
+      "source_location": "L98",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L8",
       "_origin": "ast"
     },
     {
@@ -42197,7 +42261,7 @@
       "label": "RECONCILIATION",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L136",
+      "source_location": "L142",
       "_origin": "ast"
     },
     {
@@ -42205,7 +42269,7 @@
       "label": "BSM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L149",
+      "source_location": "L155",
       "_origin": "ast"
     },
     {
@@ -42213,7 +42277,7 @@
       "label": "DISCOVERY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L175",
+      "source_location": "L181",
       "_origin": "ast"
     },
     {
@@ -42221,7 +42285,7 @@
       "label": "IPV4",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L188",
+      "source_location": "L194",
       "_origin": "ast"
     },
     {
@@ -42229,7 +42293,7 @@
       "label": "TIME",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L197",
+      "source_location": "L203",
       "_origin": "ast"
     },
     {
@@ -42237,7 +42301,7 @@
       "label": "PKI",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L206",
+      "source_location": "L212",
       "_origin": "ast"
     },
     {
@@ -42245,7 +42309,7 @@
       "label": "DISCOVERY_NODE_ENV",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L224",
+      "source_location": "L230",
       "_origin": "ast"
     },
     {
@@ -42253,7 +42317,7 @@
       "label": "SETUP_PATTERNS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L236",
+      "source_location": "L242",
       "_origin": "ast"
     },
     {
@@ -42261,7 +42325,7 @@
       "label": "SETUP_LIMITS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L246",
+      "source_location": "L252",
       "_origin": "ast"
     },
     {
@@ -42269,7 +42333,7 @@
       "label": "HTTP",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L259",
+      "source_location": "L265",
       "_origin": "ast"
     },
     {
@@ -42277,7 +42341,7 @@
       "label": "ITSM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L280",
+      "source_location": "L286",
       "_origin": "ast"
     },
     {
@@ -42285,7 +42349,7 @@
       "label": "POWER",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L289",
+      "source_location": "L295",
       "_origin": "ast"
     },
     {
@@ -42293,7 +42357,7 @@
       "label": "ASSETS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L296",
+      "source_location": "L302",
       "_origin": "ast"
     },
     {
@@ -42301,7 +42365,7 @@
       "label": "IPAM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L304",
+      "source_location": "L310",
       "_origin": "ast"
     },
     {
@@ -42309,7 +42373,7 @@
       "label": "DCIM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L312",
+      "source_location": "L318",
       "_origin": "ast"
     },
     {
@@ -42317,7 +42381,7 @@
       "label": "VULNERABILITY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L334",
+      "source_location": "L340",
       "_origin": "ast"
     },
     {
@@ -42325,7 +42389,7 @@
       "label": "SOFTWARE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L346",
+      "source_location": "L352",
       "_origin": "ast"
     },
     {
@@ -42333,7 +42397,7 @@
       "label": "ANALYTICS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L352",
+      "source_location": "L358",
       "_origin": "ast"
     },
     {
@@ -42341,7 +42405,7 @@
       "label": "ASSISTANT",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L377",
+      "source_location": "L383",
       "_origin": "ast"
     },
     {
@@ -42349,7 +42413,7 @@
       "label": "RECONCILER",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L391",
+      "source_location": "L397",
       "_origin": "ast"
     },
     {
@@ -42357,7 +42421,7 @@
       "label": "GEOMETRY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L427",
+      "source_location": "L433",
       "_origin": "ast"
     },
     {
@@ -42365,7 +42429,7 @@
       "label": "TWIN",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L439",
+      "source_location": "L445",
       "_origin": "ast"
     },
     {
@@ -42373,7 +42437,7 @@
       "label": "DEPENDENCY_MAP",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L524",
+      "source_location": "L530",
       "_origin": "ast"
     },
     {
@@ -42381,7 +42445,7 @@
       "label": "CONSOLE_ALPHA",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L570",
+      "source_location": "L576",
       "_origin": "ast"
     },
     {
@@ -42389,7 +42453,7 @@
       "label": "CONSOLE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L585",
+      "source_location": "L591",
       "_origin": "ast"
     },
     {
@@ -42397,7 +42461,7 @@
       "label": "AUTH",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L607",
+      "source_location": "L613",
       "_origin": "ast"
     },
     {
@@ -42405,7 +42469,7 @@
       "label": "ROLES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L641",
+      "source_location": "L647",
       "_origin": "ast"
     },
     {
@@ -42413,7 +42477,7 @@
       "label": "Role",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L649",
+      "source_location": "L655",
       "_origin": "ast"
     },
     {
@@ -42421,7 +42485,7 @@
       "label": "ROLE_IMPLICATIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L652",
+      "source_location": "L658",
       "_origin": "ast"
     },
     {
@@ -42429,7 +42493,7 @@
       "label": "SYNTH_ESTATE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L661",
+      "source_location": "L667",
       "_origin": "ast"
     },
     {
@@ -42437,7 +42501,7 @@
       "label": "LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L671",
+      "source_location": "L677",
       "_origin": "ast"
     },
     {
@@ -42445,7 +42509,7 @@
       "label": "Locale",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L672",
+      "source_location": "L678",
       "_origin": "ast"
     },
     {
@@ -42453,7 +42517,7 @@
       "label": "RTL_LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L673",
+      "source_location": "L679",
       "_origin": "ast"
     },
     {
@@ -42461,7 +42525,7 @@
       "label": "GUARD_FORBIDDEN_TOKENS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L679",
+      "source_location": "L685",
       "_origin": "ast"
     },
     {
@@ -42469,7 +42533,7 @@
       "label": "GUARD_ALLOWED_IPV4",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L698",
+      "source_location": "L704",
       "_origin": "ast"
     },
     {
@@ -42477,7 +42541,7 @@
       "label": "GUARD_CONFIG_BOUNDARIES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L704",
+      "source_location": "L710",
       "_origin": "ast"
     },
     {
@@ -42485,7 +42549,7 @@
       "label": "GUARD_ALLOWED_NUMERIC_LITERALS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L707",
+      "source_location": "L713",
       "_origin": "ast"
     },
     {
@@ -42493,7 +42557,7 @@
       "label": "CONTRACT_NAMES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L713",
+      "source_location": "L719",
       "_origin": "ast"
     },
     {
@@ -42501,7 +42565,7 @@
       "label": "ContractName",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L714",
+      "source_location": "L720",
       "_origin": "ast"
     },
     {
@@ -42509,7 +42573,15 @@
       "label": "CONTRACT_VERSIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L717",
+      "source_location": "L723",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_constants_src_index_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L131",
       "_origin": "ast"
     },
     {
@@ -42517,7 +42589,7 @@
       "label": "RFC-5280",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L207",
+      "source_location": "L213",
       "_origin": "ast"
     },
     {
@@ -42525,7 +42597,7 @@
       "label": "ADR-0017",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L222",
+      "source_location": "L228",
       "_origin": "ast"
     },
     {
@@ -42533,7 +42605,7 @@
       "label": "ADR-0016",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L420",
+      "source_location": "L426",
       "_origin": "ast"
     },
     {
@@ -42541,7 +42613,7 @@
       "label": "ADR-0018",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L435",
+      "source_location": "L441",
       "_origin": "ast"
     },
     {
@@ -42549,7 +42621,7 @@
       "label": "RFC-7636",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L604",
+      "source_location": "L610",
       "_origin": "ast"
     },
     {
@@ -42557,7 +42629,7 @@
       "label": "RFC-8414",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L626",
+      "source_location": "L632",
       "_origin": "ast"
     },
     {
@@ -50697,64 +50769,80 @@
       "_origin": "ast"
     },
     {
-      "id": "ref_component",
-      "label": "component",
+      "id": "packages_contracts_schemas_impact_scenario_schema_json_ref_failed",
+      "label": "failed",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "ref_power",
-      "label": "power",
+      "id": "packages_contracts_schemas_impact_scenario_schema_json_ref_degraded",
+      "label": "degraded",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "packages_contracts_schemas_impact_scenario_schema_json_ref_rack",
-      "label": "rack",
+      "id": "ref_power_loss",
+      "label": "power_loss",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "packages_contracts_schemas_impact_scenario_schema_json_ref_site",
-      "label": "site",
+      "id": "ref_link_down",
+      "label": "link_down",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "ref_network",
-      "label": "network",
+      "id": "ref_certificate_expired",
+      "label": "certificate_expired",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "packages_contracts_schemas_impact_scenario_schema_json_ref_storage",
-      "label": "storage",
+      "id": "ref_warranty_expired",
+      "label": "warranty_expired",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "ref_cloud_region",
-      "label": "cloud_region",
+      "id": "ref_subscription_expired",
+      "label": "subscription_expired",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
       "_origin": "ast"
     },
     {
-      "id": "ref_shared_service",
-      "label": "shared_service",
+      "id": "ref_end_of_life",
+      "label": "end_of_life",
+      "file_type": "concept",
+      "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
+      "source_location": "L24",
+      "_origin": "ast"
+    },
+    {
+      "id": "ref_vulnerability_exploited",
+      "label": "vulnerability_exploited",
+      "file_type": "concept",
+      "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
+      "source_location": "L24",
+      "_origin": "ast"
+    },
+    {
+      "id": "ref_capacity_exhausted",
+      "label": "capacity_exhausted",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
       "source_location": "L24",
@@ -50773,7 +50861,7 @@
       "label": "failedCiIds",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L36",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -50781,7 +50869,7 @@
       "label": "minItems",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L37",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -50789,7 +50877,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L38",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -50797,7 +50885,7 @@
       "label": "items",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L39",
+      "source_location": "L41",
       "_origin": "ast"
     },
     {
@@ -50805,7 +50893,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L40",
+      "source_location": "L42",
       "_origin": "ast"
     },
     {
@@ -50813,7 +50901,7 @@
       "label": "format",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L41",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -50821,7 +50909,7 @@
       "label": "pattern",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L42",
+      "source_location": "L44",
       "_origin": "ast"
     },
     {
@@ -50829,7 +50917,7 @@
       "label": "options",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L45",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -50837,7 +50925,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L46",
+      "source_location": "L48",
       "_origin": "ast"
     },
     {
@@ -50845,7 +50933,7 @@
       "label": "properties",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L47",
+      "source_location": "L49",
       "_origin": "ast"
     },
     {
@@ -50853,7 +50941,7 @@
       "label": "maxDepth",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L48",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -50861,7 +50949,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L49",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -50869,7 +50957,7 @@
       "label": "minimum",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L50",
+      "source_location": "L52",
       "_origin": "ast"
     },
     {
@@ -50877,7 +50965,7 @@
       "label": "maximum",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L51",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -50885,7 +50973,7 @@
       "label": "honourRedundancy",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L53",
+      "source_location": "L55",
       "_origin": "ast"
     },
     {
@@ -50893,7 +50981,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L54",
+      "source_location": "L56",
       "_origin": "ast"
     },
     {
@@ -50901,7 +50989,7 @@
       "label": "includeSharedServices",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L56",
+      "source_location": "L58",
       "_origin": "ast"
     },
     {
@@ -50909,7 +50997,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L57",
+      "source_location": "L59",
       "_origin": "ast"
     },
     {
@@ -50917,7 +51005,7 @@
       "label": "at",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L59",
+      "source_location": "L61",
       "_origin": "ast"
     },
     {
@@ -50925,7 +51013,7 @@
       "label": "anyOf",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L60",
+      "source_location": "L62",
       "_origin": "ast"
     },
     {
@@ -50933,7 +51021,7 @@
       "label": "required",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -50941,7 +51029,7 @@
       "label": "maxDepth",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -50949,7 +51037,7 @@
       "label": "honourRedundancy",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -50957,7 +51045,7 @@
       "label": "includeSharedServices",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -50965,7 +51053,7 @@
       "label": "at",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "_origin": "ast"
     },
     {
@@ -50973,7 +51061,7 @@
       "label": "createdBy",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L79",
+      "source_location": "L81",
       "_origin": "ast"
     },
     {
@@ -50981,7 +51069,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L80",
+      "source_location": "L82",
       "_origin": "ast"
     },
     {
@@ -50989,7 +51077,7 @@
       "label": "minLength",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L81",
+      "source_location": "L83",
       "_origin": "ast"
     },
     {
@@ -50997,7 +51085,7 @@
       "label": "createdAt",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L83",
+      "source_location": "L85",
       "_origin": "ast"
     },
     {
@@ -51005,7 +51093,7 @@
       "label": "type",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L84",
+      "source_location": "L86",
       "_origin": "ast"
     },
     {
@@ -51013,7 +51101,7 @@
       "label": "format",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L85",
+      "source_location": "L87",
       "_origin": "ast"
     },
     {
@@ -51021,7 +51109,7 @@
       "label": "pattern",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L86",
+      "source_location": "L88",
       "_origin": "ast"
     },
     {
@@ -51029,7 +51117,7 @@
       "label": "changeRef",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L88",
+      "source_location": "L90",
       "_origin": "ast"
     },
     {
@@ -51037,7 +51125,7 @@
       "label": "anyOf",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L89",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -51045,7 +51133,7 @@
       "label": "runbook",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L112",
+      "source_location": "L114",
       "_origin": "ast"
     },
     {
@@ -51053,7 +51141,7 @@
       "label": "anyOf",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L113",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -51061,7 +51149,7 @@
       "label": "required",
       "file_type": "code",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51069,7 +51157,7 @@
       "label": "id",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51077,7 +51165,7 @@
       "label": "tenantId",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51085,7 +51173,7 @@
       "label": "name",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51093,7 +51181,7 @@
       "label": "kind",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51101,7 +51189,7 @@
       "label": "failedCiIds",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51109,7 +51197,7 @@
       "label": "options",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51117,7 +51205,7 @@
       "label": "createdBy",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51125,7 +51213,7 @@
       "label": "createdAt",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51133,7 +51221,7 @@
       "label": "changeRef",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51141,7 +51229,7 @@
       "label": "runbook",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "_origin": "ast"
     },
     {
@@ -51585,7 +51673,7 @@
       "_origin": "ast"
     },
     {
-      "id": "ref_degraded",
+      "id": "packages_contracts_schemas_impact_simulation_schema_json_ref_degraded",
       "label": "degraded",
       "file_type": "concept",
       "source_file": "packages/contracts/schemas/impact-simulation.schema.json",
@@ -61261,7 +61349,7 @@
       "label": "here",
       "file_type": "code",
       "source_file": "packages/contracts/src/contracts.test.ts",
-      "source_location": "L25",
+      "source_location": "L29",
       "_origin": "ast"
     },
     {
@@ -61381,7 +61469,7 @@
       "label": "SCENARIO_KINDS",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L6",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -61389,7 +61477,39 @@
       "label": "scenarioKindSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L7",
+      "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_impact_scenariokind",
+      "label": "ScenarioKind",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_impact_scenario_severities",
+      "label": "SCENARIO_SEVERITIES",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_impact_scenarioseverity",
+      "label": "ScenarioSeverity",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_impact_scenario_kind_severity",
+      "label": "SCENARIO_KIND_SEVERITY",
+      "file_type": "code",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -61397,7 +61517,7 @@
       "label": "runbookSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L10",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -61405,7 +61525,7 @@
       "label": "Runbook",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L28",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -61413,7 +61533,7 @@
       "label": "impactScenarioSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L30",
+      "source_location": "L67",
       "_origin": "ast"
     },
     {
@@ -61421,7 +61541,7 @@
       "label": "ImpactScenario",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L52",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -61429,7 +61549,7 @@
       "label": "PREDICTED_STATES",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L54",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -61437,7 +61557,7 @@
       "label": "affectedServiceSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L56",
+      "source_location": "L93",
       "_origin": "ast"
     },
     {
@@ -61445,7 +61565,7 @@
       "label": "impactSimulationSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L70",
+      "source_location": "L107",
       "_origin": "ast"
     },
     {
@@ -61453,7 +61573,7 @@
       "label": "ImpactSimulation",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L90",
+      "source_location": "L127",
       "_origin": "ast"
     },
     {
@@ -61461,7 +61581,7 @@
       "label": "impactValidationSchema",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L93",
+      "source_location": "L130",
       "_origin": "ast"
     },
     {
@@ -61469,7 +61589,15 @@
       "label": "ImpactValidation",
       "file_type": "code",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L103",
+      "source_location": "L140",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_contracts_src_impact_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L7",
       "_origin": "ast"
     },
     {
@@ -63305,11 +63433,19 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_graph_src_cypher_containmentfilter",
+      "label": "containmentFilter()",
+      "file_type": "code",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L53",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_graph_src_cypher_edgealternatives",
       "label": "edgeAlternatives()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L48",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -63317,7 +63453,7 @@
       "label": "impactQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L61",
+      "source_location": "L73",
       "_origin": "ast"
     },
     {
@@ -63325,7 +63461,7 @@
       "label": "shortestPathQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L85",
+      "source_location": "L98",
       "_origin": "ast"
     },
     {
@@ -63333,7 +63469,7 @@
       "label": "shortestPathQueryNeo4j()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L94",
+      "source_location": "L107",
       "_origin": "ast"
     },
     {
@@ -63341,7 +63477,7 @@
       "label": "upsertCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L103",
+      "source_location": "L116",
       "_origin": "ast"
     },
     {
@@ -63349,7 +63485,7 @@
       "label": "addTypeLabelQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L113",
+      "source_location": "L126",
       "_origin": "ast"
     },
     {
@@ -63357,7 +63493,7 @@
       "label": "retireCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L117",
+      "source_location": "L130",
       "_origin": "ast"
     },
     {
@@ -63365,7 +63501,7 @@
       "label": "upsertRelationshipQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L121",
+      "source_location": "L134",
       "_origin": "ast"
     },
     {
@@ -63373,7 +63509,7 @@
       "label": "retireRelationshipQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L132",
+      "source_location": "L145",
       "_origin": "ast"
     },
     {
@@ -63381,7 +63517,7 @@
       "label": "getCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L136",
+      "source_location": "L149",
       "_origin": "ast"
     },
     {
@@ -63389,7 +63525,7 @@
       "label": "neighboursQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L143",
+      "source_location": "L156",
       "_origin": "ast"
     },
     {
@@ -63397,7 +63533,7 @@
       "label": "layerCountsQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L154",
+      "source_location": "L167",
       "_origin": "ast"
     },
     {
@@ -63405,7 +63541,7 @@
       "label": "setHealthQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L165",
+      "source_location": "L178",
       "_origin": "ast"
     },
     {
@@ -63413,7 +63549,7 @@
       "label": "assertReadOnly()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L172",
+      "source_location": "L185",
       "_origin": "ast"
     },
     {
@@ -63421,7 +63557,7 @@
       "label": "schemaStatementsMemgraph()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L177",
+      "source_location": "L190",
       "_origin": "ast"
     },
     {
@@ -63429,7 +63565,15 @@
       "label": "schemaStatementsNeo4j()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L183",
+      "source_location": "L196",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_graph_src_cypher_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -63510,6 +63654,14 @@
       "file_type": "code",
       "source_file": "packages/graph/src/memgraph.integration.test.ts",
       "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_graph_src_memgraph_integration_test_ts_docref_adr_0019",
+      "label": "ADR-0019",
+      "file_type": "doc_ref",
+      "source_file": "packages/graph/src/memgraph.integration.test.ts",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -72817,6 +72969,46 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_adr_adr_019_scenario_kinds_are_conditions",
+      "label": "ADR-019-scenario-kinds-are-conditions.md",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_019_scenario_kinds_are_conditions_adr_019_scenario_kinds_are_the_what_if_conditions",
+      "label": "ADR-019 — Scenario kinds are the what-if conditions",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_019_scenario_kinds_are_conditions_context",
+      "label": "Context",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_019_scenario_kinds_are_conditions_decision",
+      "label": "Decision",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L17",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_019_scenario_kinds_are_conditions_consequences",
+      "label": "Consequences",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_evidence_airgap_bundle_build",
       "label": "bundle-build.md",
       "file_type": "document",
@@ -73225,6 +73417,38 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_evidence_impact_whatif",
+      "label": "impact-whatif.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_whatif_what_if_scenarios_run_end_to_end_req_bsm_003_req_ui_013_adr_019",
+      "label": "What-if scenarios run end to end (REQ-BSM-003, REQ-UI-013, ADR-019)",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_whatif_findings_in_the_order_they_surfaced",
+      "label": "Findings, in the order they surfaced",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_whatif_proof",
+      "label": "Proof",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_evidence_release_build_release",
       "label": "build-release.md",
       "file_type": "document",
@@ -73334,6 +73558,14 @@
       "file_type": "document",
       "source_file": "docs/evidence/telemetry.md",
       "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_console_src_lib_impact_conditions_impact_conditions",
+      "label": "IMPACT_CONDITIONS",
+      "file_type": "code",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L9",
       "_origin": "ast"
     },
     {
@@ -74541,8 +74773,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 227,
-      "community_name": "@openmap/api",
+      "community": 242,
+      "community_name": "@openmap/console",
       "norm_label": "helm console deployment",
       "id": "deploy_helm_openmap_templates_apps_console_deployment"
     },
@@ -74585,8 +74817,8 @@
       "author": null,
       "contributor": null,
       "rationale": "start --import-realm with proxy-headers=xforwarded and hostname-strict=false behind the Ingress; DB on the Postgres StatefulSet with currentSchema=keycloak; KC_HOSTNAME from keycloak.publicUrl.",
-      "community": 227,
-      "community_name": "@openmap/api",
+      "community": 262,
+      "community_name": "ADR-001 — Monorepo tooling",
       "norm_label": "helm keycloak deployment",
       "id": "deploy_helm_openmap_templates_auth_keycloak_deployment"
     },
@@ -74599,8 +74831,8 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 227,
-      "community_name": "@openmap/api",
+      "community": 262,
+      "community_name": "ADR-001 — Monorepo tooling",
       "norm_label": "keycloak realm configmap (files/realm-openmap.json)",
       "id": "deploy_helm_openmap_templates_auth_realm_configmap"
     },
@@ -74658,8 +74890,8 @@
       "author": null,
       "contributor": null,
       "rationale": "Hosts are parsed from api.publicUrl, console.publicUrl and keycloak.publicUrl with urlParse; /graphql, /healthz, /readyz route to the API and / to the console, with a separate console host rule only when it differs from the API host.",
-      "community": 227,
-      "community_name": "@openmap/api",
+      "community": 242,
+      "community_name": "@openmap/console",
       "norm_label": "helm ingress (api, console, keycloak hosts)",
       "id": "deploy_helm_openmap_templates_ingress_ingress"
     },
@@ -92429,7 +92661,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92439,7 +92671,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92449,7 +92681,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92459,7 +92691,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92469,7 +92701,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L43",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -92479,7 +92711,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/common/validation.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98553,7 +98785,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98563,7 +98795,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98573,7 +98805,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L57",
+      "source_location": "L58",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -98584,7 +98816,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98594,7 +98826,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98604,7 +98836,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L66",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98614,7 +98846,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98624,7 +98856,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98634,7 +98866,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L93",
+      "source_location": "L94",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98645,7 +98877,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L63",
+      "source_location": "L64",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98656,7 +98888,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98667,7 +98899,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L85",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98678,7 +98910,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -98689,7 +98921,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L114",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99382,12 +99614,23 @@
     },
     {
       "source": "apps_api_src_impact_impact_service",
-      "target": "e_openmap_packages_contracts_dist_index_impactscenario",
+      "target": "e_openmap_packages_contracts_dist_index_scenario_kind_severity",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
       "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_impact_impact_service",
+      "target": "e_openmap_packages_contracts_dist_index_impactscenario",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/impact/impact.service.ts",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99398,7 +99641,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99409,7 +99652,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99420,7 +99663,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99431,7 +99674,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99442,7 +99685,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99453,7 +99696,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99464,7 +99707,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99475,7 +99718,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99486,7 +99729,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99497,7 +99740,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99508,7 +99751,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99519,7 +99762,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99530,7 +99773,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99541,7 +99784,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99552,7 +99795,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99563,7 +99806,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99574,7 +99817,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99585,7 +99828,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99596,7 +99839,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99607,7 +99850,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99618,7 +99861,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99629,7 +99872,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99639,7 +99882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99649,7 +99892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99659,7 +99902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L26",
+      "source_location": "L27",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99669,7 +99912,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -99680,7 +99923,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -99691,7 +99934,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99701,7 +99944,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99711,7 +99954,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99721,7 +99964,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99731,7 +99974,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99741,7 +99984,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99751,7 +99994,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99761,7 +100004,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99771,7 +100014,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99782,7 +100025,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99793,7 +100036,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99804,7 +100047,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99815,7 +100058,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99826,7 +100069,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L54",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99837,7 +100080,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99848,7 +100091,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L77",
+      "source_location": "L78",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -99859,7 +100102,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L87",
+      "source_location": "L88",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_impact_impact_service",
+      "target": "apps_api_src_impact_impact_service_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/impact/impact.service.ts",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -162637,6 +162890,103 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "ref_node_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "ref_playwright_test",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_islocale",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "e_openmap_packages_i18n_dist_src_index_translate",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "apps_console_e2e_auth",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "apps_console_e2e_auth_signin",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "apps_console_e2e_impact_spec_screenshotsdir",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_e2e_impact_spec",
+      "target": "apps_console_e2e_impact_spec_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/e2e/impact.spec.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_console_e2e_perf_spec",
       "target": "ref_node_fs",
       "relation": "imports_from",
@@ -179185,7 +179535,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L578",
+      "source_location": "L579",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179229,7 +179579,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L471",
+      "source_location": "L472",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179240,7 +179590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L599",
+      "source_location": "L600",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197021,6 +197371,28 @@
     },
     {
       "source": "apps_console_src_lib_impact_conditions_test",
+      "target": "e_openmap_packages_contracts_dist_index_scenario_kind_severity",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions_test",
+      "target": "e_openmap_packages_contracts_dist_index_scenariokindschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.test.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions_test",
       "target": "ref_vitest",
       "relation": "imports_from",
       "context": "import",
@@ -197113,7 +197485,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.test.ts",
-      "source_location": "L6",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions_test",
+      "target": "apps_console_src_lib_impact_conditions_test_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.test.ts",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197152,6 +197534,28 @@
     },
     {
       "source": "apps_console_src_lib_impact_conditions",
+      "target": "e_openmap_packages_contracts_dist_index_scenario_kinds",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "e_openmap_packages_contracts_dist_index_scenario_kind_severity",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
       "target": "e_openmap_packages_contracts_dist_index_cilayer",
       "relation": "imports",
       "context": "import",
@@ -197164,6 +197568,28 @@
     {
       "source": "apps_console_src_lib_impact_conditions",
       "target": "e_openmap_packages_contracts_dist_index_citype",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "e_openmap_packages_contracts_dist_index_scenariokind",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "e_openmap_packages_contracts_dist_index_scenarioseverity",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -197218,32 +197644,11 @@
     },
     {
       "source": "apps_console_src_lib_impact_conditions",
-      "target": "apps_console_src_lib_queries_predictedstate",
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L6",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_lib_impact_conditions",
-      "target": "apps_console_src_lib_impact_conditions_impact_conditions",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L8",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_lib_impact_conditions",
       "target": "apps_console_src_lib_impact_conditions_impactcondition",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L20",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197253,7 +197658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L22",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197263,7 +197668,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L24",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197273,7 +197678,37 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L36",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "apps_console_src_lib_impact_conditions_applicability",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "apps_console_src_lib_impact_conditions_spec",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "apps_console_src_lib_impact_conditions_everything",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197283,7 +197718,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L38",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197293,7 +197728,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L82",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197303,7 +197738,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L86",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197313,7 +197748,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L88",
+      "source_location": "L78",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197323,7 +197758,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L96",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197333,7 +197768,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L103",
+      "source_location": "L93",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197343,7 +197778,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L108",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197354,7 +197789,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L98",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -197365,7 +197800,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L100",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "apps_console_src_lib_impact_conditions_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216894,7 +217339,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L136",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216904,7 +217349,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L149",
+      "source_location": "L155",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216914,7 +217359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L175",
+      "source_location": "L181",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216924,7 +217369,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L188",
+      "source_location": "L194",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216934,7 +217379,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L197",
+      "source_location": "L203",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216944,7 +217389,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L206",
+      "source_location": "L212",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216954,7 +217399,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L224",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216964,7 +217409,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L236",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216974,7 +217419,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L246",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216984,7 +217429,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L259",
+      "source_location": "L265",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -216994,7 +217439,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L280",
+      "source_location": "L286",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217004,7 +217449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L289",
+      "source_location": "L295",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217014,7 +217459,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L296",
+      "source_location": "L302",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217024,7 +217469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L304",
+      "source_location": "L310",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217034,7 +217479,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L312",
+      "source_location": "L318",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217044,7 +217489,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L334",
+      "source_location": "L340",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217054,7 +217499,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L346",
+      "source_location": "L352",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217064,7 +217509,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L352",
+      "source_location": "L358",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217074,7 +217519,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L377",
+      "source_location": "L383",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217084,7 +217529,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L391",
+      "source_location": "L397",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217094,7 +217539,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L427",
+      "source_location": "L433",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217104,7 +217549,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L439",
+      "source_location": "L445",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217114,7 +217559,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L524",
+      "source_location": "L530",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217124,7 +217569,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L570",
+      "source_location": "L576",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217134,7 +217579,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L585",
+      "source_location": "L591",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217144,7 +217589,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L607",
+      "source_location": "L613",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217154,7 +217599,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L641",
+      "source_location": "L647",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217164,7 +217609,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L649",
+      "source_location": "L655",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217174,7 +217619,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L652",
+      "source_location": "L658",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217184,7 +217629,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L661",
+      "source_location": "L667",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217194,7 +217639,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L671",
+      "source_location": "L677",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217204,7 +217649,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L672",
+      "source_location": "L678",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217214,7 +217659,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L673",
+      "source_location": "L679",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217224,7 +217669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L679",
+      "source_location": "L685",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217234,7 +217679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L698",
+      "source_location": "L704",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217244,7 +217689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L704",
+      "source_location": "L710",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217254,7 +217699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L707",
+      "source_location": "L713",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217264,7 +217709,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L713",
+      "source_location": "L719",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217274,7 +217719,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L714",
+      "source_location": "L720",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217284,7 +217729,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L717",
+      "source_location": "L723",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_constants_src_index",
+      "target": "packages_constants_src_index_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217294,7 +217749,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L207",
+      "source_location": "L213",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217304,7 +217759,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L222",
+      "source_location": "L228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217314,7 +217769,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L420",
+      "source_location": "L426",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217324,7 +217779,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L435",
+      "source_location": "L441",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217334,7 +217789,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L604",
+      "source_location": "L610",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -217344,7 +217799,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L626",
+      "source_location": "L632",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228352,7 +228807,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "ref_component",
+      "target": "packages_contracts_schemas_impact_scenario_schema_json_ref_failed",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228363,7 +228818,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "ref_power",
+      "target": "packages_contracts_schemas_impact_scenario_schema_json_ref_degraded",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228374,7 +228829,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "packages_contracts_schemas_impact_scenario_schema_json_ref_rack",
+      "target": "ref_power_loss",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228385,7 +228840,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "packages_contracts_schemas_impact_scenario_schema_json_ref_site",
+      "target": "ref_link_down",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228396,7 +228851,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "ref_network",
+      "target": "ref_certificate_expired",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228407,7 +228862,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "packages_contracts_schemas_impact_scenario_schema_json_ref_storage",
+      "target": "ref_warranty_expired",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228418,7 +228873,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "ref_cloud_region",
+      "target": "ref_subscription_expired",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228429,7 +228884,29 @@
     },
     {
       "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
-      "target": "ref_shared_service",
+      "target": "ref_end_of_life",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
+      "target": "ref_vulnerability_exploited",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
+      "source_location": "L24",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_schemas_impact_scenario_schema_kind_enum",
+      "target": "ref_capacity_exhausted",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
@@ -228455,7 +228932,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228465,7 +228942,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L37",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228475,7 +228952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228485,7 +228962,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228495,7 +228972,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L40",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228505,7 +228982,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228515,7 +228992,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228525,7 +229002,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L45",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228535,7 +229012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L46",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228545,7 +229022,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228555,7 +229032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L48",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228565,7 +229042,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L49",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228575,7 +229052,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L50",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228585,7 +229062,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228595,7 +229072,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228605,7 +229082,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L54",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228615,7 +229092,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228625,7 +229102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L57",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228635,7 +229112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228645,7 +229122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228655,7 +229132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228665,7 +229142,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228676,7 +229153,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228687,7 +229164,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228698,7 +229175,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228709,7 +229186,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L79",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228719,7 +229196,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228729,7 +229206,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L81",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228739,7 +229216,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L83",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228749,7 +229226,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L84",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228759,7 +229236,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L85",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228769,7 +229246,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L86",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228779,7 +229256,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228789,7 +229266,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L89",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228799,7 +229276,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L112",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228809,7 +229286,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L113",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228819,7 +229296,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -228829,7 +229306,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228840,7 +229317,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228851,7 +229328,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228862,7 +229339,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228873,7 +229350,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228884,7 +229361,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228895,7 +229372,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228906,7 +229383,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228917,7 +229394,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -228928,7 +229405,7 @@
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-scenario.schema.json",
-      "source_location": "L217",
+      "source_location": "L219",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -229516,7 +229993,7 @@
     },
     {
       "source": "packages_contracts_schemas_impact_simulation_schema_predicted_enum",
-      "target": "ref_degraded",
+      "target": "packages_contracts_schemas_impact_simulation_schema_json_ref_degraded",
       "relation": "extends",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/schemas/impact-simulation.schema.json",
@@ -243001,11 +243478,55 @@
     },
     {
       "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_index_scenario_kinds",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_index_scenario_kind_severity",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_index_scenario_severities",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_index_scenariokindschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
       "target": "packages_contracts_src_contracts_test_here",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/contracts.test.ts",
-      "source_location": "L25",
+      "source_location": "L29",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243488,7 +244009,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243498,23 +244019,23 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L7",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "packages_contracts_src_impact",
-      "target": "packages_contracts_src_impact_runbookschema",
+      "target": "packages_contracts_src_impact_scenariokind",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L10",
+      "source_location": "L26",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "packages_contracts_src_impact",
-      "target": "packages_contracts_src_impact_runbook",
+      "target": "packages_contracts_src_impact_scenario_severities",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
@@ -243524,11 +244045,51 @@
     },
     {
       "source": "packages_contracts_src_impact",
+      "target": "packages_contracts_src_impact_scenarioseverity",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_impact",
+      "target": "packages_contracts_src_impact_scenario_kind_severity",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_impact",
+      "target": "packages_contracts_src_impact_runbookschema",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_impact",
+      "target": "packages_contracts_src_impact_runbook",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L65",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_impact",
       "target": "packages_contracts_src_impact_impactscenarioschema",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L30",
+      "source_location": "L67",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243538,7 +244099,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L52",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243548,7 +244109,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L54",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243558,7 +244119,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L56",
+      "source_location": "L93",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243568,7 +244129,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L70",
+      "source_location": "L107",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243578,7 +244139,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L90",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243588,7 +244149,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L93",
+      "source_location": "L130",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -243598,7 +244159,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/contracts/src/impact.ts",
-      "source_location": "L103",
+      "source_location": "L140",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_impact",
+      "target": "packages_contracts_src_impact_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/impact.ts",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248276,11 +248847,21 @@
     },
     {
       "source": "packages_graph_src_cypher",
+      "target": "packages_graph_src_cypher_containmentfilter",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_cypher",
       "target": "packages_graph_src_cypher_edgealternatives",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L48",
+      "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248290,7 +248871,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L61",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248300,7 +248881,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L85",
+      "source_location": "L98",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248310,7 +248891,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L94",
+      "source_location": "L107",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248320,7 +248901,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L103",
+      "source_location": "L116",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248330,7 +248911,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L113",
+      "source_location": "L126",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248340,7 +248921,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L117",
+      "source_location": "L130",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248350,7 +248931,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L121",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248360,7 +248941,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L132",
+      "source_location": "L145",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248370,7 +248951,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L136",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248380,7 +248961,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L143",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248390,7 +248971,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L154",
+      "source_location": "L167",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248400,7 +248981,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L165",
+      "source_location": "L178",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248410,7 +248991,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L172",
+      "source_location": "L185",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248420,7 +249001,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L177",
+      "source_location": "L190",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248430,7 +249011,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L183",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_cypher_containmentfilter",
+      "target": "packages_graph_src_cypher_rellabel",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248441,7 +249033,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L50",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248452,7 +249044,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L62",
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248463,7 +249055,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L63",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248474,7 +249066,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L66",
+      "source_location": "L78",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_cypher_impactquery",
+      "target": "packages_graph_src_cypher_containmentfilter",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248485,7 +249088,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L70",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248496,7 +249099,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L88",
+      "source_location": "L101",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248507,7 +249110,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L98",
+      "source_location": "L111",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248518,7 +249121,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L114",
+      "source_location": "L127",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248529,7 +249132,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L122",
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248540,7 +249143,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L138",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248551,7 +249154,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L148",
+      "source_location": "L161",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248562,7 +249165,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L156",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248573,7 +249176,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L179",
+      "source_location": "L192",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248584,7 +249187,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L192",
+      "source_location": "L205",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_cypher",
+      "target": "packages_graph_src_cypher_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/cypher.ts",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -248896,6 +249509,16 @@
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/memgraph.integration.test.ts",
       "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_memgraph_integration_test",
+      "target": "packages_graph_src_memgraph_integration_test_ts_docref_adr_0019",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/memgraph.integration.test.ts",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -273260,6 +273883,46 @@
       "_origin": "ast"
     },
     {
+      "source": "docs_adr_adr_019_scenario_kinds_are_conditions",
+      "target": "docs_adr_adr_019_scenario_kinds_are_conditions_adr_019_scenario_kinds_are_the_what_if_conditions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_019_scenario_kinds_are_conditions_adr_019_scenario_kinds_are_the_what_if_conditions",
+      "target": "docs_adr_adr_019_scenario_kinds_are_conditions_context",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_019_scenario_kinds_are_conditions_adr_019_scenario_kinds_are_the_what_if_conditions",
+      "target": "docs_adr_adr_019_scenario_kinds_are_conditions_decision",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_019_scenario_kinds_are_conditions_adr_019_scenario_kinds_are_the_what_if_conditions",
+      "target": "docs_adr_adr_019_scenario_kinds_are_conditions_consequences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-019-scenario-kinds-are-conditions.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "docs_evidence_airgap_bundle_build",
       "target": "docs_evidence_airgap_bundle_build_req_int_002_offline_bundle_build_2026_10_22",
       "relation": "contains",
@@ -273686,6 +274349,36 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/horizon-twin.md",
       "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_whatif",
+      "target": "docs_evidence_impact_whatif_what_if_scenarios_run_end_to_end_req_bsm_003_req_ui_013_adr_019",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_whatif_what_if_scenarios_run_end_to_end_req_bsm_003_req_ui_013_adr_019",
+      "target": "docs_evidence_impact_whatif_findings_in_the_order_they_surfaced",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_whatif_what_if_scenarios_run_end_to_end_req_bsm_003_req_ui_013_adr_019",
+      "target": "docs_evidence_impact_whatif_proof",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-whatif.md",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -274482,6 +275175,17 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_console_src_lib_impact_conditions",
+      "target": "e_openmap_packages_contracts_dist_index_js",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_console_src_lib_twin_model",
       "target": "apps_console_src_lib_graph_layout",
       "relation": "re_exports",
@@ -274891,6 +275595,50 @@
     {
       "source": "packages_contracts_src_contracts_test",
       "target": "packages_contracts_src_asset_assetrecordschema",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_impact_scenario_kinds",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_impact_scenario_kind_severity",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_impact_scenario_severities",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/contracts/src/contracts.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_contracts_src_contracts_test",
+      "target": "packages_contracts_src_impact_scenariokindschema",
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -275720,7 +276468,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -280857,7 +281605,7 @@
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -280868,7 +281616,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L59",
+      "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -280879,7 +281627,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.repository.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281088,7 +281836,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281099,7 +281847,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281110,7 +281858,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281121,7 +281869,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281132,7 +281880,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281143,7 +281891,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281154,7 +281902,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281165,7 +281913,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281176,7 +281924,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281187,7 +281935,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281198,7 +281946,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281209,7 +281957,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -281220,7 +281968,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -285628,6 +286376,18 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_analytics_analytics_service_analyticsservice_provision",
+      "target": "apps_console_src_lib_impact_conditions_spec",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/analytics/analytics.service.ts",
+      "source_location": "L144",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_api_integration_test_mint",
       "target": "apps_api_src_tenant_tenant_context_tenantcontext_userid",
       "relation": "indirect_call",
@@ -288047,7 +288807,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -288059,7 +288819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298331,7 +299091,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L433",
+      "source_location": "L434",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298343,7 +299103,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L439",
+      "source_location": "L440",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298355,7 +299115,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L579",
+      "source_location": "L580",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -298367,7 +299127,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/components/impact/ImpactView.tsx",
-      "source_location": "L580",
+      "source_location": "L581",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -300551,7 +301311,19 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/lib/impact-conditions.ts",
-      "source_location": "L92",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_console_src_lib_impact_conditions_applicableconditions",
+      "target": "apps_console_src_lib_impact_conditions_test_component",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/console/src/lib/impact-conditions.ts",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304571,7 +305343,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304583,7 +305355,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304595,7 +305367,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L73",
+      "source_location": "L74",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304607,7 +305379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304619,7 +305391,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L75",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -304631,7 +305403,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/impact/impact.service.ts",
-      "source_location": "L78",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -306419,18 +307191,6 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/console/src/lib/auth/__tests__/helpers.ts",
-      "source_location": "L100",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_console_src_lib_impact_conditions_applicableconditions",
-      "target": "apps_console_src_lib_impact_conditions_impact_conditions",
-      "relation": "references",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "apps/console/src/lib/impact-conditions.ts",
       "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast"
