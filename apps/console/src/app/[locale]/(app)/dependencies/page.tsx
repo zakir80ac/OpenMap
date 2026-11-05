@@ -1,8 +1,10 @@
-// REQ-UI-007 REQ-DEP-003 REQ-DEP-005 REQ-DEP-001 — Dependency map route. The map's state (focus CI, direction, depth,
+// REQ-UI-007 REQ-DEP-003 REQ-DEP-005 REQ-DEP-001 REQ-DEP-004 — Dependency map route. The map's state (focus CI, direction, depth,
 // as-of instant, layout mode) is carried in the query string so a map can be linked from the CI detail, services and
-// impact screens; `view=topology` shows the network topology map instead (ADR-030).
+// impact screens; `view=topology` shows the network topology map (ADR-030), `view=application` the layered
+// application map (ADR-031).
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { ApplicationMapView } from '@/components/dependencies/ApplicationMapView';
 import { DependenciesView } from '@/components/dependencies/DependenciesView';
 import { TopologyView } from '@/components/dependencies/TopologyView';
 import { ViewSwitch } from '@/components/dependencies/ViewSwitch';
@@ -33,6 +35,8 @@ export default async function DependenciesPage({ params, searchParams }: PagePro
       <ViewSwitch locale={locale} view={view} />
       {view === 'topology' ? (
         <TopologyView locale={locale} />
+      ) : view === 'application' ? (
+        <ApplicationMapView locale={locale} />
       ) : (
         <DependenciesView
           locale={locale}

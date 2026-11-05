@@ -1,6 +1,6 @@
 'use client';
-// REQ-DEP-001 (ADR-030) — the Dependencies screen's two maps: the impact map of one CI and the network topology. The
-// choice is `view=topology` in the URL; switching keeps nothing else, each map owns its own parameters.
+// REQ-DEP-001 REQ-DEP-004 (ADR-030, ADR-031) — the Dependencies screen's maps: the impact map of one CI, the layered
+// application map and the network topology. The choice is `view=` in the URL; each map owns its own parameters.
 import { useRouter } from 'next/navigation';
 import type { Locale } from '@openmap/i18n';
 import { Segmented } from '@openmap/ui';
@@ -18,7 +18,7 @@ export function ViewSwitch({ locale, view }: { locale: Locale; view: DependencyV
       value={view}
       options={DEPENDENCY_VIEWS.map((value) => ({ value, label: t(`dependencies.view.${value}`) }))}
       onChange={(next) => {
-        router.push(localizedHref(locale, '/dependencies') + (next === 'topology' ? '?view=topology' : ''));
+        router.push(localizedHref(locale, '/dependencies') + (next === 'impact' ? '' : '?view=' + next));
       }}
       className="self-start"
     />

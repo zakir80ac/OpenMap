@@ -675,6 +675,23 @@ export const TOPOLOGY = {
   endpointDepth: 3,
 } as const;
 
+/**
+ * REQ-DEP-004 (ADR-031) — the layered application map: an application's components by tier, each with where it runs
+ * (VM, host, workload, cloud resource, and what those run on, up to `placementHops`), its databases, and the
+ * dependencies between components inside the application and to other applications. Tiers are drawn left to right
+ * in `tierOrder`; a tier the catalogue does not name goes last.
+ */
+export const APPLICATION_MAP = {
+  tierOrder: ['web', 'api', 'auth', 'app', 'worker', 'db', 'infra'],
+  placementHops: 3,
+  /** Relationships that place a component on what it runs on. */
+  placementTypes: ['runs_on', 'hosted_on'],
+  /** Relationships from a component that make it depend on another component or a data store. */
+  dependencyTypes: ['depends_on', 'backed_by'],
+  /** Components a map may show; a larger application is cut and says so. */
+  maxComponents: 200,
+} as const;
+
 /** Byte volumes in the console (observed traffic, evidence sizes): binary units to one decimal. */
 export const BYTES = {
   perUnit: 1024,
@@ -1105,8 +1122,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * queries `conversations`, `conversation`, mutation `deleteConversation`, `askAssistant(…, conversationId)`.
    * 1.6.0 (REQ-DEP-001, ADR-030): `TopologyLayer`, `TopologyNode`, `TopologyLink`, `NetworkTopology`,
    * query `networkTopology(layer, siteId, includeHosts)`.
+   * 1.7.0 (REQ-DEP-004, ADR-031): `ApplicationMap`, `ApplicationTier`, `ApplicationComponent`, `Placement`,
+   * `ApplicationDependency`, query `applicationMap(id)`.
    */
-  graphql: '1.6.0',
+  graphql: '1.7.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`.

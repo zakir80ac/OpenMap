@@ -17,6 +17,8 @@ export const ASSISTANT_QUESTIONS_METRIC = 'openmap_assistant_questions_total';
 export const ASSISTANT_DURATION_METRIC = 'openmap_assistant_duration_seconds';
 /** REQ-DEP-001 (ADR-030): network topology map duration, by layer. */
 export const TOPOLOGY_DURATION_METRIC = 'openmap_topology_duration_seconds';
+/** REQ-DEP-004 (ADR-031): layered application map duration. */
+export const APPLICATION_MAP_DURATION_METRIC = 'openmap_application_map_duration_seconds';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -50,6 +52,7 @@ export class MetricsService {
   readonly assistantQuestions: Counter<'intent' | 'outcome'>;
   readonly assistantDuration: Histogram<'intent'>;
   readonly topologyDuration: Histogram<'layer'>;
+  readonly applicationMapDuration: Histogram;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
@@ -100,6 +103,12 @@ export class MetricsService {
       name: TOPOLOGY_DURATION_METRIC,
       help: 'Network topology map duration in seconds, by layer',
       labelNames: ['layer'],
+      buckets: durationBuckets(),
+      registers: [this.registry],
+    });
+    this.applicationMapDuration = new Histogram({
+      name: APPLICATION_MAP_DURATION_METRIC,
+      help: 'Layered application map duration in seconds',
       buckets: durationBuckets(),
       registers: [this.registry],
     });

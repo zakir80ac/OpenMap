@@ -6,11 +6,12 @@ import { MetricsModule } from '../metrics/metrics.module.js';
 import { ServicesModule } from '../services/services.module.js';
 import { GraphResolver } from './graph.resolver.js';
 import { GraphQueryService } from './graph.service.js';
+import { ApplicationMapService } from './application-map.service.js';
 import { TopologyService } from './topology.service.js';
 
 @Module({
   imports: [CiModule, DbModule, MetricsModule, ServicesModule],
-  providers: [GraphQueryService, TopologyService, GraphResolver],
+  providers: [GraphQueryService, TopologyService, ApplicationMapService, GraphResolver],
   exports: [GraphQueryService],
 })
 export class GraphModule {}

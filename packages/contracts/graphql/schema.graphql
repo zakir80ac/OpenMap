@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.6.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.7.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -900,6 +900,63 @@ type NetworkTopology {
   durationMs: Int!
 }
 
+# REQ-DEP-004 (ADR-031) — the layered application map: an application's components by tier, where each runs (and
+# what that runs on), and its dependencies inside the application and to other applications, derived from flows
+# (ADR-029) or asserted by a collector.
+type ApplicationComponent {
+  ci: Ci!
+  tier: String!
+  technology: String
+  protocol: String
+  port: Int
+  deployment: String
+  instances: Int
+}
+type ApplicationTier {
+  tier: String!
+  components: [ApplicationComponent!]!
+}
+type Placement {
+  ci: Ci!
+  """
+  The component or placement this one carries (a VM carries a component, a hypervisor carries a VM).
+  """
+  parentId: UUID!
+  relationship: String!
+  """
+  Hops from the component: 1 for what it runs on directly.
+  """
+  hop: Int!
+}
+type ApplicationDependency {
+  id: UUID!
+  from: Ci!
+  to: Ci!
+  type: String!
+  """
+  internal (both ends in this application), outbound (this application depends on another) or inbound.
+  """
+  direction: String!
+  """
+  The application owning the far end, when it is a component of one.
+  """
+  otherApplication: Ci
+  derived: Boolean!
+  protocol: String
+  ports: [Int!]!
+  flows: Float
+  confidence: Float!
+}
+type ApplicationMap {
+  application: Ci!
+  services: [Ci!]!
+  tiers: [ApplicationTier!]!
+  placements: [Placement!]!
+  dependencies: [ApplicationDependency!]!
+  truncated: Boolean!
+  durationMs: Int!
+}
+
 # REQ-AI-008 (ADR-028) — a persisted conversation: the person's questions with the answers as they were returned, so
 # a thread survives a reload and a follow-up ("and last month?") is read against the previous turn. Owned by the
 # user who asked; only they list, read and delete it.
@@ -1253,6 +1310,10 @@ type Query {
   The network topology at layer 2 or 3, optionally for one site and with hosts attached (REQ-DEP-001).
   """
   networkTopology(layer: TopologyLayer = l2, siteId: UUID, includeHosts: Boolean = false): NetworkTopology!
+  """
+  The layered map of one application: tiers, placements and dependencies (REQ-DEP-004); null when the id is not an application.
+  """
+  applicationMap(id: UUID!): ApplicationMap
   estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!

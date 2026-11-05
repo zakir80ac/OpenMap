@@ -7,7 +7,8 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 Syed's direction after checkpoint 20: finish the pending discovery and collector, application dependency mapping and
 CMDB rows before BSM-007 or finance.
 
-**Done.** REQ-DEP-002 (ADR-029), REQ-DEP-001 (ADR-030), REQ-DISC-030 (closed on existing evidence).
+**Done.** REQ-DEP-002 (ADR-029), REQ-DEP-001 (ADR-030), REQ-DEP-004 (ADR-031), REQ-DISC-030 (closed on existing
+evidence). The dependency workstream is complete (5 of 5).
 
 - **Discovery rows re-statused.** REQ-DISC-001…027 moved from "In progress" to "In review": every collector is built
   and tested against protocol-shaped fixtures (Go suite 40 packages ok); each becomes Done once a recorded vendor
@@ -32,11 +33,18 @@ CMDB rows before BSM-007 or finance.
   speed; capped by degree. The Dependencies screen switches between the impact map and the topology (`view=topology`),
   with layer, site and hosts in the URL, the same Sigma canvas and worker, and a device's links in the panel. L2 on the
   dev estate: 252 nodes, 459 links, 58 ms.
-- **Tests.** T-149 (derivation, 6), T-150 (pass against Postgres, 2), T-151 (traffic panel and reading, console), T-152
+- **Layered application map (REQ-DEP-004, ADR-031).** `applicationMap(id)` (GraphQL 1.7.0): an application's
+  business services, components by tier (`APPLICATION_MAP.tierOrder`), every placement through `runs_on`/`hosted_on`
+  with parent and hop, and dependencies classified internal, outbound and inbound with the far application and the
+  derived evidence. The Dependencies screen's third view (`view=application`) draws a grid: tier columns, layer rows,
+  layer chips that hide rows (URL), and the dependency panel. `aml` on the dev estate: three tiers, ten dependencies,
+  21 ms. No dev-estate component runs on a cloud resource, so no test draws a cloud row yet.
+- **Tests.** T-157 (application map, 2), T-158 (through GraphQL, 2), T-159 (view, 7), T-160 (e2e, en+ar). T-149 (derivation, 6), T-150 (pass against Postgres, 2), T-151 (traffic panel and reading, console), T-152
   (e2e dependencies, en+ar), T-153 (topology folding, 3), T-154 (topology through GraphQL, 2), T-155 (topology view
   and circle seed, console), T-156 (e2e topology, en+ar). Reconciler 27, API 34, console dependency and layout suites
   33, guard, i18n, contracts, console lint green. Evidence: `docs/evidence/dependency-mapping.md`,
-  `docs/evidence/network-topology.md`, `docs/evidence/console/{dependencies-traffic,topology-l2,topology-l3}-{en,ar}.png`.
+  `docs/evidence/network-topology.md`, `docs/evidence/application-map.md`,
+  `docs/evidence/console/{dependencies-traffic,topology-l2,topology-l3,application-map}-{en,ar}.png`.
 
 **Lessons.** (1) A force layout seeded from lanes cannot leave the row when every node shares one layer: seed such
 maps on a circle. (2) A Next.js server page must not call a function exported from a `'use client'` module (the
@@ -457,12 +465,11 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. REQ-DEP-004: the layered enterprise application view (multi-tier, cloud and on-prem) over the derived component
-   dependencies of ADR-029.
-2. The open CMDB rows, in this order: REQ-CMDB-015 custom fields, REQ-CMDB-016 categories and tags, REQ-CMDB-033 bulk
+1. The open CMDB rows, in this order: REQ-CMDB-015 custom fields, REQ-CMDB-016 categories and tags, REQ-CMDB-033 bulk
    import/export, REQ-CMDB-036 seeding from an existing CMDB or spreadsheets, REQ-CMDB-023 OS inventory and EoL,
    REQ-CMDB-034 utilisation, REQ-CMDB-014 parts, REQ-CMDB-013/021 (check against what already exists and close on
    evidence where delivered), then the asset rows 017–020 and 025–029, 032.
+2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
 3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`

@@ -23,10 +23,13 @@ export function parseLayout(value: string | undefined): LayoutMode {
   return isLayoutMode(value) ? value : 'lane';
 }
 
-/** REQ-DEP-001 (ADR-030): the screen's two maps, `view=topology` in the URL; anything else is the impact map. */
-export const DEPENDENCY_VIEWS = ['impact', 'topology'] as const;
+/**
+ * REQ-DEP-001 REQ-DEP-004 (ADR-030, ADR-031): the screen's maps, `view=topology` or `view=application` in the URL;
+ * anything else is the impact map.
+ */
+export const DEPENDENCY_VIEWS = ['impact', 'application', 'topology'] as const;
 export type DependencyView = (typeof DEPENDENCY_VIEWS)[number];
 
 export function parseView(value: string | undefined): DependencyView {
-  return value === 'topology' ? 'topology' : 'impact';
+  return (DEPENDENCY_VIEWS as readonly string[]).includes(value ?? '') ? (value as DependencyView) : 'impact';
 }
