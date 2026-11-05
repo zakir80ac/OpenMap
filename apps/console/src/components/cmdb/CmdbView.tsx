@@ -1,11 +1,12 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-038 — CMDB: virtualised CI list (TanStack Virtual) over the cursor-paginated `cis` query, with
-// layer filter chips and the layer's headline metric on every row. Hidden layers (per-device visibility) are
+// REQ-UI-008 REQ-CMDB-038 REQ-CMDB-013 REQ-CMDB-016 — CMDB: virtualised CI list (TanStack Virtual) over the
+// cursor-paginated `cis` query, with layer filter chips, type, lifecycle and tag filters, and the layer's headline
+// metric on every row. Hidden layers (per-device visibility) are
 // excluded unless a chip selects one explicitly.
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
-import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
+import { CI_LAYERS, CI_TYPES, CI_TYPE_LAYER, LIFECYCLES, type CiLayer } from '@openmap/contracts';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, cx, layerColor, spacing } from '@openmap/ui';
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react';
 import { HeadlineMetric } from '@/components/common/HeadlineMetric';
@@ -13,7 +14,7 @@ import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { healthKey, layerKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
-import { cisInfiniteQuery, type CiFilterInput } from '@/lib/queries';
+import { ciTagsQuery, cisInfiniteQuery, type CiFilterInput, type Lifecycle } from '@/lib/queries';
 import { useFormatters, useLocale, useT } from '@/providers';
 
 /** Two text lines plus padding; expressed through the spacing scale so apps/ carries no numeric literal. */
@@ -28,6 +29,9 @@ export interface CmdbViewProps {
   initialLayer?: CiLayer;
 }
 
+const filterSelect =
+  'h-9 min-w-40 rounded-om-control-lg border border-om-border-glass bg-om-surface1/80 px-om-10 text-om-sm normal-case tracking-normal text-om-primary';
+
 const columns =
   'grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center gap-om-12 px-om-16';
 
@@ -37,14 +41,23 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const format = useFormatters();
   const { visibility, visibleCount } = useLayerVisibility();
   const [selected, setSelected] = useState<CiLayer | undefined>(initialLayer);
+  // REQ-CMDB-013 REQ-CMDB-016: type, lifecycle and tag narrow the list; an empty value means any.
+  const [type, setType] = useState('');
+  const [lifecycle, setLifecycle] = useState<Lifecycle | ''>('');
+  const [tag, setTag] = useState('');
+  const tags = useQuery(ciTagsQuery());
+  const types = useMemo(() => CI_TYPES.filter((ciType) => selected === undefined || CI_TYPE_LAYER[ciType] === selected), [selected]);
 
   const filter = useMemo<CiFilterInput>(() => {
     const next: CiFilterInput = {};
     if (text !== '') next.text = text;
     if (selected !== undefined) next.layers = [selected];
     else if (visibleCount < CI_LAYERS.length) next.layers = CI_LAYERS.filter((layer) => visibility[layer]);
+    if (type !== '') next.types = [type];
+    if (lifecycle !== '') next.lifecycle = [lifecycle];
+    if (tag !== '') next.tags = [tag];
     return next;
-  }, [text, selected, visibility, visibleCount]);
+  }, [text, selected, visibility, visibleCount, type, lifecycle, tag]);
 
   const query = useInfiniteQuery(cisInfiniteQuery(filter));
   const rows = useMemo(
@@ -117,6 +130,60 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
             </Pill>
           );
         })}
+      </div>
+
+      <div role="group" aria-label={t('cmdb.filter.more')} className="flex flex-wrap items-end gap-om-12">
+        <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+          {t('cmdb.filter.type')}
+          <select
+            value={type}
+            onChange={(event) => {
+              setType(event.target.value);
+            }}
+            className={filterSelect}
+          >
+            <option value="">{t('cmdb.filter.any')}</option>
+            {types.map((ciType) => (
+              <option key={ciType} value={ciType}>
+                {ciType}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+          {t('cmdb.filter.lifecycle')}
+          <select
+            value={lifecycle}
+            onChange={(event) => {
+              setLifecycle(event.target.value as Lifecycle | '');
+            }}
+            className={filterSelect}
+          >
+            <option value="">{t('cmdb.filter.any')}</option>
+            {LIFECYCLES.map((value) => (
+              <option key={value} value={value}>
+                {t(`lifecycle.${value}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+          {t('cmdb.filter.tag')}
+          <select
+            value={tag}
+            onChange={(event) => {
+              setTag(event.target.value);
+            }}
+            className={filterSelect}
+          >
+            <option value="">{t('cmdb.filter.any')}</option>
+            {(tags.data ?? []).map((entry) => (
+              <option key={entry.tag} value={entry.tag}>
+                {entry.tag + ' (' + format.integer(entry.count) + ')'}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <Card padding="4" className="overflow-hidden">

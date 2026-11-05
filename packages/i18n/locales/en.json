@@ -1838,5 +1838,16 @@
   "appmap.dep.derived": "{type} · observed in traffic",
   "appmap.dep.asserted": "{type} · recorded by discovery",
   "appmap.dep.flows": "{flows} flows",
-  "appmap.dep.confidence": "{percent}% confidence"
+  "appmap.dep.confidence": "{percent}% confidence",
+  "cmdb.detail.lifecycle": "Lifecycle",
+  "cmdb.detail.saveFailed": "The change was not saved.",
+  "cmdb.detail.tagRemove": "Remove tag {tag}",
+  "cmdb.detail.tagAdd": "Add a tag",
+  "cmdb.detail.tagAddButton": "Add",
+  "cmdb.detail.tagInvalid": "Letters, digits and . _ : / - only, no spaces, not already on the CI.",
+  "cmdb.filter.type": "Type",
+  "cmdb.filter.lifecycle": "Lifecycle",
+  "cmdb.filter.tag": "Tag",
+  "cmdb.filter.any": "Any",
+  "cmdb.filter.more": "More filters"
 }

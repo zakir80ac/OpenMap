@@ -97,6 +97,12 @@ export interface CiRepository {
   /** The current CI of the tenant carrying this short code, if any (ADR-014). */
   findCurrentByCode(tenantId: string, code: string): Promise<CiRecord | null>;
   updateCode(tx: Prisma.TransactionClient, tenantId: string, id: string, code: string): Promise<CiRecord>;
+  /** REQ-CMDB-013: a lifecycle set by hand. */
+  updateLifecycle(tx: Prisma.TransactionClient, tenantId: string, id: string, lifecycle: Lifecycle): Promise<CiRecord>;
+  /** REQ-CMDB-016: the CI's tags replaced. */
+  updateTags(tx: Prisma.TransactionClient, tenantId: string, id: string, tags: readonly string[]): Promise<CiRecord>;
+  /** REQ-CMDB-016: the tenant's tags on current CIs, most used first. */
+  tagCounts(tenantId: string, limit: number): Promise<Array<{ tag: string; count: number }>>;
   createRelationship(
     tx: Prisma.TransactionClient,
     tenantId: string,

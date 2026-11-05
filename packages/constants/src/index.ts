@@ -692,6 +692,18 @@ export const APPLICATION_MAP = {
   maxComponents: 200,
 } as const;
 
+/**
+ * REQ-CMDB-013 REQ-CMDB-016 — editing a CI by hand: tags are trimmed, de-duplicated and kept to `maxTags` of at most
+ * `maxTagLength` characters drawn from `tagPattern` (letters, digits and . _ : / - in any script); the tag picker lists
+ * the tenant's `tagListLimit` most used tags.
+ */
+export const CI_EDIT = {
+  maxTags: 32,
+  maxTagLength: 48,
+  tagPattern: '^[\\p{L}\\p{N}][\\p{L}\\p{N}._:/-]*$',
+  tagListLimit: 100,
+} as const;
+
 /** Byte volumes in the console (observed traffic, evidence sizes): binary units to one decimal. */
 export const BYTES = {
   perUnit: 1024,
@@ -1124,8 +1136,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * query `networkTopology(layer, siteId, includeHosts)`.
    * 1.7.0 (REQ-DEP-004, ADR-031): `ApplicationMap`, `ApplicationTier`, `ApplicationComponent`, `Placement`,
    * `ApplicationDependency`, query `applicationMap(id)`.
+   * 1.8.0 (REQ-CMDB-013, REQ-CMDB-016): `TagCount`, query `ciTags`, mutations `setCiLifecycle`, `setCiTags`.
    */
-  graphql: '1.7.0',
+  graphql: '1.8.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`.

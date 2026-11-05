@@ -1,5 +1,5 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 — CI detail: header (code, name, type, layer, health, headline
+// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 — CI detail: header (code, name, type, layer, health, headline
 // metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
 // link), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
 // re-fetches `ci(id, asOf)` and the attribute diff against now). Unknown-layer CIs get the "Label this CI" panel.
@@ -37,6 +37,7 @@ import {
 import { toAsOf, toLocalInput } from '@/lib/time-travel';
 import { useFormatters, useT, type Translate } from '@/providers';
 import type { Formatters } from '@/lib/format';
+import { LifecycleField, TagEditor } from './CiEditors';
 import { LabelCiPanel } from './LabelCiPanel';
 
 export interface CiDetailViewProps {
@@ -46,13 +47,6 @@ export interface CiDetailViewProps {
 
 const TABS = ['overview', 'relationships', 'impact', 'history'] as const;
 type Tab = (typeof TABS)[number];
-
-const lifecycleKey = {
-  discovered: 'lifecycle.discovered',
-  managed: 'lifecycle.managed',
-  planned: 'lifecycle.planned',
-  retired: 'lifecycle.retired',
-} as const;
 
 const changeKey = {
   added: 'cmdb.detail.history.change.added',
@@ -383,7 +377,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
         <div className="flex flex-wrap items-center gap-om-8">
           <LayerBadge layer={ci.layer} label={t(layerKey(ci.layer))} />
           <StateBadge state={ci.health} label={t(healthKey[ci.health])} live={ci.health !== 'healthy'} />
-          <Tag>{t(lifecycleKey[ci.lifecycle])}</Tag>
+          <LifecycleField ci={ci} />
           {ci.userLabel !== null ? (
             <Tag>
               {t('cmdb.detail.userLabel', { title: ci.userLabel.title, by: ci.userLabel.labelledBy })}
@@ -488,17 +482,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
               <SectionTitle as="h2" size="sm">
                 {t('cmdb.detail.tags')}
               </SectionTitle>
-              {ci.tags.length === 0 ? (
-                <p className="text-om-sm text-om-secondary">{t('cmdb.detail.noTags')}</p>
-              ) : (
-                <ul className="flex flex-wrap gap-om-6">
-                  {ci.tags.map((tag) => (
-                    <li key={tag}>
-                      <Tag>{tag}</Tag>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <TagEditor ci={ci} />
             </Card>
             <Card as="section" className="flex flex-col gap-om-12">
               <SectionTitle as="h2" size="sm">

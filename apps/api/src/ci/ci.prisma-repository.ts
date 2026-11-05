@@ -11,7 +11,7 @@ import { CI_INCLUDE, toCiRecord, toRelationshipRecord } from './ci.mapper.js';
 import { buildCiWhere, CI_ORDER, textClause } from './ci.filter.js';
 import type { CiRepository, ListResult, NewCi, NewRelationship, RelationshipQuery } from './ci.repository.js';
 import type { CiFilterInput } from './ci.schemas.js';
-import type { CiRecord, RelationshipDirection, RelationshipRecord } from './ci.types.js';
+import type { CiRecord, Lifecycle, RelationshipDirection, RelationshipRecord } from './ci.types.js';
 
 /** Provenance recorded for user-made changes through the API. */
 export const API_SOURCE = { collectorId: 'api', nodeId: 'api' } as const;
@@ -240,6 +240,26 @@ export class PrismaCiRepository implements CiRepository {
       include: CI_INCLUDE,
     });
     return toCiRecord(row);
+  }
+
+  async updateLifecycle(tx: Prisma.TransactionClient, tenantId: string, id: string, lifecycle: Lifecycle): Promise<CiRecord> {
+    const existing = await tx.ci.findFirst({ where: { id, tenantId, validTo: null } });
+    if (!existing) throw new NotFoundException('CI ' + id + ' not found');
+    return toCiRecord(await tx.ci.update({ where: { id }, data: { lifecycle }, include: CI_INCLUDE }));
+  }
+
+  async updateTags(tx: Prisma.TransactionClient, tenantId: string, id: string, tags: readonly string[]): Promise<CiRecord> {
+    const existing = await tx.ci.findFirst({ where: { id, tenantId, validTo: null } });
+    if (!existing) throw new NotFoundException('CI ' + id + ' not found');
+    return toCiRecord(await tx.ci.update({ where: { id }, data: { tags: [...tags] }, include: CI_INCLUDE }));
+  }
+
+  async tagCounts(tenantId: string, limit: number): Promise<Array<{ tag: string; count: number }>> {
+    const rows = await this.db.$queryRaw<Array<{ tag: string; count: bigint }>>(Prisma.sql`
+      SELECT t.tag, count(*) AS count FROM cis c, unnest(c.tags) AS t(tag)
+      WHERE c."tenantId" = ${tenantId}::uuid AND c."validTo" IS NULL
+      GROUP BY t.tag ORDER BY count(*) DESC, t.tag LIMIT ${limit}`);
+    return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }));
   }
 
   async findCurrentByCode(tenantId: string, code: string): Promise<CiRecord | null> {

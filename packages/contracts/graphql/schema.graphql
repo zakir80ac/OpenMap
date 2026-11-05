@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.7.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.8.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -900,6 +900,12 @@ type NetworkTopology {
   durationMs: Int!
 }
 
+# REQ-CMDB-016 — a tag in use in the tenant and how many current CIs carry it.
+type TagCount {
+  tag: String!
+  count: Int!
+}
+
 # REQ-DEP-004 (ADR-031) — the layered application map: an application's components by tier, where each runs (and
 # what that runs on), and its dependencies inside the application and to other applications, derived from flows
 # (ADR-029) or asserted by a collector.
@@ -1314,6 +1320,10 @@ type Query {
   The layered map of one application: tiers, placements and dependencies (REQ-DEP-004); null when the id is not an application.
   """
   applicationMap(id: UUID!): ApplicationMap
+  """
+  The tenant's most used CI tags, for the CMDB tag filter and the tag editor (REQ-CMDB-016).
+  """
+  ciTags(limit: Int): [TagCount!]!
   estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -1535,6 +1545,14 @@ type Mutation {
   Rename a CI's short code; the new code must match the code pattern and be free within the tenant.
   """
   setCiCode(ciId: UUID!, code: String!): Ci!
+  """
+  Moves a CI through its lifecycle (discovered, managed, planned, retired) by hand; discovery keeps what a person set (REQ-CMDB-013).
+  """
+  setCiLifecycle(ciId: UUID!, lifecycle: Lifecycle!): Ci!
+  """
+  Replaces a CI's tags; tags a collector observes again are merged back on its next sweep (REQ-CMDB-016).
+  """
+  setCiTags(ciId: UUID!, tags: [String!]!): Ci!
   createRelationship(type: String!, fromCiId: UUID!, toCiId: UUID!, attributes: JSON): Relationship!
   retireRelationship(id: UUID!): Relationship!
   setLayerVisibility(layer: CiLayer!, visible: Boolean!): [LayerSummary!]!

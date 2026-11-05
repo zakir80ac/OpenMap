@@ -20,6 +20,7 @@ import type {
   CiVersionRecord,
   Connection,
   HealthState,
+  Lifecycle,
   RelationshipDirection,
   RelationshipRecord,
   SearchHitRecord,
@@ -284,6 +285,45 @@ export class CiService {
       });
       return ci;
     });
+  }
+
+  /**
+   * REQ-CMDB-013 — a lifecycle set by hand. The event carries the CI so the graph and the search index take the new
+   * lifecycle; the reconciler keeps it on later sweeps (an update spreads the stored CI).
+   */
+  async setLifecycle(actor: Actor, ciId: string, lifecycle: Lifecycle): Promise<CiRecord> {
+    return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
+      const current = await this.repo.findById(actor.tenantId, ciId, null);
+      if (!current) throw new NotFoundException('CI ' + ciId + ' not found');
+      const ci = await this.repo.updateLifecycle(tx, actor.tenantId, ciId, lifecycle);
+      await emit({
+        type: 'openmap.ci.updated',
+        subject: ci.id,
+        data: { ci, ciId: ci.id, changed: ['lifecycle'], lifecycle, previousLifecycle: current.lifecycle, by: actor.username },
+      });
+      return ci;
+    });
+  }
+
+  /** REQ-CMDB-016 — the CI's tags replaced; a tag a collector observes again is merged back on its next sweep. */
+  async setTags(actor: Actor, ciId: string, tags: readonly string[]): Promise<CiRecord> {
+    return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
+      const current = await this.repo.findById(actor.tenantId, ciId, null);
+      if (!current) throw new NotFoundException('CI ' + ciId + ' not found');
+      const ci = await this.repo.updateTags(tx, actor.tenantId, ciId, tags);
+      const added = tags.filter((tag) => !current.tags.includes(tag));
+      const removed = current.tags.filter((tag) => !tags.includes(tag));
+      await emit({
+        type: 'openmap.ci.updated',
+        subject: ci.id,
+        data: { ci, ciId: ci.id, changed: ['tags'], added, removed, by: actor.username },
+      });
+      return ci;
+    });
+  }
+
+  tagCounts(tenantId: string, limit: number): Promise<Array<{ tag: string; count: number }>> {
+    return this.repo.tagCounts(tenantId, limit);
   }
 
   async createRelationship(

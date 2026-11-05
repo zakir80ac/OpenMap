@@ -1,7 +1,7 @@
 // T-114 REQ-CMDB-038 REQ-UI-008 — CmdbView lists CIs with the layer's headline metric on every row: the contract
 // label through i18n, the value with the contract unit, and an explicit "no sample" state, in en and ar over
 // stubbed GraphQL.
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -86,8 +86,11 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
         },
       },
     };
+  if (body.query.includes('query CiTags')) return { data: { ciTags: [{ tag: 'pci', count: 12 }] } };
   return { errors: [{ message: 'unexpected operation' }] };
 }
+
+const listCalls = (): Array<{ query: string; variables: Record<string, unknown> }> => calls.filter((c) => c.query.includes('query Cis('));
 
 beforeEach(() => {
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
@@ -117,7 +120,7 @@ describe.each(LOCALES)('CmdbView in %s', (locale) => {
     const table = await screen.findByRole('table');
     expect(within(table).getByRole('columnheader', { name: translate(locale, 'cmdb.column.metric') })).toBeTruthy();
     expect(await within(table).findByText('SRV-DB-RYD-PG-CORE-01')).toBeTruthy();
-    expect(calls[0]?.query).toContain('headlineMetric { key label unit metric value observedAt }');
+    expect(listCalls()[0]?.query).toContain('headlineMetric { key label unit metric value observedAt }');
 
     const host = within(table).getByText('db-ryd-pg-core-01').closest('[role="row"]');
     if (host === null) throw new Error('host row missing');
@@ -134,5 +137,23 @@ describe.each(LOCALES)('CmdbView in %s', (locale) => {
     if (unknown === null) throw new Error('unknown row missing');
     expect(within(unknown as HTMLElement).getByText(translate(locale, 'metric.lastSeenDays'))).toBeTruthy();
     expect(within(unknown as HTMLElement).getByText(new Intl.NumberFormat(locale).format(3) + ' d')).toBeTruthy();
+  });
+  it('narrows the list by type, lifecycle and tag (REQ-CMDB-013, REQ-CMDB-016)', async () => {
+    calls.length = 0;
+    render(
+      <Providers locale={locale}>
+        <CmdbView text="" />
+      </Providers>,
+    );
+    await screen.findByRole('table');
+    const more = screen.getByRole('group', { name: translate(locale, 'cmdb.filter.more') });
+    const tag = within(more).getByRole<HTMLSelectElement>('combobox', { name: translate(locale, 'cmdb.filter.tag') });
+    await within(tag).findByRole('option', { name: 'pci (12)' });
+    fireEvent.change(within(more).getByRole('combobox', { name: translate(locale, 'cmdb.filter.lifecycle') }), { target: { value: 'managed' } });
+    fireEvent.change(within(more).getByRole('combobox', { name: translate(locale, 'cmdb.filter.type') }), { target: { value: 'host' } });
+    fireEvent.change(tag, { target: { value: 'pci' } });
+    await waitFor(() => {
+      expect(listCalls().at(-1)?.variables['filter']).toEqual({ types: ['host'], lifecycle: ['managed'], tags: ['pci'] });
+    });
   });
 });

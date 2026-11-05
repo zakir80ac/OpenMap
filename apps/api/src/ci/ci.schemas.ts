@@ -10,7 +10,7 @@ import {
   relationshipTypeSchema,
   scalarSchema,
 } from '@openmap/contracts';
-import { BSM } from '@openmap/constants';
+import { BSM, CI_EDIT } from '@openmap/constants';
 
 export const healthStateSchema = z.enum(BSM.healthOrder);
 export const directionSchema = z.enum(['upstream', 'downstream', 'both']);
@@ -59,6 +59,22 @@ export const setCiCodeSchema = z.object({
         ),
     ),
 });
+
+/** REQ-CMDB-013 — a lifecycle change by hand. */
+export const setLifecycleSchema = z.object({ ciId: z.uuid(), lifecycle: lifecycleSchema });
+
+const TAG = new RegExp(CI_EDIT.tagPattern, 'u');
+
+/** REQ-CMDB-016 — a tag set: trimmed, de-duplicated, sorted, each held to the tag pattern and length. */
+export const setTagsSchema = z.object({
+  ciId: z.uuid(),
+  tags: z
+    .array(z.string().trim().min(1).max(CI_EDIT.maxTagLength).regex(TAG))
+    .max(CI_EDIT.maxTags)
+    .transform((tags) => [...new Set(tags)].sort()),
+});
+
+export const tagListSchema = z.number().int().min(1).max(CI_EDIT.tagListLimit).nullish();
 
 export const updateAttributesSchema = z.object({
   ciId: z.uuid(),

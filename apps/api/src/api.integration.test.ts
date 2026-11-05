@@ -1533,6 +1533,32 @@ describe('OpenMap API (integration)', () => {
     expect(stillDb.data?.ci.code).toMatch(/^[A-Z]+-/);
   });
 
+  it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
+    // T-161 REQ-CMDB-013 REQ-CMDB-016
+    const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';
+    const managed = await gql<{ setCiLifecycle: { lifecycle: string } }>(lifecycle, { ciId: ids.host, lifecycle: 'managed' });
+    expect(managed.errors).toBeUndefined();
+    expect(managed.data?.setCiLifecycle.lifecycle).toBe('managed');
+    const tags = 'mutation T($ciId: UUID!, $tags: [String!]!) { setCiTags(ciId: $ciId, tags: $tags) { id tags } }';
+    const tagged = await gql<{ setCiTags: { tags: string[] } }>(tags, { ciId: ids.host, tags: ['pci', ' ledger ', 'pci', 'مالية'] });
+    expect(tagged.errors).toBeUndefined();
+    expect(tagged.data?.setCiTags.tags).toEqual(['ledger', 'pci', 'مالية']);
+    const bad = await gql<{ setCiTags: unknown }>(tags, { ciId: ids.host, tags: ['has space'] });
+    expect(bad.errors?.[0]?.message).toMatch(/tags/i);
+    const list = await gql<{ ciTags: Array<{ tag: string; count: number }> }>('query { ciTags { tag count } }');
+    expect(list.data?.ciTags).toEqual(expect.arrayContaining([{ tag: 'pci', count: 1 }]));
+    const filtered = await gql<{ cis: { edges: Array<{ node: { id: string } }> } }>(
+      'query F($filter: CiFilter) { cis(filter: $filter, first: 10) { edges { node { id } } } }',
+      { filter: { tags: ['pci'], lifecycle: ['managed'] } },
+    );
+    expect(filtered.data?.cis.edges.map((e) => e.node.id)).toEqual([ids.host]);
+    const audit = await prisma.outboxEvent.findFirst({ where: { tenantId, type: 'openmap.ci.updated', subject: ids.host }, orderBy: { createdAt: 'desc' } });
+    expect((audit?.envelope as { data?: { changed?: string[]; ci?: { tags?: string[] } } }).data).toMatchObject({ changed: ['tags'], ci: { tags: ['ledger', 'pci', 'مالية'] } });
+    const denied = await gql<{ setCiLifecycle: unknown }>(lifecycle, { ciId: ids.host, lifecycle: 'retired' }, viewerToken);
+    expect(denied.errors?.[0]?.message).toMatch(/roles/i);
+    await gql(tags, { ciId: ids.host, tags: [] });
+  });
+
   it('lists discovery scopes from subnets and lets an operator set exclusions, credential set and rate limit', async () => {
     // T-112 REQ-DISC-029
     const scopes = await gql<{

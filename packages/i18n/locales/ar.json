@@ -1838,5 +1838,16 @@
   "appmap.dep.derived": "{type} · مرصودة في حركة المرور",
   "appmap.dep.asserted": "{type} · مسجلة بالاكتشاف",
   "appmap.dep.flows": "{flows} تدفق",
-  "appmap.dep.confidence": "ثقة {percent}%"
+  "appmap.dep.confidence": "ثقة {percent}%",
+  "cmdb.detail.lifecycle": "دورة الحياة",
+  "cmdb.detail.saveFailed": "لم يُحفظ التغيير.",
+  "cmdb.detail.tagRemove": "إزالة الوسم {tag}",
+  "cmdb.detail.tagAdd": "إضافة وسم",
+  "cmdb.detail.tagAddButton": "إضافة",
+  "cmdb.detail.tagInvalid": "حروف وأرقام و. _ : / - فقط، دون مسافات، وغير موجود على العنصر.",
+  "cmdb.filter.type": "النوع",
+  "cmdb.filter.lifecycle": "دورة الحياة",
+  "cmdb.filter.tag": "الوسم",
+  "cmdb.filter.any": "الكل",
+  "cmdb.filter.more": "مرشحات إضافية"
 }

@@ -2,7 +2,7 @@
 // the CI mutations, and the Ci / Relationship field resolvers (health, headline metric, relationships, history).
 // Every call is scoped by TenantContext.
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
-import { TIME } from '@openmap/constants';
+import { CI_EDIT, TIME } from '@openmap/constants';
 import { LAYER_HEADLINE_METRIC } from '@openmap/contracts';
 import { parseInput } from '../common/validation.js';
 import { Roles } from '../auth/roles.decorator.js';
@@ -17,6 +17,9 @@ import {
   relationshipArgsSchema,
   searchArgsSchema,
   setCiCodeSchema,
+  setLifecycleSchema,
+  setTagsSchema,
+  tagListSchema,
   updateAttributesSchema,
   vulnerabilityArgsSchema,
 } from './ci.schemas.js';
@@ -123,6 +126,25 @@ export class CiResolver {
   setCiCode(@Args('ciId') ciId: unknown, @Args('code') code: unknown): Promise<CiRecord> {
     const args = parseInput(setCiCodeSchema, { ciId, code }, 'setCiCode arguments');
     return this.service.setCode(this.actor(), args.ciId, args.code);
+  }
+
+  @Mutation('setCiLifecycle')
+  @Roles(ROLES.operator)
+  setCiLifecycle(@Args('ciId') ciId: unknown, @Args('lifecycle') lifecycle: unknown): Promise<CiRecord> {
+    const args = parseInput(setLifecycleSchema, { ciId, lifecycle }, 'setCiLifecycle arguments');
+    return this.service.setLifecycle(this.actor(), args.ciId, args.lifecycle);
+  }
+
+  @Mutation('setCiTags')
+  @Roles(ROLES.operator)
+  setCiTags(@Args('ciId') ciId: unknown, @Args('tags') tags: unknown): Promise<CiRecord> {
+    const args = parseInput(setTagsSchema, { ciId, tags }, 'setCiTags arguments');
+    return this.service.setTags(this.actor(), args.ciId, args.tags);
+  }
+
+  @Query('ciTags')
+  ciTags(@Args('limit') limit: unknown): Promise<Array<{ tag: string; count: number }>> {
+    return this.service.tagCounts(this.tenant.tenantId, parseInput(tagListSchema, limit, 'ciTags limit') ?? CI_EDIT.tagListLimit);
   }
 
   @Mutation('createRelationship')

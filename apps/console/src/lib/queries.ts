@@ -149,6 +149,9 @@ export interface CiFilterInput {
   layers?: CiLayer[];
   /** CI types to list (the topology site picker lists `site`). */
   types?: string[];
+  /** REQ-CMDB-013 REQ-CMDB-016: lifecycle states and tags a CI must carry. */
+  lifecycle?: Lifecycle[];
+  tags?: string[];
   text?: string;
 }
 
@@ -585,6 +588,27 @@ const LABEL_CI_MUTATION = [
 
 export function labelCi(input: LabelCiInput): Promise<CiSummary> {
   return gql<{ labelCi: CiSummary }>(LABEL_CI_MUTATION, { input }).then((data) => data.labelCi);
+}
+
+// REQ-CMDB-013 REQ-CMDB-016 — lifecycle and tags set by hand, and the tenant's tags for the filter and the editor.
+const SET_CI_LIFECYCLE_MUTATION =
+  'mutation SetCiLifecycle($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';
+const SET_CI_TAGS_MUTATION = 'mutation SetCiTags($ciId: UUID!, $tags: [String!]!) { setCiTags(ciId: $ciId, tags: $tags) { id tags } }';
+const CI_TAGS_QUERY = 'query CiTags { ciTags { tag count } }';
+
+export function setCiLifecycle(ciId: string, lifecycle: Lifecycle): Promise<{ id: string; lifecycle: Lifecycle }> {
+  return gql<{ setCiLifecycle: { id: string; lifecycle: Lifecycle } }>(SET_CI_LIFECYCLE_MUTATION, { ciId, lifecycle }).then((d) => d.setCiLifecycle);
+}
+
+export function setCiTags(ciId: string, tags: string[]): Promise<{ id: string; tags: string[] }> {
+  return gql<{ setCiTags: { id: string; tags: string[] } }>(SET_CI_TAGS_MUTATION, { ciId, tags }).then((d) => d.setCiTags);
+}
+
+export function ciTagsQuery() {
+  return queryOptions({
+    queryKey: ['ci-tags'] as const,
+    queryFn: ({ signal }) => gql<{ ciTags: Array<{ tag: string; count: number }> }>(CI_TAGS_QUERY, {}, signal).then((d) => d.ciTags),
+  });
 }
 
 // REQ-CMDB-037 — rename a short code (ADR-014); the server upper-cases, validates the pattern and refuses a taken code.
