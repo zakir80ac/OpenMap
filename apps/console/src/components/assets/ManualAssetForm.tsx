@@ -25,12 +25,22 @@ export function ManualAssetForm({ onCreated }: ManualAssetFormProps): ReactNode 
   const queryClient = useQueryClient();
   const layers = useMemo(() => labelableLayers(CI_LAYERS), []);
   const [layer, setLayer] = useState<CiLayer>('dc');
-  const types = useMemo(() => CI_TYPES.filter((type) => CI_TYPE_LAYER[type] === layer && OWNED.has(type)), [layer]);
+  const types = useMemo(
+    () => CI_TYPES.filter((type) => CI_TYPE_LAYER[type] === layer && OWNED.has(type)),
+    [layer],
+  );
   const [type, setType] = useState<string>('pdu');
   const [name, setName] = useState('');
   const [assetTag, setAssetTag] = useState('');
   const mutation = useMutation({
-    mutationFn: (details: AssetDetailsInput) => createAsset({ layer, type, name: name.trim(), assetTag: assetTag.trim() === '' ? null : assetTag.trim(), details }),
+    mutationFn: (details: AssetDetailsInput) =>
+      createAsset({
+        layer,
+        type,
+        name: name.trim(),
+        assetTag: assetTag.trim() === '' ? null : assetTag.trim(),
+        details,
+      }),
     onSuccess: async (asset) => {
       await queryClient.invalidateQueries({ queryKey: ['assets'] });
       await queryClient.invalidateQueries({ queryKey: ['assetSummary'] });
@@ -41,10 +51,16 @@ export function ManualAssetForm({ onCreated }: ManualAssetFormProps): ReactNode 
   const typeValid = types.includes(type as (typeof types)[number]);
   return (
     <Card as="section" padding="24" className="flex flex-col gap-om-14">
-      <SectionTitle as="h2" size="sm" description={t('assets.manual.hint')} action={<Icon name="assets" className="size-5 text-om-violet" />}>
+      <SectionTitle
+        as="h2"
+        size="sm"
+        description={t('assets.manual.hint')}
+        action={<Icon name="assets" className="size-5 text-om-violet" />}
+      >
         {t('assets.manual.title')}
       </SectionTitle>
       <AssetDetailsForm
+        ciType={type}
         initial={null}
         label={t('assets.manual.title')}
         submitLabel={t('assets.manual.create')}
@@ -78,7 +94,9 @@ export function ManualAssetForm({ onCreated }: ManualAssetFormProps): ReactNode 
                   const next = event.target.value;
                   if ((CI_LAYERS as readonly string[]).includes(next)) {
                     setLayer(next as CiLayer);
-                    const first = CI_TYPES.find((candidate) => CI_TYPE_LAYER[candidate] === next && OWNED.has(candidate));
+                    const first = CI_TYPES.find(
+                      (candidate) => CI_TYPE_LAYER[candidate] === next && OWNED.has(candidate),
+                    );
                     setType(first ?? '');
                   }
                 }}

@@ -4,7 +4,7 @@
 // network presence (a CI is created with them), and the row an owned CI gets when a person labels it (ADR-023).
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { BSM, RECONCILIATION } from '@openmap/constants';
+import { ASSETS, BSM, RECONCILIATION } from '@openmap/constants';
 import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer } from '@openmap/contracts';
 import type { Prisma } from '@openmap/db';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
@@ -14,12 +14,24 @@ import { nowIso } from '../common/time.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { ASSETS_REPOSITORY, type AssetsQuery, type AssetsRepository } from './assets.repository.js';
 import type { AssetDetailsInput, AssetFilterInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
-import type { AssetAuditView, AssetRecordView, AssetStage, AssetSummaryView, InfraPlanView, PlanStatus, SupportContractView, VendorContactView } from './assets.types.js';
+import type {
+  AssetAuditView,
+  AssetPageView,
+  AssetRecordView,
+  AssetStage,
+  AssetSummaryView,
+  InfraPlanView,
+  PlanStatus,
+  SupportContractView,
+  VendorContactView,
+} from './assets.types.js';
 
 export const PLAN_NUMBER_PREFIX = 'PLAN-';
 
 function horizonIso(days: number | null): string | null {
-  return days === null ? null : new Date(Date.now() + days * BSM.minutesPerDay * BSM.msPerMinute).toISOString();
+  return days === null
+    ? null
+    : new Date(Date.now() + days * BSM.minutesPerDay * BSM.msPerMinute).toISOString();
 }
 
 @Injectable()
@@ -30,7 +42,14 @@ export class AssetsService {
     private readonly outbox: OutboxService,
   ) {}
 
-  assets(tenantId: string, filter: AssetFilterInput | null, stages: readonly AssetStage[], warrantyExpiringWithinDays: number | null, first: number | null | undefined, after: string | null | undefined): Promise<AssetRecordView[]> {
+  assets(
+    tenantId: string,
+    filter: AssetFilterInput | null,
+    stages: readonly AssetStage[],
+    warrantyExpiringWithinDays: number | null,
+    first: number | null | undefined,
+    after: string | null | undefined,
+  ): Promise<AssetRecordView[]> {
     const query: AssetsQuery = {
       layers: filter?.layers ?? [],
       types: filter?.types ?? [],
@@ -43,6 +62,27 @@ export class AssetsService {
       afterId: after ? decodeIdCursor(after).id : null,
     };
     return this.repo.assets(tenantId, query);
+  }
+
+  /** REQ-CMDB-041 — a register page by number; the filter is the one `assets` takes, without the cursor. */
+  assetPage(
+    tenantId: string,
+    filter: AssetFilterInput | null,
+    page: number | null | undefined,
+    pageSize: number | null | undefined,
+  ): Promise<AssetPageView> {
+    const query: AssetsQuery = {
+      layers: filter?.layers ?? [],
+      types: filter?.types ?? [],
+      stages: filter?.stages ?? [],
+      sources: filter?.sources ?? [],
+      dataGaps: filter?.dataGaps ?? [],
+      text: filter?.text?.trim() || null,
+      warrantyEndsBefore: horizonIso(filter?.warrantyExpiringWithinDays ?? null),
+      first: ASSETS.registerPageSize,
+      afterId: null,
+    };
+    return this.repo.assetPage(tenantId, query, page ?? 1, pageSize ?? ASSETS.registerPageSize);
   }
 
   summary(tenantId: string): Promise<AssetSummaryView[]> {
@@ -81,8 +121,24 @@ export class AssetsService {
     return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
       const number = PLAN_NUMBER_PREFIX + String((await this.repo.planCount(tx, tenantId)) + 1);
       const { plan, assetIds } = await this.repo.createPlan(tx, tenantId, owner, number, input);
-      await emit({ type: 'openmap.plan.status.changed', subject: plan.id, data: { planId: plan.id, number: plan.number, status: plan.status, previous: null, assetIds, by: owner } });
-      for (const assetId of assetIds) await emit({ type: 'openmap.asset.stage.changed', subject: assetId, data: { assetId, planId: plan.id, stage: 'planned', previous: null, by: owner } });
+      await emit({
+        type: 'openmap.plan.status.changed',
+        subject: plan.id,
+        data: {
+          planId: plan.id,
+          number: plan.number,
+          status: plan.status,
+          previous: null,
+          assetIds,
+          by: owner,
+        },
+      });
+      for (const assetId of assetIds)
+        await emit({
+          type: 'openmap.asset.stage.changed',
+          subject: assetId,
+          data: { assetId, planId: plan.id, stage: 'planned', previous: null, by: owner },
+        });
       return plan;
     });
   }
@@ -92,28 +148,65 @@ export class AssetsService {
       const before = await this.repo.plan(tenantId, planId);
       if (!before) throw new NotFoundException('plan ' + planId + ' not found');
       const plan = await this.repo.setPlanStatus(tx, tenantId, planId, status);
-      await emit({ type: 'openmap.plan.status.changed', subject: plan.id, data: { planId: plan.id, number: plan.number, status: plan.status, previous: before.status, by: actor } });
+      await emit({
+        type: 'openmap.plan.status.changed',
+        subject: plan.id,
+        data: {
+          planId: plan.id,
+          number: plan.number,
+          status: plan.status,
+          previous: before.status,
+          by: actor,
+        },
+      });
       return plan;
     });
   }
 
-  setAssetStage(tenantId: string, actor: string, assetId: string, stage: AssetStage, note: string | null): Promise<AssetRecordView> {
+  setAssetStage(
+    tenantId: string,
+    actor: string,
+    assetId: string,
+    stage: AssetStage,
+    note: string | null,
+  ): Promise<AssetRecordView> {
     return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
       const before = await this.repo.asset(tenantId, assetId);
       if (!before) throw new NotFoundException('asset ' + assetId + ' not found');
       const asset = await this.repo.setAssetStage(tx, tenantId, assetId, stage, actor, note, nowIso());
-      await emit({ type: 'openmap.asset.stage.changed', subject: asset.id, data: { assetId: asset.id, ciId: asset.ciId, stage: asset.stage, previous: before.stage, note, by: actor } });
+      await emit({
+        type: 'openmap.asset.stage.changed',
+        subject: asset.id,
+        data: {
+          assetId: asset.id,
+          ciId: asset.ciId,
+          stage: asset.stage,
+          previous: before.stage,
+          note,
+          by: actor,
+        },
+      });
       return asset;
     });
   }
 
   /** Records what a person knows about an asset; each changed field is an audit row and the event lists them. */
-  updateAsset(tenantId: string, actor: string, assetId: string, input: AssetDetailsInput): Promise<AssetRecordView> {
+  updateAsset(
+    tenantId: string,
+    actor: string,
+    assetId: string,
+    input: AssetDetailsInput,
+  ): Promise<AssetRecordView> {
     return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
       const before = await this.repo.asset(tenantId, assetId);
       if (!before) throw new NotFoundException('asset ' + assetId + ' not found');
       const { asset, changed } = await this.repo.updateDetails(tx, tenantId, assetId, input, actor, nowIso());
-      if (changed.length > 0) await emit({ type: 'openmap.asset.updated', subject: asset.id, data: { assetId: asset.id, ciId: asset.ciId, changed, dataGaps: asset.dataGaps, by: actor } });
+      if (changed.length > 0)
+        await emit({
+          type: 'openmap.asset.updated',
+          subject: asset.id,
+          data: { assetId: asset.id, ciId: asset.ciId, changed, dataGaps: asset.dataGaps, by: actor },
+        });
       return asset;
     });
   }
@@ -145,7 +238,18 @@ export class AssetsService {
       });
       await emit({ type: 'openmap.ci.created', subject: ci.id, data: { ci } });
       const asset = await this.repo.createManual(tx, tenantId, actor, ci, input, nowIso());
-      await emit({ type: 'openmap.asset.created', subject: asset.id, data: { assetId: asset.id, ciId: ci.id, source: 'manual', layer: asset.layer, dataGaps: asset.dataGaps, by: actor } });
+      await emit({
+        type: 'openmap.asset.created',
+        subject: asset.id,
+        data: {
+          assetId: asset.id,
+          ciId: ci.id,
+          source: 'manual',
+          layer: asset.layer,
+          dataGaps: asset.dataGaps,
+          by: actor,
+        },
+      });
       return asset;
     });
   }
@@ -154,7 +258,13 @@ export class AssetsService {
    * Called when a person labels a CI (an unknown device classified into an owned type, or a layer override): the CI
    * gets its register row if it has none yet. Labelling into a non-owned type leaves the register alone.
    */
-  async ensureForLabelledCi(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, layer: CiLayer): Promise<AssetRecordView | null> {
+  async ensureForLabelledCi(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    ci: CiRecord,
+    layer: CiLayer,
+  ): Promise<AssetRecordView | null> {
     if (!isOwnedCiType(ci.type)) return null;
     return this.repo.ensureForCi(tx, tenantId, actor, ci, layer ?? CI_TYPE_LAYER[ci.type], nowIso());
   }

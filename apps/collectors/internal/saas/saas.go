@@ -82,6 +82,9 @@ type Product struct {
 	SeatsTotal    int64
 	SeatsAssigned int64
 	Status        string
+	// Subscription term as the vendor's commerce API reports it (RFC 3339); empty when the vendor exposes none.
+	StartsAt string
+	EndsAt   string
 }
 
 // Tenant is what one adapter learned about a SaaS tenant.
@@ -156,6 +159,17 @@ type graphOrganization struct {
 	} `json:"assignedPlans"`
 }
 
+// graphSubscription is Microsoft Graph's companySubscription (GET /v1.0/directory/subscriptions): the commercial term
+// behind a SKU, with the date the next lifecycle event (renewal or expiry) falls on.
+type graphSubscription struct {
+	SkuID                 string `json:"skuId"`
+	SkuPartNumber         string `json:"skuPartNumber"`
+	Status                string `json:"status"`
+	CreatedDateTime       string `json:"createdDateTime"`
+	NextLifecycleDateTime string `json:"nextLifecycleDateTime"`
+	TotalLicenses         int64  `json:"totalLicenses"`
+}
+
 type graphSku struct {
 	SkuPartNumber string `json:"skuPartNumber"`
 	SkuID         string `json:"skuId"`
@@ -187,6 +201,20 @@ func microsoft365(ctx context.Context, c *restjson.Client, counting *restjson.Cl
 	}
 	for _, s := range skus.Value {
 		t.Products = append(t.Products, Product{Name: s.SkuPartNumber, SKU: s.SkuID, SeatsTotal: s.PrepaidUnits.Enabled, SeatsAssigned: s.ConsumedUnits, Status: strings.ToLower(s.CapabilityStatus)})
+	}
+	// The commercial term per SKU (REQ-CMDB-042): a tenant whose app registration lacks the permission simply has none.
+	var terms graphList[graphSubscription]
+	if err := c.Get(ctx, "/v1.0/directory/subscriptions", &terms); err == nil {
+		for _, term := range terms.Value {
+			for i := range t.Products {
+				if t.Products[i].SKU == term.SkuID && term.NextLifecycleDateTime != "" {
+					t.Products[i].StartsAt = term.CreatedDateTime
+					t.Products[i].EndsAt = term.NextLifecycleDateTime
+				}
+			}
+		}
+	} else if !restjson.IsNotFound(err) && !restjson.IsForbidden(err) {
+		return nil, err
 	}
 	// $count needs ConsistencyLevel: eventual, which the counting client carries.
 	var users graphList[json.RawMessage]
@@ -424,6 +452,12 @@ func Emit(t *Tenant, at time.Time) collector.Observation {
 	for _, p := range t.Products {
 		identity := map[string]string{"vendor": t.Vendor, "product": p.Name, "tenantRef": t.TenantID}
 		pAttrs := map[string]any{"vendor": t.Vendor, "product": p.Name, "sku": p.SKU, "seatsTotal": p.SeatsTotal, "seatsAssigned": p.SeatsAssigned, "status": p.Status, "source": collectorID}
+		if p.EndsAt != "" {
+			pAttrs["subscriptionEnd"] = p.EndsAt
+			if p.StartsAt != "" {
+				pAttrs["subscriptionStart"] = p.StartsAt
+			}
+		}
 		if p.SeatsTotal > 0 {
 			pAttrs["seatUtilisationPercent"] = p.SeatsAssigned * 100 / p.SeatsTotal
 		}

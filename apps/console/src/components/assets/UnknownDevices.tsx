@@ -21,7 +21,9 @@ export interface UnknownDevicesProps {
 }
 
 function kindTitle(t: ReturnType<typeof useT>, r: Remediation): string {
-  return r.kind === 'unknown_service' ? t('assets.unknown.kind.unknown_service.title', { ports: r.nonStandardPorts.join(', ') }) : t(`assets.unknown.kind.${r.kind}.title`);
+  return r.kind === 'unknown_service'
+    ? t('assets.unknown.kind.unknown_service.title', { ports: r.nonStandardPorts.join(', ') })
+    : t(`assets.unknown.kind.${r.kind}.title`);
 }
 
 export function UnknownDevices({ canOperate }: UnknownDevicesProps): ReactNode {
@@ -32,16 +34,28 @@ export function UnknownDevices({ canOperate }: UnknownDevicesProps): ReactNode {
   const [open, setOpen] = useState<string | null>(null);
   const [classified, setClassified] = useState<string | null>(null);
   const now = useMemo(() => new Date(), []);
-  const rows = useMemo(() => (unknown.data?.items ?? []).map((ci) => ({ ci, remediation: diagnoseUnknown(ci.attributes, now) })), [unknown.data, now]);
+  const rows = useMemo(
+    () => (unknown.data?.items ?? []).map((ci) => ({ ci, remediation: diagnoseUnknown(ci.attributes, now) })),
+    [unknown.data, now],
+  );
   const evidenceValue = (key: Remediation['evidence'][number]['key'], value: string): string => {
     if (key === 'lastSeen') return format.dateTime(value);
     if (key === 'snmp') return value === 'yes' ? t('common.yes') : t('common.no');
     return value;
   };
   const row = (ci: UnknownCi, r: Remediation): ReactNode => (
-    <li key={ci.id} data-testid="unknown-device" data-kind={r.kind} data-stale={r.stale ? 'true' : undefined} className="flex flex-col gap-om-8 rounded-om-panel border border-om-border-glass bg-om-surface2/50 px-om-14 py-om-10">
+    <li
+      key={ci.id}
+      data-testid="unknown-device"
+      data-kind={r.kind}
+      data-stale={r.stale ? 'true' : undefined}
+      className="flex flex-col gap-om-8 rounded-om-panel border border-om-border-glass bg-om-surface2/50 px-om-14 py-om-10"
+    >
       <div className="flex flex-wrap items-center gap-om-8">
-        <Link href={localizedHref(locale, '/cmdb/' + encodeURIComponent(ci.id))} className="font-om-display text-om-sm font-semibold text-om-primary hover:underline">
+        <Link
+          href={localizedHref(locale, '/cmdb/' + encodeURIComponent(ci.id))}
+          className="font-om-display text-om-sm font-semibold text-om-primary hover:underline"
+        >
           {ci.displayName}
         </Link>
         <Tag variant="state" state={r.manageable ? 'at_risk' : 'down'}>
@@ -94,12 +108,12 @@ export function UnknownDevices({ canOperate }: UnknownDevicesProps): ReactNode {
       {open === ci.id ? (
         <div id={'label-' + ci.id}>
           <LabelCiPanel
-          ci={{ id: ci.id, displayName: ci.displayName, userLabel: null }}
-          preset={{ layer: r.suggestedLayer, type: r.suggestedType }}
-          onLabelled={() => {
-            setClassified(ci.id);
-            setOpen(null);
-          }}
+            ci={{ id: ci.id, displayName: ci.displayName, userLabel: null }}
+            preset={{ layer: r.suggestedLayer, type: r.suggestedType }}
+            onLabelled={() => {
+              setClassified(ci.id);
+              setOpen(null);
+            }}
           />
         </div>
       ) : null}
@@ -107,7 +121,16 @@ export function UnknownDevices({ canOperate }: UnknownDevicesProps): ReactNode {
   );
   return (
     <Card as="section" padding="24" className="flex flex-col gap-om-14">
-      <SectionTitle as="h2" size="sm" description={t('assets.unknown.subtitle')} action={unknown.data !== undefined ? <Tag>{t('assets.unknown.count', { count: format.integer(unknown.data.total) })}</Tag> : undefined}>
+      <SectionTitle
+        as="h2"
+        size="sm"
+        description={t('assets.unknown.subtitle')}
+        action={
+          unknown.data !== undefined ? (
+            <Tag>{t('assets.unknown.count', { count: format.integer(unknown.data.total) })}</Tag>
+          ) : undefined
+        }
+      >
         {t('assets.unknown.title')}
       </SectionTitle>
       {unknown.isPending ? (

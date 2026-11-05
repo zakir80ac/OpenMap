@@ -18,6 +18,18 @@ test('the wizard creates a Finance dashboard whose widgets paint from live data 
   await page.goto('/' + locale + '/dashboard');
   await signIn(page, locale);
   await expect(page.getByRole('heading', { level: 1, name: translate(locale, 'nav.dashboard') })).toBeVisible();
+  // REQ-UI-036: the seeded administrator's dashboards carry the overall uptime tile first; it paints the month's figure.
+  const landing = page.getByRole('region', { name: translate(locale, 'dashboard.widgets') });
+  const landed = await landing
+    .waitFor({ state: 'visible', timeout: PAINT_TIMEOUT_MS })
+    .then(() => true)
+    .catch(() => false);
+  if (landed) {
+    const uptime = landing.getByText(translate(locale, 'dashboard.widget.services.uptime.title')).first();
+    await expect(uptime).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
+    await expect(landing.getByText(translate(locale, 'dashboard.widget.services.uptime.kpi')).first()).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
+    await page.screenshot({ path: screenshotsDir + 'dashboard-uptime-' + locale + '.png', fullPage: false });
+  }
   // A user without a dashboard lands in the wizard; one with dashboards lands on one and the wizard is a click away.
   const wizard = page.getByRole('region', { name: translate(locale, 'dashboard.wizard.title') });
   const newButton = page.getByRole('button', { name: translate(locale, 'dashboard.new') });

@@ -2,7 +2,42 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 17: SLA assignment, uptime by period, incident response with RCA)
+## Last session · 2026-11-05 (checkpoint 18: uptime tile, register pages, subscription cover, assistant ADR)
+
+**Done.** REQ-UI-036, REQ-CMDB-041, REQ-CMDB-042; ADR-027 accepted; ADR-028 proposed for REQ-AI-007/008.
+
+- **Uptime tile (REQ-UI-036).** Widget kind `services.uptime`: the estate's availability this month weighted by
+  observed minutes over the monthly availability report, the change against last month, services below target.
+  First on the admin and CTO/CIO templates; migration 0017 inserted it first on existing dashboards of those
+  personas. `estateAvailability()` in `dashboard/widgets.tsx`.
+- **Register pages (REQ-CMDB-041).** `assetPage(filter, page, pageSize)` (GraphQL 1.2.0) with totals; the console
+  keeps the page in the URL, resets on filter change, shows the error of a failed page. The cursor query stays.
+- **Subscription cover (REQ-CMDB-042, ADR-027).** `subscriptionSchema` (provider, plan, start, end, credits with
+  unit/currency/asOf, source) on `asset_records.subscription` (migration 0018 with backfill from CI attributes);
+  `SUBSCRIPTION_CI_TYPES` take the `subscription` gap instead of `warranty`; GraphQL 1.3.0 (`SubscriptionCover`,
+  `Credits`, `SubscriptionInput`, `AssetSummary.subscriptionExpired`); the reconciler sync, the labelling path and
+  the manual form carry it; the details form shows the subscription group for those types. Collectors: Microsoft
+  365 reads `directory/subscriptions` for the term per SKU; Azure reads the billing account and the credit balance;
+  both tested with protocol-shaped stand-ins. Google, Salesforce, ServiceNow, Workday, AWS, GCP, OCI, Alibaba have no
+  read API for terms or balances: manual entry, documented in the ADR. The synthetic estate emits terms on licences
+  and a term plus credits on cloud accounts.
+- **Assistant (ADR-028, proposed).** Conversation records, five levels (understand → plan → retrieve across Postgres,
+  Memgraph, ClickHouse → compose with a numeric grounding guard → follow-ups and clarifications), skills for
+  attribute statistics, measurements, availability, incidents, impact, history and how-to, a checked-in evaluation
+  set in CI. "Trained for OpenMap" is the catalogue, examples and evaluation set, not weights; LoRA is the documented
+  later step once a GPU host exists. Increment one is REQ-AI-007, increment two REQ-AI-008.
+- **Tracker.** Rows REQ-UI-036, REQ-CMDB-041, REQ-CMDB-042, REQ-AI-008 added; the `next` list still leads with the
+  old P0 discovery rows because 26 DISC rows sit "In progress" since the collector marathon; that is a prioritisation
+  question for Syed (below).
+- **Tests.** Console 239 (35 files), API integration 22/22, contracts 14, reconciler 6+20, synth 8, Go saas/azure ok,
+  e2e assets + dashboard: assets 3/3 (pager, subscription save), dashboard 3/3 (uptime tile); Lighthouse: assets 0.97/1.0/1.0, dashboard 0.99/1.0/1.0. Evidence: `docs/evidence/dashboard-uptime-register.md`,
+  `docs/evidence/console/{dashboard-uptime,assets-subscription}-{en,ar}.png`.
+
+**Lessons.** (1) Playwright `isVisible({ timeout })` ignores the timeout: use `waitFor({ state: 'visible' })`.
+(2) A generated end-marker insertion lands in whichever test precedes the marker; anchor on the test being extended.
+(3) The console's `Kpi` prints value and unit in one text node: match by prefix in tests.
+
+## Previous session · 2026-11-05 (checkpoint 17: SLA assignment, uptime by period, incident response with RCA)
 
 **Done.** REQ-BSM-006 and REQ-BSM-008 (ADR-024), plus the register paging fix (cf5a4c0).
 
@@ -47,7 +82,7 @@ with `--progress=plain` to a log and compare image ids before `--force-recreate`
 `=> Promise<...>` on one .tsx line as JSX text: callback types live in `components/services/types.ts`. (6) k6 v2
 consolidates `options` in `handleSummary`: read the VU count from `__ENV`.
 
-## Previous session · 2026-11-05 (checkpoint 16: the asset register follows the CMDB)
+## Earlier session · 2026-11-05 (checkpoint 16: the asset register follows the CMDB)
 
 Syed's next statement: asset management must show everything the organisation owns across every layer plus the
 unknown devices (with remediation or manual entry where a device has no out-of-band management), every asset with
@@ -296,21 +331,25 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-BSM-007 (ADR-025): sites and their connectivity, inter-site links probed by the Nodes into ClickHouse, link CI
-   health, HA/DR readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) and
-   incidents; relates to REQ-UI-026.
-2. REQ-AI-007: assistant grounding (schema and measurement catalogue, store routing for measurements such as memory,
-   OS or VM density, Cypher validation and repair incl. nested aggregates, checked-in question set in CI, failure
-   logging).
+1. REQ-AI-007 then REQ-AI-008 (ADR-028): the conversational assistant — increment one: skills `cmdb.attributes`,
+   `metrics.latest`, `services.availability`, the intent classifier with clarifications, the grounding guard and the
+   evaluation set in CI; increment two: persisted conversations, follow-ups, `howto`, `history`, the console thread.
+2. REQ-BSM-007 (ADR-025): sites and connectivity for HA/DR readiness.
 3. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0016
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0018
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
+0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
+   and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
+   the lab) so the next list shows the SLA, assistant and finance work you asked for?
+0b. Microsoft 365 and Azure: grant the read-only app registration `Organization.Read.All` (Graph) and a Billing
+   Reader role on the billing account so the subscription term and credit balance flow in; Google Workspace terms
+   need the Reseller API only if Workspace is bought through a reseller.
 0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
    console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
    Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)

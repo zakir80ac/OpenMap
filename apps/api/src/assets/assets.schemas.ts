@@ -1,7 +1,16 @@
 // REQ-CMDB-002 REQ-CMDB-039 REQ-CMDB-040 — zod schemas for PlanInput, the register filter, the asset detail and
 // manual-asset inputs and the asset/plan mutations. Dates a person enters are calendar dates (YYYY-MM-DD).
+import { ASSETS } from '@openmap/constants';
 import { z } from 'zod';
-import { ASSET_DATA_GAPS, ASSET_SOURCES, ASSET_STAGES, PLAN_KINDS, PLAN_STATUSES, ciLayerSchema, ciTypeSchema } from '@openmap/contracts';
+import {
+  ASSET_DATA_GAPS,
+  ASSET_SOURCES,
+  ASSET_STAGES,
+  PLAN_KINDS,
+  PLAN_STATUSES,
+  ciLayerSchema,
+  ciTypeSchema,
+} from '@openmap/contracts';
 import { CURRENCY_CODE_LENGTH } from '../common/money.js';
 
 export const bomLineInputSchema = z.object({
@@ -55,6 +64,23 @@ export const warrantyInputSchema = z.object({
   startsAt: calendarDate.nullish(),
   endsAt: calendarDate,
 });
+/** REQ-CMDB-042 — a subscription needs an end date or a credit balance; credits need their unit. */
+export const subscriptionInputSchema = z
+  .object({
+    provider: trimmed,
+    plan: trimmed.nullish(),
+    startsAt: calendarDate.nullish(),
+    endsAt: calendarDate.nullish(),
+    creditsRemaining: z.number().min(0).nullish(),
+    creditsUnit: trimmed.nullish(),
+    creditsCurrency: z.string().length(CURRENCY_CODE_LENGTH).nullish(),
+  })
+  .refine((v) => v.endsAt || (v.creditsRemaining !== null && v.creditsRemaining !== undefined), {
+    message: 'a subscription needs an end date or a credit balance',
+  })
+  .refine((v) => v.creditsRemaining === null || v.creditsRemaining === undefined || v.creditsUnit, {
+    message: 'credits need a unit',
+  });
 export const supportInputSchema = z.object({
   provider: trimmed,
   contractNumber: trimmed.nullish(),
@@ -67,7 +93,9 @@ export const endOfLifeInputSchema = z
     endOfSoftwareMaintenance: calendarDate.nullish(),
     endOfSupport: calendarDate.nullish(),
   })
-  .refine((v) => v.endOfSale || v.endOfSoftwareMaintenance || v.endOfSupport, { message: 'at least one end-of-life date is required' });
+  .refine((v) => v.endOfSale || v.endOfSoftwareMaintenance || v.endOfSupport, {
+    message: 'at least one end-of-life date is required',
+  });
 
 /** Every field is optional: an omitted (undefined) field is left alone, an explicit null clears it. */
 export const assetDetailsInputSchema = z.object({
@@ -80,6 +108,7 @@ export const assetDetailsInputSchema = z.object({
   purchaseCostAmount: z.number().min(0).nullish(),
   purchaseCostCurrency: z.string().length(CURRENCY_CODE_LENGTH).nullish(),
   warranty: warrantyInputSchema.nullish(),
+  subscription: subscriptionInputSchema.nullish(),
   support: supportInputSchema.nullish(),
   endOfLife: endOfLifeInputSchema.nullish(),
   note: z.string().nullish(),
@@ -99,4 +128,15 @@ export type ManualAssetInput = z.infer<typeof manualAssetInputSchema>;
 export const updateAssetArgsSchema = z.object({ assetId: z.uuid(), input: assetDetailsInputSchema });
 export const plansArgsSchema = z.object({ status: z.array(z.enum(PLAN_STATUSES)).nullish() });
 export const setPlanStatusSchema = z.object({ planId: z.uuid(), status: z.enum(PLAN_STATUSES) });
-export const setAssetStageSchema = z.object({ assetId: z.uuid(), stage: z.enum(ASSET_STAGES), note: z.string().nullish() });
+export const setAssetStageSchema = z.object({
+  assetId: z.uuid(),
+  stage: z.enum(ASSET_STAGES),
+  note: z.string().nullish(),
+});
+
+/** REQ-CMDB-041 — register page arguments: 1-based page, page size capped at ASSETS.registerMaxPageSize. */
+export const assetPageArgsSchema = z.object({
+  filter: assetFilterSchema.nullish(),
+  page: z.number().int().min(1).nullish(),
+  pageSize: z.number().int().min(1).max(ASSETS.registerMaxPageSize).nullish(),
+});

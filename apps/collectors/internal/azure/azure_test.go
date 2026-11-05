@@ -46,6 +46,10 @@ func arm(t *testing.T) *httptest.Server {
 		switch {
 		case p == "/subscriptions/"+sub:
 			_ = json.NewEncoder(w).Encode(map[string]any{"id": "/subscriptions/" + sub, "subscriptionId": sub, "displayName": "Production", "state": "Enabled", "tenantId": "tenant-1"})
+		case strings.HasSuffix(p, "/providers/Microsoft.Billing/billingProperties/default"):
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": "/subscriptions/" + sub + "/providers/Microsoft.Billing/billingProperties/default", "properties": map[string]any{"billingAccountId": "ba-7781", "billingAccountDisplayName": "Horizon"}})
+		case strings.HasSuffix(p, "/providers/Microsoft.Consumption/credits/balance"):
+			_ = json.NewEncoder(w).Encode(map[string]any{"properties": map[string]any{"creditCurrency": "USD", "balanceSummary": map[string]any{"estimatedBalance": map[string]any{"currency": "USD", "value": 12345.5}}}})
 		case strings.HasSuffix(p, "/resources") && r.URL.Query().Get("$skiptoken") == "":
 			_ = json.NewEncoder(w).Encode(map[string]any{"value": []any{
 				map[string]any{"id": vmID, "name": "app-01", "type": "Microsoft.Compute/virtualMachines", "location": "uaenorth", "tags": map[string]string{"env": "prod"}},
@@ -109,6 +113,9 @@ func TestTokenWalkEmit(t *testing.T) {
 				t.Fatalf("vm wrong: %+v", ci)
 			}
 		case typeAccount:
+			if ci.Attributes["creditsRemaining"] != 12345.5 || ci.Attributes["creditsCurrency"] != "USD" || ci.Attributes["creditsUnit"] != "USD" || ci.Attributes["creditsAsOf"] == nil {
+				t.Fatalf("credit balance not on the account: %v", ci.Attributes)
+			}
 			if ci.Identity["accountId"] != sub || ci.Attributes["resourceCount"] != 3 {
 				t.Fatalf("account wrong: %+v", ci)
 			}

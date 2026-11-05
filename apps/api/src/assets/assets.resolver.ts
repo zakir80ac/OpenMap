@@ -6,9 +6,26 @@ import { ROLES } from '../auth/roles.js';
 import type { CiRecord } from '../ci/ci.types.js';
 import { parseInput } from '../common/validation.js';
 import { TenantContext } from '../tenant/tenant.context.js';
-import { assetsArgsSchema, manualAssetInputSchema, planInputSchema, plansArgsSchema, setAssetStageSchema, setPlanStatusSchema, updateAssetArgsSchema } from './assets.schemas.js';
+import {
+  assetPageArgsSchema,
+  assetsArgsSchema,
+  manualAssetInputSchema,
+  planInputSchema,
+  plansArgsSchema,
+  setAssetStageSchema,
+  setPlanStatusSchema,
+  updateAssetArgsSchema,
+} from './assets.schemas.js';
 import { AssetsService } from './assets.service.js';
-import type { AssetAuditView, AssetRecordView, AssetSummaryView, InfraPlanView, SupportContractView, VendorContactView } from './assets.types.js';
+import type {
+  AssetAuditView,
+  AssetPageView,
+  AssetRecordView,
+  AssetSummaryView,
+  InfraPlanView,
+  SupportContractView,
+  VendorContactView,
+} from './assets.types.js';
 
 @Resolver()
 export class AssetsResolver {
@@ -18,9 +35,36 @@ export class AssetsResolver {
   ) {}
 
   @Query('assets')
-  assets(@Args('filter') filter: unknown, @Args('stage') stage: unknown, @Args('warrantyExpiringWithinDays') days: unknown, @Args('first') first: unknown, @Args('after') after: unknown): Promise<AssetRecordView[]> {
-    const a = parseInput(assetsArgsSchema, { filter, stage, warrantyExpiringWithinDays: days, first, after }, 'assets arguments');
-    return this.service.assets(this.tenant.tenantId, a.filter ?? null, a.stage ?? [], a.warrantyExpiringWithinDays ?? null, a.first, a.after);
+  assets(
+    @Args('filter') filter: unknown,
+    @Args('stage') stage: unknown,
+    @Args('warrantyExpiringWithinDays') days: unknown,
+    @Args('first') first: unknown,
+    @Args('after') after: unknown,
+  ): Promise<AssetRecordView[]> {
+    const a = parseInput(
+      assetsArgsSchema,
+      { filter, stage, warrantyExpiringWithinDays: days, first, after },
+      'assets arguments',
+    );
+    return this.service.assets(
+      this.tenant.tenantId,
+      a.filter ?? null,
+      a.stage ?? [],
+      a.warrantyExpiringWithinDays ?? null,
+      a.first,
+      a.after,
+    );
+  }
+
+  @Query('assetPage')
+  assetPage(
+    @Args('filter') filter: unknown,
+    @Args('page') page: unknown,
+    @Args('pageSize') pageSize: unknown,
+  ): Promise<AssetPageView> {
+    const a = parseInput(assetPageArgsSchema, { filter, page, pageSize }, 'assetPage arguments');
+    return this.service.assetPage(this.tenant.tenantId, a.filter ?? null, a.page, a.pageSize);
   }
 
   @Query('assetSummary')
@@ -37,7 +81,11 @@ export class AssetsResolver {
   @Mutation('createPlan')
   @Roles(ROLES.operator)
   createPlan(@Args('input') input: unknown): Promise<InfraPlanView> {
-    return this.service.createPlan(this.tenant.tenantId, this.tenant.username, parseInput(planInputSchema, input, 'PlanInput'));
+    return this.service.createPlan(
+      this.tenant.tenantId,
+      this.tenant.username,
+      parseInput(planInputSchema, input, 'PlanInput'),
+    );
   }
 
   @Mutation('setPlanStatus')
@@ -49,9 +97,19 @@ export class AssetsResolver {
 
   @Mutation('setAssetStage')
   @Roles(ROLES.operator)
-  setAssetStage(@Args('assetId') assetId: unknown, @Args('stage') stage: unknown, @Args('note') note: unknown): Promise<AssetRecordView> {
+  setAssetStage(
+    @Args('assetId') assetId: unknown,
+    @Args('stage') stage: unknown,
+    @Args('note') note: unknown,
+  ): Promise<AssetRecordView> {
     const a = parseInput(setAssetStageSchema, { assetId, stage, note }, 'setAssetStage arguments');
-    return this.service.setAssetStage(this.tenant.tenantId, this.tenant.username, a.assetId, a.stage, a.note ?? null);
+    return this.service.setAssetStage(
+      this.tenant.tenantId,
+      this.tenant.username,
+      a.assetId,
+      a.stage,
+      a.note ?? null,
+    );
   }
 
   @Mutation('updateAsset')
@@ -64,7 +122,11 @@ export class AssetsResolver {
   @Mutation('createAsset')
   @Roles(ROLES.operator)
   createAsset(@Args('input') input: unknown): Promise<AssetRecordView> {
-    return this.service.createAsset(this.tenant.tenantId, this.tenant.username, parseInput(manualAssetInputSchema, input, 'ManualAssetInput'));
+    return this.service.createAsset(
+      this.tenant.tenantId,
+      this.tenant.username,
+      parseInput(manualAssetInputSchema, input, 'ManualAssetInput'),
+    );
   }
 }
 
@@ -82,12 +144,16 @@ export class AssetRecordFieldsResolver {
 
   @ResolveField('locationCi')
   locationCi(@Parent() asset: AssetRecordView): Promise<CiRecord | null> {
-    return asset.locationCiId === null ? Promise.resolve(null) : this.tenant.loaders.ci.load(asset.locationCiId);
+    return asset.locationCiId === null
+      ? Promise.resolve(null)
+      : this.tenant.loaders.ci.load(asset.locationCiId);
   }
 
   @ResolveField('supportContract')
   supportContract(@Parent() asset: AssetRecordView): Promise<SupportContractView | null> {
-    return asset.supportContractId === null ? Promise.resolve(null) : this.service.supportContract(this.tenant.tenantId, asset.supportContractId);
+    return asset.supportContractId === null
+      ? Promise.resolve(null)
+      : this.service.supportContract(this.tenant.tenantId, asset.supportContractId);
   }
 
   @ResolveField('supportEndsAt')
@@ -100,7 +166,9 @@ export class AssetRecordFieldsResolver {
 
   @ResolveField('plan')
   plan(@Parent() asset: AssetRecordView): Promise<InfraPlanView | null> {
-    return asset.planId === null ? Promise.resolve(null) : this.service.plan(this.tenant.tenantId, asset.planId);
+    return asset.planId === null
+      ? Promise.resolve(null)
+      : this.service.plan(this.tenant.tenantId, asset.planId);
   }
 
   @ResolveField('audits')
@@ -118,12 +186,16 @@ export class InfraPlanFieldsResolver {
 
   @ResolveField('targetSite')
   targetSite(@Parent() plan: InfraPlanView): Promise<CiRecord | null> {
-    return plan.targetSiteCiId === null ? Promise.resolve(null) : this.tenant.loaders.ci.load(plan.targetSiteCiId);
+    return plan.targetSiteCiId === null
+      ? Promise.resolve(null)
+      : this.tenant.loaders.ci.load(plan.targetSiteCiId);
   }
 
   @ResolveField('targetRacks')
   async targetRacks(@Parent() plan: InfraPlanView): Promise<CiRecord[]> {
-    return (await this.tenant.loaders.ci.loadMany(plan.targetRackCiIds)).filter((c): c is CiRecord => c !== null);
+    return (await this.tenant.loaders.ci.loadMany(plan.targetRackCiIds)).filter(
+      (c): c is CiRecord => c !== null,
+    );
   }
 
   @ResolveField('assets')
@@ -146,7 +218,9 @@ export class SupportContractFieldsResolver {
 
   @ResolveField('primaryContact')
   primaryContact(@Parent() contract: SupportContractView): Promise<VendorContactView | null> {
-    return contract.primaryContactId === null ? Promise.resolve(null) : this.service.vendorContact(this.tenant.tenantId, contract.primaryContactId);
+    return contract.primaryContactId === null
+      ? Promise.resolve(null)
+      : this.service.vendorContact(this.tenant.tenantId, contract.primaryContactId);
   }
 }
 

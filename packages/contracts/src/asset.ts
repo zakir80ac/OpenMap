@@ -5,7 +5,15 @@ import { z } from 'zod';
 import { CI_TYPES, ciLayerSchema, ciTypeSchema, type CiType } from './ci.js';
 
 /** Asset lifecycle stages. An asset is in exactly one; every move is audited. `planned` assets come from an infrastructure plan's BOM. */
-export const ASSET_STAGES = ['planned', 'in_stock', 'deployed', 'spare', 'rma', 'retired', 'disposed'] as const;
+export const ASSET_STAGES = [
+  'planned',
+  'in_stock',
+  'deployed',
+  'spare',
+  'rma',
+  'retired',
+  'disposed',
+] as const;
 export const assetStageSchema = z.enum(ASSET_STAGES);
 export type AssetStage = z.infer<typeof assetStageSchema>;
 
@@ -59,10 +67,28 @@ export function isOwnedCiType(type: string): type is OwnedCiType {
   return OWNED.has(type) && (CI_TYPES as readonly string[]).includes(type);
 }
 
-/** The dates every asset must carry; a null one is a data gap the register flags for manual entry. */
-export const ASSET_DATA_GAPS = ['warranty', 'support', 'end_of_life'] as const;
+/**
+ * The dates every asset must carry; a null one is a data gap the register flags for manual entry. Hardware carries a
+ * warranty; software, SaaS and cloud services carry a subscription instead (REQ-CMDB-042, ADR-027).
+ */
+export const ASSET_DATA_GAPS = ['warranty', 'subscription', 'support', 'end_of_life'] as const;
 export const assetDataGapSchema = z.enum(ASSET_DATA_GAPS);
 export type AssetDataGap = z.infer<typeof assetDataGapSchema>;
+
+/** CI types whose cover is a subscription (start, end, credits) rather than a warranty. */
+export const SUBSCRIPTION_CI_TYPES = [
+  'software',
+  'software_instance',
+  'licence',
+  'saas_application',
+  'saas_tenant',
+  'cloud_account',
+  'cloud_resource',
+] as const;
+const SUBSCRIPTION_CI_TYPE_SET: ReadonlySet<string> = new Set(SUBSCRIPTION_CI_TYPES);
+export function isSubscriptionCiType(type: string | null | undefined): boolean {
+  return type !== null && type !== undefined && SUBSCRIPTION_CI_TYPE_SET.has(type);
+}
 
 /** ISO 4217 currency code. */
 const currency = z.string().length(3);
@@ -83,7 +109,14 @@ export const vendorContactSchema = z.object({
 });
 export type VendorContact = z.infer<typeof vendorContactSchema>;
 
-export const SUPPORT_LEVELS = ['none', 'basic', 'next_business_day', 'four_hour', 'mission_critical', 'custom'] as const;
+export const SUPPORT_LEVELS = [
+  'none',
+  'basic',
+  'next_business_day',
+  'four_hour',
+  'mission_critical',
+  'custom',
+] as const;
 
 export const supportContractSchema = z.object({
   id: z.uuid(),
@@ -134,6 +167,36 @@ export const supportSchema = z.object({
 });
 export type Support = z.infer<typeof supportSchema>;
 
+/** Remaining prepaid credits of a cloud or SaaS subscription, as the vendor's billing API reported them. */
+export const creditsSchema = z.object({
+  remaining: z.number().min(0),
+  /** What the number counts: a currency amount, vendor credits, seats, hours. */
+  unit: z.string().min(1),
+  currency: z.string().length(3).nullable(),
+  asOf: z.iso.datetime(),
+});
+export type Credits = z.infer<typeof creditsSchema>;
+
+/**
+ * Subscription cover of software, SaaS and cloud assets (ADR-027): the term and the credits left. Either an end date
+ * or a credit balance must be known for the cover to count; the rest stays null until the vendor or a person reports it.
+ */
+export const subscriptionSchema = z
+  .object({
+    provider: z.string().min(1),
+    /** Plan, SKU or edition as the vendor names it. */
+    plan: z.string().min(1).nullable(),
+    startsAt: z.iso.date().nullable(),
+    endsAt: z.iso.date().nullable(),
+    credits: creditsSchema.nullable(),
+    source: dateSourceSchema,
+    verifiedAt: z.iso.datetime().nullable(),
+  })
+  .refine((v) => v.endsAt !== null || v.credits !== null, {
+    message: 'a subscription needs an end date or a credit balance',
+  });
+export type Subscription = z.infer<typeof subscriptionSchema>;
+
 export const endOfLifeSchema = z.object({
   endOfSale: z.iso.date().nullable(),
   endOfSoftwareMaintenance: z.iso.date().nullable(),
@@ -143,16 +206,35 @@ export const endOfLifeSchema = z.object({
 });
 export type EndOfLife = z.infer<typeof endOfLifeSchema>;
 
-/** The data gaps of an asset: each of the three dates that is missing. */
-export function assetDataGaps(asset: { warranty: unknown; support: unknown; supportContractId: string | null; endOfLife: { endOfSupport: string | null } | null }): AssetDataGap[] {
+/**
+ * The data gaps of an asset: each of the three dates that is missing. A subscription type is asked for its
+ * subscription, every other type for its warranty; both are asked for support and end of life.
+ */
+export function assetDataGaps(asset: {
+  ciType?: string | null | undefined;
+  warranty: unknown;
+  subscription?: unknown;
+  support: unknown;
+  supportContractId: string | null;
+  endOfLife: { endOfSupport: string | null } | null;
+}): AssetDataGap[] {
   const gaps: AssetDataGap[] = [];
-  if (asset.warranty === null || asset.warranty === undefined) gaps.push('warranty');
-  if ((asset.support === null || asset.support === undefined) && asset.supportContractId === null) gaps.push('support');
+  if (isSubscriptionCiType(asset.ciType)) {
+    if (asset.subscription === null || asset.subscription === undefined) gaps.push('subscription');
+  } else if (asset.warranty === null || asset.warranty === undefined) gaps.push('warranty');
+  if ((asset.support === null || asset.support === undefined) && asset.supportContractId === null)
+    gaps.push('support');
   if (asset.endOfLife === null || asset.endOfLife.endOfSupport === null) gaps.push('end_of_life');
   return gaps;
 }
 
-export const PLAN_KINDS = ['new_infrastructure', 'stack_expansion', 'refresh', 'migration', 'decommission'] as const;
+export const PLAN_KINDS = [
+  'new_infrastructure',
+  'stack_expansion',
+  'refresh',
+  'migration',
+  'decommission',
+] as const;
 export const PLAN_STATUSES = ['draft', 'approved', 'building', 'live', 'cancelled'] as const;
 
 /** One line of a plan's bill of materials. Each line becomes `quantity` assets in stage `planned`. */
@@ -231,6 +313,8 @@ export const assetRecordSchema = z.object({
     residualValue: money,
   }),
   warranty: warrantySchema.nullable(),
+  /** ADR-027: the subscription term and credits of software, SaaS and cloud assets. */
+  subscription: subscriptionSchema.nullable(),
   support: supportSchema.nullable(),
   supportContractId: z.uuid().nullable(),
   endOfLife: endOfLifeSchema.nullable(),
@@ -270,12 +354,18 @@ export interface AssetFieldsFromCi {
   partNumber: string | null;
   purchasedAt: string | null;
   warranty: Warranty | null;
+  subscription: Subscription | null;
   support: Support | null;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
 /** Types whose `expiresAt` is a subscription or entitlement end, recorded as support cover. */
-const SUBSCRIPTION_TYPES: ReadonlySet<string> = new Set(['licence', 'saas_application', 'saas_tenant', 'certificate']);
+const SUBSCRIPTION_TYPES: ReadonlySet<string> = new Set([
+  'licence',
+  'saas_application',
+  'saas_tenant',
+  'certificate',
+]);
 
 function text(attributes: Record<string, unknown>, ...keys: readonly string[]): string | null {
   for (const key of keys) {
@@ -290,7 +380,76 @@ function isoDate(attributes: Record<string, unknown>, key: string): string | nul
   return value !== null && ISO_DATE.test(value) ? value : null;
 }
 
-export function assetFieldsFromCi(type: string, attributes: Record<string, unknown>): AssetFieldsFromCi {
+/** A calendar date from a date or an instant attribute (collectors report RFC 3339 for SaaS and cloud terms). */
+function calendarDate(attributes: Record<string, unknown>, ...keys: readonly string[]): string | null {
+  for (const key of keys) {
+    const value = text(attributes, key);
+    if (value === null) continue;
+    if (ISO_DATE.test(value)) return value;
+    const ms = Date.parse(value);
+    if (!Number.isNaN(ms)) return new Date(ms).toISOString().slice(0, ISO_DATE_LENGTH);
+  }
+  return null;
+}
+const ISO_DATE_LENGTH = 'YYYY-MM-DD'.length;
+
+function number(attributes: Record<string, unknown>, key: string): number | null {
+  const value = attributes[key];
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
+/** Attribute names a collector or the synthetic estate uses for subscription terms and credits (ADR-027). */
+export const SUBSCRIPTION_ATTRIBUTES = {
+  start: ['subscriptionStart', 'activatedAt', 'purchaseDate'],
+  end: ['subscriptionEnd', 'expiresAt', 'nextLifecycleDateTime'],
+  plan: ['plan', 'licenceType', 'sku', 'edition'],
+  creditsRemaining: 'creditsRemaining',
+  creditsUnit: 'creditsUnit',
+  creditsCurrency: 'creditsCurrency',
+  creditsAsOf: 'creditsAsOf',
+  defaultCreditsUnit: 'credits',
+} as const;
+
+/** The subscription a subscription-type CI's attributes describe, or null when neither a term end nor credits are known. */
+export function subscriptionFromAttributes(
+  type: string,
+  attributes: Record<string, unknown>,
+  observedAt: string | null = null,
+): Subscription | null {
+  if (!isSubscriptionCiType(type)) return null;
+  const provider = text(attributes, 'vendor', 'provider', 'manufacturer');
+  if (provider === null) return null;
+  const endsAt = calendarDate(attributes, ...SUBSCRIPTION_ATTRIBUTES.end);
+  const remaining = number(attributes, SUBSCRIPTION_ATTRIBUTES.creditsRemaining);
+  const asOf = text(attributes, SUBSCRIPTION_ATTRIBUTES.creditsAsOf) ?? observedAt;
+  const credits: Credits | null =
+    remaining !== null && asOf !== null && !Number.isNaN(Date.parse(asOf))
+      ? {
+          remaining,
+          unit:
+            text(attributes, SUBSCRIPTION_ATTRIBUTES.creditsUnit) ??
+            SUBSCRIPTION_ATTRIBUTES.defaultCreditsUnit,
+          currency: text(attributes, SUBSCRIPTION_ATTRIBUTES.creditsCurrency),
+          asOf: new Date(asOf).toISOString(),
+        }
+      : null;
+  if (endsAt === null && credits === null) return null;
+  return {
+    provider,
+    plan: text(attributes, ...SUBSCRIPTION_ATTRIBUTES.plan),
+    startsAt: calendarDate(attributes, ...SUBSCRIPTION_ATTRIBUTES.start),
+    endsAt,
+    credits,
+    source: 'vendor_api',
+    verifiedAt: null,
+  };
+}
+
+export function assetFieldsFromCi(
+  type: string,
+  attributes: Record<string, unknown>,
+  observedAt: string | null = null,
+): AssetFieldsFromCi {
   const manufacturer = text(attributes, 'manufacturer', 'vendor');
   const warrantyEnd = isoDate(attributes, 'warrantyEnd');
   const warrantyProvider = text(attributes, 'warrantyProvider') ?? manufacturer;
@@ -305,11 +464,26 @@ export function assetFieldsFromCi(type: string, attributes: Record<string, unkno
     purchasedAt: isoDate(attributes, 'purchaseDate'),
     warranty:
       warrantyEnd !== null && warrantyProvider !== null
-        ? { provider: warrantyProvider, level: text(attributes, 'warrantyLevel'), startsAt: isoDate(attributes, 'purchaseDate'), endsAt: warrantyEnd, source: 'vendor_api', verifiedAt: null }
+        ? {
+            provider: warrantyProvider,
+            level: text(attributes, 'warrantyLevel'),
+            startsAt: isoDate(attributes, 'purchaseDate'),
+            endsAt: warrantyEnd,
+            source: 'vendor_api',
+            verifiedAt: null,
+          }
         : null,
+    subscription: subscriptionFromAttributes(type, attributes, observedAt),
     support:
       SUBSCRIPTION_TYPES.has(type) && expiresAt !== null && vendor !== null
-        ? { provider: vendor, contractNumber: text(attributes, 'poNumber'), level: text(attributes, 'licenceType'), endsAt: expiresAt, source: 'vendor_api', verifiedAt: null }
+        ? {
+            provider: vendor,
+            contractNumber: text(attributes, 'poNumber'),
+            level: text(attributes, 'licenceType'),
+            endsAt: expiresAt,
+            source: 'vendor_api',
+            verifiedAt: null,
+          }
         : null,
   };
 }

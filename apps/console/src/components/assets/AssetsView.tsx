@@ -6,10 +6,11 @@
 // purchase orders). Operators edit details, change stages and create plans; everyone else reads.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ASSETS, ROLES, TIME } from '@openmap/constants';
-import { CI_LAYERS, PLAN_KINDS, type CiLayer } from '@openmap/contracts';
+import { CI_LAYERS, PLAN_KINDS, isSubscriptionCiType, type CiLayer } from '@openmap/contracts';
 import type { Locale, MessageKey } from '@openmap/i18n';
 import { Card, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, Tag, layerColor } from '@openmap/ui';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
 import {
   Button,
@@ -30,7 +31,7 @@ import {
   ASSET_DATA_GAPS,
   ASSET_STAGES,
   assetSummaryQuery,
-  assetsAfter,
+  assetPageQuery,
   assetsQuery,
   createPlan,
   plansQuery,
@@ -80,7 +81,7 @@ const REGISTER_LAYERS: readonly CiLayer[] = CI_LAYERS.filter((layer) => layer !=
 type DataFilter = '' | 'any' | AssetDataGap;
 
 function coverDates(a: AssetRecord): number[] {
-  return [a.warrantyEndsAt, a.endOfSupport, a.supportEndsAt]
+  return [a.warrantyEndsAt, a.subscriptionEndsAt, a.endOfSupport, a.supportEndsAt]
     .filter((d): d is string => d !== null)
     .map((d) => new Date(d).getTime());
 }
@@ -123,17 +124,48 @@ interface CoverCellProps {
   missingLabel: string;
   expiredLabel: string;
   format: ReturnType<typeof useFormatters>;
+  /** Credits left on a subscription, shown under the date (or alone when no end date is known). */
+  note?: string | null;
 }
 
 /** A cover date: missing in the warning tone, past in the down tone, otherwise the date. */
-function CoverCell({ endsAt, now, missingLabel, expiredLabel, format }: CoverCellProps): ReactNode {
-  if (endsAt === null) return <Tag variant="state" state="at_risk">{missingLabel}</Tag>;
+function CoverCell({
+  endsAt,
+  now,
+  missingLabel,
+  expiredLabel,
+  format,
+  note = null,
+}: CoverCellProps): ReactNode {
+  const credits = note === null ? null : <span className="block text-om-2xs text-om-secondary">{note}</span>;
+  if (endsAt === null)
+    return note === null ? (
+      <Tag variant="state" state="at_risk">
+        {missingLabel}
+      </Tag>
+    ) : (
+      <span className="font-om-mono text-om-xs tabular-nums text-om-primary">{note}</span>
+    );
   const expired = new Date(endsAt).getTime() < now;
   return (
-    <span className={'font-om-mono tabular-nums ' + (expired ? 'text-om-state-down' : 'text-om-secondary')} title={expired ? expiredLabel : undefined}>
-      {format.date(endsAt)}
+    <span className="flex flex-col">
+      <span
+        className={'font-om-mono tabular-nums ' + (expired ? 'text-om-state-down' : 'text-om-secondary')}
+        title={expired ? expiredLabel : undefined}
+      >
+        {format.date(endsAt)}
+      </span>
+      {credits}
     </span>
   );
+}
+
+const PAGE_PARAM = 'page';
+
+/** The 1-based page from the URL; anything missing or malformed is the first page. */
+export function pageOf(raw: string | null): number {
+  const n = Number(raw);
+  return raw !== null && Number.isInteger(n) && n >= 1 ? n : 1;
 }
 
 export function AssetsView({ locale }: AssetsViewProps): ReactNode {
@@ -152,11 +184,18 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   // The selected row is kept as a record, not an id: after a save it may leave the current filter (a gap filled) and
   // the panel must stay open showing the saved result.
   const [selected, setSelected] = useState<AssetRecord | null>(null);
-  const [more, setMore] = useState<AssetRecord[]>([]);
-  const [loadingMore, setLoadingMore] = useState(false);
-  // A page shorter than the page size is the last one; a failed page keeps the button as a retry.
-  const [exhausted, setExhausted] = useState(false);
-  const [moreFailed, setMoreFailed] = useState(false);
+  // REQ-CMDB-041: the page lives in the URL so a reload or the back button returns to the same rows.
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const page = pageOf(params.get(PAGE_PARAM));
+  const setPage = (next: number): void => {
+    const query = new URLSearchParams(params.toString());
+    if (next <= 1) query.delete(PAGE_PARAM);
+    else query.set(PAGE_PARAM, String(next));
+    const search = query.toString();
+    router.replace(search === '' ? pathname : pathname + '?' + search, { scroll: false });
+  };
   const filter = useMemo<AssetsFilter>(
     () => ({
       stage: stage === '' ? null : [stage],
@@ -167,7 +206,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
     }),
     [stage, layer, source, data, text],
   );
-  const assets = useQuery(assetsQuery(filter, ASSETS.registerPageSize));
+  const assets = useQuery(assetPageQuery(filter, page));
   const summary = useQuery(assetSummaryQuery());
   const expiring = useQuery(assetsQuery({ warrantyExpiringWithinDays: horizon }));
   const plans = useQuery(plansQuery());
@@ -187,32 +226,12 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
     },
   });
 
-  // The filter's first page comes from the query cache; pages loaded on demand are appended until the filter changes.
-  const firstPage = assets.data ?? [];
-  const list = useMemo(() => {
-    const seen = new Set(firstPage.map((a) => a.id));
-    return [...firstPage, ...more.filter((a) => !seen.has(a.id))];
-  }, [firstPage, more]);
-  const hasMore = !exhausted && firstPage.length >= ASSETS.registerPageSize;
-  const loadMore = async (): Promise<void> => {
-    const last = list[list.length - 1];
-    if (last === undefined) return;
-    setLoadingMore(true);
-    try {
-      const page = await assetsAfter(filter, last.id, ASSETS.registerPageSize);
-      setMore((current) => [...current, ...page]);
-      if (page.length < ASSETS.registerPageSize) setExhausted(true);
-      setMoreFailed(false);
-    } catch {
-      setMoreFailed(true);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
+  const list = assets.data?.items ?? [];
+  const pageCount = assets.data?.pageCount ?? 1;
+  const totalCount = assets.data?.totalCount ?? 0;
+  /** A filter change starts again from the first page. */
   const resetPages = (): void => {
-    setMore([]);
-    setExhausted(false);
-    setMoreFailed(false);
+    setPage(1);
     setSelected(null);
   };
   const now = useMemo(() => Date.now(), []);
@@ -222,8 +241,16 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   );
   const totals = useMemo(() => {
     const rows = summary.data ?? [];
-    const sum = (pick: (row: (typeof rows)[number]) => number): number => rows.reduce((acc, row) => acc + pick(row), 0);
-    return { owned: sum((r) => r.count), needsData: sum((r) => r.needsData), warrantyExpired: sum((r) => r.warrantyExpired), supportExpired: sum((r) => r.supportExpired), eolPassed: sum((r) => r.endOfSupportPassed) };
+    const sum = (pick: (row: (typeof rows)[number]) => number): number =>
+      rows.reduce((acc, row) => acc + pick(row), 0);
+    return {
+      owned: sum((r) => r.count),
+      needsData: sum((r) => r.needsData),
+      warrantyExpired: sum((r) => r.warrantyExpired),
+      supportExpired: sum((r) => r.supportExpired),
+      eolPassed: sum((r) => r.endOfSupportPassed),
+      subscriptionExpired: sum((r) => r.subscriptionExpired),
+    };
   }, [summary.data]);
   const byLayer = useMemo(() => new Map((summary.data ?? []).map((row) => [row.layer, row])), [summary.data]);
   const selectedAsset = selected === null ? null : (list.find((a) => a.id === selected.id) ?? selected);
@@ -238,10 +265,34 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
 
       <div className="grid grid-cols-2 gap-om-12 md:grid-cols-5">
         <Kpi label={t('assets.kpi.owned')} value={format.integer(totals.owned)} />
-        <Kpi label={t('assets.kpi.needsData')} value={format.integer(totals.needsData)} delta={totals.needsData} deltaLabel="" lowerIsBetter />
-        <Kpi label={t('assets.kpi.warrantyExpired')} value={format.integer(totals.warrantyExpired)} delta={totals.warrantyExpired} deltaLabel="" lowerIsBetter />
-        <Kpi label={t('assets.kpi.supportExpired')} value={format.integer(totals.supportExpired)} delta={totals.supportExpired} deltaLabel="" lowerIsBetter />
-        <Kpi label={t('assets.kpi.eolPassed')} value={format.integer(totals.eolPassed)} delta={totals.eolPassed} deltaLabel="" lowerIsBetter />
+        <Kpi
+          label={t('assets.kpi.needsData')}
+          value={format.integer(totals.needsData)}
+          delta={totals.needsData}
+          deltaLabel=""
+          lowerIsBetter
+        />
+        <Kpi
+          label={t('assets.kpi.warrantyExpired')}
+          value={format.integer(totals.warrantyExpired)}
+          delta={totals.warrantyExpired}
+          deltaLabel=""
+          lowerIsBetter
+        />
+        <Kpi
+          label={t('assets.kpi.supportExpired')}
+          value={format.integer(totals.supportExpired)}
+          delta={totals.supportExpired}
+          deltaLabel=""
+          lowerIsBetter
+        />
+        <Kpi
+          label={t('assets.kpi.eolPassed')}
+          value={format.integer(totals.eolPassed)}
+          delta={totals.eolPassed}
+          deltaLabel=""
+          lowerIsBetter
+        />
       </div>
 
       <Card padding="24" className="flex flex-col gap-om-16">
@@ -249,7 +300,12 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
           {t('assets.register.title')}
         </SectionTitle>
         {/* Layer strip: one pill per layer with its register count; the active one filters the table. */}
-        <div className="flex flex-wrap gap-om-6" role="group" aria-label={t('assets.register.layers')} data-testid="asset-layer-strip">
+        <div
+          className="flex flex-wrap gap-om-6"
+          role="group"
+          aria-label={t('assets.register.layers')}
+          data-testid="asset-layer-strip"
+        >
           <Pill
             variant={layer === '' ? 'primary' : 'default'}
             onClick={() => {
@@ -265,14 +321,22 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
               <Pill
                 key={candidate}
                 variant={layer === candidate ? 'primary' : 'default'}
-                icon={<span aria-hidden="true" className="size-2 rounded-om-pill" style={{ background: layerColor(candidate) }} />}
+                icon={
+                  <span
+                    aria-hidden="true"
+                    className="size-2 rounded-om-pill"
+                    style={{ background: layerColor(candidate) }}
+                  />
+                }
                 onClick={() => {
                   setLayer(layer === candidate ? '' : candidate);
                   resetPages();
                 }}
               >
                 {t(layerKey(candidate))} · {format.integer(row?.count ?? 0)}
-                {row !== undefined && row.needsData > 0 ? <span className="ms-om-4 text-om-state-degraded">({format.integer(row.needsData)})</span> : null}
+                {row !== undefined && row.needsData > 0 ? (
+                  <span className="ms-om-4 text-om-state-degraded">({format.integer(row.needsData)})</span>
+                ) : null}
               </Pill>
             );
           })}
@@ -292,6 +356,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
           <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
             <span>{t('assets.filter.data')}</span>
             <Select
+              data-testid="asset-data-filter"
               value={data}
               onChange={(event) => {
                 setData(event.target.value as DataFilter);
@@ -378,7 +443,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                       {t('assets.table.stage')}
                     </th>
                     <th scope="col" className={thClass}>
-                      {t('assets.table.warranty')}
+                      {t('assets.table.cover')}
                     </th>
                     <th scope="col" className={thClass}>
                       {t('assets.table.support')}
@@ -393,7 +458,12 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                 </thead>
                 <tbody>
                   {list.map((a) => (
-                    <tr key={a.id} className={rowClass} data-asset-tag={a.assetTag} data-selected={selected?.id === a.id ? 'true' : undefined}>
+                    <tr
+                      key={a.id}
+                      className={rowClass}
+                      data-asset-tag={a.assetTag}
+                      data-selected={selected?.id === a.id ? 'true' : undefined}
+                    >
                       <td className={tdClass + ' font-om-mono text-om-primary'}>
                         {a.assetTag}
                         {a.serialNumber !== null ? (
@@ -402,14 +472,18 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                       </td>
                       <td className={tdClass + ' text-om-secondary'}>
                         {itemLabel(a)}
-                        {a.ciType !== null && itemLabel(a) !== a.ciType ? <span className="block text-om-2xs text-om-muted">{a.ciType}</span> : null}
+                        {a.ciType !== null && itemLabel(a) !== a.ciType ? (
+                          <span className="block text-om-2xs text-om-muted">{a.ciType}</span>
+                        ) : null}
                       </td>
                       <td className={tdClass}>
                         <LayerBadge layer={a.layer} label={t(layerKey(a.layer))} />
                       </td>
                       <td className={tdClass}>
                         {a.ci === null ? (
-                          <span className="text-om-muted">{a.plan === null ? t('common.none') : a.plan.number}</span>
+                          <span className="text-om-muted">
+                            {a.plan === null ? t('common.none') : a.plan.number}
+                          </span>
                         ) : (
                           <Link href={ciHref(a.ci.id)} className="text-om-cyan hover:underline">
                             {a.ci.displayName}
@@ -438,13 +512,40 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                         )}
                       </td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.warrantyEndsAt} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={isSubscriptionCiType(a.ciType) ? a.subscriptionEndsAt : a.warrantyEndsAt}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                          note={
+                            a.creditsRemaining !== null && a.subscription !== null
+                              ? t('assets.table.credits', {
+                                  remaining: format.number(a.creditsRemaining),
+                                  unit:
+                                    a.subscription.credits?.currency ?? a.subscription.credits?.unit ?? '',
+                                })
+                              : null
+                          }
+                        />
                       </td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.supportEndsAt} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={a.supportEndsAt}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                        />
                       </td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.endOfSupport} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={a.endOfSupport}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                        />
                       </td>
                       <td className={tdClass}>
                         <Button
@@ -465,25 +566,55 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
             </div>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-om-10 text-om-xs text-om-secondary">
-          <span>{t('assets.table.showing', { count: format.integer(list.length) })}</span>
-          {moreFailed ? (
-            <span role="alert" className="text-om-danger">
-              {t('common.error')}
-            </span>
-          ) : null}
-          {hasMore ? (
+        <nav
+          aria-label={t('assets.table.pager')}
+          className="flex flex-wrap items-center gap-om-8 text-om-xs text-om-secondary"
+          data-testid="asset-pager"
+          data-page={page}
+        >
+          <span>{t('assets.table.total', { count: format.integer(totalCount) })}</span>
+          <span className="font-om-mono">
+            {t('assets.table.page', { page: format.integer(page), pages: format.integer(pageCount) })}
+          </span>
+          <span className="ms-auto flex gap-om-4">
             <Button
               tone="quiet"
-              disabled={loadingMore}
+              disabled={page <= 1 || assets.isPending}
               onClick={() => {
-                void loadMore();
+                setPage(1);
               }}
             >
-              {loadingMore ? t('common.loading') : moreFailed ? t('common.retry') : t('common.more')}
+              {t('common.first')}
             </Button>
-          ) : null}
-        </div>
+            <Button
+              tone="quiet"
+              disabled={page <= 1 || assets.isPending}
+              onClick={() => {
+                setPage(page - 1);
+              }}
+            >
+              {t('common.previous')}
+            </Button>
+            <Button
+              tone="quiet"
+              disabled={page >= pageCount || assets.isPending}
+              onClick={() => {
+                setPage(page + 1);
+              }}
+            >
+              {t('common.next')}
+            </Button>
+            <Button
+              tone="quiet"
+              disabled={page >= pageCount || assets.isPending}
+              onClick={() => {
+                setPage(pageCount);
+              }}
+            >
+              {t('common.last')}
+            </Button>
+          </span>
+        </nav>
         {selectedAsset !== null ? (
           <AssetDetailsPanel
             key={selectedAsset.id}
@@ -547,7 +678,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                       {t('assets.table.item')}
                     </th>
                     <th scope="col" className={thClass}>
-                      {t('assets.table.warranty')}
+                      {t('assets.table.cover')}
                     </th>
                     <th scope="col" className={thClass}>
                       {t('assets.table.support')}
@@ -563,13 +694,40 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                       <td className={tdClass + ' font-om-mono text-om-primary'}>{a.assetTag}</td>
                       <td className={tdClass + ' text-om-secondary'}>{itemLabel(a)}</td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.warrantyEndsAt} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={isSubscriptionCiType(a.ciType) ? a.subscriptionEndsAt : a.warrantyEndsAt}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                          note={
+                            a.creditsRemaining !== null && a.subscription !== null
+                              ? t('assets.table.credits', {
+                                  remaining: format.number(a.creditsRemaining),
+                                  unit:
+                                    a.subscription.credits?.currency ?? a.subscription.credits?.unit ?? '',
+                                })
+                              : null
+                          }
+                        />
                       </td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.supportEndsAt} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={a.supportEndsAt}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                        />
                       </td>
                       <td className={tdClass}>
-                        <CoverCell endsAt={a.endOfSupport} now={now} missingLabel={t('assets.table.missing')} expiredLabel={t('assets.table.expired')} format={format} />
+                        <CoverCell
+                          endsAt={a.endOfSupport}
+                          now={now}
+                          missingLabel={t('assets.table.missing')}
+                          expiredLabel={t('assets.table.expired')}
+                          format={format}
+                        />
                       </td>
                     </tr>
                   ))}

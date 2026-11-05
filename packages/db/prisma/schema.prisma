@@ -1002,6 +1002,8 @@ model AssetRecord {
   residualValueAmount   Decimal            @db.Decimal(18, 2)
   residualValueCurrency String             @db.Char(3)
   warranty              Json?
+  /// subscriptionSchema or null (ADR-027): term and credits of a software, SaaS or cloud asset.
+  subscription          Json?
   /// supportSchema or null: cover entered on the row itself (a SupportContract row is the other way).
   support               Json?
   supportContractId     String?            @db.Uuid

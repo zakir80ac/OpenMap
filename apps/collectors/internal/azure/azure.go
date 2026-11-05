@@ -34,7 +34,11 @@ const (
 	apiResources    = "2021-04-01"
 	apiCompute      = "2024-07-01"
 	apiNetwork      = "2024-01-01"
-	vrfInternet     = "internet"
+	// Billing properties of the subscription (the billing account it sits under) and the credit balance of a
+	// credit-based account (sponsorship, Azure credits), both read-only (REQ-CMDB-042).
+	apiBillingProperties = "2020-05-01"
+	apiCredits           = "2023-05-01"
+	vrfInternet          = "internet"
 
 	typeAccount  = "cloud_account"
 	typeResource = "cloud_resource"
@@ -215,14 +219,23 @@ type listPage[T any] struct {
 }
 
 // Inventory is one subscription's content.
+// CreditBalance is what Microsoft.Consumption/credits/balance reports for a credit-based billing account.
+type CreditBalance struct {
+	Currency       string
+	EstimatedValue float64
+	AsOf           string
+}
+
 type Inventory struct {
 	Subscription Subscription
-	Resources    []Resource
-	VMs          []VirtualMachine
-	Nics         []NetworkInterface
-	Vnets        []VirtualNetwork
-	PublicIPs    []PublicIP
-	Raw          [][]byte
+	// Credits is set only when the subscription sits under a billing account that reports a credit balance.
+	Credits   *CreditBalance
+	Resources []Resource
+	VMs       []VirtualMachine
+	Nics      []NetworkInterface
+	Vnets     []VirtualNetwork
+	PublicIPs []PublicIP
+	Raw       [][]byte
 }
 
 func listAll[T any](ctx context.Context, c *restjson.Client, path string, out *[]T) error {
@@ -255,6 +268,7 @@ func Walk(ctx context.Context, c *restjson.Client, subscriptionID string) (*Inve
 	if err := listAll(ctx, c, base+"/resources?api-version="+apiResources, &inv.Resources); err != nil {
 		return nil, err
 	}
+	inv.Credits = creditBalance(ctx, c, base)
 	if err := listAll(ctx, c, base+"/providers/Microsoft.Compute/virtualMachines?api-version="+apiCompute, &inv.VMs); err != nil {
 		return nil, err
 	}
@@ -272,6 +286,52 @@ func Walk(ctx context.Context, c *restjson.Client, subscriptionID string) (*Inve
 }
 
 func lower(s string) string { return strings.ToLower(s) }
+
+// creditBalance walks subscription -> billing account -> credit balance. Any missing step (a pay-as-you-go
+// subscription, a credential without billing reader rights) yields nil: the balance is optional cover, never an error.
+func creditBalance(ctx context.Context, c *restjson.Client, base string) *CreditBalance {
+	var props struct {
+		Properties struct {
+			BillingAccountID string `json:"billingAccountId"`
+		} `json:"properties"`
+	}
+	if err := c.Get(ctx, base+"/providers/Microsoft.Billing/billingProperties/default?api-version="+apiBillingProperties, &props); err != nil || props.Properties.BillingAccountID == "" {
+		return nil
+	}
+	var balance struct {
+		Properties struct {
+			BalanceSummary struct {
+				EstimatedBalance struct {
+					Currency string  `json:"currency"`
+					Value    float64 `json:"value"`
+				} `json:"estimatedBalance"`
+			} `json:"balanceSummary"`
+			CreditCurrency string `json:"creditCurrency"`
+		} `json:"properties"`
+	}
+	if err := c.Get(ctx, "/providers/Microsoft.Billing/billingAccounts/"+props.Properties.BillingAccountID+"/providers/Microsoft.Consumption/credits/balance?api-version="+apiCredits, &balance); err != nil {
+		return nil
+	}
+	currency := firstNonEmpty(balance.Properties.BalanceSummary.EstimatedBalance.Currency, balance.Properties.CreditCurrency)
+	if currency == "" {
+		return nil
+	}
+	return &CreditBalance{Currency: currency, EstimatedValue: balance.Properties.BalanceSummary.EstimatedBalance.Value, AsOf: time.Now().UTC().Format(time.RFC3339)}
+}
+
+// accountAttributes is the cloud_account CI's attribute map; a credit balance becomes the credits* keys the asset
+// register reads as subscription cover (packages/contracts subscriptionFromAttributes).
+func accountAttributes(inv *Inventory, subID string, typeCounts map[string]int, regionList []string) map[string]any {
+	sub := inv.Subscription
+	attrs := map[string]any{"provider": provider, "subscriptionId": subID, "tenantId": sub.TenantID, "state": sub.State, "resourceCount": len(inv.Resources), "resourceTypes": typeCounts, "regions": regionList}
+	if inv.Credits != nil {
+		attrs["creditsRemaining"] = inv.Credits.EstimatedValue
+		attrs["creditsUnit"] = inv.Credits.Currency
+		attrs["creditsCurrency"] = inv.Credits.Currency
+		attrs["creditsAsOf"] = inv.Credits.AsOf
+	}
+	return attrs
+}
 
 // Emit converts the inventory into contract observations.
 func Emit(inv *Inventory, at time.Time) collector.Observation {
@@ -294,7 +354,7 @@ func Emit(inv *Inventory, at time.Time) collector.Observation {
 		regionList = append(regionList, l)
 	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeAccount, Identity: accountIdentity, Name: firstNonEmpty(sub.DisplayName, subID),
-		Attributes: map[string]any{"provider": provider, "subscriptionId": subID, "tenantId": sub.TenantID, "state": sub.State, "resourceCount": len(inv.Resources), "resourceTypes": typeCounts, "regions": regionList},
+		Attributes: accountAttributes(inv, subID, typeCounts, regionList),
 		Tags:       []string{}, ExternalIDs: []contract.ExternalID{{Source: provider, ID: sub.ID}}, ObservedAt: at})
 
 	resourceRef := map[string]contract.CiRef{}

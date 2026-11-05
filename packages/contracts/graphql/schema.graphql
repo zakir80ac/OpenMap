@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.1.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.3.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -11,7 +11,7 @@ enum HealthState { healthy degraded down unknown }
 enum PredictedState { down degraded at_risk unaffected }
 enum AssetStage { planned in_stock deployed spare rma retired disposed }
 enum AssetSource { plan discovery manual }
-enum AssetDataGap { warranty support end_of_life }
+enum AssetDataGap { warranty subscription support end_of_life }
 enum PlanStatus { draft approved building live cancelled }
 enum IntegrationHealth { healthy warning failing disabled }
 enum Direction { upstream downstream both }
@@ -189,6 +189,8 @@ type Rca {
 }
 """One step of an incident's history: engine events and people's actions, oldest first."""
 type IncidentEvent { at: DateTime! actor: String! kind: String! details: JSON! }
+"""REQ-CMDB-041 — one page of the register with its totals, for page controls (page numbers start at 1)."""
+type AssetPage { items: [AssetRecord!]! totalCount: Int! page: Int! pageSize: Int! pageCount: Int! }
 type Incident {
   id: UUID!
   title: String!
@@ -243,6 +245,11 @@ type AssetRecord {
   purchaseCost: Money
   warranty: Warranty
   warrantyEndsAt: DateTime
+  """The subscription of a software, SaaS or cloud asset (ADR-027); null on hardware."""
+  subscription: SubscriptionCover
+  subscriptionEndsAt: DateTime
+  """Credits left on the subscription, when the vendor reports a balance."""
+  creditsRemaining: Float
   support: Support
   supportContract: SupportContract
   """The support end date from the row's own support entry or its support contract, whichever is set."""
@@ -254,11 +261,15 @@ type AssetRecord {
   audits: [AssetAudit!]!
 }
 type Warranty { provider: String! level: String startsAt: DateTime endsAt: DateTime! source: String! verifiedAt: DateTime }
+"""REQ-CMDB-042 (ADR-027) — prepaid credits of a cloud or SaaS subscription as the vendor's billing API reported them."""
+type Credits { remaining: Float! unit: String! currency: String asOf: DateTime! }
+"""Subscription cover of software, SaaS and cloud assets: the term and the credits left; endsAt or credits is set."""
+type SubscriptionCover { provider: String! plan: String startsAt: DateTime endsAt: DateTime credits: Credits source: String! verifiedAt: DateTime }
 type Support { provider: String! contractNumber: String level: String endsAt: DateTime! source: String! verifiedAt: DateTime }
 type EndOfLife { endOfSale: DateTime endOfSoftwareMaintenance: DateTime endOfSupport: DateTime source: String! verifiedAt: DateTime }
 type AssetAudit { id: UUID! actor: String! at: DateTime! field: String! fromValue: String toValue: String note: String }
 """Register totals per layer: rows, rows with a data gap, and rows whose cover has already ended."""
-type AssetSummary { layer: CiLayer! count: Int! needsData: Int! warrantyExpired: Int! supportExpired: Int! endOfSupportPassed: Int! }
+type AssetSummary { layer: CiLayer! count: Int! needsData: Int! warrantyExpired: Int! subscriptionExpired: Int! supportExpired: Int! endOfSupportPassed: Int! }
 type SupportContract { id: UUID! vendor: Ci! contractNumber: String! level: String! endsAt: DateTime! primaryContact: VendorContact }
 type VendorContact { id: UUID! name: String! role: String! email: String phone: String portalUrl: String }
 type InfraPlan { id: UUID! number: String! name: String! kind: String! status: PlanStatus! bom: [BomLine!]! estimatedCost: Money targetSite: Ci targetRacks: [Ci!]! plannedLiveAt: DateTime assets: [AssetRecord!]! }
@@ -388,6 +399,7 @@ type Query {
   racks(roomId: UUID): [Rack!]!
   assets(filter: AssetFilter, stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
   assetSummary: [AssetSummary!]!
+  assetPage(filter: AssetFilter, page: Int = 1, pageSize: Int): AssetPage!
   plans(status: [PlanStatus!]): [InfraPlan!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   vulnerabilitySummaries(minCvss: Float, exploitedOnly: Boolean, internetFacing: Boolean): [VulnerabilitySummary!]!
@@ -415,10 +427,12 @@ input BomLineInput { description: String! manufacturer: String model: String sku
 input AssetFilter { layers: [CiLayer!] types: [String!] stages: [AssetStage!] sources: [AssetSource!] dataGaps: [AssetDataGap!] text: String warrantyExpiringWithinDays: Int }
 """Dates are calendar dates (YYYY-MM-DD)."""
 input WarrantyInput { provider: String! level: String startsAt: String endsAt: String! }
+"""Dates are calendar dates; creditsRemaining needs creditsUnit (and an optional ISO 4217 creditsCurrency)."""
+input SubscriptionInput { provider: String! plan: String startsAt: String endsAt: String creditsRemaining: Float creditsUnit: String creditsCurrency: String }
 input SupportInput { provider: String! contractNumber: String level: String endsAt: String! }
 input EndOfLifeInput { endOfSale: String endOfSoftwareMaintenance: String endOfSupport: String }
 """Fields a person records on an asset; every change is audited per field. A null object clears that cover."""
-input AssetDetailsInput { manufacturer: String model: String serialNumber: String partNumber: String custodian: String purchasedAt: String purchaseCostAmount: Float purchaseCostCurrency: String warranty: WarrantyInput support: SupportInput endOfLife: EndOfLifeInput note: String }
+input AssetDetailsInput { manufacturer: String model: String serialNumber: String partNumber: String custodian: String purchasedAt: String purchaseCostAmount: Float purchaseCostCurrency: String warranty: WarrantyInput subscription: SubscriptionInput support: SupportInput endOfLife: EndOfLifeInput note: String }
 """An asset with no network presence (an unmetered PDU, a device without out-of-band management): a CI of the chosen type is created with it."""
 input ManualAssetInput { layer: CiLayer! type: String! name: String! assetTag: String locationCiId: UUID details: AssetDetailsInput! }
 input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }

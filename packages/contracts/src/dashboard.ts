@@ -15,6 +15,8 @@ export const WIDGET_KINDS = [
   'estate.trend',
   'services.health',
   'services.sla',
+  /** REQ-UI-036: overall availability of the business services this month against last month. */
+  'services.uptime',
   'incidents.open',
   'impact.recent',
   'discovery.sweep',
@@ -88,28 +90,33 @@ type TemplatePersona = Exclude<DashboardPersona, 'custom'>;
  * Persona templates: what each role opens the console for, in the order they read it. Sizes add up to full rows on
  * a four-column grid. The wizard pre-ticks these; the owner can add any other kind.
  */
-export const DASHBOARD_TEMPLATES: Record<TemplatePersona, ReadonlyArray<{ kind: WidgetKind; size: WidgetSize }>> = {
+export const DASHBOARD_TEMPLATES: Record<
+  TemplatePersona,
+  ReadonlyArray<{ kind: WidgetKind; size: WidgetSize }>
+> = {
   admin: [
     { kind: 'estate.cis', size: 's' },
+    { kind: 'services.uptime', size: 's' },
     { kind: 'discovery.sweep', size: 's' },
     { kind: 'discovery.nodes', size: 's' },
-    { kind: 'integrations.health', size: 's' },
     { kind: 'estate.trend', size: 'l' },
-    { kind: 'platform.settings', size: 's' },
+    { kind: 'integrations.health', size: 's' },
     { kind: 'estate.layers', size: 'm' },
     { kind: 'discovery.jobs', size: 'm' },
-    { kind: 'audit.recent', size: 'xl' },
+    { kind: 'platform.settings', size: 's' },
+    { kind: 'audit.recent', size: 'l' },
   ],
   cto_cio: [
     { kind: 'services.health', size: 's' },
+    { kind: 'services.uptime', size: 's' },
     { kind: 'incidents.open', size: 's' },
     { kind: 'estate.cis', size: 's' },
-    { kind: 'software.end_of_support', size: 's' },
     { kind: 'services.sla', size: 'm' },
     { kind: 'estate.trend', size: 'm' },
     { kind: 'estate.layers', size: 'm' },
     { kind: 'impact.recent', size: 'm' },
-    { kind: 'finance.plans', size: 'xl' },
+    { kind: 'software.end_of_support', size: 's' },
+    { kind: 'finance.plans', size: 'l' },
   ],
   ciso: [
     { kind: 'security.vulnerabilities', size: 'm' },
@@ -133,6 +140,9 @@ export const DASHBOARD_TEMPLATES: Record<TemplatePersona, ReadonlyArray<{ kind: 
 
 /** The widget list a persona starts from; `custom` starts from the estate's basic tiles. */
 export function templateWidgets(persona: DashboardPersona): DashboardWidgetInput[] {
-  const list = persona === 'custom' ? DASHBOARD_TEMPLATES.cto_cio.slice(0, DASHBOARD.columns) : DASHBOARD_TEMPLATES[persona];
+  const list =
+    persona === 'custom'
+      ? DASHBOARD_TEMPLATES.cto_cio.slice(0, DASHBOARD.columns)
+      : DASHBOARD_TEMPLATES[persona];
   return list.map((w) => ({ kind: w.kind, size: w.size, options: {} }));
 }

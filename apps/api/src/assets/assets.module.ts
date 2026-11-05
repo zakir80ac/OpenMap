@@ -3,12 +3,26 @@
 import { Module } from '@nestjs/common';
 import { CiModule } from '../ci/ci.module.js';
 import { ASSETS_REPOSITORY, PrismaAssetsRepository } from './assets.repository.js';
-import { AssetRecordFieldsResolver, AssetsResolver, CiAssetFieldResolver, InfraPlanFieldsResolver, SupportContractFieldsResolver } from './assets.resolver.js';
+import {
+  AssetRecordFieldsResolver,
+  AssetsResolver,
+  CiAssetFieldResolver,
+  InfraPlanFieldsResolver,
+  SupportContractFieldsResolver,
+} from './assets.resolver.js';
 import { AssetsService } from './assets.service.js';
 
 @Module({
   imports: [CiModule],
-  providers: [{ provide: ASSETS_REPOSITORY, useClass: PrismaAssetsRepository }, AssetsService, AssetsResolver, AssetRecordFieldsResolver, InfraPlanFieldsResolver, SupportContractFieldsResolver, CiAssetFieldResolver],
+  providers: [
+    { provide: ASSETS_REPOSITORY, useClass: PrismaAssetsRepository },
+    AssetsService,
+    AssetsResolver,
+    AssetRecordFieldsResolver,
+    InfraPlanFieldsResolver,
+    SupportContractFieldsResolver,
+    CiAssetFieldResolver,
+  ],
   exports: [AssetsService],
 })
 export class AssetsModule {}

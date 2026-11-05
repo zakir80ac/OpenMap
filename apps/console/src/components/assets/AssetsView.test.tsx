@@ -10,6 +10,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as AuthModule from '@/lib/auth';
 import type { AuthValue } from '@/lib/auth';
 import { Providers } from '@/providers';
+
+const navigation = {
+  search: new URLSearchParams(),
+  replace: vi.fn((href: string) => {
+    const at = href.indexOf('?');
+    navigation.search = new URLSearchParams(at < 0 ? '' : href.slice(at + 1));
+  }),
+};
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace: navigation.replace, push: vi.fn() }),
+  usePathname: () => '/en/assets',
+  useSearchParams: () => navigation.search,
+}));
 import { AssetsView, needsAttention, PLAN_NEXT, toBomInput } from './AssetsView';
 
 const roles = { current: ['openmap-operator'] as string[] };
@@ -76,6 +89,17 @@ interface FixtureAsset {
     verifiedAt: string | null;
   } | null;
   warrantyEndsAt: string | null;
+  subscription: {
+    provider: string;
+    plan: string | null;
+    startsAt: string | null;
+    endsAt: string | null;
+    credits: { remaining: number; unit: string; currency: string | null; asOf: string } | null;
+    source: string;
+    verifiedAt: string | null;
+  } | null;
+  subscriptionEndsAt: string | null;
+  creditsRemaining: number | null;
   support: null;
   supportContract: null;
   supportEndsAt: string | null;
@@ -117,6 +141,9 @@ const assets: FixtureAsset[] = [
       verifiedAt: null,
     },
     warrantyEndsAt: soon,
+    subscription: null,
+    subscriptionEndsAt: null,
+    creditsRemaining: null,
     support: null,
     supportContract: null,
     supportEndsAt: null,
@@ -149,6 +176,9 @@ const assets: FixtureAsset[] = [
       verifiedAt: null,
     },
     warrantyEndsAt: far,
+    subscription: null,
+    subscriptionEndsAt: null,
+    creditsRemaining: null,
     support: null,
     supportContract: null,
     supportEndsAt: null,
@@ -182,23 +212,79 @@ const assets: FixtureAsset[] = [
     purchasedAt: null,
     warranty: null,
     warrantyEndsAt: null,
+    subscription: null,
+    subscriptionEndsAt: null,
+    creditsRemaining: null,
     support: null,
     supportContract: null,
     supportEndsAt: null,
     endOfLife: null,
     endOfSupport: null,
-    dataGaps: ['warranty', 'support', 'end_of_life'],
+    dataGaps: ['subscription', 'support', 'end_of_life'],
+    plan: null,
+    purchaseCost: null,
+  },
+  {
+    id: 'a4',
+    ci: {
+      id: 'ci-4',
+      name: 'payroll-cloud',
+      displayName: 'Payroll cloud',
+      code: 'SAAS-PAYROLL',
+      type: 'saas_application',
+      layer: 'saas',
+      health: 'healthy',
+    },
+    ciType: 'saas_application',
+    layer: 'saas',
+    source: 'discovery',
+    assetTag: 'SAAS-PAYROLL',
+    serialNumber: null,
+    manufacturer: 'Workday',
+    model: 'HCM',
+    partNumber: null,
+    stage: 'deployed',
+    custodian: null,
+    purchasedAt: null,
+    warranty: null,
+    warrantyEndsAt: null,
+    subscription: {
+      provider: 'Workday',
+      plan: 'Enterprise',
+      startsAt: '2026-01-01',
+      endsAt: far.slice(0, DATE_LENGTH),
+      credits: { remaining: 1250, unit: 'seats', currency: null, asOf: soon },
+      source: 'vendor_api',
+      verifiedAt: null,
+    },
+    subscriptionEndsAt: far,
+    creditsRemaining: 1250,
+    support: null,
+    supportContract: null,
+    supportEndsAt: null,
+    endOfLife: null,
+    endOfSupport: null,
+    dataGaps: ['support', 'end_of_life'],
     plan: null,
     purchaseCost: null,
   },
 ];
 const summary = [
-  { layer: 'hardware', count: 2, needsData: 2, warrantyExpired: 0, supportExpired: 0, endOfSupportPassed: 0 },
+  {
+    layer: 'hardware',
+    count: 2,
+    needsData: 2,
+    warrantyExpired: 0,
+    subscriptionExpired: 0,
+    supportExpired: 0,
+    endOfSupportPassed: 0,
+  },
   {
     layer: 'applications',
     count: 1,
     needsData: 1,
     warrantyExpired: 0,
+    subscriptionExpired: 0,
     supportExpired: 0,
     endOfSupportPassed: 0,
   },
@@ -254,6 +340,8 @@ const state = {
 };
 /** Three pages of rows render three times over; the paging test gets a longer budget than vitest's default on a busy host. */
 const PAGING_TEST_TIMEOUT_MS = 30_000;
+/** One retry with its back-off precedes the error state. */
+const ALERT_TIMEOUT_MS = 8_000;
 /** Two full register pages and a short third one, so paging past the first page can be exercised. */
 const bulkCount = ASSETS.registerPageSize * 2 + 5;
 const bulkBase: FixtureAsset =
@@ -310,6 +398,35 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
         return { data: { assets: bulk.slice(start, start + first) } };
       }
       return { data: { assets: list } };
+    }
+    case 'AssetPage': {
+      const v = body.variables ?? {};
+      const filter = v['filter'] as
+        { layers?: string[] | null; dataGaps?: string[] | null; text?: string | null } | null | undefined;
+      let list = state.bulk ? bulk : assets;
+      const layers = filter?.layers;
+      if (layers) list = list.filter((a) => layers.includes(a.layer));
+      const gaps = filter?.dataGaps;
+      if (gaps) list = list.filter((a) => a.dataGaps.some((g) => gaps.includes(g)));
+      const text = filter?.text?.toLowerCase();
+      if (text)
+        list = list.filter((a) =>
+          [a.assetTag, a.manufacturer ?? '', a.model ?? ''].join(' ').toLowerCase().includes(text),
+        );
+      const page = typeof v['page'] === 'number' ? v['page'] : 1;
+      const pageSize = typeof v['pageSize'] === 'number' ? v['pageSize'] : ASSETS.registerPageSize;
+      if (state.failAfter && page > 1) return { errors: [{ message: 'page unavailable' }] };
+      return {
+        data: {
+          assetPage: {
+            items: list.slice((page - 1) * pageSize, page * pageSize),
+            totalCount: list.length,
+            page,
+            pageSize,
+            pageCount: Math.max(1, Math.ceil(list.length / pageSize)),
+          },
+        },
+      };
     }
     case 'AssetSummary':
       return { data: { assetSummary: summary } };
@@ -434,6 +551,8 @@ beforeEach(() => {
   state.calls = [];
   state.bulk = false;
   state.failAfter = false;
+  navigation.search = new URLSearchParams();
+  navigation.replace.mockClear();
   roles.current = ['openmap-operator'];
   for (const a of assets.slice(0, 1)) a.stage = 'deployed';
   for (const p of plans.slice(0, 1)) p.status = 'draft';
@@ -583,7 +702,7 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     await waitFor(() => {
       expect(
         state.calls.some(
-          (c) => c.op === 'Assets' && JSON.stringify(c.variables['filter']).includes('"applications"'),
+          (c) => c.op === 'AssetPage' && JSON.stringify(c.variables['filter']).includes('"applications"'),
         ),
       ).toBe(true);
     });
@@ -597,7 +716,7 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     await waitFor(() => {
       expect(
         state.calls.some(
-          (c) => c.op === 'Assets' && JSON.stringify(c.variables['filter']).includes('"warranty"'),
+          (c) => c.op === 'AssetPage' && JSON.stringify(c.variables['filter']).includes('"warranty"'),
         ),
       ).toBe(true);
     });
@@ -608,54 +727,126 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     await waitFor(() => {
       expect(
         state.calls.some(
-          (c) => c.op === 'Assets' && JSON.stringify(c.variables['filter']).includes('"dell"'),
+          (c) => c.op === 'AssetPage' && JSON.stringify(c.variables['filter']).includes('"dell"'),
         ),
       ).toBe(true);
     });
   });
 
   it(
-    'pages the register past the first page with the id cursor, stops at a short page, and offers a retry after a failed page',
+    'pages the register by number with totals, keeps the page in the URL and shows the error of a page that fails (REQ-CMDB-041)',
     async () => {
       state.bulk = true;
       mount('en');
       const register = await screen.findByTestId('asset-register');
       expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize + 1);
+      const pager = screen.getByRole('navigation', { name: translate('en', 'assets.table.pager') });
       expect(
-        screen.getByText(translate('en', 'assets.table.showing', { count: String(ASSETS.registerPageSize) })),
+        within(pager).getByText(translate('en', 'assets.table.total', { count: String(bulkCount) })),
       ).toBeTruthy();
+      expect(
+        within(pager).getByText(translate('en', 'assets.table.page', { page: '1', pages: '3' })),
+      ).toBeTruthy();
+      expect(within(pager).getByRole('button', { name: translate('en', 'common.previous') })).toHaveProperty(
+        'disabled',
+        true,
+      );
+
+      fireEvent.click(within(pager).getByRole('button', { name: translate('en', 'common.next') }));
+      expect(navigation.replace).toHaveBeenCalledWith('/en/assets?page=2', { scroll: false });
+      expect(navigation.search.get('page')).toBe('2');
+      cleanup();
+      mount('en');
+      await waitFor(() => {
+        expect(state.calls.some((c) => c.op === 'AssetPage' && c.variables['page'] === 2)).toBe(true);
+      });
+      const second = await screen.findByTestId('asset-register');
+      await waitFor(() => {
+        expect(within(second).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize + 1);
+      });
+      expect(screen.getByTestId('asset-pager').getAttribute('data-page')).toBe('2');
+      expect(within(second).getAllByRole('row')[1]?.getAttribute('data-asset-tag')).toBe(
+        bulk[ASSETS.registerPageSize]?.assetTag,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.last') }));
+      expect(navigation.search.get('page')).toBe('3');
+      cleanup();
+      mount('en');
+      const third = await screen.findByTestId('asset-register');
+      await waitFor(() => {
+        expect(within(third).getAllByRole('row')).toHaveLength(bulkCount - ASSETS.registerPageSize * 2 + 1);
+      });
+      expect(screen.getByRole('button', { name: translate('en', 'common.next') })).toHaveProperty(
+        'disabled',
+        true,
+      );
 
       state.failAfter = true;
-      fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.more') }));
-      expect((await screen.findByRole('alert')).textContent).toBe(translate('en', 'common.error'));
-      expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize + 1);
-
-      state.failAfter = false;
-      fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.retry') }));
-      await waitFor(() => {
-        expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize * 2 + 1);
-      });
-      expect(screen.queryByRole('alert')).toBeNull();
-      const second = state.calls
-        .filter((c) => c.op === 'Assets' && typeof c.variables['after'] === 'string')
-        .at(-1);
-      expect(decodeIdCursor(second?.variables['after'])).toBe(bulk[ASSETS.registerPageSize - 1]?.id);
-      expect(second?.variables['first']).toBe(ASSETS.registerPageSize);
-
-      fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.more') }));
-      await waitFor(() => {
-        expect(within(register).getAllByRole('row')).toHaveLength(bulkCount + 1);
-      });
-      expect(screen.queryByRole('button', { name: translate('en', 'common.more') })).toBeNull();
+      cleanup();
+      mount('en');
+      // The query client retries once before surfacing the error.
+      expect(await screen.findByRole('alert', {}, { timeout: ALERT_TIMEOUT_MS })).toBeTruthy();
     },
     PAGING_TEST_TIMEOUT_MS,
   );
 
+  it('shows a SaaS asset with its subscription end and credits in the cover column and saves the subscription through updateAsset (REQ-CMDB-042)', async () => {
+    mount('en');
+    const register = await screen.findByTestId('asset-register');
+    const row = within(register)
+      .getAllByRole('row')
+      .find((r) => r.getAttribute('data-asset-tag') === 'SAAS-PAYROLL');
+    if (row === undefined) throw new Error('SaaS row rendered');
+    expect(
+      within(row).getByText(
+        translate('en', 'assets.table.credits', {
+          remaining: new Intl.NumberFormat('en').format(1250),
+          unit: 'seats',
+        }),
+      ),
+    ).toBeTruthy();
+    // Support and end of life are still missing; the subscription column is not.
+    expect(within(row).getAllByText(translate('en', 'assets.table.missing'))).toHaveLength(2);
+    fireEvent.click(
+      within(row).getByRole('button', {
+        name: translate('en', 'assets.table.edit', { tag: 'SAAS-PAYROLL' }),
+      }),
+    );
+    const panel = await screen.findByTestId('asset-details-panel');
+    expect(
+      within(panel).getAllByText(translate('en', 'assets.details.subscription.title')).length,
+    ).toBeGreaterThan(0);
+    expect(within(panel).queryByLabelText(translate('en', 'assets.details.warranty.provider'))).toBeNull();
+    fireEvent.change(
+      within(panel).getByLabelText(translate('en', 'assets.details.subscription.creditsRemaining')),
+      { target: { value: '900' } },
+    );
+    fireEvent.change(within(panel).getByLabelText(translate('en', 'assets.details.subscription.endsAt')), {
+      target: { value: '2027-12-31' },
+    });
+    fireEvent.submit(within(panel).getByRole('form', { name: translate('en', 'assets.details.title') }));
+    await waitFor(() => {
+      const update = state.calls.find((c) => c.op === 'UpdateAsset' && c.variables['assetId'] === 'a4');
+      expect(update?.variables['input']).toMatchObject({
+        subscription: {
+          provider: 'Workday',
+          plan: 'Enterprise',
+          startsAt: '2026-01-01',
+          endsAt: '2027-12-31',
+          creditsRemaining: 900,
+          creditsUnit: 'seats',
+          creditsCurrency: null,
+        },
+      });
+    });
+  });
+
   it('opens the details panel for a row and saves warranty cover through updateAsset', async () => {
     mount(locale);
-    await screen.findAllByText('APP-RHEL');
+    await screen.findAllByText('AST-0001');
     fireEvent.click(
-      screen.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: 'APP-RHEL' }) }),
+      screen.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: 'AST-0001' }) }),
     );
     const panel = await screen.findByTestId('asset-details-panel');
     const form = within(panel).getByRole('form', { name: translate(locale, 'assets.details.title') });
@@ -668,7 +859,7 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'assets.details.save') }));
     await within(panel).findByRole('status');
     const update = state.calls.find((c) => c.op === 'UpdateAsset');
-    expect(update?.variables['assetId']).toBe('a3');
+    expect(update?.variables['assetId']).toBe('a1');
     const input = update?.variables['input'] as {
       warranty: unknown;
       support: unknown;
@@ -683,7 +874,7 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     });
     // Support and end of life were left empty: they are cleared explicitly, the identity fields echo the row.
     expect(input.support).toBeNull();
-    expect(input.manufacturer).toBe('Red Hat');
+    expect(input.manufacturer).toBe('Dell');
   });
 
   it('diagnoses unknown devices and opens the label panel preset with the suggested layer and type', async () => {

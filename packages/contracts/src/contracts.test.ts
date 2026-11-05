@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSchema } from 'graphql';
 import { describe, expect, it } from 'vitest';
+import { assetDataGaps, subscriptionFromAttributes } from './asset.js';
 import {
   CI_LAYERS,
   CI_TYPES,
@@ -64,9 +65,18 @@ describe('CI contract', () => {
 
 describe('collector contract', () => {
   it('accepts metric samples that reference a CI by identity or id and rejects malformed metric names', () => {
-    const sample = { ci: { type: 'host', identity: { fqdn: 'a.example' } }, metric: 'host.cpu.utilisation_percent', ts: now, value: 41.5, unit: 'percent', labels: {} };
+    const sample = {
+      ci: { type: 'host', identity: { fqdn: 'a.example' } },
+      metric: 'host.cpu.utilisation_percent',
+      ts: now,
+      value: 41.5,
+      unit: 'percent',
+      labels: {},
+    };
     expect(metricSampleSchema.safeParse(sample).success).toBe(true);
-    expect(metricSampleSchema.safeParse({ ...sample, ci: { id: uuid }, labels: { rack_id: 'R12' } }).success).toBe(true);
+    expect(
+      metricSampleSchema.safeParse({ ...sample, ci: { id: uuid }, labels: { rack_id: 'R12' } }).success,
+    ).toBe(true);
     expect(metricSampleSchema.safeParse({ ...sample, metric: 'CPU' }).success).toBe(false);
     expect(metricSampleSchema.safeParse({ ...sample, metric: 'host.cpu' }).success).toBe(false);
     expect(metricSampleSchema.safeParse({ ...sample, value: Number.NaN }).success).toBe(false);
@@ -139,7 +149,8 @@ describe('asset, impact and integration contracts', () => {
       expect(scenarioKindSchema.safeParse(kind).success).toBe(true);
       expect(SCENARIO_SEVERITIES).toContain(SCENARIO_KIND_SEVERITY[kind]);
     }
-    for (const legacy of ['component', 'power', 'rack', 'site']) expect(scenarioKindSchema.safeParse(legacy).success).toBe(false);
+    for (const legacy of ['component', 'power', 'rack', 'site'])
+      expect(scenarioKindSchema.safeParse(legacy).success).toBe(false);
   });
   it('validate representative records', () => {
     expect(
@@ -209,6 +220,7 @@ describe('asset, impact and integration contracts', () => {
           residualValue: { amount: 0, currency: 'SAR' },
         },
         warranty: null,
+        subscription: null,
         support: null,
         supportContractId: null,
         endOfLife: null,
@@ -234,5 +246,51 @@ describe('GraphQL contract', () => {
     expect(layerEnum && 'getValues' in layerEnum ? layerEnum.getValues().map((v) => v.name) : []).toEqual([
       ...CI_LAYERS,
     ]);
+  });
+});
+
+describe('subscription cover (REQ-CMDB-042, ADR-027)', () => {
+  it('maps terms and credits for subscription types only and asks the right gap per type', () => {
+    expect(
+      subscriptionFromAttributes('cloud_account', {
+        provider: 'azure',
+        subscriptionEnd: '2027-03-31T00:00:00Z',
+        creditsRemaining: 1200.5,
+        creditsCurrency: 'USD',
+        creditsAsOf: '2026-11-05T07:00:00.000Z',
+      }),
+    ).toEqual({
+      provider: 'azure',
+      plan: null,
+      startsAt: null,
+      endsAt: '2027-03-31',
+      credits: { remaining: 1200.5, unit: 'credits', currency: 'USD', asOf: '2026-11-05T07:00:00.000Z' },
+      source: 'vendor_api',
+      verifiedAt: null,
+    });
+    expect(
+      subscriptionFromAttributes('saas_application', { vendor: 'microsoft365', sku: 'ENTERPRISEPACK' }),
+    ).toBeNull();
+    expect(subscriptionFromAttributes('host', { vendor: 'Dell', expiresAt: '2027-01-01' })).toBeNull();
+    expect(
+      assetDataGaps({
+        ciType: 'licence',
+        warranty: null,
+        subscription: null,
+        support: null,
+        supportContractId: null,
+        endOfLife: null,
+      }),
+    ).toEqual(['subscription', 'support', 'end_of_life']);
+    expect(
+      assetDataGaps({
+        ciType: 'host',
+        warranty: null,
+        subscription: null,
+        support: null,
+        supportContractId: null,
+        endOfLife: null,
+      }),
+    ).toEqual(['warranty', 'support', 'end_of_life']);
   });
 });

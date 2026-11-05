@@ -4,14 +4,44 @@
 // changed field; ensureAssetForCi gives a labelled CI its register row (ADR-023).
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ASSETS, MONEY } from '@openmap/constants';
-import { assetDataGaps, assetFieldsFromCi, endOfLifeSchema, supportSchema, warrantySchema, type AssetDataGap, type AssetSource, type CiLayer, type CiType, type EndOfLife, type Support, type Warranty } from '@openmap/contracts';
+import {
+  type AssetDataGap,
+  type AssetSource,
+  type CiLayer,
+  type CiType,
+  type EndOfLife,
+  SUBSCRIPTION_CI_TYPES,
+  type Subscription,
+  type Support,
+  type Warranty,
+  assetDataGaps,
+  assetFieldsFromCi,
+  endOfLifeSchema,
+  subscriptionSchema,
+  supportSchema,
+  warrantySchema,
+} from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import type { CiRecord } from '../ci/ci.types.js';
 import { NO_CURRENCY, toMoney } from '../common/money.js';
 import { isoOf, toIso } from '../common/time.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { AssetDetailsInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
-import type { AssetAuditView, AssetRecordView, AssetStage, AssetSummaryView, EndOfLifeView, InfraPlanView, PlanStatus, SupportContractView, SupportView, VendorContactView, WarrantyView } from './assets.types.js';
+import type {
+  AssetAuditView,
+  AssetPageView,
+  AssetRecordView,
+  AssetStage,
+  AssetSummaryView,
+  EndOfLifeView,
+  InfraPlanView,
+  PlanStatus,
+  SubscriptionView,
+  SupportContractView,
+  SupportView,
+  VendorContactView,
+  WarrantyView,
+} from './assets.types.js';
 
 export const ASSETS_REPOSITORY = Symbol('ASSETS_REPOSITORY');
 
@@ -31,6 +61,7 @@ export interface AssetsQuery {
 
 export interface AssetsRepository {
   assets(tenantId: string, query: AssetsQuery): Promise<AssetRecordView[]>;
+  assetPage(tenantId: string, query: AssetsQuery, page: number, pageSize: number): Promise<AssetPageView>;
   asset(tenantId: string, id: string): Promise<AssetRecordView | null>;
   assetsByCiIds(tenantId: string, ciIds: readonly string[]): Promise<AssetRecordView[]>;
   assetsByPlan(tenantId: string, planId: string): Promise<AssetRecordView[]>;
@@ -39,12 +70,52 @@ export interface AssetsRepository {
   plans(tenantId: string, statuses: readonly PlanStatus[]): Promise<InfraPlanView[]>;
   plan(tenantId: string, id: string): Promise<InfraPlanView | null>;
   planCount(tx: Prisma.TransactionClient, tenantId: string): Promise<number>;
-  createPlan(tx: Prisma.TransactionClient, tenantId: string, owner: string, number: string, input: PlanInput): Promise<{ plan: InfraPlanView; assetIds: string[] }>;
-  setPlanStatus(tx: Prisma.TransactionClient, tenantId: string, id: string, status: PlanStatus): Promise<InfraPlanView>;
-  setAssetStage(tx: Prisma.TransactionClient, tenantId: string, id: string, stage: AssetStage, actor: string, note: string | null, at: string): Promise<AssetRecordView>;
-  updateDetails(tx: Prisma.TransactionClient, tenantId: string, id: string, input: AssetDetailsInput, actor: string, at: string): Promise<{ asset: AssetRecordView; changed: string[] }>;
-  createManual(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, input: ManualAssetInput, at: string): Promise<AssetRecordView>;
-  ensureForCi(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, layer: CiLayer, at: string): Promise<AssetRecordView>;
+  createPlan(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    owner: string,
+    number: string,
+    input: PlanInput,
+  ): Promise<{ plan: InfraPlanView; assetIds: string[] }>;
+  setPlanStatus(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    status: PlanStatus,
+  ): Promise<InfraPlanView>;
+  setAssetStage(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    stage: AssetStage,
+    actor: string,
+    note: string | null,
+    at: string,
+  ): Promise<AssetRecordView>;
+  updateDetails(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    input: AssetDetailsInput,
+    actor: string,
+    at: string,
+  ): Promise<{ asset: AssetRecordView; changed: string[] }>;
+  createManual(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    ci: CiRecord,
+    input: ManualAssetInput,
+    at: string,
+  ): Promise<AssetRecordView>;
+  ensureForCi(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    ci: CiRecord,
+    layer: CiLayer,
+    at: string,
+  ): Promise<AssetRecordView>;
   supportContract(tenantId: string, id: string): Promise<SupportContractView | null>;
   vendorContact(tenantId: string, id: string): Promise<VendorContactView | null>;
 }
@@ -60,6 +131,10 @@ function parseWarranty(value: Prisma.JsonValue | null): Warranty | null {
   const parsed = warrantySchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
+function parseSubscription(value: Prisma.JsonValue | null): Subscription | null {
+  const parsed = subscriptionSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 function parseSupport(value: Prisma.JsonValue | null): Support | null {
   const parsed = supportSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
@@ -73,15 +148,29 @@ function parseEndOfLife(value: Prisma.JsonValue | null): EndOfLife | null {
 function warrantyView(w: Warranty): WarrantyView {
   return { ...w, startsAt: toIso(w.startsAt), endsAt: isoOf(w.endsAt) };
 }
+function subscriptionView(sub: Subscription): SubscriptionView {
+  return {
+    ...sub,
+    startsAt: toIso(sub.startsAt),
+    endsAt: toIso(sub.endsAt),
+    credits: sub.credits === null ? null : { ...sub.credits },
+  };
+}
 function supportView(s: Support): SupportView {
   return { ...s, endsAt: isoOf(s.endsAt) };
 }
 function endOfLifeView(e: EndOfLife): EndOfLifeView {
-  return { ...e, endOfSale: toIso(e.endOfSale), endOfSoftwareMaintenance: toIso(e.endOfSoftwareMaintenance), endOfSupport: toIso(e.endOfSupport) };
+  return {
+    ...e,
+    endOfSale: toIso(e.endOfSale),
+    endOfSoftwareMaintenance: toIso(e.endOfSoftwareMaintenance),
+    endOfSupport: toIso(e.endOfSupport),
+  };
 }
 
 export function toAsset(row: AssetRow): AssetRecordView {
   const warranty = parseWarranty(row.warranty);
+  const subscription = parseSubscription(row.subscription);
   const support = parseSupport(row.support);
   const endOfLife = parseEndOfLife(row.endOfLife);
   return {
@@ -103,12 +192,22 @@ export function toAsset(row: AssetRow): AssetRecordView {
     purchaseCost: toMoney(row.purchaseCostAmount, row.purchaseCostCurrency),
     warranty: warranty ? warrantyView(warranty) : null,
     warrantyEndsAt: warranty ? toIso(warranty.endsAt) : null,
+    subscription: subscription ? subscriptionView(subscription) : null,
+    subscriptionEndsAt: subscription ? toIso(subscription.endsAt) : null,
+    creditsRemaining: subscription?.credits?.remaining ?? null,
     support: support ? supportView(support) : null,
     supportContractId: row.supportContractId,
     supportEndsAt: support ? toIso(support.endsAt) : null,
     endOfLife: endOfLife ? endOfLifeView(endOfLife) : null,
     endOfSupport: endOfLife ? toIso(endOfLife.endOfSupport) : null,
-    dataGaps: assetDataGaps({ warranty, support, supportContractId: row.supportContractId, endOfLife }),
+    dataGaps: assetDataGaps({
+      ciType: row.ciType,
+      warranty,
+      subscription,
+      support,
+      supportContractId: row.supportContractId,
+      endOfLife,
+    }),
     planId: row.planId,
   };
 }
@@ -120,7 +219,16 @@ export function toPlan(row: PlanRow): InfraPlanView {
     name: row.name,
     kind: row.kind,
     status: row.status,
-    bom: row.bom.map((l) => ({ description: l.description, manufacturer: l.manufacturer, model: l.model, sku: l.sku, layer: l.layer, quantity: l.quantity, received: l.received, unitCost: toMoney(l.unitCostAmount, l.unitCostCurrency) })),
+    bom: row.bom.map((l) => ({
+      description: l.description,
+      manufacturer: l.manufacturer,
+      model: l.model,
+      sku: l.sku,
+      layer: l.layer,
+      quantity: l.quantity,
+      received: l.received,
+      unitCost: toMoney(l.unitCostAmount, l.unitCostCurrency),
+    })),
     estimatedCost: toMoney(row.estimatedCostAmount, row.estimatedCostCurrency),
     targetSiteCiId: row.targetSiteCiId,
     targetRackCiIds: row.targetRackCiIds,
@@ -130,12 +238,17 @@ export function toPlan(row: PlanRow): InfraPlanView {
 
 /** Sum of quantity × unit cost when every priced line shares one currency; null otherwise. */
 export function estimatedCostOf(bom: PlanInput['bom']): { amount: number; currency: string } | null {
-  const priced = bom.filter((l) => l.unitCostAmount !== null && l.unitCostAmount !== undefined && l.unitCostCurrency);
+  const priced = bom.filter(
+    (l) => l.unitCostAmount !== null && l.unitCostAmount !== undefined && l.unitCostCurrency,
+  );
   if (priced.length === 0) return null;
   const currencies = new Set(priced.map((l) => l.unitCostCurrency));
   if (currencies.size !== 1) return null;
   const [currency] = currencies;
-  return { amount: priced.reduce((sum, l) => sum + (l.unitCostAmount ?? 0) * l.quantity, 0), currency: currency ?? NO_CURRENCY };
+  return {
+    amount: priced.reduce((sum, l) => sum + (l.unitCostAmount ?? 0) * l.quantity, 0),
+    currency: currency ?? NO_CURRENCY,
+  };
 }
 
 function dateOnly(value: Date | null): string | null {
@@ -157,9 +270,29 @@ interface FieldChange {
  * An omitted field is untouched; an explicit null clears it. Cover a person enters is stamped `manual` and verified now.
  */
 /** The columns a details input may set; plain values, so the same object feeds a create and an update. */
-type DetailsData = Partial<Pick<Prisma.AssetRecordUncheckedCreateInput, 'manufacturer' | 'model' | 'serialNumber' | 'partNumber' | 'custodian' | 'purchasedAt' | 'purchaseCostAmount' | 'purchaseCostCurrency' | 'warranty' | 'support' | 'endOfLife'>>;
+type DetailsData = Partial<
+  Pick<
+    Prisma.AssetRecordUncheckedCreateInput,
+    | 'manufacturer'
+    | 'model'
+    | 'serialNumber'
+    | 'partNumber'
+    | 'custodian'
+    | 'purchasedAt'
+    | 'purchaseCostAmount'
+    | 'purchaseCostCurrency'
+    | 'warranty'
+    | 'subscription'
+    | 'support'
+    | 'endOfLife'
+  >
+>;
 
-export function detailsData(input: AssetDetailsInput, row: AssetRow | null, at: string): { data: DetailsData; changes: FieldChange[] } {
+export function detailsData(
+  input: AssetDetailsInput,
+  row: AssetRow | null,
+  at: string,
+): { data: DetailsData; changes: FieldChange[] } {
   const data: DetailsData = {};
   const changes: FieldChange[] = [];
   const set = (field: string, from: string | null, to: string | null): void => {
@@ -182,23 +315,88 @@ export function detailsData(input: AssetDetailsInput, row: AssetRow | null, at: 
   }
   if (input.purchaseCostAmount !== undefined) {
     const amount = input.purchaseCostAmount;
-    const currency = amount === null ? null : (input.purchaseCostCurrency ?? row?.purchaseCostCurrency ?? NO_CURRENCY);
+    const currency =
+      amount === null ? null : (input.purchaseCostCurrency ?? row?.purchaseCostCurrency ?? NO_CURRENCY);
     data.purchaseCostAmount = amount;
     data.purchaseCostCurrency = currency;
-    set('purchaseCost', row?.purchaseCostAmount == null ? null : String(row.purchaseCostAmount) + ' ' + (row.purchaseCostCurrency ?? NO_CURRENCY), amount === null ? null : String(amount) + ' ' + (currency ?? NO_CURRENCY));
+    set(
+      'purchaseCost',
+      row?.purchaseCostAmount == null
+        ? null
+        : String(row.purchaseCostAmount) + ' ' + (row.purchaseCostCurrency ?? NO_CURRENCY),
+      amount === null ? null : String(amount) + ' ' + (currency ?? NO_CURRENCY),
+    );
   }
   if (input.warranty !== undefined) {
-    const warranty: Warranty | null = input.warranty === null ? null : { provider: input.warranty.provider, level: input.warranty.level ?? null, startsAt: input.warranty.startsAt ?? null, endsAt: input.warranty.endsAt, source: MANUAL_SOURCE, verifiedAt: at };
+    const warranty: Warranty | null =
+      input.warranty === null
+        ? null
+        : {
+            provider: input.warranty.provider,
+            level: input.warranty.level ?? null,
+            startsAt: input.warranty.startsAt ?? null,
+            endsAt: input.warranty.endsAt,
+            source: MANUAL_SOURCE,
+            verifiedAt: at,
+          };
     data.warranty = warranty === null ? Prisma.DbNull : warranty;
     set('warranty', jsonText(row?.warranty ?? null), warranty === null ? null : JSON.stringify(warranty));
   }
+  if (input.subscription !== undefined) {
+    const subscription: Subscription | null =
+      input.subscription === null
+        ? null
+        : {
+            provider: input.subscription.provider,
+            plan: input.subscription.plan ?? null,
+            startsAt: input.subscription.startsAt ?? null,
+            endsAt: input.subscription.endsAt ?? null,
+            credits:
+              input.subscription.creditsRemaining === null ||
+              input.subscription.creditsRemaining === undefined
+                ? null
+                : {
+                    remaining: input.subscription.creditsRemaining,
+                    unit: input.subscription.creditsUnit ?? '',
+                    currency: input.subscription.creditsCurrency ?? null,
+                    asOf: at,
+                  },
+            source: MANUAL_SOURCE,
+            verifiedAt: at,
+          };
+    data.subscription = subscription === null ? Prisma.DbNull : subscription;
+    set(
+      'subscription',
+      jsonText(row?.subscription ?? null),
+      subscription === null ? null : JSON.stringify(subscription),
+    );
+  }
   if (input.support !== undefined) {
-    const support: Support | null = input.support === null ? null : { provider: input.support.provider, contractNumber: input.support.contractNumber ?? null, level: input.support.level ?? null, endsAt: input.support.endsAt, source: MANUAL_SOURCE, verifiedAt: at };
+    const support: Support | null =
+      input.support === null
+        ? null
+        : {
+            provider: input.support.provider,
+            contractNumber: input.support.contractNumber ?? null,
+            level: input.support.level ?? null,
+            endsAt: input.support.endsAt,
+            source: MANUAL_SOURCE,
+            verifiedAt: at,
+          };
     data.support = support === null ? Prisma.DbNull : support;
     set('support', jsonText(row?.support ?? null), support === null ? null : JSON.stringify(support));
   }
   if (input.endOfLife !== undefined) {
-    const eol: EndOfLife | null = input.endOfLife === null ? null : { endOfSale: input.endOfLife.endOfSale ?? null, endOfSoftwareMaintenance: input.endOfLife.endOfSoftwareMaintenance ?? null, endOfSupport: input.endOfLife.endOfSupport ?? null, source: MANUAL_SOURCE, verifiedAt: at };
+    const eol: EndOfLife | null =
+      input.endOfLife === null
+        ? null
+        : {
+            endOfSale: input.endOfLife.endOfSale ?? null,
+            endOfSoftwareMaintenance: input.endOfLife.endOfSoftwareMaintenance ?? null,
+            endOfSupport: input.endOfLife.endOfSupport ?? null,
+            source: MANUAL_SOURCE,
+            verifiedAt: at,
+          };
     data.endOfLife = eol === null ? Prisma.DbNull : eol;
     set('endOfLife', jsonText(row?.endOfLife ?? null), eol === null ? null : JSON.stringify(eol));
   }
@@ -208,11 +406,19 @@ export function detailsData(input: AssetDetailsInput, row: AssetRow | null, at: 
 function gapWhere(gap: AssetDataGap): Prisma.AssetRecordWhereInput {
   switch (gap) {
     case 'warranty':
-      return { warranty: { equals: Prisma.DbNull } };
+      // Hardware asks for a warranty; a subscription type never does.
+      return { warranty: { equals: Prisma.DbNull }, NOT: { ciType: { in: [...SUBSCRIPTION_CI_TYPES] } } };
+    case 'subscription':
+      return { subscription: { equals: Prisma.DbNull }, ciType: { in: [...SUBSCRIPTION_CI_TYPES] } };
     case 'support':
       return { AND: [{ support: { equals: Prisma.DbNull } }, { supportContractId: null }] };
     case 'end_of_life':
-      return { OR: [{ endOfLife: { equals: Prisma.DbNull } }, { endOfLife: { path: ['endOfSupport'], equals: Prisma.AnyNull } }] };
+      return {
+        OR: [
+          { endOfLife: { equals: Prisma.DbNull } },
+          { endOfLife: { path: ['endOfSupport'], equals: Prisma.AnyNull } },
+        ],
+      };
   }
 }
 
@@ -220,7 +426,8 @@ function gapWhere(gap: AssetDataGap): Prisma.AssetRecordWhereInput {
 export class PrismaAssetsRepository implements AssetsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async assets(tenantId: string, q: AssetsQuery): Promise<AssetRecordView[]> {
+  /** The register's filter as a Prisma predicate; the cursor (afterId) is added by `assets`, the page by `assetPage`. */
+  private whereFor(tenantId: string, q: AssetsQuery): Prisma.AssetRecordWhereInput[] {
     const and: Prisma.AssetRecordWhereInput[] = [{ tenantId }];
     if (q.layers.length > 0) and.push({ layer: { in: [...q.layers] } });
     if (q.types.length > 0) and.push({ ciType: { in: [...q.types] } });
@@ -229,12 +436,51 @@ export class PrismaAssetsRepository implements AssetsRepository {
     for (const gap of q.dataGaps) and.push(gapWhere(gap));
     if (q.text !== null) {
       const contains = { contains: q.text, mode: 'insensitive' as const };
-      and.push({ OR: [{ assetTag: contains }, { serialNumber: contains }, { manufacturer: contains }, { model: contains }, { ci: { displayName: contains } }] });
+      and.push({
+        OR: [
+          { assetTag: contains },
+          { serialNumber: contains },
+          { manufacturer: contains },
+          { model: contains },
+          { ci: { displayName: contains } },
+        ],
+      });
     }
-    if (q.warrantyEndsBefore !== null) and.push({ warranty: { path: ['endsAt'], lte: q.warrantyEndsBefore } });
+    if (q.warrantyEndsBefore !== null)
+      and.push({ warranty: { path: ['endsAt'], lte: q.warrantyEndsBefore } });
+    return and;
+  }
+
+  async assets(tenantId: string, q: AssetsQuery): Promise<AssetRecordView[]> {
+    const and = this.whereFor(tenantId, q);
     if (q.afterId !== null) and.push({ id: { gt: q.afterId } });
-    const rows = await this.prisma.client.assetRecord.findMany({ where: { AND: and }, orderBy: { id: 'asc' }, take: q.first });
+    const rows = await this.prisma.client.assetRecord.findMany({
+      where: { AND: and },
+      orderBy: { id: 'asc' },
+      take: q.first,
+    });
     return rows.map(toAsset);
+  }
+
+  /** REQ-CMDB-041 — one page by number with the total under the same filter (two statements, one round trip each). */
+  async assetPage(tenantId: string, q: AssetsQuery, page: number, pageSize: number): Promise<AssetPageView> {
+    const where = { AND: this.whereFor(tenantId, q) };
+    const [rows, totalCount] = await Promise.all([
+      this.prisma.client.assetRecord.findMany({
+        where,
+        orderBy: { id: 'asc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.client.assetRecord.count({ where }),
+    ]);
+    return {
+      items: rows.map(toAsset),
+      totalCount,
+      page,
+      pageSize,
+      pageCount: Math.max(1, Math.ceil(totalCount / pageSize)),
+    };
   }
 
   async asset(tenantId: string, id: string): Promise<AssetRecordView | null> {
@@ -244,44 +490,87 @@ export class PrismaAssetsRepository implements AssetsRepository {
 
   async assetsByCiIds(tenantId: string, ciIds: readonly string[]): Promise<AssetRecordView[]> {
     if (ciIds.length === 0) return [];
-    const rows = await this.prisma.client.assetRecord.findMany({ where: { tenantId, ciId: { in: [...ciIds] } }, orderBy: { id: 'asc' } });
+    const rows = await this.prisma.client.assetRecord.findMany({
+      where: { tenantId, ciId: { in: [...ciIds] } },
+      orderBy: { id: 'asc' },
+    });
     return rows.map(toAsset);
   }
 
   async assetsByPlan(tenantId: string, planId: string): Promise<AssetRecordView[]> {
-    const rows = await this.prisma.client.assetRecord.findMany({ where: { tenantId, planId }, orderBy: { assetTag: 'asc' } });
+    const rows = await this.prisma.client.assetRecord.findMany({
+      where: { tenantId, planId },
+      orderBy: { assetTag: 'asc' },
+    });
     return rows.map(toAsset);
   }
 
   /** One grouped statement: rows per layer, rows with a gap, and cover already ended as of `now`. */
   async summary(tenantId: string, nowIso: string): Promise<AssetSummaryView[]> {
     const today = nowIso.slice(0, 'YYYY-MM-DD'.length);
-    const rows = await this.prisma.client.$queryRaw<Array<{ layer: CiLayer; count: number; needsData: number; warrantyExpired: number; supportExpired: number; endOfSupportPassed: number }>>(Prisma.sql`
+    const rows = await this.prisma.client.$queryRaw<
+      Array<{
+        layer: CiLayer;
+        count: number;
+        needsData: number;
+        warrantyExpired: number;
+        subscriptionExpired: number;
+        supportExpired: number;
+        endOfSupportPassed: number;
+      }>
+    >(Prisma.sql`
       SELECT a.layer, count(*)::int AS "count",
-        count(*) FILTER (WHERE a.warranty IS NULL OR (a.support IS NULL AND a."supportContractId" IS NULL) OR a."endOfLife" IS NULL OR a."endOfLife"->>'endOfSupport' IS NULL)::int AS "needsData",
+        count(*) FILTER (WHERE (CASE WHEN a."ciType"::text = ANY(${[...SUBSCRIPTION_CI_TYPES]}::text[]) THEN a.subscription IS NULL ELSE a.warranty IS NULL END) OR (a.support IS NULL AND a."supportContractId" IS NULL) OR a."endOfLife" IS NULL OR a."endOfLife"->>'endOfSupport' IS NULL)::int AS "needsData",
         count(*) FILTER (WHERE (a.warranty->>'endsAt')::date < ${today}::date)::int AS "warrantyExpired",
+        count(*) FILTER (WHERE (a.subscription->>'endsAt')::date < ${today}::date)::int AS "subscriptionExpired",
         count(*) FILTER (WHERE (a.support->>'endsAt')::date < ${today}::date OR sc."endsAt" < ${today}::date)::int AS "supportExpired",
         count(*) FILTER (WHERE (a."endOfLife"->>'endOfSupport')::date < ${today}::date)::int AS "endOfSupportPassed"
       FROM asset_records a LEFT JOIN support_contracts sc ON sc.id = a."supportContractId"
       WHERE a."tenantId" = ${tenantId}::uuid AND a.stage <> ALL(${[...UNOWNED_STAGES]}::"AssetStage"[])
       GROUP BY a.layer`);
-    return rows.map((r) => ({ layer: r.layer, count: Number(r.count), needsData: Number(r.needsData), warrantyExpired: Number(r.warrantyExpired), supportExpired: Number(r.supportExpired), endOfSupportPassed: Number(r.endOfSupportPassed) }));
+    return rows.map((r) => ({
+      layer: r.layer,
+      count: Number(r.count),
+      needsData: Number(r.needsData),
+      warrantyExpired: Number(r.warrantyExpired),
+      subscriptionExpired: Number(r.subscriptionExpired),
+      supportExpired: Number(r.supportExpired),
+      endOfSupportPassed: Number(r.endOfSupportPassed),
+    }));
   }
 
   async audits(tenantId: string, assetId: string): Promise<AssetAuditView[]> {
-    const rows = await this.prisma.client.assetAudit.findMany({ where: { tenantId, assetId }, orderBy: { at: 'desc' } });
-    return rows.map((r) => ({ id: r.id, actor: r.actor, at: isoOf(r.at), field: r.field, fromValue: r.fromValue, toValue: r.toValue, note: r.note }));
+    const rows = await this.prisma.client.assetAudit.findMany({
+      where: { tenantId, assetId },
+      orderBy: { at: 'desc' },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      actor: r.actor,
+      at: isoOf(r.at),
+      field: r.field,
+      fromValue: r.fromValue,
+      toValue: r.toValue,
+      note: r.note,
+    }));
   }
 
   async plans(tenantId: string, statuses: readonly PlanStatus[]): Promise<InfraPlanView[]> {
     const where: Prisma.InfraPlanWhereInput = { tenantId };
     if (statuses.length > 0) where.status = { in: [...statuses] };
-    const rows = await this.prisma.client.infraPlan.findMany({ where, include: PLAN_INCLUDE, orderBy: { createdAt: 'desc' } });
+    const rows = await this.prisma.client.infraPlan.findMany({
+      where,
+      include: PLAN_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
     return rows.map(toPlan);
   }
 
   async plan(tenantId: string, id: string): Promise<InfraPlanView | null> {
-    const row = await this.prisma.client.infraPlan.findFirst({ where: { id, tenantId }, include: PLAN_INCLUDE });
+    const row = await this.prisma.client.infraPlan.findFirst({
+      where: { id, tenantId },
+      include: PLAN_INCLUDE,
+    });
     return row ? toPlan(row) : null;
   }
 
@@ -289,7 +578,13 @@ export class PrismaAssetsRepository implements AssetsRepository {
     return tx.infraPlan.count({ where: { tenantId } });
   }
 
-  async createPlan(tx: Prisma.TransactionClient, tenantId: string, owner: string, number: string, input: PlanInput): Promise<{ plan: InfraPlanView; assetIds: string[] }> {
+  async createPlan(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    owner: string,
+    number: string,
+    input: PlanInput,
+  ): Promise<{ plan: InfraPlanView; assetIds: string[] }> {
     const estimated = estimatedCostOf(input.bom);
     const plan = await tx.infraPlan.create({
       data: {
@@ -323,7 +618,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
       },
       include: PLAN_INCLUDE,
     });
-    const planCurrency = estimated?.currency ?? input.bom.find((l) => l.unitCostCurrency)?.unitCostCurrency ?? NO_CURRENCY;
+    const planCurrency =
+      estimated?.currency ?? input.bom.find((l) => l.unitCostCurrency)?.unitCostCurrency ?? NO_CURRENCY;
     const now = new Date();
     const assetIds: string[] = [];
     for (const [position, line] of input.bom.entries()) {
@@ -352,39 +648,99 @@ export class PrismaAssetsRepository implements AssetsRepository {
             customFields: {},
           },
         });
-        await tx.assetAudit.create({ data: { tenantId, assetId: asset.id, actor: owner, at: now, field: 'stage', fromValue: null, toValue: 'planned', note: 'created from plan ' + number } });
+        await tx.assetAudit.create({
+          data: {
+            tenantId,
+            assetId: asset.id,
+            actor: owner,
+            at: now,
+            field: 'stage',
+            fromValue: null,
+            toValue: 'planned',
+            note: 'created from plan ' + number,
+          },
+        });
         assetIds.push(asset.id);
       }
     }
     return { plan: toPlan(plan), assetIds };
   }
 
-  async setPlanStatus(tx: Prisma.TransactionClient, tenantId: string, id: string, status: PlanStatus): Promise<InfraPlanView> {
+  async setPlanStatus(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    status: PlanStatus,
+  ): Promise<InfraPlanView> {
     const existing = await tx.infraPlan.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('plan ' + id + ' not found');
     const row = await tx.infraPlan.update({ where: { id }, data: { status }, include: PLAN_INCLUDE });
     return toPlan(row);
   }
 
-  async setAssetStage(tx: Prisma.TransactionClient, tenantId: string, id: string, stage: AssetStage, actor: string, note: string | null, at: string): Promise<AssetRecordView> {
+  async setAssetStage(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    stage: AssetStage,
+    actor: string,
+    note: string | null,
+    at: string,
+  ): Promise<AssetRecordView> {
     const existing = await tx.assetRecord.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('asset ' + id + ' not found');
     const row = await tx.assetRecord.update({ where: { id }, data: { stage, stageChangedAt: new Date(at) } });
-    await tx.assetAudit.create({ data: { tenantId, assetId: id, actor, at: new Date(at), field: 'stage', fromValue: existing.stage, toValue: stage, note } });
+    await tx.assetAudit.create({
+      data: {
+        tenantId,
+        assetId: id,
+        actor,
+        at: new Date(at),
+        field: 'stage',
+        fromValue: existing.stage,
+        toValue: stage,
+        note,
+      },
+    });
     return toAsset(row);
   }
 
-  async updateDetails(tx: Prisma.TransactionClient, tenantId: string, id: string, input: AssetDetailsInput, actor: string, at: string): Promise<{ asset: AssetRecordView; changed: string[] }> {
+  async updateDetails(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    id: string,
+    input: AssetDetailsInput,
+    actor: string,
+    at: string,
+  ): Promise<{ asset: AssetRecordView; changed: string[] }> {
     const existing = await tx.assetRecord.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('asset ' + id + ' not found');
     const { data, changes } = detailsData(input, existing, at);
     if (changes.length === 0) return { asset: toAsset(existing), changed: [] };
     const row = await tx.assetRecord.update({ where: { id }, data });
-    await tx.assetAudit.createMany({ data: changes.map((c) => ({ tenantId, assetId: id, actor, at: new Date(at), field: c.field, fromValue: c.from, toValue: c.to, note: input.note ?? null })) });
+    await tx.assetAudit.createMany({
+      data: changes.map((c) => ({
+        tenantId,
+        assetId: id,
+        actor,
+        at: new Date(at),
+        field: c.field,
+        fromValue: c.from,
+        toValue: c.to,
+        note: input.note ?? null,
+      })),
+    });
     return { asset: toAsset(row), changed: changes.map((c) => c.field) };
   }
 
-  async createManual(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, input: ManualAssetInput, at: string): Promise<AssetRecordView> {
+  async createManual(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    ci: CiRecord,
+    input: ManualAssetInput,
+    at: string,
+  ): Promise<AssetRecordView> {
     const { data, changes } = detailsData(input.details, null, at);
     const when = new Date(at);
     const row = await tx.assetRecord.create({
@@ -409,25 +765,68 @@ export class PrismaAssetsRepository implements AssetsRepository {
     });
     await tx.assetAudit.createMany({
       data: [
-        { tenantId, assetId: row.id, actor, at: when, field: 'stage', fromValue: null, toValue: 'deployed', note: 'entered manually' },
-        ...changes.map((c) => ({ tenantId, assetId: row.id, actor, at: when, field: c.field, fromValue: c.from, toValue: c.to, note: input.details.note ?? null })),
+        {
+          tenantId,
+          assetId: row.id,
+          actor,
+          at: when,
+          field: 'stage',
+          fromValue: null,
+          toValue: 'deployed',
+          note: 'entered manually',
+        },
+        ...changes.map((c) => ({
+          tenantId,
+          assetId: row.id,
+          actor,
+          at: when,
+          field: c.field,
+          fromValue: c.from,
+          toValue: c.to,
+          note: input.details.note ?? null,
+        })),
       ],
     });
     return toAsset(row);
   }
 
-  ensureForCi(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, layer: CiLayer, at: string): Promise<AssetRecordView> {
+  ensureForCi(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    ci: CiRecord,
+    layer: CiLayer,
+    at: string,
+  ): Promise<AssetRecordView> {
     return ensureAssetForCi(tx, tenantId, actor, ci, layer, at);
   }
 
   async supportContract(tenantId: string, id: string): Promise<SupportContractView | null> {
     const row = await this.prisma.client.supportContract.findFirst({ where: { id, tenantId } });
-    return row ? { id: row.id, vendorCiId: row.vendorCiId, contractNumber: row.contractNumber, level: row.level, endsAt: isoOf(row.endsAt), primaryContactId: row.primaryContactId } : null;
+    return row
+      ? {
+          id: row.id,
+          vendorCiId: row.vendorCiId,
+          contractNumber: row.contractNumber,
+          level: row.level,
+          endsAt: isoOf(row.endsAt),
+          primaryContactId: row.primaryContactId,
+        }
+      : null;
   }
 
   async vendorContact(tenantId: string, id: string): Promise<VendorContactView | null> {
     const row = await this.prisma.client.vendorContact.findFirst({ where: { id, tenantId } });
-    return row ? { id: row.id, name: row.name, role: row.role, email: row.email, phone: row.phone, portalUrl: row.portalUrl } : null;
+    return row
+      ? {
+          id: row.id,
+          name: row.name,
+          role: row.role,
+          email: row.email,
+          phone: row.phone,
+          portalUrl: row.portalUrl,
+        }
+      : null;
   }
 }
 
@@ -436,15 +835,36 @@ export class PrismaAssetsRepository implements AssetsRepository {
  * exists (ADR-023), otherwise moved to the labelled layer. A standalone function so the CMDB service can call it
  * inside its own transaction without a module cycle.
  */
-export async function ensureAssetForCi(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, layer: CiLayer, at: string): Promise<AssetRecordView> {
+export async function ensureAssetForCi(
+  tx: Prisma.TransactionClient,
+  tenantId: string,
+  actor: string,
+  ci: CiRecord,
+  layer: CiLayer,
+  at: string,
+): Promise<AssetRecordView> {
   const existing = await tx.assetRecord.findFirst({ where: { tenantId, ciId: ci.id } });
   if (existing) {
     if (existing.layer === layer && existing.ciType === ci.type) return toAsset(existing);
-    const moved = await tx.assetRecord.update({ where: { id: existing.id }, data: { layer, ciType: ci.type } });
-    await tx.assetAudit.create({ data: { tenantId, assetId: existing.id, actor, at: new Date(at), field: 'layer', fromValue: existing.layer, toValue: layer, note: 'labelled as ' + ci.type } });
+    const moved = await tx.assetRecord.update({
+      where: { id: existing.id },
+      data: { layer, ciType: ci.type },
+    });
+    await tx.assetAudit.create({
+      data: {
+        tenantId,
+        assetId: existing.id,
+        actor,
+        at: new Date(at),
+        field: 'layer',
+        fromValue: existing.layer,
+        toValue: layer,
+        note: 'labelled as ' + ci.type,
+      },
+    });
     return toAsset(moved);
   }
-  const fields = assetFieldsFromCi(ci.type, ci.attributes);
+  const fields = assetFieldsFromCi(ci.type, ci.attributes, ci.observedAt);
   const when = new Date(at);
   const currency = ci.attributes['currency'];
   const row = await tx.assetRecord.create({
@@ -465,13 +885,28 @@ export async function ensureAssetForCi(tx: Prisma.TransactionClient, tenantId: s
       depreciationMethod: 'none',
       usefulLifeMonths: ASSETS.defaultUsefulLifeMonths,
       residualValueAmount: 0,
-      residualValueCurrency: typeof currency === 'string' && currency.length === MONEY.currencyCodeLength ? currency : MONEY.noCurrency,
+      residualValueCurrency:
+        typeof currency === 'string' && currency.length === MONEY.currencyCodeLength
+          ? currency
+          : MONEY.noCurrency,
       warranty: fields.warranty ?? Prisma.DbNull,
+      subscription: fields.subscription ?? Prisma.DbNull,
       support: fields.support ?? Prisma.DbNull,
       tags: [],
       customFields: {},
     },
   });
-  await tx.assetAudit.create({ data: { tenantId, assetId: row.id, actor, at: when, field: 'stage', fromValue: null, toValue: 'deployed', note: 'created when the CI was labelled as ' + ci.type } });
+  await tx.assetAudit.create({
+    data: {
+      tenantId,
+      assetId: row.id,
+      actor,
+      at: when,
+      field: 'stage',
+      fromValue: null,
+      toValue: 'deployed',
+      note: 'created when the CI was labelled as ' + ci.type,
+    },
+  });
   return toAsset(row);
 }

@@ -15,6 +15,21 @@ export interface WarrantyView {
   source: string;
   verifiedAt: string | null;
 }
+export interface CreditsView {
+  remaining: number;
+  unit: string;
+  currency: string | null;
+  asOf: string;
+}
+export interface SubscriptionView {
+  provider: string;
+  plan: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  credits: CreditsView | null;
+  source: string;
+  verifiedAt: string | null;
+}
 export interface SupportView {
   provider: string;
   contractNumber: string | null;
@@ -50,6 +65,9 @@ export interface AssetRecordView {
   purchaseCost: Money | null;
   warranty: WarrantyView | null;
   warrantyEndsAt: string | null;
+  subscription: SubscriptionView | null;
+  subscriptionEndsAt: string | null;
+  creditsRemaining: number | null;
   support: SupportView | null;
   supportContractId: string | null;
   /** From the row's own support entry, else resolved from the support contract by the field resolver. */
@@ -75,6 +93,7 @@ export interface AssetSummaryView {
   count: number;
   needsData: number;
   warrantyExpired: number;
+  subscriptionExpired: number;
   supportExpired: number;
   endOfSupportPassed: number;
 }
@@ -119,4 +138,13 @@ export interface VendorContactView {
   email: string | null;
   phone: string | null;
   portalUrl: string | null;
+}
+
+/** REQ-CMDB-041 — one page of the register with its totals. */
+export interface AssetPageView {
+  items: AssetRecordView[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
 }

@@ -28,7 +28,20 @@ function ci(type: Ci['type'], attributes: Record<string, unknown>, code = 'HW-TE
 
 describe('asset rows from CIs', () => {
   it('maps a discovered host with its own tag, serial, make, model and vendor warranty', () => {
-    const row = assetRowFor(ci('host', { assetTag: 'SRV-XFTBS6G', serialNumber: 'ABC123', manufacturer: 'Dell', model: 'PowerEdge R760', partNumber: '0R760', purchaseDate: '2024-12-24', warrantyEnd: '2027-12-24', warrantyProvider: 'Dell ProSupport', warrantyLevel: 'ProSupport Plus', currency: 'SAR' }));
+    const row = assetRowFor(
+      ci('host', {
+        assetTag: 'SRV-XFTBS6G',
+        serialNumber: 'ABC123',
+        manufacturer: 'Dell',
+        model: 'PowerEdge R760',
+        partNumber: '0R760',
+        purchaseDate: '2024-12-24',
+        warrantyEnd: '2027-12-24',
+        warrantyProvider: 'Dell ProSupport',
+        warrantyLevel: 'ProSupport Plus',
+        currency: 'SAR',
+      }),
+    );
     expect(row).not.toBeNull();
     expect(row?.assetTag).toBe('SRV-XFTBS6G');
     expect(row?.serialNumber).toBe('ABC123');
@@ -37,12 +50,25 @@ describe('asset rows from CIs', () => {
     expect(row?.partNumber).toBe('0R760');
     expect(row?.purchasedAt).toBe('2024-12-24');
     expect(row?.currency).toBe('SAR');
-    expect(JSON.parse(row?.warranty ?? 'null')).toEqual({ provider: 'Dell ProSupport', level: 'ProSupport Plus', startsAt: '2024-12-24', endsAt: '2027-12-24', source: 'vendor_api', verifiedAt: null });
+    expect(JSON.parse(row?.warranty ?? 'null')).toEqual({
+      provider: 'Dell ProSupport',
+      level: 'ProSupport Plus',
+      startsAt: '2024-12-24',
+      endsAt: '2027-12-24',
+      source: 'vendor_api',
+      verifiedAt: null,
+    });
     expect(row?.support).toBeNull();
   });
 
   it('falls back to the CI code for the tag and leaves unknown fields null rather than inventing them', () => {
-    const row = assetRowFor(ci('software_instance', { name: 'Enterprise Linux Server Subscription', vendor: 'Red Hat', version: '9' }, 'APP-RHEL-SUB'));
+    const row = assetRowFor(
+      ci(
+        'software_instance',
+        { name: 'Enterprise Linux Server Subscription', vendor: 'Red Hat', version: '9' },
+        'APP-RHEL-SUB',
+      ),
+    );
     expect(row?.assetTag).toBe('APP-RHEL-SUB');
     expect(row?.manufacturer).toBe('Red Hat');
     expect(row?.model).toBe('Enterprise Linux Server Subscription');
@@ -53,8 +79,23 @@ describe('asset rows from CIs', () => {
   });
 
   it('records a licence expiry as subscription support cover', () => {
-    const row = assetRowFor(ci('licence', { vendor: 'CrowdStrike', software: 'Falcon Sensor', expiresAt: '2027-06-26', poNumber: 'PO-1', licenceType: 'perpetual' }));
-    expect(JSON.parse(row?.support ?? 'null')).toEqual({ provider: 'CrowdStrike', contractNumber: 'PO-1', level: 'perpetual', endsAt: '2027-06-26', source: 'vendor_api', verifiedAt: null });
+    const row = assetRowFor(
+      ci('licence', {
+        vendor: 'CrowdStrike',
+        software: 'Falcon Sensor',
+        expiresAt: '2027-06-26',
+        poNumber: 'PO-1',
+        licenceType: 'perpetual',
+      }),
+    );
+    expect(JSON.parse(row?.support ?? 'null')).toEqual({
+      provider: 'CrowdStrike',
+      contractNumber: 'PO-1',
+      level: 'perpetual',
+      endsAt: '2027-06-26',
+      source: 'vendor_api',
+      verifiedAt: null,
+    });
   });
 
   it('ignores a warranty end that is not a calendar date and a warranty without a provider', () => {
@@ -69,5 +110,59 @@ describe('asset rows from CIs', () => {
     expect(assetRowFor(ci('unknown', {}))).toBeNull();
     const rows = assetRowsFor(OWNED_CI_TYPES.map((type) => ci(type, {})));
     expect(rows).toHaveLength(OWNED_CI_TYPES.length);
+  });
+});
+
+describe('assetRowFor subscription cover (REQ-CMDB-042)', () => {
+  const base = {
+    tenantId: '8b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e',
+    lifecycle: 'managed',
+    tags: [],
+    source: { collectorId: 'test', nodeId: 'test', runId: 'test', confidence: 0.9 },
+    observedAt: '2026-11-05T07:00:00.000Z',
+    validFrom: '2026-11-05T07:00:00.000Z',
+    validTo: null,
+    checksum: 'b'.repeat(64),
+  };
+  it('maps a licence expiry and credits to a subscription and leaves hardware without one', () => {
+    const licence = assetRowFor({
+      ...base,
+      id: '7b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e',
+      type: 'licence',
+      layer: 'applications',
+      identity: { licenceKeyDigest: 'a'.repeat(64) },
+      name: 'RHEL subscription',
+      displayName: 'RHEL subscription',
+      code: 'APP-RHEL',
+      attributes: {
+        vendor: 'Red Hat',
+        licenceType: 'subscription',
+        subscriptionStart: '2026-01-01',
+        expiresAt: '2026-12-31',
+        creditsRemaining: 32,
+        creditsUnit: 'cores',
+      },
+    } as unknown as Ci);
+    expect(licence?.subscription).not.toBeNull();
+    expect(JSON.parse(licence?.subscription ?? '{}')).toMatchObject({
+      provider: 'Red Hat',
+      plan: 'subscription',
+      startsAt: '2026-01-01',
+      endsAt: '2026-12-31',
+      credits: { remaining: 32, unit: 'cores', currency: null, asOf: '2026-11-05T07:00:00.000Z' },
+      source: 'vendor_api',
+    });
+    const host = assetRowFor({
+      ...base,
+      id: '9b2c6a7e-0f6d-4c0b-9d7e-2a1f3b4c5d6e',
+      type: 'host',
+      layer: 'hardware',
+      identity: { serialNumber: 'X1' },
+      name: 'esx-01',
+      displayName: 'esx-01',
+      code: 'HW-ESX-01',
+      attributes: { manufacturer: 'Dell', expiresAt: '2026-12-31' },
+    } as unknown as Ci);
+    expect(host?.subscription).toBeNull();
   });
 });

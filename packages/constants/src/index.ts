@@ -396,6 +396,8 @@ export const ASSETS = {
   defaultUsefulLifeMonths: 1,
   /** Register rows fetched per page; the register loads more on demand. */
   registerPageSize: 50,
+  /** Most rows one register page may ask for (REQ-CMDB-041). */
+  registerMaxPageSize: 200,
   /** Rows of the audit-note field on the details form. */
   noteRows: 2,
   /** Unknown CIs listed in the remediation panel. */
@@ -724,6 +726,10 @@ export const CONSOLE_ALPHA = {
 /** Console-wide interaction constants shared by several screens (REQ-UI-003). */
 /** Dashboards (REQ-UI-030, ADR-020): the widget grid, template sizes and the trend window every dashboard shares. */
 export const DASHBOARD = {
+  /** REQ-UI-036: months the uptime tile compares (this month against last). */
+  uptimeMonths: 2,
+  /** Decimal scale of the uptime tile's delta in percentage points (two decimals). */
+  uptimeDeltaScale: 100,
   /** Widget grid columns on a wide screen; a widget spans 1..columns of them. */
   columns: 4,
   /** Widgets a dashboard may hold; the wizard and the API both refuse more. */
@@ -972,8 +978,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
+   * 1.2.0 (REQ-CMDB-041): `AssetPage`, `assetPage` (page numbers and totals for the register).
+   * 1.3.0 (REQ-CMDB-042, ADR-027): `SubscriptionCover`, `Credits`, `SubscriptionInput`, `AssetDataGap.subscription`,
+   * `AssetRecord.subscription`/`subscriptionEndsAt`/`creditsRemaining`, `AssetSummary.subscriptionExpired`.
    */
-  graphql: '1.1.0',
+  graphql: '1.3.0',
   /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. */
   event: '0.4.0',
 };

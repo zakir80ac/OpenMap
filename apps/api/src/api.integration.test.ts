@@ -989,6 +989,138 @@ describe('OpenMap API (integration)', () => {
       serialNumber: 'UPS-4416',
       manufacturer: 'Schneider Electric',
     });
+    // REQ-CMDB-041 — pages by number carry the totals under the same filter; a page past the end is empty, not an error.
+    type Page = {
+      items: Array<{ id: string }>;
+      totalCount: number;
+      page: number;
+      pageSize: number;
+      pageCount: number;
+    };
+    const paged = await gql<{ first: Page; second: Page; beyond: Page }>(
+      '{ first: assetPage(filter: { layers: [dc] }, page: 1, pageSize: 1) { items { id } totalCount page pageSize pageCount } second: assetPage(filter: { layers: [dc] }, page: 2, pageSize: 1) { items { id } totalCount page pageSize pageCount } beyond: assetPage(filter: { layers: [dc] }, page: 9, pageSize: 1) { items { id } totalCount pageCount } }',
+    );
+    expect(paged.errors).toBeUndefined();
+    expect(paged.data?.first).toMatchObject({ totalCount: 2, page: 1, pageSize: 1, pageCount: 2 });
+    expect(paged.data?.first.items).toHaveLength(1);
+    expect(paged.data?.second.items).toHaveLength(1);
+    expect(paged.data?.second.items[0]?.id).not.toBe(paged.data?.first.items[0]?.id);
+    expect(paged.data?.beyond).toMatchObject({ totalCount: 2, pageCount: 2, items: [] });
+    const tooBig = await gql<{ assetPage: Page }>('{ assetPage(pageSize: 100000) { totalCount } }');
+    expect(tooBig.errors?.[0]?.message).toMatch(/assetPage arguments/);
+
+    // REQ-CMDB-042 (ADR-027) — a SaaS asset carries a subscription instead of a warranty: term, credits, the gap and the summary follow.
+    type SubAsset = Asset & {
+      subscription: {
+        provider: string;
+        plan: string | null;
+        endsAt: string | null;
+        credits: { remaining: number; unit: string; currency: string | null; asOf: string } | null;
+        source: string;
+      } | null;
+      subscriptionEndsAt: string | null;
+      creditsRemaining: number | null;
+    };
+    const subFields =
+      fields +
+      ' subscription { provider plan endsAt credits { remaining unit currency asOf } source } subscriptionEndsAt creditsRemaining';
+    const saas = await gql<{ createAsset: SubAsset }>(
+      'mutation S($input: ManualAssetInput!) { createAsset(input: $input) { ' + subFields + ' } }',
+      {
+        input: {
+          layer: 'saas',
+          type: 'saas_application',
+          name: 'Payroll cloud',
+          details: {
+            manufacturer: 'Workday',
+            model: 'HCM',
+            subscription: {
+              provider: 'Workday',
+              plan: 'Enterprise',
+              startsAt: '2026-01-01',
+              endsAt: '2026-12-31',
+              creditsRemaining: 1250,
+              creditsUnit: 'seats',
+            },
+          },
+        },
+      },
+    );
+    expect(saas.errors).toBeUndefined();
+    expect(saas.data?.createAsset.subscription).toMatchObject({
+      provider: 'Workday',
+      plan: 'Enterprise',
+      endsAt: '2026-12-31T00:00:00.000Z',
+      source: 'manual',
+      credits: { remaining: 1250, unit: 'seats', currency: null },
+    });
+    expect(saas.data?.createAsset.subscriptionEndsAt).toBe('2026-12-31T00:00:00.000Z');
+    expect(saas.data?.createAsset.creditsRemaining).toBe(1250);
+    // A subscription type never asks for a warranty, and its subscription is filled, so only support and end of life remain.
+    expect(saas.data?.createAsset.dataGaps).toEqual(['support', 'end_of_life']);
+    const saasId = saas.data?.createAsset.id;
+    const subGap = await gql<{
+      assets: Asset[];
+      assetSummary: Array<{ layer: string; count: number; needsData: number; subscriptionExpired: number }>;
+    }>(
+      '{ assets(filter: { layers: [saas], dataGaps: [subscription] }) { id } assetSummary { layer count needsData subscriptionExpired } }',
+    );
+    expect(subGap.errors).toBeUndefined();
+    expect(subGap.data?.assets.map((a) => a.id)).not.toContain(saasId);
+    expect(subGap.data?.assetSummary.find((row) => row.layer === 'saas')).toMatchObject({
+      count: 1,
+      subscriptionExpired: 0,
+    });
+    const clearedSubscription = await gql<{ updateAsset: SubAsset }>(
+      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' +
+        subFields +
+        ' } }',
+      { id: saasId, input: { subscription: null } },
+    );
+    expect(clearedSubscription.errors).toBeUndefined();
+    expect(clearedSubscription.data?.updateAsset.subscription).toBeNull();
+    expect(clearedSubscription.data?.updateAsset.dataGaps).toEqual([
+      'subscription',
+      'support',
+      'end_of_life',
+    ]);
+    expect(clearedSubscription.data?.updateAsset.audits.some((a) => a.field === 'subscription')).toBe(true);
+    const invalid = await gql<{ updateAsset: SubAsset }>(
+      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { id } }',
+      { id: saasId, input: { subscription: { provider: 'Workday' } } },
+    );
+    expect(invalid.errors?.[0]?.message).toMatch(/updateAsset arguments|end date or a credit balance/);
+    // The licence CI of the fixture carries expiresAt and vendor: labelling an unknown CI into a licence maps them to a subscription.
+    const licenceId = randomUUID();
+    await prisma.ci.create({
+      data: ciRow(licenceId, 'unknown', 'unknown', 'app-7781', {
+        vendor: 'Atlassian',
+        expiresAt: '2027-06-30',
+        licenceType: 'subscription',
+        creditsRemaining: 40,
+        creditsUnit: 'seats',
+      }),
+    });
+    const asLicence = await gql<{ labelCi: { asset: SubAsset | null } }>(
+      'mutation L($input: LabelCiInput!) { labelCi(input: $input) { asset { ' + subFields + ' } } }',
+      {
+        input: {
+          ciId: licenceId,
+          title: 'Jira licence',
+          description: 'from the invoice',
+          layer: 'applications',
+          type: 'licence',
+        },
+      },
+    );
+    expect(asLicence.errors).toBeUndefined();
+    expect(asLicence.data?.labelCi.asset?.subscription).toMatchObject({
+      provider: 'Atlassian',
+      plan: 'subscription',
+      endsAt: '2027-06-30T00:00:00.000Z',
+      source: 'vendor_api',
+      credits: { remaining: 40, unit: 'seats' },
+    });
   });
 
   it('assigns an SLA, reports availability by period from the ClickHouse history, and runs an incident through assignment, RCA, resolution and closure with every step on the timeline (REQ-BSM-006, REQ-BSM-008)', async () => {

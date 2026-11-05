@@ -24,6 +24,8 @@ export interface AssetRow {
   currency: string;
   /** JSON text of warrantySchema, or null. */
   warranty: string | null;
+  /** JSON text of subscriptionSchema, or null (ADR-027). */
+  subscription: string | null;
   /** JSON text of supportSchema, or null. */
   support: string | null;
 }
@@ -36,7 +38,7 @@ function currencyOf(attributes: Record<string, unknown>): string {
 /** The register row a CI deserves, or null when its type is not owned. The tag prefers the organisation's own. */
 export function assetRowFor(ci: Ci): AssetRow | null {
   if (!isOwnedCiType(ci.type)) return null;
-  const fields = assetFieldsFromCi(ci.type, ci.attributes);
+  const fields = assetFieldsFromCi(ci.type, ci.attributes, ci.observedAt);
   return {
     tenantId: ci.tenantId,
     ciId: ci.id,
@@ -51,6 +53,7 @@ export function assetRowFor(ci: Ci): AssetRow | null {
     purchasedAt: fields.purchasedAt,
     currency: currencyOf(ci.attributes),
     warranty: fields.warranty === null ? null : JSON.stringify(fields.warranty),
+    subscription: fields.subscription === null ? null : JSON.stringify(fields.subscription),
     support: fields.support === null ? null : JSON.stringify(fields.support),
   };
 }
@@ -64,18 +67,18 @@ async function insertRows(tx: Tx, rows: readonly AssetRow[], tag: (row: AssetRow
   await tx.$executeRaw(Prisma.sql`
     INSERT INTO asset_records (id, "tenantId", "ciId", "ciType", layer, source, "assetTag", "serialNumber", manufacturer, model, "partNumber",
       stage, "stageChangedAt", "purchasedAt", "depreciationMethod", "usefulLifeMonths", "residualValueAmount", "residualValueCurrency",
-      warranty, support, tags, "customFields", "createdAt", "updatedAt")
+      warranty, subscription, support, tags, "customFields", "createdAt", "updatedAt")
     SELECT gen_random_uuid(), u.tenant_id, u.ci_id, u.ci_type::"CiType", u.layer::"CiLayer", 'discovery'::"AssetSource", u.asset_tag, u.serial, u.manufacturer, u.model, u.part,
       'deployed'::"AssetStage", now(), CASE WHEN u.purchased_at IS NULL THEN NULL ELSE u.purchased_at::date END,
       'none'::"DepreciationMethod", ${ASSETS.defaultUsefulLifeMonths}, 0, u.currency,
-      CASE WHEN u.warranty IS NULL THEN NULL ELSE u.warranty::jsonb END, CASE WHEN u.support IS NULL THEN NULL ELSE u.support::jsonb END,
+      CASE WHEN u.warranty IS NULL THEN NULL ELSE u.warranty::jsonb END, CASE WHEN u.subscription IS NULL THEN NULL ELSE u.subscription::jsonb END, CASE WHEN u.support IS NULL THEN NULL ELSE u.support::jsonb END,
       ARRAY[]::text[], '{}'::jsonb, now(), now()
     FROM unnest(
       ${rows.map((r) => r.tenantId)}::uuid[], ${rows.map((r) => r.ciId)}::uuid[], ${rows.map((r) => r.ciType)}::text[], ${rows.map((r) => r.layer)}::text[],
       ${rows.map(tag)}::text[], ${rows.map((r) => r.serialNumber)}::text[], ${rows.map((r) => r.manufacturer)}::text[], ${rows.map((r) => r.model)}::text[],
       ${rows.map((r) => r.partNumber)}::text[], ${rows.map((r) => r.purchasedAt)}::text[], ${rows.map((r) => r.currency)}::text[],
-      ${rows.map((r) => r.warranty)}::text[], ${rows.map((r) => r.support)}::text[]
-    ) AS u(tenant_id, ci_id, ci_type, layer, asset_tag, serial, manufacturer, model, part, purchased_at, currency, warranty, support)
+      ${rows.map((r) => r.warranty)}::text[], ${rows.map((r) => r.subscription)}::text[], ${rows.map((r) => r.support)}::text[]
+    ) AS u(tenant_id, ci_id, ci_type, layer, asset_tag, serial, manufacturer, model, part, purchased_at, currency, warranty, subscription, support)
     ON CONFLICT DO NOTHING`);
 }
 
@@ -120,11 +123,12 @@ export async function refreshAssetsBatch(tx: Tx, cis: readonly Ci[]): Promise<vo
       "partNumber" = COALESCE(u.part, a."partNumber"),
       "purchasedAt" = COALESCE(CASE WHEN u.purchased_at IS NULL THEN NULL ELSE u.purchased_at::date END, a."purchasedAt"),
       warranty = CASE WHEN u.warranty IS NOT NULL AND (a.warranty IS NULL OR a.warranty->>'source' = 'vendor_api') THEN u.warranty::jsonb ELSE a.warranty END,
+      subscription = CASE WHEN u.subscription IS NOT NULL AND (a.subscription IS NULL OR a.subscription->>'source' = 'vendor_api') THEN u.subscription::jsonb ELSE a.subscription END,
       support = CASE WHEN u.support IS NOT NULL AND (a.support IS NULL OR a.support->>'source' = 'vendor_api') THEN u.support::jsonb ELSE a.support END,
       "updatedAt" = now()
     FROM unnest(
       ${rows.map((r) => r.ciId)}::uuid[], ${rows.map((r) => r.serialNumber)}::text[], ${rows.map((r) => r.manufacturer)}::text[], ${rows.map((r) => r.model)}::text[],
-      ${rows.map((r) => r.partNumber)}::text[], ${rows.map((r) => r.purchasedAt)}::text[], ${rows.map((r) => r.warranty)}::text[], ${rows.map((r) => r.support)}::text[]
-    ) AS u(ci_id, serial, manufacturer, model, part, purchased_at, warranty, support)
+      ${rows.map((r) => r.partNumber)}::text[], ${rows.map((r) => r.purchasedAt)}::text[], ${rows.map((r) => r.warranty)}::text[], ${rows.map((r) => r.subscription)}::text[], ${rows.map((r) => r.support)}::text[]
+    ) AS u(ci_id, serial, manufacturer, model, part, purchased_at, warranty, subscription, support)
     WHERE a."ciId" = u.ci_id AND a.source = 'discovery'::"AssetSource"`);
 }

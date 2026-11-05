@@ -66,6 +66,7 @@ func TestMicrosoft365(t *testing.T) {
 	var seenScope string
 	tokenEndpoint(t, mux, "client_credentials", func(form map[string][]string) { seenScope = form["scope"][0] })
 	mux.HandleFunc("/v1.0/organization", authed(`{"value":[{"id":"72f988bf-86f1-41af-91ab-2d7cd011db47","displayName":"Bank","tenantType":"AAD","verifiedDomains":[{"name":"bank.onmicrosoft.com","isDefault":false},{"name":"bank.local","isDefault":true}]}]}`))
+	mux.HandleFunc("/v1.0/directory/subscriptions", authed(`{"value":[{"id":"c1","skuId":"6fd2c87f","skuPartNumber":"ENTERPRISEPACK","status":"Enabled","totalLicenses":5000,"createdDateTime":"2025-07-01T00:00:00Z","nextLifecycleDateTime":"2026-07-01T00:00:00Z","isTrial":false}]}`))
 	mux.HandleFunc("/v1.0/subscribedSkus", authed(`{"value":[{"skuPartNumber":"ENTERPRISEPACK","skuId":"6fd2c87f","consumedUnits":4100,"prepaidUnits":{"enabled":5000,"suspended":0,"warning":0},"capabilityStatus":"Enabled"},{"skuPartNumber":"POWER_BI_PRO","skuId":"f8a1db68","consumedUnits":300,"prepaidUnits":{"enabled":250,"suspended":0,"warning":50},"capabilityStatus":"Warning"}]}`))
 	mux.HandleFunc("/v1.0/users", func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("ConsistencyLevel") != "eventual" {
@@ -92,6 +93,9 @@ func TestMicrosoft365(t *testing.T) {
 	tenant := byName["Bank"]
 	if tenant.Identity["tenantId"] != "72f988bf-86f1-41af-91ab-2d7cd011db47" || tenant.Attributes["users"] != int64(4312) || tenant.Attributes["ssoApplications"] != int64(187) || tenant.Attributes["seatsTotal"] != int64(5250) {
 		t.Fatalf("tenant wrong: %+v", tenant.Attributes)
+	}
+	if byName["ENTERPRISEPACK"].Attributes["subscriptionEnd"] != "2026-07-01T00:00:00Z" || byName["ENTERPRISEPACK"].Attributes["subscriptionStart"] != "2025-07-01T00:00:00Z" || byName["POWER_BI_PRO"].Attributes["subscriptionEnd"] != nil {
+		t.Fatalf("subscription terms not mapped from directory/subscriptions: %v / %v", byName["ENTERPRISEPACK"].Attributes, byName["POWER_BI_PRO"].Attributes)
 	}
 	if byName["POWER_BI_PRO"].Attributes["health"] != "degraded" || byName["ENTERPRISEPACK"].Attributes["seatUtilisationPercent"] != int64(82) {
 		t.Fatalf("products wrong")

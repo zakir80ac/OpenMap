@@ -187,6 +187,12 @@ func Classify(host string, err error) error {
 }
 
 // IsNotFound reports whether err is the unsupported_device error raised for a 404.
+// IsForbidden reports the permission_denied error raised for a 403: the credential lacks a right an optional call needs.
+func IsForbidden(err error) bool {
+	var te *collector.TargetError
+	return errors.As(err, &te) && te.Code == contract.ErrPermissionDenied
+}
+
 func IsNotFound(err error) bool {
 	var te *collector.TargetError
 	return errors.As(err, &te) && te.Code == contract.ErrUnsupportedDevice
