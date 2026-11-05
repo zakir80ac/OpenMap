@@ -1,8 +1,0 @@
-E:\OpenMap\deploy\compose\docker-compose.apps.yml
-E:\OpenMap\docs\CONTRACTS.md
-E:\OpenMap\docs\STATE.md
-E:\OpenMap\docs\adr\ADR-028-conversational-assistant.md
-E:\OpenMap\docs\evidence\assistant-conversation.md
-E:\OpenMap\graphify-out\converted\OpenMap-Tracker_d0198e2e.md
-E:\OpenMap\docs\evidence\console\assistant-conversation-ar.png
-E:\OpenMap\docs\evidence\console\assistant-conversation-en.png
