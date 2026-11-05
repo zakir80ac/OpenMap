@@ -2,7 +2,7 @@
 // integrations, analytics and assistant screens. Same conventions as queries.ts: TanStack Query options for reads,
 // plain async functions for mutations, every field list spelled once.
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
-import { ASSETS, CONSOLE } from '@openmap/constants';
+import { ASSETS, CONSOLE, type Locale } from '@openmap/constants';
 import type { AssetDataGap, CiLayer } from '@openmap/contracts';
 import { gql } from './graphql';
 import { CI_SUMMARY_FIELDS, type CiRef, type CiSummary, type JsonValue } from './queries';
@@ -711,19 +711,54 @@ export interface AnalyticsEmbed {
   expiresInSeconds: number;
 }
 
+export interface AssistantFigure {
+  label: string;
+  value: number;
+  unit: string;
+}
+
+export interface AssistantEvidence {
+  skill: string;
+  store: string;
+  query: string;
+  params: Record<string, unknown>;
+  rows: number;
+  durationMs: number;
+  error: string | null;
+}
+
+export interface AssistantClarification {
+  question: string;
+  options: Array<{ label: string; value: string }>;
+}
+
+// REQ-AI-007 (ADR-028) — a conversational answer: prose, figures, evidence per retrieval step, follow-ups and, when
+// the assistant has to ask back, a clarification with choices. `cypher`/`rows` carry a graph step when one ran.
 export interface AssistantAnswer {
   text: string;
   cypher: string;
   rows: Array<Record<string, unknown>>;
   cis: CiSummary[];
+  intent: string;
+  confidence: number;
+  grounded: boolean;
+  figures: AssistantFigure[];
+  evidence: AssistantEvidence[];
+  followUps: string[];
+  clarification: AssistantClarification | null;
 }
+
+export const ASSISTANT_ANSWER_FIELDS =
+  'text cypher rows intent confidence grounded figures { label value unit } evidence { skill store query params rows durationMs error } followUps clarification { question options { label value } } cis { ' +
+  CI_SUMMARY_FIELDS +
+  ' }';
 
 const ANALYTICS_EMBED_QUERY =
   'query AnalyticsEmbed { analyticsEmbed { supersetUrl dashboardId token expiresInSeconds } }';
 const ASK_ASSISTANT_MUTATION =
-  'mutation AskAssistant($question: String!) { askAssistant(question: $question) { text cypher rows cis { ' +
-  CI_SUMMARY_FIELDS +
-  ' } } }';
+  'mutation AskAssistant($question: String!, $locale: String) { askAssistant(question: $question, locale: $locale) { ' +
+  ASSISTANT_ANSWER_FIELDS +
+  ' } }';
 
 /** One embed handshake per mount; the SDK asks again through fetchAnalyticsEmbed before the token expires. */
 export function analyticsEmbedQuery() {
@@ -742,8 +777,8 @@ export function fetchAnalyticsEmbed(): Promise<AnalyticsEmbed> {
   return gql<{ analyticsEmbed: AnalyticsEmbed }>(ANALYTICS_EMBED_QUERY, {}).then((d) => d.analyticsEmbed);
 }
 
-export function askAssistant(question: string): Promise<AssistantAnswer> {
-  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question }).then(
+export function askAssistant(question: string, locale: Locale): Promise<AssistantAnswer> {
+  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question, locale }).then(
     (d) => d.askAssistant,
   );
 }

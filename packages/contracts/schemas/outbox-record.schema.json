@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/outbox-record/0.4.0",
+  "$id": "https://openmap.dev/contracts/outbox-record/0.5.0",
   "title": "outbox-record",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -52,6 +52,7 @@
             "openmap.licence.compliance.changed",
             "openmap.timetravel.snapshot.created",
             "openmap.assistant.query.answered",
+            "openmap.assistant.query.failed",
             "openmap.audit.action",
             "openmap.incident.opened",
             "openmap.incident.updated",

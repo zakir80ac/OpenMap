@@ -2,7 +2,46 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 18: uptime tile, register pages, subscription cover, assistant ADR)
+## Last session · 2026-11-05 (checkpoint 19: the conversational assistant, increment one)
+
+**Done.** REQ-AI-007 (ADR-028 accepted for increment one). REQ-AI-008 stays In progress (increment two).
+
+- **Understand** (`apps/assistant/src/core/vocabulary.ts`, `intent.ts`): a bilingual catalogue (CI types, attribute
+  families with the keys collectors write, the ClickHouse measurements, aggregates, grouping words, intent markers,
+  periods, health, names, scope words) classifies the question deterministically with the matched terms kept as
+  evidence; the model (`llm-intent.ts`) is asked for a JSON verdict only below `ASSISTANT.minIntentConfidence` and
+  can fill gaps, never override.
+- **Plan** (`plan.ts`): intent → skill steps with typed parameters, or a clarification (`needName`, `unknown`);
+  "VMs per host" maps the counterpart to the hypervisor; a non-numeric attribute becomes a breakdown.
+- **Retrieve** (`apps/api/src/assistant/skills/*`): `cmdb.attributes` (Postgres SQL: count, breakdown, avg/sum/min/
+  max, grouped aggregates, relationship fan-out density; attribute keys from the tenant's discovered catalogue,
+  scope words resolved against low-cardinality values), `metrics.latest` (ClickHouse latest sample per CI,
+  aggregate or ranking with names), `services.availability` and `incidents` (ADR-024 services module), `impact` and
+  `history` (graph closure, CI versions), `howto` (screen catalogue in i18n), `graph.query` (REQ-AI-001 kept).
+  Each step: timeout, span, evidence (store, query, params, rows, duration, error); ambiguous names narrow to the
+  types the question used, then ask back with choices that re-ask using the CI code.
+- **Compose** (`compose.ts`, `guard.ts`, `prose.ts`): every summary worded through the catalogue in en and ar with its
+  figures; `ASSISTANT_PROSE` lets the model reword under the grounding guard (numbers at any rounding, identifiers in
+  the evidence, sentence budget) and falls back with `grounded: false`.
+- **Follow up** (`followups.ts`): three next questions per intent.
+- **Contracts.** GraphQL 1.4.0 (`AssistantAnswer` intent/confidence/figures/evidence/followUps/clarification/
+  grounded, `askAssistant(question, locale)`), event 0.5.0 (`openmap.assistant.query.failed`), assistant 0.1.0
+  (`packages/contracts/src/assistant.ts`). Metrics `openmap_assistant_questions_total{intent,outcome}`,
+  `openmap_assistant_duration_seconds`.
+- **Console.** `AssistantView` shows prose, intent and confidence, figures (Kpi), CI pills, evidence per step,
+  Cypher and rows when a graph step ran, follow-up chips, clarification choices, the ungrounded note; the Impact
+  screen passes the locale. 193 i18n keys per locale.
+- **Evaluation.** `apps/assistant/src/eval/questions.ts` (28 questions, en and ar, Syed's two failures included),
+  run offline by T-142 and through GraphQL against the stack by T-143 (`apps/api/src/assistant/
+assistant.eval.integration.test.ts`): 28 of 28 through GraphQL in 45 s, English prose grounded, Arabic deterministic (ASSISTANT_PROSE_LOCALES=en on the CPU profile). Console T-144; e2e Assistant: 3 of 3 (setup, en, ar); Lighthouse: not re-measured (the Assistant screen carries no budget; the budgeted screens are untouched).
+  Evidence: `docs/evidence/assistant-conversation.md`.
+
+**Lessons.** (1) Parameterised SQL keeps the attribute key in `$n` bindings: evidence checks must read params too.
+(2) A hypervisor and its host share a name in the synthetic estate: resolve names by the types the question named
+before asking back. (3) Arabic accusative endings ("جهازاً افتراضياً") need per-word suffixes in the term matcher.
+(4) The graphify commit hook (`--no-cluster`, `stage_fixed`) commits the raw graph.json; the curated report is ours.
+
+## Previous session · 2026-11-05 (checkpoint 18: uptime tile, register pages, subscription cover, assistant ADR)
 
 **Done.** REQ-UI-036, REQ-CMDB-041, REQ-CMDB-042; ADR-027 accepted; ADR-028 proposed for REQ-AI-007/008.
 
@@ -37,7 +76,7 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 (2) A generated end-marker insertion lands in whichever test precedes the marker; anchor on the test being extended.
 (3) The console's `Kpi` prints value and unit in one text node: match by prefix in tests.
 
-## Previous session · 2026-11-05 (checkpoint 17: SLA assignment, uptime by period, incident response with RCA)
+## Earlier session · 2026-11-05 (checkpoint 17: SLA assignment, uptime by period, incident response with RCA)
 
 **Done.** REQ-BSM-006 and REQ-BSM-008 (ADR-024), plus the register paging fix (cf5a4c0).
 
@@ -297,16 +336,16 @@ tracker is the truth.
 
 ## Dependencies on Syed (nothing below can be finished without them)
 
-| Need | Rows blocked |
-| --- | --- |
-| `docs/SPEC.md` (the planning document exported as Markdown) | re-seeding the tracker; frozen contracts checked against it; every "per SPEC" acceptance criterion |
+| Need                                                                                                                                                                                                                      | Rows blocked                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `docs/SPEC.md` (the planning document exported as Markdown)                                                                                                                                                               | re-seeding the tracker; frozen contracts checked against it; every "per SPEC" acceptance criterion                                   |
 | Vendor lab or recorded transcripts (snmpwalk, SSH/CLI, WinRM, REST) for Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert | REQ-DISC-001…027 Done (collectors exist, tested against protocol-shaped fixtures; R-004 forbids fabricating vendor data), REQ-QA-003 |
-| Read-only cloud and SaaS credentials (AWS, Azure, GCP, OCI, Alibaba, Microsoft 365, Google Workspace, Salesforce, ServiceNow, Workday) | REQ-DISC-010, REQ-CMDB-022 Done |
-| A GitHub remote (or other CI runner) so the `verify`, `integration`, `e2e` and `kind` jobs run | REQ-QA-002/004, REQ-INT-003 evidence from CI, REQ-PERF-002/004 thresholds "enforced in CI" |
-| Warranty / EoX API credentials (Dell TechDirect, HPE, Lenovo, Cisco, IBM) | REQ-CMDB-024, REQ-INT-014 |
-| Integration sandboxes (ServiceNow, Jira SM, Splunk/Sentinel, PagerDuty, Slack/Teams webhooks) | REQ-INT-009…017 Done beyond the recorded-fixture level |
-| Corporate IdP (SAML/OIDC) and the MFA decision | REQ-SEC-009 Done |
-| Decisions: ADR-006 (@peculiar/x509), ADR-007 (Sigma.js + graphology), per-business-unit tenancy, code-signing certificate for the release tarballs | REQ-SEC-013, REQ-SEC-010 scope, REQ-DISC-031/004 Done |
+| Read-only cloud and SaaS credentials (AWS, Azure, GCP, OCI, Alibaba, Microsoft 365, Google Workspace, Salesforce, ServiceNow, Workday)                                                                                    | REQ-DISC-010, REQ-CMDB-022 Done                                                                                                      |
+| A GitHub remote (or other CI runner) so the `verify`, `integration`, `e2e` and `kind` jobs run                                                                                                                            | REQ-QA-002/004, REQ-INT-003 evidence from CI, REQ-PERF-002/004 thresholds "enforced in CI"                                           |
+| Warranty / EoX API credentials (Dell TechDirect, HPE, Lenovo, Cisco, IBM)                                                                                                                                                 | REQ-CMDB-024, REQ-INT-014                                                                                                            |
+| Integration sandboxes (ServiceNow, Jira SM, Splunk/Sentinel, PagerDuty, Slack/Teams webhooks)                                                                                                                             | REQ-INT-009…017 Done beyond the recorded-fixture level                                                                               |
+| Corporate IdP (SAML/OIDC) and the MFA decision                                                                                                                                                                            | REQ-SEC-009 Done                                                                                                                     |
+| Decisions: ADR-006 (@peculiar/x509), ADR-007 (Sigma.js + graphology), per-business-unit tenancy, code-signing certificate for the release tarballs                                                                        | REQ-SEC-013, REQ-SEC-010 scope, REQ-DISC-031/004 Done                                                                                |
 
 ## In progress
 
@@ -331,9 +370,9 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-AI-007 then REQ-AI-008 (ADR-028): the conversational assistant — increment one: skills `cmdb.attributes`,
-   `metrics.latest`, `services.availability`, the intent classifier with clarifications, the grounding guard and the
-   evaluation set in CI; increment two: persisted conversations, follow-ups, `howto`, `history`, the console thread.
+1. REQ-AI-008 (ADR-028 increment two): persisted conversations (`assistant_conversations`, `assistant_turns`,
+   Prisma migration), follow-up resolution against the previous turn's entities and period ("and last month?"),
+   the conversation list in the console, `metrics.series` for ranges, LoRA step documented once a GPU host exists.
 2. REQ-BSM-007 (ADR-025): sites and connectivity for HA/DR readiness.
 3. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
 
@@ -345,15 +384,15 @@ Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`
 ## Questions for Syed
 
 0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
-   and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
-   the lab) so the next list shows the SLA, assistant and finance work you asked for?
+and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
+the lab) so the next list shows the SLA, assistant and finance work you asked for?
 0b. Microsoft 365 and Azure: grant the read-only app registration `Organization.Read.All` (Graph) and a Billing
-   Reader role on the billing account so the subscription term and credit balance flow in; Google Workspace terms
-   need the Reseller API only if Workspace is bought through a reseller.
-0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
-   console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
-   Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)
-   with Superset kept for ad-hoc exploration only? That is the only way to the 0.90 budget on that screen.
+Reader role on the billing account so the subscription term and credit balance flow in; Google Workspace terms
+need the Reseller API only if Workspace is bought through a reseller. 0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
+console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
+Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)
+with Superset kept for ad-hoc exploration only? That is the only way to the 0.90 budget on that screen.
+
 1. Export the planning document to `docs/SPEC.md` so the tracker can be re-seeded and the contracts frozen against it.
 2. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE
    iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.

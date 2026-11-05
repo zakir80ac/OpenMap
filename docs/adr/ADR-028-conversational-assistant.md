@@ -1,6 +1,6 @@
 # ADR-028 — Ask becomes a conversation: intent, plan, retrieve across the stores, compose with grounding
 
-Status: Proposed (implementation under REQ-AI-007 and REQ-AI-008) · Date: 2026-11-05 · Tracker: REQ-AI-007, REQ-AI-008
+Status: Accepted (increment one shipped under REQ-AI-007 on 2026-11-05: skills `cmdb.attributes`, `metrics.latest`, `services.availability`, `incidents`, `impact`, `history`, `howto` and the kept `graph.query`; the classifier with clarifications; the grounding guard; the evaluation set in CI; GraphQL 1.4.0; increment two, persisted conversations and follow-up resolution, continues under REQ-AI-008) · Date: 2026-11-05 · Tracker: REQ-AI-007, REQ-AI-008
 
 ## Context
 
@@ -22,21 +22,21 @@ in Postgres are out of reach, and the model (Qwen2.5-Coder 1.5B on the CPU profi
    `askAssistant(question, conversationId)` appends to a conversation and the answer carries the conversation id, so
    a follow-up ("and last month?") resolves against the previous turn's entities and period.
 2. **Five levels, deterministic where it matters.**
-   - *Understand*: an intent classifier over a bilingual pattern catalogue (lookup, count, attribute statistics,
+   - _Understand_: an intent classifier over a bilingual pattern catalogue (lookup, count, attribute statistics,
      measurement, availability, incidents, impact, change history, how-to, report) with the LLM as the fallback
      that returns JSON (intent, entities, measurement, period) and a confidence; entities are resolved against the
      CMDB (names, codes, types) and an ambiguous match becomes a clarifying question, not a guess.
-   - *Plan*: a short list of retrieval steps over named skills, each with a validated parameter shape:
+   - _Plan_: a short list of retrieval steps over named skills, each with a validated parameter shape:
      `graph.query` (the existing NL→Cypher path, kept), `cmdb.attributes` (Postgres aggregates over CI attributes:
      OS per host, memory per VM, VM density per host through `runs_on`), `metrics.latest` / `metrics.series`
      (ClickHouse metrics per CI or per type), `services.availability` (ADR-024), `incidents`, `impact` (the impact
      service), `history` (`ci_history`), `howto` (a checked-in knowledge base of OpenMap's screens and concepts).
-   - *Retrieve*: the steps run with timeouts; every query, row count and error is kept as evidence on the turn.
-   - *Compose*: the LLM writes two to five sentences from the structured results in the user's locale, under a
+   - _Retrieve_: the steps run with timeouts; every query, row count and error is kept as evidence on the turn.
+   - _Compose_: the LLM writes two to five sentences from the structured results in the user's locale, under a
      grounding guard: every number in the prose must occur in the results, every CI named must be in the evidence,
      or the sentence is replaced by the deterministic summary; the answer always ends with the figures it rests on
      and the CIs it cites, and the evidence (queries) is one click away.
-   - *Follow up*: three suggested next questions per intent (deterministic), the clarifying question when
+   - _Follow up_: three suggested next questions per intent (deterministic), the clarifying question when
      confidence is low, and "I cannot answer that from the estate" with the reason when no skill applies.
 3. **Trained for OpenMap means a catalogue, examples and an evaluation set, not weights.** The grounding prompt is
    generated from the contracts (types, layers, relationships, metric names, availability and SLA vocabulary) with

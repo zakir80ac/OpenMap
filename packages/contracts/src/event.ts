@@ -28,6 +28,7 @@ export const EVENT_TYPES = [
   'openmap.licence.compliance.changed',
   'openmap.timetravel.snapshot.created',
   'openmap.assistant.query.answered',
+  'openmap.assistant.query.failed',
   'openmap.audit.action',
   'openmap.incident.opened',
   'openmap.incident.updated',

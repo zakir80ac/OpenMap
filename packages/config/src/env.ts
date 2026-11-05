@@ -109,6 +109,13 @@ export const envSchema = z.object({
   /** Feature switches. */
   FEATURE_OUTBOUND_INTEGRATIONS: bool.default(false),
   FEATURE_ASSISTANT: bool.default(true),
+  /**
+   * ADR-028: let the model write the prose of an answer (under the grounding guard). Off, every answer is the
+   * deterministic summary; useful on a CPU profile where the small model adds seconds and little wording.
+   */
+  ASSISTANT_PROSE: bool.default(true),
+  /** Locales the model may reword in (comma-separated); the CPU profile's small model is trusted with English only. */
+  ASSISTANT_PROSE_LOCALES: z.string().default('en,ar'),
 });
 
 export type Env = z.infer<typeof envSchema>;

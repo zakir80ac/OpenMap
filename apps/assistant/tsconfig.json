@@ -3,5 +3,5 @@
   "compilerOptions": { "outDir": "dist", "rootDir": "src", "composite": true, "lib": ["ES2023", "DOM"] },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"],
-  "references": [{ "path": "../../packages/constants" }, { "path": "../../packages/config" }, { "path": "../../packages/contracts" }, { "path": "../../packages/graph" }]
+  "references": [{ "path": "../../packages/constants" }, { "path": "../../packages/config" }, { "path": "../../packages/contracts" }, { "path": "../../packages/graph" }, { "path": "../../packages/i18n" }]
 }

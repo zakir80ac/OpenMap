@@ -1,0 +1,398 @@
+{
+ "capturedAt": "2026-11-05T11:27:46.226Z",
+ "tenantId": "ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c",
+ "model": "Qwen/Qwen2.5-7B-Instruct",
+ "prose": true,
+ "passed": 28,
+ "total": 28,
+ "outcomes": [
+  {
+   "id": "count-hosts",
+   "question": "How many hosts are there?",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 1,
+   "text": "There are 2,000 hosts in the IT estate.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "os-per-server",
+   "question": "OS per server average",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 6,
+   "text": "hosts by operating system, 2,000 in 5 groups: Windows Server: 636; Red Hat Enterprise Linux: 629; Ubuntu: 623; VMware ESXi: 71; Nutanix AHV: 41.",
+   "grounded": false,
+   "evidence": [
+    "cmdb.attributes:postgres:5"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "vm-density-vmware",
+   "question": "How many VMs running per host in VMware",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 3,
+   "text": "There are an average of 12 virtual machines running per host in VMware, with a maximum of 12 virtual machines on a single host.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "avg-memory-hosts",
+   "question": "What is the average memory of the hosts?",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 2,
+   "text": "The average memory of the hosts is 865.79 GB.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "hosts-per-os",
+   "question": "How many hosts run each operating system?",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 6,
+   "text": "There are 2,000 hosts in total, with 636 running Windows Server, 629 running Red Hat Enterprise Linux, 623 running Ubuntu, 71 running VMware ESXi, and 41 running Nutanix AHV.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:5"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "hosts-per-site",
+   "question": "How many hosts per site?",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 5,
+   "text": "hosts by site, 2,000 in 4 groups: RYD: 1,000; JED: 600; DMM-COLO: 240; HQ: 160.",
+   "grounded": false,
+   "evidence": [
+    "cmdb.attributes:postgres:4"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "vcpus-per-vm",
+   "question": "What is the average number of vCPUs per VM?",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 2,
+   "text": "The average number of vCPUs per VM is 7.07.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "avg-cpu-hosts",
+   "question": "Average CPU utilisation of hosts",
+   "intent": "measurement",
+   "skill": "metrics.latest",
+   "figures": 2,
+   "text": "The average CPU utilisation of hosts across 4,000 hosts is 48.36%.",
+   "grounded": true,
+   "evidence": [
+    "metrics.latest:clickhouse:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "top-cpu-hosts",
+   "question": "Which hosts have the highest CPU utilisation?",
+   "intent": "measurement",
+   "skill": "metrics.latest",
+   "figures": 10,
+   "text": "host CPU utilisation across 4,000 hosts, highest first (as of Oct 1, 2026): srv-jed-build-0154 94%; srv-dmm-gpu-0189 94%; srv-ryd-sql-0167 94%; ahv-jed-c01-03 93.9%; bac-ryd-01 93.9%; srv-ryd-hsm-0664-bmc 93.9%; srv-ryd-sas-0786-bmc 93.9%; srv-ryd-oracle-0326 93.9%; hv-ryd-c02-12-bmc 93.9%; srv-jed-backup-0258 93.9%.",
+   "grounded": false,
+   "evidence": [
+    "metrics.latest:clickhouse:10"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "power-racks",
+   "question": "Which PDUs draw the most power?",
+   "intent": "measurement",
+   "skill": "metrics.latest",
+   "figures": 10,
+   "text": "The JED-DH01-A-14 PDU-A draws the most power at 4,180 W.",
+   "grounded": true,
+   "evidence": [
+    "metrics.latest:clickhouse:10"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "uptime-month",
+   "question": "What is the uptime of business services this month?",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "The uptime of business services this month was 100%, with 0 minutes down in total and 0 below target.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "uptime-service",
+   "question": "What was the availability of \"ATM Network\" last month?",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 2,
+   "text": "The availability of \"ATM Network\" last month was 100%, with no downtime and the target of 99.99% met.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "open-incidents",
+   "question": "Which incidents are open?",
+   "intent": "incidents",
+   "skill": "incidents",
+   "figures": 1,
+   "text": "There are no open incidents.",
+   "grounded": true,
+   "evidence": [
+    "incidents:postgres:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "impact-host",
+   "question": "Which business services depend on the host named ahv-dmm-c01-01?",
+   "intent": "impact",
+   "skill": "impact",
+   "figures": 1,
+   "text": "ahv-dmm-c01-01 depends on no business service in the graph.",
+   "grounded": true,
+   "evidence": [
+    "impact:memgraph:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "impact-no-name",
+   "question": "What is affected if it fails?",
+   "intent": "impact",
+   "skill": null,
+   "figures": 0,
+   "text": "Which item should I look at? Name a host, service, device or rack.",
+   "grounded": true,
+   "evidence": [],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "history-host",
+   "question": "What changed on the host ahv-dmm-c01-01 recently?",
+   "intent": "history",
+   "skill": "history",
+   "figures": 1,
+   "text": "ahv-dmm-c01-01 has 1 recorded version(s); the latest change was on Oct 1, 2026 and touched no attribute.",
+   "grounded": true,
+   "evidence": [
+    "history:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "howto-subnet",
+   "question": "How do I add a subnet?",
+   "intent": "howto",
+   "skill": "howto",
+   "figures": 0,
+   "text": "Open IPAM. The tree on the left lists sites, VRFs and subnets; select a subnet to see its addresses and the next free one. Subnets are created from Setup → Discovery scopes or by a collector; DHCP scopes and DNS zones appear under their subnet.",
+   "grounded": true,
+   "evidence": [
+    "howto:catalogue:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "services-down",
+   "question": "Which business services are down?",
+   "intent": "lookup",
+   "skill": "graph.query",
+   "figures": 0,
+   "text": "No matching items were found in the graph.",
+   "grounded": true,
+   "evidence": [
+    "graph.query:memgraph:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "racks-most-hosts",
+   "question": "Which racks hold the most hosts?",
+   "intent": "lookup",
+   "skill": "graph.query",
+   "figures": 1,
+   "text": "The rack with the most hosts is HQ-SR-B1-A-02, which has 25 hosts.",
+   "grounded": true,
+   "evidence": [
+    "graph.query:memgraph:94"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "small-talk",
+   "question": "hello there",
+   "intent": "unknown",
+   "skill": null,
+   "figures": 0,
+   "text": "Hello. Ask me about the estate: counts, memory and cores, CPU and power, uptime and SLAs, incidents, impact or what changed.",
+   "grounded": true,
+   "evidence": [],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-count-hosts",
+   "question": "كم عدد المضيفين؟",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 1,
+   "text": "يوجد 2,000 من المضيفين.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-avg-memory",
+   "question": "ما متوسط الذاكرة للمضيفين؟",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 2,
+   "text": "متوسط الذاكرة (GB) لـ 2,000 من المضيفين هو 865.79 GB.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-vm-density",
+   "question": "كم جهازاً افتراضياً لكل مضيف؟",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 3,
+   "text": "في المتوسط 12 من الأجهزة الافتراضية لكل واحد من 125 من المشرفين الافتراضيين: 1,500 من الأجهزة الافتراضية إجمالًا، وأكبرها يحمل 12.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-uptime",
+   "question": "ما هو توافر خدمات الأعمال هذا الشهر؟",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "كانت 15 خدمة أعمال متاحة بنسبة 100% الشهر الحالي، بإجمالي 0 دقيقة تعطل و0 دون الهدف. الأدنى: ATM Network 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ Auto Finance 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ Card Acquiring 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ Card Issuing 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Corporate Cash Management 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Loan Origination 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Mobile Banking 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Money Markets 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ Mortgage Servicing 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ POS Network 100%، 0 دقيقة تعطل، تحقق هدف 99.5%.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-incidents",
+   "question": "أي الحوادث مفتوحة؟",
+   "intent": "incidents",
+   "skill": "incidents",
+   "figures": 1,
+   "text": "لا توجد حوادث مفتوحة.",
+   "grounded": true,
+   "evidence": [
+    "incidents:postgres:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-howto-subnet",
+   "question": "كيف أضيف شبكة فرعية؟",
+   "intent": "howto",
+   "skill": "howto",
+   "figures": 0,
+   "text": "افتح IPAM. تعرض الشجرة على اليسار المواقع وVRF والشبكات الفرعية؛ اختر شبكة فرعية لترى عناوينها والعنوان الحر التالي. تُنشأ الشبكات الفرعية من الإعداد ← نطاقات الاكتشاف أو عبر مجمّع؛ نطاقات DHCP ومناطق DNS تظهر تحت شبكتها.",
+   "grounded": true,
+   "evidence": [
+    "howto:catalogue:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-avg-cpu",
+   "question": "متوسط استخدام المعالج للمضيفين",
+   "intent": "measurement",
+   "skill": "metrics.latest",
+   "figures": 2,
+   "text": "متوسط استخدام معالج المضيف عبر 4,000 من المضيفين هو 48.36%، من أحدث العينات حتى 01‏/10‏/2026.",
+   "grounded": true,
+   "evidence": [
+    "metrics.latest:clickhouse:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-services-down",
+   "question": "أي خدمات الأعمال معطلة؟",
+   "intent": "lookup",
+   "skill": "graph.query",
+   "figures": 0,
+   "text": "لم يُعثر على عناصر مطابقة في الرسم.",
+   "grounded": true,
+   "evidence": [
+    "graph.query:memgraph:0"
+   ],
+   "ok": true,
+   "why": []
+  }
+ ]
+}

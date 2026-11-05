@@ -10,6 +10,11 @@ export const catalogues: Record<Locale, Catalogue> = { en, ar };
 
 export type Params = Record<string, string | number>;
 
+/** Whether a string names a catalogue key; lets a key assembled from an enum fall back when the enum grows first. */
+export function isMessageKey(key: string): key is MessageKey {
+  return Object.hasOwn(en, key);
+}
+
 const INTERPOLATION_TOKEN = /\{(\w+)\}/g;
 
 /** Interpolate `{name}` tokens. Unknown tokens are left intact so they are visible in review. */

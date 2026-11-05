@@ -26,6 +26,8 @@ x-app-env: &app-env
   OPENBAO_TOKEN: ${OPENBAO_TOKEN:-openmap-dev-root}
   SUPERSET_URL: http://superset:8088
   LLM_BASE_URL: ${LLM_BASE_URL:-http://llm-cpu:8000/v1}
+  # ADR-028: the CPU fallback model rewords English reliably and Arabic poorly; Arabic answers stay deterministic here.
+  ASSISTANT_PROSE_LOCALES: ${ASSISTANT_PROSE_LOCALES:-en}
   PUBLIC_SUPERSET_URL: ${PUBLIC_SUPERSET_URL:-http://localhost:8088}
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}

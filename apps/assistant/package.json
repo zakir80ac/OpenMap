@@ -22,6 +22,7 @@
     "@openmap/constants": "workspace:*",
     "@openmap/contracts": "workspace:*",
     "@openmap/graph": "workspace:*",
+    "@openmap/i18n": "workspace:*",
     "zod": "^4.1.0"
   },
   "devDependencies": {

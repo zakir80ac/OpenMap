@@ -1,24 +1,99 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.3.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.4.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
 scalar JSON
 scalar UUID
 
-enum CiLayer { dc network_security hardware storage virtualization cloud os containers databases applications saas unknown }
-enum Lifecycle { discovered managed planned retired }
-enum HealthState { healthy degraded down unknown }
-enum PredictedState { down degraded at_risk unaffected }
-enum AssetStage { planned in_stock deployed spare rma retired disposed }
-enum AssetSource { plan discovery manual }
-enum AssetDataGap { warranty subscription support end_of_life }
-enum PlanStatus { draft approved building live cancelled }
-enum IntegrationHealth { healthy warning failing disabled }
-enum Direction { upstream downstream both }
+enum CiLayer {
+  dc
+  network_security
+  hardware
+  storage
+  virtualization
+  cloud
+  os
+  containers
+  databases
+  applications
+  saas
+  unknown
+}
+enum Lifecycle {
+  discovered
+  managed
+  planned
+  retired
+}
+enum HealthState {
+  healthy
+  degraded
+  down
+  unknown
+}
+enum PredictedState {
+  down
+  degraded
+  at_risk
+  unaffected
+}
+enum AssetStage {
+  planned
+  in_stock
+  deployed
+  spare
+  rma
+  retired
+  disposed
+}
+enum AssetSource {
+  plan
+  discovery
+  manual
+}
+enum AssetDataGap {
+  warranty
+  subscription
+  support
+  end_of_life
+}
+enum PlanStatus {
+  draft
+  approved
+  building
+  live
+  cancelled
+}
+enum IntegrationHealth {
+  healthy
+  warning
+  failing
+  disabled
+}
+enum Direction {
+  upstream
+  downstream
+  both
+}
 
-type Provenance { collectorId: String! nodeId: String! runId: String! confidence: Float! }
-type ExternalId { source: String! id: String! }
-type UserLabel { title: String! description: String! layer: CiLayer! type: String labelledBy: String! labelledAt: DateTime! }
+type Provenance {
+  collectorId: String!
+  nodeId: String!
+  runId: String!
+  confidence: Float!
+}
+type ExternalId {
+  source: String!
+  id: String!
+}
+type UserLabel {
+  title: String!
+  description: String!
+  layer: CiLayer!
+  type: String
+  labelledBy: String!
+  labelledAt: DateTime!
+}
 
 type Ci {
   id: UUID!
@@ -27,7 +102,9 @@ type Ci {
   layer: CiLayer!
   name: String!
   displayName: String!
-  """Short code spoken in incidents and printed on cards (layer prefix plus slug); unique per tenant, editable by operators."""
+  """
+  Short code spoken in incidents and printed on cards (layer prefix plus slug); unique per tenant, editable by operators.
+  """
   code: String!
   identity: JSON!
   attributes: JSON!
@@ -40,18 +117,40 @@ type Ci {
   validFrom: DateTime!
   validTo: DateTime
   health: HealthState!
-  """The layer's headline measurement (ADR-016): the latest ClickHouse sample of the metric LAYER_HEADLINE_METRIC names for the CI's layer; value and observedAt are null until a collector has sampled it. For the unknown layer the value is the days since the CI was last observed."""
+  """
+  The layer's headline measurement (ADR-016): the latest ClickHouse sample of the metric LAYER_HEADLINE_METRIC names for the CI's layer; value and observedAt are null until a collector has sampled it. For the unknown layer the value is the days since the CI was last observed.
+  """
   headlineMetric: HeadlineMetric!
-  relationships(direction: Direction = both, types: [String!], first: Int = 50, after: String): RelationshipConnection!
+  relationships(
+    direction: Direction = both
+    types: [String!]
+    first: Int = 50
+    after: String
+  ): RelationshipConnection!
   asset: AssetRecord
   vulnerabilities: [Vulnerability!]!
   history(from: DateTime, to: DateTime): [CiVersion!]!
 }
 
-type CiVersion { validFrom: DateTime! validTo: DateTime attributes: JSON! lifecycle: Lifecycle! source: Provenance! }
+type CiVersion {
+  validFrom: DateTime!
+  validTo: DateTime
+  attributes: JSON!
+  lifecycle: Lifecycle!
+  source: Provenance!
+}
 
-"""One headline measurement: key and label from the contract's LAYER_HEADLINE_METRIC, unit as printed after the value, metric as stored in ClickHouse."""
-type HeadlineMetric { key: String! label: String! unit: String! metric: String! value: Float observedAt: DateTime }
+"""
+One headline measurement: key and label from the contract's LAYER_HEADLINE_METRIC, unit as printed after the value, metric as stored in ClickHouse.
+"""
+type HeadlineMetric {
+  key: String!
+  label: String!
+  unit: String!
+  metric: String!
+  value: Float
+  observedAt: DateTime
+}
 
 type Relationship {
   id: UUID!
@@ -64,11 +163,28 @@ type Relationship {
   validTo: DateTime
 }
 
-type PageInfo { endCursor: String hasNextPage: Boolean! }
-type CiEdge { cursor: String! node: Ci! }
-type CiConnection { edges: [CiEdge!]! pageInfo: PageInfo! totalCount: Int! }
-type RelationshipEdge { cursor: String! node: Relationship! }
-type RelationshipConnection { edges: [RelationshipEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+type CiEdge {
+  cursor: String!
+  node: Ci!
+}
+type CiConnection {
+  edges: [CiEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+type RelationshipEdge {
+  cursor: String!
+  node: Relationship!
+}
+type RelationshipConnection {
+  edges: [RelationshipEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
 
 input CiFilter {
   types: [String!]
@@ -82,7 +198,12 @@ input CiFilter {
   asOf: DateTime
 }
 
-type ImpactNode { ci: Ci! depth: Int! predicted: PredictedState! path: [UUID!]! }
+type ImpactNode {
+  ci: Ci!
+  depth: Int!
+  predicted: PredictedState!
+  path: [UUID!]!
+}
 type ImpactResult {
   root: Ci!
   nodes: [ImpactNode!]!
@@ -99,10 +220,24 @@ type AffectedService {
   slaBudgetRemainingMinutes: Float
   recovery: Recovery
 }
-type Recovery { description: String! estimatedMinutes: Int! }
-type Money { amount: Float! currency: String! }
+type Recovery {
+  description: String!
+  estimatedMinutes: Int!
+}
+type Money {
+  amount: Float!
+  currency: String!
+}
 
-type ImpactScenario { id: UUID! name: String! kind: String! failedCis: [Ci!]! options: JSON! createdBy: String! createdAt: DateTime! }
+type ImpactScenario {
+  id: UUID!
+  name: String!
+  kind: String!
+  failedCis: [Ci!]!
+  options: JSON!
+  createdBy: String!
+  createdAt: DateTime!
+}
 type ImpactSimulation {
   id: UUID!
   scenario: ImpactScenario!
@@ -114,22 +249,58 @@ type ImpactSimulation {
   totals: ImpactTotals!
   recommendations: [Recommendation!]!
 }
-type ImpactTotals { servicesDown: Int! servicesDegraded: Int! usersAffected: Int! revenueAtRiskPerHour: Money }
-type Recommendation { title: String! rationale: String! estimatedMinutes: Int }
+type ImpactTotals {
+  servicesDown: Int!
+  servicesDegraded: Int!
+  usersAffected: Int!
+  revenueAtRiskPerHour: Money
+}
+type Recommendation {
+  title: String!
+  rationale: String!
+  estimatedMinutes: Int
+}
 
 # REQ-BSM-006 REQ-BSM-008 (ADR-024) — SLAs, availability by period and incident response with RCA.
-enum SlaWindow { calendar_month calendar_quarter calendar_year rolling_30d }
-enum AvailabilityGranularity { month quarter year }
-enum IncidentSeverity { informational low medium high critical }
-enum IncidentState { open acknowledged mitigated resolved closed }
-type SeverityTarget { severity: IncidentSeverity! respondMinutes: Int! resolveMinutes: Int! }
+enum SlaWindow {
+  calendar_month
+  calendar_quarter
+  calendar_year
+  rolling_30d
+}
+enum AvailabilityGranularity {
+  month
+  quarter
+  year
+}
+enum IncidentSeverity {
+  informational
+  low
+  medium
+  high
+  critical
+}
+enum IncidentState {
+  open
+  acknowledged
+  mitigated
+  resolved
+  closed
+}
+type SeverityTarget {
+  severity: IncidentSeverity!
+  respondMinutes: Int!
+  resolveMinutes: Int!
+}
 type Sla {
   id: UUID!
   name: String!
   description: String!
   availabilityTargetPercent: Float!
   window: SlaWindow!
-  """Targets for every severity: the SLA's own where it names one, the platform defaults elsewhere."""
+  """
+  Targets for every severity: the SLA's own where it names one, the platform defaults elsewhere.
+  """
   responseTargets: [SeverityTarget!]!
   burnRateAlert: Float!
   services: [Ci!]!
@@ -137,7 +308,9 @@ type Sla {
   createdAt: DateTime!
   updatedAt: DateTime!
 }
-"""One calendar period (in the tenant's time zone) or SLA window of a service's availability."""
+"""
+One calendar period (in the tenant's time zone) or SLA window of a service's availability.
+"""
 type AvailabilityPeriod {
   granularity: AvailabilityGranularity
   year: Int!
@@ -145,24 +318,36 @@ type AvailabilityPeriod {
   quarter: Int
   periodStart: DateTime!
   periodEnd: DateTime!
-  """True while the period is still running; figures run to now."""
+  """
+  True while the period is still running; figures run to now.
+  """
   current: Boolean!
-  """Null when the service was not observed at all in the period."""
+  """
+  Null when the service was not observed at all in the period.
+  """
   availabilityPercent: Float
   elapsedMinutes: Float!
   downtimeMinutes: Float!
   degradedMinutes: Float!
   unknownMinutes: Float!
   targetPercent: Float
-  """Whether availability meets the target; null without a target or a figure."""
+  """
+  Whether availability meets the target; null without a target or a figure.
+  """
   met: Boolean
   budgetMinutes: Float
   budgetRemainingMinutes: Float
   burnRate: Float
-  """Incidents of the service that were open during the period."""
+  """
+  Incidents of the service that were open during the period.
+  """
   incidents: [Incident!]!
 }
-type ServiceAvailability { service: Ci! sla: Sla periods: [AvailabilityPeriod!]! }
+type ServiceAvailability {
+  service: Ci!
+  sla: Sla
+  periods: [AvailabilityPeriod!]!
+}
 type ServiceHealth {
   service: Ci!
   state: HealthState!
@@ -171,11 +356,18 @@ type ServiceHealth {
   slaTarget: Float!
   errorBudgetRemainingMinutes: Float!
   sla: Sla
-  """The SLA's current window (or the rolling 30 days without an SLA)."""
+  """
+  The SLA's current window (or the rolling 30 days without an SLA).
+  """
   currentWindow: AvailabilityPeriod!
   availability(granularity: AvailabilityGranularity!, periods: Int): [AvailabilityPeriod!]!
 }
-type CorrectiveAction { description: String! owner: String dueAt: DateTime done: Boolean! }
+type CorrectiveAction {
+  description: String!
+  owner: String
+  dueAt: DateTime
+  done: Boolean!
+}
 type Rca {
   summary: String!
   rootCauseCi: Ci
@@ -187,10 +379,25 @@ type Rca {
   updatedBy: String!
   updatedAt: DateTime!
 }
-"""One step of an incident's history: engine events and people's actions, oldest first."""
-type IncidentEvent { at: DateTime! actor: String! kind: String! details: JSON! }
-"""REQ-CMDB-041 — one page of the register with its totals, for page controls (page numbers start at 1)."""
-type AssetPage { items: [AssetRecord!]! totalCount: Int! page: Int! pageSize: Int! pageCount: Int! }
+"""
+One step of an incident's history: engine events and people's actions, oldest first.
+"""
+type IncidentEvent {
+  at: DateTime!
+  actor: String!
+  kind: String!
+  details: JSON!
+}
+"""
+REQ-CMDB-041 — one page of the register with its totals, for page controls (page numbers start at 1).
+"""
+type AssetPage {
+  items: [AssetRecord!]!
+  totalCount: Int!
+  page: Int!
+  pageSize: Int!
+  pageCount: Int!
+}
 type Incident {
   id: UUID!
   title: String!
@@ -216,19 +423,51 @@ type Incident {
   rca: Rca
   timeline: [IncidentEvent!]!
 }
-type IncidentLink { integration: Integration! remoteId: String! remoteUrl: String remoteState: String! syncedAt: DateTime! }
+type IncidentLink {
+  integration: Integration!
+  remoteId: String!
+  remoteUrl: String
+  remoteState: String!
+  syncedAt: DateTime!
+}
 
-type Subnet { ci: Ci! cidr: String! vrf: String utilisationPercent: Float! addresses(first: Int = 100, after: String): CiConnection! children: [Subnet!]! }
-type Rack { ci: Ci! units: Int! occupiedUnits: Int! devices: [RackDevice!]! powerFeeds: [PowerFeed!]! row: Ci room: Ci }
-type RackDevice { ci: Ci! startUnit: Int! heightUnits: Int! face: String! }
-type PowerFeed { ci: Ci! ratedWatts: Int! currentWatts: Int! }
+type Subnet {
+  ci: Ci!
+  cidr: String!
+  vrf: String
+  utilisationPercent: Float!
+  addresses(first: Int = 100, after: String): CiConnection!
+  children: [Subnet!]!
+}
+type Rack {
+  ci: Ci!
+  units: Int!
+  occupiedUnits: Int!
+  devices: [RackDevice!]!
+  powerFeeds: [PowerFeed!]!
+  row: Ci
+  room: Ci
+}
+type RackDevice {
+  ci: Ci!
+  startUnit: Int!
+  heightUnits: Int!
+  face: String!
+}
+type PowerFeed {
+  ci: Ci!
+  ratedWatts: Int!
+  currentWatts: Int!
+}
 
 # REQ-CMDB-039 REQ-CMDB-040 (ADR-023) — the register: one row per owned CI (discovery), per BOM unit (plan) or per
 # manual entry; warranty, support and end-of-life carried on the row, the missing ones listed as dataGaps.
 type AssetRecord {
   id: UUID!
   ci: Ci
-  """The CI's type at creation; null for a planned asset with no CI yet."""
+  """
+  The CI's type at creation; null for a planned asset with no CI yet.
+  """
   ciType: String
   layer: CiLayer!
   source: AssetSource!
@@ -245,14 +484,20 @@ type AssetRecord {
   purchaseCost: Money
   warranty: Warranty
   warrantyEndsAt: DateTime
-  """The subscription of a software, SaaS or cloud asset (ADR-027); null on hardware."""
+  """
+  The subscription of a software, SaaS or cloud asset (ADR-027); null on hardware.
+  """
   subscription: SubscriptionCover
   subscriptionEndsAt: DateTime
-  """Credits left on the subscription, when the vendor reports a balance."""
+  """
+  Credits left on the subscription, when the vendor reports a balance.
+  """
   creditsRemaining: Float
   support: Support
   supportContract: SupportContract
-  """The support end date from the row's own support entry or its support contract, whichever is set."""
+  """
+  The support end date from the row's own support entry or its support contract, whichever is set.
+  """
   supportEndsAt: DateTime
   endOfLife: EndOfLife
   endOfSupport: DateTime
@@ -260,107 +505,663 @@ type AssetRecord {
   plan: InfraPlan
   audits: [AssetAudit!]!
 }
-type Warranty { provider: String! level: String startsAt: DateTime endsAt: DateTime! source: String! verifiedAt: DateTime }
-"""REQ-CMDB-042 (ADR-027) — prepaid credits of a cloud or SaaS subscription as the vendor's billing API reported them."""
-type Credits { remaining: Float! unit: String! currency: String asOf: DateTime! }
-"""Subscription cover of software, SaaS and cloud assets: the term and the credits left; endsAt or credits is set."""
-type SubscriptionCover { provider: String! plan: String startsAt: DateTime endsAt: DateTime credits: Credits source: String! verifiedAt: DateTime }
-type Support { provider: String! contractNumber: String level: String endsAt: DateTime! source: String! verifiedAt: DateTime }
-type EndOfLife { endOfSale: DateTime endOfSoftwareMaintenance: DateTime endOfSupport: DateTime source: String! verifiedAt: DateTime }
-type AssetAudit { id: UUID! actor: String! at: DateTime! field: String! fromValue: String toValue: String note: String }
-"""Register totals per layer: rows, rows with a data gap, and rows whose cover has already ended."""
-type AssetSummary { layer: CiLayer! count: Int! needsData: Int! warrantyExpired: Int! subscriptionExpired: Int! supportExpired: Int! endOfSupportPassed: Int! }
-type SupportContract { id: UUID! vendor: Ci! contractNumber: String! level: String! endsAt: DateTime! primaryContact: VendorContact }
-type VendorContact { id: UUID! name: String! role: String! email: String phone: String portalUrl: String }
-type InfraPlan { id: UUID! number: String! name: String! kind: String! status: PlanStatus! bom: [BomLine!]! estimatedCost: Money targetSite: Ci targetRacks: [Ci!]! plannedLiveAt: DateTime assets: [AssetRecord!]! }
-type BomLine { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! received: Int! unitCost: Money }
+type Warranty {
+  provider: String!
+  level: String
+  startsAt: DateTime
+  endsAt: DateTime!
+  source: String!
+  verifiedAt: DateTime
+}
+"""
+REQ-CMDB-042 (ADR-027) — prepaid credits of a cloud or SaaS subscription as the vendor's billing API reported them.
+"""
+type Credits {
+  remaining: Float!
+  unit: String!
+  currency: String
+  asOf: DateTime!
+}
+"""
+Subscription cover of software, SaaS and cloud assets: the term and the credits left; endsAt or credits is set.
+"""
+type SubscriptionCover {
+  provider: String!
+  plan: String
+  startsAt: DateTime
+  endsAt: DateTime
+  credits: Credits
+  source: String!
+  verifiedAt: DateTime
+}
+type Support {
+  provider: String!
+  contractNumber: String
+  level: String
+  endsAt: DateTime!
+  source: String!
+  verifiedAt: DateTime
+}
+type EndOfLife {
+  endOfSale: DateTime
+  endOfSoftwareMaintenance: DateTime
+  endOfSupport: DateTime
+  source: String!
+  verifiedAt: DateTime
+}
+type AssetAudit {
+  id: UUID!
+  actor: String!
+  at: DateTime!
+  field: String!
+  fromValue: String
+  toValue: String
+  note: String
+}
+"""
+Register totals per layer: rows, rows with a data gap, and rows whose cover has already ended.
+"""
+type AssetSummary {
+  layer: CiLayer!
+  count: Int!
+  needsData: Int!
+  warrantyExpired: Int!
+  subscriptionExpired: Int!
+  supportExpired: Int!
+  endOfSupportPassed: Int!
+}
+type SupportContract {
+  id: UUID!
+  vendor: Ci!
+  contractNumber: String!
+  level: String!
+  endsAt: DateTime!
+  primaryContact: VendorContact
+}
+type VendorContact {
+  id: UUID!
+  name: String!
+  role: String!
+  email: String
+  phone: String
+  portalUrl: String
+}
+type InfraPlan {
+  id: UUID!
+  number: String!
+  name: String!
+  kind: String!
+  status: PlanStatus!
+  bom: [BomLine!]!
+  estimatedCost: Money
+  targetSite: Ci
+  targetRacks: [Ci!]!
+  plannedLiveAt: DateTime
+  assets: [AssetRecord!]!
+}
+type BomLine {
+  description: String!
+  manufacturer: String
+  model: String
+  sku: String
+  layer: CiLayer!
+  quantity: Int!
+  received: Int!
+  unitCost: Money
+}
 
-type Vulnerability { ci: Ci! cveId: String! cvss: Float! severity: String! fixedIn: String exploited: Boolean! internetFacing: Boolean! }
+type Vulnerability {
+  ci: Ci!
+  cveId: String!
+  cvss: Float!
+  severity: String!
+  fixedIn: String
+  exploited: Boolean!
+  internetFacing: Boolean!
+}
 # REQ-UI-016 REQ-SEC-008 REQ-CMDB-035 (ADR-013) — one row per CVE with what it touches; the detail walks the blast radius.
-type VulnerabilitySummary { ci: Ci! cveId: String! title: String! severity: String! cvss: Float! exploited: Boolean! cisaKev: Boolean! patchAvailable: Boolean! publishedAt: DateTime internetFacing: Boolean! affectedSoftware: Int! affectedHosts: Int! fixedIn: String }
-type VulnerabilityDetail { summary: VulnerabilitySummary! software: [Ci!]! hosts: [Ci!]! services: [AffectedService!]! blastRadiusTruncated: Boolean! }
+type VulnerabilitySummary {
+  ci: Ci!
+  cveId: String!
+  title: String!
+  severity: String!
+  cvss: Float!
+  exploited: Boolean!
+  cisaKev: Boolean!
+  patchAvailable: Boolean!
+  publishedAt: DateTime
+  internetFacing: Boolean!
+  affectedSoftware: Int!
+  affectedHosts: Int!
+  fixedIn: String
+}
+type VulnerabilityDetail {
+  summary: VulnerabilitySummary!
+  software: [Ci!]!
+  hosts: [Ci!]!
+  services: [AffectedService!]!
+  blastRadiusTruncated: Boolean!
+}
 # REQ-UI-015 REQ-CMDB-030 REQ-CMDB-031 (ADR-013) — software products with their instances, hosts, licence and CVE count.
-type LicenceSummary { ci: Ci! metric: String! licenceType: String! entitlement: Int! consumed: Int! overDeployed: Boolean! expiresAt: DateTime expired: Boolean! annualCost: Money contract: Ci }
-type SoftwareProduct { ci: Ci! vendor: String! name: String! version: String! category: String endOfSupport: DateTime instances: Int! hosts: Int! running: Int! licence: LicenceSummary vulnerabilities: Int! }
+type LicenceSummary {
+  ci: Ci!
+  metric: String!
+  licenceType: String!
+  entitlement: Int!
+  consumed: Int!
+  overDeployed: Boolean!
+  expiresAt: DateTime
+  expired: Boolean!
+  annualCost: Money
+  contract: Ci
+}
+type SoftwareProduct {
+  ci: Ci!
+  vendor: String!
+  name: String!
+  version: String!
+  category: String
+  endOfSupport: DateTime
+  instances: Int!
+  hosts: Int!
+  running: Int!
+  licence: LicenceSummary
+  vulnerabilities: Int!
+}
 
-type Integration { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! }
+type Integration {
+  id: UUID!
+  category: String!
+  vendor: String!
+  name: String!
+  enabled: Boolean!
+  direction: String!
+  health: IntegrationHealth!
+  lastSuccessAt: DateTime
+  lastError: String
+  deliveredLastHour: Int!
+  failedLastHour: Int!
+}
 # REQ-UI-014 (ADR-012) — the full configuration of one integration and its recent deliveries.
-type IntegrationDetail { id: UUID! category: String! vendor: String! name: String! enabled: Boolean! direction: String! health: IntegrationHealth! lastSuccessAt: DateTime lastError: String deliveredLastHour: Int! failedLastHour: Int! endpoint: String! credentialRef: String! settings: JSON! fieldMappings: JSON! classMappings: JSON! subscribedEvents: [String!]! createdAt: DateTime! updatedAt: DateTime! }
-type IntegrationDelivery { id: UUID! direction: String! eventId: UUID remoteId: String state: String! attempts: Int! responseCode: Int error: String createdAt: DateTime! completedAt: DateTime }
+type IntegrationDetail {
+  id: UUID!
+  category: String!
+  vendor: String!
+  name: String!
+  enabled: Boolean!
+  direction: String!
+  health: IntegrationHealth!
+  lastSuccessAt: DateTime
+  lastError: String
+  deliveredLastHour: Int!
+  failedLastHour: Int!
+  endpoint: String!
+  credentialRef: String!
+  settings: JSON!
+  fieldMappings: JSON!
+  classMappings: JSON!
+  subscribedEvents: [String!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+type IntegrationDelivery {
+  id: UUID!
+  direction: String!
+  eventId: UUID
+  remoteId: String
+  state: String!
+  attempts: Int!
+  responseCode: Int
+  error: String
+  createdAt: DateTime!
+  completedAt: DateTime
+}
 # REQ-UI-017 (ADR-012) — what the console needs to embed the tenant's Superset dashboard: a guest token carrying
 # row-level security on tenant_id, the dashboard's embedded id and the Superset origin browsers reach.
-type AnalyticsEmbed { supersetUrl: String! dashboardId: String! token: String! expiresInSeconds: Int! }
+type AnalyticsEmbed {
+  supersetUrl: String!
+  dashboardId: String!
+  token: String!
+  expiresInSeconds: Int!
+}
 
-type DiscoveryNode { id: String! site: Ci status: String! lastHeartbeat: DateTime! activeJobs: Int! certificateExpiresAt: DateTime! }
-type DiscoveryJob { id: UUID! collectorId: String! node: DiscoveryNode! status: String! targets: Int! scheduledAt: DateTime! startedAt: DateTime finishedAt: DateTime cisEmitted: Int! errors: Int! }
-type Sweep { id: UUID! startedAt: DateTime! finishedAt: DateTime targetsTotal: Int! targetsDone: Int! devicesDiscovered: Int! budgetMinutes: Int! }
-"""One discovery scope per subnet CI (REQ-DISC-029, ADR-015): its CIDR, site, exclusions, credential set and rate limit."""
-type DiscoveryScope { ci: Ci! cidr: String! site: Ci exclusions: [String!]! credentialRef: String credentialType: String! rateLimitConcurrency: Int rateLimitRps: Float }
-"""Fields omitted or null stay unchanged, except credentialRef and the rate limits where null clears the value."""
-input DiscoveryScopeInput { exclusions: [String!] credentialRef: String credentialType: String rateLimitConcurrency: Int rateLimitRps: Float }
+type DiscoveryNode {
+  id: String!
+  site: Ci
+  status: String!
+  lastHeartbeat: DateTime!
+  activeJobs: Int!
+  certificateExpiresAt: DateTime!
+}
+type DiscoveryJob {
+  id: UUID!
+  collectorId: String!
+  node: DiscoveryNode!
+  status: String!
+  targets: Int!
+  scheduledAt: DateTime!
+  startedAt: DateTime
+  finishedAt: DateTime
+  cisEmitted: Int!
+  errors: Int!
+}
+type Sweep {
+  id: UUID!
+  startedAt: DateTime!
+  finishedAt: DateTime
+  targetsTotal: Int!
+  targetsDone: Int!
+  devicesDiscovered: Int!
+  budgetMinutes: Int!
+}
+"""
+One discovery scope per subnet CI (REQ-DISC-029, ADR-015): its CIDR, site, exclusions, credential set and rate limit.
+"""
+type DiscoveryScope {
+  ci: Ci!
+  cidr: String!
+  site: Ci
+  exclusions: [String!]!
+  credentialRef: String
+  credentialType: String!
+  rateLimitConcurrency: Int
+  rateLimitRps: Float
+}
+"""
+Fields omitted or null stay unchanged, except credentialRef and the rate limits where null clears the value.
+"""
+input DiscoveryScopeInput {
+  exclusions: [String!]
+  credentialRef: String
+  credentialType: String
+  rateLimitConcurrency: Int
+  rateLimitRps: Float
+}
 
-type LayerSummary { layer: CiLayer! count: Int! healthy: Int! degraded: Int! down: Int! visible: Boolean! }
+type LayerSummary {
+  layer: CiLayer!
+  count: Int!
+  healthy: Int!
+  degraded: Int!
+  down: Int!
+  visible: Boolean!
+}
 
-type SearchHit { ci: Ci! score: Float! highlight: String }
+type SearchHit {
+  ci: Ci!
+  score: Float!
+  highlight: String
+}
 
-type AssistantAnswer { text: String! cypher: String! rows: JSON! cis: [Ci!]! }
+# REQ-AI-007 (ADR-028) — a conversational answer: the intent the question was classified into, the figures the prose
+# rests on, every retrieval step as evidence (store, query, parameters, rows, duration), suggested follow-ups and, when
+# a name or the intent is ambiguous, the clarifying question with its choices instead of a guess. `cypher` and `rows`
+# carry the graph query of a `graph.query` step (empty otherwise); `grounded` is false when the model's prose failed
+# the grounding guard and the deterministic summary was used instead.
+enum AssistantIntent {
+  lookup
+  count
+  attribute_stats
+  measurement
+  availability
+  incidents
+  impact
+  history
+  howto
+  report
+  unknown
+}
+enum AssistantStore {
+  postgres
+  memgraph
+  clickhouse
+  catalogue
+}
+type AssistantFigure {
+  label: String!
+  value: Float!
+  unit: String!
+}
+type AssistantEvidence {
+  skill: String!
+  store: AssistantStore!
+  query: String!
+  params: JSON!
+  rows: Int!
+  durationMs: Int!
+  error: String
+}
+type AssistantOption {
+  label: String!
+  value: String!
+}
+type AssistantClarification {
+  question: String!
+  options: [AssistantOption!]!
+}
+type AssistantAnswer {
+  text: String!
+  cypher: String!
+  rows: JSON!
+  cis: [Ci!]!
+  intent: AssistantIntent!
+  confidence: Float!
+  figures: [AssistantFigure!]!
+  evidence: [AssistantEvidence!]!
+  followUps: [String!]!
+  clarification: AssistantClarification
+  grounded: Boolean!
+}
 
 # REQ-SEC-005 (ADR-010) — immutable audit log: one entry per successful mutation, newest first.
-type AuditEntry { id: UUID! at: DateTime! actor: String! action: String! subjectType: String! subjectId: String! details: JSON! traceparent: String }
-type AuditEdge { cursor: String! node: AuditEntry! }
-type AuditConnection { edges: [AuditEdge!]! pageInfo: PageInfo! totalCount: Int! }
+type AuditEntry {
+  id: UUID!
+  at: DateTime!
+  actor: String!
+  action: String!
+  subjectType: String!
+  subjectId: String!
+  details: JSON!
+  traceparent: String
+}
+type AuditEdge {
+  cursor: String!
+  node: AuditEntry!
+}
+type AuditConnection {
+  edges: [AuditEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
 
 # REQ-UI-019 REQ-CORE-012 (ADR-011) — tenant settings: the per-tenant layer above process configuration. Every
 # signed-in role reads them; administrators change them. Omitted input fields keep their value.
-type TenantSettings { locale: String! timeZone: String! discoveryIntervalMinutes: Int! historyRetentionDays: Int! staleAfterDays: Int! auditRetentionDays: Int! assistantEnabled: Boolean! outboundIntegrationsEnabled: Boolean! }
-input TenantSettingsInput { locale: String timeZone: String discoveryIntervalMinutes: Int historyRetentionDays: Int staleAfterDays: Int auditRetentionDays: Int assistantEnabled: Boolean outboundIntegrationsEnabled: Boolean }
+type TenantSettings {
+  locale: String!
+  timeZone: String!
+  discoveryIntervalMinutes: Int!
+  historyRetentionDays: Int!
+  staleAfterDays: Int!
+  auditRetentionDays: Int!
+  assistantEnabled: Boolean!
+  outboundIntegrationsEnabled: Boolean!
+}
+input TenantSettingsInput {
+  locale: String
+  timeZone: String
+  discoveryIntervalMinutes: Int
+  historyRetentionDays: Int
+  staleAfterDays: Int
+  auditRetentionDays: Int
+  assistantEnabled: Boolean
+  outboundIntegrationsEnabled: Boolean
+}
 
 # REQ-UI-020 REQ-UI-024 (ADR-017) — initial setup: the organization and its business units (tenants), sites, inter-site
 # links, Discovery Node registrations with one-time enrolment tokens, credential sets (OpenBao references; values are
 # written to the vault and never read back), discovery scopes and the generated twin. Every signed-in role reads the
 # state; administrators change it. Saving a site creates its CI; generating the twin creates link CIs and starts the
 # first sweep.
-enum OnboardingStep { organization sites connectivity nodes_credentials integrations generate }
-enum SiteKind { datacenter colocation office branch cloud_region edge }
-type BusinessUnit { tenantId: UUID! name: String! slug: String! }
-type Organization { id: UUID! name: String! industry: String! timeZone: String! defaultLocale: String! regulatoryScope: [String!]! airGapped: Boolean! businessUnits: [BusinessUnit!]! createdAt: DateTime! }
-input BusinessUnitInput { tenantId: UUID name: String! }
-input OrganizationInput { name: String! industry: String! timeZone: String! defaultLocale: String! regulatoryScope: [String!]! airGapped: Boolean! businessUnits: [BusinessUnitInput!]! }
-type GeoPoint { lat: Float! lon: Float! }
-type CloudRegion { provider: String! region: String! }
-type Facility { powerCapacityKw: Float! rackCount: Int! designPue: Float }
-type Site { id: UUID! code: String! name: String! kind: SiteKind! tier: Int address: String! city: String! countryCode: String! geo: GeoPoint cloud: CloudRegion locationCount: Int! facility: Facility ci: Ci nodes: [DiscoveryNode!]! }
-input GeoPointInput { lat: Float! lon: Float! }
-input CloudRegionInput { provider: String! region: String! }
-input FacilityInput { powerCapacityKw: Float! rackCount: Int! designPue: Float }
-input SiteInput { code: String! name: String! kind: SiteKind! tier: Int address: String! city: String! countryCode: String! geo: GeoPointInput cloud: CloudRegionInput locationCount: Int! facility: FacilityInput }
-type SiteLink { id: UUID! fromSite: Site! toSite: Site! kind: String! provider: String circuitId: String bandwidthMbps: Int! diversePaths: Int! role: String! latencyMs: Float ci: Ci }
-input SiteLinkInput { fromSiteId: UUID! toSiteId: UUID! kind: String! provider: String circuitId: String bandwidthMbps: Int! diversePaths: Int! role: String! latencyMs: Float }
-"""Returned once by registerNode: the clear enrolment token is never stored, only its digest."""
-type NodeRegistration { node: DiscoveryNode! siteCode: String! enrolToken: String! schedulerUrl: String! }
-"""A credential set as the vault holds it: the reference, the contract credential type and the field names, never a value."""
-type CredentialSet { ref: String! type: String! fields: [String!]! }
-input CredentialSetInput { ref: String! type: String! fields: JSON! }
-input ScopeInput { cidr: String! vrf: String siteId: UUID! credentialRef: String credentialType: String }
-type OnboardingState { organization: Organization! step: OnboardingStep! completedSteps: [OnboardingStep!]! sites: [Site!]! links: [SiteLink!]! nodes: [DiscoveryNode!]! credentials: [CredentialSet!]! scopes: [DiscoveryScope!]! integrations: [Integration!]! generatedAt: DateTime firstSweep: Sweep schedulerUrl: String! }
+enum OnboardingStep {
+  organization
+  sites
+  connectivity
+  nodes_credentials
+  integrations
+  generate
+}
+enum SiteKind {
+  datacenter
+  colocation
+  office
+  branch
+  cloud_region
+  edge
+}
+type BusinessUnit {
+  tenantId: UUID!
+  name: String!
+  slug: String!
+}
+type Organization {
+  id: UUID!
+  name: String!
+  industry: String!
+  timeZone: String!
+  defaultLocale: String!
+  regulatoryScope: [String!]!
+  airGapped: Boolean!
+  businessUnits: [BusinessUnit!]!
+  createdAt: DateTime!
+}
+input BusinessUnitInput {
+  tenantId: UUID
+  name: String!
+}
+input OrganizationInput {
+  name: String!
+  industry: String!
+  timeZone: String!
+  defaultLocale: String!
+  regulatoryScope: [String!]!
+  airGapped: Boolean!
+  businessUnits: [BusinessUnitInput!]!
+}
+type GeoPoint {
+  lat: Float!
+  lon: Float!
+}
+type CloudRegion {
+  provider: String!
+  region: String!
+}
+type Facility {
+  powerCapacityKw: Float!
+  rackCount: Int!
+  designPue: Float
+}
+type Site {
+  id: UUID!
+  code: String!
+  name: String!
+  kind: SiteKind!
+  tier: Int
+  address: String!
+  city: String!
+  countryCode: String!
+  geo: GeoPoint
+  cloud: CloudRegion
+  locationCount: Int!
+  facility: Facility
+  ci: Ci
+  nodes: [DiscoveryNode!]!
+}
+input GeoPointInput {
+  lat: Float!
+  lon: Float!
+}
+input CloudRegionInput {
+  provider: String!
+  region: String!
+}
+input FacilityInput {
+  powerCapacityKw: Float!
+  rackCount: Int!
+  designPue: Float
+}
+input SiteInput {
+  code: String!
+  name: String!
+  kind: SiteKind!
+  tier: Int
+  address: String!
+  city: String!
+  countryCode: String!
+  geo: GeoPointInput
+  cloud: CloudRegionInput
+  locationCount: Int!
+  facility: FacilityInput
+}
+type SiteLink {
+  id: UUID!
+  fromSite: Site!
+  toSite: Site!
+  kind: String!
+  provider: String
+  circuitId: String
+  bandwidthMbps: Int!
+  diversePaths: Int!
+  role: String!
+  latencyMs: Float
+  ci: Ci
+}
+input SiteLinkInput {
+  fromSiteId: UUID!
+  toSiteId: UUID!
+  kind: String!
+  provider: String
+  circuitId: String
+  bandwidthMbps: Int!
+  diversePaths: Int!
+  role: String!
+  latencyMs: Float
+}
+"""
+Returned once by registerNode: the clear enrolment token is never stored, only its digest.
+"""
+type NodeRegistration {
+  node: DiscoveryNode!
+  siteCode: String!
+  enrolToken: String!
+  schedulerUrl: String!
+}
+"""
+A credential set as the vault holds it: the reference, the contract credential type and the field names, never a value.
+"""
+type CredentialSet {
+  ref: String!
+  type: String!
+  fields: [String!]!
+}
+input CredentialSetInput {
+  ref: String!
+  type: String!
+  fields: JSON!
+}
+input ScopeInput {
+  cidr: String!
+  vrf: String
+  siteId: UUID!
+  credentialRef: String
+  credentialType: String
+}
+type OnboardingState {
+  organization: Organization!
+  step: OnboardingStep!
+  completedSteps: [OnboardingStep!]!
+  sites: [Site!]!
+  links: [SiteLink!]!
+  nodes: [DiscoveryNode!]!
+  credentials: [CredentialSet!]!
+  scopes: [DiscoveryScope!]!
+  integrations: [Integration!]!
+  generatedAt: DateTime
+  firstSweep: Sweep
+  schedulerUrl: String!
+}
 
 # REQ-UI-030 (ADR-020) — dashboards: per-tenant, owned by a user, optionally shared; a persona template seeds the widget
 # list and the owner customises it. EstateStats is the aggregate the widgets read in one round trip; the trend series
 # come from ClickHouse over the last DASHBOARD.trendDays days.
-enum DashboardPersona { admin cto_cio ciso finance custom }
-type DashboardWidget { id: String! kind: String! size: String! options: JSON! }
-type Dashboard { id: UUID! name: String! persona: DashboardPersona! owner: String! shared: Boolean! isDefault: Boolean! mine: Boolean! widgets: [DashboardWidget!]! createdAt: DateTime! updatedAt: DateTime! }
-input DashboardWidgetInput { kind: String! size: String! options: JSON }
-input DashboardInput { name: String! persona: DashboardPersona! shared: Boolean = false widgets: [DashboardWidgetInput!]! }
-type StageCount { stage: AssetStage! count: Int! purchaseCost: [Money!]! }
-type LicenceStats { products: Int! licensed: Int! overDeployed: Int! expiringSoon: Int! expired: Int! annualCost: [Money!]! }
-type VulnerabilityStats { total: Int! critical: Int! exploited: Int! cisaKev: Int! internetFacing: Int! patchAvailable: Int! affectedHosts: Int! }
-type PlanStatusCost { status: PlanStatus! count: Int! estimatedCost: [Money!]! }
-type PowerStats { racks: Int! ratedWatts: Int! currentWatts: Int! }
-type IpamStats { subnets: Int! averageUtilisationPercent: Float! critical: Int! }
-type NodeStats { total: Int! online: Int! }
-type IntegrationStats { total: Int! healthy: Int! failedLastHour: Int! }
-type EstateTrend { days: [DateTime!]! cis: [Int!]! discoveryRuns: [Int!]! events: [Int!]! incidents: [Int!]! }
+enum DashboardPersona {
+  admin
+  cto_cio
+  ciso
+  finance
+  custom
+}
+type DashboardWidget {
+  id: String!
+  kind: String!
+  size: String!
+  options: JSON!
+}
+type Dashboard {
+  id: UUID!
+  name: String!
+  persona: DashboardPersona!
+  owner: String!
+  shared: Boolean!
+  isDefault: Boolean!
+  mine: Boolean!
+  widgets: [DashboardWidget!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+input DashboardWidgetInput {
+  kind: String!
+  size: String!
+  options: JSON
+}
+input DashboardInput {
+  name: String!
+  persona: DashboardPersona!
+  shared: Boolean = false
+  widgets: [DashboardWidgetInput!]!
+}
+type StageCount {
+  stage: AssetStage!
+  count: Int!
+  purchaseCost: [Money!]!
+}
+type LicenceStats {
+  products: Int!
+  licensed: Int!
+  overDeployed: Int!
+  expiringSoon: Int!
+  expired: Int!
+  annualCost: [Money!]!
+}
+type VulnerabilityStats {
+  total: Int!
+  critical: Int!
+  exploited: Int!
+  cisaKev: Int!
+  internetFacing: Int!
+  patchAvailable: Int!
+  affectedHosts: Int!
+}
+type PlanStatusCost {
+  status: PlanStatus!
+  count: Int!
+  estimatedCost: [Money!]!
+}
+type PowerStats {
+  racks: Int!
+  ratedWatts: Int!
+  currentWatts: Int!
+}
+type IpamStats {
+  subnets: Int!
+  averageUtilisationPercent: Float!
+  critical: Int!
+}
+type NodeStats {
+  total: Int!
+  online: Int!
+}
+type IntegrationStats {
+  total: Int!
+  healthy: Int!
+  failedLastHour: Int!
+}
+type EstateTrend {
+  days: [DateTime!]!
+  cis: [Int!]!
+  discoveryRuns: [Int!]!
+  events: [Int!]!
+  incidents: [Int!]!
+}
 type EstateStats {
   assetsByStage: [StageCount!]!
   licences: LicenceStats!
@@ -390,19 +1191,33 @@ type Query {
   incidents(open: Boolean = true, serviceId: UUID): [Incident!]!
   incident(id: UUID!): Incident
   slas: [Sla!]!
-  """Availability of every business service over the last periods (default count per granularity)."""
+  """
+  Availability of every business service over the last periods (default count per granularity).
+  """
   availabilityReport(granularity: AvailabilityGranularity!, periods: Int): [ServiceAvailability!]!
-  """The same report as CSV text (UTF-8, header row), for export."""
+  """
+  The same report as CSV text (UTF-8, header row), for export.
+  """
   availabilityReportCsv(granularity: AvailabilityGranularity!, periods: Int): String!
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
-  assets(filter: AssetFilter, stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
+  assets(
+    filter: AssetFilter
+    stage: [AssetStage!]
+    warrantyExpiringWithinDays: Int
+    first: Int = 50
+    after: String
+  ): [AssetRecord!]!
   assetSummary: [AssetSummary!]!
   assetPage(filter: AssetFilter, page: Int = 1, pageSize: Int): AssetPage!
   plans(status: [PlanStatus!]): [InfraPlan!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
-  vulnerabilitySummaries(minCvss: Float, exploitedOnly: Boolean, internetFacing: Boolean): [VulnerabilitySummary!]!
+  vulnerabilitySummaries(
+    minCvss: Float
+    exploitedOnly: Boolean
+    internetFacing: Boolean
+  ): [VulnerabilitySummary!]!
   vulnerability(cveId: String!): VulnerabilityDetail
   software(text: String, licensedOnly: Boolean, first: Int = 50): [SoftwareProduct!]!
   integrations(category: String): [Integration!]!
@@ -415,31 +1230,163 @@ type Query {
   discoveryScopes(siteId: UUID): [DiscoveryScope!]!
   layers: [LayerSummary!]!
   unknownCis(first: Int = 50, after: String): CiConnection!
-  auditLog(subjectType: String, subjectId: String, actor: String, action: String, first: Int = 50, after: String): AuditConnection!
+  auditLog(
+    subjectType: String
+    subjectId: String
+    actor: String
+    action: String
+    first: Int = 50
+    after: String
+  ): AuditConnection!
   tenantSettings: TenantSettings!
   onboarding: OnboardingState!
 }
 
-input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLayer! type: String }
-input ScenarioInput { name: String! kind: String! failedCiIds: [UUID!]! maxDepth: Int = 0 honourRedundancy: Boolean = true includeSharedServices: Boolean = true at: DateTime }
-input PlanInput { name: String! description: String! kind: String! targetSiteId: UUID targetRackIds: [UUID!] bom: [BomLineInput!]! plannedLiveAt: DateTime }
-input BomLineInput { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! unitCostAmount: Float unitCostCurrency: String }
-input AssetFilter { layers: [CiLayer!] types: [String!] stages: [AssetStage!] sources: [AssetSource!] dataGaps: [AssetDataGap!] text: String warrantyExpiringWithinDays: Int }
-"""Dates are calendar dates (YYYY-MM-DD)."""
-input WarrantyInput { provider: String! level: String startsAt: String endsAt: String! }
-"""Dates are calendar dates; creditsRemaining needs creditsUnit (and an optional ISO 4217 creditsCurrency)."""
-input SubscriptionInput { provider: String! plan: String startsAt: String endsAt: String creditsRemaining: Float creditsUnit: String creditsCurrency: String }
-input SupportInput { provider: String! contractNumber: String level: String endsAt: String! }
-input EndOfLifeInput { endOfSale: String endOfSoftwareMaintenance: String endOfSupport: String }
-"""Fields a person records on an asset; every change is audited per field. A null object clears that cover."""
-input AssetDetailsInput { manufacturer: String model: String serialNumber: String partNumber: String custodian: String purchasedAt: String purchaseCostAmount: Float purchaseCostCurrency: String warranty: WarrantyInput subscription: SubscriptionInput support: SupportInput endOfLife: EndOfLifeInput note: String }
-"""An asset with no network presence (an unmetered PDU, a device without out-of-band management): a CI of the chosen type is created with it."""
-input ManualAssetInput { layer: CiLayer! type: String! name: String! assetTag: String locationCiId: UUID details: AssetDetailsInput! }
-input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }
-input SeverityTargetInput { severity: IncidentSeverity! respondMinutes: Int! resolveMinutes: Int! }
-input SlaInput { name: String! description: String availabilityTargetPercent: Float! window: SlaWindow! responseTargets: [SeverityTargetInput!] burnRateAlert: Float }
-input CorrectiveActionInput { description: String! owner: String dueAt: DateTime done: Boolean }
-input RcaInput { summary: String! rootCauseCiId: UUID contributingFactors: [String!] correctiveActions: [CorrectiveActionInput!] owner: String dueAt: DateTime completedAt: DateTime }
+input LabelCiInput {
+  ciId: UUID!
+  title: String!
+  description: String!
+  layer: CiLayer!
+  type: String
+}
+input ScenarioInput {
+  name: String!
+  kind: String!
+  failedCiIds: [UUID!]!
+  maxDepth: Int = 0
+  honourRedundancy: Boolean = true
+  includeSharedServices: Boolean = true
+  at: DateTime
+}
+input PlanInput {
+  name: String!
+  description: String!
+  kind: String!
+  targetSiteId: UUID
+  targetRackIds: [UUID!]
+  bom: [BomLineInput!]!
+  plannedLiveAt: DateTime
+}
+input BomLineInput {
+  description: String!
+  manufacturer: String
+  model: String
+  sku: String
+  layer: CiLayer!
+  quantity: Int!
+  unitCostAmount: Float
+  unitCostCurrency: String
+}
+input AssetFilter {
+  layers: [CiLayer!]
+  types: [String!]
+  stages: [AssetStage!]
+  sources: [AssetSource!]
+  dataGaps: [AssetDataGap!]
+  text: String
+  warrantyExpiringWithinDays: Int
+}
+"""
+Dates are calendar dates (YYYY-MM-DD).
+"""
+input WarrantyInput {
+  provider: String!
+  level: String
+  startsAt: String
+  endsAt: String!
+}
+"""
+Dates are calendar dates; creditsRemaining needs creditsUnit (and an optional ISO 4217 creditsCurrency).
+"""
+input SubscriptionInput {
+  provider: String!
+  plan: String
+  startsAt: String
+  endsAt: String
+  creditsRemaining: Float
+  creditsUnit: String
+  creditsCurrency: String
+}
+input SupportInput {
+  provider: String!
+  contractNumber: String
+  level: String
+  endsAt: String!
+}
+input EndOfLifeInput {
+  endOfSale: String
+  endOfSoftwareMaintenance: String
+  endOfSupport: String
+}
+"""
+Fields a person records on an asset; every change is audited per field. A null object clears that cover.
+"""
+input AssetDetailsInput {
+  manufacturer: String
+  model: String
+  serialNumber: String
+  partNumber: String
+  custodian: String
+  purchasedAt: String
+  purchaseCostAmount: Float
+  purchaseCostCurrency: String
+  warranty: WarrantyInput
+  subscription: SubscriptionInput
+  support: SupportInput
+  endOfLife: EndOfLifeInput
+  note: String
+}
+"""
+An asset with no network presence (an unmetered PDU, a device without out-of-band management): a CI of the chosen type is created with it.
+"""
+input ManualAssetInput {
+  layer: CiLayer!
+  type: String!
+  name: String!
+  assetTag: String
+  locationCiId: UUID
+  details: AssetDetailsInput!
+}
+input IntegrationInput {
+  category: String!
+  vendor: String!
+  name: String!
+  endpoint: String!
+  credentialRef: String!
+  direction: String!
+  settings: JSON
+  fieldMappings: JSON
+  classMappings: JSON
+  subscribedEvents: [String!]
+}
+input SeverityTargetInput {
+  severity: IncidentSeverity!
+  respondMinutes: Int!
+  resolveMinutes: Int!
+}
+input SlaInput {
+  name: String!
+  description: String
+  availabilityTargetPercent: Float!
+  window: SlaWindow!
+  responseTargets: [SeverityTargetInput!]
+  burnRateAlert: Float
+}
+input CorrectiveActionInput {
+  description: String!
+  owner: String
+  dueAt: DateTime
+  done: Boolean
+}
+input RcaInput {
+  summary: String!
+  rootCauseCiId: UUID
+  contributingFactors: [String!]
+  correctiveActions: [CorrectiveActionInput!]
+  owner: String
+  dueAt: DateTime
+  completedAt: DateTime
+}
 
 type Mutation {
   createDashboard(input: DashboardInput!): Dashboard!
@@ -448,7 +1395,9 @@ type Mutation {
   setDefaultDashboard(id: UUID!): Dashboard!
   labelCi(input: LabelCiInput!): Ci!
   updateCiAttributes(ciId: UUID!, attributes: JSON!): Ci!
-  """Rename a CI's short code; the new code must match the code pattern and be free within the tenant."""
+  """
+  Rename a CI's short code; the new code must match the code pattern and be free within the tenant.
+  """
   setCiCode(ciId: UUID!, code: String!): Ci!
   createRelationship(type: String!, fromCiId: UUID!, toCiId: UUID!, attributes: JSON): Relationship!
   retireRelationship(id: UUID!): Relationship!
@@ -471,26 +1420,43 @@ type Mutation {
   closeIncident(incidentId: UUID!): Incident!
   updateIncidentRca(incidentId: UUID!, input: RcaInput!): Incident!
   upsertSla(id: UUID, input: SlaInput!): Sla!
-  """Removes an SLA; its services lose their assignment and fall back to the slaTargetPercent attribute."""
+  """
+  Removes an SLA; its services lose their assignment and fall back to the slaTargetPercent attribute.
+  """
   deleteSla(id: UUID!): Boolean!
-  """Holds a business service to an SLA; a null slaId clears the assignment."""
+  """
+  Holds a business service to an SLA; a null slaId clears the assignment.
+  """
   assignSla(serviceId: UUID!, slaId: UUID): ServiceHealth!
-  askAssistant(question: String!): AssistantAnswer!
+  """
+  Answers in `locale` (en or ar; the tenant's locale when omitted) over Postgres, Memgraph and ClickHouse.
+  """
+  askAssistant(question: String!, locale: String): AssistantAnswer!
   updateTenantSettings(input: TenantSettingsInput!): TenantSettings!
   updateOrganization(input: OrganizationInput!): Organization!
   upsertSite(id: UUID, input: SiteInput!): Site!
-  """Removes a site that has no Node and no link; its CI is retired."""
+  """
+  Removes a site that has no Node and no link; its CI is retired.
+  """
   removeSite(id: UUID!): Boolean!
   upsertSiteLink(id: UUID, input: SiteLinkInput!): SiteLink!
   removeSiteLink(id: UUID!): Boolean!
-  """Registers (or re-registers) a Discovery Node for a site and returns its one-time enrolment token."""
+  """
+  Registers (or re-registers) a Discovery Node for a site and returns its one-time enrolment token.
+  """
   registerNode(siteId: UUID!, nodeId: String!): NodeRegistration!
-  """Writes a credential set to the vault under `ref`; the API keeps the reference only."""
+  """
+  Writes a credential set to the vault under `ref`; the API keeps the reference only.
+  """
   saveCredentialSet(input: CredentialSetInput!): CredentialSet!
-  """Creates a subnet CI at a site as a discovery scope, through the outbox like any CI."""
+  """
+  Creates a subnet CI at a site as a discovery scope, through the outbox like any CI.
+  """
   addDiscoveryScope(input: ScopeInput!): DiscoveryScope!
   setOnboardingStep(step: OnboardingStep!, completed: Boolean!): OnboardingState!
-  """Creates the CIs the twin still lacks (links), records the generation and starts the first sweep."""
+  """
+  Creates the CIs the twin still lacks (links), records the generation and starts the first sweep.
+  """
   generateTwin: OnboardingState!
 }
 

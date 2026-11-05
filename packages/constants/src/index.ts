@@ -527,6 +527,48 @@ export const ASSISTANT = {
   temperature: 0.1,
   /** Times a rejected query is sent back to the model with the reason before the question is refused. */
   repairAttempts: 2,
+  /**
+   * ADR-028 — the conversational pipeline. A retrieval step that outlives this budget is reported as evidence with an
+   * error rather than hanging the answer; the follow-up count keeps the chips to one row; the accuracy floor is what
+   * `apps/assistant` evaluation set must reach in CI before the catalogue is considered sound.
+   */
+  skillTimeoutMs: 20_000,
+  followUps: 3,
+  evalAccuracyMin: 0.9,
+  /** Pattern-matched intents below this confidence ask the model to classify; below it again, the user is asked. */
+  minIntentConfidence: 0.6,
+  /**
+   * How much each vocabulary match adds to the classifier's confidence (capped at 1). An intent marker alone, or a
+   * CI type with an aggregate, clears `minIntentConfidence`; a bare type does not, so the model is consulted.
+   */
+  intentConfidence: {
+    base: 0.3,
+    marker: 0.4,
+    type: 0.3,
+    measurement: 0.25,
+    attribute: 0.15,
+    aggregate: 0.1,
+    name: 0.2,
+  },
+  /** Rows a top-N or distribution answer lists before "and N more". */
+  topN: 10,
+  /** Distinct values an attribute may have to count as a filterable dimension (site, platform, cluster, role). */
+  filterValueLimit: 60,
+  /** Candidate CIs offered when a name is ambiguous. */
+  clarificationChoices: 5,
+  /** Decimal places of a computed figure in prose, and the base the grounding guard rounds in when matching them. */
+  decimals: 2,
+  decimalBase: 10,
+  /** How long the discovered attribute keys and filter values of a tenant stay cached in the API process. */
+  catalogueCacheMs: 300_000,
+  /** Sentences the model may write before the deterministic summary takes over. */
+  maxProseSentences: 5,
+  /** Length of a retrieval query kept as evidence on the answer. */
+  evidenceQueryMaxLength: 4_000,
+  /** A greeting or thanks this short is answered without running a skill. */
+  smallTalkMaxWords: 4,
+  /** Rows a skill may return to the composer and the evidence; larger sets are summarised in the store. */
+  skillRowLimit: 500,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */
@@ -981,8 +1023,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.2.0 (REQ-CMDB-041): `AssetPage`, `assetPage` (page numbers and totals for the register).
    * 1.3.0 (REQ-CMDB-042, ADR-027): `SubscriptionCover`, `Credits`, `SubscriptionInput`, `AssetDataGap.subscription`,
    * `AssetRecord.subscription`/`subscriptionEndsAt`/`creditsRemaining`, `AssetSummary.subscriptionExpired`.
+   * 1.4.0 (REQ-AI-007, ADR-028): `AssistantIntent`, `AssistantStore`, `AssistantFigure`, `AssistantEvidence`,
+   * `AssistantOption`, `AssistantClarification`; `AssistantAnswer.intent`/`confidence`/`figures`/`evidence`/
+   * `followUps`/`clarification`/`grounded`; `askAssistant(question, locale)`.
    */
-  graphql: '1.3.0',
-  /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. */
-  event: '0.4.0',
+  graphql: '1.4.0',
+  /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`. */
+  event: '0.5.0',
 };

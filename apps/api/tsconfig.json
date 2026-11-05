@@ -16,6 +16,7 @@
     { "path": "../../packages/contracts" },
     { "path": "../../packages/db" },
     { "path": "../../packages/graph" },
+    { "path": "../../packages/i18n" },
     { "path": "../bsm-engine" },
     { "path": "../assistant" },
     { "path": "../scheduler" }

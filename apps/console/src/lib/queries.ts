@@ -2,7 +2,14 @@
 // GraphQL contract (packages/contracts/graphql/schema.graphql) and their TanStack Query option builders. Only the
 // fields the console renders are selected.
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
-import { CONSOLE, GRAPH, type AvailabilityGranularity, type BSM, type SlaWindow } from '@openmap/constants';
+import {
+  CONSOLE,
+  GRAPH,
+  type AvailabilityGranularity,
+  type BSM,
+  type Locale,
+  type SlaWindow,
+} from '@openmap/constants';
 import type { CiLayer } from '@openmap/contracts';
 import { gql } from './graphql';
 
@@ -700,21 +707,40 @@ export function runSimulation(scenarioId: string): Promise<ImpactSimulation> {
   );
 }
 
+// REQ-AI-007 (ADR-028) — the conversational answer as the Impact screen reads it; the Assistant screen's richer
+// typing lives in estate-queries.ts and both ask the same mutation.
 export interface AssistantAnswer {
   text: string;
   cypher: string;
   rows: JsonValue;
   cis: CiSummary[];
+  intent: string;
+  confidence: number;
+  grounded: boolean;
+  figures: Array<{ label: string; value: number; unit: string }>;
+  evidence: Array<{
+    skill: string;
+    store: string;
+    query: string;
+    params: JsonValue;
+    rows: number;
+    durationMs: number;
+    error: string | null;
+  }>;
+  followUps: string[];
+  clarification: { question: string; options: Array<{ label: string; value: string }> } | null;
 }
 
 const ASK_ASSISTANT_MUTATION = [
-  'mutation AskAssistant($question: String!) {',
-  '  askAssistant(question: $question) { text cypher rows cis { ' + CI_SUMMARY_FIELDS + ' } }',
+  'mutation AskAssistant($question: String!, $locale: String) {',
+  '  askAssistant(question: $question, locale: $locale) { text cypher rows intent confidence grounded figures { label value unit } evidence { skill store query params rows durationMs error } followUps clarification { question options { label value } } cis { ' +
+    CI_SUMMARY_FIELDS +
+    ' } }',
   '}',
 ].join('\n');
 
-export function askAssistant(question: string): Promise<AssistantAnswer> {
-  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question }).then(
+export function askAssistant(question: string, locale: Locale): Promise<AssistantAnswer> {
+  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question, locale }).then(
     (data) => data.askAssistant,
   );
 }

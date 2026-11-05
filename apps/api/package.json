@@ -26,6 +26,7 @@
     "@openmap/contracts": "workspace:*",
     "@openmap/db": "workspace:*",
     "@openmap/graph": "workspace:*",
+    "@openmap/i18n": "workspace:*",
     "@openmap/scheduler": "workspace:*",
     "@openmap/telemetry": "workspace:*",
     "@opentelemetry/api": "^1.10.0",

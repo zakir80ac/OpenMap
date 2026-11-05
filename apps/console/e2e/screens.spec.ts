@@ -118,12 +118,20 @@ test('Assistant: an example question is answered or explicitly refused', async (
   await page.getByRole('button', { name: translate(locale, 'assistant.example.hosts') }).click();
   const conversation = page.getByRole('list', { name: translate(locale, 'assistant.conversation') });
   await expect(conversation.getByText(translate(locale, 'assistant.example.hosts'))).toBeVisible();
-  const answered = conversation.getByText(translate(locale, 'assistant.cypher'));
+  // REQ-AI-007 (ADR-028): an answer carries its evidence and follow-ups; a count question also shows figures.
+  const answered = conversation.getByTestId('assistant-evidence');
   const refused = conversation.getByRole('alert');
   await expect(answered.or(refused).first()).toBeVisible({ timeout: ASSISTANT_TIMEOUT_MS });
   const outcome =
     (await answered.count()) > 0 ? 'answered' : 'refused: ' + ((await refused.first().textContent()) ?? '');
   testInfo.annotations.push({ type: 'assistant', description: outcome });
+  if ((await answered.count()) > 0) {
+    await expect(
+      conversation.getByRole('group', { name: translate(locale, 'assistant.figures') }),
+    ).toBeVisible();
+    await expect(conversation.getByTestId('assistant-followups')).toBeVisible();
+    await conversation.getByTestId('assistant-evidence').locator('summary').click();
+  }
   await page.screenshot({ path: screenshotsDir + 'assistant-answered-' + locale + '.png', fullPage: true });
 });
 
