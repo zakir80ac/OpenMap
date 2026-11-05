@@ -1,9 +1,9 @@
 # Assistant: a conversation over the estate (REQ-AI-007, ADR-028)
 
 Captured 2026-11-05 on the dev compose stack: Postgres, Memgraph and ClickHouse with the synthetic estate (tenant
-`ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`), the `cpu` LLM profile (llama.cpp serving `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`; `LLM_MODEL` names the alias the
-API asks for), model prose on (`ASSISTANT_PROSE`) for English only (`ASSISTANT_PROSE_LOCALES=en`, the compose default
-for the CPU profile; Arabic answers are the deterministic composition).
+`ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`), the `cpu` LLM profile (llama.cpp serving `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`; `LLM_MODEL`
+names the alias the API asks for), model prose on (`ASSISTANT_PROSE`) for English only
+(`ASSISTANT_PROSE_LOCALES=en`, the compose default for the CPU profile; Arabic answers are the deterministic composition).
 
 ## What changed
 
@@ -32,7 +32,7 @@ The two reported failures are skill cases now: "OS per server average" is a brea
 "How many VMs running per host in VMware" is the `hosted_on` fan-out from VMs to hypervisors, scoped by the
 `platform` value `vmware` the catalogue discovered on the tenant's VMs.
 
-## Evaluation set: 28 of 28 (100%, floor `ASSISTANT.evalAccuracyMin`)
+## Evaluation set: 29 of 29 (100%, floor `ASSISTANT.evalAccuracyMin`)
 
 `apps/assistant/src/eval/questions.ts`, run by `apps/api/src/assistant/assistant.eval.integration.test.ts` (T-143)
 through GraphQL against the stack above. Each question must resolve to the expected intent and first skill (or a
@@ -41,13 +41,13 @@ clarification), carry a figure where the estate holds one, and name the expected
 | Id                  | Question                                                         | Intent          | First skill           | Figures | Grounded prose | Result |
 | ------------------- | ---------------------------------------------------------------- | --------------- | --------------------- | ------- | -------------- | ------ |
 | `count-hosts`       | How many hosts are there?                                        | count           | cmdb.attributes       | 1       | yes            | pass   |
-| `os-per-server`     | OS per server average                                            | attribute_stats | cmdb.attributes       | 6       | no             | pass   |
+| `os-per-server`     | OS per server average                                            | attribute_stats | cmdb.attributes       | 6       | yes            | pass   |
 | `vm-density-vmware` | How many VMs running per host in VMware                          | count           | cmdb.attributes       | 3       | yes            | pass   |
 | `avg-memory-hosts`  | What is the average memory of the hosts?                         | attribute_stats | cmdb.attributes       | 2       | yes            | pass   |
 | `hosts-per-os`      | How many hosts run each operating system?                        | count           | cmdb.attributes       | 6       | yes            | pass   |
 | `hosts-per-site`    | How many hosts per site?                                         | count           | cmdb.attributes       | 5       | no             | pass   |
 | `vcpus-per-vm`      | What is the average number of vCPUs per VM?                      | attribute_stats | cmdb.attributes       | 2       | yes            | pass   |
-| `avg-cpu-hosts`     | Average CPU utilisation of hosts                                 | measurement     | metrics.latest        | 2       | yes            | pass   |
+| `avg-cpu-hosts`     | Average CPU utilisation of hosts                                 | measurement     | metrics.latest        | 2       | no             | pass   |
 | `top-cpu-hosts`     | Which hosts have the highest CPU utilisation?                    | measurement     | metrics.latest        | 10      | no             | pass   |
 | `power-racks`       | Which PDUs draw the most power?                                  | measurement     | metrics.latest        | 10      | yes            | pass   |
 | `uptime-month`      | What is the uptime of business services this month?              | availability    | services.availability | 4       | yes            | pass   |
@@ -68,6 +68,7 @@ clarification), carry a figure where the estate holds one, and name the expected
 | `ar-howto-subnet`   | كيف أضيف شبكة فرعية؟                                             | howto           | howto                 | 0       | yes            | pass   |
 | `ar-avg-cpu`        | متوسط استخدام المعالج للمضيفين                                   | measurement     | metrics.latest        | 2       | yes            | pass   |
 | `ar-services-down`  | أي خدمات الأعمال معطلة؟                                          | lookup          | graph.query           | 0       | yes            | pass   |
+| `ar-hosts-per-os`   | كم مضيفًا يعمل بكل نظام تشغيل؟                                   | count           | cmdb.attributes       | 6       | yes            | pass   |
 
 ## Other tests
 
@@ -75,6 +76,6 @@ clarification), carry a figure where the estate holds one, and name the expected
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `apps/assistant/src/core/conversation.test.ts` (T-142)                 | vocabulary normalisation and matching in both scripts; every evaluation question classified and planned as expected offline; every summary kind worded in en and ar with its figures; the guard rejects invented numbers and identifiers; the model's verdict only fills gaps | 44 passed (3 files, incl. compose.test.ts) |
 | `apps/console/src/components/assistant/AssistantView.test.tsx` (T-144) | prose, figures, evidence steps, linked CIs and follow-ups in en and ar; a follow-up and a clarification choice are asked as the next question with the locale; refusal and ungrounded states                                                                                  | 7 passed                                   |
-| `apps/console/e2e/screens.spec.ts` (Assistant)                         | the example question answered on the real stack with figures, follow-ups and evidence, screenshots in en and ar                                                                                                                                                               | 3 of 3 (setup, en, ar), 13 s               |
+| `apps/console/e2e/screens.spec.ts` (Assistant)                         | the example question answered on the real stack with figures, follow-ups and evidence, screenshots in en and ar                                                                                                                                                               | 3 of 3 (setup, en, ar), 11 s               |
 
 Guard ok; `contracts:check` GraphQL 1.4.0 additive (the optional `locale` argument); i18n in sync (193 keys added per locale).

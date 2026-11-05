@@ -31,9 +31,9 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 - **Console.** `AssistantView` shows prose, intent and confidence, figures (Kpi), CI pills, evidence per step,
   Cypher and rows when a graph step ran, follow-up chips, clarification choices, the ungrounded note; the Impact
   screen passes the locale. 193 i18n keys per locale.
-- **Evaluation.** `apps/assistant/src/eval/questions.ts` (28 questions, en and ar, Syed's two failures included),
+- **Evaluation.** `apps/assistant/src/eval/questions.ts` (29 questions, en and ar, Syed's two failures included),
   run offline by T-142 and through GraphQL against the stack by T-143 (`apps/api/src/assistant/
-assistant.eval.integration.test.ts`): 28 of 28 through GraphQL in 45 s, English prose grounded, Arabic deterministic (ASSISTANT_PROSE_LOCALES=en on the CPU profile). Console T-144; e2e Assistant: 3 of 3 (setup, en, ar); Lighthouse: not re-measured (the Assistant screen carries no budget; the budgeted screens are untouched).
+assistant.eval.integration.test.ts`): 29 of 29 through GraphQL in 45 s, English prose grounded, Arabic deterministic (ASSISTANT_PROSE_LOCALES=en on the CPU profile). Console T-144; e2e Assistant: 3 of 3 (setup, en, ar); Lighthouse: not re-measured (the Assistant screen carries no budget; the budgeted screens are untouched).
   Evidence: `docs/evidence/assistant-conversation.md`.
 
 **Lessons.** (1) Parameterised SQL keeps the attribute key in `$n` bindings: evidence checks must read params too.

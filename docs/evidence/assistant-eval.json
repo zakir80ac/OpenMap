@@ -1,10 +1,10 @@
 {
- "capturedAt": "2026-11-05T11:27:46.226Z",
+ "capturedAt": "2026-11-05T11:36:37.706Z",
  "tenantId": "ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c",
  "model": "Qwen/Qwen2.5-7B-Instruct",
  "prose": true,
- "passed": 28,
- "total": 28,
+ "passed": 29,
+ "total": 29,
  "outcomes": [
   {
    "id": "count-hosts",
@@ -26,8 +26,8 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "hosts by operating system, 2,000 in 5 groups: Windows Server: 636; Red Hat Enterprise Linux: 629; Ubuntu: 623; VMware ESXi: 71; Nutanix AHV: 41.",
-   "grounded": false,
+   "text": "The average number of hosts per server is 2000.",
+   "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
    ],
@@ -40,7 +40,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 3,
-   "text": "There are an average of 12 virtual machines running per host in VMware, with a maximum of 12 virtual machines on a single host.",
+   "text": "There are an average of 12 virtual machines running per host in VMware, with a maximum of 12 virtual machines on the largest hypervisor.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -68,7 +68,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "There are 2,000 hosts in total, with 636 running Windows Server, 629 running Red Hat Enterprise Linux, 623 running Ubuntu, 71 running VMware ESXi, and 41 running Nutanix AHV.",
+   "text": "There are 2,000 hosts running each operating system.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
@@ -110,8 +110,8 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "The average CPU utilisation of hosts across 4,000 hosts is 48.36%.",
-   "grounded": true,
+   "text": "The average host CPU utilisation across 4,000 hosts is 48.36%, from the latest samples as of Oct 1, 2026.",
+   "grounded": false,
    "evidence": [
     "metrics.latest:clickhouse:1"
    ],
@@ -138,7 +138,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 10,
-   "text": "The JED-DH01-A-14 PDU-A draws the most power at 4,180 W.",
+   "text": "The JED-DH01-A-14 PDU-A draws the most power with a power draw of 4,180 W.",
    "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:10"
@@ -390,6 +390,20 @@
    "grounded": true,
    "evidence": [
     "graph.query:memgraph:0"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-hosts-per-os",
+   "question": "كم مضيفًا يعمل بكل نظام تشغيل؟",
+   "intent": "count",
+   "skill": "cmdb.attributes",
+   "figures": 6,
+   "text": "المضيفين حسب نظام التشغيل، 2,000 في 5 مجموعات: Windows Server: 636؛ Red Hat Enterprise Linux: 629؛ Ubuntu: 623؛ VMware ESXi: 71؛ Nutanix AHV: 41.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:5"
    ],
    "ok": true,
    "why": []

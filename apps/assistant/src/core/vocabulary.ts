@@ -491,7 +491,7 @@ export const AGGREGATE_TERMS: Record<AssistantAggregate, Terms> = {
 /** "per site", "by platform", "for each rack": the question wants one row per group. */
 export const GROUP_TERMS: Terms = {
   en: ['per', 'by', 'each', 'for each', 'grouped by', 'broken down by', 'across'],
-  ar: ['لكل', 'حسب', 'بحسب', 'وفق', 'موزعة', 'موزعين'],
+  ar: ['لكل', 'بكل', 'في كل', 'حسب', 'بحسب', 'وفق', 'موزعة', 'موزعين'],
 };
 
 /** Words that decide the intent before any type or attribute is considered. */
@@ -671,7 +671,11 @@ export const FILTER_MARKERS: Terms = {
 
 /** Health words mapped to the contract's health states. */
 export const HEALTH_TERMS: Record<'healthy' | 'degraded' | 'down', Terms> = {
-  healthy: { en: ['healthy', 'up', 'fine', 'ok'], ar: ['سليم', 'سليمة', 'يعمل', 'تعمل', 'جيد'] },
+  // "يعمل" (runs) is not a health word: "كم مضيفًا يعمل بكل نظام تشغيل" asks how many hosts run each OS.
+  healthy: {
+    en: ['healthy', 'up', 'fine', 'ok'],
+    ar: ['سليم', 'سليمة', 'سليمين', 'بصحة جيدة', 'بحالة جيدة'],
+  },
   degraded: { en: ['degraded', 'struggling', 'impaired'], ar: ['متدهور', 'متدهورة', 'متأثر', 'ضعيف'] },
   down: {
     en: ['down', 'failed', 'offline', 'outage', 'broken', 'not working'],
