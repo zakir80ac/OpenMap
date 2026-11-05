@@ -1,4 +1,5 @@
 // REQ-UI-003 — locale-aware formatters (numbers and timestamps) shared by every view; Intl does the digits and calendars.
+import { SLA } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
 
 export interface Formatters {
@@ -7,6 +8,10 @@ export interface Formatters {
   dateTime: (iso: string) => string;
   /** A calendar date (YYYY-MM-DD or ISO instant), shown without a time. */
   date: (iso: string) => string;
+  /** An availability percentage to SLA.percentDecimals, without the sign. */
+  percent: (value: number) => string;
+  /** Month and year of an instant, e.g. for an availability period. */
+  monthYear: (iso: string) => string;
 }
 
 export function createFormatters(locale: Locale): Formatters {
@@ -14,6 +19,8 @@ export function createFormatters(locale: Locale): Formatters {
   const integer = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   const dateTime = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
   const date = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+  const percent = new Intl.NumberFormat(locale, { maximumFractionDigits: SLA.percentDecimals });
+  const monthYear = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' });
   return {
     number: (value) => number.format(value),
     integer: (value) => integer.format(value),
@@ -24,6 +31,11 @@ export function createFormatters(locale: Locale): Formatters {
     date: (iso) => {
       const value = new Date(iso);
       return Number.isNaN(value.getTime()) ? iso : date.format(value);
+    },
+    percent: (value) => percent.format(value),
+    monthYear: (iso) => {
+      const value = new Date(iso);
+      return Number.isNaN(value.getTime()) ? iso : monthYear.format(value);
     },
   };
 }

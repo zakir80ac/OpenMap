@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/outbox-record/0.3.0",
+  "$id": "https://openmap.dev/contracts/outbox-record/0.4.0",
   "title": "outbox-record",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -43,6 +43,7 @@
             "openmap.reconciliation.conflict",
             "openmap.bsm.health.changed",
             "openmap.bsm.sla.breached",
+            "openmap.bsm.sla.at_risk",
             "openmap.bsm.incident.correlated",
             "openmap.ipam.subnet.utilisation",
             "openmap.ipam.address.conflict",

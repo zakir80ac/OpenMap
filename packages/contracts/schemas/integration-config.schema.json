@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/integration-config/0.3.0",
+  "$id": "https://openmap.dev/contracts/integration-config/0.4.0",
   "title": "integration-config",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

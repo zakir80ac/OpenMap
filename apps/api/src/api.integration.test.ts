@@ -411,38 +411,106 @@ describe('OpenMap API (integration)', () => {
   });
 
   it('serves the layer headline metric from the latest ClickHouse sample, null until sampled, days since seen for unknown CIs (REQ-CMDB-038)', async () => {
-    type Headline = { ci: { layer: string; headlineMetric: { key: string; label: string; unit: string; metric: string; value: number | null; observedAt: string | null } } | null };
-    const query = 'query Headline($id: UUID!) { ci(id: $id) { layer headlineMetric { key label unit metric value observedAt } } }';
+    type Headline = {
+      ci: {
+        layer: string;
+        headlineMetric: {
+          key: string;
+          label: string;
+          unit: string;
+          metric: string;
+          value: number | null;
+          observedAt: string | null;
+        };
+      } | null;
+    };
+    const query =
+      'query Headline($id: UUID!) { ci(id: $id) { layer headlineMetric { key label unit metric value observedAt } } }';
     const clickhouse = app.get(ClickHouseService);
     const older = '2026-10-22 08:00:00.000';
     const latest = '2026-10-22 09:30:00.000';
     await clickhouse.insert('metrics', [
-      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.cpu.utilisation_percent', ts: older, value: 12, unit: 'percent', labels: {}, source_run_id: randomUUID() },
-      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.cpu.utilisation_percent', ts: latest, value: 41.5, unit: 'percent', labels: {}, source_run_id: randomUUID() },
-      { tenant_id: tenantId, ci_id: ids.host, metric: 'host.memory.utilisation_percent', ts: latest, value: 88, unit: 'percent', labels: {}, source_run_id: randomUUID() },
+      {
+        tenant_id: tenantId,
+        ci_id: ids.host,
+        metric: 'host.cpu.utilisation_percent',
+        ts: older,
+        value: 12,
+        unit: 'percent',
+        labels: {},
+        source_run_id: randomUUID(),
+      },
+      {
+        tenant_id: tenantId,
+        ci_id: ids.host,
+        metric: 'host.cpu.utilisation_percent',
+        ts: latest,
+        value: 41.5,
+        unit: 'percent',
+        labels: {},
+        source_run_id: randomUUID(),
+      },
+      {
+        tenant_id: tenantId,
+        ci_id: ids.host,
+        metric: 'host.memory.utilisation_percent',
+        ts: latest,
+        value: 88,
+        unit: 'percent',
+        labels: {},
+        source_run_id: randomUUID(),
+      },
     ]);
     const host = await gql<Headline>(query, { id: ids.host });
     expect(host.errors).toBeUndefined();
-    expect(host.data?.ci?.headlineMetric).toEqual({ key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent', value: 41.5, observedAt: '2026-10-22T09:30:00.000Z' });
+    expect(host.data?.ci?.headlineMetric).toEqual({
+      key: 'cpuPercent',
+      label: 'Host load',
+      unit: '%',
+      metric: 'host.cpu.utilisation_percent',
+      value: 41.5,
+      observedAt: '2026-10-22T09:30:00.000Z',
+    });
 
     const db = await gql<Headline>(query, { id: ids.db });
-    expect(db.data?.ci?.headlineMetric).toEqual({ key: 'iops', label: 'IOPS', unit: '', metric: 'db.instance.iops', value: null, observedAt: null });
+    expect(db.data?.ci?.headlineMetric).toEqual({
+      key: 'iops',
+      label: 'IOPS',
+      unit: '',
+      metric: 'db.instance.iops',
+      value: null,
+      observedAt: null,
+    });
 
     const unknownId = randomUUID();
-    await prisma.ci.create({ data: { ...ciRow(unknownId, 'unknown', 'unknown', '10.20.4.99', {}, { address: '10.20.4.99' }), observedAt: new Date(Date.now() - 3 * TIME.msPerDay - TIME.msPerSecond) } });
+    await prisma.ci.create({
+      data: {
+        ...ciRow(unknownId, 'unknown', 'unknown', '10.20.4.99', {}, { address: '10.20.4.99' }),
+        observedAt: new Date(Date.now() - 3 * TIME.msPerDay - TIME.msPerSecond),
+      },
+    });
     const unknown = await gql<Headline>(query, { id: unknownId });
-    expect(unknown.data?.ci?.headlineMetric).toMatchObject({ key: 'lastSeenDays', unit: 'd', metric: 'discovery.last_seen.days', value: 3 });
+    expect(unknown.data?.ci?.headlineMetric).toMatchObject({
+      key: 'lastSeenDays',
+      unit: 'd',
+      metric: 'discovery.last_seen.days',
+      value: 3,
+    });
     expect(unknown.data?.ci?.headlineMetric.observedAt).not.toBeNull();
 
     // One ClickHouse round trip per page: the loader batches every CI of the list query.
     type Page = { cis: { edges: Array<{ node: { id: string; headlineMetric: { value: number | null } } }> } };
-    const page = await gql<Page>('query { cis(filter: { tags: ["integration-test"] }, first: 20) { edges { node { id headlineMetric { value } } } } }');
+    const page = await gql<Page>(
+      'query { cis(filter: { tags: ["integration-test"] }, first: 20) { edges { node { id headlineMetric { value } } } } }',
+    );
     expect(page.errors).toBeUndefined();
     const byId = new Map(page.data?.cis.edges.map((e) => [e.node.id, e.node.headlineMetric.value]));
     expect(byId.get(ids.host)).toBe(41.5);
     expect(byId.get(ids.db)).toBeNull();
     const metricsText = (await app.inject({ method: 'GET', url: env.METRICS_PATH })).body;
-    expect(metricsText).toMatch(/openmap_clickhouse_queries_total\{query="headline_metrics",status="ok"\} [1-9]/);
+    expect(metricsText).toMatch(
+      /openmap_clickhouse_queries_total\{query="headline_metrics",status="ok"\} [1-9]/,
+    );
   });
 
   it('reads a CI as of a point in time', async () => {
@@ -810,47 +878,406 @@ describe('OpenMap API (integration)', () => {
       ci: { id: string; type: string; layer: string } | null;
       audits: Array<{ field: string; actor: string }>;
     };
-    const fields = 'id assetTag layer ciType source serialNumber manufacturer dataGaps warranty { provider endsAt source } ci { id type layer } audits { field actor }';
+    const fields =
+      'id assetTag layer ciType source serialNumber manufacturer dataGaps warranty { provider endsAt source } ci { id type layer } audits { field actor }';
     const created = await gql<{ createAsset: Asset }>(
       'mutation C($input: ManualAssetInput!) { createAsset(input: $input) { ' + fields + ' } }',
-      { input: { layer: 'dc', type: 'pdu', name: 'PDU rack 7 left', details: { manufacturer: 'APC', model: 'AP7921', serialNumber: 'PDU-7L' } } },
+      {
+        input: {
+          layer: 'dc',
+          type: 'pdu',
+          name: 'PDU rack 7 left',
+          details: { manufacturer: 'APC', model: 'AP7921', serialNumber: 'PDU-7L' },
+        },
+      },
     );
     expect(created.errors).toBeUndefined();
     const asset = created.data?.createAsset;
-    expect(asset).toMatchObject({ layer: 'dc', ciType: 'pdu', source: 'manual', serialNumber: 'PDU-7L', dataGaps: ['warranty', 'support', 'end_of_life'] });
+    expect(asset).toMatchObject({
+      layer: 'dc',
+      ciType: 'pdu',
+      source: 'manual',
+      serialNumber: 'PDU-7L',
+      dataGaps: ['warranty', 'support', 'end_of_life'],
+    });
     expect(asset?.ci).toMatchObject({ type: 'pdu', layer: 'dc' });
-    expect(asset?.audits.map((a) => a.field).sort()).toEqual(['manufacturer', 'model', 'serialNumber', 'stage']);
-    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.ci.created', subject: asset?.ci?.id } })).toBe(1);
-    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.created', subject: asset?.id } })).toBe(1);
+    expect(asset?.audits.map((a) => a.field).sort()).toEqual([
+      'manufacturer',
+      'model',
+      'serialNumber',
+      'stage',
+    ]);
+    expect(
+      await prisma.outboxEvent.count({
+        where: { tenantId, type: 'openmap.ci.created', subject: asset?.ci?.id },
+      }),
+    ).toBe(1);
+    expect(
+      await prisma.outboxEvent.count({
+        where: { tenantId, type: 'openmap.asset.created', subject: asset?.id },
+      }),
+    ).toBe(1);
 
     const updated = await gql<{ updateAsset: Asset }>(
-      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' + fields + ' } }',
-      { id: asset?.id, input: { warranty: { provider: 'APC', endsAt: '2029-03-31' }, note: 'from the invoice' } },
+      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' +
+        fields +
+        ' } }',
+      {
+        id: asset?.id,
+        input: { warranty: { provider: 'APC', endsAt: '2029-03-31' }, note: 'from the invoice' },
+      },
     );
     expect(updated.errors).toBeUndefined();
-    expect(updated.data?.updateAsset.warranty).toMatchObject({ provider: 'APC', endsAt: '2029-03-31T00:00:00.000Z', source: 'manual' });
+    expect(updated.data?.updateAsset.warranty).toMatchObject({
+      provider: 'APC',
+      endsAt: '2029-03-31T00:00:00.000Z',
+      source: 'manual',
+    });
     expect(updated.data?.updateAsset.dataGaps).toEqual(['support', 'end_of_life']);
-    expect(updated.data?.updateAsset.audits.some((a) => a.field === 'warranty' && a.actor === 'tester')).toBe(true);
-    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.updated', subject: asset?.id } })).toBe(1);
+    expect(updated.data?.updateAsset.audits.some((a) => a.field === 'warranty' && a.actor === 'tester')).toBe(
+      true,
+    );
+    expect(
+      await prisma.outboxEvent.count({
+        where: { tenantId, type: 'openmap.asset.updated', subject: asset?.id },
+      }),
+    ).toBe(1);
 
-    const gaps = await gql<{ assets: Asset[]; assetSummary: Array<{ layer: string; count: number; needsData: number }> }>(
+    const gaps = await gql<{
+      assets: Asset[];
+      assetSummary: Array<{ layer: string; count: number; needsData: number }>;
+    }>(
       '{ assets(filter: { layers: [dc], dataGaps: [warranty] }) { id } assetSummary { layer count needsData } }',
     );
     expect(gaps.errors).toBeUndefined();
     expect(gaps.data?.assets.map((a) => a.id)).not.toContain(asset?.id);
-    expect(gaps.data?.assetSummary.find((row) => row.layer === 'dc')).toMatchObject({ count: 1, needsData: 1 });
+    expect(gaps.data?.assetSummary.find((row) => row.layer === 'dc')).toMatchObject({
+      count: 1,
+      needsData: 1,
+    });
     const text = await gql<{ assets: Asset[] }>('{ assets(filter: { text: "rack 7 left" }) { id } }');
     expect(text.data?.assets.map((a) => a.id)).toContain(asset?.id);
 
     const unknownId = randomUUID();
-    await prisma.ci.create({ data: ciRow(unknownId, 'unknown', 'unknown', 'ups_card-4416', { deviceKind: 'ups_card', snmpReachable: true, manufacturer: 'Schneider Electric', model: 'AP9641', serialNumber: 'UPS-4416' }) });
+    await prisma.ci.create({
+      data: ciRow(unknownId, 'unknown', 'unknown', 'ups_card-4416', {
+        deviceKind: 'ups_card',
+        snmpReachable: true,
+        manufacturer: 'Schneider Electric',
+        model: 'AP9641',
+        serialNumber: 'UPS-4416',
+      }),
+    });
     const labelled = await gql<{ labelCi: { id: string; type: string; asset: Asset | null } }>(
       'mutation L($input: LabelCiInput!) { labelCi(input: $input) { id type asset { ' + fields + ' } } }',
-      { input: { ciId: unknownId, title: 'UPS card rack 12', description: 'APC network management card', layer: 'dc', type: 'ups' } },
+      {
+        input: {
+          ciId: unknownId,
+          title: 'UPS card rack 12',
+          description: 'APC network management card',
+          layer: 'dc',
+          type: 'ups',
+        },
+      },
     );
     expect(labelled.errors).toBeUndefined();
     expect(labelled.data?.labelCi.type).toBe('ups');
-    expect(labelled.data?.labelCi.asset).toMatchObject({ ciType: 'ups', layer: 'dc', source: 'discovery', serialNumber: 'UPS-4416', manufacturer: 'Schneider Electric' });
+    expect(labelled.data?.labelCi.asset).toMatchObject({
+      ciType: 'ups',
+      layer: 'dc',
+      source: 'discovery',
+      serialNumber: 'UPS-4416',
+      manufacturer: 'Schneider Electric',
+    });
+  });
+
+  it('assigns an SLA, reports availability by period from the ClickHouse history, and runs an incident through assignment, RCA, resolution and closure with every step on the timeline (REQ-BSM-006, REQ-BSM-008)', async () => {
+    // T-135 ADR-024
+    const clickhouse = app.get(ClickHouseService);
+    const now = new Date();
+    const monthStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+    const previousMonthStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1);
+    const minute = TIME.secondsPerMinute * TIME.msPerSecond;
+    const chTs = (ms: number): string => new Date(ms).toISOString().replace('T', ' ').replace('Z', '');
+    const row = (ms: number, health: string, score: number) => ({
+      tenant_id: tenantId,
+      service_ci_id: ids.service,
+      health,
+      score,
+      cause_ci_id: null,
+      sla_budget_remaining_minutes: null,
+      ts: chTs(ms),
+    });
+    // Last month: 30 minutes degraded. This month: a 60-minute outage one hour after the month began.
+    await clickhouse.insert('service_health_history', [
+      row(previousMonthStart + 2 * minute, 'degraded', 0.5),
+      row(previousMonthStart + 32 * minute, 'healthy', 1),
+      row(monthStart + 60 * minute, 'down', 0),
+      row(monthStart + 120 * minute, 'healthy', 1),
+    ]);
+
+    type Sla = {
+      id: string;
+      name: string;
+      availabilityTargetPercent: number;
+      window: string;
+      responseTargets: Array<{ severity: string; respondMinutes: number; resolveMinutes: number }>;
+      services: Array<{ id: string }>;
+    };
+    const created = await gql<{ upsertSla: Sla }>(
+      'mutation S($input: SlaInput!) { upsertSla(input: $input) { id name availabilityTargetPercent window responseTargets { severity respondMinutes resolveMinutes } services { id } } }',
+      {
+        input: {
+          name: 'Gold',
+          availabilityTargetPercent: 99.9,
+          window: 'calendar_month',
+          responseTargets: [{ severity: 'critical', respondMinutes: 10, resolveMinutes: 60 }],
+        },
+      },
+    );
+    expect(created.errors).toBeUndefined();
+    const sla = created.data?.upsertSla;
+    expect(sla).toMatchObject({ name: 'Gold', window: 'calendar_month', services: [] });
+    expect(sla?.responseTargets.find((t) => t.severity === 'critical')).toMatchObject({
+      respondMinutes: 10,
+      resolveMinutes: 60,
+    });
+    expect(sla?.responseTargets.find((t) => t.severity === 'high')?.respondMinutes).toBeGreaterThan(0);
+
+    const denied = await gql<{ assignSla: unknown }>(
+      'mutation A($serviceId: UUID!, $slaId: UUID) { assignSla(serviceId: $serviceId, slaId: $slaId) { slaTarget } }',
+      { serviceId: ids.service, slaId: sla?.id },
+      viewerToken,
+    );
+    expect(denied.errors?.[0]?.message).toMatch(/roles/);
+
+    type Period = {
+      year: number;
+      month: number | null;
+      quarter: number | null;
+      current: boolean;
+      availabilityPercent: number | null;
+      downtimeMinutes: number;
+      degradedMinutes: number;
+      targetPercent: number | null;
+      met: boolean | null;
+      budgetMinutes: number | null;
+      incidents: Array<{ id: string }>;
+    };
+    type Health = {
+      slaTarget: number;
+      errorBudgetRemainingMinutes: number;
+      sla: { id: string } | null;
+      currentWindow: Period;
+      availability: Period[];
+    };
+    const periodFields =
+      'year month quarter current availabilityPercent downtimeMinutes degradedMinutes targetPercent met budgetMinutes incidents { id }';
+    const assigned = await gql<{ assignSla: Health }>(
+      'mutation A($serviceId: UUID!, $slaId: UUID) { assignSla(serviceId: $serviceId, slaId: $slaId) { slaTarget errorBudgetRemainingMinutes sla { id } currentWindow { ' +
+        periodFields +
+        ' } availability(granularity: month, periods: 2) { ' +
+        periodFields +
+        ' } } }',
+      { serviceId: ids.service, slaId: sla?.id },
+    );
+    expect(assigned.errors).toBeUndefined();
+    const health = assigned.data?.assignSla;
+    expect(health?.sla?.id).toBe(sla?.id);
+    expect(health?.slaTarget).toBe(99.9);
+    expect(health?.currentWindow).toMatchObject({
+      current: true,
+      downtimeMinutes: 60,
+      targetPercent: 99.9,
+      met: false,
+    });
+    expect(health?.currentWindow.budgetMinutes).toBeGreaterThan(0);
+    expect(health?.errorBudgetRemainingMinutes).toBeCloseTo(
+      (health?.currentWindow.budgetMinutes ?? 0) - 60,
+      6,
+    );
+    expect(health?.availability).toHaveLength(2);
+    const [previous, current] = health?.availability ?? [];
+    expect(previous).toMatchObject({
+      current: false,
+      downtimeMinutes: 0,
+      degradedMinutes: 30,
+      availabilityPercent: 100,
+      met: true,
+      quarter: null,
+    });
+    expect(current).toMatchObject({
+      current: true,
+      downtimeMinutes: 60,
+      met: false,
+      month: now.getUTCMonth() + 1,
+    });
+    expect(current?.availabilityPercent ?? 100).toBeLessThan(100);
+
+    const report = await gql<{
+      availabilityReport: Array<{ service: { id: string }; sla: { name: string } | null; periods: Period[] }>;
+      availabilityReportCsv: string;
+    }>(
+      '{ availabilityReport(granularity: quarter, periods: 1) { service { id } sla { name } periods { quarter current downtimeMinutes } } availabilityReportCsv(granularity: year, periods: 1) }',
+    );
+    expect(report.errors).toBeUndefined();
+    const ours = report.data?.availabilityReport.find((r) => r.service.id === ids.service);
+    expect(ours?.sla?.name).toBe('Gold');
+    expect(ours?.periods).toHaveLength(1);
+    expect(ours?.periods[0]?.downtimeMinutes).toBeGreaterThanOrEqual(60);
+    const csv = report.data?.availabilityReportCsv ?? '';
+    expect(csv.split('\n')[0]).toBe(
+      'service,code,sla,granularity,year,month,quarter,period_start,period_end,availability_percent,target_percent,met,downtime_minutes,degraded_minutes,unknown_minutes,elapsed_minutes',
+    );
+    expect(csv).toContain('"Online banking"');
+    expect(csv).toContain('"Gold"');
+
+    // An incident the engine would have opened during this month's outage, run through the response flow.
+    const incidentRow = await prisma.incident.create({
+      data: {
+        tenantId,
+        title: 'Online banking down',
+        description: 'Ledger DB lost power',
+        severity: 'critical',
+        state: 'open',
+        source: 'bsm',
+        affectedServiceCiIds: [ids.service],
+        rootCauseCiId: ids.pdu,
+        correlatedEventIds: [],
+        openedAt: new Date(monthStart + 60 * minute),
+        slaId: sla?.id,
+        respondBy: new Date(monthStart + 70 * minute),
+        resolveBy: new Date(monthStart + 120 * minute),
+      },
+    });
+    type Incident = {
+      id: string;
+      state: string;
+      severity: string;
+      assignee: string | null;
+      acknowledgedAt: string | null;
+      resolvedAt: string | null;
+      closedAt: string | null;
+      resolutionNote: string | null;
+      sla: { name: string } | null;
+      rca: {
+        summary: string;
+        rootCauseCi: { id: string } | null;
+        correctiveActions: Array<{ description: string; owner: string | null; done: boolean }>;
+        updatedBy: string;
+      } | null;
+      timeline: Array<{ kind: string; actor: string }>;
+    };
+    const incidentFields =
+      'id state severity assignee acknowledgedAt resolvedAt closedAt resolutionNote sla { name } rca { summary rootCauseCi { id } correctiveActions { description owner done } updatedBy } timeline { kind actor }';
+    const assignedIncident = await gql<{ assignIncident: Incident }>(
+      'mutation I($id: UUID!) { assignIncident(incidentId: $id, assignee: "ops.lead") { ' +
+        incidentFields +
+        ' } }',
+      { id: incidentRow.id },
+    );
+    expect(assignedIncident.errors).toBeUndefined();
+    expect(assignedIncident.data?.assignIncident).toMatchObject({
+      state: 'acknowledged',
+      assignee: 'ops.lead',
+      severity: 'critical',
+    });
+    expect(assignedIncident.data?.assignIncident.acknowledgedAt).not.toBeNull();
+    expect(assignedIncident.data?.assignIncident.sla?.name).toBe('Gold');
+
+    const rca = await gql<{ updateIncidentRca: Incident }>(
+      'mutation R($id: UUID!, $input: RcaInput!) { updateIncidentRca(incidentId: $id, input: $input) { ' +
+        incidentFields +
+        ' } }',
+      {
+        id: incidentRow.id,
+        input: {
+          summary: 'Single PDU feed; breaker tripped under load',
+          rootCauseCiId: ids.pdu,
+          contributingFactors: ['no redundant feed', 'breaker undersized'],
+          correctiveActions: [{ description: 'Add B-side feed to rack 12', owner: 'dc.ops' }],
+          owner: 'ops.lead',
+        },
+      },
+    );
+    expect(rca.errors).toBeUndefined();
+    expect(rca.data?.updateIncidentRca.rca).toMatchObject({
+      summary: 'Single PDU feed; breaker tripped under load',
+      rootCauseCi: { id: ids.pdu },
+      updatedBy: 'tester',
+      correctiveActions: [{ description: 'Add B-side feed to rack 12', owner: 'dc.ops', done: false }],
+    });
+
+    const resolved = await gql<{ resolveIncident: Incident }>(
+      'mutation V($id: UUID!) { resolveIncident(incidentId: $id, note: "Feed restored, breaker replaced") { ' +
+        incidentFields +
+        ' } }',
+      { id: incidentRow.id },
+    );
+    expect(resolved.errors).toBeUndefined();
+    expect(resolved.data?.resolveIncident).toMatchObject({
+      state: 'resolved',
+      resolutionNote: 'Feed restored, breaker replaced',
+    });
+    expect(resolved.data?.resolveIncident.resolvedAt).not.toBeNull();
+
+    const closed = await gql<{ closeIncident: Incident }>(
+      'mutation X($id: UUID!) { closeIncident(incidentId: $id) { ' + incidentFields + ' } }',
+      { id: incidentRow.id },
+    );
+    expect(closed.errors).toBeUndefined();
+    expect(closed.data?.closeIncident.state).toBe('closed');
+    expect(closed.data?.closeIncident.closedAt).not.toBeNull();
+    const kinds = closed.data?.closeIncident.timeline.map((t) => t.kind) ?? [];
+    for (const kind of [
+      'assignIncident',
+      'updateIncidentRca',
+      'resolveIncident',
+      'openmap.incident.updated:assigned',
+      'openmap.incident.updated:rca_updated',
+      'openmap.incident.resolved:resolved',
+    ])
+      expect(kinds).toContain(kind);
+    expect(
+      closed.data?.closeIncident.timeline
+        .filter((t) => t.kind === 'assignIncident')
+        .every((t) => t.actor === 'tester'),
+    ).toBe(true);
+    expect(
+      await prisma.auditLog.count({
+        where: { tenantId, subjectType: 'Incident', subjectId: incidentRow.id },
+      }),
+    ).toBeGreaterThanOrEqual(4);
+
+    const lists = await gql<{
+      open: Array<{ id: string }>;
+      all: Array<{ id: string }>;
+      one: { id: string; state: string } | null;
+      period: { availability: Period[] } | null;
+    }>(
+      'query L($service: UUID!, $id: UUID!) { open: incidents(open: true, serviceId: $service) { id } all: incidents(open: false, serviceId: $service) { id } one: incident(id: $id) { id state } period: service(id: $service) { availability(granularity: month, periods: 1) { incidents { id } } } }',
+      { service: ids.service, id: incidentRow.id },
+    );
+    expect(lists.errors).toBeUndefined();
+    expect(lists.data?.open.map((i) => i.id)).not.toContain(incidentRow.id);
+    expect(lists.data?.all.map((i) => i.id)).toContain(incidentRow.id);
+    expect(lists.data?.one).toMatchObject({ id: incidentRow.id, state: 'closed' });
+    expect(lists.data?.period?.availability[0]?.incidents.map((i) => i.id)).toContain(incidentRow.id);
+
+    const cleared = await gql<{ assignSla: Health }>(
+      'mutation A($serviceId: UUID!) { assignSla(serviceId: $serviceId, slaId: null) { sla { id } slaTarget } }',
+      { serviceId: ids.service },
+    );
+    expect(cleared.errors).toBeUndefined();
+    expect(cleared.data?.assignSla.sla).toBeNull();
+    expect(cleared.data?.assignSla.slaTarget).toBe(99.95);
+    const removed = await gql<{ deleteSla: boolean }>('mutation D($id: UUID!) { deleteSla(id: $id) }', {
+      id: sla?.id,
+    });
+    expect(removed.data?.deleteSla).toBe(true);
+    expect((await gql<{ slas: Sla[] }>('{ slas { id } }')).data?.slas.map((x) => x.id)).not.toContain(
+      sla?.id,
+    );
   });
 
   it('builds the subnet tree, utilisation and the next free address from stored CIs', async () => {
@@ -1046,22 +1473,41 @@ describe('OpenMap API (integration)', () => {
   it('runs the initial setup end to end: organization, site CI, link CI, Node token, vault credential, scope and twin (REQ-UI-024)', async () => {
     type Onboarding = {
       onboarding: {
-        organization: { id: string; name: string; businessUnits: Array<{ tenantId: string; name: string; slug: string }> };
+        organization: {
+          id: string;
+          name: string;
+          businessUnits: Array<{ tenantId: string; name: string; slug: string }>;
+        };
         step: string;
         completedSteps: string[];
-        sites: Array<{ id: string; code: string; ci: { id: string; code: string; type: string } | null; nodes: Array<{ id: string; status: string }> }>;
+        sites: Array<{
+          id: string;
+          code: string;
+          ci: { id: string; code: string; type: string } | null;
+          nodes: Array<{ id: string; status: string }>;
+        }>;
         links: Array<{ id: string; ci: { type: string } | null }>;
         credentials: Array<{ ref: string; type: string; fields: string[] }>;
-        scopes: Array<{ cidr: string; credentialRef: string | null; credentialType: string; site: { id: string } | null }>;
+        scopes: Array<{
+          cidr: string;
+          credentialRef: string | null;
+          credentialType: string;
+          site: { id: string } | null;
+        }>;
         generatedAt: string | null;
         firstSweep: { id: string } | null;
         schedulerUrl: string;
       };
     };
-    const stateQuery = 'query { onboarding { organization { id name businessUnits { tenantId name slug } } step completedSteps sites { id code ci { id code type } nodes { id status } } links { id ci { type } } credentials { ref type fields } scopes { cidr credentialRef credentialType site { id } } generatedAt firstSweep { id } schedulerUrl } }';
+    const stateQuery =
+      'query { onboarding { organization { id name businessUnits { tenantId name slug } } step completedSteps sites { id code ci { id code type } nodes { id status } } links { id ci { type } } credentials { ref type fields } scopes { cidr credentialRef credentialType site { id } } generatedAt firstSweep { id } schedulerUrl } }';
     // The setup mutations are administrator-only; the operator token used by the other tests must be refused.
     const operatorOnly = operatorToken;
-    const refusedOperator = await gql<{ generateTwin: unknown }>('mutation { generateTwin { step } }', {}, operatorOnly);
+    const refusedOperator = await gql<{ generateTwin: unknown }>(
+      'mutation { generateTwin { step } }',
+      {},
+      operatorOnly,
+    );
     expect(refusedOperator.errors?.[0]?.message).toContain(ROLES.admin);
     operatorToken = await mint([ROLES.admin], keys.privateKey);
     const initial = await gql<Onboarding>(stateQuery);
@@ -1072,99 +1518,272 @@ describe('OpenMap API (integration)', () => {
     expect(initial.data?.onboarding.schedulerUrl).toBe(env.PUBLIC_SCHEDULER_URL);
 
     // Organization: rename, keep the signed-in unit, add one (a new tenant with a derived slug); viewers are refused.
-    const orgMutation = 'mutation($input: OrganizationInput!) { updateOrganization(input: $input) { name industry businessUnits { tenantId name slug } } }';
-    const orgInput = { name: 'Horizon Bank', industry: 'Banking', timeZone: 'Asia/Riyadh', defaultLocale: 'en', regulatoryScope: ['SAMA CSF'], airGapped: true, businessUnits: [{ tenantId, name: 'Group Technology' }, { tenantId: null, name: 'Retail Banking' }] };
+    const orgMutation =
+      'mutation($input: OrganizationInput!) { updateOrganization(input: $input) { name industry businessUnits { tenantId name slug } } }';
+    const orgInput = {
+      name: 'Horizon Bank',
+      industry: 'Banking',
+      timeZone: 'Asia/Riyadh',
+      defaultLocale: 'en',
+      regulatoryScope: ['SAMA CSF'],
+      airGapped: true,
+      businessUnits: [
+        { tenantId, name: 'Group Technology' },
+        { tenantId: null, name: 'Retail Banking' },
+      ],
+    };
     const denied = await gql<{ updateOrganization: unknown }>(orgMutation, { input: orgInput }, viewerToken);
     expect(denied.errors?.[0]?.message).toMatch(/forbidden|role/i);
-    const org = await gql<{ updateOrganization: { name: string; businessUnits: Array<{ tenantId: string; name: string; slug: string }> } }>(orgMutation, { input: orgInput });
+    const org = await gql<{
+      updateOrganization: {
+        name: string;
+        businessUnits: Array<{ tenantId: string; name: string; slug: string }>;
+      };
+    }>(orgMutation, { input: orgInput });
     expect(org.errors).toBeUndefined();
     expect(org.data?.updateOrganization.name).toBe('Horizon Bank');
     const retail = org.data?.updateOrganization.businessUnits.find((u) => u.name === 'Retail Banking');
     expect(retail?.slug).toBe('retail-banking');
-    expect(org.data?.updateOrganization.businessUnits.find((u) => u.tenantId === tenantId)?.name).toBe('Group Technology');
+    expect(org.data?.updateOrganization.businessUnits.find((u) => u.tenantId === tenantId)?.name).toBe(
+      'Group Technology',
+    );
 
     // Sites: saving creates the site CI (identity = code) through the outbox; the code cannot change; duplicates are refused.
-    const siteMutation = 'mutation($id: UUID, $input: SiteInput!) { upsertSite(id: $id, input: $input) { id code name ci { id code type } } }';
-    const siteInput = { code: 'ryd', name: 'Riyadh DC', kind: 'datacenter', tier: 3, address: 'King Fahd Rd', city: 'Riyadh', countryCode: 'sa', geo: { lat: 24.7, lon: 46.7 }, cloud: null, locationCount: 1, facility: { powerCapacityKw: 800, rackCount: 40, designPue: 1.4 } };
-    const ryd = await gql<{ upsertSite: { id: string; code: string; ci: { id: string; code: string; type: string } } }>(siteMutation, { id: null, input: siteInput });
+    const siteMutation =
+      'mutation($id: UUID, $input: SiteInput!) { upsertSite(id: $id, input: $input) { id code name ci { id code type } } }';
+    const siteInput = {
+      code: 'ryd',
+      name: 'Riyadh DC',
+      kind: 'datacenter',
+      tier: 3,
+      address: 'King Fahd Rd',
+      city: 'Riyadh',
+      countryCode: 'sa',
+      geo: { lat: 24.7, lon: 46.7 },
+      cloud: null,
+      locationCount: 1,
+      facility: { powerCapacityKw: 800, rackCount: 40, designPue: 1.4 },
+    };
+    const ryd = await gql<{
+      upsertSite: { id: string; code: string; ci: { id: string; code: string; type: string } };
+    }>(siteMutation, { id: null, input: siteInput });
     expect(ryd.errors).toBeUndefined();
     expect(ryd.data?.upsertSite.code).toBe('RYD');
     expect(ryd.data?.upsertSite.ci.type).toBe('site');
     const siteCi = await prisma.ci.findUnique({ where: { id: ryd.data?.upsertSite.ci.id } });
     expect(siteCi?.identityKey).toBe('ryd');
     expect(siteCi?.sourceCollectorId).toBe('api');
-    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.ci.created', subject: siteCi?.id } })).toBe(1);
-    const duplicate = await gql<{ upsertSite: unknown }>(siteMutation, { id: null, input: { ...siteInput, name: 'Other' } });
+    expect(
+      await prisma.outboxEvent.count({
+        where: { tenantId, type: 'openmap.ci.created', subject: siteCi?.id },
+      }),
+    ).toBe(1);
+    const duplicate = await gql<{ upsertSite: unknown }>(siteMutation, {
+      id: null,
+      input: { ...siteInput, name: 'Other' },
+    });
     expect(duplicate.errors?.[0]?.message).toContain('already used');
-    const renamed = await gql<{ upsertSite: unknown }>(siteMutation, { id: ryd.data?.upsertSite.id, input: { ...siteInput, code: 'RYD2' } });
+    const renamed = await gql<{ upsertSite: unknown }>(siteMutation, {
+      id: ryd.data?.upsertSite.id,
+      input: { ...siteInput, code: 'RYD2' },
+    });
     expect(renamed.errors?.[0]?.message).toContain('cannot change');
-    const updated = await gql<{ upsertSite: { ci: { id: string } } }>(siteMutation, { id: ryd.data?.upsertSite.id, input: { ...siteInput, facility: { powerCapacityKw: 900, rackCount: 40, designPue: 1.4 } } });
+    const updated = await gql<{ upsertSite: { ci: { id: string } } }>(siteMutation, {
+      id: ryd.data?.upsertSite.id,
+      input: { ...siteInput, facility: { powerCapacityKw: 900, rackCount: 40, designPue: 1.4 } },
+    });
     expect(updated.data?.upsertSite.ci.id).toBe(ryd.data?.upsertSite.ci.id);
-    const dmm = await gql<{ upsertSite: { id: string } }>(siteMutation, { id: null, input: { ...siteInput, code: 'DMM', name: 'Dammam DR', city: 'Dammam' } });
+    const dmm = await gql<{ upsertSite: { id: string } }>(siteMutation, {
+      id: null,
+      input: { ...siteInput, code: 'DMM', name: 'Dammam DR', city: 'Dammam' },
+    });
     expect(dmm.errors).toBeUndefined();
-    const cloudMissing = await gql<{ upsertSite: unknown }>(siteMutation, { id: null, input: { ...siteInput, code: 'AZ1', kind: 'cloud_region', cloud: null } });
+    const cloudMissing = await gql<{ upsertSite: unknown }>(siteMutation, {
+      id: null,
+      input: { ...siteInput, code: 'AZ1', kind: 'cloud_region', cloud: null },
+    });
     expect(cloudMissing.errors?.[0]?.message).toContain('cloud region');
 
     // Link: a site_link CI connected to both site CIs.
-    const linkMutation = 'mutation($input: SiteLinkInput!) { upsertSiteLink(input: $input) { id fromSite { code } toSite { code } ci { id type } } }';
-    const link = await gql<{ upsertSiteLink: { id: string; fromSite: { code: string }; ci: { id: string; type: string } } }>(linkMutation, { input: { fromSiteId: ryd.data?.upsertSite.id, toSiteId: dmm.data?.upsertSite.id, kind: 'dwdm', provider: 'stc', circuitId: 'STC-DWDM-1', bandwidthMbps: 10000, diversePaths: 2, role: 'primary', latencyMs: 4.2 } });
+    const linkMutation =
+      'mutation($input: SiteLinkInput!) { upsertSiteLink(input: $input) { id fromSite { code } toSite { code } ci { id type } } }';
+    const link = await gql<{
+      upsertSiteLink: { id: string; fromSite: { code: string }; ci: { id: string; type: string } };
+    }>(linkMutation, {
+      input: {
+        fromSiteId: ryd.data?.upsertSite.id,
+        toSiteId: dmm.data?.upsertSite.id,
+        kind: 'dwdm',
+        provider: 'stc',
+        circuitId: 'STC-DWDM-1',
+        bandwidthMbps: 10000,
+        diversePaths: 2,
+        role: 'primary',
+        latencyMs: 4.2,
+      },
+    });
     expect(link.errors).toBeUndefined();
     expect(link.data?.upsertSiteLink.ci.type).toBe('site_link');
-    expect(await prisma.relationship.count({ where: { tenantId, fromCiId: link.data?.upsertSiteLink.ci.id, type: 'connected_to', validTo: null } })).toBe(2);
-    const selfLink = await gql<{ upsertSiteLink: unknown }>(linkMutation, { input: { fromSiteId: ryd.data?.upsertSite.id, toSiteId: ryd.data?.upsertSite.id, kind: 'mpls', bandwidthMbps: 100, diversePaths: 1, role: 'backup' } });
+    expect(
+      await prisma.relationship.count({
+        where: { tenantId, fromCiId: link.data?.upsertSiteLink.ci.id, type: 'connected_to', validTo: null },
+      }),
+    ).toBe(2);
+    const selfLink = await gql<{ upsertSiteLink: unknown }>(linkMutation, {
+      input: {
+        fromSiteId: ryd.data?.upsertSite.id,
+        toSiteId: ryd.data?.upsertSite.id,
+        kind: 'mpls',
+        bandwidthMbps: 100,
+        diversePaths: 1,
+        role: 'backup',
+      },
+    });
     expect(selfLink.errors?.[0]?.message).toContain('two different sites');
 
     // Node: pending with the digest of the one-time token, as the scheduler's enrol route expects.
-    const registration = await gql<{ registerNode: { node: { id: string; status: string }; siteCode: string; enrolToken: string; schedulerUrl: string } }>('mutation($siteId: UUID!, $nodeId: String!) { registerNode(siteId: $siteId, nodeId: $nodeId) { node { id status } siteCode enrolToken schedulerUrl } }', { siteId: ryd.data?.upsertSite.id, nodeId: 'node-ryd-it-01' });
+    const registration = await gql<{
+      registerNode: {
+        node: { id: string; status: string };
+        siteCode: string;
+        enrolToken: string;
+        schedulerUrl: string;
+      };
+    }>(
+      'mutation($siteId: UUID!, $nodeId: String!) { registerNode(siteId: $siteId, nodeId: $nodeId) { node { id status } siteCode enrolToken schedulerUrl } }',
+      { siteId: ryd.data?.upsertSite.id, nodeId: 'node-ryd-it-01' },
+    );
     expect(registration.errors).toBeUndefined();
     expect(registration.data?.registerNode.enrolToken).toMatch(/^[a-f0-9]{64}$/);
     expect(registration.data?.registerNode.siteCode).toBe('RYD');
     const nodeRow = await prisma.discoveryNode.findUnique({ where: { id: 'node-ryd-it-01' } });
     expect(nodeRow?.status).toBe('pending');
-    expect(nodeRow?.enrolTokenDigest).toBe(createHash('sha256').update(registration.data?.registerNode.enrolToken ?? '').digest('hex'));
+    expect(nodeRow?.enrolTokenDigest).toBe(
+      createHash('sha256')
+        .update(registration.data?.registerNode.enrolToken ?? '')
+        .digest('hex'),
+    );
 
     // Credential set: written to OpenBao with its type; the API answers with field names only and refuses a wrong field.
-    const credentialMutation = 'mutation($input: CredentialSetInput!) { saveCredentialSet(input: $input) { ref type fields } }';
+    const credentialMutation =
+      'mutation($input: CredentialSetInput!) { saveCredentialSet(input: $input) { ref type fields } }';
     const credentialRef = 'it/snmp-' + tenantId.slice(0, 8);
-    const credential = await gql<{ saveCredentialSet: { ref: string; type: string; fields: string[] } }>(credentialMutation, { input: { ref: credentialRef, type: 'snmp_v2c', fields: { community: 'it-community' } } });
+    const credential = await gql<{ saveCredentialSet: { ref: string; type: string; fields: string[] } }>(
+      credentialMutation,
+      { input: { ref: credentialRef, type: 'snmp_v2c', fields: { community: 'it-community' } } },
+    );
     expect(credential.errors).toBeUndefined();
-    expect(credential.data?.saveCredentialSet).toEqual({ ref: credentialRef, type: 'snmp_v2c', fields: ['community'] });
-    const vault = await fetch(new URL('v1/' + env.OPENBAO_MOUNT + '/data/' + credentialRef, env.OPENBAO_ADDR.endsWith('/') ? env.OPENBAO_ADDR : env.OPENBAO_ADDR + '/'), { headers: { 'X-Vault-Token': env.OPENBAO_TOKEN } });
-    expect((await vault.json() as { data: { data: Record<string, string> } }).data.data).toEqual({ type: 'snmp_v2c', community: 'it-community' });
-    const wrongField = await gql<{ saveCredentialSet: unknown }>(credentialMutation, { input: { ref: 'it/bad', type: 'password', fields: { username: 'x', password: 'y', community: 'z' } } });
+    expect(credential.data?.saveCredentialSet).toEqual({
+      ref: credentialRef,
+      type: 'snmp_v2c',
+      fields: ['community'],
+    });
+    const vault = await fetch(
+      new URL(
+        'v1/' + env.OPENBAO_MOUNT + '/data/' + credentialRef,
+        env.OPENBAO_ADDR.endsWith('/') ? env.OPENBAO_ADDR : env.OPENBAO_ADDR + '/',
+      ),
+      { headers: { 'X-Vault-Token': env.OPENBAO_TOKEN } },
+    );
+    expect(((await vault.json()) as { data: { data: Record<string, string> } }).data.data).toEqual({
+      type: 'snmp_v2c',
+      community: 'it-community',
+    });
+    const wrongField = await gql<{ saveCredentialSet: unknown }>(credentialMutation, {
+      input: { ref: 'it/bad', type: 'password', fields: { username: 'x', password: 'y', community: 'z' } },
+    });
     expect(wrongField.errors?.[0]?.message).toContain('invalid CredentialSetInput');
-    const auditRow = await prisma.auditLog.findFirst({ where: { tenantId, action: 'saveCredentialSet' }, orderBy: { at: 'desc' } });
+    const auditRow = await prisma.auditLog.findFirst({
+      where: { tenantId, action: 'saveCredentialSet' },
+      orderBy: { at: 'desc' },
+    });
     expect(JSON.stringify(auditRow?.details)).not.toContain('it-community');
 
     // Scope: a subnet CI located at the site, carrying the credential; the same CIDR again updates instead of duplicating.
-    const scopeMutation = 'mutation($input: ScopeInput!) { addDiscoveryScope(input: $input) { ci { id } cidr credentialRef credentialType site { id } } }';
-    const scope = await gql<{ addDiscoveryScope: { ci: { id: string }; cidr: string; credentialRef: string; credentialType: string; site: { id: string } } }>(scopeMutation, { input: { cidr: '10.77.0.0/24', vrf: null, siteId: ryd.data?.upsertSite.id, credentialRef, credentialType: 'snmp_v2c' } });
+    const scopeMutation =
+      'mutation($input: ScopeInput!) { addDiscoveryScope(input: $input) { ci { id } cidr credentialRef credentialType site { id } } }';
+    const scope = await gql<{
+      addDiscoveryScope: {
+        ci: { id: string };
+        cidr: string;
+        credentialRef: string;
+        credentialType: string;
+        site: { id: string };
+      };
+    }>(scopeMutation, {
+      input: {
+        cidr: '10.77.0.0/24',
+        vrf: null,
+        siteId: ryd.data?.upsertSite.id,
+        credentialRef,
+        credentialType: 'snmp_v2c',
+      },
+    });
     expect(scope.errors).toBeUndefined();
-    expect(scope.data?.addDiscoveryScope).toMatchObject({ cidr: '10.77.0.0/24', credentialRef, credentialType: 'snmp_v2c', site: { id: ryd.data?.upsertSite.ci.id } });
-    const again = await gql<{ addDiscoveryScope: { ci: { id: string } } }>(scopeMutation, { input: { cidr: '10.77.0.0/24', vrf: null, siteId: ryd.data?.upsertSite.id, credentialRef: null, credentialType: null } });
+    expect(scope.data?.addDiscoveryScope).toMatchObject({
+      cidr: '10.77.0.0/24',
+      credentialRef,
+      credentialType: 'snmp_v2c',
+      site: { id: ryd.data?.upsertSite.ci.id },
+    });
+    const again = await gql<{ addDiscoveryScope: { ci: { id: string } } }>(scopeMutation, {
+      input: {
+        cidr: '10.77.0.0/24',
+        vrf: null,
+        siteId: ryd.data?.upsertSite.id,
+        credentialRef: null,
+        credentialType: null,
+      },
+    });
     expect(again.data?.addDiscoveryScope.ci.id).toBe(scope.data?.addDiscoveryScope.ci.id);
-    expect(await prisma.ci.count({ where: { tenantId, type: 'subnet', identityKey: '10.77.0.0/24|default', validTo: null } })).toBe(1);
+    expect(
+      await prisma.ci.count({
+        where: { tenantId, type: 'subnet', identityKey: '10.77.0.0/24|default', validTo: null },
+      }),
+    ).toBe(1);
 
     // Steps and the twin: generate records the moment, completes every step and plans the first sweep.
-    const stepped = await gql<{ setOnboardingStep: { step: string; completedSteps: string[] } }>('mutation { setOnboardingStep(step: nodes_credentials, completed: true) { step completedSteps } }');
+    const stepped = await gql<{ setOnboardingStep: { step: string; completedSteps: string[] } }>(
+      'mutation { setOnboardingStep(step: nodes_credentials, completed: true) { step completedSteps } }',
+    );
     expect(stepped.data?.setOnboardingStep.completedSteps).toContain('nodes_credentials');
-    const generated = await gql<{ generateTwin: { generatedAt: string | null; completedSteps: string[]; firstSweep: { id: string } | null; links: Array<{ ci: { type: string } | null }> } }>('mutation { generateTwin { generatedAt completedSteps firstSweep { id } links { ci { type } } } }');
+    const generated = await gql<{
+      generateTwin: {
+        generatedAt: string | null;
+        completedSteps: string[];
+        firstSweep: { id: string } | null;
+        links: Array<{ ci: { type: string } | null }>;
+      };
+    }>('mutation { generateTwin { generatedAt completedSteps firstSweep { id } links { ci { type } } } }');
     expect(generated.errors).toBeUndefined();
     expect(generated.data?.generateTwin.generatedAt).not.toBeNull();
     expect(generated.data?.generateTwin.completedSteps).toHaveLength(6);
     expect(generated.data?.generateTwin.firstSweep?.id).toBeTruthy();
     const final = await gql<Onboarding>(stateQuery);
     expect(final.data?.onboarding.sites.map((s) => s.code).sort()).toEqual(['DMM', 'RYD']);
-    expect(final.data?.onboarding.sites.find((s) => s.code === 'RYD')?.nodes.map((n) => n.id)).toEqual(['node-ryd-it-01']);
-    expect(final.data?.onboarding.credentials).toEqual([{ ref: credentialRef, type: 'snmp_v2c', fields: ['community'] }]);
+    expect(final.data?.onboarding.sites.find((s) => s.code === 'RYD')?.nodes.map((n) => n.id)).toEqual([
+      'node-ryd-it-01',
+    ]);
+    expect(final.data?.onboarding.credentials).toEqual([
+      { ref: credentialRef, type: 'snmp_v2c', fields: ['community'] },
+    ]);
 
     // Removal: a site with a Node is refused; the link and the empty site go, retiring their CIs.
-    const refused = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', { id: ryd.data?.upsertSite.id });
+    const refused = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', {
+      id: ryd.data?.upsertSite.id,
+    });
     expect(refused.errors?.[0]?.message).toContain('Nodes and links');
-    const linkGone = await gql<{ removeSiteLink: boolean }>('mutation($id: UUID!) { removeSiteLink(id: $id) }', { id: link.data?.upsertSiteLink.id });
+    const linkGone = await gql<{ removeSiteLink: boolean }>(
+      'mutation($id: UUID!) { removeSiteLink(id: $id) }',
+      { id: link.data?.upsertSiteLink.id },
+    );
     expect(linkGone.data?.removeSiteLink).toBe(true);
-    expect((await prisma.ci.findUnique({ where: { id: link.data?.upsertSiteLink.ci.id } }))?.validTo).not.toBeNull();
-    const siteGone = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', { id: dmm.data?.upsertSite.id });
+    expect(
+      (await prisma.ci.findUnique({ where: { id: link.data?.upsertSiteLink.ci.id } }))?.validTo,
+    ).not.toBeNull();
+    const siteGone = await gql<{ removeSite: boolean }>('mutation($id: UUID!) { removeSite(id: $id) }', {
+      id: dmm.data?.upsertSite.id,
+    });
     expect(siteGone.data?.removeSite).toBe(true);
     operatorToken = operatorOnly;
   });

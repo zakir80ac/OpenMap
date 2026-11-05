@@ -55,16 +55,100 @@ function perfBudgets(): Finding[] {
     if (!file.endsWith('.json')) continue;
     const r = JSON.parse(readFileSync(join(PERF_RESULTS, file), 'utf8')) as PerfResult;
     const path = 'tools/perf/results/' + file;
-    if (r.name === 'screen-interaction' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.screenInteractionP95Ms) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'screen p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.screenInteractionP95Ms) });
-    if (r.name === 'impact-query' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.impactQuery100kP95Ms) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'impact p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.impactQuery100kP95Ms) });
-    if (r.name === 'graph-render' && r.fps !== undefined && r.fps < PERF_BUDGETS.graphRenderFps) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'graph ' + String(r.fps) + ' fps under ' + String(PERF_BUDGETS.graphRenderFps) });
-    if (r.name === 'discovery-sweep' && r.minutes !== undefined && r.minutes > PERF_BUDGETS.discoverySweepMinutes) out.push({ rule: 'perf-budget', file: path, line: 1, message: 'sweep ' + String(r.minutes) + ' min over ' + String(PERF_BUDGETS.discoverySweepMinutes) });
+    if (
+      r.name === 'screen-interaction' &&
+      r.p95Ms !== undefined &&
+      r.p95Ms > PERF_BUDGETS.screenInteractionP95Ms
+    )
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message: 'screen p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.screenInteractionP95Ms),
+      });
+    if (r.name === 'impact-query' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.impactQuery100kP95Ms)
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message: 'impact p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.impactQuery100kP95Ms),
+      });
+    if (
+      r.name === 'availability-report' &&
+      r.p95Ms !== undefined &&
+      r.p95Ms > PERF_BUDGETS.availabilityReportP95Ms
+    )
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message:
+          'availability report p95 ' +
+          String(r.p95Ms) +
+          ' ms over ' +
+          String(PERF_BUDGETS.availabilityReportP95Ms),
+      });
+    if (r.name === 'graph-render' && r.fps !== undefined && r.fps < PERF_BUDGETS.graphRenderFps)
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message: 'graph ' + String(r.fps) + ' fps under ' + String(PERF_BUDGETS.graphRenderFps),
+      });
+    if (
+      r.name === 'discovery-sweep' &&
+      r.minutes !== undefined &&
+      r.minutes > PERF_BUDGETS.discoverySweepMinutes
+    )
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message: 'sweep ' + String(r.minutes) + ' min over ' + String(PERF_BUDGETS.discoverySweepMinutes),
+      });
     if (r.name === 'lighthouse' && r.pages !== undefined) {
       for (const page of r.pages) {
-        const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(page.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
-        if (page.performance < performanceMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse performance ' + String(page.performance) + ' under ' + String(performanceMin) });
-        if (page.accessibility < PERF_BUDGETS.lighthouseAccessibilityMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse accessibility ' + String(page.accessibility) + ' under ' + String(PERF_BUDGETS.lighthouseAccessibilityMin) });
-        if (page.bestPractices < PERF_BUDGETS.lighthouseBestPracticesMin) out.push({ rule: 'perf-budget', file: path, line: 1, message: page.label + ' Lighthouse best practices ' + String(page.bestPractices) + ' under ' + String(PERF_BUDGETS.lighthouseBestPracticesMin) });
+        const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(
+          page.label,
+        )
+          ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin
+          : PERF_BUDGETS.lighthousePerformanceMin;
+        if (page.performance < performanceMin)
+          out.push({
+            rule: 'perf-budget',
+            file: path,
+            line: 1,
+            message:
+              page.label +
+              ' Lighthouse performance ' +
+              String(page.performance) +
+              ' under ' +
+              String(performanceMin),
+          });
+        if (page.accessibility < PERF_BUDGETS.lighthouseAccessibilityMin)
+          out.push({
+            rule: 'perf-budget',
+            file: path,
+            line: 1,
+            message:
+              page.label +
+              ' Lighthouse accessibility ' +
+              String(page.accessibility) +
+              ' under ' +
+              String(PERF_BUDGETS.lighthouseAccessibilityMin),
+          });
+        if (page.bestPractices < PERF_BUDGETS.lighthouseBestPracticesMin)
+          out.push({
+            rule: 'perf-budget',
+            file: path,
+            line: 1,
+            message:
+              page.label +
+              ' Lighthouse best practices ' +
+              String(page.bestPractices) +
+              ' under ' +
+              String(PERF_BUDGETS.lighthouseBestPracticesMin),
+          });
       }
     }
   }
@@ -73,16 +157,23 @@ function perfBudgets(): Finding[] {
 
 function trackerVerify(): boolean {
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-  const result = spawnSync(pnpm, ['tracker', 'verify'], { cwd: repoRoot, stdio: 'inherit', shell: process.platform === 'win32' });
+  const result = spawnSync(pnpm, ['tracker', 'verify'], {
+    cwd: repoRoot,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
   return result.status === 0;
 }
 
 function main(): void {
   const findings = [...scan(), ...perfBudgets()];
-  for (const f of findings) console.error('guard: ' + f.file + ':' + String(f.line) + ' [' + f.rule + '] ' + f.message);
+  for (const f of findings)
+    console.error('guard: ' + f.file + ':' + String(f.line) + ' [' + f.rule + '] ' + f.message);
   const trackerOk = process.argv.includes('--no-tracker') ? true : trackerVerify();
   if (findings.length > 0 || !trackerOk) {
-    console.error('guard: ' + String(findings.length) + ' finding(s)' + (trackerOk ? '' : ', tracker verify failed'));
+    console.error(
+      'guard: ' + String(findings.length) + ' finding(s)' + (trackerOk ? '' : ', tracker verify failed'),
+    );
     process.exit(1);
   }
   console.log('guard: ok');

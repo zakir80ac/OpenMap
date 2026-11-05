@@ -2,7 +2,7 @@
 // GraphQL contract (packages/contracts/graphql/schema.graphql) and their TanStack Query option builders. Only the
 // fields the console renders are selected.
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
-import { CONSOLE, GRAPH, type BSM } from '@openmap/constants';
+import { CONSOLE, GRAPH, type AvailabilityGranularity, type BSM, type SlaWindow } from '@openmap/constants';
 import type { CiLayer } from '@openmap/contracts';
 import { gql } from './graphql';
 
@@ -29,6 +29,63 @@ export interface CiRef {
   displayName: string;
 }
 
+// REQ-BSM-006 REQ-BSM-008 (ADR-024) — SLAs, availability periods, incident response and RCA.
+export type IncidentSeverity = 'informational' | 'low' | 'medium' | 'high' | 'critical';
+export type IncidentState = 'open' | 'acknowledged' | 'mitigated' | 'resolved' | 'closed';
+export type { AvailabilityGranularity, SlaWindow };
+
+export interface SeverityTarget {
+  severity: IncidentSeverity;
+  respondMinutes: number;
+  resolveMinutes: number;
+}
+
+export interface Sla {
+  id: string;
+  name: string;
+  description: string;
+  availabilityTargetPercent: number;
+  window: SlaWindow;
+  responseTargets: SeverityTarget[];
+  burnRateAlert: number;
+  services: CiRef[];
+}
+
+export interface AvailabilityPeriod {
+  granularity: AvailabilityGranularity | null;
+  year: number;
+  month: number | null;
+  quarter: number | null;
+  periodStart: string;
+  periodEnd: string;
+  current: boolean;
+  availabilityPercent: number | null;
+  elapsedMinutes: number;
+  downtimeMinutes: number;
+  degradedMinutes: number;
+  unknownMinutes: number;
+  targetPercent: number | null;
+  met: boolean | null;
+  budgetMinutes: number | null;
+  budgetRemainingMinutes: number | null;
+  burnRate: number | null;
+}
+
+export interface PeriodIncidentRef {
+  id: string;
+  title: string;
+  severity: IncidentSeverity;
+  state: IncidentState;
+  openedAt: string;
+  resolvedAt: string | null;
+}
+
+export interface ServiceAvailability {
+  service: CiRef & { name: string; code: string };
+  sla: Pick<Sla, 'id' | 'name'> | null;
+  periods: AvailabilityPeriod[];
+}
+
 export interface ServiceHealth {
   service: CiRef & { name: string };
   state: HealthState;
@@ -36,7 +93,21 @@ export interface ServiceHealth {
   rootCauses: CiRef[];
   slaTarget: number;
   errorBudgetRemainingMinutes: number;
+  sla: Pick<Sla, 'id' | 'name' | 'window'> | null;
+  currentWindow: AvailabilityPeriod;
 }
+
+export const SLA_FIELDS =
+  'id name description availabilityTargetPercent window responseTargets { severity respondMinutes resolveMinutes } burnRateAlert services { id displayName }';
+export const PERIOD_FIELDS =
+  'granularity year month quarter periodStart periodEnd current availabilityPercent elapsedMinutes downtimeMinutes degradedMinutes unknownMinutes targetPercent met budgetMinutes budgetRemainingMinutes burnRate';
+const SERVICE_HEALTH_FIELDS = [
+  'service { id name displayName }',
+  'state since slaTarget errorBudgetRemainingMinutes',
+  'rootCauses { id displayName }',
+  'sla { id name window }',
+  'currentWindow { ' + PERIOD_FIELDS + ' }',
+].join(' ');
 
 /** REQ-CMDB-038 — the layer's headline measurement (ADR-016): null value until a collector has sampled it. */
 export interface HeadlineMetric {
@@ -76,22 +147,139 @@ const LAYERS_QUERY = ['query Layers {', '  layers { layer count healthy degraded
   '\n',
 );
 
-const SERVICES_QUERY = [
-  'query Services {',
-  '  services {',
-  '    service { id name displayName }',
-  '    state since slaTarget errorBudgetRemainingMinutes',
-  '    rootCauses { id displayName }',
-  '  }',
+const SERVICES_QUERY = ['query Services {', '  services { ' + SERVICE_HEALTH_FIELDS + ' }', '}'].join('\n');
+
+const SERVICE_QUERY = [
+  'query Service($id: UUID!) {',
+  '  service(id: $id) { ' + SERVICE_HEALTH_FIELDS + ' }',
   '}',
 ].join('\n');
+
+export function serviceQuery(id: string) {
+  return queryOptions({
+    queryKey: ['service', id] as const,
+    queryFn: ({ signal }) => gql<{ service: ServiceHealth | null }>(SERVICE_QUERY, { id }, signal),
+    select: (data) => data.service,
+  });
+}
+
+const SERVICE_AVAILABILITY_QUERY = [
+  'query ServiceAvailability($id: UUID!, $granularity: AvailabilityGranularity!, $periods: Int) {',
+  '  service(id: $id) { availability(granularity: $granularity, periods: $periods) { ' +
+    PERIOD_FIELDS +
+    ' incidents { id title severity state openedAt resolvedAt } } }',
+  '}',
+].join('\n');
+
+export type ServicePeriod = AvailabilityPeriod & { incidents: PeriodIncidentRef[] };
+
+export function serviceAvailabilityQuery(
+  id: string,
+  granularity: AvailabilityGranularity,
+  periods: number | null = null,
+) {
+  return queryOptions({
+    queryKey: ['serviceAvailability', id, granularity, periods] as const,
+    queryFn: ({ signal }) =>
+      gql<{ service: { availability: ServicePeriod[] } | null }>(
+        SERVICE_AVAILABILITY_QUERY,
+        { id, granularity, periods },
+        signal,
+      ),
+    select: (data) => data.service?.availability ?? [],
+  });
+}
+
+const AVAILABILITY_REPORT_QUERY = [
+  'query AvailabilityReport($granularity: AvailabilityGranularity!, $periods: Int) {',
+  '  availabilityReport(granularity: $granularity, periods: $periods) { service { id name displayName code } sla { id name } periods { ' +
+    PERIOD_FIELDS +
+    ' } }',
+  '}',
+].join('\n');
+
+export function availabilityReportQuery(granularity: AvailabilityGranularity, periods: number | null = null) {
+  return queryOptions({
+    queryKey: ['availabilityReport', granularity, periods] as const,
+    queryFn: ({ signal }) =>
+      gql<{ availabilityReport: ServiceAvailability[] }>(
+        AVAILABILITY_REPORT_QUERY,
+        { granularity, periods },
+        signal,
+      ),
+    select: (data) => data.availabilityReport,
+  });
+}
+
+const AVAILABILITY_CSV_QUERY =
+  'query AvailabilityReportCsv($granularity: AvailabilityGranularity!, $periods: Int) { availabilityReportCsv(granularity: $granularity, periods: $periods) }';
+
+export function availabilityReportCsv(
+  granularity: AvailabilityGranularity,
+  periods: number | null = null,
+): Promise<string> {
+  return gql<{ availabilityReportCsv: string }>(AVAILABILITY_CSV_QUERY, { granularity, periods }).then(
+    (d) => d.availabilityReportCsv,
+  );
+}
+
+const SLAS_QUERY = ['query Slas {', '  slas { ' + SLA_FIELDS + ' }', '}'].join('\n');
+
+export function slasQuery() {
+  return queryOptions({
+    queryKey: ['slas'] as const,
+    queryFn: ({ signal }) => gql<{ slas: Sla[] }>(SLAS_QUERY, undefined, signal),
+    select: (data) => data.slas,
+  });
+}
+
+export interface SeverityTargetInput {
+  severity: IncidentSeverity;
+  respondMinutes: number;
+  resolveMinutes: number;
+}
+
+export interface SlaInput {
+  name: string;
+  description?: string;
+  availabilityTargetPercent: number;
+  window: SlaWindow;
+  responseTargets?: SeverityTargetInput[];
+  burnRateAlert?: number;
+}
+
+export function upsertSla(id: string | null, input: SlaInput): Promise<Sla> {
+  return gql<{ upsertSla: Sla }>(
+    'mutation UpsertSla($id: UUID, $input: SlaInput!) { upsertSla(id: $id, input: $input) { ' +
+      SLA_FIELDS +
+      ' } }',
+    { id, input },
+  ).then((d) => d.upsertSla);
+}
+
+export function deleteSla(id: string): Promise<boolean> {
+  return gql<{ deleteSla: boolean }>('mutation DeleteSla($id: UUID!) { deleteSla(id: $id) }', { id }).then(
+    (d) => d.deleteSla,
+  );
+}
+
+export function assignSla(serviceId: string, slaId: string | null): Promise<ServiceHealth> {
+  return gql<{ assignSla: ServiceHealth }>(
+    'mutation AssignSla($serviceId: UUID!, $slaId: UUID) { assignSla(serviceId: $serviceId, slaId: $slaId) { ' +
+      SERVICE_HEALTH_FIELDS +
+      ' } }',
+    { serviceId, slaId },
+  ).then((d) => d.assignSla);
+}
 
 const CIS_QUERY = [
   'query Cis($filter: CiFilter, $first: Int, $after: String) {',
   '  cis(filter: $filter, first: $first, after: $after) {',
   '    totalCount',
   '    pageInfo { endCursor hasNextPage }',
-  '    edges { cursor node { id code type layer displayName health observedAt ' + HEADLINE_METRIC_FIELDS + ' } }',
+  '    edges { cursor node { id code type layer displayName health observedAt ' +
+    HEADLINE_METRIC_FIELDS +
+    ' } }',
   '  }',
   '}',
 ].join('\n');
@@ -543,35 +731,148 @@ export interface IncidentLink {
   syncedAt: string;
 }
 
+export interface CorrectiveAction {
+  description: string;
+  owner: string | null;
+  dueAt: string | null;
+  done: boolean;
+}
+
+export interface Rca {
+  summary: string;
+  rootCauseCi: CiSummary | null;
+  contributingFactors: string[];
+  correctiveActions: CorrectiveAction[];
+  owner: string | null;
+  dueAt: string | null;
+  completedAt: string | null;
+  updatedBy: string;
+  updatedAt: string;
+}
+
+export interface IncidentEvent {
+  at: string;
+  actor: string;
+  kind: string;
+  details: Record<string, JsonValue>;
+}
+
 export interface Incident {
   id: string;
+  title: string;
+  description: string;
+  severity: IncidentSeverity;
+  state: IncidentState;
+  source: string;
   service: CiSummary;
+  sla: Pick<Sla, 'id' | 'name'> | null;
   openedAt: string;
+  acknowledgedAt: string | null;
   resolvedAt: string | null;
+  closedAt: string | null;
+  assignee: string | null;
+  respondBy: string | null;
+  resolveBy: string | null;
+  responseBreachedAt: string | null;
+  resolutionBreachedAt: string | null;
+  resolutionNote: string | null;
   rootCause: CiSummary | null;
   alerts: number;
   links: IncidentLink[];
+  rca: Rca | null;
+  timeline: IncidentEvent[];
 }
 
 const INCIDENT_FIELDS = [
-  'id openedAt resolvedAt alerts',
+  'id title description severity state source openedAt acknowledgedAt resolvedAt closedAt assignee respondBy resolveBy responseBreachedAt resolutionBreachedAt resolutionNote alerts',
   'service { ' + CI_SUMMARY_FIELDS + ' }',
+  'sla { id name }',
   'rootCause { ' + CI_SUMMARY_FIELDS + ' }',
   'links { integration { id vendor name } remoteId remoteUrl remoteState syncedAt }',
+  'rca { summary rootCauseCi { ' +
+    CI_SUMMARY_FIELDS +
+    ' } contributingFactors correctiveActions { description owner dueAt done } owner dueAt completedAt updatedBy updatedAt }',
+  'timeline { at actor kind details }',
 ].join(' ');
 
 const INCIDENTS_QUERY = [
-  'query Incidents($open: Boolean) {',
-  '  incidents(open: $open) { ' + INCIDENT_FIELDS + ' }',
+  'query Incidents($open: Boolean, $serviceId: UUID) {',
+  '  incidents(open: $open, serviceId: $serviceId) { ' + INCIDENT_FIELDS + ' }',
   '}',
 ].join('\n');
 
-export function incidentsQuery(open: boolean = true) {
+export function incidentsQuery(open: boolean = true, serviceId: string | null = null) {
   return queryOptions({
-    queryKey: ['incidents', open] as const,
-    queryFn: ({ signal }) => gql<{ incidents: Incident[] }>(INCIDENTS_QUERY, { open }, signal),
+    queryKey: ['incidents', open, serviceId] as const,
+    queryFn: ({ signal }) => gql<{ incidents: Incident[] }>(INCIDENTS_QUERY, { open, serviceId }, signal),
     select: (data) => data.incidents,
   });
+}
+
+function incidentMutation(name: string, args: string, call: string): string {
+  return ['mutation ' + name + '(' + args + ') {', '  ' + call + ' { ' + INCIDENT_FIELDS + ' }', '}'].join(
+    '\n',
+  );
+}
+
+const ASSIGN_MUTATION = incidentMutation(
+  'AssignIncident',
+  '$incidentId: UUID!, $assignee: String!',
+  'assignIncident(incidentId: $incidentId, assignee: $assignee)',
+);
+const RESOLVE_MUTATION = incidentMutation(
+  'ResolveIncident',
+  '$incidentId: UUID!, $note: String!',
+  'resolveIncident(incidentId: $incidentId, note: $note)',
+);
+const CLOSE_MUTATION = incidentMutation(
+  'CloseIncident',
+  '$incidentId: UUID!',
+  'closeIncident(incidentId: $incidentId)',
+);
+const RCA_MUTATION = incidentMutation(
+  'UpdateIncidentRca',
+  '$incidentId: UUID!, $input: RcaInput!',
+  'updateIncidentRca(incidentId: $incidentId, input: $input)',
+);
+
+export function assignIncident(incidentId: string, assignee: string): Promise<Incident> {
+  return gql<{ assignIncident: Incident }>(ASSIGN_MUTATION, { incidentId, assignee }).then(
+    (d) => d.assignIncident,
+  );
+}
+
+export function resolveIncident(incidentId: string, note: string): Promise<Incident> {
+  return gql<{ resolveIncident: Incident }>(RESOLVE_MUTATION, { incidentId, note }).then(
+    (d) => d.resolveIncident,
+  );
+}
+
+export function closeIncident(incidentId: string): Promise<Incident> {
+  return gql<{ closeIncident: Incident }>(CLOSE_MUTATION, { incidentId }).then((d) => d.closeIncident);
+}
+
+export interface CorrectiveActionInput {
+  description: string;
+  owner?: string | null;
+  dueAt?: string | null;
+  done?: boolean;
+}
+
+export interface RcaInput {
+  summary: string;
+  rootCauseCiId?: string | null;
+  contributingFactors?: string[];
+  correctiveActions?: CorrectiveActionInput[];
+  owner?: string | null;
+  dueAt?: string | null;
+  completedAt?: string | null;
+}
+
+export function updateIncidentRca(incidentId: string, input: RcaInput): Promise<Incident> {
+  return gql<{ updateIncidentRca: Incident }>(RCA_MUTATION, { incidentId, input }).then(
+    (d) => d.updateIncidentRca,
+  );
 }
 
 const ACKNOWLEDGE_MUTATION = [

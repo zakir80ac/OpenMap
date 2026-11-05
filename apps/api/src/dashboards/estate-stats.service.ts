@@ -37,20 +37,25 @@ function fromRows(rows: readonly DayRow[]): DayCount[] {
 }
 
 /** Sums amounts per currency; a tenant that buys in two currencies gets two totals, never a mixed one. */
-export function sumMoney(entries: ReadonlyArray<{ amount: number; currency: string } | null | undefined>): MoneyTotal[] {
+export function sumMoney(
+  entries: ReadonlyArray<{ amount: number; currency: string } | null | undefined>,
+): MoneyTotal[] {
   const totals = new Map<string, number>();
   for (const e of entries) {
     if (!e) continue;
     totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount);
   }
-  return [...totals.entries()].map(([currency, amount]) => ({ amount, currency })).sort((a, b) => b.amount - a.amount);
+  return [...totals.entries()]
+    .map(([currency, amount]) => ({ amount, currency }))
+    .sort((a, b) => b.amount - a.amount);
 }
 
 /** The last `DASHBOARD.trendDays` calendar days as ISO dates, oldest first. */
 export function trendDays(now: Date): string[] {
   const out: string[] = [];
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  for (let i = DASHBOARD.trendDays - 1; i >= 0; i -= 1) out.push(new Date(start - i * TIME.msPerDay).toISOString().slice(0, 'YYYY-MM-DD'.length));
+  for (let i = DASHBOARD.trendDays - 1; i >= 0; i -= 1)
+    out.push(new Date(start - i * TIME.msPerDay).toISOString().slice(0, 'YYYY-MM-DD'.length));
   return out;
 }
 
@@ -80,7 +85,18 @@ export class EstateStatsService {
   ) {}
 
   async stats(tenantId: string, now = new Date()): Promise<EstateStatsView> {
-    const [assetsByStage, products, vulnerabilities, plans, racks, subnets, nodes, integrations, incidents, trend] = await Promise.all([
+    const [
+      assetsByStage,
+      products,
+      vulnerabilities,
+      plans,
+      racks,
+      subnets,
+      nodes,
+      integrations,
+      incidents,
+      trend,
+    ] = await Promise.all([
       this.assetsByStage(tenantId),
       this.software.software(tenantId, null, false, DASHBOARD.statsRowCap),
       this.software.vulnerabilitySummaries(tenantId, null, false, null),
@@ -89,7 +105,7 @@ export class EstateStatsService {
       this.ipam.subnets(tenantId, null),
       this.discovery.nodes(tenantId),
       this.integrations.list(tenantId, null),
-      this.services.incidents(tenantId, false),
+      this.services.incidents(tenantId, false, null),
       this.trend(tenantId, now),
     ]);
     const nowMs = now.getTime();
@@ -104,7 +120,9 @@ export class EstateStatsService {
         products: products.length,
         licensed: licensed.length,
         overDeployed: licensed.filter((p) => p.licence?.overDeployed === true).length,
-        expiringSoon: licensed.filter((p) => withinDays(p.licence?.expiresAt ?? null, DASHBOARD.licenceExpiryDays, nowMs)).length,
+        expiringSoon: licensed.filter((p) =>
+          withinDays(p.licence?.expiresAt ?? null, DASHBOARD.licenceExpiryDays, nowMs),
+        ).length,
         expired: licensed.filter((p) => p.licence?.expired === true).length,
         annualCost: sumMoney(licensed.map((p) => p.licence?.annualCost)),
       },
@@ -117,7 +135,8 @@ export class EstateStatsService {
         patchAvailable: vulnerabilities.filter((v) => v.patchAvailable).length,
         affectedHosts: vulnerabilities.reduce((sum, v) => sum + v.affectedHosts, 0),
       },
-      endOfSupport: products.filter((p) => p.endOfSupport !== null && Date.parse(p.endOfSupport) <= nowMs).length,
+      endOfSupport: products.filter((p) => p.endOfSupport !== null && Date.parse(p.endOfSupport) <= nowMs)
+        .length,
       plans: planRows,
       power: {
         racks: racks.length,
@@ -126,7 +145,10 @@ export class EstateStatsService {
       },
       ipam: {
         subnets: subnets.length,
-        averageUtilisationPercent: subnets.length === 0 ? 0 : subnets.reduce((sum, s) => sum + s.utilisationPercent, 0) / subnets.length,
+        averageUtilisationPercent:
+          subnets.length === 0
+            ? 0
+            : subnets.reduce((sum, s) => sum + s.utilisationPercent, 0) / subnets.length,
         critical: subnets.filter((s) => s.utilisationPercent >= IPAM.criticalUtilisationPercent).length,
       },
       nodes: { total: nodes.length, online: nodes.filter((n) => n.status === NODE_ONLINE).length },
@@ -136,7 +158,13 @@ export class EstateStatsService {
         failedLastHour: integrations.reduce((sum, i) => sum + i.failedLastHour, 0),
       },
       incidentsOpen: incidents.filter((i) => i.resolvedAt === null).length,
-      trend: { ...trend, incidents: countsByDay(trend.days, incidents.map((i) => ({ day: i.openedAt, n: 1 })).reduce<DayCount[]>(foldDays, [])) },
+      trend: {
+        ...trend,
+        incidents: countsByDay(
+          trend.days,
+          incidents.map((i) => ({ day: i.openedAt, n: 1 })).reduce<DayCount[]>(foldDays, []),
+        ),
+      },
     };
   }
 
@@ -153,7 +181,13 @@ export class EstateStatsService {
       return {
         stage,
         count: of.reduce((sum, g) => sum + g._count._all, 0),
-        purchaseCost: sumMoney(of.map((g) => (g.purchaseCostCurrency === null || g._sum.purchaseCostAmount === null ? null : { amount: Number(g._sum.purchaseCostAmount.toString()), currency: g.purchaseCostCurrency }))),
+        purchaseCost: sumMoney(
+          of.map((g) =>
+            g.purchaseCostCurrency === null || g._sum.purchaseCostAmount === null
+              ? null
+              : { amount: Number(g._sum.purchaseCostAmount.toString()), currency: g.purchaseCostCurrency },
+          ),
+        ),
       };
     });
   }
@@ -164,11 +198,34 @@ export class EstateStatsService {
     const from = days[0] ?? '';
     const db = this.clickhouse.database;
     const [cis, runs, events] = await Promise.all([
-      this.clickhouse.query<DayRow>('dashboard_cis_by_day', 'SELECT toString(day) AS d, uniqMerge(cis) AS n FROM ' + db + '.layer_counts_daily WHERE tenant_id = {tenantId:UUID} AND day >= {from:Date} GROUP BY day ORDER BY day', { tenantId, from }),
-      this.clickhouse.query<DayRow>('dashboard_runs_by_day', 'SELECT toString(toDate(started_at)) AS d, count() AS n FROM ' + db + '.discovery_runs WHERE tenant_id = {tenantId:UUID} AND toDate(started_at) >= {from:Date} GROUP BY d ORDER BY d', { tenantId, from }),
-      this.clickhouse.query<DayRow>('dashboard_events_by_day', 'SELECT toString(toDate(time)) AS d, count() AS n FROM ' + db + '.events WHERE tenant_id = {tenantId:UUID} AND toDate(time) >= {from:Date} GROUP BY d ORDER BY d', { tenantId, from }),
+      this.clickhouse.query<DayRow>(
+        'dashboard_cis_by_day',
+        'SELECT toString(day) AS d, uniqMerge(cis) AS n FROM ' +
+          db +
+          '.layer_counts_daily WHERE tenant_id = {tenantId:UUID} AND day >= {from:Date} GROUP BY day ORDER BY day',
+        { tenantId, from },
+      ),
+      this.clickhouse.query<DayRow>(
+        'dashboard_runs_by_day',
+        'SELECT toString(toDate(started_at)) AS d, count() AS n FROM ' +
+          db +
+          '.discovery_runs WHERE tenant_id = {tenantId:UUID} AND toDate(started_at) >= {from:Date} GROUP BY d ORDER BY d',
+        { tenantId, from },
+      ),
+      this.clickhouse.query<DayRow>(
+        'dashboard_events_by_day',
+        'SELECT toString(toDate(time)) AS d, count() AS n FROM ' +
+          db +
+          '.events WHERE tenant_id = {tenantId:UUID} AND toDate(time) >= {from:Date} GROUP BY d ORDER BY d',
+        { tenantId, from },
+      ),
     ]);
-    return { days: days.map((d) => d + 'T00:00:00.000Z'), cis: countsByDay(days, fromRows(cis)), discoveryRuns: countsByDay(days, fromRows(runs)), events: countsByDay(days, fromRows(events)) };
+    return {
+      days: days.map((d) => d + 'T00:00:00.000Z'),
+      cis: countsByDay(days, fromRows(cis)),
+      discoveryRuns: countsByDay(days, fromRows(runs)),
+      events: countsByDay(days, fromRows(events)),
+    };
   }
 }
 

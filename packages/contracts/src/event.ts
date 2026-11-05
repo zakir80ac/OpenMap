@@ -18,6 +18,8 @@ export const EVENT_TYPES = [
   'openmap.reconciliation.conflict',
   'openmap.bsm.health.changed',
   'openmap.bsm.sla.breached',
+  /** ADR-024: the SLA's error budget is burning fast enough to be exhausted before the window ends. */
+  'openmap.bsm.sla.at_risk',
   'openmap.bsm.incident.correlated',
   'openmap.ipam.subnet.utilisation',
   'openmap.ipam.address.conflict',

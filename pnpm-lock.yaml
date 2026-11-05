@@ -172,6 +172,9 @@ importers:
 
   apps/bsm-engine:
     dependencies:
+      '@clickhouse/client':
+        specifier: ^1.24.0
+        version: 1.24.1
       '@openmap/config':
         specifier: workspace:*
         version: link:../../packages/config

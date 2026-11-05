@@ -37,8 +37,18 @@ export default function () {
   });
 }
 
+// k6 v2 consolidates `options` in handleSummary; the VU count is read from the environment it came from.
 export function handleSummary(data) {
   const p95 = data.metrics.openmap_impact_ms ? data.metrics.openmap_impact_ms.values['p(95)'] : null;
-  const result = { name: 'impact-query', p95Ms: p95, budgetMs, vus: options.scenarios.impact.vus, generatedAt: new Date().toISOString() };
-  return { 'results/impact-query.json': JSON.stringify(result, null, 2), stdout: JSON.stringify(result) + '\n' };
+  const result = {
+    name: 'impact-query',
+    p95Ms: p95,
+    budgetMs,
+    vus: Number(__ENV.VUS || '8'),
+    generatedAt: new Date().toISOString(),
+  };
+  return {
+    'results/impact-query.json': JSON.stringify(result, null, 2),
+    stdout: JSON.stringify(result) + '\n',
+  };
 }

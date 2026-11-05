@@ -117,6 +117,9 @@ export const PERF_BUDGETS = {
    * around it; the 0.70 set in ADR-012 was measured while the frame was still loading. The floor states that cost.
    */
   lighthouseEmbeddedPerformanceMin: 0.65,
+  /** REQ-BSM-008: p95 for the yearly availability roll-up of availabilityReportServices business services. */
+  availabilityReportP95Ms: 1000,
+  availabilityReportServices: 300,
 } as const;
 
 /**
@@ -135,7 +138,21 @@ export const GRAPH = {
    * traversed only from the containers in `impactContainerTypes`: an application is down when its component is, a
    * switch is not down when one of its interfaces is (ADR-019).
    */
-  impactEdgeTypes: ['depends_on', 'runs_on', 'hosted_on', 'powered_by', 'cooled_by', 'connected_to', 'cabled_to', 'uses_ip', 'mounted_on', 'backed_by', 'secured_by', 'part_of_service', 'contains'] as const,
+  impactEdgeTypes: [
+    'depends_on',
+    'runs_on',
+    'hosted_on',
+    'powered_by',
+    'cooled_by',
+    'connected_to',
+    'cabled_to',
+    'uses_ip',
+    'mounted_on',
+    'backed_by',
+    'secured_by',
+    'part_of_service',
+    'contains',
+  ] as const,
   /** CI types whose `contains` edge is a dependency on the member: logical containers made of their parts. */
   impactContainerTypes: ['application', 'k8s_namespace', 'k8s_cluster'] as const,
 } as const;
@@ -157,6 +174,61 @@ export const RECONCILIATION = {
  * its minimum, degraded when it has no spare member left. Degraded services are assumed to lose
  * this fraction of revenue per hour in impact totals.
  */
+/**
+ * REQ-BSM-006 REQ-BSM-008 (ADR-024) — service level agreements: availability windows, response and resolution
+ * targets by severity, the burn-rate alert, and the periods the uptime report shows.
+ */
+export const SLA = {
+  /** Windows an SLA's availability target is measured over. */
+  windows: ['calendar_month', 'calendar_quarter', 'calendar_year', 'rolling_30d'] as const,
+  /** Granularities of the uptime report. */
+  granularities: ['month', 'quarter', 'year'] as const,
+  /** Periods the report shows by default, per granularity, and the most a request may ask for. */
+  defaultPeriods: { month: 12, quarter: 8, year: 3 } as const,
+  maxPeriods: 36,
+  monthsPerQuarter: 3,
+  monthsPerYear: 12,
+  /** Rolling window length in days for the rolling_30d SLA window. */
+  rollingWindowDays: 30,
+  /**
+   * Response (time to acknowledge) and resolution targets in minutes by incident severity, used when an SLA names none
+   * of its own: the common 15/30/60-minute response ladder of a tier-1 operations team.
+   */
+  defaultTargets: {
+    critical: { respondMinutes: 15, resolveMinutes: 240 },
+    high: { respondMinutes: 30, resolveMinutes: 480 },
+    medium: { respondMinutes: 60, resolveMinutes: 1440 },
+    low: { respondMinutes: 240, resolveMinutes: 4320 },
+    informational: { respondMinutes: 1440, resolveMinutes: 10080 },
+  } as const,
+  /** Burn rate (budget consumed per elapsed window fraction) at which an at-risk alert is raised; 1 exhausts exactly at window end. */
+  defaultBurnRateAlert: 2,
+  /** Availability target bounds a person may enter, in percent. */
+  minTargetPercent: 50,
+  maxTargetPercent: 100,
+  /** Longest response or resolution target a person may enter, in minutes (30 days). */
+  maxTargetMinutes: 43200,
+  /** Numeric weight of each health state written to service_health_history.score. */
+  healthScore: { healthy: 1, degraded: 0.5, unknown: 0, down: 0 } as const,
+  /** Decimal places of availability percentages in reports and CSV. */
+  percentDecimals: 3,
+  /** Rows of the contributing-factors and corrective-actions editors. */
+  rcaRows: 3,
+  /** How far back the synthetic health history runs, in months, and the outage rates it draws from. */
+  synthetic: {
+    months: 14,
+    outagesPerServiceMonthMax: 2,
+    outageMinutesMin: 3,
+    outageMinutesMax: 180,
+    degradedShare: 0.4,
+    tier1OutageFactor: 0.4,
+    acknowledgeShare: 0.5,
+    eventsPerOutage: 2,
+  } as const,
+} as const;
+export type SlaWindow = (typeof SLA.windows)[number];
+export type AvailabilityGranularity = (typeof SLA.granularities)[number];
+
 export const BSM = {
   slaPeriodDays: 30,
   degradedRevenueFactor: 0.3,
@@ -211,6 +283,8 @@ export const TIME = {
   hoursPerDay: 24,
   msPerDay: 86_400_000,
   microsecondsPerMillisecond: 1000,
+  /** Length of a calendar date in ISO form (YYYY-MM-DD). */
+  isoDateLength: 10,
 } as const;
 
 /** Node PKI parameters shared by the scheduler (issuer) and tests. */
@@ -332,7 +406,10 @@ export const ASSETS = {
    * Ports whose service is well known; an open port outside this set on an unknown device is an unknown application
    * on a non-standard port and remediation asks for a credential or a label.
    */
-  wellKnownPorts: [22, 23, 25, 53, 80, 88, 110, 123, 135, 139, 143, 161, 389, 443, 445, 465, 514, 515, 554, 587, 631, 636, 993, 995, 1433, 1521, 1883, 3306, 3389, 5060, 5061, 5432, 5900, 6379, 8080, 8443, 9100, 27017] as const,
+  wellKnownPorts: [
+    22, 23, 25, 53, 80, 88, 110, 123, 135, 139, 143, 161, 389, 443, 445, 465, 514, 515, 554, 587, 631, 636,
+    993, 995, 1433, 1521, 1883, 3306, 3389, 5060, 5061, 5432, 5900, 6379, 8080, 8443, 9100, 27017,
+  ] as const,
 } as const;
 
 /** IPAM screen (REQ-UI-010): utilisation thresholds that colour a subnet. */
@@ -410,7 +487,18 @@ export const ANALYTICS = {
   /** Colour scheme registered in superset_config.py (EXTRA_CATEGORICAL_COLOR_SCHEMES) that charts are provisioned with. */
   colorScheme: 'openmapHorizon',
   /** Series colours of that scheme, in the order Superset assigns them: the Horizon accents (packages/ui tokens). */
-  schemeColors: ['#22D3EE', '#8B5CF6', '#2DD4A0', '#F5B82E', '#FB5B7A', '#38BDF8', '#A78BFA', '#F472B6', '#34D399', '#FBBF24'] as const,
+  schemeColors: [
+    '#22D3EE',
+    '#8B5CF6',
+    '#2DD4A0',
+    '#F5B82E',
+    '#FB5B7A',
+    '#38BDF8',
+    '#A78BFA',
+    '#F472B6',
+    '#34D399',
+    '#FBBF24',
+  ] as const,
   /** Surfaces the provisioned dashboard CSS paints with; mirrors the console's ground, surface1, glass border and text tokens. */
   theme: {
     ground: '#070A12',
@@ -717,7 +805,15 @@ export const LAYER_STACK = {
   /** Equipment proportions, metres: cabinet, 2U server, switch, firewall, disk shelf, SAN switch, database drum. */
   cabinet: { widthM: 0.52, heightM: 1.05, depthM: 0.7, railInsetM: 0.035, panelM: 0.03, servers: 4 },
   server: { widthM: 1.1, heightM: 0.14, depthM: 0.8, bays: 8, bayInsetM: 0.012, gapM: 0.04 },
-  switch: { widthM: 1.35, heightM: 0.1, depthM: 0.6, portsPerRow: 16, portRows: 2, portSizeM: 0.04, portGapM: 0.012 },
+  switch: {
+    widthM: 1.35,
+    heightM: 0.1,
+    depthM: 0.6,
+    portsPerRow: 16,
+    portRows: 2,
+    portSizeM: 0.04,
+    portGapM: 0.012,
+  },
   firewall: { widthM: 0.8, heightM: 0.14, depthM: 0.6, stripeM: 0.025 },
   shelf: { widthM: 1.3, heightM: 0.22, depthM: 0.8, slots: 12, slotInsetM: 0.012 },
   sanSwitch: { widthM: 1.0, heightM: 0.08, depthM: 0.55 },
@@ -874,10 +970,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
   collector: '0.2.0',
   /**
-   * 1.0.0 (ADR-023): `AssetRecord.manufacturer`/`model` nullable (breaking), `Warranty`, `Support`, `EndOfLife`,
-   * `AssetSummary`, `AssetFilter`, `assetSummary`, `updateAsset`, `createAsset`.
+   * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
+   * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
    */
-  graphql: '1.0.0',
-  /** 0.3.0 (ADR-023): `openmap.asset.created`, `openmap.asset.updated`. */
-  event: '0.3.0',
+  graphql: '1.1.0',
+  /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. */
+  event: '0.4.0',
 };

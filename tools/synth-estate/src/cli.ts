@@ -1,9 +1,13 @@
-// REQ-QA-001 — synth-estate CLI: `generate` writes one NDJSON file per collector family plus
-// estate-summary.json, services.json and organization.json; `stats` summarises an output directory.
-import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+// REQ-QA-001 REQ-BSM-008 — synth-estate CLI: `generate` writes one NDJSON file per collector family plus
+// estate-summary.json, services.json and organization.json; `stats` summarises an output directory; `health-history`
+// draws the deterministic outage history of the business services into health-history.json (ADR-024).
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { SLA } from '@openmap/constants';
 import { join, resolve } from 'node:path';
 import { buildEstate } from './estate.js';
-import { emitEstate, NDJSON_SUFFIX, SUMMARY_FILE } from './emit.js';
+import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.js';
+import { generateHealthHistory, HEALTH_HISTORY_FILE } from './health.js';
+import type { BusinessServiceRecord } from './gen/applications.js';
 
 const DEFAULT_SEED = 42;
 const DEFAULT_SCALE = 1;
@@ -63,17 +67,29 @@ async function generate(flags: Flags): Promise<void> {
   const done = performance.now();
   const s = report.summary;
   console.log('synth-estate: seed ' + String(seed) + ', scale ' + String(scale) + ' -> ' + out);
-  console.log(table([
-    ['CIs', s.totals.cis],
-    ['relationships', s.totals.relationships],
-    ['collector results', s.totals.results],
-    ['business services', s.businessServices],
-    ['build time', ((built - t0) / MS_PER_SECOND).toFixed(1) + ' s'],
-    ['emit time', ((done - built) / MS_PER_SECOND).toFixed(1) + ' s'],
-    ['output size', (report.files.reduce((a, f) => a + f.bytes, 0) / BYTES_PER_MIB).toFixed(1) + ' MiB'],
-  ]));
+  console.log(
+    table([
+      ['CIs', s.totals.cis],
+      ['relationships', s.totals.relationships],
+      ['collector results', s.totals.results],
+      ['business services', s.businessServices],
+      ['build time', ((built - t0) / MS_PER_SECOND).toFixed(1) + ' s'],
+      ['emit time', ((done - built) / MS_PER_SECOND).toFixed(1) + ' s'],
+      ['output size', (report.files.reduce((a, f) => a + f.bytes, 0) / BYTES_PER_MIB).toFixed(1) + ' MiB'],
+    ]),
+  );
   console.log('files:');
-  console.log(table(report.files.map((f) => [f.family + NDJSON_SUFFIX, String(f.results) + ' results, ' + String(f.cis) + ' CIs, ' + String(f.relationships) + ' rels'] as [string, string])));
+  console.log(
+    table(
+      report.files.map(
+        (f) =>
+          [
+            f.family + NDJSON_SUFFIX,
+            String(f.results) + ' results, ' + String(f.cis) + ' CIs, ' + String(f.relationships) + ' rels',
+          ] as [string, string],
+      ),
+    ),
+  );
   console.log('CI types:');
   console.log(table(recordRows(s.ciTypes)));
   console.log('layers:');
@@ -111,19 +127,34 @@ async function stats(positional: string[], flags: Flags): Promise<void> {
   const summaryPath = join(dir, SUMMARY_FILE);
   if (!existsSync(summaryPath)) throw new Error('no ' + SUMMARY_FILE + ' in ' + dir + '; run generate first');
   const summary = JSON.parse(readFileSync(summaryPath, 'utf8')) as StoredSummary;
-  console.log('synth-estate output at ' + dir + ' (seed ' + String(summary.seed) + ', scale ' + String(summary.scale) + ')');
-  console.log(table([
-    ['CIs', summary.totals.cis],
-    ['relationships', summary.totals.relationships],
-    ['collector results', summary.totals.results],
-    ['business services', summary.businessServices],
-  ]));
+  console.log(
+    'synth-estate output at ' +
+      dir +
+      ' (seed ' +
+      String(summary.seed) +
+      ', scale ' +
+      String(summary.scale) +
+      ')',
+  );
+  console.log(
+    table([
+      ['CIs', summary.totals.cis],
+      ['relationships', summary.totals.relationships],
+      ['collector results', summary.totals.results],
+      ['business services', summary.businessServices],
+    ]),
+  );
   console.log('files:');
   const rows: Array<[string, string]> = [];
-  for (const name of readdirSync(dir).filter((f) => f.endsWith(NDJSON_SUFFIX)).sort()) {
+  for (const name of readdirSync(dir)
+    .filter((f) => f.endsWith(NDJSON_SUFFIX))
+    .sort()) {
     const path = join(dir, name);
     const lines = await countLines(path);
-    rows.push([name, String(lines) + ' results, ' + (statSync(path).size / BYTES_PER_MIB).toFixed(1) + ' MiB']);
+    rows.push([
+      name,
+      String(lines) + ' results, ' + (statSync(path).size / BYTES_PER_MIB).toFixed(1) + ' MiB',
+    ]);
   }
   console.log(table(rows));
   console.log('CI types:');
@@ -136,8 +167,34 @@ async function stats(positional: string[], flags: Flags): Promise<void> {
   console.log(table(recordRows(summary.sites)));
 }
 
+/** health-history: outages for every business service of a generated estate over the months before --now. */
+function healthHistory(flags: Flags): void {
+  const dir = resolve(process.cwd(), stringFlag(flags, 'dir', DEFAULT_OUT));
+  const seed = numberFlag(flags, 'seed', DEFAULT_SEED);
+  const months = numberFlag(flags, 'months', SLA.synthetic.months);
+  const now = stringFlag(flags, 'now', new Date().toISOString());
+  const services = JSON.parse(readFileSync(join(dir, SERVICES_FILE), 'utf8')) as BusinessServiceRecord[];
+  const history = generateHealthHistory(services, seed, now, months);
+  const out = join(dir, HEALTH_HISTORY_FILE);
+  writeFileSync(out, JSON.stringify(history, null, 2) + '\n');
+  console.log(
+    table([
+      ['services', services.length],
+      ['months', months],
+      ['outages', history.outages.length],
+      ['down', history.outages.filter((o) => o.state === 'down').length],
+      ['file', out],
+    ]),
+  );
+}
+
 function usage(): string {
-  return ['usage:', '  synth generate [--seed N] [--scale F] [--out DIR]', '  synth stats [DIR|--dir DIR]'].join('\n');
+  return [
+    'usage:',
+    '  synth generate [--seed N] [--scale F] [--out DIR]',
+    '  synth stats [DIR|--dir DIR]',
+    '  synth health-history [--dir DIR] [--seed N] [--months M] [--now ISO]',
+  ].join('\n');
 }
 
 async function main(): Promise<void> {
@@ -149,6 +206,9 @@ async function main(): Promise<void> {
       return;
     case 'stats':
       await stats(positional.slice(1), flags);
+      return;
+    case 'health-history':
+      healthHistory(flags);
       return;
     default:
       console.error(usage());

@@ -522,6 +522,8 @@ model Tenant {
   impactValidations       ImpactValidation[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
+  slas                    Sla[]
+  slaAssignments          ServiceSlaAssignment[]
   integrationConfigs      IntegrationConfig[]
   integrationDeliveries   IntegrationDelivery[]
   securityAlerts          SecurityAlert[]
@@ -1236,7 +1238,56 @@ model ImpactValidation {
   @@map("impact_validations")
 }
 
-/// An incident opened by BSM correlation, an integration or a user (openmap.incident.* events).
+/// Window an SLA's availability target is measured over (ADR-024).
+enum SlaWindow {
+  calendar_month
+  calendar_quarter
+  calendar_year
+  rolling_30d
+}
+
+/// A service level agreement a business service can be held to (ADR-024): the availability target over a window,
+/// response and resolution targets by severity, and the burn rate that raises an at-risk alert.
+model Sla {
+  id                        String    @id @default(uuid()) @db.Uuid
+  tenantId                  String    @db.Uuid
+  name                      String
+  description               String    @default("")
+  availabilityTargetPercent Float
+  window                    SlaWindow @default(calendar_month)
+  /// { severity: { respondMinutes, resolveMinutes } } for the severities the SLA names; others use SLA.defaultTargets.
+  responseTargets           Json      @default("{}")
+  burnRateAlert             Float
+  createdBy                 String
+  createdAt                 DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt                 DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignments ServiceSlaAssignment[]
+  incidents   Incident[]
+
+  @@unique([tenantId, name])
+  @@map("slas")
+}
+
+/// Which SLA a business service is held to; one per service. The service is a CI (type business_service).
+model ServiceSlaAssignment {
+  tenantId    String   @db.Uuid
+  serviceCiId String   @db.Uuid
+  slaId       String   @db.Uuid
+  assignedBy  String
+  assignedAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sla    Sla    @relation(fields: [slaId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, serviceCiId])
+  @@index([slaId])
+  @@map("service_sla_assignments")
+}
+
+/// An incident opened by BSM correlation, an SLA breach, an integration or a user (openmap.incident.* events).
+/// ADR-024 adds the response and resolution deadlines, the assignee, the closing fields and the structured RCA.
 model Incident {
   id                   String        @id @default(uuid()) @db.Uuid
   tenantId             String        @db.Uuid
@@ -1244,7 +1295,7 @@ model Incident {
   description          String
   severity             AlertSeverity
   state                IncidentState @default(open)
-  /// Service, integration or user that opened it.
+  /// Service, integration or user that opened it: bsm, sla, an integration vendor or a username.
   source               String
   affectedServiceCiIds String[]      @db.Uuid
   rootCauseCiId        String?       @db.Uuid
@@ -1253,14 +1304,28 @@ model Incident {
   openedAt             DateTime      @db.Timestamptz(3)
   acknowledgedAt       DateTime?     @db.Timestamptz(3)
   resolvedAt           DateTime?     @db.Timestamptz(3)
+  closedAt             DateTime?     @db.Timestamptz(3)
+  /// Person the incident is assigned to (a username); null until assigned.
+  assignee             String?
+  /// SLA the targets were taken from when the incident opened; null when the service had none (defaults applied).
+  slaId                String?       @db.Uuid
+  respondBy            DateTime?     @db.Timestamptz(3)
+  resolveBy            DateTime?     @db.Timestamptz(3)
+  responseBreachedAt   DateTime?     @db.Timestamptz(3)
+  resolutionBreachedAt DateTime?     @db.Timestamptz(3)
+  resolutionNote       String?
+  /// Root cause analysis: { summary, rootCauseCiId, contributingFactors[], correctiveActions[{description, owner, dueAt, done}], owner, dueAt, completedAt, updatedBy, updatedAt }.
+  rca                  Json?
   createdAt            DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
 
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sla         Sla?               @relation(fields: [slaId], references: [id], onDelete: SetNull)
   links       IncidentLink[]
   validations ImpactValidation[]
 
   @@index([tenantId, state, openedAt])
+  @@index([tenantId, source, state])
   @@map("incidents")
 }
 

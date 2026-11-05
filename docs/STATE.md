@@ -2,7 +2,52 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 16: the asset register follows the CMDB)
+## Last session · 2026-11-05 (checkpoint 17: SLA assignment, uptime by period, incident response with RCA)
+
+**Done.** REQ-BSM-006 and REQ-BSM-008 (ADR-024), plus the register paging fix (cf5a4c0).
+
+- **History has one store.** The reconciler's dispatcher now writes every `openmap.bsm.health.changed` event as a
+  `service_health_history` row (ClickHouse DDL 0004 back-filled the 12 earlier events); the API and the engine read
+  availability from that table only. `@openmap/bsm-engine` gained the pure arithmetic (`core/availability.ts`:
+  windows, unknown time out of the denominator, calendar months/quarters/years cut at local midnight in the tenant's
+  zone, budgets and burn rate; `core/history.ts`: the shared ClickHouse reader) and the SLA decisions
+  (`service/sla.ts`: breach incident once per window, at-risk alert at the burn-rate threshold, roll-over clear,
+  response and resolution deadlines and misses).
+- **SLAs are rows.** Prisma 0016: `slas`, `service_sla_assignments` (one per service), and on `incidents` the
+  assignee, `slaId`, `respondBy`/`resolveBy`, the breach stamps, `closedAt`, `resolutionNote` and the RCA JSON. The
+  engine evaluates every assigned service each tick (`evaluateSlas`, new metrics `openmap_bsm_sla_evaluations_total`,
+  `openmap_bsm_sla_evaluation_duration_seconds`) and stamps missed targets on every open incident, delivering
+  `incident.updated` to subscribed integrations.
+- **API.** GraphQL 1.1.0 (additive): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`,
+  `ServiceHealth.sla`/`currentWindow`/`availability`, the full `Incident`, queries `service`, `incident`, `slas`,
+  `availabilityReport`, `availabilityReportCsv`, mutations `assignIncident`, `resolveIncident`, `closeIncident`,
+  `updateIncidentRca`, `upsertSla`, `deleteSla`, `assignSla`; event 0.4.0 adds `openmap.bsm.sla.at_risk`. The
+  incident timeline merges audit entries (the global interceptor records every mutation) with the engine's events.
+  `BsmFactsService.slaFor` moved from the outbox to the history; `Query.incidents` takes `serviceId`.
+- **Console.** Business services: SLA select per row, window figure ("99.2% this month") in the met/missed tone,
+  burn rate; the Uptime table (month / quarter / year, "to date", "Missed" tags, Export CSV); the SLA catalogue with
+  create/edit/delete; incident cards with severity, state, deadlines, assignee, acknowledge / assign / resolve /
+  close, the RCA form and the timeline; `/services/[id]` detail route. 118 new i18n keys in en and ar.
+- **Synthetic history.** `synth-estate health-history` (deterministic outages per service and month) and
+  `reconciler replay-history` (back-dated health events through the outbox plus resolved incidents with deadlines).
+  The dev tenant carries 14 months for its 15 services (398 rows, 199 incidents); the 300-service k6 measurement used
+  a temporary perf fixture (284 seeded services, 7,884 events) that was removed afterwards.
+- **Tests.** T-132 availability (12), T-133 SLA decisions (6), T-134 synthetic history (3), dispatcher health rows,
+  T-135 API integration (22/22 whole suite), T-136 ServicesView (15), T-137 ServiceDetailView (4), T-138 e2e
+  `services.spec.ts` en+ar (3/3), k6 `availability-report.js` p95 629 ms on 299 services (budget 1,000 ms), guard ok,
+  `contracts:check` ok, i18n in sync, Lighthouse on Services 1.0/1.0/1.0 with CLS 0 (fixed-height scroll regions
+  for the list and the uptime table, as on Assets). Evidence: `docs/evidence/sla-uptime.md`, `docs/evidence/console/services-*.png`.
+
+**Lessons.** (1) `@clickhouse/client` binds `{p:DateTime64(3)}` params as String: cast in SQL
+(`toDateTime64({p:String}, 3, 'UTC')`). (2) A SELECT alias named like a column (`toString(ts) AS ts`) shadows the
+column in WHERE. (3) Two outbox dispatchers (the compose reconciler and a local `replay-history`) both claim the same
+pending rows: the claim is read-then-update, not `FOR UPDATE SKIP LOCKED`; stop one before running the other (noted
+under In progress for REQ-CORE-013). (4) `docker compose build` once produced no new image at all (same ids); run it
+with `--progress=plain` to a log and compare image ids before `--force-recreate`. (5) Guard reads
+`=> Promise<...>` on one .tsx line as JSX text: callback types live in `components/services/types.ts`. (6) k6 v2
+consolidates `options` in `handleSummary`: read the VU count from `__ENV`.
+
+## Previous session · 2026-11-05 (checkpoint 16: the asset register follows the CMDB)
 
 Syed's next statement: asset management must show everything the organisation owns across every layer plus the
 unknown devices (with remediation or manual entry where a device has no out-of-band management), every asset with
@@ -30,7 +75,7 @@ must carry a UUID run id (the manual asset first stamped the literal `manual-ass
 ClickHouse batch of the dispatcher until it was fixed and the leftover test tenant purged). Docker Desktop's WSL engine
 died during an image build and had to be restarted by hand; containers came back on their old images until recreated.
 
-## Previous session · 2026-11-05 (checkpoint 15: the Layers equipment scene and the formal profile)
+## Earlier session · 2026-11-05 (checkpoint 15: the Layers equipment scene and the formal profile)
 
 Syed rejected the first Layers revision (holographic wafers and abstract glyphs, projected labels) as "horrible",
 "game inspired" and unreadable, and asked for realistic objects (switches, firewalls, racks, servers, storage) with
@@ -235,6 +280,9 @@ tracker is the truth.
   scope test); it moves to Done with the queued tracker closures. The scope builder now reads the CIDR from the subnet
   identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
 - REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
+  The outbox claim in `dispatchOnce` is read-then-update: two dispatchers on one database both deliver the same
+  rows (seen with the compose reconciler and a local `replay-history`); a `FOR UPDATE SKIP LOCKED` claim belongs to the
+  multi-worker measurement.
 - REQ-AI-001 is complete in code (golden set 12/12, T-011/T-113/T-104/T-106); it moves to Done with the queued
   tracker closures. Test files of apps/assistant and apps/api are excluded from their tsconfig, so the root ESLint
   project service cannot parse them (`pnpm exec eslint apps/assistant/src` reports only that); part of the lint item.
@@ -248,17 +296,17 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-BSM-006 + REQ-BSM-008 (ADR-024): SLA assignment per service, continuous monitoring with availability by
-   month, quarter and year from `service_health_history`, alerting, incident response (acknowledge, assign, resolve
-   against targets), audit logging and a structured RCA section on incidents.
-2. REQ-BSM-007 (ADR-025): sites and their connectivity, inter-site links probed by the Nodes into ClickHouse, link CI
-   health, HA/DR readiness rules and incidents; relates to REQ-UI-026.
-3. REQ-AI-007: assistant grounding (schema and measurement catalogue, store routing for measurements, Cypher
-   validation and repair, checked-in question set in CI); then the finance module (costing, ROI, budgeting).
+1. REQ-BSM-007 (ADR-025): sites and their connectivity, inter-site links probed by the Nodes into ClickHouse, link CI
+   health, HA/DR readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) and
+   incidents; relates to REQ-UI-026.
+2. REQ-AI-007: assistant grounding (schema and measurement catalogue, store routing for measurements such as memory,
+   OS or VM density, Cypher validation and repair incl. nested aggregates, checked-in question set in CI, failure
+   logging).
+3. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0015
-are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0016
+and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed

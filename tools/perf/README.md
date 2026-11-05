@@ -6,6 +6,7 @@ under `tools/perf/results/` (CI writes them; they are not committed).
 | Test | Tool | Budget | Result file |
 | --- | --- | --- | --- |
 | Impact query on 100k nodes | k6 `k6/impact-query.js` | p95 < 1000 ms | `results/impact-query.json` |
+| Availability report, yearly roll-up of 300 services (REQ-BSM-008) | k6 `k6/availability-report.js` | p95 < 1000 ms | `results/availability-report.json` |
 | Screen interaction p95 | Playwright `apps/console/e2e/perf.spec.ts` (T-089) | p95 < 100 ms | `results/screen-interaction.json` |
 | Graph rendering | Playwright frame timing on the dependency map, same spec | 60 fps | `results/graph-render.json` |
 | Lighthouse | `pnpm --filter @openmap/perf lighthouse` user flow over the signed-in console | performance ≥ 0.90, accessibility ≥ 0.95, best practices ≥ 0.95 | `results/lighthouse.json` (+ `lighthouse-flow.html`) |
@@ -23,6 +24,16 @@ API_URL=http://localhost:4000/graphql TOKEN=... ROOT_IDS=id1,id2 k6 run k6/impac
 ```
 
 The summary writes `results/impact-query.json`; `pnpm guard` then fails if p95 is over budget.
+
+## Availability report
+
+With the compose stack up and a token for the tenant (the synthetic tenant after `replay-history` has months of history):
+
+```bash
+API_URL=http://localhost:4000/graphql TOKEN=... GRANULARITY=year PERIODS=3 k6 run k6/availability-report.js
+```
+
+The summary writes `results/availability-report.json`; `pnpm guard` fails if p95 is over `PERF_BUDGETS.availabilityReportP95Ms`.
 
 ## Screen interaction, graph frame rate and Lighthouse
 

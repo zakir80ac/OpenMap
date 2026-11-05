@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.0.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.1.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -117,8 +117,103 @@ type ImpactSimulation {
 type ImpactTotals { servicesDown: Int! servicesDegraded: Int! usersAffected: Int! revenueAtRiskPerHour: Money }
 type Recommendation { title: String! rationale: String! estimatedMinutes: Int }
 
-type ServiceHealth { service: Ci! state: HealthState! since: DateTime! rootCauses: [Ci!]! slaTarget: Float! errorBudgetRemainingMinutes: Float! }
-type Incident { id: UUID! service: Ci! openedAt: DateTime! resolvedAt: DateTime rootCause: Ci alerts: Int! links: [IncidentLink!]! }
+# REQ-BSM-006 REQ-BSM-008 (ADR-024) — SLAs, availability by period and incident response with RCA.
+enum SlaWindow { calendar_month calendar_quarter calendar_year rolling_30d }
+enum AvailabilityGranularity { month quarter year }
+enum IncidentSeverity { informational low medium high critical }
+enum IncidentState { open acknowledged mitigated resolved closed }
+type SeverityTarget { severity: IncidentSeverity! respondMinutes: Int! resolveMinutes: Int! }
+type Sla {
+  id: UUID!
+  name: String!
+  description: String!
+  availabilityTargetPercent: Float!
+  window: SlaWindow!
+  """Targets for every severity: the SLA's own where it names one, the platform defaults elsewhere."""
+  responseTargets: [SeverityTarget!]!
+  burnRateAlert: Float!
+  services: [Ci!]!
+  createdBy: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+"""One calendar period (in the tenant's time zone) or SLA window of a service's availability."""
+type AvailabilityPeriod {
+  granularity: AvailabilityGranularity
+  year: Int!
+  month: Int
+  quarter: Int
+  periodStart: DateTime!
+  periodEnd: DateTime!
+  """True while the period is still running; figures run to now."""
+  current: Boolean!
+  """Null when the service was not observed at all in the period."""
+  availabilityPercent: Float
+  elapsedMinutes: Float!
+  downtimeMinutes: Float!
+  degradedMinutes: Float!
+  unknownMinutes: Float!
+  targetPercent: Float
+  """Whether availability meets the target; null without a target or a figure."""
+  met: Boolean
+  budgetMinutes: Float
+  budgetRemainingMinutes: Float
+  burnRate: Float
+  """Incidents of the service that were open during the period."""
+  incidents: [Incident!]!
+}
+type ServiceAvailability { service: Ci! sla: Sla periods: [AvailabilityPeriod!]! }
+type ServiceHealth {
+  service: Ci!
+  state: HealthState!
+  since: DateTime!
+  rootCauses: [Ci!]!
+  slaTarget: Float!
+  errorBudgetRemainingMinutes: Float!
+  sla: Sla
+  """The SLA's current window (or the rolling 30 days without an SLA)."""
+  currentWindow: AvailabilityPeriod!
+  availability(granularity: AvailabilityGranularity!, periods: Int): [AvailabilityPeriod!]!
+}
+type CorrectiveAction { description: String! owner: String dueAt: DateTime done: Boolean! }
+type Rca {
+  summary: String!
+  rootCauseCi: Ci
+  contributingFactors: [String!]!
+  correctiveActions: [CorrectiveAction!]!
+  owner: String
+  dueAt: DateTime
+  completedAt: DateTime
+  updatedBy: String!
+  updatedAt: DateTime!
+}
+"""One step of an incident's history: engine events and people's actions, oldest first."""
+type IncidentEvent { at: DateTime! actor: String! kind: String! details: JSON! }
+type Incident {
+  id: UUID!
+  title: String!
+  description: String!
+  severity: IncidentSeverity!
+  state: IncidentState!
+  source: String!
+  service: Ci!
+  sla: Sla
+  openedAt: DateTime!
+  acknowledgedAt: DateTime
+  resolvedAt: DateTime
+  closedAt: DateTime
+  assignee: String
+  respondBy: DateTime
+  resolveBy: DateTime
+  responseBreachedAt: DateTime
+  resolutionBreachedAt: DateTime
+  resolutionNote: String
+  rootCause: Ci
+  alerts: Int!
+  links: [IncidentLink!]!
+  rca: Rca
+  timeline: [IncidentEvent!]!
+}
 type IncidentLink { integration: Integration! remoteId: String! remoteUrl: String remoteState: String! syncedAt: DateTime! }
 
 type Subnet { ci: Ci! cidr: String! vrf: String utilisationPercent: Float! addresses(first: Int = 100, after: String): CiConnection! children: [Subnet!]! }
@@ -280,7 +375,14 @@ type Query {
   impactScenarios: [ImpactScenario!]!
   impactSimulation(id: UUID!): ImpactSimulation
   services(health: [HealthState!]): [ServiceHealth!]!
-  incidents(open: Boolean = true): [Incident!]!
+  service(id: UUID!): ServiceHealth
+  incidents(open: Boolean = true, serviceId: UUID): [Incident!]!
+  incident(id: UUID!): Incident
+  slas: [Sla!]!
+  """Availability of every business service over the last periods (default count per granularity)."""
+  availabilityReport(granularity: AvailabilityGranularity!, periods: Int): [ServiceAvailability!]!
+  """The same report as CSV text (UTF-8, header row), for export."""
+  availabilityReportCsv(granularity: AvailabilityGranularity!, periods: Int): String!
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
@@ -320,6 +422,10 @@ input AssetDetailsInput { manufacturer: String model: String serialNumber: Strin
 """An asset with no network presence (an unmetered PDU, a device without out-of-band management): a CI of the chosen type is created with it."""
 input ManualAssetInput { layer: CiLayer! type: String! name: String! assetTag: String locationCiId: UUID details: AssetDetailsInput! }
 input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }
+input SeverityTargetInput { severity: IncidentSeverity! respondMinutes: Int! resolveMinutes: Int! }
+input SlaInput { name: String! description: String availabilityTargetPercent: Float! window: SlaWindow! responseTargets: [SeverityTargetInput!] burnRateAlert: Float }
+input CorrectiveActionInput { description: String! owner: String dueAt: DateTime done: Boolean }
+input RcaInput { summary: String! rootCauseCiId: UUID contributingFactors: [String!] correctiveActions: [CorrectiveActionInput!] owner: String dueAt: DateTime completedAt: DateTime }
 
 type Mutation {
   createDashboard(input: DashboardInput!): Dashboard!
@@ -346,6 +452,15 @@ type Mutation {
   testIntegration(id: UUID!): Integration!
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!
   acknowledgeIncident(incidentId: UUID!): Incident!
+  assignIncident(incidentId: UUID!, assignee: String!): Incident!
+  resolveIncident(incidentId: UUID!, note: String!): Incident!
+  closeIncident(incidentId: UUID!): Incident!
+  updateIncidentRca(incidentId: UUID!, input: RcaInput!): Incident!
+  upsertSla(id: UUID, input: SlaInput!): Sla!
+  """Removes an SLA; its services lose their assignment and fall back to the slaTargetPercent attribute."""
+  deleteSla(id: UUID!): Boolean!
+  """Holds a business service to an SLA; a null slaId clears the assignment."""
+  assignSla(serviceId: UUID!, slaId: UUID): ServiceHealth!
   askAssistant(question: String!): AssistantAnswer!
   updateTenantSettings(input: TenantSettingsInput!): TenantSettings!
   updateOrganization(input: OrganizationInput!): Organization!
