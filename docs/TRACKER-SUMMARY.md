@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-05T14:46:21.243Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-05T14:56:20.235Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 65 |
+| Not started | 63 |
 | In progress | 2 |
 | Blocked | 0 |
 | In review | 30 |
-| Done | 109 |
+| Done | 111 |
 | **Total** | **206** |
 
 ## By workstream
@@ -17,7 +17,7 @@ Generated 2026-11-05T14:46:21.243Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | --- | ---: | ---: | ---: | ---: | ---: |
 | CORE | 19 | 17 | 1 | 0 | 89% |
 | DISC | 31 | 3 | 0 | 0 | 10% |
-| DEP | 5 | 2 | 0 | 0 | 40% |
+| DEP | 5 | 4 | 0 | 0 | 80% |
 | CMDB | 42 | 21 | 1 | 0 | 50% |
 | IPAM | 7 | 3 | 0 | 0 | 43% |
 | DCIM | 9 | 2 | 0 | 0 | 22% |
@@ -45,10 +45,10 @@ Generated 2026-11-05T14:46:21.243Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-BSM-005 [P0] Runbooks attached to scenarios and incidents with automation hooks per step
 - REQ-BSM-007 [P0] Sites and connectivity monitoring for HA / DR readiness
 - REQ-CORE-019 [P0] REST and GraphQL API, SDKs, OpenAPI
-- REQ-DEP-001 [P0] Network topology maps (L2/L3, LLDP/CDP)
-- REQ-DEP-002 [P0] Application Dependency Mapping from flows, processes, listeners
 - REQ-DEP-004 [P0] Enterprise application dependency (multi-tier, cloud and on-prem)
 - REQ-PERF-002 [P0] Impact query under 1000 ms on 100000 nodes
+- REQ-PERF-004 [P0] 10000 devices discovered in under 15 minutes
+- REQ-QA-003 [P0] Vendor lab fixtures for every collector family
 
 ## Open risks
 
