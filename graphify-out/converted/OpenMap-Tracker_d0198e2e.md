@@ -199,18 +199,24 @@
 | REQ-UI-033 | UI | Screen | Layers screen: isometric stack with 3D holographic icons per layer |  | The twelve-layer stack renders as a lit isometric scene with a holographic 3D glyph for every layer (data centre, network and security, hardware, storage, virtualization, cloud, OS, containers, databases, applications, SaaS, unknown), counts and health per layer, hover and click to filter; 60 fps, reduced-motion fallback; en and ar screenshots | P1 | Done |  |  | ADR-018 | T-125, T-126, T-087 | docs/evidence/layers-stack.md; ADR-021; stack overview in contract order, click-to-focus with equipment, focus panel, CMDB ?layer=; Lighthouse layers 1.00; docs/evidence/console/layers-stack-{en,ar}.png, layers-focus-{en,ar}.png | 2026-11-04 | 2026-11-04 |  |
 | REQ-UI-034 | UI | Design system | Formal profile: remove game-like effects from the Horizon look |  | No holographic card borders, HUD corner brackets, perspective grid floor, aurora washes, bar sheens, dot rings, value glows or entrance rises; plain bordered cards with a layered float shadow and a 2 px hover lift; accent pills and bars glow only on request; sidebar active item is a quiet tint with an indicator bar; Sora display face kept; every screen re-captured in en and ar; Lighthouse floors hold | P0 | Done |  |  | ADR-022 | T-087, T-124, T-126 | docs/evidence/layers-stack.md; ADR-022; effects.ts reduced to float; holographic border, brackets, grid floor, aurora, sheen, ring, value glow, rise removed from packages/ui; ui tests 44; walkthrough re-captured; Lighthouse every screen ok | 2026-11-04 | 2026-11-04 |  |
 | REQ-UI-035 | UI | Design system | Vendor marks catalogue (simple-icons, CC0) for platform badges |  | simple-icons is bundled (no network), used only beside the platform it names; marks the catalogue lacks (Microsoft, Azure, AWS, Oracle, Salesforce, ServiceNow) are typeset names; recorded in the components sheet with licence CC0-1.0 | P1 | Done |  |  | ADR-021 | T-125 | docs/evidence/layers-stack.md; ADR-021; simple-icons 16.36.0 (CC0-1.0) bundled in apps/console; marks only beside the platform they name; names in chips where the catalogue lacks the mark | 2026-11-04 | 2026-11-04 |  |
+| REQ-CMDB-039 | CMDB | CMDB | Asset register for every owned CI across all layers, with warranty, support and end-of-life dates and manual data entry |  | Every CI of an owned type (DCIM, network and security, hardware, PCs, storage, virtualization, OS, applications, databases, licences, cloud and SaaS subscriptions) has an asset record kept in sync by the reconciler (created on discovery, retired with the CI); the register lists them per layer with warranty end, support end and end-of-life dates, flags missing dates, and lets an operator enter or correct them with an audit trail; plan-created assets attach to the CI when discovered | P0 | Done | claude |  | ADR-023 | T-100, T-127, T-129, T-130, T-131 | ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-register-{en,ar}.png, assets-details-{en,ar}.png; migration 0015; reconciler worker/assets.ts; API assetSummary/updateAsset/createAsset; commit b63f25e; ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-register-{en,ar}.png, assets-details-{en,ar}.png; migration 0015; reconciler worker/assets.ts; API assetSummary/updateAsset/createAsset | 2026-11-05 | 2026-11-05 |  |
+| REQ-CMDB-040 | CMDB | CMDB | Unknown CI remediation: diagnosis and manual entry for devices without out-of-band management |  | Each unknown CI shows what was observed (evidence), a diagnosis (unmanaged or unmetered PDU, unknown application on a non-standard port, device without SNMP or management interface) and the remediation (what to enable, or manual entry of type, owner, location, warranty); labelling creates the asset record; en and ar; e2e | P0 | Done | claude |  | ADR-023 | T-100, T-128, T-129, T-130 | ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-unknown-{en,ar}.png; console lib/unknown-remediation.ts, UnknownDevices.tsx, ManualAssetForm.tsx; labelCi registers owned CIs; commit b63f25e; ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-unknown-{en,ar}.png; console lib/unknown-remediation.ts, UnknownDevices.tsx, ManualAssetForm.tsx; labelCi registers owned CIs | 2026-11-05 | 2026-11-05 |  |
+| REQ-BSM-006 | BSM | BSM | SLA assignment, continuous SLA monitoring, alerting and incident response with audit and RCA |  | An SLA (availability target, response and resolution targets per severity, window) is assigned to a business service through the console; the BSM engine evaluates it continuously, opens incidents and alerts on breach or budget exhaustion, tracks acknowledgement, assignment and resolution against the targets, writes every step to the audit log, and each incident carries a structured RCA (root cause CI, contributing factors, corrective actions, owner, due date); en and ar; e2e | P0 | Not started |  |  | ADR-024 |  |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-BSM-007 | BSM | BSM | Sites and connectivity monitoring for HA / DR readiness |  | Every site and inter-site link is shown with live health; Discovery Nodes probe the links continuously (reachability, latency, loss) and the results land in ClickHouse and on the link CI; readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) are evaluated continuously and breaches open incidents; en and ar; e2e | P0 | Not started |  |  | ADR-025 |  |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-BSM-008 | BSM | Added | Uptime monitoring and availability reporting by month, quarter and year |  | Every service and every monitored CI has an availability figure for the current and past months, quarters and years computed from the health history in ClickHouse; the BSM and service detail screens show uptime per period beside the SLA target with the minutes of downtime and the incidents that caused them; a period report can be exported; k6 budget under 1 s for a yearly roll-up of 300 services; en and ar. | P0 | Not started |  |  | CLAUDE.md §0 BSM; Syed 2026-11-05 |  |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-AI-007 | AI | Added | Assistant grounding: schema catalogue, measurement routing, query validation and a regression suite so Ask answers accurately and never hallucinates properties |  | The assistant answers from a generated catalogue of node labels, properties, relationship types and ClickHouse measurements; questions about measurements (memory, CPU, OS per host, VM density) are routed to the right store instead of failing; generated Cypher is validated and rewritten (no nested aggregates, only known properties) before it runs, with one automatic repair pass; a checked-in question set with expected answers runs in CI and must pass; every failure is logged with the question and the generated query; en and ar. | P0 | Not started |  |  | CLAUDE.md §0 AI assistant; Syed 2026-11-05 screenshot |  |  | 2026-11-05 | 2026-11-05 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
 | CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 19 | 17 | 89 |
 | DISC | Discovery and collectors | Discovery, Onboarding and digital twin |  | 31 | 2 | 6 |
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 2 | 40 |
-| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity |  | 38 | 17 | 45 |
+| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB |  | 40 | 19 | 48 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
-| BSM | Business service management | Application dependency mapping and business services, Runbooks |  | 5 | 3 | 60 |
+| BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 3 | 38 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 35 | 30 | 86 |
-| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI |  | 6 | 2 | 33 |
+| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 7 | 2 | 29 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
 | PERF | Performance budgets | Budgets, Platform |  | 5 | 2 | 40 |
@@ -334,7 +340,7 @@
 | T-097 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
 | T-098 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
 | T-099 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
-| T-100 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018 | 2026-10-22 | Pass | 0 |
+| T-100 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-039, REQ-CMDB-040 | 2026-10-22 | Pass | 0 |
 | T-101 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-INT-005, REQ-INT-006, REQ-INT-007, REQ-SEC-006 | 2026-10-22 | Pass | 0 |
 | T-102 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-IPAM-001, REQ-IPAM-002, REQ-IPAM-006 | 2026-10-22 | Pass | 0 |
 | T-103 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-DCIM-002, REQ-DCIM-009 | 2026-10-22 | Pass | 0 |
@@ -369,6 +375,11 @@
 | T-124 | unit | REQ-UI-030, REQ-UI-034 | 2026-11-04 | Pass | 0 |
 | T-125 | unit | REQ-UI-033, REQ-UI-035 | 2026-11-04 | Pass | 0 |
 | T-126 | unit | REQ-UI-033, REQ-UI-034 | 2026-11-04 | Pass | 0 |
+| T-127 | unit | REQ-CMDB-039 | 2026-11-05 | Pass | 0 |
+| T-129 | unit | REQ-CMDB-039, REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
+| T-130 | unit | REQ-CMDB-039, REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
+| T-131 | unit | REQ-CMDB-039 | 2026-11-05 | Pass | 0 |
+| T-128 | unit | REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -386,33 +397,35 @@
 | 2026-11-04 | Checkpoint 13: what-if scenarios failed on every run (kind vocabulary mismatch, missing runbook column, containment never traversed). ADR-019, impact contract 1.0.0, migrations 0012/0013, T-122 e2e on the live stack. |  |  |  |
 | 2026-11-04 | Checkpoint 14: dashboard wizard, customization and Admin/CTO-CIO/CISO/Finance templates (ADR-020, dashboard contract 0.1.0, GraphQL 0.10.0, migration 0014); Sora + floating surfaces + Sparkline/Donut/Segmented; Superset Horizon theme. Fixed on the way: Memgraph parameterised IN scan behind every health lookup (racks 1.7 s → 0.5 s), orphaned incidents after a replay reset, discovery CLS. |  |  |  |
 | 2026-11-04 | Checkpoint 15: Layers screen rebuilt twice on Syed's feedback: holographic stack rejected; realistic equipment scene; final form is the ordered plane stack with click-to-focus onto a layer's equipment (ADR-021). Formal profile sweep removed the game-like effects (ADR-022). simple-icons (CC0) for vendor marks. On-demand frame loop and shared materials fixed the 3D screens' blocking time. |  |  |  |
+| 2026-11-05 | Asset register across every layer (REQ-CMDB-039) and unknown-device remediation with manual entry (REQ-CMDB-040), ADR-023: owned CI types, reconciler asset sync, migration 0015 backfill, GraphQL 1.0.0, Assets screen rework; REQ-BSM-008 (uptime by month/quarter/year) and REQ-AI-007 (assistant grounding) added from Syed's asks; Docker Desktop WSL engine died mid-build and was restarted; ClickHouse run-id UUID defect fixed. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-04T22:10:38.924Z |  |  |  |  |  |  |
+| Generated | 2026-11-05T05:34:51.064Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 65 | 28 | 0 | 4 | 99 |  |  |
+| All | 69 | 28 | 0 | 4 | 101 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
 | DEP | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
-| CMDB | 20 | 1 | 0 | 0 | 17 | 38 | 45 |
+| CMDB | 20 | 1 | 0 | 0 | 19 | 40 | 48 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
-| BSM | 2 | 0 | 0 | 0 | 3 | 5 | 60 |
+| BSM | 5 | 0 | 0 | 0 | 3 | 8 | 38 |
 | UI | 5 | 0 | 0 | 0 | 30 | 35 | 86 |
-| AI | 4 | 0 | 0 | 0 | 2 | 6 | 33 |
+| AI | 5 | 0 | 0 | 0 | 2 | 7 | 29 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 12 | 27 | 0 | 3 | 72 | 114 |  |
+| P0 | 16 | 27 | 0 | 3 | 74 | 120 |  |
 | P1 | 50 | 1 | 0 | 1 | 27 | 79 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 37 |  |  |  |  |  |  |
 | 2026-11-01 | 87 |  |  |  |  |  |  |
 | 2026-11-04 | 99 |  |  |  |  |  |  |
+| 2026-11-05 | 101 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
