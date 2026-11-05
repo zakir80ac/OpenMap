@@ -33,6 +33,10 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
   GraphQL (T-143/T-146). Tests: T-145 (assistant unit, 54), T-146 (series skill offline 2, integration 38), T-147
   (console view 14, en and ar), T-148 (e2e `assistant.spec.ts`, en and ar). Guard, i18n, contracts, console lint green.
   Evidence: `docs/evidence/assistant-conversations.md`, `docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png`.
+- **Tracker.** The workbook was open in Excel for the whole session (EBUSY on every write), so the REQ-AI-008 closure
+  (Done, T-145..T-148, commit f19125d), the session row and the report rebuild are queued in
+  `.local/tracker-closures.sh` (gitignored); run it once Excel is closed. Until then the tracker still says
+  "In progress" for REQ-AI-008 and this file is ahead of it.
 
 **Lessons.** (1) A group-marker hit found in a slice must be reported at its absolute offset before comparing it with
 hits found in the whole text (the "per site" subject bug). (2) The synthetic estate's metric samples all sit at the
