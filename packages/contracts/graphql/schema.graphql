@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.5.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.6.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -858,6 +858,48 @@ type AssistantAnswer {
   turnId: UUID!
 }
 
+# REQ-DEP-001 (ADR-030) — network topology maps. L2: devices joined by the LLDP/CDP neighbour links between their
+# interfaces, hosts attached by their cabling. L3: devices joined to the subnets their addresses sit in. A link
+# aggregates every interface pair between the same two nodes.
+enum TopologyLayer {
+  l2
+  l3
+}
+type TopologyNode {
+  ci: Ci!
+  """
+  Links this node has in the map.
+  """
+  degree: Int!
+}
+type TopologyLink {
+  id: String!
+  from: Ci!
+  to: Ci!
+  """
+  neighbour (device to device), host (cabling to a device port) or subnet (device address in a subnet).
+  """
+  kind: String!
+  """
+  Interface pairs (L2) or addresses (L3) the link aggregates.
+  """
+  count: Int!
+  ports: [String!]!
+  protocols: [String!]!
+  media: [String!]!
+  speedMbps: Float
+}
+type NetworkTopology {
+  layer: TopologyLayer!
+  nodes: [TopologyNode!]!
+  links: [TopologyLink!]!
+  """
+  True when the map hit the node cap and was cut.
+  """
+  truncated: Boolean!
+  durationMs: Int!
+}
+
 # REQ-AI-008 (ADR-028) — a persisted conversation: the person's questions with the answers as they were returned, so
 # a thread survives a reload and a follow-up ("and last month?") is read against the previous turn. Owned by the
 # user who asked; only they list, read and delete it.
@@ -1207,6 +1249,10 @@ type Query {
   """
   conversations: [Conversation!]!
   conversation(id: UUID!): Conversation
+  """
+  The network topology at layer 2 or 3, optionally for one site and with hosts attached (REQ-DEP-001).
+  """
+  networkTopology(layer: TopologyLayer = l2, siteId: UUID, includeHosts: Boolean = false): NetworkTopology!
   estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!

@@ -29,6 +29,8 @@ export const EVENT_TYPES = [
   'openmap.timetravel.snapshot.created',
   'openmap.assistant.query.answered',
   'openmap.assistant.query.failed',
+  /** ADR-029: a dependency-mapping pass derived, refreshed or retired `depends_on` edges for a tenant. */
+  'openmap.dependency.derived',
   'openmap.audit.action',
   'openmap.incident.opened',
   'openmap.incident.updated',

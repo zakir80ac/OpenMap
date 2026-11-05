@@ -133,7 +133,7 @@ const detail = {
   validFrom: '2026-03-02T00:00:00.000Z',
   validTo: null,
   relationships: {
-    totalCount: 1,
+    totalCount: 2,
     edges: [
       {
         node: {
@@ -141,7 +141,22 @@ const detail = {
           type: 'runs_on',
           from: impact.root,
           to: impact.nodes[1]?.ci,
+          attributes: {},
+          source: { collectorId: 'ssh_agentless', nodeId: 'node-1', runId: 'run-1', confidence: 0.98 },
           validFrom: '2026-03-02T00:00:00.000Z',
+          validTo: null,
+        },
+      },
+      // REQ-DEP-002: an edge the reconciler derived from flows, with its evidence.
+      {
+        node: {
+          id: 'rel-2',
+          type: 'depends_on',
+          from: impact.nodes[1]?.ci,
+          to: impact.root,
+          attributes: { derivedFrom: 'flows', kind: 'listener', protocol: 'tcp', ports: [5432], flows: 576088, bytes: 32959722744, processes: ['postgres'], lastSeen: '2026-10-01T00:00:00.000Z', confidence: 0.9, ambiguous: false },
+          source: { collectorId: 'adm', nodeId: 'reconciler', runId: 'run-2', confidence: 0.9 },
+          validFrom: '2026-10-01T00:00:00.000Z',
           validTo: null,
         },
       },
@@ -255,6 +270,14 @@ describe.each(LOCALES)('DependenciesView in %s', (locale) => {
     await waitFor(() => {
       expect(screen.getByText(translate(locale, 'relationship.runs_on'))).toBeTruthy();
     });
+    // REQ-DEP-002 (T-151): the edge derived from flows is listed with its evidence, in the root's direction.
+    const traffic = screen.getByTestId('observed-traffic');
+    expect(within(traffic).getByText(translate(locale, 'dependencies.panel.trafficFrom'))).toBeTruthy();
+    expect(within(traffic).getByRole('link', { name: 'vm-ledger' })).toBeTruthy();
+    expect(within(traffic).getByText('tcp/5432')).toBeTruthy();
+    expect(within(traffic).getByText(translate(locale, 'dependencies.panel.trafficProcess', { process: 'postgres' }))).toBeTruthy();
+    expect(within(traffic).getByText(translate(locale, 'dependencies.panel.trafficConfidence', { percent: '90' }))).toBeTruthy();
+    expect(within(traffic).queryByText(translate(locale, 'dependencies.panel.trafficAmbiguous'))).toBeNull();
     const depth = screen.getByRole<HTMLSelectElement>('combobox', {
       name: translate(locale, 'dependencies.depth.label'),
     });

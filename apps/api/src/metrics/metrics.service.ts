@@ -15,6 +15,8 @@ export const CLICKHOUSE_QUERIES_METRIC = 'openmap_clickhouse_queries_total';
 /** REQ-AI-007 */
 export const ASSISTANT_QUESTIONS_METRIC = 'openmap_assistant_questions_total';
 export const ASSISTANT_DURATION_METRIC = 'openmap_assistant_duration_seconds';
+/** REQ-DEP-001 (ADR-030): network topology map duration, by layer. */
+export const TOPOLOGY_DURATION_METRIC = 'openmap_topology_duration_seconds';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -47,6 +49,7 @@ export class MetricsService {
   /** REQ-AI-007 — assistant questions by classified intent and outcome (answered, clarified, failed). */
   readonly assistantQuestions: Counter<'intent' | 'outcome'>;
   readonly assistantDuration: Histogram<'intent'>;
+  readonly topologyDuration: Histogram<'layer'>;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
@@ -90,6 +93,13 @@ export class MetricsService {
       name: ASSISTANT_DURATION_METRIC,
       help: 'Assistant answer duration in seconds, by intent',
       labelNames: ['intent'],
+      buckets: durationBuckets(),
+      registers: [this.registry],
+    });
+    this.topologyDuration = new Histogram({
+      name: TOPOLOGY_DURATION_METRIC,
+      help: 'Network topology map duration in seconds, by layer',
+      labelNames: ['layer'],
       buckets: durationBuckets(),
       registers: [this.registry],
     });

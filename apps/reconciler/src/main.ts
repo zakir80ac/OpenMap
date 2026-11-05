@@ -10,6 +10,7 @@ import { collectorResultSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } from '@openmap/telemetry';
+import { AdmScheduler, runAdmPass, triggersAdm } from './worker/adm.js';
 import { createClickHouse, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
 import { processResult, retryPendingRelationships } from './worker/pipeline.js';
 
@@ -28,6 +29,10 @@ export function createReconcilerMetrics() {
     outboxFailures: new Counter({ name: 'openmap_outbox_failures_total', help: 'Outbox target failures, by target', labelNames: ['target'], registers: [registry] }),
     /** REQ-CMDB-038 — metric samples per result: bound to a CI and queued for ClickHouse, or dropped for want of one. */
     samples: new Counter({ name: 'openmap_reconciler_metric_samples_total', help: 'Metric samples reconciled, by outcome (stored or dropped)', labelNames: ['outcome'], registers: [registry] }),
+    // REQ-DEP-002 (ADR-029): dependency-mapping passes and the edges they created, refreshed or retired.
+    admPasses: new Counter({ name: 'openmap_reconciler_adm_passes_total', help: 'Dependency-mapping passes, by outcome', labelNames: ['outcome'], registers: [registry] }),
+    admEdges: new Counter({ name: 'openmap_reconciler_adm_edges_total', help: 'Derived dependency edges, by action (created, refreshed, retired)', labelNames: ['action'], registers: [registry] }),
+    admDuration: new Histogram({ name: 'openmap_reconciler_adm_duration_seconds', help: 'Dependency-mapping pass duration', registers: [registry] }),
   };
 }
 
@@ -39,6 +44,22 @@ async function main(): Promise<void> {
   const sinks = { graph, clickhouse: createClickHouse(env), search: createMeilisearchSink(env), stream: createEventStream(env) };
   const metrics = createReconcilerMetrics();
   const connection = new Redis(env.VALKEY_URL, { maxRetriesPerRequest: null, enableReadyCheck: false });
+  const adm = new AdmScheduler(async (tenantId) => {
+    const stop = metrics.admDuration.startTimer();
+    try {
+      const summary = await withSpan(TRACER, 'reconcile.adm', { 'openmap.tenant_id': tenantId }, () => runAdmPass(prisma, tenantId));
+      metrics.admPasses.inc({ outcome: 'ok' });
+      metrics.admEdges.inc({ action: 'created' }, summary.created);
+      metrics.admEdges.inc({ action: 'refreshed' }, summary.refreshed);
+      metrics.admEdges.inc({ action: 'retired' }, summary.retired);
+      console.log(JSON.stringify({ msg: 'dependencies derived', ...summary }));
+    } catch (err) {
+      metrics.admPasses.inc({ outcome: 'error' });
+      console.error(JSON.stringify({ msg: 'dependency mapping failed', tenantId, error: err instanceof Error ? err.message : String(err) }));
+    } finally {
+      stop();
+    }
+  });
   const worker = new Worker(
     RESULTS_QUEUE,
     async (job) => {
@@ -50,6 +71,7 @@ async function main(): Promise<void> {
         metrics.results.inc({ collector: result.collectorId, outcome: 'ok' });
         metrics.samples.inc({ outcome: 'stored' }, summary.samples);
         metrics.samples.inc({ outcome: 'dropped' }, summary.samplesDropped);
+        if (triggersAdm(result)) adm.schedule(result.tenantId);
         console.log(JSON.stringify({ msg: 'reconciled', runId: result.runId, collector: result.collectorId, ...summary, pendingResolved: retried.resolved }));
         return summary;
       } catch (err) {
@@ -86,6 +108,7 @@ async function main(): Promise<void> {
     running = false;
     await metricsServer.close();
     await worker.close();
+    await adm.drain();
     await loop;
     await sinks.stream.close();
     await sinks.clickhouse.close();

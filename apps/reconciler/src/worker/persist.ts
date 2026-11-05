@@ -9,7 +9,7 @@ import { insertAssetsBatch, refreshAssetsBatch } from './assets.js';
 import { identityKeyOf } from './lookup.js';
 import type { ReconcileOutput } from '../core/reconcile.js';
 
-type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+export type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 type OutboxTarget = 'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm';
 
@@ -115,7 +115,7 @@ async function insertRelationshipsBatch(tx: Tx, rels: readonly Relationship[]): 
     ON CONFLICT (id) DO NOTHING`);
 }
 
-async function insertOutboxBatch(tx: Tx, events: readonly EventEnvelope[]): Promise<void> {
+export async function insertOutboxBatch(tx: Tx, events: readonly EventEnvelope[]): Promise<void> {
   if (events.length === 0) return;
   // One statement per distinct target list: a result's CI events and its metric events differ in where they go.
   const groups = new Map<string, EventEnvelope[]>();

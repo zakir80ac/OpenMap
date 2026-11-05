@@ -1,6 +1,7 @@
-// REQ-DEP-001 — Query.impact / Query.path / Query.layers and Mutation.setLayerVisibility.
+// REQ-DEP-001 — Query.impact / Query.path / Query.layers / Query.networkTopology (ADR-030) and Mutation.setLayerVisibility.
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { z } from 'zod';
+import { TOPOLOGY } from '@openmap/constants';
 import { ciLayerSchema } from '@openmap/contracts';
 import { Roles } from '../auth/roles.decorator.js';
 import { ROLES } from '../auth/roles.js';
@@ -10,6 +11,7 @@ import { parseInput } from '../common/validation.js';
 import { TenantContext } from '../tenant/tenant.context.js';
 import { GraphQueryService } from './graph.service.js';
 import type { ImpactResultView, LayerSummaryView } from './graph.types.js';
+import { TopologyService, type NetworkTopologyView } from './topology.service.js';
 
 const impactArgs = z.object({
   ciId: z.uuid(),
@@ -19,13 +21,21 @@ const impactArgs = z.object({
 });
 const pathArgs = z.object({ fromCiId: z.uuid(), toCiId: z.uuid() });
 const visibilityArgs = z.object({ layer: ciLayerSchema, visible: z.boolean() });
+const topologyArgs = z.object({ layer: z.enum(TOPOLOGY.layers).nullish(), siteId: z.uuid().nullish(), includeHosts: z.boolean().nullish() });
 
 @Resolver()
 export class GraphResolver {
   constructor(
     private readonly service: GraphQueryService,
+    private readonly topologies: TopologyService,
     private readonly tenant: TenantContext,
   ) {}
+
+  @Query('networkTopology')
+  networkTopology(@Args('layer') layer: unknown, @Args('siteId') siteId: unknown, @Args('includeHosts') includeHosts: unknown): Promise<NetworkTopologyView> {
+    const a = parseInput(topologyArgs, { layer, siteId, includeHosts }, 'networkTopology arguments');
+    return this.topologies.topology(this.tenant.tenantId, a.layer ?? 'l2', a.siteId ?? null, a.includeHosts ?? false);
+  }
 
   @Query('impact')
   impact(@Args('ciId') ciId: unknown, @Args('direction') direction: unknown, @Args('maxDepth') maxDepth: unknown, @Args('asOf') asOf: unknown): Promise<ImpactResultView> {

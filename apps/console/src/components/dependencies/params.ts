@@ -1,4 +1,4 @@
-// REQ-UI-007 REQ-DEP-003 REQ-DEP-005 — query-string helpers for the dependency map, shared by the server route (which reads
+// REQ-UI-007 REQ-DEP-003 REQ-DEP-005 REQ-DEP-001 — query-string helpers for the dependency map, shared by the server route (which reads
 // searchParams) and the client view (which writes them back). Not a client module: a server component may call these.
 import { GRAPH } from '@openmap/constants';
 import { isLayoutMode, type LayoutMode } from '@/lib/layout-mode';
@@ -21,4 +21,12 @@ export function parseDepth(value: string | undefined): number {
 /** Layout mode from the query string; anything but a known mode is the lane layout. */
 export function parseLayout(value: string | undefined): LayoutMode {
   return isLayoutMode(value) ? value : 'lane';
+}
+
+/** REQ-DEP-001 (ADR-030): the screen's two maps, `view=topology` in the URL; anything else is the impact map. */
+export const DEPENDENCY_VIEWS = ['impact', 'topology'] as const;
+export type DependencyView = (typeof DEPENDENCY_VIEWS)[number];
+
+export function parseView(value: string | undefined): DependencyView {
+  return value === 'topology' ? 'topology' : 'impact';
 }

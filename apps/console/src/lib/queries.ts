@@ -147,6 +147,8 @@ export interface CiConnection {
 
 export interface CiFilterInput {
   layers?: CiLayer[];
+  /** CI types to list (the topology site picker lists `site`). */
+  types?: string[];
   text?: string;
 }
 
@@ -509,6 +511,9 @@ export interface RelationshipRow {
   type: string;
   from: CiSummary;
   to: CiSummary;
+  /** REQ-DEP-002: the evidence a derived edge carries (flows, ports, processes, window, confidence). */
+  attributes: Record<string, JsonValue>;
+  source: Provenance;
   validFrom: string;
   validTo: string | null;
 }
@@ -541,7 +546,7 @@ const CI_DETAIL_QUERY = [
   '    source { collectorId nodeId runId confidence }',
   '    relationships(first: $first) {',
   '      totalCount',
-  '      edges { node { id type validFrom validTo from { ' +
+  '      edges { node { id type validFrom validTo attributes source { collectorId nodeId runId confidence } from { ' +
     CI_SUMMARY_FIELDS +
     ' } to { ' +
     CI_SUMMARY_FIELDS +

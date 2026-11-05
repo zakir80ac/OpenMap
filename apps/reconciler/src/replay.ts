@@ -10,6 +10,7 @@ import { collectorResultSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { createClickHouse, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
+import { runAdmPass } from './worker/adm.js';
 import { processResult, retryPendingRelationships } from './worker/pipeline.js';
 
 interface Args {
@@ -128,6 +129,9 @@ async function main(): Promise<void> {
     if (r.tried === 0 || r.resolved === 0) break;
   }
   const pendingMs = Date.now() - pendingStart;
+  // REQ-DEP-002: the estate's flows, listeners and components are in; derive the dependencies they imply.
+  const adm = await runAdmPass(prisma, tenantId);
+  console.log(JSON.stringify({ msg: 'dependencies derived', ...adm }));
   const pendingLeft = await prisma.pendingRelationship.count({ where: { tenantId } });
   const phaseMs = Date.now() - started;
   const dupes = await prisma.$queryRaw<Array<{ n: bigint }>>`SELECT count(*) AS n FROM (SELECT "tenantId", type, "identityKey" FROM cis WHERE "validTo" IS NULL GROUP BY 1,2,3 HAVING count(*) > 1) d`;

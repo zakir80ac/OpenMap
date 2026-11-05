@@ -628,6 +628,60 @@ export const RECONCILER = {
   samplesPerEvent: 500,
 } as const;
 
+/**
+ * REQ-DEP-002 (ADR-029) — application dependency mapping derived in the reconciler from what collectors observed:
+ * flows between addresses (`communicates_with`), which compute owns which address (`uses_ip`), the listeners on the
+ * server side (`listening_service` + `runs_on`) and the application components on both sides. The pass runs after any
+ * result that carried flows, listeners, addresses or components, debounced per tenant, and on `pnpm reconciler adm`.
+ */
+export const ADM = {
+  /** Provenance stamped on derived relationships; the API shows it as the source of the edge. */
+  collectorId: 'adm',
+  nodeId: 'reconciler',
+  /** Attribute marking a derived edge and naming what it was derived from. */
+  derivedFromKey: 'derivedFrom',
+  derivedFromFlows: 'flows',
+  /** Confidence per derivation kind: a flow to a known listener, to a compute with no listener on that port, between components. */
+  confidence: { listener: 0.9, compute: 0.6, component: 0.85, ambiguousComponent: 0.6 },
+  /** Flows below this count in the window are noise (a single probe), not a dependency. */
+  minFlows: 2,
+  /** Result types that make a pass worthwhile; a results-queue job carrying one of these schedules the pass. */
+  triggerCiTypes: ['listening_service', 'application_component', 'ip_address'],
+  triggerRelationshipTypes: ['communicates_with', 'uses_ip'],
+  /** How long after the last triggering result a tenant's pass runs, so a sweep of many results runs it once. */
+  debounceMs: 15_000,
+  /** Addresses, listeners and flows loaded per Postgres page. */
+  pageSize: 5_000,
+  /** Derived relationships per synthetic result handed to the pipeline. */
+  resultBatch: 2_000,
+} as const;
+
+/**
+ * REQ-DEP-001 (ADR-030) — network topology maps. L2 joins devices through the interfaces they contain and the
+ * neighbour links between those interfaces (LLDP/CDP `connected_to`), with hosts attached by their cabling; L3 joins
+ * devices to the subnets their addresses sit in. A map is capped so the force layout stays interactive; the site
+ * filter walks `located_in` (device → rack → room → building → site) up to `siteHops`.
+ */
+export const TOPOLOGY = {
+  layers: ['l2', 'l3'],
+  maxNodes: 1_500,
+  siteHops: 5,
+  /** Device types drawn as network nodes. */
+  deviceTypes: ['network_device', 'load_balancer'],
+  /** Types a host attachment may come from. */
+  hostTypes: ['host', 'hypervisor'],
+  /** Drawn size ring on the map: network gear on the first ring (large), hosts and subnets further out (small). */
+  deviceDepth: 1,
+  endpointDepth: 3,
+} as const;
+
+/** Byte volumes in the console (observed traffic, evidence sizes): binary units to one decimal. */
+export const BYTES = {
+  perUnit: 1024,
+  units: ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'],
+  decimals: 1,
+} as const;
+
 /** Geometry helpers for the console's scene code: the divisor that halves an extent and the tuple axis indices. */
 export const GEOMETRY = {
   halfDivisor: 2,
@@ -1049,8 +1103,13 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `followUps`/`clarification`/`grounded`; `askAssistant(question, locale)`.
    * 1.5.0 (REQ-AI-008, ADR-028): `Conversation`, `AssistantTurn`, `AssistantAnswer.conversationId`/`turnId`,
    * queries `conversations`, `conversation`, mutation `deleteConversation`, `askAssistant(…, conversationId)`.
+   * 1.6.0 (REQ-DEP-001, ADR-030): `TopologyLayer`, `TopologyNode`, `TopologyLink`, `NetworkTopology`,
+   * query `networkTopology(layer, siteId, includeHosts)`.
    */
-  graphql: '1.5.0',
-  /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`. */
-  event: '0.5.0',
+  graphql: '1.6.0',
+  /**
+   * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
+   * 0.6.0 (ADR-029): `openmap.dependency.derived`.
+   */
+  event: '0.6.0',
 };

@@ -1,7 +1,7 @@
 // REQ-UI-007 REQ-DEP-003 REQ-DEP-005 — dependency map model and lane layout. Pure functions: an `impact` result
 // becomes nodes and edges, hidden layers are bridged out of the paths, and nodes are placed in horizontal lanes
 // (one per CI layer in CI_LAYERS order) so the same code runs on the main thread and in the layout Web Worker.
-import { BSM, DEPENDENCY_MAP } from '@openmap/constants';
+import { BSM, DEPENDENCY_MAP, GEOMETRY } from '@openmap/constants';
 import { CI_LAYERS, type CiLayer, type RelationshipType } from '@openmap/contracts';
 import { accents, layerColor, stateColor, text, type HexColor, type UiState } from '@openmap/ui';
 import type { HealthState, ImpactResult, PredictedState } from './queries';
@@ -145,6 +145,11 @@ export interface LayoutRequest {
   nodes: LayoutNode[];
   /** Edges drive the force layout's attraction; the lane layout ignores them. */
   edges: LayoutEdge[];
+  /**
+   * Where the force layout starts (REQ-DEP-001): from the lane positions (default, keeps the layers readable) or on a
+   * circle around the root, for maps whose nodes share one layer and would otherwise stay on a single row.
+   */
+  seed?: 'lane' | 'circle';
 }
 
 export interface Position {
@@ -221,17 +226,31 @@ export function assignLanePositions(request: LayoutRequest): LayoutResponse {
  */
 export function assignForcePositions(request: LayoutRequest): LayoutResponse {
   const started = now();
-  const seed = assignLanePositions(request);
   const ids = request.nodes.map((n) => n.id);
   const index = new Map(ids.map((id, i) => [id, i]));
   const count = ids.length;
   const xs = new Float64Array(count);
   const ys = new Float64Array(count);
-  ids.forEach((id, i) => {
-    const p = seed.positions[id];
-    xs[i] = p?.x ?? 0;
-    ys[i] = p?.y ?? 0;
-  });
+  if (request.seed === 'circle') {
+    // The root at the centre, every other node on a circle in request order: deterministic and two-dimensional.
+    const radius = DEPENDENCY_MAP.forceIdealDistance * Math.sqrt(count);
+    const turn = Math.PI * GEOMETRY.halfDivisor;
+    let placed = 0;
+    ids.forEach((id, i) => {
+      if (id === request.rootId) return;
+      const angle = (turn * placed) / Math.max(1, count - 1);
+      placed += 1;
+      xs[i] = Math.cos(angle) * radius;
+      ys[i] = Math.sin(angle) * radius;
+    });
+  } else {
+    const seed = assignLanePositions(request);
+    ids.forEach((id, i) => {
+      const p = seed.positions[id];
+      xs[i] = p?.x ?? 0;
+      ys[i] = p?.y ?? 0;
+    });
+  }
   const edges: Array<[number, number]> = [];
   for (const edge of request.edges) {
     const a = index.get(edge.source);

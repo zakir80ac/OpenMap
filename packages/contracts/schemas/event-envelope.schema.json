@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/event-envelope/0.5.0",
+  "$id": "https://openmap.dev/contracts/event-envelope/0.6.0",
   "title": "event-envelope",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -45,6 +45,7 @@
         "openmap.timetravel.snapshot.created",
         "openmap.assistant.query.answered",
         "openmap.assistant.query.failed",
+        "openmap.dependency.derived",
         "openmap.audit.action",
         "openmap.incident.opened",
         "openmap.incident.updated",

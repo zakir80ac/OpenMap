@@ -20,7 +20,8 @@
     "dev": "tsx watch src/main.ts",
     "bench": "tsx src/bench.ts",
     "replay": "tsx src/replay.ts",
-    "replay-history": "tsx src/replay-history.ts"
+    "replay-history": "tsx src/replay-history.ts",
+    "adm": "tsx src/adm.ts"
   },
   "dependencies": {
     "@clickhouse/client": "^1.24.0",

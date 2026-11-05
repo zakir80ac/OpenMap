@@ -2,7 +2,7 @@
 // REQ-UI-007 REQ-DEP-003 — side panel beside the dependency map: the focus CI, its blast radius, the affected services
 // with predicted state, money and SLA budget, and the relationships of the focus CI grouped by family.
 import Link from 'next/link';
-import { CONSOLE_ALPHA } from '@openmap/constants';
+import { BSM, CONSOLE_ALPHA } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
 import { Card, Dot, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx, withAlpha } from '@openmap/ui';
 import type { ReactNode } from 'react';
@@ -11,6 +11,7 @@ import { healthKey, layerKey, predictedKey, relationshipKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
 import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import type { CiSummary, ImpactResult, RelationshipRow } from '@/lib/queries';
+import { formatBytes, observedTraffic } from './traffic';
 import { useFormatters, useT } from '@/providers';
 
 export interface ImpactPanelProps {
@@ -29,6 +30,8 @@ function ciHref(locale: Locale, ci: CiSummary): string {
 }
 
 export function ImpactPanel({ locale, result, graph, relationships, className }: ImpactPanelProps): ReactNode {
+  // REQ-DEP-002: the edges the reconciler derived from flows, with their evidence.
+  const traffic = observedTraffic(relationships, result.root.id);
   const t = useT();
   const format = useFormatters();
   const root = result.root;
@@ -132,6 +135,39 @@ export function ImpactPanel({ locale, result, graph, relationships, className }:
           </ul>
         )}
       </section>
+
+      {traffic.length > 0 ? (
+        <section className="flex flex-col gap-om-8" data-testid="observed-traffic" aria-label={t('dependencies.panel.traffic')}>
+          <SectionTitle as="h3" size="sm">
+            {t('dependencies.panel.traffic')}
+          </SectionTitle>
+          <p className="text-om-2xs text-om-secondary">{t('dependencies.panel.trafficHint')}</p>
+          <ul className="flex flex-col">
+            {traffic.map((row) => (
+              <li key={row.id} className="flex flex-col gap-om-2 border-b border-om-border-glass py-om-6 text-om-sm last:border-b-0">
+                <div className="flex items-center gap-om-8">
+                  <span className="w-20 shrink-0 text-om-2xs font-semibold uppercase tracking-[0.06em] text-om-muted">
+                    {t(row.direction === 'to' ? 'dependencies.panel.trafficTo' : 'dependencies.panel.trafficFrom')}
+                  </span>
+                  <Link href={ciHref(locale, row.other)} className="min-w-0 flex-1 truncate text-om-primary hover:text-om-cyan">
+                    {row.other.displayName}
+                  </Link>
+                  <span className="shrink-0 font-om-mono text-om-2xs text-om-secondary">
+                    {row.protocol}/{row.ports.map((p) => String(p)).join(',')}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-om-10 gap-y-om-2 ps-20 text-om-2xs text-om-secondary">
+                  <span>{t('dependencies.panel.trafficVolume', { flows: format.integer(row.flows), bytes: formatBytes(locale, row.bytes) })}</span>
+                  {row.processes.length > 0 ? <span>{t('dependencies.panel.trafficProcess', { process: row.processes.join(', ') })}</span> : null}
+                  {row.lastSeen !== null ? <span>{t('dependencies.panel.trafficLastSeen', { at: format.dateTime(row.lastSeen) })}</span> : null}
+                  <span>{t('dependencies.panel.trafficConfidence', { percent: format.integer(Math.round(row.confidence * BSM.percentScale)) })}</span>
+                  {row.ambiguous ? <span className="text-om-amber">{t('dependencies.panel.trafficAmbiguous')}</span> : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {relationships.length > 0 ? (
         <section className="flex flex-col gap-om-8">

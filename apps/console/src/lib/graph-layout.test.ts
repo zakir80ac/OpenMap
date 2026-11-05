@@ -156,6 +156,21 @@ describe('force layout and layout modes', () => {
     { source: 'db', target: 'vm' },
     { source: 'vm', target: 'host' },
   ];
+  it('spreads a single-layer map in two dimensions from a circle seed (REQ-DEP-001)', () => {
+    const flat = ['core', 'd1', 'd2', 'd3', 'd4'].map((id) => ({ id, layer: 'network_security' as const, depth: 1, label: id }));
+    const links = ['d1', 'd2', 'd3', 'd4'].map((target) => ({ source: 'core', target }));
+    const lane = assignForcePositions({ requestId: 1, rootId: 'core', mode: 'force', nodes: flat, edges: links });
+    const circle = assignForcePositions({ requestId: 2, rootId: 'core', mode: 'force', nodes: flat, edges: links, seed: 'circle' });
+    const spread = (r: typeof lane): number => {
+      const ys = Object.values(r.positions).map((p) => p.y);
+      return Math.max(...ys) - Math.min(...ys);
+    };
+    expect(spread(lane)).toBe(0);
+    expect(spread(circle)).toBeGreaterThan(0);
+    expect(circle.positions['core']).toEqual({ x: 0, y: 0 });
+    expect(assignForcePositions({ requestId: 3, rootId: 'core', mode: 'force', nodes: flat, edges: links, seed: 'circle' }).positions).toEqual(circle.positions);
+  });
+
   it('is deterministic, pins the root and keeps connected nodes closer than unconnected ones', () => {
     const a = assignForcePositions({ requestId: 1, rootId: 'db', mode: 'force', nodes, edges });
     const b = assignForcePositions({ requestId: 2, rootId: 'db', mode: 'force', nodes, edges });

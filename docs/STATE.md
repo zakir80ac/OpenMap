@@ -2,7 +2,50 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 20: the conversational assistant, increment two)
+## Last session · 2026-11-05 (checkpoint 21: discovery re-statused, dependency mapping, network topology)
+
+Syed's direction after checkpoint 20: finish the pending discovery and collector, application dependency mapping and
+CMDB rows before BSM-007 or finance.
+
+**Done.** REQ-DEP-002 (ADR-029), REQ-DEP-001 (ADR-030), REQ-DISC-030 (closed on existing evidence).
+
+- **Discovery rows re-statused.** REQ-DISC-001…027 moved from "In progress" to "In review": every collector is built
+  and tested against protocol-shaped fixtures (Go suite 40 packages ok); each becomes Done once a recorded vendor
+  fixture is captured and parsed (R-004, the vendor-lab dependency on Syed). REQ-DISC-030 (unknown devices with
+  sysDescr/banner, label and promote) was already delivered by the register work (b63f25e, cf5a4c0) and is Done with
+  T-018, T-042, T-100, T-128, T-129, T-130.
+- **Application dependency mapping (REQ-DEP-002, ADR-029).** `apps/reconciler/src/core/adm.ts` joins flows
+  (`communicates_with`, both dialects: netflow ip → ip and resolved compute → listener), address owners (`uses_ip`),
+  listeners with their process (`listening_service` + `runs_on`) and components into `depends_on` edges: compute →
+  listener (0.9), compute → compute when no listener serves the port (0.6), component → component (0.85, or 0.6 and
+  `ambiguous` when the client runs several), each with its evidence (protocol, ports, flows, bytes, exporters,
+  addresses, processes, window). `worker/adm.ts` runs the pass through the pipeline as the `adm` source (versioned,
+  outbox fan-out), refreshes every edge's evidence and confidence in batched statements, retires edges the flows no
+  longer support, and emits `openmap.dependency.derived` (event 0.6.0). It runs after results carrying flows,
+  addresses, listeners or components (debounced per tenant), at the end of a replay, and on `pnpm --filter
+  @openmap/reconciler adm`. On the dev estate: 7,587 edges (7,434 listener, 148 component, 5 compute) from 7,495
+  flows in 2.7 s; a second pass creates none and refreshes all in 0.7 s. The Dependencies side panel lists the focus
+  CI's observed traffic with its evidence.
+- **Network topology (REQ-DEP-001, ADR-030).** `networkTopology(layer, siteId, includeHosts)` (GraphQL 1.6.0): L2
+  from LLDP/CDP neighbour links between device interfaces plus host cabling on request, L3 from device addresses in
+  subnets, a site through `located_in`; one link per node pair with interface pairs, protocols, media and slowest
+  speed; capped by degree. The Dependencies screen switches between the impact map and the topology (`view=topology`),
+  with layer, site and hosts in the URL, the same Sigma canvas and worker, and a device's links in the panel. L2 on the
+  dev estate: 252 nodes, 459 links, 58 ms.
+- **Tests.** T-149 (derivation, 6), T-150 (pass against Postgres, 2), T-151 (traffic panel and reading, console), T-152
+  (e2e dependencies, en+ar), T-153 (topology folding, 3), T-154 (topology through GraphQL, 2), T-155 (topology view
+  and circle seed, console), T-156 (e2e topology, en+ar). Reconciler 27, API 34, console dependency and layout suites
+  33, guard, i18n, contracts, console lint green. Evidence: `docs/evidence/dependency-mapping.md`,
+  `docs/evidence/network-topology.md`, `docs/evidence/console/{dependencies-traffic,topology-l2,topology-l3}-{en,ar}.png`.
+
+**Lessons.** (1) A force layout seeded from lanes cannot leave the row when every node shares one layer: seed such
+maps on a circle. (2) A Next.js server page must not call a function exported from a `'use client'` module (the
+route renders an application error); keep URL parsers in server-safe modules. (3) A URL-driven checkbox only flips
+after the navigation: Playwright `check()` fails, click and wait for the URL. (4) Format ports with `String`, not the
+locale integer formatter ("8,443"). (5) The CONTRACTS.md GraphQL row had kept 1.4.0 as its current version through
+1.5.0; it now says 1.6.0.
+
+## Previous session · 2026-11-05 (checkpoint 20: the conversational assistant, increment two)
 
 **Done.** REQ-AI-008 (ADR-028 accepted and implemented in full).
 
@@ -44,7 +87,7 @@ moves the URL to the newly opened conversation, and a follow-up must use the ope
 (4) Playwright `getByText` on a short word such as "availability" hits the figures, the evidence and the chips: mark
 the line under test with a `data-testid`.
 
-## Previous session · 2026-11-05 (checkpoint 19: the conversational assistant, increment one)
+## Earlier session · 2026-11-05 (checkpoint 19: the conversational assistant, increment one)
 
 **Done.** REQ-AI-007 (ADR-028 accepted for increment one). REQ-AI-008 stays In progress (increment two).
 
@@ -412,11 +455,15 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-BSM-007 (ADR-025): sites and connectivity for HA/DR readiness.
-2. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
-3. Assistant follow-through (new rows to add): the synthetic estate emitting a metric time series (several samples
-   per CI over the days before `--now`) so `metrics.series` carries figures on the dev stack and in CI; the LoRA
-   step of ADR-028 once a GPU host exists.
+Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
+
+1. REQ-DEP-004: the layered enterprise application view (multi-tier, cloud and on-prem) over the derived component
+   dependencies of ADR-029.
+2. The open CMDB rows, in this order: REQ-CMDB-015 custom fields, REQ-CMDB-016 categories and tags, REQ-CMDB-033 bulk
+   import/export, REQ-CMDB-036 seeding from an existing CMDB or spreadsheets, REQ-CMDB-023 OS inventory and EoL,
+   REQ-CMDB-034 utilisation, REQ-CMDB-014 parts, REQ-CMDB-013/021 (check against what already exists and close on
+   evidence where delivered), then the asset rows 017–020 and 025–029, 032.
+3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
 profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0019
