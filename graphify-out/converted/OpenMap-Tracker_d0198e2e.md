@@ -205,18 +205,22 @@
 | REQ-BSM-007 | BSM | BSM | Sites and connectivity monitoring for HA / DR readiness |  | Every site and inter-site link is shown with live health; Discovery Nodes probe the links continuously (reachability, latency, loss) and the results land in ClickHouse and on the link CI; readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) are evaluated continuously and breaches open incidents; en and ar; e2e | P0 | Not started |  |  | ADR-025 |  |  | 2026-11-05 | 2026-11-05 |  |
 | REQ-BSM-008 | BSM | Added | Uptime monitoring and availability reporting by month, quarter and year |  | Every service and every monitored CI has an availability figure for the current and past months, quarters and years computed from the health history in ClickHouse; the BSM and service detail screens show uptime per period beside the SLA target with the minutes of downtime and the incidents that caused them; a period report can be exported; k6 budget under 1 s for a yearly roll-up of 300 services; en and ar. | P0 | Done |  |  | CLAUDE.md §0 BSM; Syed 2026-11-05 | T-132, T-134, T-135, T-136, T-137, T-138 | commit 95faf93; docs/evidence/sla-uptime.md; k6 availability-report p95 629 ms on 299 services (budget 1000 ms); ClickHouse DDL 0004 | 2026-11-05 | 2026-11-05 |  |
 | REQ-AI-007 | AI | Added | Assistant grounding: schema catalogue, measurement routing, query validation and a regression suite so Ask answers accurately and never hallucinates properties |  | The assistant answers from a generated catalogue of node labels, properties, relationship types and ClickHouse measurements; questions about measurements (memory, CPU, OS per host, VM density) are routed to the right store instead of failing; generated Cypher is validated and rewritten (no nested aggregates, only known properties) before it runs, with one automatic repair pass; a checked-in question set with expected answers runs in CI and must pass; every failure is logged with the question and the generated query; en and ar. | P0 | Not started |  |  | CLAUDE.md §0 AI assistant; Syed 2026-11-05 screenshot |  |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-UI-036 | UI | Added | Overall uptime tile on the main dashboard |  | A small KPI tile on the default dashboard shows the estate's overall availability for the current month (weighted across business services from service_health_history) with the trend against the previous month and the count of services below target; en and ar; e2e; Lighthouse unchanged | P0 | Done |  |  | Syed 2026-11-05; ADR-024 | T-139 | commit 98911d7; docs/evidence/dashboard-uptime-register.md; DashboardView.test.tsx tile test; dashboard.spec.ts e2e en+ar; Lighthouse dashboard 0.99/1/1 | 2026-11-05 | 2026-11-05 |  |
+| REQ-CMDB-041 | CMDB | Added | Asset register pagination with page numbers and totals |  | The register shows the total matching rows and pages of ASSETS.registerPageSize with first/previous/next/last controls and a page indicator; the page is kept in the URL so it survives reload and back; filters reset to page 1; en and ar; e2e | P0 | Done |  |  | Syed 2026-11-05; ADR-023 | T-130, T-140 | commit 98911d7; docs/evidence/dashboard-uptime-register.md; assetPage integration case; AssetsView pager test; assets.spec.ts e2e en+ar; Lighthouse assets 0.97/1/1 | 2026-11-05 | 2026-11-05 |  |
+| REQ-CMDB-042 | CMDB | Added | Subscription cover for software, SaaS and cloud assets: start, end, credits remaining |  | An asset whose CI is software, a software instance, a licence, a SaaS application or tenant, a cloud account or cloud resource carries subscription start, subscription end and credits remaining (with unit) instead of warranty; the values come from the collectors where the vendor exposes them (licence expiry, SaaS tenant subscription, cloud billing credits) with the source recorded, and can be entered by hand; the register's gap filters, summary and details panel follow; en and ar | P0 | Done |  |  | Syed 2026-11-05; ADR-023 | T-130, T-141, T-075, T-131 | commit 98911d7; ADR-027; docs/evidence/dashboard-uptime-register.md; API subscription case; AssetsView SaaS test; Go saas/azure stand-ins; assets.spec.ts e2e en+ar | 2026-11-05 | 2026-11-05 |  |
+| REQ-AI-008 | AI | Added | Conversational assistant: structured multi-level chat trained for OpenMap |  | Ask holds a multi-turn conversation over the estate: it classifies the intent (lookup, measurement, impact, change history, how-to, report), plans the retrieval across Postgres, Memgraph and ClickHouse, answers in prose with the figures and the CIs it used, offers follow-up questions, asks a clarifying question when the request is ambiguous, and never invents a figure (every number traces to a query shown on demand); conversations persist per user; a checked-in evaluation set of OpenMap questions runs in CI with an accuracy floor; en and ar | P0 | In progress | Claude |  | Syed 2026-11-05; REQ-AI-007 |  |  | 2026-11-05 | 2026-11-05 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
 | CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 19 | 17 | 89 |
 | DISC | Discovery and collectors | Discovery, Onboarding and digital twin |  | 31 | 2 | 6 |
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 2 | 40 |
-| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB |  | 40 | 19 | 48 |
+| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 21 | 50 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 5 | 63 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 35 | 30 | 86 |
-| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 7 | 2 | 29 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 31 | 86 |
+| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 2 | 25 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
 | PERF | Performance budgets | Budgets, Platform |  | 5 | 2 | 40 |
@@ -327,7 +331,7 @@
 | T-072 | unit | REQ-DISC-010, REQ-DISC-004 | 2026-10-22 | Pass | 0 |
 | T-073 | unit | REQ-DISC-004 | 2026-10-22 | Pass | 0 |
 | T-074 | unit | REQ-DISC-004 | 2026-10-22 | Pass | 0 |
-| T-075 | unit | REQ-CMDB-022, REQ-DISC-004 | 2026-10-22 | Pass | 0 |
+| T-075 | unit | REQ-CMDB-022, REQ-DISC-004, REQ-CMDB-042 | 2026-10-22 | Pass | 0 |
 | T-038 | unit | REQ-SEC-005 | 2026-10-22 | Pass | 0 |
 | T-090 | unit | REQ-SEC-005, REQ-UI-019, REQ-SEC-007 | 2026-10-22 | Pass | 0 |
 | T-093 | unit | REQ-CORE-002, REQ-CMDB-038 | 2026-10-22 | Pass | 0 |
@@ -377,8 +381,8 @@
 | T-126 | unit | REQ-UI-033, REQ-UI-034 | 2026-11-04 | Pass | 0 |
 | T-127 | unit | REQ-CMDB-039 | 2026-11-05 | Pass | 0 |
 | T-129 | unit | REQ-CMDB-039, REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
-| T-130 | unit | REQ-CMDB-039, REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
-| T-131 | unit | REQ-CMDB-039 | 2026-11-05 | Pass | 0 |
+| T-130 | unit | REQ-CMDB-039, REQ-CMDB-040, REQ-CMDB-041, REQ-CMDB-042 | 2026-11-05 | Pass | 0 |
+| T-131 | unit | REQ-CMDB-039, REQ-CMDB-042 | 2026-11-05 | Pass | 0 |
 | T-128 | unit | REQ-CMDB-040 | 2026-11-05 | Pass | 0 |
 | T-133 | unit | REQ-BSM-006 | 2026-11-05 | Pass | 0 |
 | T-135 | unit | REQ-BSM-006, REQ-BSM-008 | 2026-11-05 | Pass | 0 |
@@ -387,6 +391,9 @@
 | T-138 | unit | REQ-BSM-006, REQ-BSM-008 | 2026-11-05 | Pass | 0 |
 | T-132 | unit | REQ-BSM-008 | 2026-11-05 | Pass | 0 |
 | T-134 | unit | REQ-BSM-008 | 2026-11-05 | Pass | 0 |
+| T-139 | unit | REQ-UI-036 | 2026-11-05 | Pass | 0 |
+| T-140 | unit | REQ-CMDB-041 | 2026-11-05 | Pass | 0 |
+| T-141 | unit | REQ-CMDB-042 | 2026-11-05 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -406,34 +413,35 @@
 | 2026-11-04 | Checkpoint 15: Layers screen rebuilt twice on Syed's feedback: holographic stack rejected; realistic equipment scene; final form is the ordered plane stack with click-to-focus onto a layer's equipment (ADR-021). Formal profile sweep removed the game-like effects (ADR-022). simple-icons (CC0) for vendor marks. On-demand frame loop and shared materials fixed the 3D screens' blocking time. |  |  |  |
 | 2026-11-05 | Asset register across every layer (REQ-CMDB-039) and unknown-device remediation with manual entry (REQ-CMDB-040), ADR-023: owned CI types, reconciler asset sync, migration 0015 backfill, GraphQL 1.0.0, Assets screen rework; REQ-BSM-008 (uptime by month/quarter/year) and REQ-AI-007 (assistant grounding) added from Syed's asks; Docker Desktop WSL engine died mid-build and was restarted; ClickHouse run-id UUID defect fixed. |  |  |  |
 | 2026-11-05 | REQ-BSM-006 + REQ-BSM-008 (ADR-024): SLA catalogue and assignment, engine SLA evaluation per tick, uptime by month/quarter/year from service_health_history, incident assign/resolve/close with RCA and timeline, /services/[id]; synth health-history + replay-history; register paging fix (cf5a4c0). Commits cf5a4c0, 95faf93. |  |  |  |
+| 2026-11-05 | REQ-UI-036 uptime tile, REQ-CMDB-041 register pages, REQ-CMDB-042 subscription cover (ADR-027, M365/Azure collector calls), ADR-028 proposed for the conversational assistant; tracker rows for the 2026-11-05 asks. Commit 98911d7. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-05T08:50:36.637Z |  |  |  |  |  |  |
+| Generated | 2026-11-05T10:02:16.923Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 67 | 28 | 0 | 4 | 103 |  |  |
+| All | 67 | 29 | 0 | 4 | 106 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
 | DEP | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
-| CMDB | 20 | 1 | 0 | 0 | 19 | 40 | 48 |
+| CMDB | 20 | 1 | 0 | 0 | 21 | 42 | 50 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 3 | 0 | 0 | 0 | 5 | 8 | 63 |
-| UI | 5 | 0 | 0 | 0 | 30 | 35 | 86 |
-| AI | 5 | 0 | 0 | 0 | 2 | 7 | 29 |
+| UI | 5 | 0 | 0 | 0 | 31 | 36 | 86 |
+| AI | 5 | 1 | 0 | 0 | 2 | 8 | 25 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 14 | 27 | 0 | 3 | 76 | 120 |  |
+| P0 | 14 | 28 | 0 | 3 | 79 | 124 |  |
 | P1 | 50 | 1 | 0 | 1 | 27 | 79 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 37 |  |  |  |  |  |  |
 | 2026-11-01 | 87 |  |  |  |  |  |  |
 | 2026-11-04 | 99 |  |  |  |  |  |  |
-| 2026-11-05 | 103 |  |  |  |  |  |  |
+| 2026-11-05 | 106 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
