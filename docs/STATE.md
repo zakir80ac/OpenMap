@@ -2,7 +2,56 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 21: discovery re-statused, dependency mapping, network topology)
+## Last session · 2026-11-05 (checkpoint 22: CMDB import and export, depreciation and spare stock)
+
+Syed's direction: keep going with the remaining CMDB rows.
+
+**Committed, not yet closed in the tracker.** b5430f2 carries REQ-CMDB-033, REQ-CMDB-036 (ADR-032, GraphQL 1.10.0)
+and REQ-CMDB-017, REQ-CMDB-019 (ADR-033, GraphQL 1.11.0, event 0.7.0, asset 0.4.0). The four rows stay "Not
+started" in the tracker until their e2e specs run.
+
+- **Import and export (ADR-032).** `previewImport` / `runImport` read CSV or XLSX (base64, `IMPORTS.maxFileBytes`),
+  map columns to import targets, recognise a ServiceNow `cmdb_ci` export and refuse unknown classes per row. Accepted
+  rows go to the results queue as `import` observations in chunks with one run id (a job id per chunk). The
+  reconciler merges them at `importSeedConfidence` (0.6), so they fill gaps and never overwrite discovery. Imported
+  CIs start managed. `ImportJob` (migration 0021, applied to the dev database) and `importJobs` report what each
+  run created. `GET /export/cis` streams CSV with a byte-order mark, XLSX or JSON for the CMDB filter, and the CSV
+  re-imports unchanged. The console exports from the CMDB screen and imports on `/cmdb/import`.
+- **Depreciation and spare stock (ADR-033).** `bookValue` in the asset contract (straight line, double declining
+  balance, floored at the residual, whole months). The register exposes `depreciation`, `bookValue` and `stock`, and
+  `AssetDetailsInput` edits them with a per-field audit. `AssetFilter.belowReorderPoint` and the matching summary
+  count find low spares. `openmap.asset.stock.low` fires once when a spare reaches its reorder point, on creation or
+  update. The console form has depreciation and stock groups and shows today's book value. The register has a book
+  value column, a low-stock mark and a low-stock filter.
+- **Tests.** Passing: T-169 (import contract), T-170 (import and export integration, 2 of 2), T-171 (import screen,
+  en+ar, 5 of 5), T-173 (book value, 3 of 3), and the asset screen suite (21 of 21, including the new value and
+  stock case). Written, waiting for the stack: T-174 (value and stock integration in `api.integration.test.ts`),
+  T-172 (`e2e/import-export.spec.ts`), T-175 (`e2e/asset-value.spec.ts`).
+
+**Blocker: the dev stack is down.** The Docker engine hung during the image rebuild (API 500, ping timeout), and
+`docker desktop restart` left it stopped. On every start since, the backend crashes on a Unix-domain socket it cannot
+remove (`dockerInference`, then the secrets engine's `engine.sock`: "The file cannot be accessed by the system").
+A plain Node `net.listen` on a socket path in `%TEMP%` also fails with EACCES, so AF_UNIX sockets fail for every
+process on this machine, not only Docker. Docker's old `run` folder was renamed to `run.stale-20261105` (nothing
+deleted). Docker Desktop shows an error dialog offering "Reset to factory defaults": do not take it, it wipes the
+dev stack's images and volumes. A Windows restart is the expected fix.
+
+**To resume after the restart:**
+1. Start Docker Desktop and check `docker info`, then from `deploy/compose` run
+   `docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile cpu --profile node build api console reconciler`
+   and `up -d --force-recreate api console reconciler`.
+2. Run T-174 with `pnpm --filter @openmap/api exec vitest run --config vitest.integration.config.ts src/api.integration.test.ts`.
+3. From `apps/console`, run `pnpm exec playwright test e2e/import-export.spec.ts e2e/asset-value.spec.ts e2e/assets.spec.ts e2e/cmdb-edit.spec.ts e2e/custom-fields.spec.ts --reporter list`.
+4. Copy the screenshots `import-preview-*`, `import-jobs-*`, `asset-value-register-*` and `asset-value-details-*`
+   to `docs/evidence/console/`, and write `docs/evidence/import-export.md` and `docs/evidence/asset-value.md`.
+5. Close REQ-CMDB-033 and REQ-CMDB-036 with T-169, T-170, T-171, T-172. Close REQ-CMDB-017 and REQ-CMDB-019 with
+   T-173, T-174, T-175. Use evidence b5430f2, then run `pnpm tracker report`.
+
+**Next CMDB rows after that:** 020 purchase orders and receiving (BOM lines already carry `received`), 026 support
+contracts, 027 vendors and contacts, 028 cost centres, 029 general contracts and documents, 032 certificates, 023 OS
+inventory, 025 EoX, 021 layer visibility, 014 parts, 034 utilisation.
+
+## Previous session · 2026-11-05 (checkpoint 21: discovery re-statused, dependency mapping, network topology)
 
 Syed's direction after checkpoint 20: finish the pending discovery and collector, application dependency mapping and
 CMDB rows before BSM-007 or finance.
@@ -65,7 +114,7 @@ after the navigation: Playwright `check()` fails, click and wait for the URL. (4
 locale integer formatter ("8,443"). (5) The CONTRACTS.md GraphQL row had kept 1.4.0 as its current version through
 1.5.0; it now says 1.6.0.
 
-## Previous session · 2026-11-05 (checkpoint 20: the conversational assistant, increment two)
+## Earlier session · 2026-11-05 (checkpoint 20: the conversational assistant, increment two)
 
 **Done.** REQ-AI-008 (ADR-028 accepted and implemented in full).
 
@@ -471,15 +520,15 @@ tracker is the truth.
 
 ## Blocked
 
+- The dev stack: Docker Desktop cannot start while AF_UNIX sockets fail on this machine (checkpoint 22).
 - docs/SPEC.md still missing (risk R-001). Vendor lab fixtures (risk R-004). CI never ran (no remote).
 
 ## Next three
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. The open CMDB rows, in this order (gaps from the 2026-11-05 audit): REQ-CMDB-033 bulk import/export (none beyond the uptime
-   CSV), REQ-CMDB-036 seeding as lower-confidence observations, REQ-CMDB-017 depreciation and book value, 019 spare
-   stock and reorder points, 020 BOM receiving, 026 support contracts (nothing writes the table), 027 vendors and
+1. Close REQ-CMDB-033, 036, 017 and 019 once the stack is back (checkpoint 22). Then the open CMDB rows, in this
+   order: 020 purchase orders and receiving, 026 support contracts (nothing writes the table), 027 vendors and
    contacts, 028 cost centres linked to units, assets and plans, 029 general contracts and documents, 032 certificate
    inventory and expiry event, 023 OS inventory and EoL, 025 EoX feeds, 021 layer visibility on the remaining screens,
    014 parts, 034 utilisation from collectors. 024 needs vendor warranty credentials (Syed).
@@ -487,7 +536,7 @@ Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB
 3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0019
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0021
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
