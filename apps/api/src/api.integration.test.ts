@@ -1559,6 +1559,56 @@ describe('OpenMap API (integration)', () => {
     await gql(tags, { ciId: ids.host, tags: [] });
   });
 
+  it('defines custom fields, sets and validates values on a CI, filters by them and clears them on delete', async () => {
+    // T-165 REQ-CMDB-015
+    const adminToken = await mint([ROLES.admin], keys.privateKey);
+    const upsert = 'mutation U($id: UUID, $input: CustomFieldDefinitionInput!) { upsertCustomFieldDefinition(id: $id, input: $input) { id key type options appliesTo required usage } }';
+    const owner = await gql<{ upsertCustomFieldDefinition: { id: string } }>(upsert, { input: { key: 'businessOwner', labelEn: 'Business owner', labelAr: 'مالك الأعمال', type: 'text' } }, adminToken);
+    expect(owner.errors).toBeUndefined();
+    const tier = await gql<{ upsertCustomFieldDefinition: { id: string; options: string[] } }>(
+      upsert,
+      { input: { key: 'dataTier', labelEn: 'Data tier', labelAr: 'فئة البيانات', type: 'select', options: ['gold', 'silver'], appliesTo: ['host'] } },
+      adminToken,
+    );
+    expect(tier.data?.upsertCustomFieldDefinition.options).toEqual(['gold', 'silver']);
+    const byOperator = await gql<{ upsertCustomFieldDefinition: unknown }>(upsert, { input: { key: 'nope', labelEn: 'x', labelAr: 'x', type: 'text' } });
+    expect(byOperator.errors?.[0]?.message).toMatch(/roles/i);
+    const dup = await gql<{ upsertCustomFieldDefinition: unknown }>(upsert, { input: { key: 'businessOwner', labelEn: 'x', labelAr: 'x', type: 'text' } }, adminToken);
+    expect(dup.errors?.[0]?.message).toContain('already exists');
+    const rekey = await gql<{ upsertCustomFieldDefinition: unknown }>(upsert, { id: owner.data?.upsertCustomFieldDefinition.id, input: { key: 'renamed', labelEn: 'x', labelAr: 'x', type: 'text' } }, adminToken);
+    expect(rekey.errors?.[0]?.message).toContain('cannot change');
+
+    const forHost = await gql<{ customFieldDefinitions: Array<{ key: string }> }>('query { customFieldDefinitions(type: "host") { key } }');
+    expect(forHost.data?.customFieldDefinitions.map((d) => d.key)).toEqual(['businessOwner', 'dataTier']);
+    const forDb = await gql<{ customFieldDefinitions: Array<{ key: string }> }>('query { customFieldDefinitions(type: "database_cluster") { key } }');
+    expect(forDb.data?.customFieldDefinitions.map((d) => d.key)).toEqual(['businessOwner']);
+
+    const set = 'mutation S($ciId: UUID!, $values: JSON!) { setCiCustomFields(ciId: $ciId, values: $values) { id customFields } }';
+    const ok = await gql<{ setCiCustomFields: { customFields: Record<string, unknown> } }>(set, { ciId: ids.host, values: { businessOwner: ' Treasury ', dataTier: 'gold' } });
+    expect(ok.errors).toBeUndefined();
+    expect(ok.data?.setCiCustomFields.customFields).toEqual({ businessOwner: 'Treasury', dataTier: 'gold' });
+    const badValue = await gql<{ setCiCustomFields: unknown }>(set, { ciId: ids.host, values: { dataTier: 'bronze' } });
+    expect(badValue.errors?.[0]?.message).toContain('dataTier expects one of gold, silver');
+    const wrongType = await gql<{ setCiCustomFields: unknown }>(set, { ciId: ids.db, values: { dataTier: 'gold' } });
+    expect(wrongType.errors?.[0]?.message).toContain('no custom field');
+    const viewer = await gql<{ setCiCustomFields: unknown }>(set, { ciId: ids.host, values: { businessOwner: 'x' } }, viewerToken);
+    expect(viewer.errors?.[0]?.message).toMatch(/roles/i);
+
+    const filtered = await gql<{ cis: { edges: Array<{ node: { id: string } }> } }>(
+      'query F($filter: CiFilter) { cis(filter: $filter, first: 10) { edges { node { id } } } }',
+      { filter: { customFields: { dataTier: 'gold' } } },
+    );
+    expect(filtered.data?.cis.edges.map((e) => e.node.id)).toEqual([ids.host]);
+    const usage = await gql<{ customFieldDefinitions: Array<{ key: string; usage: number }> }>('query { customFieldDefinitions { key usage } }');
+    expect(usage.data?.customFieldDefinitions).toEqual(expect.arrayContaining([{ key: 'dataTier', usage: 1 }]));
+
+    const del = await gql<{ deleteCustomFieldDefinition: boolean }>('mutation D($id: UUID!) { deleteCustomFieldDefinition(id: $id) }', { id: tier.data?.upsertCustomFieldDefinition.id }, adminToken);
+    expect(del.data?.deleteCustomFieldDefinition).toBe(true);
+    const after = await gql<{ ci: { customFields: Record<string, unknown> } }>('query C($id: UUID!) { ci(id: $id) { customFields } }', { id: ids.host });
+    expect(after.data?.ci.customFields).toEqual({ businessOwner: 'Treasury' });
+    await gql('mutation D($id: UUID!) { deleteCustomFieldDefinition(id: $id) }', { id: owner.data?.upsertCustomFieldDefinition.id }, adminToken);
+  });
+
   it('lists discovery scopes from subnets and lets an operator set exclusions, credential set and rate limit', async () => {
     // T-112 REQ-DISC-029
     const scopes = await gql<{

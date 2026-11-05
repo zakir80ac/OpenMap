@@ -23,6 +23,8 @@ export const ciFilterSchema = z.object({
   siteId: z.uuid().nullish(),
   text: z.string().nullish(),
   attributeEquals: z.record(z.string().min(1), scalarSchema).nullish(),
+  /** REQ-CMDB-015: custom field values a CI must carry. */
+  customFields: z.record(z.string().min(1), z.union([z.string(), z.number(), z.boolean()])).nullish(),
   health: z.array(healthStateSchema).nullish(),
   asOf: z.iso.datetime({ offset: true }).nullish(),
 });

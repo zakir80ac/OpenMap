@@ -531,6 +531,7 @@ model Tenant {
   userPreferences         UserPreference[]
   dashboards           Dashboard[]
   assistantConversations AssistantConversation[]
+  customFieldDefinitions CustomFieldDefinition[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -673,6 +674,8 @@ model Ci {
   lifecycle         Lifecycle
   attributes        Json
   tags              String[]
+  /// REQ-CMDB-015: values for the tenant's custom fields that apply to this type; only people write them.
+  customFields      Json      @default("{}")
   /// provenanceSchema, flattened.
   sourceCollectorId String
   sourceNodeId      String
@@ -1580,4 +1583,34 @@ model AssistantTurn {
 
   @@index([tenantId, conversationId, at])
   @@map("assistant_turns")
+}
+
+enum CustomFieldType {
+  text
+  number
+  date
+  boolean
+  select
+}
+
+/// REQ-CMDB-015 — a tenant-defined field on CIs (customFieldDefinitionInputSchema in @openmap/contracts). The key is
+/// unique per tenant and names the value in `cis.customFields`; an empty `appliesTo` applies to every CI type.
+model CustomFieldDefinition {
+  id          String          @id @default(uuid()) @db.Uuid
+  tenantId    String          @db.Uuid
+  key         String
+  labelEn     String
+  labelAr     String
+  description String          @default("")
+  type        CustomFieldType
+  options     String[]
+  appliesTo   CiType[]
+  required    Boolean         @default(false)
+  createdAt   DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@map("custom_field_definitions")
 }

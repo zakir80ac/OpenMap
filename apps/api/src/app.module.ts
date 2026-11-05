@@ -14,6 +14,7 @@ import { AuthService } from './auth/auth.service.js';
 import { CiLoaderFactory } from './ci/ci.loaders.js';
 import { CiModule } from './ci/ci.module.js';
 import { EnvModule } from './config/env.module.js';
+import { CustomFieldsModule } from './custom-fields/custom-fields.module.js';
 import { DashboardsModule } from './dashboards/dashboards.module.js';
 import { DbModule } from './db/db.module.js';
 import { DcimModule } from './dcim/dcim.module.js';
@@ -47,6 +48,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     ImpactModule,
     AssetsModule,
     DashboardsModule,
+    CustomFieldsModule,
     IpamModule,
     DcimModule,
     DiscoveryModule,

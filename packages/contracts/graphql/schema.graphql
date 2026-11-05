@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.8.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.9.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -109,6 +109,10 @@ type Ci {
   identity: JSON!
   attributes: JSON!
   tags: [String!]!
+  """
+  Values of the tenant's custom fields that apply to this CI's type, keyed by field key (REQ-CMDB-015).
+  """
+  customFields: JSON!
   externalIds: [ExternalId!]!
   lifecycle: Lifecycle!
   userLabel: UserLabel
@@ -196,6 +200,10 @@ input CiFilter {
   attributeEquals: JSON
   health: [HealthState!]
   asOf: DateTime
+  """
+  Custom field values a CI must carry, keyed by field key (REQ-CMDB-015).
+  """
+  customFields: JSON
 }
 
 type ImpactNode {
@@ -900,6 +908,45 @@ type NetworkTopology {
   durationMs: Int!
 }
 
+# REQ-CMDB-015 — tenant-defined custom fields on CIs; values live in Ci.customFields keyed by the field key.
+enum CustomFieldType {
+  text
+  number
+  date
+  boolean
+  select
+}
+type CustomFieldDefinition {
+  id: UUID!
+  key: String!
+  labelEn: String!
+  labelAr: String!
+  description: String!
+  type: CustomFieldType!
+  options: [String!]!
+  """
+  CI types the field applies to; empty means every type.
+  """
+  appliesTo: [String!]!
+  required: Boolean!
+  """
+  Current CIs carrying a value for the field.
+  """
+  usage: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+input CustomFieldDefinitionInput {
+  key: String!
+  labelEn: String!
+  labelAr: String!
+  description: String
+  type: CustomFieldType!
+  options: [String!]
+  appliesTo: [String!]
+  required: Boolean
+}
+
 # REQ-CMDB-016 — a tag in use in the tenant and how many current CIs carry it.
 type TagCount {
   tag: String!
@@ -1324,6 +1371,10 @@ type Query {
   The tenant's most used CI tags, for the CMDB tag filter and the tag editor (REQ-CMDB-016).
   """
   ciTags(limit: Int): [TagCount!]!
+  """
+  The tenant's custom field definitions, optionally only those that apply to one CI type (REQ-CMDB-015).
+  """
+  customFieldDefinitions(type: String): [CustomFieldDefinition!]!
   estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -1553,6 +1604,18 @@ type Mutation {
   Replaces a CI's tags; tags a collector observes again are merged back on its next sweep (REQ-CMDB-016).
   """
   setCiTags(ciId: UUID!, tags: [String!]!): Ci!
+  """
+  Sets custom field values on a CI; null clears a value; each value is checked against its definition (REQ-CMDB-015).
+  """
+  setCiCustomFields(ciId: UUID!, values: JSON!): Ci!
+  """
+  Creates or changes a custom field definition (administrators); the key cannot change once created.
+  """
+  upsertCustomFieldDefinition(id: UUID, input: CustomFieldDefinitionInput!): CustomFieldDefinition!
+  """
+  Removes a definition and clears its values from every CI (administrators).
+  """
+  deleteCustomFieldDefinition(id: UUID!): Boolean!
   createRelationship(type: String!, fromCiId: UUID!, toCiId: UUID!, attributes: JSON): Relationship!
   retireRelationship(id: UUID!): Relationship!
   setLayerVisibility(layer: CiLayer!, visible: Boolean!): [LayerSummary!]!

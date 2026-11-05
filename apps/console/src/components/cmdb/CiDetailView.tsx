@@ -38,6 +38,7 @@ import { toAsOf, toLocalInput } from '@/lib/time-travel';
 import { useFormatters, useT, type Translate } from '@/providers';
 import type { Formatters } from '@/lib/format';
 import { LifecycleField, TagEditor } from './CiEditors';
+import { CustomFieldsEditor } from './CustomFieldsEditor';
 import { LabelCiPanel } from './LabelCiPanel';
 
 export interface CiDetailViewProps {
@@ -484,6 +485,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
               </SectionTitle>
               <TagEditor ci={ci} />
             </Card>
+            <CustomFieldsEditor ci={ci} />
             <Card as="section" className="flex flex-col gap-om-12">
               <SectionTitle as="h2" size="sm">
                 {t('cmdb.detail.externalIds')}

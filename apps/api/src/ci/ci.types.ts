@@ -27,6 +27,8 @@ export interface CiRecord {
   externalIds: ExternalIdRecord[];
   lifecycle: Lifecycle;
   userLabel: UserLabel | null;
+  /** REQ-CMDB-015: values of the tenant's custom fields, keyed by field key. */
+  customFields: Record<string, string | number | boolean>;
   source: Provenance;
   observedAt: string;
   validFrom: string;

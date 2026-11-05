@@ -17,6 +17,11 @@ export function attributeClause(key: string, value: string | number | boolean | 
   return { attributes: { path: [key], equals: value === null ? Prisma.JsonNull : value } };
 }
 
+/** REQ-CMDB-015: a custom field equal to a value. */
+export function customFieldClause(key: string, value: string | number | boolean): Prisma.CiWhereInput {
+  return { customFields: { path: [key], equals: value } };
+}
+
 /** Rows after the cursor in (name, id) order. */
 export function afterClause(after: SortKey): Prisma.CiWhereInput {
   return { OR: [{ name: { gt: after.name } }, { name: after.name, id: { gt: after.id } }] };
@@ -31,6 +36,7 @@ export function buildCiWhere(tenantId: string, filter: CiFilterInput, healthIds:
   if (filter.siteId) and.push({ relationshipsFrom: { some: { type: LOCATED_IN, toCiId: filter.siteId, validTo: null } } });
   if (filter.text && filter.text.trim().length > 0) and.push(textClause(filter.text.trim()));
   if (filter.attributeEquals) for (const [k, v] of Object.entries(filter.attributeEquals)) and.push(attributeClause(k, v));
+  if (filter.customFields) for (const [k, v] of Object.entries(filter.customFields)) and.push(customFieldClause(k, v));
   if (healthIds !== null) and.push({ id: { in: [...healthIds] } });
   if (after !== null) and.push(afterClause(after));
   return { tenantId, AND: and };

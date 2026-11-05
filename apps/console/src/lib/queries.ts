@@ -152,6 +152,8 @@ export interface CiFilterInput {
   /** REQ-CMDB-013 REQ-CMDB-016: lifecycle states and tags a CI must carry. */
   lifecycle?: Lifecycle[];
   tags?: string[];
+  /** REQ-CMDB-015: custom field values a CI must carry. */
+  customFields?: Record<string, string | number | boolean>;
   text?: string;
 }
 
@@ -526,6 +528,8 @@ export interface CiDetail extends CiSummary {
   identity: Record<string, JsonValue>;
   attributes: Record<string, JsonValue>;
   tags: string[];
+  /** REQ-CMDB-015: the tenant's custom field values on this CI. */
+  customFields: Record<string, string | number | boolean>;
   externalIds: ExternalId[];
   lifecycle: Lifecycle;
   userLabel: UserLabel | null;
@@ -543,7 +547,7 @@ const CI_DETAIL_QUERY = [
   'query CiDetail($id: UUID!, $asOf: DateTime, $first: Int) {',
   '  ci(id: $id, asOf: $asOf) {',
   '    ' + CI_SUMMARY_METRIC_FIELDS,
-  '    identity attributes tags lifecycle observedAt validFrom validTo',
+  '    identity attributes tags customFields lifecycle observedAt validFrom validTo',
   '    externalIds { source id }',
   '    userLabel { title description layer type labelledBy labelledAt }',
   '    source { collectorId nodeId runId confidence }',

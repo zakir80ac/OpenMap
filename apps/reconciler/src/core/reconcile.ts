@@ -1,7 +1,7 @@
 // REQ-CORE-013 — reconciles one CollectorResult into stored CIs and relationships, producing the
 // writes and outbox events the stores apply. Pure: the caller supplies lookups and persists outputs.
 import { randomUUID } from 'node:crypto';
-import { RECONCILER, RECONCILIATION } from '@openmap/constants';
+import { IMPORTS, RECONCILER, RECONCILIATION } from '@openmap/constants';
 import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelope, type MetricSample, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
 import { identityKeysOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
@@ -54,7 +54,7 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
 
   for (const observed of result.cis) {
     const resolution = resolve(observed, lookup.index);
-    const source = { ...provenance, confidence: confidenceFor(observed) };
+    const source = { ...provenance, confidence: confidenceFor(observed, result.collectorId) };
     if (resolution.kind === 'conflict') {
       out.conflicts.push({ observed, ciIds: resolution.ciIds });
       out.events.push(envelope(result.tenantId, 'openmap.reconciliation.conflict', observed.name, { type: observed.type, identity: observed.identity, ciIds: resolution.ciIds, matchedKeys: resolution.matchedKeys }));
@@ -71,7 +71,7 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
         code: ciCode(layer, observed.type, observed.name),
         layer,
         userLabel: null,
-        lifecycle: 'discovered',
+        lifecycle: result.collectorId === IMPORTS.collectorId ? IMPORTS.createdLifecycle : 'discovered',
         source,
         validFrom: observed.observedAt,
         validTo: null,
@@ -143,7 +143,11 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
   return out;
 }
 
-/** Observations from port scans and unknown classification are weaker than authenticated collectors. */
-function confidenceFor(observed: ObservedCi): number {
+/**
+ * Observations from port scans and unknown classification are weaker than authenticated collectors; an import from a
+ * spreadsheet or another CMDB (REQ-CMDB-036, ADR-032) is weaker still than discovery, so it only fills gaps.
+ */
+function confidenceFor(observed: ObservedCi, collectorId: string): number {
+  if (collectorId === IMPORTS.collectorId) return RECONCILIATION.importSeedConfidence;
   return observed.type === 'unknown' ? RECONCILIATION.overwriteMinConfidence : RECONCILIATION.discoveryDefaultConfidence;
 }

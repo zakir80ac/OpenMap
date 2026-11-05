@@ -8,7 +8,7 @@ Syed's direction after checkpoint 20: finish the pending discovery and collector
 CMDB rows before BSM-007 or finance.
 
 **Done.** REQ-DEP-002 (ADR-029), REQ-DEP-001 (ADR-030), REQ-DEP-004 (ADR-031), REQ-DISC-030 (closed on existing
-evidence), REQ-CMDB-013, REQ-CMDB-016, REQ-CMDB-018. The dependency workstream is complete (5 of 5).
+evidence), REQ-CMDB-013, REQ-CMDB-016, REQ-CMDB-018, REQ-CMDB-015. The dependency workstream is complete (5 of 5).
 
 - **Discovery rows re-statused.** REQ-DISC-001…027 moved from "In progress" to "In review": every collector is built
   and tested against protocol-shaped fixtures (Go suite 40 packages ok); each becomes Done once a recorded vendor
@@ -45,6 +45,12 @@ evidence), REQ-CMDB-013, REQ-CMDB-016, REQ-CMDB-018. The dependency workstream i
   `setCiTags`, `ciTags` (GraphQL 1.8.0), CMDB type/lifecycle/tag filters, lifecycle and tag editors on the CI detail
   (REQ-CMDB-013, REQ-CMDB-016), and the e2e that changes an asset stage and finds it in the audit trail (REQ-CMDB-018).
   T-161 (API), T-162 (console), T-163 (e2e en+ar). Evidence `docs/evidence/cmdb-editing.md`.
+- **Custom fields (REQ-CMDB-015).** Contract `custom-field.ts` (one validator for API and console), migration 0020
+  (`custom_field_definitions`, `cis.customFields` JSONB with a GIN index, never written by the reconciler), GraphQL
+  1.9.0 (`customFieldDefinitions`, `upsertCustomFieldDefinition`, `deleteCustomFieldDefinition`, `setCiCustomFields`,
+  `Ci.customFields`, `CiFilter.customFields`), Settings card, CI detail card, CMDB filter. T-164..T-168. Evidence
+  `docs/evidence/custom-fields.md`. The import contract (`packages/contracts/src/import.ts`, T-169) and the
+  reconciler's import-source confidence landed in the same commit as groundwork for REQ-CMDB-033/036.
 - **Tests.** T-157 (application map, 2), T-158 (through GraphQL, 2), T-159 (view, 7), T-160 (e2e, en+ar). T-149 (derivation, 6), T-150 (pass against Postgres, 2), T-151 (traffic panel and reading, console), T-152
   (e2e dependencies, en+ar), T-153 (topology folding, 3), T-154 (topology through GraphQL, 2), T-155 (topology view
   and circle seed, console), T-156 (e2e topology, en+ar). Reconciler 27, API 34, console dependency and layout suites
@@ -471,8 +477,7 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. The open CMDB rows, in this order (gaps from the 2026-11-05 audit): REQ-CMDB-015 custom fields (no tenant field
-   schema, validation or editor; `customFields` always `{}`), REQ-CMDB-033 bulk import/export (none beyond the uptime
+1. The open CMDB rows, in this order (gaps from the 2026-11-05 audit): REQ-CMDB-033 bulk import/export (none beyond the uptime
    CSV), REQ-CMDB-036 seeding as lower-confidence observations, REQ-CMDB-017 depreciation and book value, 019 spare
    stock and reorder points, 020 BOM receiving, 026 support contracts (nothing writes the table), 027 vendors and
    contacts, 028 cost centres linked to units, assets and plans, 029 general contracts and documents, 032 certificate

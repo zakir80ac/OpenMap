@@ -704,6 +704,39 @@ export const CI_EDIT = {
   tagListLimit: 100,
 } as const;
 
+/**
+ * REQ-CMDB-015 — tenant-defined custom fields on CIs. A key is a camelCase identifier (it is also the filter key); a
+ * tenant keeps up to `maxDefinitions`; text values are capped so a field stays a field, not a document store.
+ */
+export const CUSTOM_FIELDS = {
+  keyPattern: '^[a-z][a-zA-Z0-9_]{1,47}$',
+  maxDefinitions: 200,
+  maxLabelLength: 80,
+  maxDescriptionLength: 400,
+  maxOptions: 50,
+  maxTextLength: 1_000,
+} as const;
+
+/**
+ * REQ-CMDB-033 REQ-CMDB-036 (ADR-032) — imports and exports. An import is a collector result from the `import` source:
+ * its observations enter at RECONCILIATION.importSeedConfidence, so they fill what discovery has not observed and
+ * never overwrite it, and discovery overwrites them later. Files up to `maxFileBytes`; `previewRows` rows are shown
+ * back; results are queued in chunks of `resultChunk` observations. Exports stream `exportPageSize` CIs per read.
+ */
+export const IMPORTS = {
+  collectorId: 'import',
+  nodeId: 'api',
+  maxFileBytes: 10_485_760,
+  /** GraphQL request body limit: the base64 of the largest file plus the mapping. */
+  maxBodyBytes: 16_777_216,
+  previewRows: 20,
+  maxRejectedShown: 200,
+  resultChunk: 2_000,
+  exportPageSize: 1_000,
+  /** Lifecycle of a CI an import creates: recorded by a person's source, not observed. */
+  createdLifecycle: 'managed',
+} as const;
+
 /** Byte volumes in the console (observed traffic, evidence sizes): binary units to one decimal. */
 export const BYTES = {
   perUnit: 1024,
@@ -1137,8 +1170,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.7.0 (REQ-DEP-004, ADR-031): `ApplicationMap`, `ApplicationTier`, `ApplicationComponent`, `Placement`,
    * `ApplicationDependency`, query `applicationMap(id)`.
    * 1.8.0 (REQ-CMDB-013, REQ-CMDB-016): `TagCount`, query `ciTags`, mutations `setCiLifecycle`, `setCiTags`.
+   * 1.9.0 (REQ-CMDB-015): `CustomFieldType`, `CustomFieldDefinition`, `CustomFieldDefinitionInput`, `Ci.customFields`,
+   * `CiFilter.customFields`, query `customFieldDefinitions`, mutations `upsertCustomFieldDefinition`,
+   * `deleteCustomFieldDefinition`, `setCiCustomFields`.
    */
-  graphql: '1.8.0',
+  graphql: '1.9.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`.

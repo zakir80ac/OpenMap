@@ -16,6 +16,15 @@ function identityOf(json: Prisma.JsonValue): Record<string, string> {
   return out;
 }
 
+/** Only scalar values survive: anything else in the column is ignored rather than handed to the client. */
+function customFieldsOf(json: unknown): Record<string, string | number | boolean> {
+  if (json === null || typeof json !== 'object' || Array.isArray(json)) return {};
+  const out: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(json as Record<string, unknown>))
+    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out[k] = v;
+  return out;
+}
+
 export function toCiRecord(row: CiRow): CiRecord {
   const label = row.userLabel === null ? null : userLabelSchema.safeParse(row.userLabel);
   return {
@@ -29,6 +38,7 @@ export function toCiRecord(row: CiRow): CiRecord {
     identity: identityOf(row.identity),
     attributes: asRecord(row.attributes),
     tags: row.tags,
+    customFields: customFieldsOf(row.customFields),
     externalIds: row.externalIds.map((e) => ({ source: e.source, id: e.externalId })),
     lifecycle: row.lifecycle as Lifecycle,
     userLabel: label !== null && label.success ? label.data : null,

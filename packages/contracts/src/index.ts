@@ -8,5 +8,7 @@ export * from './integration.js';
 export * from './organization.js';
 export * from './dashboard.js';
 export * from './assistant.js';
+export * from './custom-field.js';
+export * from './import.js';
 export { CONTRACT_VERSIONS, CONTRACT_NAMES } from '@openmap/constants';
 export type { ContractName } from '@openmap/constants';

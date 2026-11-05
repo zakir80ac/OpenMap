@@ -6,13 +6,14 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
-import { CI_LAYERS, CI_TYPES, CI_TYPE_LAYER, LIFECYCLES, type CiLayer } from '@openmap/contracts';
+import { CI_LAYERS, CI_TYPES, CI_TYPE_LAYER, LIFECYCLES, readCustomFieldValue, type CiLayer } from '@openmap/contracts';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, cx, layerColor, spacing } from '@openmap/ui';
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react';
 import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { healthKey, layerKey } from '@/lib/keys';
+import { customFieldDefinitionsQuery } from '@/lib/custom-field-queries';
 import { localizedHref } from '@/lib/locale-path';
 import { ciTagsQuery, cisInfiniteQuery, type CiFilterInput, type Lifecycle } from '@/lib/queries';
 import { useFormatters, useLocale, useT } from '@/providers';
@@ -46,6 +47,16 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const [lifecycle, setLifecycle] = useState<Lifecycle | ''>('');
   const [tag, setTag] = useState('');
   const tags = useQuery(ciTagsQuery());
+  // REQ-CMDB-015: a custom field and the value it must hold; the value is read with the field's own rules.
+  const fields = useQuery(customFieldDefinitionsQuery());
+  const [fieldKey, setFieldKey] = useState('');
+  const [fieldText, setFieldText] = useState('');
+  const fieldDef = fields.data?.find((d) => d.key === fieldKey);
+  const fieldValue = useMemo(() => {
+    if (fieldDef === undefined || fieldText.trim() === '') return null;
+    const read = readCustomFieldValue(fieldDef, fieldDef.type === 'boolean' ? fieldText === 'true' : fieldText);
+    return 'error' in read ? null : read.value;
+  }, [fieldDef, fieldText]);
   const types = useMemo(() => CI_TYPES.filter((ciType) => selected === undefined || CI_TYPE_LAYER[ciType] === selected), [selected]);
 
   const filter = useMemo<CiFilterInput>(() => {
@@ -56,8 +67,9 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
     if (type !== '') next.types = [type];
     if (lifecycle !== '') next.lifecycle = [lifecycle];
     if (tag !== '') next.tags = [tag];
+    if (fieldDef !== undefined && fieldValue !== null) next.customFields = { [fieldDef.key]: fieldValue };
     return next;
-  }, [text, selected, visibility, visibleCount, type, lifecycle, tag]);
+  }, [text, selected, visibility, visibleCount, type, lifecycle, tag, fieldDef, fieldValue]);
 
   const query = useInfiniteQuery(cisInfiniteQuery(filter));
   const rows = useMemo(
@@ -184,6 +196,58 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
             ))}
           </select>
         </label>
+        {(fields.data ?? []).length > 0 ? (
+          <>
+            <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('cmdb.filter.customField')}
+              <select
+                value={fieldKey}
+                onChange={(event) => {
+                  setFieldKey(event.target.value);
+                  setFieldText('');
+                }}
+                className={filterSelect}
+              >
+                <option value="">{t('cmdb.filter.any')}</option>
+                {(fields.data ?? []).map((def) => (
+                  <option key={def.key} value={def.key}>
+                    {locale === 'ar' ? def.labelAr : def.labelEn}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {fieldDef !== undefined ? (
+              <label className="flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+                {t('cmdb.filter.customValue')}
+                {fieldDef.type === 'select' || fieldDef.type === 'boolean' ? (
+                  <select
+                    value={fieldText}
+                    onChange={(event) => {
+                      setFieldText(event.target.value);
+                    }}
+                    className={filterSelect}
+                  >
+                    <option value="">{t('cmdb.filter.any')}</option>
+                    {(fieldDef.type === 'boolean' ? ['true', 'false'] : fieldDef.options).map((o) => (
+                      <option key={o} value={o}>
+                        {fieldDef.type === 'boolean' ? t(o === 'true' ? 'customFields.yes' : 'customFields.no') : o}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={fieldDef.type === 'number' ? 'number' : fieldDef.type === 'date' ? 'date' : 'text'}
+                    value={fieldText}
+                    onChange={(event) => {
+                      setFieldText(event.target.value);
+                    }}
+                    className={filterSelect}
+                  />
+                )}
+              </label>
+            ) : null}
+          </>
+        ) : null}
       </div>
 
       <Card padding="4" className="overflow-hidden">

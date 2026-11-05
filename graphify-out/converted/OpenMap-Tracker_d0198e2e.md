@@ -102,12 +102,12 @@
 | REQ-DISC-029 | DISC | Discovery | Discovery scheduling, exclusions, rate limits, credential sets | OpenMap: apps/scheduler, OpenBao credential refs (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done | Claude |  | CAPABILITY-MAP.md §1. Discovery | T-067, T-010, T-112, T-106 | discovery scopes per subnet: exclusions, credential set (OpenBao reference and type) and rate limits honoured by the planner under the Node ceiling; discoveryScopes / updateDiscoveryScope (GraphQL 0.7.0, ADR-015) validated with the scheduler CIDR parser; Discovery screen scopes card with inline editing; e2e saves and reads back a scope; commit 3b6b9e8 | 2026-10-22 | 2026-11-01 | Console shows sweep progress and jobs and starts a sweep (runDiscovery); exclusions and rate-limit settings UI pending. |
 | REQ-DISC-030 | DISC | Discovery | Autodiscovery of unknown devices with sysDescr/banner | OpenMap: unknown CI type, label-and-promote flow (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §1. Discovery | T-018, T-042, T-128, T-100, T-129, T-130 | SNMP emits unknown CIs with sysDescr when no identity classifies (T-018), the port scanner emits unknown with service banners (T-042), the Assets screen diagnoses every unknown from sysDescr/banner/ports (T-128, T-100), labelCi promotes it to an owned type and registers it (T-130), e2e assets.spec unknown devices en+ar (T-129); commits b63f25e, cf5a4c0; docs/evidence/assets-register.md, docs/evidence/console/assets-unknown-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
 | REQ-CORE-016 | CORE | Discovery | Discovery scoring and confidence per source | OpenMap: provenance.confidence on every observation (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §1. Discovery | T-008, T-049 | reconciler confidence merge per source with identity resolution (apps/reconciler/src/core); replay of the synthetic estate matches generator counts (docs/evidence/cmdb/layer-counts.md); commit 6e6a055 | 2026-10-22 | 2026-11-01 |  |
-| REQ-CMDB-013 | CMDB | CMDB and asset management | Devices (physical, virtual, blade, cluster, other) with lifecycle | OpenMap: CI types per packages/contracts/ci.ts, lifecycle discovered/managed/planned/retired (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-CMDB-013 | CMDB | CMDB and asset management | Devices (physical, virtual, blade, cluster, other) with lifecycle | OpenMap: CI types per packages/contracts/ci.ts, lifecycle discovered/managed/planned/retired (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-161, T-162, T-163 | commit 8607e12; GraphQL 1.8.0 (013/016); T-161 API integration, T-162 console en+ar, T-163 e2e cmdb-edit.spec en+ar; docs/evidence/cmdb-editing.md, docs/evidence/console/{cmdb-edit,assets-stage-audit}-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
 | REQ-CMDB-014 | CMDB | CMDB and asset management | Device parts/components (CPU, memory, disks, NICs, HBAs) | OpenMap: attributes plus child CIs for interfaces and LUNs; parts in asset record (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-015 | CMDB | CMDB and asset management | Custom fields on every object | OpenMap: attributes typed JSON; tenant-defined schema with validation and search (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-CMDB-016 | CMDB | CMDB and asset management | Object categories, tags, labels | OpenMap: tags, layer, user labels (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-CMDB-016 | CMDB | CMDB and asset management | Object categories, tags, labels | OpenMap: tags, layer, user labels (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-161, T-162, T-163 | commit 8607e12; GraphQL 1.8.0 (013/016); T-161 API integration, T-162 console en+ar, T-163 e2e cmdb-edit.spec en+ar; docs/evidence/cmdb-editing.md, docs/evidence/console/{cmdb-edit,assets-stage-audit}-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
 | REQ-CMDB-017 | CMDB | CMDB and asset management | Asset management: tag, purchase, cost, depreciation | OpenMap: assetRecordSchema (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-CMDB-018 | CMDB | CMDB and asset management | Asset lifecycle: planned → in stock → deployed → spare → RMA → retired → disposed, audited | OpenMap: ASSET_STAGES, assetAuditSchema (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-CMDB-018 | CMDB | CMDB and asset management | Asset lifecycle: planned → in stock → deployed → spare → RMA → retired → disposed, audited | OpenMap: ASSET_STAGES, assetAuditSchema (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-100, T-032, T-163 | commit 8607e12; GraphQL 1.8.0 (013/016); T-161 API integration, T-162 console en+ar, T-163 e2e cmdb-edit.spec en+ar; docs/evidence/cmdb-editing.md, docs/evidence/console/{cmdb-edit,assets-stage-audit}-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
 | REQ-CMDB-019 | CMDB | CMDB and asset management | Spare parts inventory and reorder points | OpenMap: assetRecord.stock (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-020 | CMDB | CMDB and asset management | Purchase orders and line items, receiving | OpenMap: Infrastructure plans with a BOM (infraPlanSchema): plan new infra or a stack, enter BOM, target site and racks; assets created as planned; procurement stays in the ERP and is linked by reference (parity ~ vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-021 | CMDB | CMDB and asset management | Layered visibility: DC, network and security, hardware, storage, virtualization, cloud, OS, containers, databases, applications, SaaS, unknown | OpenMap: CI_LAYERS, CI_TYPE_LAYER, per-layer visibility on every screen (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -215,7 +215,7 @@
 | CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 19 | 17 | 89 |
 | DISC | Discovery and collectors | Discovery, Onboarding and digital twin |  | 31 | 3 | 10 |
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 5 | 100 |
-| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 21 | 50 |
+| CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 24 | 57 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 5 | 63 |
@@ -298,7 +298,7 @@
 | T-029 | unit | REQ-CORE-012, REQ-CMDB-001, REQ-CMDB-002, REQ-CMDB-003, REQ-CMDB-004, REQ-CMDB-005, REQ-CMDB-006, REQ-CMDB-007, REQ-CMDB-008, REQ-CMDB-009, REQ-CMDB-010, REQ-CMDB-011, REQ-CMDB-012 | 2026-10-22 | Pass | 0 |
 | T-030 | unit | REQ-CORE-012, REQ-SEC-009, REQ-IPAM-001 | 2026-10-22 | Pass | 0 |
 | T-031 | unit | REQ-CORE-012 | 2026-10-22 | Pass | 0 |
-| T-032 | unit | REQ-CORE-012, REQ-SEC-005, REQ-SEC-007, REQ-SEC-010, REQ-IPAM-001, REQ-IPAM-006, REQ-CMDB-001, REQ-CMDB-002, REQ-CMDB-003, REQ-CMDB-004, REQ-CMDB-005, REQ-CMDB-006, REQ-CMDB-007, REQ-CMDB-008, REQ-CMDB-009, REQ-CMDB-010, REQ-CMDB-011, REQ-CMDB-012, REQ-QA-002, REQ-CORE-015, REQ-CORE-018 | 2026-10-22 | Pass | 0 |
+| T-032 | unit | REQ-CORE-012, REQ-SEC-005, REQ-SEC-007, REQ-SEC-010, REQ-IPAM-001, REQ-IPAM-006, REQ-CMDB-001, REQ-CMDB-002, REQ-CMDB-003, REQ-CMDB-004, REQ-CMDB-005, REQ-CMDB-006, REQ-CMDB-007, REQ-CMDB-008, REQ-CMDB-009, REQ-CMDB-010, REQ-CMDB-011, REQ-CMDB-012, REQ-QA-002, REQ-CORE-015, REQ-CORE-018, REQ-CMDB-018 | 2026-10-22 | Pass | 0 |
 | T-024 | unit | REQ-DISC-028, REQ-INT-001, REQ-SEC-002 | 2026-10-22 | Pass | 0 |
 | T-060 | unit | REQ-UI-007, REQ-DEP-003, REQ-DEP-005, REQ-INT-003, REQ-PERF-003 | 2026-10-22 | Pass | 0 |
 | T-061 | unit | REQ-UI-007, REQ-DEP-003, REQ-DEP-005, REQ-CORE-018 | 2026-10-22 | Pass | 0 |
@@ -344,7 +344,7 @@
 | T-097 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
 | T-098 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
 | T-099 | unit | REQ-UI-019 | 2026-10-22 | Pass | 0 |
-| T-100 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-039, REQ-CMDB-040, REQ-DISC-030 | 2026-10-22 | Pass | 0 |
+| T-100 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-CMDB-039, REQ-CMDB-040, REQ-DISC-030, REQ-CMDB-018 | 2026-10-22 | Pass | 0 |
 | T-101 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-INT-005, REQ-INT-006, REQ-INT-007, REQ-SEC-006 | 2026-10-22 | Pass | 0 |
 | T-102 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-IPAM-001, REQ-IPAM-002, REQ-IPAM-006 | 2026-10-22 | Pass | 0 |
 | T-103 | unit | REQ-UI-009, REQ-UI-010, REQ-UI-011, REQ-UI-014, REQ-UI-017, REQ-UI-018, REQ-DCIM-002, REQ-DCIM-009 | 2026-10-22 | Pass | 0 |
@@ -414,6 +414,9 @@
 | T-158 | unit | REQ-DEP-004 | 2026-11-05 | Pass | 0 |
 | T-159 | unit | REQ-DEP-004 | 2026-11-05 | Pass | 0 |
 | T-160 | unit | REQ-DEP-004 | 2026-11-05 | Pass | 0 |
+| T-161 | unit | REQ-CMDB-013, REQ-CMDB-016 | 2026-11-05 | Pass | 0 |
+| T-162 | unit | REQ-CMDB-013, REQ-CMDB-016 | 2026-11-05 | Pass | 0 |
+| T-163 | unit | REQ-CMDB-013, REQ-CMDB-016, REQ-CMDB-018 | 2026-11-05 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -439,15 +442,15 @@
 | 2026-11-05 | REQ-AI-008 (ADR-028 increment two): persisted conversations (migration 0019), follow-up resolution, metrics.series, console conversation list; evaluation 38/38. Commits f19125d, aa8b415. Closure recorded from the parent session once Excel released the workbook. |  |  |  |
 | 2026-11-05 | Checkpoint 21: discovery rows 001-027 In review pending vendor fixtures, REQ-DISC-030 Done; REQ-DEP-002 dependency mapping from flows (ADR-029); REQ-DEP-001 network topology L2/L3 (ADR-030); commit 2fb5968 |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-05T15:08:00.051Z |  |  |  |  |  |  |
+| Generated | 2026-11-05T15:29:12.688Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 62 | 2 | 0 | 30 | 112 |  |  |
+| All | 59 | 2 | 0 | 30 | 115 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 0 | 0 | 0 | 28 | 3 | 31 | 10 |
 | DEP | 0 | 0 | 0 | 0 | 5 | 5 | 100 |
-| CMDB | 20 | 1 | 0 | 0 | 21 | 42 | 50 |
+| CMDB | 17 | 1 | 0 | 0 | 24 | 42 | 57 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 3 | 0 | 0 | 0 | 5 | 8 | 63 |
@@ -459,13 +462,13 @@
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
 | P0 | 9 | 1 | 0 | 29 | 85 | 124 |  |
-| P1 | 50 | 1 | 0 | 1 | 27 | 79 |  |
+| P1 | 47 | 1 | 0 | 1 | 30 | 79 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 37 |  |  |  |  |  |  |
 | 2026-11-01 | 87 |  |  |  |  |  |  |
 | 2026-11-04 | 99 |  |  |  |  |  |  |
-| 2026-11-05 | 112 |  |  |  |  |  |  |
+| 2026-11-05 | 115 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
