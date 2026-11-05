@@ -154,6 +154,9 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   const [selected, setSelected] = useState<AssetRecord | null>(null);
   const [more, setMore] = useState<AssetRecord[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  // A page shorter than the page size is the last one; a failed page keeps the button as a retry.
+  const [exhausted, setExhausted] = useState(false);
+  const [moreFailed, setMoreFailed] = useState(false);
   const filter = useMemo<AssetsFilter>(
     () => ({
       stage: stage === '' ? null : [stage],
@@ -190,7 +193,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
     const seen = new Set(firstPage.map((a) => a.id));
     return [...firstPage, ...more.filter((a) => !seen.has(a.id))];
   }, [firstPage, more]);
-  const hasMore = (more.length > 0 ? more.length : firstPage.length) % ASSETS.registerPageSize === 0 && list.length > 0;
+  const hasMore = !exhausted && firstPage.length >= ASSETS.registerPageSize;
   const loadMore = async (): Promise<void> => {
     const last = list[list.length - 1];
     if (last === undefined) return;
@@ -198,12 +201,18 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
     try {
       const page = await assetsAfter(filter, last.id, ASSETS.registerPageSize);
       setMore((current) => [...current, ...page]);
+      if (page.length < ASSETS.registerPageSize) setExhausted(true);
+      setMoreFailed(false);
+    } catch {
+      setMoreFailed(true);
     } finally {
       setLoadingMore(false);
     }
   };
   const resetPages = (): void => {
     setMore([]);
+    setExhausted(false);
+    setMoreFailed(false);
     setSelected(null);
   };
   const now = useMemo(() => Date.now(), []);
@@ -458,6 +467,11 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
         </div>
         <div className="flex flex-wrap items-center gap-om-10 text-om-xs text-om-secondary">
           <span>{t('assets.table.showing', { count: format.integer(list.length) })}</span>
+          {moreFailed ? (
+            <span role="alert" className="text-om-danger">
+              {t('common.error')}
+            </span>
+          ) : null}
           {hasMore ? (
             <Button
               tone="quiet"
@@ -466,7 +480,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                 void loadMore();
               }}
             >
-              {loadingMore ? t('common.loading') : t('common.more')}
+              {loadingMore ? t('common.loading') : moreFailed ? t('common.retry') : t('common.more')}
             </Button>
           ) : null}
         </div>

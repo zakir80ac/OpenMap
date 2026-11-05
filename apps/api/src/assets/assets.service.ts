@@ -9,7 +9,7 @@ import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer } from '@openmap/contracts';
 import type { Prisma } from '@openmap/db';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord } from '../ci/ci.types.js';
-import { clampPageSize, decodeCursor } from '../common/cursor.js';
+import { clampPageSize, decodeIdCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 import { ASSETS_REPOSITORY, type AssetsQuery, type AssetsRepository } from './assets.repository.js';
@@ -40,7 +40,7 @@ export class AssetsService {
       text: filter?.text?.trim() || null,
       warrantyEndsBefore: horizonIso(filter?.warrantyExpiringWithinDays ?? warrantyExpiringWithinDays),
       first: clampPageSize(first),
-      afterId: after ? decodeCursor(after).id : null,
+      afterId: after ? decodeIdCursor(after).id : null,
     };
     return this.repo.assets(tenantId, query);
   }

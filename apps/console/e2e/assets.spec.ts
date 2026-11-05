@@ -30,6 +30,11 @@ test('the register covers every layer, flags missing cover, saves details and re
   await expect(register.getByRole('row').nth(1)).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
   await page.screenshot({ path: screenshotsDir + 'assets-register-' + locale + '.png', fullPage: false });
 
+  // The register pages past its first page: the next page is appended after the last row.
+  const firstPageRows = await register.getByRole('row').count();
+  await page.getByRole('button', { name: translate(locale, 'common.more') }).click();
+  await expect.poll(() => register.getByRole('row').count(), { timeout: PAINT_TIMEOUT_MS }).toBeGreaterThan(firstPageRows);
+
   // Rows missing an end-of-life date, then the details panel saves one for the first row.
   await page.getByLabel(translate(locale, 'assets.filter.data')).selectOption('end_of_life');
   const firstRow = register.getByRole('row').nth(1);

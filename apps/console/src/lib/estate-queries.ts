@@ -238,9 +238,16 @@ export function assetsQuery(filter: AssetsFilter, first: number = CONSOLE.explor
   });
 }
 
-/** The register page after the last row seen: the cursor is the row id, as the API's `after` expects it. */
+/** base64url of a UTF-8 string: the encoding the API's cursors use (REQ-CORE-012). */
+function base64Url(text: string): string {
+  let binary = '';
+  for (const byte of new TextEncoder().encode(text)) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/[+]/g, '-').replace(/[/]/g, '_').replace(/=+$/, '');
+}
+
+/** The register page after the last row seen: the API's id cursor is the base64url of `{ id }`. */
 export function assetsAfter(filter: AssetsFilter, afterId: string, first: number = CONSOLE.explorerPageSize): Promise<AssetRecord[]> {
-  const after = typeof btoa === 'function' ? btoa(JSON.stringify({ id: afterId })) : afterId;
+  const after = base64Url(JSON.stringify({ id: afterId }));
   return gql<{ assets: AssetRecord[] }>(ASSETS_QUERY, { ...filterVariables(filter), first, after }).then((d) => d.assets);
 }
 

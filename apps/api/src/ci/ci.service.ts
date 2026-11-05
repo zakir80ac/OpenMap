@@ -4,7 +4,7 @@ import { ConflictException, Inject, Injectable, NotFoundException } from '@nestj
 import { RECONCILIATION } from '@openmap/constants';
 import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer, type RelationshipType, type UserLabel } from '@openmap/contracts';
 import { ensureAssetForCi } from '../assets/assets.repository.js';
-import { clampPageSize, decodeCursor, encodeCursor } from '../common/cursor.js';
+import { clampPageSize, decodeCursor, decodeIdCursor, encodeCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { booleanAttribute, numberAttribute, stringAttribute } from '../common/validation.js';
 import { GraphService } from '../db/graph.service.js';
@@ -142,7 +142,7 @@ export class CiService {
     asOf: string | null,
   ): Promise<Connection<RelationshipRecord>> {
     const size = clampPageSize(first);
-    const afterId = after ? decodeCursor(after).id : null;
+    const afterId = after ? decodeIdCursor(after).id : null;
     const page = await this.repo.relationships(tenantId, {
       ciId,
       direction,

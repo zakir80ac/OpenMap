@@ -4,6 +4,7 @@
 // plans with their bill of materials and status transitions, a new plan created from the form with only the filled
 // bill-of-materials lines, and analysts seeing everything read-only.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { ASSETS } from '@openmap/constants';
 import { LOCALES, translate } from '@openmap/i18n';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as AuthModule from '@/lib/auth';
@@ -68,7 +69,23 @@ const unknown = [
   { id: 'u1', name: 'pdu-unmetered', displayName: 'pdu-unmetered-01', code: 'UNK-PDU', type: 'unknown', layer: 'unknown', health: 'unknown', observedAt: soon, attributes: { deviceKind: 'pdu', snmpReachable: false, openPorts: [], lastSeen: new Date().toISOString() } },
 ];
 const plans = [{ id: 'p1', number: 'PLAN-001', name: 'Core refresh', kind: 'refresh', status: 'draft', bom: [{ description: 'Server', manufacturer: 'HPE', model: 'DL380', sku: null, layer: 'hardware', quantity: 2, received: 0, unitCost: null }], estimatedCost: null, targetSite: null, targetRacks: [], plannedLiveAt: null, assets: [{ id: 'a2', assetTag: 'AST-0002', stage: 'planned' }] }];
-const state = { calls: [] as Array<{ op: string; variables: Record<string, unknown> }> };
+const state = { calls: [] as Array<{ op: string; variables: Record<string, unknown> }>, bulk: false, failAfter: false };
+/** Two full register pages and a short third one, so paging past the first page can be exercised. */
+const bulkCount = ASSETS.registerPageSize * 2 + 5;
+const bulkBase: FixtureAsset = assets[0] ?? (() => { throw new Error('fixture needed'); })();
+const bulk: FixtureAsset[] = Array.from({ length: bulkCount }, (_, i) => ({
+  ...bulkBase,
+  id: 'b' + String(i).padStart(4, '0'),
+  assetTag: 'BULK-' + String(i).padStart(4, '0'),
+  ci: null,
+  ciType: null,
+  source: 'discovery',
+}));
+function decodeIdCursor(after: unknown): string | null {
+  if (typeof after !== 'string') return null;
+  const json = atob(after.replace(/-/g, '+').replace(/_/g, '/'));
+  return (JSON.parse(json) as { id: string }).id;
+}
 
 function respond(body: { query: string; variables?: Record<string, unknown> }): unknown {
   const op = /^(query|mutation) (\w+)/.exec(body.query)?.[2] ?? 'unknown';
@@ -88,6 +105,13 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
       if (gaps) list = list.filter((a) => a.dataGaps.some((g) => gaps.includes(g)));
       const text = filter?.text?.toLowerCase();
       if (text) list = list.filter((a) => [a.assetTag, a.manufacturer ?? '', a.model ?? ''].join(' ').toLowerCase().includes(text));
+      if (state.bulk && typeof days !== 'number') {
+        const afterId = decodeIdCursor(v['after']);
+        if (afterId !== null && state.failAfter) return { errors: [{ message: 'invalid cursor' }] };
+        const start = afterId === null ? 0 : bulk.findIndex((a) => a.id === afterId) + 1;
+        const first = typeof v['first'] === 'number' ? v['first'] : bulk.length;
+        return { data: { assets: bulk.slice(start, start + first) } };
+      }
       return { data: { assets: list } };
     }
     case 'AssetSummary':
@@ -137,6 +161,8 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
 
 beforeEach(() => {
   state.calls = [];
+  state.bulk = false;
+  state.failAfter = false;
   roles.current = ['openmap-operator'];
   for (const a of assets.slice(0, 1)) a.stage = 'deployed';
   for (const p of plans.slice(0, 1)) p.status = 'draft';
@@ -247,6 +273,35 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     await waitFor(() => {
       expect(state.calls.some((c) => c.op === 'Assets' && JSON.stringify(c.variables['filter']).includes('"dell"'))).toBe(true);
     });
+  });
+
+  it('pages the register past the first page with the id cursor, stops at a short page, and offers a retry after a failed page', async () => {
+    state.bulk = true;
+    mount('en');
+    const register = await screen.findByTestId('asset-register');
+    expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize + 1);
+    expect(screen.getByText(translate('en', 'assets.table.showing', { count: String(ASSETS.registerPageSize) }))).toBeTruthy();
+
+    state.failAfter = true;
+    fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.more') }));
+    expect((await screen.findByRole('alert')).textContent).toBe(translate('en', 'common.error'));
+    expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize + 1);
+
+    state.failAfter = false;
+    fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.retry') }));
+    await waitFor(() => {
+      expect(within(register).getAllByRole('row')).toHaveLength(ASSETS.registerPageSize * 2 + 1);
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+    const second = state.calls.filter((c) => c.op === 'Assets' && typeof c.variables['after'] === 'string').at(-1);
+    expect(decodeIdCursor(second?.variables['after'])).toBe(bulk[ASSETS.registerPageSize - 1]?.id);
+    expect(second?.variables['first']).toBe(ASSETS.registerPageSize);
+
+    fireEvent.click(screen.getByRole('button', { name: translate('en', 'common.more') }));
+    await waitFor(() => {
+      expect(within(register).getAllByRole('row')).toHaveLength(bulkCount + 1);
+    });
+    expect(screen.queryByRole('button', { name: translate('en', 'common.more') })).toBeNull();
   });
 
   it('opens the details panel for a row and saves warranty cover through updateAsset', async () => {

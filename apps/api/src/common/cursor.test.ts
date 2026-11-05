@@ -1,7 +1,7 @@
 // T-028 REQ-CORE-012 — cursor encoding and page-size clamping.
 import { describe, expect, it } from 'vitest';
 import { GRAPH } from '@openmap/constants';
-import { clampPageSize, decodeCursor, encodeCursor, InvalidCursorError, toPage } from './cursor.js';
+import { clampPageSize, decodeCursor, decodeIdCursor, encodeCursor, InvalidCursorError, toPage } from './cursor.js';
 
 describe('cursor', () => {
   it('round-trips the (name, id) sort key through an opaque base64url string', () => {
@@ -15,6 +15,13 @@ describe('cursor', () => {
     expect(() => decodeCursor('not-a-cursor')).toThrow(InvalidCursorError);
     expect(() => decodeCursor(Buffer.from('{"name":"x"}').toString('base64url'))).toThrow(InvalidCursorError);
     expect(() => decodeCursor(Buffer.from('[1,2]').toString('base64url'))).toThrow(InvalidCursorError);
+  });
+  it('decodes an id-only cursor for id-ordered lists, in base64url or padded base64, and still rejects a missing id', () => {
+    expect(decodeIdCursor(Buffer.from('{"id":"a1"}').toString('base64url'))).toEqual({ id: 'a1' });
+    expect(decodeIdCursor(Buffer.from('{"id":"a1"}').toString('base64'))).toEqual({ id: 'a1' });
+    expect(decodeIdCursor(encodeCursor({ name: 'n', id: 'a2' }))).toEqual({ id: 'a2' });
+    expect(() => decodeIdCursor(Buffer.from('{"name":"x"}').toString('base64url'))).toThrow(InvalidCursorError);
+    expect(() => decodeIdCursor('not-a-cursor')).toThrow(InvalidCursorError);
   });
   it('orders cursors so that encoding is stable for equal keys', () => {
     const a = encodeCursor({ name: 'a', id: '1' });
