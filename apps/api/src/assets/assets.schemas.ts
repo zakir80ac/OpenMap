@@ -3,6 +3,7 @@
 import { ASSETS } from '@openmap/constants';
 import { z } from 'zod';
 import {
+  DEPRECIATION_METHODS,
   ASSET_DATA_GAPS,
   ASSET_SOURCES,
   ASSET_STAGES,
@@ -44,6 +45,7 @@ export const assetFilterSchema = z.object({
   dataGaps: z.array(z.enum(ASSET_DATA_GAPS)).nullish(),
   text: z.string().nullish(),
   warrantyExpiringWithinDays: z.number().int().min(0).nullish(),
+  belowReorderPoint: z.boolean().nullish(),
 });
 export type AssetFilterInput = z.infer<typeof assetFilterSchema>;
 
@@ -111,6 +113,12 @@ export const assetDetailsInputSchema = z.object({
   subscription: subscriptionInputSchema.nullish(),
   support: supportInputSchema.nullish(),
   endOfLife: endOfLifeInputSchema.nullish(),
+  /** REQ-CMDB-017 */
+  depreciation: z
+    .object({ method: z.enum(DEPRECIATION_METHODS), usefulLifeMonths: z.number().int().min(1).max(ASSETS.maxUsefulLifeMonths), residualValueAmount: z.number().min(0) })
+    .nullish(),
+  /** REQ-CMDB-019; null stops stock control for the asset. */
+  stock: z.object({ onHand: z.number().int().min(0), reorderPoint: z.number().int().min(0) }).nullish(),
   note: z.string().nullish(),
 });
 export type AssetDetailsInput = z.infer<typeof assetDetailsInputSchema>;

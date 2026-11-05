@@ -8,6 +8,7 @@ import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type GenerateKe
 import neo4j from 'neo4j-driver';
 import { loadEnv, TENANT_SETTINGS_DEFAULTS, type TenantSettings } from '@openmap/config';
 import { TIME } from '@openmap/constants';
+import { bookValue } from '@openmap/contracts';
 import { createPrismaClient, type Prisma } from '@openmap/db';
 import { createGraphRepository, type GraphCi, type GraphRelationship } from '@openmap/graph';
 import { AppModule } from './app.module.js';
@@ -1531,6 +1532,81 @@ describe('OpenMap API (integration)', () => {
       id: ids.db,
     });
     expect(stillDb.data?.ci.code).toMatch(/^[A-Z]+-/);
+  });
+
+  it('values an asset under its depreciation schedule and raises low stock once when a spare reaches its reorder point (REQ-CMDB-017, REQ-CMDB-019)', async () => {
+    // T-174 ADR-033
+    type Valued = {
+      id: string;
+      bookValue: { amount: number; currency: string } | null;
+      depreciation: { method: string; usefulLifeMonths: number; residualValue: { amount: number; currency: string } };
+      stock: { onHand: number; reorderPoint: number; belowReorderPoint: boolean } | null;
+      audits: Array<{ field: string }>;
+    };
+    const fields = 'id bookValue { amount currency } depreciation { method usefulLifeMonths residualValue { amount currency } } stock { onHand reorderPoint belowReorderPoint } audits { field }';
+    // Bought on the first of the month a year ago: exactly twelve whole months have passed.
+    const now = new Date();
+    const purchasedAt = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 1)).toISOString().slice(0, 'YYYY-MM-DD'.length);
+    const created = await gql<{ createAsset: Valued }>('mutation C($input: ManualAssetInput!) { createAsset(input: $input) { ' + fields + ' } }', {
+      input: {
+        layer: 'dc',
+        type: 'pdu',
+        name: 'Spare PSU shelf ' + String(Date.now()),
+        details: {
+          purchasedAt,
+          purchaseCostAmount: 4800,
+          purchaseCostCurrency: 'SAR',
+          depreciation: { method: 'straight_line', usefulLifeMonths: 48, residualValueAmount: 0 },
+          stock: { onHand: 5, reorderPoint: 2 },
+        },
+      },
+    });
+    expect(created.errors).toBeUndefined();
+    const asset = created.data?.createAsset;
+    expect(asset).toMatchObject({
+      bookValue: { amount: 3600, currency: 'SAR' },
+      depreciation: { method: 'straight_line', usefulLifeMonths: 48, residualValue: { amount: 0, currency: 'SAR' } },
+      stock: { onHand: 5, reorderPoint: 2, belowReorderPoint: false },
+    });
+    expect(asset?.audits.map((a) => a.field)).toEqual(expect.arrayContaining(['depreciation', 'stock']));
+    const update = 'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' + fields + ' } }';
+    const lows = (): Promise<number> => prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.stock.low', subject: asset?.id } });
+    expect(await lows()).toBe(0);
+
+    // Declining balance at twice the straight-line rate, floored at the residual value.
+    const declining = await gql<{ updateAsset: Valued }>(update, {
+      id: asset?.id,
+      input: { depreciation: { method: 'declining_balance', usefulLifeMonths: 24, residualValueAmount: 100 } },
+    });
+    expect(declining.errors).toBeUndefined();
+    expect(declining.data?.updateAsset.bookValue?.amount).toBe(
+      bookValue(4800, purchasedAt, { method: 'declining_balance', usefulLifeMonths: 24, residualValue: 100 }, now.toISOString()),
+    );
+
+    const reached = await gql<{ updateAsset: Valued }>(update, { id: asset?.id, input: { stock: { onHand: 2, reorderPoint: 2 } } });
+    expect(reached.data?.updateAsset.stock).toEqual({ onHand: 2, reorderPoint: 2, belowReorderPoint: true });
+    expect(await lows()).toBe(1);
+    const event = await prisma.outboxEvent.findFirst({ where: { tenantId, type: 'openmap.asset.stock.low', subject: asset?.id } });
+    expect((event?.envelope as { data?: unknown }).data).toMatchObject({ onHand: 2, reorderPoint: 2, by: 'tester' });
+    // Staying below the reorder point is not news.
+    await gql(update, { id: asset?.id, input: { stock: { onHand: 1, reorderPoint: 2 } } });
+    expect(await lows()).toBe(1);
+
+    const low = await gql<{ assets: Array<{ id: string; stock: { belowReorderPoint: boolean } | null }> }>(
+      'query L($filter: AssetFilter) { assets(filter: $filter, first: 200) { id stock { belowReorderPoint } } }',
+      { filter: { belowReorderPoint: true } },
+    );
+    expect(low.errors).toBeUndefined();
+    expect(low.data?.assets.map((a) => a.id)).toContain(asset?.id);
+    expect(low.data?.assets.every((a) => a.stock?.belowReorderPoint === true)).toBe(true);
+    const summary = await gql<{ assetSummary: Array<{ layer: string; belowReorderPoint: number }> }>('query { assetSummary { layer belowReorderPoint } }');
+    expect(summary.data?.assetSummary.find((r) => r.layer === 'dc')?.belowReorderPoint).toBeGreaterThanOrEqual(1);
+
+    const invalid = await gql(update, { id: asset?.id, input: { depreciation: { method: 'straight_line', usefulLifeMonths: 0, residualValueAmount: 0 } } });
+    expect(invalid.errors?.[0]?.message).toMatch(/updateAsset arguments|usefulLifeMonths/);
+    // Stopping stock control clears it.
+    const cleared = await gql<{ updateAsset: Valued }>(update, { id: asset?.id, input: { stock: null } });
+    expect(cleared.data?.updateAsset.stock).toBeNull();
   });
 
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {

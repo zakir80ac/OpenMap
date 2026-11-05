@@ -94,3 +94,29 @@ export async function gql<TData>(query: string, variables?: Variables, signal?: 
   }
   return payload.data;
 }
+
+/**
+ * REQ-CMDB-033 — a file from a REST route of the API (the CI export), fetched with the same bearer token as GraphQL and
+ * handed to the browser as a download under the name the API gave it.
+ */
+export async function downloadFromApi(path: string, fallbackName: string): Promise<void> {
+  const origin = graphqlEndpoint().slice(0, -GRAPHQL_PATH.length);
+  const accessToken = authHooks.getAccessToken();
+  const response = await fetch(origin + path, { headers: accessToken === undefined ? {} : { authorization: 'Bearer ' + accessToken } });
+  if (!response.ok) {
+    const unauthorized = response.status === HTTP.status.unauthorized;
+    const error = new GraphqlRequestError([{ message: 'export failed: HTTP ' + String(response.status) }], response.status, unauthorized);
+    if (unauthorized) authHooks.onUnauthorized(error);
+    throw error;
+  }
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}

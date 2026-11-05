@@ -395,6 +395,8 @@ export const ASSETS = {
    * assigns one, the schema's one-month minimum useful life, zero residual value.
    */
   defaultUsefulLifeMonths: 1,
+  /** REQ-CMDB-017: the longest useful life a schedule may state (fifty years). */
+  maxUsefulLifeMonths: 600,
   /** Register rows fetched per page; the register loads more on demand. */
   registerPageSize: 50,
   /** Most rows one register page may ask for (REQ-CMDB-041). */
@@ -733,6 +735,11 @@ export const IMPORTS = {
   maxRejectedShown: 200,
   resultChunk: 2_000,
   exportPageSize: 1_000,
+  maxFilenameLength: 200,
+  /** Padding the base64 length check allows for line breaks some encoders insert. */
+  base64Slack: 1_024,
+  /** Base64 carries 3 bytes in 4 characters: the longest content string a file of maxFileBytes can become. */
+  maxBase64Length: Math.ceil((10_485_760 * 4) / 3) + 1_024,
   /** Lifecycle of a CI an import creates: recorded by a person's source, not observed. */
   createdLifecycle: 'managed',
 } as const;
@@ -1173,11 +1180,15 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.9.0 (REQ-CMDB-015): `CustomFieldType`, `CustomFieldDefinition`, `CustomFieldDefinitionInput`, `Ci.customFields`,
    * `CiFilter.customFields`, query `customFieldDefinitions`, mutations `upsertCustomFieldDefinition`,
    * `deleteCustomFieldDefinition`, `setCiCustomFields`.
+   * 1.10.0 (REQ-CMDB-033, REQ-CMDB-036, ADR-032): `ImportFormat`, `ImportInput`, `ImportPreview`, `RejectedRow`,
+   * `ImportJob`, query `importJobs`, mutations `previewImport`, `runImport`.
+   * 1.11.0 (REQ-CMDB-017, REQ-CMDB-019, ADR-033): `Depreciation`, `DepreciationInput`, `Stock`, `StockInput`,
+   * `AssetRecord.depreciation`/`bookValue`/`stock`, `AssetFilter.belowReorderPoint`, `AssetSummary.belowReorderPoint`.
    */
-  graphql: '1.9.0',
+  graphql: '1.11.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
-   * 0.6.0 (ADR-029): `openmap.dependency.derived`.
+   * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
    */
-  event: '0.6.0',
+  event: '0.7.0',
 };

@@ -45,6 +45,8 @@ export const EVENT_TYPES = [
   'openmap.asset.stage.changed',
   'openmap.asset.created',
   'openmap.asset.updated',
+  /** REQ-CMDB-019: a stocked spare's count fell to its reorder point. */
+  'openmap.asset.stock.low',
   'openmap.asset.warranty.expiring',
   'openmap.asset.eos.approaching',
   'openmap.plan.status.changed',

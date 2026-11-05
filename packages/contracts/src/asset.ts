@@ -280,6 +280,7 @@ export const infraPlanSchema = z.object({
 export type InfraPlan = z.infer<typeof infraPlanSchema>;
 
 export const DEPRECIATION_METHODS = ['straight_line', 'declining_balance', 'none'] as const;
+export type DepreciationMethod = (typeof DEPRECIATION_METHODS)[number];
 
 export const assetRecordSchema = z.object({
   id: z.uuid(),
@@ -486,4 +487,55 @@ export function assetFieldsFromCi(
           }
         : null,
   };
+}
+
+/** REQ-CMDB-017 — what an asset's value is on a day, under its depreciation schedule. */
+export interface DepreciationSchedule {
+  method: DepreciationMethod;
+  usefulLifeMonths: number;
+  residualValue: number;
+}
+
+/** Whole calendar months between a purchase date and a day (YYYY-MM-DD or ISO), never negative. */
+export function monthsBetween(from: string, to: string): number {
+  const a = new Date(from);
+  const b = new Date(to);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime()) || b < a) return 0;
+  const months = (b.getUTCFullYear() - a.getUTCFullYear()) * MONTHS_PER_YEAR + (b.getUTCMonth() - a.getUTCMonth());
+  return b.getUTCDate() < a.getUTCDate() ? Math.max(0, months - 1) : months;
+}
+
+const MONTHS_PER_YEAR = 12;
+/** Double-declining balance: twice the straight-line rate, applied to what is left each month. */
+const DECLINING_FACTOR = 2;
+
+/**
+ * The book value on `asOf`: straight line spreads (cost − residual) evenly over the useful life; declining balance
+ * takes twice the straight-line rate of what is left each month; both stop at the residual value; `none` keeps the
+ * cost. Rounded to cents. Null without a cost or a purchase date.
+ */
+export function bookValue(cost: number | null, purchasedAt: string | null, schedule: DepreciationSchedule, asOf: string): number | null {
+  if (cost === null || purchasedAt === null) return null;
+  const residual = Math.min(schedule.residualValue, cost);
+  const months = Math.min(monthsBetween(purchasedAt, asOf), schedule.usefulLifeMonths);
+  let value: number;
+  switch (schedule.method) {
+    case 'none':
+      value = cost;
+      break;
+    case 'straight_line':
+      value = cost - ((cost - residual) * months) / schedule.usefulLifeMonths;
+      break;
+    case 'declining_balance':
+      value = months >= schedule.usefulLifeMonths ? residual : Math.max(residual, cost * (1 - DECLINING_FACTOR / schedule.usefulLifeMonths) ** months);
+      break;
+  }
+  return Math.round(value * CENTS) / CENTS;
+}
+
+const CENTS = 100;
+
+/** REQ-CMDB-019 — a stocked spare is low when what is on hand has fallen to its reorder point. */
+export function belowReorderPoint(stock: { onHand: number; reorderPoint: number } | null): boolean {
+  return stock !== null && stock.onHand <= stock.reorderPoint;
 }

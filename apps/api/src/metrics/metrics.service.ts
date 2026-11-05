@@ -17,6 +17,9 @@ export const ASSISTANT_QUESTIONS_METRIC = 'openmap_assistant_questions_total';
 export const ASSISTANT_DURATION_METRIC = 'openmap_assistant_duration_seconds';
 /** REQ-DEP-001 (ADR-030): network topology map duration, by layer. */
 export const TOPOLOGY_DURATION_METRIC = 'openmap_topology_duration_seconds';
+/** REQ-CMDB-033 (ADR-032): rows imported (queued or rejected) and exported, by outcome and format. */
+export const IMPORT_ROWS_METRIC = 'openmap_import_rows_total';
+export const EXPORT_ROWS_METRIC = 'openmap_export_rows_total';
 /** REQ-DEP-004 (ADR-031): layered application map duration. */
 export const APPLICATION_MAP_DURATION_METRIC = 'openmap_application_map_duration_seconds';
 
@@ -53,6 +56,8 @@ export class MetricsService {
   readonly assistantDuration: Histogram<'intent'>;
   readonly topologyDuration: Histogram<'layer'>;
   readonly applicationMapDuration: Histogram;
+  readonly importRows: Counter<'outcome'>;
+  readonly exportRows: Counter<'format'>;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
@@ -106,6 +111,8 @@ export class MetricsService {
       buckets: durationBuckets(),
       registers: [this.registry],
     });
+    this.importRows = new Counter({ name: IMPORT_ROWS_METRIC, help: 'Import rows, by outcome (queued or rejected)', labelNames: ['outcome'], registers: [this.registry] });
+    this.exportRows = new Counter({ name: EXPORT_ROWS_METRIC, help: 'CIs exported, by format', labelNames: ['format'], registers: [this.registry] });
     this.applicationMapDuration = new Histogram({
       name: APPLICATION_MAP_DURATION_METRIC,
       help: 'Layered application map duration in seconds',

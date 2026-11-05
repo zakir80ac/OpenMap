@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.9.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.11.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -490,6 +490,12 @@ type AssetRecord {
   locationCi: Ci
   purchasedAt: DateTime
   purchaseCost: Money
+  depreciation: Depreciation!
+  """
+  Value today under the depreciation schedule; null without a purchase cost and date (REQ-CMDB-017).
+  """
+  bookValue: Money
+  stock: Stock
   warranty: Warranty
   warrantyEndsAt: DateTime
   """
@@ -569,10 +575,26 @@ type AssetAudit {
 """
 Register totals per layer: rows, rows with a data gap, and rows whose cover has already ended.
 """
+# REQ-CMDB-017 — the depreciation schedule of an asset; the book value follows from it and the purchase.
+type Depreciation {
+  method: String!
+  usefulLifeMonths: Int!
+  residualValue: Money!
+}
+# REQ-CMDB-019 — spare-part stock control on a stocked asset.
+type Stock {
+  onHand: Int!
+  reorderPoint: Int!
+  belowReorderPoint: Boolean!
+}
 type AssetSummary {
   layer: CiLayer!
   count: Int!
   needsData: Int!
+  """
+  Stocked spares at or below their reorder point (REQ-CMDB-019).
+  """
+  belowReorderPoint: Int!
   warrantyExpired: Int!
   subscriptionExpired: Int!
   supportExpired: Int!
@@ -945,6 +967,58 @@ input CustomFieldDefinitionInput {
   options: [String!]
   appliesTo: [String!]
   required: Boolean
+}
+
+# REQ-CMDB-033 REQ-CMDB-036 (ADR-032) — importing a spreadsheet or another CMDB's export. The file travels as base64;
+# a preview reads it with a mapping (proposed from the headers when none is given) and says what would be queued and
+# what refused; a run queues the observations for the reconciler as the `import` source, which fills what discovery
+# has not observed and never overwrites it.
+enum ImportFormat {
+  csv
+  xlsx
+}
+input ImportInput {
+  filename: String!
+  format: ImportFormat!
+  contentBase64: String!
+  """
+  importMappingSchema; omitted, a mapping is proposed from the headers (a ServiceNow export is recognised).
+  """
+  mapping: JSON
+}
+type RejectedRow {
+  row: Int!
+  reason: String!
+}
+type ImportPreview {
+  headers: [String!]!
+  mapping: JSON!
+  rows: Int!
+  accepted: Int!
+  rejected: Int!
+  rejectedRows: [RejectedRow!]!
+  byType: JSON!
+  """
+  The first rows as read, for the mapping screen.
+  """
+  sample: [[String!]!]!
+}
+type ImportJob {
+  id: UUID!
+  filename: String!
+  format: ImportFormat!
+  rows: Int!
+  accepted: Int!
+  rejected: Int!
+  rejectedRows: [RejectedRow!]!
+  byType: JSON!
+  runId: UUID!
+  """
+  Current CIs the import created (their provenance is this run).
+  """
+  created: Int!
+  submittedBy: String!
+  createdAt: DateTime!
 }
 
 # REQ-CMDB-016 — a tag in use in the tenant and how many current CIs carry it.
@@ -1375,6 +1449,10 @@ type Query {
   The tenant's custom field definitions, optionally only those that apply to one CI type (REQ-CMDB-015).
   """
   customFieldDefinitions(type: String): [CustomFieldDefinition!]!
+  """
+  The tenant's imports, newest first (REQ-CMDB-033).
+  """
+  importJobs: [ImportJob!]!
   estateStats: EstateStats!
   ci(id: UUID!, asOf: DateTime): Ci
   cis(filter: CiFilter, first: Int = 50, after: String): CiConnection!
@@ -1482,6 +1560,10 @@ input AssetFilter {
   dataGaps: [AssetDataGap!]
   text: String
   warrantyExpiringWithinDays: Int
+  """
+  Only stocked spares at or below their reorder point (REQ-CMDB-019).
+  """
+  belowReorderPoint: Boolean
 }
 """
 Dates are calendar dates (YYYY-MM-DD).
@@ -1516,6 +1598,18 @@ input EndOfLifeInput {
   endOfSupport: String
 }
 """
+REQ-CMDB-017: method is straight_line, declining_balance or none; the residual is in the purchase currency.
+"""
+input DepreciationInput {
+  method: String!
+  usefulLifeMonths: Int!
+  residualValueAmount: Float!
+}
+input StockInput {
+  onHand: Int!
+  reorderPoint: Int!
+}
+"""
 Fields a person records on an asset; every change is audited per field. A null object clears that cover.
 """
 input AssetDetailsInput {
@@ -1531,6 +1625,8 @@ input AssetDetailsInput {
   subscription: SubscriptionInput
   support: SupportInput
   endOfLife: EndOfLifeInput
+  depreciation: DepreciationInput
+  stock: StockInput
   note: String
 }
 """
@@ -1608,6 +1704,14 @@ type Mutation {
   Sets custom field values on a CI; null clears a value; each value is checked against its definition (REQ-CMDB-015).
   """
   setCiCustomFields(ciId: UUID!, values: JSON!): Ci!
+  """
+  Reads an import file with a mapping and says what would be queued and what refused; writes nothing (REQ-CMDB-033).
+  """
+  previewImport(input: ImportInput!): ImportPreview!
+  """
+  Queues an import's observations for the reconciler as the import source (REQ-CMDB-033, REQ-CMDB-036).
+  """
+  runImport(input: ImportInput!): ImportJob!
   """
   Creates or changes a custom field definition (administrators); the key cannot change once created.
   """

@@ -11,7 +11,7 @@ import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord } from '../ci/ci.types.js';
 import { clampPageSize, decodeIdCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
-import { OutboxService } from '../outbox/outbox.service.js';
+import { OutboxService, type OutboxDraft } from '../outbox/outbox.service.js';
 import { ASSETS_REPOSITORY, type AssetsQuery, type AssetsRepository } from './assets.repository.js';
 import type { AssetDetailsInput, AssetFilterInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
 import type {
@@ -32,6 +32,20 @@ function horizonIso(days: number | null): string | null {
   return days === null
     ? null
     : new Date(Date.now() + days * BSM.minutesPerDay * BSM.msPerMinute).toISOString();
+}
+
+/**
+ * REQ-CMDB-019 — the low-stock event of a stocked spare at or below its reorder point; null when the stock is fine
+ * or not tracked.
+ */
+function stockLow(asset: AssetRecordView, actor: string): OutboxDraft | null {
+  const stock = asset.stock;
+  if (stock === null || !stock.belowReorderPoint) return null;
+  return {
+    type: 'openmap.asset.stock.low',
+    subject: asset.id,
+    data: { assetId: asset.id, assetTag: asset.assetTag, onHand: stock.onHand, reorderPoint: stock.reorderPoint, by: actor },
+  };
 }
 
 @Injectable()
@@ -58,6 +72,7 @@ export class AssetsService {
       dataGaps: filter?.dataGaps ?? [],
       text: filter?.text?.trim() || null,
       warrantyEndsBefore: horizonIso(filter?.warrantyExpiringWithinDays ?? warrantyExpiringWithinDays),
+      belowReorderPoint: filter?.belowReorderPoint === true,
       first: clampPageSize(first),
       afterId: after ? decodeIdCursor(after).id : null,
     };
@@ -79,6 +94,7 @@ export class AssetsService {
       dataGaps: filter?.dataGaps ?? [],
       text: filter?.text?.trim() || null,
       warrantyEndsBefore: horizonIso(filter?.warrantyExpiringWithinDays ?? null),
+      belowReorderPoint: filter?.belowReorderPoint === true,
       first: ASSETS.registerPageSize,
       afterId: null,
     };
@@ -207,6 +223,9 @@ export class AssetsService {
           subject: asset.id,
           data: { assetId: asset.id, ciId: asset.ciId, changed, dataGaps: asset.dataGaps, by: actor },
         });
+      // REQ-CMDB-019: crossing to the reorder point is the moment to reorder; staying below it is not news.
+      const low = before.stock?.belowReorderPoint === true ? null : stockLow(asset, actor);
+      if (low !== null) await emit(low);
       return asset;
     });
   }
@@ -250,6 +269,8 @@ export class AssetsService {
           by: actor,
         },
       });
+      const low = stockLow(asset, actor);
+      if (low !== null) await emit(low);
       return asset;
     });
   }

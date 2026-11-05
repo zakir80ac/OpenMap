@@ -51,5 +51,7 @@ describe('import contract', () => {
     expect(readImport(rows, mapping, AT).rejected).toEqual([{ row: 1, reason: 'no type and no default type' }]);
     expect(attributeKey('  2nd line / cost centre ')).toBe('lineCostCentre');
     expect(attributeKey('###')).toBeNull();
+    // An OpenMap export re-imports as it is: its headers are targets already.
+    expect(suggestMapping(['type', 'name', 'identity.serialNumber', 'attribute.osName']).columns).toEqual({ type: 'type', name: 'name', 'identity.serialNumber': 'identity.serialNumber', 'attribute.osName': 'attribute.osName' });
   });
 });

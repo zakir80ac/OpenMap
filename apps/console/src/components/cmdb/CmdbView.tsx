@@ -14,6 +14,7 @@ import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { healthKey, layerKey } from '@/lib/keys';
 import { customFieldDefinitionsQuery } from '@/lib/custom-field-queries';
+import { exportCis, type ExportFormat } from '@/lib/import-queries';
 import { localizedHref } from '@/lib/locale-path';
 import { ciTagsQuery, cisInfiniteQuery, type CiFilterInput, type Lifecycle } from '@/lib/queries';
 import { useFormatters, useLocale, useT } from '@/providers';
@@ -29,6 +30,8 @@ export interface CmdbViewProps {
   /** Layer selected on arrival (REQ-UI-033: the Layers screen opens the CMDB filtered to a layer). */
   initialLayer?: CiLayer;
 }
+
+const EXPORT_FORMATS: readonly ExportFormat[] = ['csv', 'xlsx', 'json'];
 
 const filterSelect =
   'h-9 min-w-40 rounded-om-control-lg border border-om-border-glass bg-om-surface1/80 px-om-10 text-om-sm normal-case tracking-normal text-om-primary';
@@ -47,6 +50,9 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const [lifecycle, setLifecycle] = useState<Lifecycle | ''>('');
   const [tag, setTag] = useState('');
   const tags = useQuery(ciTagsQuery());
+  // REQ-CMDB-033: the current filter exported as a file.
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const [exportFailed, setExportFailed] = useState(false);
   // REQ-CMDB-015: a custom field and the value it must hold; the value is read with the field's own rules.
   const fields = useQuery(customFieldDefinitionsQuery());
   const [fieldKey, setFieldKey] = useState('');
@@ -103,6 +109,35 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
         size="lg"
         eyebrow={t('app.name')}
         description={text === '' ? t('cmdb.subtitle') : t('cmdb.searchFor', { text })}
+        action={
+          <div role="group" aria-label={t('cmdb.transfer')} className="flex flex-wrap items-center gap-om-6">
+            {EXPORT_FORMATS.map((f) => (
+              <Pill
+                key={f}
+                onClick={() => {
+                  setExporting(f);
+                  void exportCis(f, filter)
+                    .catch(() => {
+                      setExportFailed(true);
+                    })
+                    .finally(() => {
+                      setExporting(null);
+                    });
+                }}
+              >
+                {exporting === f ? t('cmdb.exporting') : t(`cmdb.export.${f}`)}
+              </Pill>
+            ))}
+            <Link href={localizedHref(locale, '/cmdb/import')}>
+              <Pill variant="primary">{t('cmdb.import')}</Pill>
+            </Link>
+            {exportFailed ? (
+              <span role="alert" className="text-om-2xs text-om-rose">
+                {t('cmdb.exportFailed')}
+              </span>
+            ) : null}
+          </div>
+        }
       >
         {t('nav.cmdb')}
       </SectionTitle>

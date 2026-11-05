@@ -3,7 +3,7 @@
 // plain async functions for mutations, every field list spelled once.
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import { ASSETS, CONSOLE, type Locale } from '@openmap/constants';
-import type { AssetDataGap, CiLayer } from '@openmap/contracts';
+import type { AssetDataGap, CiLayer, DepreciationMethod } from '@openmap/contracts';
 import { gql } from './graphql';
 import { CI_SUMMARY_FIELDS, type CiRef, type CiSummary, type JsonValue } from './queries';
 
@@ -129,6 +129,11 @@ export interface AssetRecord {
   dataGaps: AssetDataGap[];
   plan: { id: string; number: string; name: string; status: PlanStatus } | null;
   purchaseCost: Money | null;
+  /** REQ-CMDB-017: the schedule and today's value under it (null without a purchase cost and date). */
+  depreciation: { method: DepreciationMethod; usefulLifeMonths: number; residualValue: Money };
+  bookValue: Money | null;
+  /** REQ-CMDB-019: stock control of a stocked spare. */
+  stock: { onHand: number; reorderPoint: number; belowReorderPoint: boolean } | null;
 }
 
 export interface AssetSummary {
@@ -139,6 +144,7 @@ export interface AssetSummary {
   subscriptionExpired: number;
   supportExpired: number;
   endOfSupportPassed: number;
+  belowReorderPoint: number;
 }
 
 /** Fields a person records on an asset; an omitted field is left alone, null clears it. */
@@ -172,6 +178,8 @@ export interface AssetDetailsInput {
     endOfSoftwareMaintenance?: string | null;
     endOfSupport?: string | null;
   } | null;
+  depreciation?: { method: DepreciationMethod; usefulLifeMonths: number; residualValueAmount: number } | null;
+  stock?: { onHand: number; reorderPoint: number } | null;
   note?: string | null;
 }
 
@@ -240,6 +248,9 @@ const ASSET_FIELDS = [
   'supportContract { id contractNumber level endsAt vendor { id displayName } primaryContact { id name role email phone portalUrl } }',
   'plan { id number name status }',
   'purchaseCost ' + MONEY_FIELDS,
+  'depreciation { method usefulLifeMonths residualValue ' + MONEY_FIELDS + ' }',
+  'bookValue ' + MONEY_FIELDS,
+  'stock { onHand reorderPoint belowReorderPoint }',
 ].join(' ');
 const PLAN_FIELDS = [
   'id number name kind status plannedLiveAt',
@@ -254,7 +265,7 @@ const ASSETS_QUERY =
   ASSET_FIELDS +
   ' } }';
 const ASSET_SUMMARY_QUERY =
-  'query AssetSummary { assetSummary { layer count needsData warrantyExpired subscriptionExpired supportExpired endOfSupportPassed } }';
+  'query AssetSummary { assetSummary { layer count needsData warrantyExpired subscriptionExpired supportExpired endOfSupportPassed belowReorderPoint } }';
 const ASSET_AUDITS_QUERY =
   'query AssetAudits($filter: AssetFilter) { assets(filter: $filter, first: 1) { id audits { id actor at field fromValue toValue note } } }';
 const UPDATE_ASSET_MUTATION =
@@ -287,10 +298,12 @@ export interface AssetsFilter {
   sources?: AssetSource[] | null;
   dataGaps?: AssetDataGap[] | null;
   text?: string | null;
+  /** REQ-CMDB-019: only stocked spares at or below their reorder point. */
+  belowReorderPoint?: boolean | null;
 }
 
 function filterVariables(filter: AssetsFilter): Record<string, unknown> {
-  const register = filter.layers || filter.types || filter.sources || filter.dataGaps || filter.text;
+  const register = filter.layers || filter.types || filter.sources || filter.dataGaps || filter.text || filter.belowReorderPoint;
   return {
     filter: register
       ? {
@@ -301,6 +314,7 @@ function filterVariables(filter: AssetsFilter): Record<string, unknown> {
           dataGaps: filter.dataGaps ?? null,
           text: filter.text ?? null,
           warrantyExpiringWithinDays: filter.warrantyExpiringWithinDays ?? null,
+          belowReorderPoint: filter.belowReorderPoint ?? null,
         }
       : null,
     stage: filter.stage ?? null,

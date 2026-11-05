@@ -138,6 +138,11 @@ export function suggestMapping(headers: readonly string[]): ImportMapping {
   for (const keys of Object.values(CI_IDENTITY_KEYS)) for (const k of keys) known[squash(k)] ??= 'identity.' + k;
   const columns: Record<string, string> = {};
   for (const h of headers) {
+    // An OpenMap export names its columns by their target already (identity.serialNumber, attribute.osName).
+    if (IMPORT_TARGET_PATTERN.test(h)) {
+      columns[h] = h;
+      continue;
+    }
     const target = known[squash(h)];
     columns[h] = target ?? (attributeKey(h) === null ? 'ignore' : 'attribute.' + String(attributeKey(h)));
   }

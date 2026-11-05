@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./results-queue": {
+      "types": "./dist/server/results-queue.d.ts",
+      "import": "./dist/server/results-queue.js"
     }
   },
   "scripts": {

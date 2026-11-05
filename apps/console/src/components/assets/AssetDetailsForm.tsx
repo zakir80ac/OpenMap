@@ -1,14 +1,14 @@
 'use client';
-// REQ-CMDB-039 REQ-CMDB-040 — the fields a person records on an asset (ADR-023): identity, purchase, warranty, vendor
-// support and end of life. One form serves the edit panel of a register row and the manual-asset entry; it builds an
+// REQ-CMDB-039 REQ-CMDB-040 REQ-CMDB-017 REQ-CMDB-019 — the fields a person records on an asset (ADR-023): identity,
+// purchase, warranty, vendor support, end of life, the depreciation schedule and spare-part stock control. One form serves the edit panel of a register row and the manual-asset entry; it builds an
 // AssetDetailsInput where an empty group clears that cover and an empty field clears that value.
 import { ASSETS } from '@openmap/constants';
-import { isSubscriptionCiType } from '@openmap/contracts';
+import { DEPRECIATION_METHODS, isSubscriptionCiType, type DepreciationMethod } from '@openmap/contracts';
 import type { ReactNode, SyntheticEvent } from 'react';
 import { useId, useState } from 'react';
 import { Button, Field, Select, TextArea, TextInput } from '@/components/common/controls';
 import type { AssetDetailsInput, AssetRecord } from '@/lib/estate-queries';
-import { useT } from '@/providers';
+import { useFormatters, useT } from '@/providers';
 
 export interface AssetDetailsFormProps {
   initial: AssetRecord | null;
@@ -52,6 +52,11 @@ interface Draft {
   endOfSale: string;
   endOfSoftwareMaintenance: string;
   endOfSupport: string;
+  depreciationMethod: DepreciationMethod;
+  usefulLifeMonths: string;
+  residualValue: string;
+  stockOnHand: string;
+  stockReorderPoint: string;
   note: string;
 }
 
@@ -89,6 +94,12 @@ export function draftOf(asset: AssetRecord | null): Draft {
     endOfSale: dateOnly(asset?.endOfLife?.endOfSale),
     endOfSoftwareMaintenance: dateOnly(asset?.endOfLife?.endOfSoftwareMaintenance),
     endOfSupport: dateOnly(asset?.endOfLife?.endOfSupport),
+    depreciationMethod: asset?.depreciation.method ?? 'none',
+    // A register row always has a schedule; 'none' with the one-month minimum is how an unscheduled one is stored.
+    usefulLifeMonths: asset && asset.depreciation.method !== 'none' ? String(asset.depreciation.usefulLifeMonths) : '',
+    residualValue: asset && asset.depreciation.method !== 'none' ? String(asset.depreciation.residualValue.amount) : '',
+    stockOnHand: asset?.stock ? String(asset.stock.onHand) : '',
+    stockReorderPoint: asset?.stock ? String(asset.stock.reorderPoint) : '',
     note: '',
   };
 }
@@ -164,7 +175,38 @@ export function detailsOf(d: Draft): AssetDetailsInput {
       endOfSoftwareMaintenance: orNull(d.endOfSoftwareMaintenance),
       endOfSupport: orNull(d.endOfSupport),
     };
+  // REQ-CMDB-017: a schedule is sent once a method other than none is chosen with its life. Choosing none on a
+  // scheduled asset (its life still filled) stops depreciation and keeps the minimum life the register requires; an
+  // asset that never had a schedule sends nothing, so saving it records no change.
+  const life = orNull(d.usefulLifeMonths);
+  const residual = orNull(d.residualValue);
+  if (d.depreciationMethod !== 'none' && life !== null)
+    input.depreciation = {
+      method: d.depreciationMethod,
+      usefulLifeMonths: Number(life),
+      residualValueAmount: Number(residual ?? 0),
+    };
+  else if (d.depreciationMethod === 'none' && (life !== null || residual !== null))
+    input.depreciation = { method: 'none', usefulLifeMonths: ASSETS.defaultUsefulLifeMonths, residualValueAmount: 0 };
+  // REQ-CMDB-019: both counts start stock control, both empty stop it.
+  const onHand = orNull(d.stockOnHand);
+  const reorderPoint = orNull(d.stockReorderPoint);
+  if (onHand === null && reorderPoint === null) input.stock = null;
+  else if (onHand !== null && reorderPoint !== null) input.stock = { onHand: Number(onHand), reorderPoint: Number(reorderPoint) };
   return input;
+}
+
+function wholeCount(value: string): boolean {
+  return value.trim() !== '' && Number.isInteger(Number(value)) && Number(value) >= 0;
+}
+
+/** A schedule needs a whole useful life when a method is chosen; stock needs both counts or neither. */
+export function valueComplete(d: Draft): boolean {
+  const scheduled =
+    d.depreciationMethod === 'none' ||
+    (wholeCount(d.usefulLifeMonths) && Number(d.usefulLifeMonths) >= 1 && (d.residualValue.trim() === '' || Number(d.residualValue) >= 0));
+  const stockEmpty = d.stockOnHand.trim() === '' && d.stockReorderPoint.trim() === '';
+  return scheduled && (stockEmpty || (wholeCount(d.stockOnHand) && wholeCount(d.stockReorderPoint)));
 }
 
 /** A subscription is complete with a provider and either an end date or a credit balance with its unit. */
@@ -200,7 +242,8 @@ export function draftComplete(d: Draft): boolean {
   return (
     group(d.warrantyProvider, d.warrantyEndsAt, [d.warrantyLevel, d.warrantyStartsAt]) &&
     (!subscriptionAny || subscriptionComplete(d)) &&
-    group(d.supportProvider, d.supportEndsAt, [d.supportContractNumber, d.supportLevel])
+    group(d.supportProvider, d.supportEndsAt, [d.supportContractNumber, d.supportLevel]) &&
+    valueComplete(d)
   );
 }
 
@@ -217,6 +260,7 @@ export function AssetDetailsForm({
   onSubmit,
 }: AssetDetailsFormProps): ReactNode {
   const t = useT();
+  const format = useFormatters();
   const id = useId();
   const subscriptionType = isSubscriptionCiType(ciType ?? initial?.ciType ?? null);
   const [draft, setDraft] = useState<Draft>(() => draftOf(initial));
@@ -329,6 +373,43 @@ export function AssetDetailsForm({
           {field('endOfSale', 'assets.details.eol.endOfSale', 'date')}
           {field('endOfSoftwareMaintenance', 'assets.details.eol.endOfSoftwareMaintenance', 'date')}
           {field('endOfSupport', 'assets.details.eol.endOfSupport', 'date')}
+        </>,
+      )}
+      {group(
+        t('assets.details.depreciation.title'),
+        <>
+          <Field id={id + 'depreciationMethod'} label={t('assets.details.depreciation.method')}>
+            <Select
+              id={id + 'depreciationMethod'}
+              value={draft.depreciationMethod}
+              onChange={(event) => {
+                const value = DEPRECIATION_METHODS.find((m) => m === event.currentTarget.value) ?? 'none';
+                setDraft((d) => ({ ...d, depreciationMethod: value }));
+              }}
+            >
+              {DEPRECIATION_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {t(`assets.details.depreciation.methods.${m}`)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          {field('usefulLifeMonths', 'assets.details.depreciation.usefulLife', 'number', { min: 1, step: '1' })}
+          {field('residualValue', 'assets.details.depreciation.residual', 'number', { min: 0, step: 'any' })}
+          {initial?.bookValue ? (
+            <p className="self-end text-om-sm text-om-secondary" data-testid="asset-book-value">
+              {t('assets.details.depreciation.bookValue', {
+                value: format.number(initial.bookValue.amount) + ' ' + initial.bookValue.currency,
+              })}
+            </p>
+          ) : null}
+        </>,
+      )}
+      {group(
+        t('assets.details.stock.title'),
+        <>
+          {field('stockOnHand', 'assets.details.stock.onHand', 'number', { min: 0, step: '1' })}
+          {field('stockReorderPoint', 'assets.details.stock.reorderPoint', 'number', { min: 0, step: '1' })}
         </>,
       )}
       <Field id={id + 'note'} label={t('assets.details.note')}>

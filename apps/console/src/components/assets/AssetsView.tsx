@@ -180,6 +180,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   const [source, setSource] = useState<AssetSource | ''>('');
   const [data, setData] = useState<DataFilter>('');
   const [text, setText] = useState('');
+  const [lowStock, setLowStock] = useState(false);
   const [horizon, setHorizon] = useState<number>(ASSETS.defaultWarrantyHorizonDays);
   // The selected row is kept as a record, not an id: after a save it may leave the current filter (a gap filled) and
   // the panel must stay open showing the saved result.
@@ -203,8 +204,9 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
       sources: source === '' ? null : [source],
       dataGaps: data === '' ? null : data === 'any' ? [...ASSET_DATA_GAPS] : [data],
       text: text.trim() === '' ? null : text.trim(),
+      belowReorderPoint: lowStock ? true : null,
     }),
-    [stage, layer, source, data, text],
+    [stage, layer, source, data, text, lowStock],
   );
   const assets = useQuery(assetPageQuery(filter, page));
   const summary = useQuery(assetSummaryQuery());
@@ -250,6 +252,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
       supportExpired: sum((r) => r.supportExpired),
       eolPassed: sum((r) => r.endOfSupportPassed),
       subscriptionExpired: sum((r) => r.subscriptionExpired),
+      belowReorderPoint: sum((r) => r.belowReorderPoint),
     };
   }, [summary.data]);
   const byLayer = useMemo(() => new Map((summary.data ?? []).map((row) => [row.layer, row])), [summary.data]);
@@ -409,6 +412,18 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
               ))}
             </Select>
           </label>
+          <span data-testid="asset-low-stock-filter">
+            <Pill
+              variant={lowStock ? 'primary' : 'default'}
+              selected={lowStock}
+              onClick={() => {
+                setLowStock(!lowStock);
+                resetPages();
+              }}
+            >
+              {t('assets.filter.lowStock', { count: format.integer(totals.belowReorderPoint) })}
+            </Pill>
+          </span>
         </div>
         <div className="max-h-[32rem] overflow-y-auto">
           {assets.isPending ? (
@@ -452,6 +467,9 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                       {t('assets.table.endOfSupport')}
                     </th>
                     <th scope="col" className={thClass}>
+                      {t('assets.table.value')}
+                    </th>
+                    <th scope="col" className={thClass}>
                       <span className="sr-only">{t('assets.table.actions')}</span>
                     </th>
                   </tr>
@@ -468,6 +486,16 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                         {a.assetTag}
                         {a.serialNumber !== null ? (
                           <span className="block text-om-2xs text-om-muted">{a.serialNumber}</span>
+                        ) : null}
+                        {a.stock?.belowReorderPoint ? (
+                          <span className="mt-om-2 block" data-testid="asset-low-stock">
+                            <Tag>
+                              {t('assets.table.lowStock', {
+                                onHand: format.integer(a.stock.onHand),
+                                reorderPoint: format.integer(a.stock.reorderPoint),
+                              })}
+                            </Tag>
+                          </span>
                         ) : null}
                       </td>
                       <td className={tdClass + ' text-om-secondary'}>
@@ -546,6 +574,20 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                           expiredLabel={t('assets.table.expired')}
                           format={format}
                         />
+                      </td>
+                      <td className={tdClass + ' whitespace-nowrap'} data-testid="asset-book-value-cell">
+                        {a.bookValue === null ? (
+                          <span className="text-om-muted">{t('common.none')}</span>
+                        ) : (
+                          <>
+                            {money(format, a.bookValue)}
+                            {a.purchaseCost !== null ? (
+                              <span className="block text-om-2xs text-om-muted">
+                                {t('assets.table.ofCost', { cost: money(format, a.purchaseCost) })}
+                              </span>
+                            ) : null}
+                          </>
+                        )}
                       </td>
                       <td className={tdClass}>
                         <Button

@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/event-envelope/0.6.0",
+  "$id": "https://openmap.dev/contracts/event-envelope/0.7.0",
   "title": "event-envelope",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -60,6 +60,7 @@
         "openmap.asset.stage.changed",
         "openmap.asset.created",
         "openmap.asset.updated",
+        "openmap.asset.stock.low",
         "openmap.asset.warranty.expiring",
         "openmap.asset.eos.approaching",
         "openmap.plan.status.changed",

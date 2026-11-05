@@ -108,6 +108,9 @@ interface FixtureAsset {
   dataGaps: string[];
   plan: { id: string; number: string; name: string; status: string } | null;
   purchaseCost: { amount: number; currency: string } | null;
+  depreciation: { method: string; usefulLifeMonths: number; residualValue: { amount: number; currency: string } };
+  bookValue: { amount: number; currency: string } | null;
+  stock: { onHand: number; reorderPoint: number; belowReorderPoint: boolean } | null;
 }
 const assets: FixtureAsset[] = [
   {
@@ -152,6 +155,9 @@ const assets: FixtureAsset[] = [
     dataGaps: ['support', 'end_of_life'],
     plan: null,
     purchaseCost: { amount: 12000, currency: 'SAR' },
+    depreciation: { method: 'straight_line', usefulLifeMonths: 60, residualValue: { amount: 0, currency: 'SAR' } },
+    bookValue: { amount: 9600, currency: 'SAR' },
+    stock: null,
   },
   {
     id: 'a2',
@@ -187,6 +193,9 @@ const assets: FixtureAsset[] = [
     dataGaps: ['support', 'end_of_life'],
     plan: { id: 'p1', number: 'PLAN-001', name: 'Core refresh', status: 'draft' },
     purchaseCost: null,
+    depreciation: { method: 'none', usefulLifeMonths: 1, residualValue: { amount: 0, currency: 'XXX' } },
+    bookValue: null,
+    stock: { onHand: 1, reorderPoint: 2, belowReorderPoint: true },
   },
   {
     id: 'a3',
@@ -223,6 +232,9 @@ const assets: FixtureAsset[] = [
     dataGaps: ['subscription', 'support', 'end_of_life'],
     plan: null,
     purchaseCost: null,
+    depreciation: { method: 'none', usefulLifeMonths: 1, residualValue: { amount: 0, currency: 'XXX' } },
+    bookValue: null,
+    stock: null,
   },
   {
     id: 'a4',
@@ -267,6 +279,9 @@ const assets: FixtureAsset[] = [
     dataGaps: ['support', 'end_of_life'],
     plan: null,
     purchaseCost: null,
+    depreciation: { method: 'none', usefulLifeMonths: 1, residualValue: { amount: 0, currency: 'XXX' } },
+    bookValue: null,
+    stock: null,
   },
 ];
 const summary = [
@@ -278,6 +293,7 @@ const summary = [
     subscriptionExpired: 0,
     supportExpired: 0,
     endOfSupportPassed: 0,
+    belowReorderPoint: 1,
   },
   {
     layer: 'applications',
@@ -287,6 +303,7 @@ const summary = [
     subscriptionExpired: 0,
     supportExpired: 0,
     endOfSupportPassed: 0,
+    belowReorderPoint: 0,
   },
 ];
 const unknown = [
@@ -402,8 +419,11 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
     case 'AssetPage': {
       const v = body.variables ?? {};
       const filter = v['filter'] as
-        { layers?: string[] | null; dataGaps?: string[] | null; text?: string | null } | null | undefined;
+        | { layers?: string[] | null; dataGaps?: string[] | null; text?: string | null; belowReorderPoint?: boolean | null }
+        | null
+        | undefined;
       let list = state.bulk ? bulk : assets;
+      if (filter?.belowReorderPoint) list = list.filter((a) => a.stock?.belowReorderPoint === true);
       const layers = filter?.layers;
       if (layers) list = list.filter((a) => layers.includes(a.layer));
       const gaps = filter?.dataGaps;
@@ -875,6 +895,57 @@ describe.each(LOCALES)('AssetsView register (%s)', (locale) => {
     // Support and end of life were left empty: they are cleared explicitly, the identity fields echo the row.
     expect(input.support).toBeNull();
     expect(input.manufacturer).toBe('Dell');
+  });
+
+  it('shows book value and low stock, filters spares below their reorder point and saves a schedule and stock (REQ-CMDB-017, REQ-CMDB-019)', async () => {
+    mount(locale);
+    await screen.findAllByText('AST-0001');
+    const register = screen.getByTestId('asset-register');
+    const first = register.querySelector('[data-asset-tag="AST-0001"]');
+    expect(first?.querySelector('[data-testid="asset-book-value-cell"]')?.textContent.match(/SAR/g)?.length).toBe(2);
+    const spare = register.querySelector('[data-asset-tag="AST-0002"]');
+    expect(spare?.querySelector('[data-testid="asset-low-stock"]')).not.toBeNull();
+    expect(first?.querySelector('[data-testid="asset-low-stock"]')).toBeNull();
+
+    fireEvent.click(within(screen.getByTestId('asset-low-stock-filter')).getByRole('button'));
+    await waitFor(() => {
+      const last = state.calls.filter((c) => c.op === 'AssetPage').at(-1);
+      expect((last?.variables['filter'] as { belowReorderPoint?: boolean } | null)?.belowReorderPoint).toBe(true);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('asset-register').querySelector('[data-asset-tag="AST-0001"]')).toBeNull();
+    });
+    fireEvent.click(within(screen.getByTestId('asset-low-stock-filter')).getByRole('button'));
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: translate(locale, 'assets.table.edit', { tag: 'AST-0001' }) }),
+    );
+    const panel = await screen.findByTestId('asset-details-panel');
+    const form = within(panel).getByRole('form', { name: translate(locale, 'assets.details.title') });
+    expect(within(form).getByTestId('asset-book-value').textContent).toContain('SAR');
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.details.depreciation.method')), {
+      target: { value: 'declining_balance' },
+    });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.details.depreciation.usefulLife')), {
+      target: { value: '36' },
+    });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.details.stock.onHand')), {
+      target: { value: '4' },
+    });
+    const save = within(form).getByRole('button', { name: translate(locale, 'assets.details.save') });
+    // One stock count without the other is incomplete.
+    expect((save as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.details.stock.reorderPoint')), {
+      target: { value: '2' },
+    });
+    fireEvent.click(save);
+    await waitFor(() => {
+      const update = state.calls.filter((c) => c.op === 'UpdateAsset').at(-1);
+      expect(update?.variables['input']).toMatchObject({
+        depreciation: { method: 'declining_balance', usefulLifeMonths: 36, residualValueAmount: 0 },
+        stock: { onHand: 4, reorderPoint: 2 },
+      });
+    });
   });
 
   it('diagnoses unknown devices and opens the label panel preset with the suggested layer and type', async () => {

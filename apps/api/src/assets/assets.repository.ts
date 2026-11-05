@@ -16,6 +16,8 @@ import {
   type Warranty,
   assetDataGaps,
   assetFieldsFromCi,
+  belowReorderPoint,
+  bookValue,
   endOfLifeSchema,
   subscriptionSchema,
   supportSchema,
@@ -23,8 +25,8 @@ import {
 } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import type { CiRecord } from '../ci/ci.types.js';
-import { NO_CURRENCY, toMoney } from '../common/money.js';
-import { isoOf, toIso } from '../common/time.js';
+import { NO_CURRENCY, toMoney, type Money } from '../common/money.js';
+import { isoOf, nowIso, toIso } from '../common/time.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { AssetDetailsInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
 import type {
@@ -55,6 +57,8 @@ export interface AssetsQuery {
   text: string | null;
   /** Only assets whose warranty ends before this instant (ISO). */
   warrantyEndsBefore: string | null;
+  /** REQ-CMDB-019: only stocked spares at or below their reorder point. */
+  belowReorderPoint: boolean;
   first: number;
   afterId: string | null;
 }
@@ -168,6 +172,13 @@ function endOfLifeView(e: EndOfLife): EndOfLifeView {
   };
 }
 
+/** REQ-CMDB-017: today's value under the row's schedule, in the purchase currency. */
+function bookValueOf(row: AssetRow): Money | null {
+  const cost = row.purchaseCostAmount === null ? null : Number(row.purchaseCostAmount);
+  const value = bookValue(cost, row.purchasedAt === null ? null : isoOf(row.purchasedAt), { method: row.depreciationMethod, usefulLifeMonths: row.usefulLifeMonths, residualValue: Number(row.residualValueAmount) }, nowIso());
+  return value === null ? null : { amount: value, currency: row.purchaseCostCurrency ?? row.residualValueCurrency };
+}
+
 export function toAsset(row: AssetRow): AssetRecordView {
   const warranty = parseWarranty(row.warranty);
   const subscription = parseSubscription(row.subscription);
@@ -190,6 +201,16 @@ export function toAsset(row: AssetRow): AssetRecordView {
     locationCiId: row.locationCiId,
     purchasedAt: toIso(row.purchasedAt),
     purchaseCost: toMoney(row.purchaseCostAmount, row.purchaseCostCurrency),
+    depreciation: {
+      method: row.depreciationMethod,
+      usefulLifeMonths: row.usefulLifeMonths,
+      residualValue: { amount: Number(row.residualValueAmount), currency: row.residualValueCurrency },
+    },
+    bookValue: bookValueOf(row),
+    stock:
+      row.stockOnHand === null || row.stockReorderPoint === null
+        ? null
+        : { onHand: row.stockOnHand, reorderPoint: row.stockReorderPoint, belowReorderPoint: belowReorderPoint({ onHand: row.stockOnHand, reorderPoint: row.stockReorderPoint }) },
     warranty: warranty ? warrantyView(warranty) : null,
     warrantyEndsAt: warranty ? toIso(warranty.endsAt) : null,
     subscription: subscription ? subscriptionView(subscription) : null,
@@ -285,6 +306,12 @@ type DetailsData = Partial<
     | 'subscription'
     | 'support'
     | 'endOfLife'
+    | 'depreciationMethod'
+    | 'usefulLifeMonths'
+    | 'residualValueAmount'
+    | 'residualValueCurrency'
+    | 'stockOnHand'
+    | 'stockReorderPoint'
   >
 >;
 
@@ -325,6 +352,27 @@ export function detailsData(
         ? null
         : String(row.purchaseCostAmount) + ' ' + (row.purchaseCostCurrency ?? NO_CURRENCY),
       amount === null ? null : String(amount) + ' ' + (currency ?? NO_CURRENCY),
+    );
+  }
+  if (input.depreciation !== undefined && input.depreciation !== null) {
+    const d = input.depreciation;
+    data.depreciationMethod = d.method;
+    data.usefulLifeMonths = d.usefulLifeMonths;
+    data.residualValueAmount = d.residualValueAmount;
+    data.residualValueCurrency = input.purchaseCostCurrency ?? row?.purchaseCostCurrency ?? row?.residualValueCurrency ?? NO_CURRENCY;
+    set(
+      'depreciation',
+      row === null ? null : row.depreciationMethod + ' ' + String(row.usefulLifeMonths) + 'm ' + String(row.residualValueAmount),
+      d.method + ' ' + String(d.usefulLifeMonths) + 'm ' + String(d.residualValueAmount),
+    );
+  }
+  if (input.stock !== undefined) {
+    data.stockOnHand = input.stock === null ? null : input.stock.onHand;
+    data.stockReorderPoint = input.stock === null ? null : input.stock.reorderPoint;
+    set(
+      'stock',
+      row?.stockOnHand == null ? null : String(row.stockOnHand) + '/' + String(row.stockReorderPoint),
+      input.stock === null ? null : String(input.stock.onHand) + '/' + String(input.stock.reorderPoint),
     );
   }
   if (input.warranty !== undefined) {
@@ -448,6 +496,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
     }
     if (q.warrantyEndsBefore !== null)
       and.push({ warranty: { path: ['endsAt'], lte: q.warrantyEndsBefore } });
+    if (q.belowReorderPoint)
+      and.push({ stockOnHand: { not: null, lte: this.prisma.client.assetRecord.fields.stockReorderPoint } });
     return and;
   }
 
@@ -517,6 +567,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
         subscriptionExpired: number;
         supportExpired: number;
         endOfSupportPassed: number;
+        belowReorderPoint: number;
       }>
     >(Prisma.sql`
       SELECT a.layer, count(*)::int AS "count",
@@ -524,7 +575,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
         count(*) FILTER (WHERE (a.warranty->>'endsAt')::date < ${today}::date)::int AS "warrantyExpired",
         count(*) FILTER (WHERE (a.subscription->>'endsAt')::date < ${today}::date)::int AS "subscriptionExpired",
         count(*) FILTER (WHERE (a.support->>'endsAt')::date < ${today}::date OR sc."endsAt" < ${today}::date)::int AS "supportExpired",
-        count(*) FILTER (WHERE (a."endOfLife"->>'endOfSupport')::date < ${today}::date)::int AS "endOfSupportPassed"
+        count(*) FILTER (WHERE (a."endOfLife"->>'endOfSupport')::date < ${today}::date)::int AS "endOfSupportPassed",
+        count(*) FILTER (WHERE a."stockOnHand" IS NOT NULL AND a."stockOnHand" <= a."stockReorderPoint")::int AS "belowReorderPoint"
       FROM asset_records a LEFT JOIN support_contracts sc ON sc.id = a."supportContractId"
       WHERE a."tenantId" = ${tenantId}::uuid AND a.stage <> ALL(${[...UNOWNED_STAGES]}::"AssetStage"[])
       GROUP BY a.layer`);
@@ -536,6 +588,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       subscriptionExpired: Number(r.subscriptionExpired),
       supportExpired: Number(r.supportExpired),
       endOfSupportPassed: Number(r.endOfSupportPassed),
+      belowReorderPoint: Number(r.belowReorderPoint),
     }));
   }
 

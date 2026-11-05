@@ -63,6 +63,11 @@ export interface AssetRecordView {
   locationCiId: string | null;
   purchasedAt: string | null;
   purchaseCost: Money | null;
+  /** REQ-CMDB-017: the schedule and today's value under it. */
+  depreciation: { method: string; usefulLifeMonths: number; residualValue: Money };
+  bookValue: Money | null;
+  /** REQ-CMDB-019: stock control of a stocked spare. */
+  stock: { onHand: number; reorderPoint: number; belowReorderPoint: boolean } | null;
   warranty: WarrantyView | null;
   warrantyEndsAt: string | null;
   subscription: SubscriptionView | null;
@@ -96,6 +101,7 @@ export interface AssetSummaryView {
   subscriptionExpired: number;
   supportExpired: number;
   endOfSupportPassed: number;
+  belowReorderPoint: number;
 }
 
 export interface BomLineView {
