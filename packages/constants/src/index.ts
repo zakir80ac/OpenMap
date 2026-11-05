@@ -281,6 +281,7 @@ export const TIME = {
   secondsPerMinute: 60,
   msPerSecond: 1000,
   hoursPerDay: 24,
+  msPerHour: 3_600_000,
   msPerDay: 86_400_000,
   microsecondsPerMillisecond: 1000,
   /** Length of a calendar date in ISO form (YYYY-MM-DD). */
@@ -569,6 +570,26 @@ export const ASSISTANT = {
   smallTalkMaxWords: 4,
   /** Rows a skill may return to the composer and the evidence; larger sets are summarised in the store. */
   skillRowLimit: 500,
+  /**
+   * ADR-028 increment two (REQ-AI-008): conversations. A conversation's title is the first question clipped; the
+   * list shows the newest conversations of the person; a question this short with no intent marker of its own is
+   * read against the previous turn ("and last month?", "and for VMs?").
+   */
+  conversationTitleLength: 80,
+  conversationListLimit: 50,
+  followUpMaxWords: 6,
+  /** A follow-up inherits the previous turn's reading, so its confidence is at least the floor that ran that turn. */
+  followUpConfidence: 0.75,
+  /**
+   * `metrics.series`: a range question ("CPU of host X over the last 7 days") is averaged into this many buckets for
+   * the evidence rows and the trend; a calendar period in a measurement question ("last month") is read as a rolling
+   * window of the given days; "last week" is seven days; a trend within the flat band is reported as flat.
+   */
+  seriesBuckets: 48,
+  rollingDays: { month: 30, quarter: 90, year: 365 },
+  weekDays: 7,
+  seriesFlatPercent: 5,
+  seriesDefaultDays: 7,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */
@@ -1026,8 +1047,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.4.0 (REQ-AI-007, ADR-028): `AssistantIntent`, `AssistantStore`, `AssistantFigure`, `AssistantEvidence`,
    * `AssistantOption`, `AssistantClarification`; `AssistantAnswer.intent`/`confidence`/`figures`/`evidence`/
    * `followUps`/`clarification`/`grounded`; `askAssistant(question, locale)`.
+   * 1.5.0 (REQ-AI-008, ADR-028): `Conversation`, `AssistantTurn`, `AssistantAnswer.conversationId`/`turnId`,
+   * queries `conversations`, `conversation`, mutation `deleteConversation`, `askAssistant(…, conversationId)`.
    */
-  graphql: '1.4.0',
+  graphql: '1.5.0',
   /** 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`. */
   event: '0.5.0',
 };

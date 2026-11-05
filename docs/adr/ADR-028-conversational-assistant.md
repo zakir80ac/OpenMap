@@ -1,6 +1,18 @@
 # ADR-028 — Ask becomes a conversation: intent, plan, retrieve across the stores, compose with grounding
 
-Status: Accepted (increment one shipped under REQ-AI-007 on 2026-11-05: skills `cmdb.attributes`, `metrics.latest`, `services.availability`, `incidents`, `impact`, `history`, `howto` and the kept `graph.query`; the classifier with clarifications; the grounding guard; the evaluation set in CI; GraphQL 1.4.0; increment two, persisted conversations and follow-up resolution, continues under REQ-AI-008) · Date: 2026-11-05 · Tracker: REQ-AI-007, REQ-AI-008
+Status: Accepted and implemented (increment one shipped under REQ-AI-007 on 2026-11-05: skills `cmdb.attributes`, `metrics.latest`, `services.availability`, `incidents`, `impact`, `history`, `howto` and the kept `graph.query`; the classifier with clarifications; the grounding guard; the evaluation set in CI; GraphQL 1.4.0. Increment two shipped under REQ-AI-008 on 2026-11-05: persisted conversations (`assistant_conversations`, `assistant_turns`, migration 0019), follow-up resolution against the previous turn (`apps/assistant/src/core/conversation.ts`), the `metrics.series` skill over a rolling window, GraphQL 1.5.0 with `Conversation`, `AssistantTurn`, `conversations`, `conversation`, `deleteConversation` and `askAssistant(…, conversationId)`, the console's conversation list with the thread kept by id in the URL, and four multi-turn cases in the evaluation set: 38 of 38 through GraphQL) · Date: 2026-11-05 · Tracker: REQ-AI-007, REQ-AI-008
+
+Notes from increment two. (1) A turn row holds both the question and the answer, so the column the first sketch called
+`role` is `outcome` (`answered`, `clarified`, `failed`): the thread is one row per exchange, not two. (2) The follow-up
+resolution is deterministic: a question that opens with a continuation word, or is short with no intent marker and
+only a fragment (a type, a period, a window, a scope word, a grouping), inherits what it left out from the previous
+turn's persisted reading and the intent is derived again from the merged entities; a new subject type drops the
+previous names and scope, a swapped type carries a measurement to its equivalent metric, and a marker intent that no
+longer fits (availability on hosts) is dropped. (3) A calendar period in a measurement question ("CPU last month") is
+read as a rolling window of the same length (`ASSISTANT.rollingDays`), because measurements are sampled, not booked
+to calendar months as availability is. (4) The synthetic estate holds one sample per CI at its generation instant,
+so a series over the last days is the sample-less wording on the dev stack; the series arithmetic is unit-tested
+against bucket rows and the SQL runs in the evaluation.
 
 ## Context
 

@@ -2,7 +2,47 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 19: the conversational assistant, increment one)
+## Last session · 2026-11-05 (checkpoint 20: the conversational assistant, increment two)
+
+**Done.** REQ-AI-008 (ADR-028 accepted and implemented in full).
+
+- **Conversations are records.** Prisma 0019: `assistant_conversations` (tenant, owner, title = first question
+  clipped) and `assistant_turns` (question, locale, outcome `answered`/`clarified`/`failed`, the answer JSON as
+  returned plus the resolved reading as `context`; `assistantTurnAnswerSchema`, assistant contract 0.2.0). The API's
+  `ConversationsService` records every turn from `AssistantService.finish`, opening a conversation when the question
+  came without one; `askAssistant(question, locale, conversationId)` returns `conversationId` and `turnId`; queries
+  `conversations`, `conversation(id)` (turns through a field resolver, CIs resolved by id on read) and mutation
+  `deleteConversation` are scoped to the user who asked. GraphQL 1.5.0 (additive).
+- **Follow-ups** (`apps/assistant/src/core/conversation.ts`): `isFollowUp` (a continuation opener, or short with no
+  intent marker and only a fragment), `resolveFollowUp` (fills types, names, attribute, measurement, aggregate,
+  grouping, filters, health, period, window and top-N from the previous turn; a swapped subject drops the previous
+  names and scope and carries a measurement to the equivalent metric; the intent is re-derived from the merged
+  entities by the classifier's own ladder, `deriveIntent`, with a previous marker intent only where it still fits),
+  `turnContextOf` / `parseTurnContext`. Classifier fixes on the way: the grouping attribute is reported at its
+  absolute offset (so "per site" is no longer a second subject) and a `range` entity reads rolling windows in both
+  scripts ("over the last 7 days", "آخر ٧ أيام", "last week").
+- **`metrics.series`**: ClickHouse `metrics` over a window ending `offsetHours` ago, averaged into
+  `ASSISTANT.seriesBuckets`; summary kind `series` worded in en and ar (average, range, samples, latest, trend);
+  a calendar period on a measurement is a rolling window of `ASSISTANT.rollingDays`. `metrics.latest` honours a named
+  CI. Follow-up chips lead a latest-sample answer to its series and a series to a longer window.
+- **Console.** The Assistant screen lists the person's conversations (open, continue, new, delete) beside the thread;
+  the open conversation's id is `?c=<id>` in the URL, so a reload rebuilds the thread from the server; local turns
+  and server turns are merged by turn id; a follow-up continues the conversation the first answer opened even before
+  the URL has moved. 26 new i18n keys per locale.
+- **Evaluation.** 30 single questions (series question added) and four multi-turn conversations: 38 of 38 through
+  GraphQL (T-143/T-146). Tests: T-145 (assistant unit, 54), T-146 (series skill offline 2, integration 38), T-147
+  (console view 14, en and ar), T-148 (e2e `assistant.spec.ts`, en and ar). Guard, i18n, contracts, console lint green.
+  Evidence: `docs/evidence/assistant-conversations.md`, `docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png`.
+
+**Lessons.** (1) A group-marker hit found in a slice must be reported at its absolute offset before comparing it with
+hits found in the whole text (the "per site" subject bug). (2) The synthetic estate's metric samples all sit at the
+generator's instant, so any "last N days" series on the dev stack is the sample-less wording; series arithmetic is
+tested against bucket rows instead. (3) In the console, local turns must stay visible across the router update that
+moves the URL to the newly opened conversation, and a follow-up must use the opened id, not the URL's, until then.
+(4) Playwright `getByText` on a short word such as "availability" hits the figures, the evidence and the chips: mark
+the line under test with a `data-testid`.
+
+## Previous session · 2026-11-05 (checkpoint 19: the conversational assistant, increment one)
 
 **Done.** REQ-AI-007 (ADR-028 accepted for increment one). REQ-AI-008 stays In progress (increment two).
 
@@ -41,7 +81,7 @@ assistant.eval.integration.test.ts`): 29 of 29 through GraphQL in 45 s, English 
 before asking back. (3) Arabic accusative endings ("جهازاً افتراضياً") need per-word suffixes in the term matcher.
 (4) The graphify commit hook (`--no-cluster`, `stage_fixed`) commits the raw graph.json; the curated report is ours.
 
-## Previous session · 2026-11-05 (checkpoint 18: uptime tile, register pages, subscription cover, assistant ADR)
+## Earlier session · 2026-11-05 (checkpoint 18: uptime tile, register pages, subscription cover, assistant ADR)
 
 **Done.** REQ-UI-036, REQ-CMDB-041, REQ-CMDB-042; ADR-027 accepted; ADR-028 proposed for REQ-AI-007/008.
 
@@ -370,14 +410,14 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-AI-008 (ADR-028 increment two): persisted conversations (`assistant_conversations`, `assistant_turns`,
-   Prisma migration), follow-up resolution against the previous turn's entities and period ("and last month?"),
-   the conversation list in the console, `metrics.series` for ranges, LoRA step documented once a GPU host exists.
-2. REQ-BSM-007 (ADR-025): sites and connectivity for HA/DR readiness.
-3. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
+1. REQ-BSM-007 (ADR-025): sites and connectivity for HA/DR readiness.
+2. Finance module (costing, ROI, cost management, planning, budgeting): tracker rows to add, then build.
+3. Assistant follow-through (new rows to add): the synthetic estate emitting a metric time series (several samples
+   per CI over the days before `--now`) so `metrics.series` carries figures on the dev stack and in CI; the LoRA
+   step of ADR-028 once a GPU host exists.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0018
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0019
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 

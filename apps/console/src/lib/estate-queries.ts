@@ -746,19 +746,75 @@ export interface AssistantAnswer {
   evidence: AssistantEvidence[];
   followUps: string[];
   clarification: AssistantClarification | null;
+  /** REQ-AI-008: the conversation the answer was appended to and its turn. */
+  conversationId: string;
+  turnId: string;
+}
+
+/** REQ-AI-008 — a persisted conversation as listed, and a turn as it was answered. */
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  turnCount: number;
+}
+
+export interface AssistantTurn {
+  id: string;
+  at: string;
+  question: string;
+  locale: string;
+  answer: AssistantAnswer;
 }
 
 export const ASSISTANT_ANSWER_FIELDS =
-  'text cypher rows intent confidence grounded figures { label value unit } evidence { skill store query params rows durationMs error } followUps clarification { question options { label value } } cis { ' +
+  'text cypher rows intent confidence grounded conversationId turnId figures { label value unit } evidence { skill store query params rows durationMs error } followUps clarification { question options { label value } } cis { ' +
   CI_SUMMARY_FIELDS +
   ' }';
 
 const ANALYTICS_EMBED_QUERY =
   'query AnalyticsEmbed { analyticsEmbed { supersetUrl dashboardId token expiresInSeconds } }';
 const ASK_ASSISTANT_MUTATION =
-  'mutation AskAssistant($question: String!, $locale: String) { askAssistant(question: $question, locale: $locale) { ' +
+  'mutation AskAssistant($question: String!, $locale: String, $conversationId: UUID) { askAssistant(question: $question, locale: $locale, conversationId: $conversationId) { ' +
   ASSISTANT_ANSWER_FIELDS +
   ' } }';
+const CONVERSATIONS_QUERY = 'query Conversations { conversations { id title createdAt updatedAt turnCount } }';
+const CONVERSATION_QUERY =
+  'query Conversation($id: UUID!) { conversation(id: $id) { id title createdAt updatedAt turnCount turns { id at question locale answer { ' +
+  ASSISTANT_ANSWER_FIELDS +
+  ' } } } }';
+const DELETE_CONVERSATION_MUTATION = 'mutation DeleteConversation($id: UUID!) { deleteConversation(id: $id) }';
+
+export const conversationsQueryKey = ['conversations'] as const;
+
+export function conversationsQuery() {
+  return queryOptions({
+    queryKey: conversationsQueryKey,
+    queryFn: ({ signal }) =>
+      gql<{ conversations: Conversation[] }>(CONVERSATIONS_QUERY, {}, signal).then((d) => d.conversations),
+  });
+}
+
+export type ConversationThread = Conversation & { turns: AssistantTurn[] };
+
+/** One conversation with its turns; null when it no longer exists (or never belonged to this user). */
+export function conversationQuery(id: string | null) {
+  return queryOptions({
+    queryKey: ['conversation', id] as const,
+    queryFn: ({ signal }) =>
+      gql<{ conversation: ConversationThread | null }>(CONVERSATION_QUERY, { id }, signal).then(
+        (d) => d.conversation,
+      ),
+    enabled: id !== null,
+  });
+}
+
+export function deleteConversation(id: string): Promise<boolean> {
+  return gql<{ deleteConversation: boolean }>(DELETE_CONVERSATION_MUTATION, { id }).then(
+    (d) => d.deleteConversation,
+  );
+}
 
 /** One embed handshake per mount; the SDK asks again through fetchAnalyticsEmbed before the token expires. */
 export function analyticsEmbedQuery() {
@@ -777,8 +833,14 @@ export function fetchAnalyticsEmbed(): Promise<AnalyticsEmbed> {
   return gql<{ analyticsEmbed: AnalyticsEmbed }>(ANALYTICS_EMBED_QUERY, {}).then((d) => d.analyticsEmbed);
 }
 
-export function askAssistant(question: string, locale: Locale): Promise<AssistantAnswer> {
-  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, { question, locale }).then(
-    (d) => d.askAssistant,
-  );
+export function askAssistant(
+  question: string,
+  locale: Locale,
+  conversationId: string | null = null,
+): Promise<AssistantAnswer> {
+  return gql<{ askAssistant: AssistantAnswer }>(ASK_ASSISTANT_MUTATION, {
+    question,
+    locale,
+    conversationId,
+  }).then((d) => d.askAssistant);
 }

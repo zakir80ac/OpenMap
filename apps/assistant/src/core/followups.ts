@@ -1,4 +1,4 @@
-// REQ-AI-007 (ADR-028) — level five: follow up. Three suggested next questions per intent, deterministic and
+// REQ-AI-007 REQ-AI-008 (ADR-028) — level five: follow up. Three suggested next questions per intent, deterministic and
 // worded through the catalogue in the answer's locale, so the conversation leads somewhere useful even when the
 // person does not know what the estate can answer.
 import { ASSISTANT } from '@openmap/constants';
@@ -21,6 +21,7 @@ function firstName(summaries: ReadonlyArray<Summary | null>): string | null {
     if (s.kind === 'history') return s.ci.name;
     if (s.kind === 'availability' && s.lines.length === 1) return s.lines[0]?.name ?? null;
     if (s.kind === 'measurement' && s.ranked.length > 0) return s.ranked[0]?.name ?? null;
+    if (s.kind === 'series' && s.ci !== null) return s.ci.name;
   }
   return null;
 }
@@ -45,14 +46,20 @@ export function suggestFollowUps(
         { key: 'assistant.followup.down', params: { subject } },
       );
       break;
-    case 'measurement':
+    case 'measurement': {
+      // REQ-AI-008: a latest-sample answer leads to its series; a series leads to a longer window.
+      const series = summaries.some((s) => s?.kind === 'series');
       out.push(
+        series
+          ? { key: 'assistant.followup.seriesMonth', params: {} }
+          : { key: 'assistant.followup.series', params: {} },
         { key: 'assistant.followup.topCpu', params: { subject } },
         { key: 'assistant.followup.avgMemory', params: { subject } },
         { key: 'assistant.followup.perSite', params: { subject } },
       );
       if (name !== null) out.unshift({ key: 'assistant.followup.impactOf', params: { ci: name } });
       break;
+    }
     case 'availability':
     case 'report':
       out.push(

@@ -1,7 +1,7 @@
-// REQ-AI-007 (ADR-028) — level four: compose, the deterministic half. Every skill summary has a wording in both
+// REQ-AI-007 REQ-AI-008 (ADR-028) — level four: compose, the deterministic half. Every skill summary has a wording in both
 // locales through the message catalogue, with the figures the sentence rests on listed beside it. The model's prose,
 // when enabled, is checked against these figures by the grounding guard and falls back to this text.
-import { ASSISTANT, type Locale } from '@openmap/constants';
+import { ASSISTANT, TIME, type Locale } from '@openmap/constants';
 import type { AssistantAggregate, AssistantFigure, AssistantIntent, CiType } from '@openmap/contracts';
 import { isMessageKey, type MessageKey, type Params } from '@openmap/i18n';
 import type { AvailabilityLine, GroupCount, HowtoTopic, Summary } from './types.js';
@@ -51,6 +51,17 @@ export function intentLabel(t: Translate, intent: AssistantIntent): string {
 function periodLabel(t: Translate, granularity: 'month' | 'quarter' | 'year', back: number): string {
   const when = back === 0 ? t('assistant.period.current') : t('assistant.period.previous');
   return t(`assistant.period.${granularity}`, { when });
+}
+
+/** "the last 7 days", "the last 36 hours", or "the 30 days ending <date>" when the window does not reach now. */
+function windowLabel(t: Translate, locale: Locale, hours: number, to: string): string {
+  const days = hours / TIME.hoursPerDay;
+  const endsNow = Date.now() - new Date(to).getTime() < TIME.msPerDay;
+  if (!endsNow)
+    return t('assistant.range.ending', { count: formatNumber(locale, Math.round(days)), to: formatDate(locale, to) });
+  return Number.isInteger(days) && days >= 1
+    ? t('assistant.range.days', { count: formatNumber(locale, days) })
+    : t('assistant.range.hours', { count: formatNumber(locale, hours) });
 }
 
 /** "; "-joined items with "and N more" after the first topN. */
@@ -243,6 +254,53 @@ export function composeSummary(
         ],
       };
     }
+    case 'series': {
+      const metric = metricLabel(t, summary.metric);
+      const subject =
+        summary.ci !== null
+          ? summary.ci.name
+          : t('assistant.answer.seriesSubject', {
+              count: formatNumber(locale, summary.count),
+              subject: typeLabel(t, summary.type),
+            });
+      const window = windowLabel(t, locale, summary.hours, summary.to);
+      if (summary.samples === 0 || summary.avg === null)
+        return { text: t('assistant.answer.seriesNone', { metric, subject, window }), figures: [] };
+      const unit = summary.unit;
+      const trend =
+        summary.trendPercent === null
+          ? t('assistant.answer.trendUnknown')
+          : Math.abs(summary.trendPercent) < ASSISTANT.seriesFlatPercent
+            ? t('assistant.answer.trendFlat')
+            : summary.trendPercent > 0
+              ? t('assistant.answer.trendUp', { percent: formatNumber(locale, Math.abs(summary.trendPercent)) })
+              : t('assistant.answer.trendDown', {
+                  percent: formatNumber(locale, Math.abs(summary.trendPercent)),
+                });
+      const figures: AssistantFigure[] = [
+        { label: aggregateLabel(t, 'avg') + ' ' + metric, value: summary.avg, unit },
+        { label: t('assistant.answer.minLabel'), value: summary.min ?? summary.avg, unit },
+        { label: t('assistant.answer.maxLabel'), value: summary.max ?? summary.avg, unit },
+        { label: t('assistant.answer.latestLabel'), value: summary.last ?? summary.avg, unit },
+        { label: t('assistant.answer.samplesLabel'), value: summary.samples, unit: '' },
+      ];
+      return {
+        text: t('assistant.answer.series', {
+          window,
+          metric,
+          subject,
+          avg: formatNumber(locale, summary.avg) + unitSuffix(unit),
+          min: formatNumber(locale, summary.min ?? summary.avg) + unitSuffix(unit),
+          max: formatNumber(locale, summary.max ?? summary.avg) + unitSuffix(unit),
+          last: formatNumber(locale, summary.last ?? summary.avg) + unitSuffix(unit),
+          samples: formatNumber(locale, summary.samples),
+          from: formatDate(locale, summary.from),
+          to: formatDate(locale, summary.to),
+          trend,
+        }),
+        figures,
+      };
+    }
     case 'availability': {
       const period = periodLabel(t, summary.granularity, summary.back);
       if (summary.lines.length === 0)
@@ -416,6 +474,8 @@ export function hasContent(summary: Summary): boolean {
       return summary.total > 0;
     case 'measurement':
       return summary.count > 0;
+    case 'series':
+      return summary.samples > 0;
     case 'availability':
       return summary.lines.length > 0;
     case 'incidents':

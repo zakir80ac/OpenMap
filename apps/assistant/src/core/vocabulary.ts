@@ -3,6 +3,7 @@
 // catalogue, not a model: a term either occurs in the normalised question or it does not, and every match is kept
 // on the classification so the evidence shows why a question was read the way it was. Arabic is matched after
 // normalisation (diacritics, alef forms, taa marbuta, Arabic-Indic digits) with the common clitic prefixes allowed.
+import { ASSISTANT, TIME } from '@openmap/constants';
 import type { AssistantAggregate, AssistantIntent, CiType } from '@openmap/contracts';
 
 export interface Terms {
@@ -793,4 +794,67 @@ export function matchCatalogue<K extends string>(
 /** Blanks a matched span so shorter terms inside it ("host" in "esxi host") are not matched again. */
 export function maskSpan(text: string, hit: TermHit): string {
   return text.slice(0, hit.start) + ' '.repeat(hit.length) + text.slice(hit.start + hit.length);
+}
+
+/** REQ-AI-008 — a rolling window in a measurement question: "over the last 7 days", "last 24 hours", "آخر 7 أيام". */
+export interface RangeSpec {
+  hours: number;
+  term: string;
+}
+
+const RANGE_UNIT_HOURS: ReadonlyArray<{ terms: readonly string[]; hours: number }> = [
+  { terms: ['hour', 'hours', 'hr', 'hrs', 'ساعه', 'ساعات', 'ساعتين'], hours: 1 },
+  { terms: ['day', 'days', 'يوم', 'ايام', 'يومين'], hours: TIME.hoursPerDay },
+  { terms: ['week', 'weeks', 'اسبوع', 'اسابيع', 'اسبوعين'], hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+];
+const RANGE_LEAD = '(?:over the last|over the past|in the last|in the past|during the last|for the last|last|past|previous|recent|اخر|خلال اخر|خلال|في اخر|على مدى اخر|على مدار اخر)';
+const RANGE_NUMBERED = new RegExp(
+  '(?:^|\\s)' + RANGE_LEAD + '\\s+([0-9]+)\\s+(' +
+    RANGE_UNIT_HOURS.flatMap((u) => u.terms).join('|') +
+    ')(?=\\s|$)',
+);
+/** Word forms without a number: "last week", "past week", "الأسبوع الماضي", "الأسبوع الأخير", "last 24 hours" is numbered. */
+const RANGE_WORDS: ReadonlyArray<{ term: string; hours: number }> = [
+  { term: 'last week', hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+  { term: 'past week', hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+  { term: 'previous week', hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+  { term: 'الاسبوع الماضي', hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+  { term: 'الاسبوع الاخير', hours: TIME.hoursPerDay * ASSISTANT.weekDays },
+  { term: 'last 24 hours', hours: TIME.hoursPerDay },
+  { term: 'today', hours: TIME.hoursPerDay },
+  { term: 'اليوم', hours: TIME.hoursPerDay },
+];
+
+/** The rolling window named in a normalised question, or null; the matched span is returned for the evidence. */
+export function rangeOf(normalisedText: string): RangeSpec | null {
+  const m = RANGE_NUMBERED.exec(normalisedText);
+  if (m !== null) {
+    const [whole, countText, unitText] = m;
+    const count = Number(countText);
+    const unit = RANGE_UNIT_HOURS.find((u) => u.terms.includes(unitText ?? ''));
+    if (unit !== undefined && Number.isFinite(count) && count > 0)
+      return { hours: count * unit.hours, term: whole.trim() };
+  }
+  for (const w of RANGE_WORDS) {
+    const hit = locateTerm(normalisedText, w.term);
+    if (hit !== null) return { hours: w.hours, term: w.term };
+  }
+  return null;
+}
+
+/** Words that open a follow-up: "and last month?", "what about VMs?", "وماذا عن الشهر الماضي؟". */
+export const CONTINUATION_TERMS: Terms = {
+  en: ['and', 'what about', 'how about', 'also', 'same for', 'and for', 'now for', 'then'],
+  ar: ['وماذا عن', 'ماذا عن', 'وبالنسبه', 'بالنسبه', 'ايضا', 'كذلك', 'والان', 'ثم'],
+};
+
+/** True when the normalised question opens with a continuation word (an Arabic clitic "و" on the first word counts). */
+export function startsWithContinuation(normalisedText: string): boolean {
+  const first = normalisedText.split(' ')[0] ?? '';
+  if (first.length === 0) return false;
+  for (const term of [...CONTINUATION_TERMS.en, ...CONTINUATION_TERMS.ar]) {
+    const hit = locateTerm(normalisedText, term);
+    if (hit !== null && hit.start === 0) return true;
+  }
+  return isArabic(first) && first.startsWith('و') && first.length > 1;
 }

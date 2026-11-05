@@ -1,4 +1,4 @@
-// REQ-AI-007 REQ-AI-008 (ADR-028) — the assistant contract: the intents a question is classified into, the
+// REQ-AI-007 REQ-AI-008 (ADR-028) — the assistant contract (0.2.0): the intents a question is classified into, the
 // retrieval skills a plan is made of, the stores they read and the aggregate functions an attribute or
 // measurement question may ask for. The GraphQL enums mirror these lists; the console labels them through i18n.
 import { z } from 'zod';
@@ -25,6 +25,7 @@ export const ASSISTANT_SKILLS = [
   'graph.query',
   'cmdb.attributes',
   'metrics.latest',
+  'metrics.series',
   'services.availability',
   'incidents',
   'impact',
@@ -71,3 +72,28 @@ export const assistantClarificationSchema = z.object({
   options: z.array(assistantOptionSchema),
 });
 export type AssistantClarification = z.infer<typeof assistantClarificationSchema>;
+
+/**
+ * REQ-AI-008 — the answer persisted on a conversation turn. CIs are kept by id and resolved when the thread is read;
+ * `context` is the resolved reading of the question (intent and entities, as the assistant package shapes them) so
+ * the next turn can fill its gaps from it ("and last month?" inherits the subject, "and for VMs?" the measurement).
+ */
+export const assistantTurnAnswerSchema = z.object({
+  text: z.string(),
+  cypher: z.string(),
+  rows: z.array(z.record(z.string(), z.unknown())),
+  ciIds: z.array(z.string()),
+  intent: assistantIntentSchema,
+  confidence: z.number().min(0).max(1),
+  figures: z.array(assistantFigureSchema),
+  evidence: z.array(assistantEvidenceSchema),
+  followUps: z.array(z.string()),
+  clarification: assistantClarificationSchema.nullable(),
+  grounded: z.boolean(),
+  context: z.object({ intent: assistantIntentSchema, entities: z.record(z.string(), z.unknown()) }),
+});
+export type AssistantTurnAnswer = z.infer<typeof assistantTurnAnswerSchema>;
+
+/** How a persisted turn ended: an answer, a question back, or every step failed. */
+export const ASSISTANT_TURN_OUTCOMES = ['answered', 'clarified', 'failed'] as const;
+export type AssistantTurnOutcome = (typeof ASSISTANT_TURN_OUTCOMES)[number];

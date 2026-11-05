@@ -204,7 +204,7 @@
 | REQ-BSM-006 | BSM | BSM | SLA assignment, continuous SLA monitoring, alerting and incident response with audit and RCA |  | An SLA (availability target, response and resolution targets per severity, window) is assigned to a business service through the console; the BSM engine evaluates it continuously, opens incidents and alerts on breach or budget exhaustion, tracks acknowledgement, assignment and resolution against the targets, writes every step to the audit log, and each incident carries a structured RCA (root cause CI, contributing factors, corrective actions, owner, due date); en and ar; e2e | P0 | Done |  |  | ADR-024 | T-133, T-135, T-136, T-137, T-138 | commit 95faf93; docs/evidence/sla-uptime.md; ADR-024; e2e services.spec.ts en+ar; Lighthouse services 1.0/1.0/1.0 | 2026-11-05 | 2026-11-05 |  |
 | REQ-BSM-007 | BSM | BSM | Sites and connectivity monitoring for HA / DR readiness |  | Every site and inter-site link is shown with live health; Discovery Nodes probe the links continuously (reachability, latency, loss) and the results land in ClickHouse and on the link CI; readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) are evaluated continuously and breaches open incidents; en and ar; e2e | P0 | Not started |  |  | ADR-025 |  |  | 2026-11-05 | 2026-11-05 |  |
 | REQ-BSM-008 | BSM | Added | Uptime monitoring and availability reporting by month, quarter and year |  | Every service and every monitored CI has an availability figure for the current and past months, quarters and years computed from the health history in ClickHouse; the BSM and service detail screens show uptime per period beside the SLA target with the minutes of downtime and the incidents that caused them; a period report can be exported; k6 budget under 1 s for a yearly roll-up of 300 services; en and ar. | P0 | Done |  |  | CLAUDE.md §0 BSM; Syed 2026-11-05 | T-132, T-134, T-135, T-136, T-137, T-138 | commit 95faf93; docs/evidence/sla-uptime.md; k6 availability-report p95 629 ms on 299 services (budget 1000 ms); ClickHouse DDL 0004 | 2026-11-05 | 2026-11-05 |  |
-| REQ-AI-007 | AI | Added | Assistant grounding: schema catalogue, measurement routing, query validation and a regression suite so Ask answers accurately and never hallucinates properties |  | The assistant answers from a generated catalogue of node labels, properties, relationship types and ClickHouse measurements; questions about measurements (memory, CPU, OS per host, VM density) are routed to the right store instead of failing; generated Cypher is validated and rewritten (no nested aggregates, only known properties) before it runs, with one automatic repair pass; a checked-in question set with expected answers runs in CI and must pass; every failure is logged with the question and the generated query; en and ar. | P0 | In progress | Claude |  | CLAUDE.md §0 AI assistant; Syed 2026-11-05 screenshot | T-142, T-143, T-144 |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-AI-007 | AI | Added | Assistant grounding: schema catalogue, measurement routing, query validation and a regression suite so Ask answers accurately and never hallucinates properties |  | The assistant answers from a generated catalogue of node labels, properties, relationship types and ClickHouse measurements; questions about measurements (memory, CPU, OS per host, VM density) are routed to the right store instead of failing; generated Cypher is validated and rewritten (no nested aggregates, only known properties) before it runs, with one automatic repair pass; a checked-in question set with expected answers runs in CI and must pass; every failure is logged with the question and the generated query; en and ar. | P0 | Done | Claude |  | CLAUDE.md §0 AI assistant; Syed 2026-11-05 screenshot | T-142, T-143, T-144 | commits bfd1586 87ada3c a53b195; ADR-028; docs/evidence/assistant-conversation.md; docs/evidence/assistant-eval.json 29/29; conversation.test.ts + compose.test.ts 44; AssistantView.test.tsx 7; screens.spec.ts Assistant e2e en+ar; docs/evidence/console/assistant-conversation-{en,ar}.png | 2026-11-05 | 2026-11-05 |  |
 | REQ-UI-036 | UI | Added | Overall uptime tile on the main dashboard |  | A small KPI tile on the default dashboard shows the estate's overall availability for the current month (weighted across business services from service_health_history) with the trend against the previous month and the count of services below target; en and ar; e2e; Lighthouse unchanged | P0 | Done |  |  | Syed 2026-11-05; ADR-024 | T-139 | commit 98911d7; docs/evidence/dashboard-uptime-register.md; DashboardView.test.tsx tile test; dashboard.spec.ts e2e en+ar; Lighthouse dashboard 0.99/1/1 | 2026-11-05 | 2026-11-05 |  |
 | REQ-CMDB-041 | CMDB | Added | Asset register pagination with page numbers and totals |  | The register shows the total matching rows and pages of ASSETS.registerPageSize with first/previous/next/last controls and a page indicator; the page is kept in the URL so it survives reload and back; filters reset to page 1; en and ar; e2e | P0 | Done |  |  | Syed 2026-11-05; ADR-023 | T-130, T-140 | commit 98911d7; docs/evidence/dashboard-uptime-register.md; assetPage integration case; AssetsView pager test; assets.spec.ts e2e en+ar; Lighthouse assets 0.97/1/1 | 2026-11-05 | 2026-11-05 |  |
 | REQ-CMDB-042 | CMDB | Added | Subscription cover for software, SaaS and cloud assets: start, end, credits remaining |  | An asset whose CI is software, a software instance, a licence, a SaaS application or tenant, a cloud account or cloud resource carries subscription start, subscription end and credits remaining (with unit) instead of warranty; the values come from the collectors where the vendor exposes them (licence expiry, SaaS tenant subscription, cloud billing credits) with the source recorded, and can be entered by hand; the register's gap filters, summary and details panel follow; en and ar | P0 | Done |  |  | Syed 2026-11-05; ADR-023 | T-130, T-141, T-075, T-131 | commit 98911d7; ADR-027; docs/evidence/dashboard-uptime-register.md; API subscription case; AssetsView SaaS test; Go saas/azure stand-ins; assets.spec.ts e2e en+ar | 2026-11-05 | 2026-11-05 |  |
@@ -220,7 +220,7 @@
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 5 | 63 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 31 | 86 |
-| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 2 | 25 |
+| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 3 | 38 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E |  | 4 | 2 | 50 |
 | PERF | Performance budgets | Budgets, Platform |  | 5 | 2 | 40 |
@@ -417,11 +417,12 @@
 | 2026-11-05 | Asset register across every layer (REQ-CMDB-039) and unknown-device remediation with manual entry (REQ-CMDB-040), ADR-023: owned CI types, reconciler asset sync, migration 0015 backfill, GraphQL 1.0.0, Assets screen rework; REQ-BSM-008 (uptime by month/quarter/year) and REQ-AI-007 (assistant grounding) added from Syed's asks; Docker Desktop WSL engine died mid-build and was restarted; ClickHouse run-id UUID defect fixed. |  |  |  |
 | 2026-11-05 | REQ-BSM-006 + REQ-BSM-008 (ADR-024): SLA catalogue and assignment, engine SLA evaluation per tick, uptime by month/quarter/year from service_health_history, incident assign/resolve/close with RCA and timeline, /services/[id]; synth health-history + replay-history; register paging fix (cf5a4c0). Commits cf5a4c0, 95faf93. |  |  |  |
 | 2026-11-05 | REQ-UI-036 uptime tile, REQ-CMDB-041 register pages, REQ-CMDB-042 subscription cover (ADR-027, M365/Azure collector calls), ADR-028 proposed for the conversational assistant; tracker rows for the 2026-11-05 asks. Commit 98911d7. |  |  |  |
+| 2026-11-05 | REQ-AI-007 (ADR-028 increment one): conversational assistant; deterministic bilingual classifier, skills over Postgres/Memgraph/ClickHouse, grounding guard, evaluation set 29/29 in CI, GraphQL 1.4.0, console thread; ASSISTANT_PROSE_LOCALES. Commits bfd1586, 87ada3c, a53b195. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-05T11:14:32.119Z |  |  |  |  |  |  |
+| Generated | 2026-11-05T11:47:22.150Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 66 | 30 | 0 | 4 | 106 |  |  |
+| All | 66 | 29 | 0 | 4 | 107 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 1 | 0 | 0 | 17 | 19 | 89 |
 | DISC | 1 | 26 | 0 | 2 | 2 | 31 | 6 |
@@ -431,20 +432,20 @@
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 3 | 0 | 0 | 0 | 5 | 8 | 63 |
 | UI | 5 | 0 | 0 | 0 | 31 | 36 | 86 |
-| AI | 4 | 2 | 0 | 0 | 2 | 8 | 25 |
+| AI | 4 | 1 | 0 | 0 | 3 | 8 | 38 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 2 | 4 | 50 |
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 13 | 29 | 0 | 3 | 79 | 124 |  |
+| P0 | 13 | 28 | 0 | 3 | 80 | 124 |  |
 | P1 | 50 | 1 | 0 | 1 | 27 | 79 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 37 |  |  |  |  |  |  |
 | 2026-11-01 | 87 |  |  |  |  |  |  |
 | 2026-11-04 | 99 |  |  |  |  |  |  |
-| 2026-11-05 | 106 |  |  |  |  |  |  |
+| 2026-11-05 | 107 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |

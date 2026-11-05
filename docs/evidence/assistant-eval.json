@@ -1,10 +1,10 @@
 {
- "capturedAt": "2026-11-05T11:36:37.706Z",
+ "capturedAt": "2026-11-05T12:15:10.331Z",
  "tenantId": "ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c",
  "model": "Qwen/Qwen2.5-7B-Instruct",
  "prose": true,
- "passed": 29,
- "total": 29,
+ "passed": 38,
+ "total": 38,
  "outcomes": [
   {
    "id": "count-hosts",
@@ -26,8 +26,8 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "The average number of hosts per server is 2000.",
-   "grounded": true,
+   "text": "hosts by operating system, 2,000 in 5 groups: Windows Server: 636; Red Hat Enterprise Linux: 629; Ubuntu: 623; VMware ESXi: 71; Nutanix AHV: 41.",
+   "grounded": false,
    "evidence": [
     "cmdb.attributes:postgres:5"
    ],
@@ -68,7 +68,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "There are 2,000 hosts running each operating system.",
+   "text": "There are 2,000 hosts in total, with 636 running Windows Server, 629 running Red Hat Enterprise Linux, 623 running Ubuntu, 71 running VMware ESXi, and 41 running Nutanix AHV.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
@@ -110,8 +110,8 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "The average host CPU utilisation across 4,000 hosts is 48.36%, from the latest samples as of Oct 1, 2026.",
-   "grounded": false,
+   "text": "The average CPU utilisation of hosts across 4,000 hosts is 48.36%.",
+   "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:1"
    ],
@@ -262,8 +262,8 @@
    "intent": "lookup",
    "skill": "graph.query",
    "figures": 1,
-   "text": "The rack with the most hosts is HQ-SR-B1-A-02, which has 25 hosts.",
-   "grounded": true,
+   "text": "94 rows with columns id, rack, hosts.",
+   "grounded": false,
    "evidence": [
     "graph.query:memgraph:94"
    ],
@@ -302,7 +302,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "متوسط الذاكرة (GB) لـ 2,000 من المضيفين هو 865.79 GB.",
+   "text": "الذاكرة المتوسطة للمضيفين هو 865.79 GB.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -316,10 +316,24 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 3,
-   "text": "في المتوسط 12 من الأجهزة الافتراضية لكل واحد من 125 من المشرفين الافتراضيين: 1,500 من الأجهزة الافتراضية إجمالًا، وأكبرها يحمل 12.",
+   "text": "في المتوسط، لكل مضيف، توجد 12 من الأجهزة الافتراضية.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "cpu-series-host",
+   "question": "CPU utilisation of host ahv-dmm-c01-01 over the last 7 days",
+   "intent": "measurement",
+   "skill": "metrics.series",
+   "figures": 0,
+   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c01-01 over the last 7 days.",
+   "grounded": true,
+   "evidence": [
+    "metrics.series:clickhouse:0"
    ],
    "ok": true,
    "why": []
@@ -330,7 +344,7 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "كانت 15 خدمة أعمال متاحة بنسبة 100% الشهر الحالي، بإجمالي 0 دقيقة تعطل و0 دون الهدف. الأدنى: ATM Network 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ Auto Finance 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ Card Acquiring 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ Card Issuing 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Corporate Cash Management 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Loan Origination 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Mobile Banking 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ Money Markets 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ Mortgage Servicing 100%، 0 دقيقة تعطل، تحقق هدف 99.9%؛ POS Network 100%، 0 دقيقة تعطل، تحقق هدف 99.5%.",
+   "text": "التوافر خدمات الأعمال هذا الشهر هو 15 خدمة أعمال متاحة بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
    "grounded": true,
    "evidence": [
     "services.availability:clickhouse:15"
@@ -373,7 +387,7 @@
    "skill": "metrics.latest",
    "figures": 2,
    "text": "متوسط استخدام معالج المضيف عبر 4,000 من المضيفين هو 48.36%، من أحدث العينات حتى 01‏/10‏/2026.",
-   "grounded": true,
+   "grounded": false,
    "evidence": [
     "metrics.latest:clickhouse:1"
    ],
@@ -400,10 +414,122 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "المضيفين حسب نظام التشغيل، 2,000 في 5 مجموعات: Windows Server: 636؛ Red Hat Enterprise Linux: 629؛ Ubuntu: 623؛ VMware ESXi: 71؛ Nutanix AHV: 41.",
+   "text": "There are 2,000 servers in the IT estate, with 636 Windows Server, 629 Red Hat Enterprise Linux, 623 Ubuntu, 71 VMware ESXi, and 41 Nutanix AHV.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "uptime-this-month",
+   "question": "What is the uptime of business services this month?",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "The uptime of business services this month was 100%, with 0 minutes down in total and 0 below target.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "and-last-month",
+   "question": "And last month?",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "Last month, 15 business services were 100% available, with 0 minutes down in total and 0 below target.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "avg-memory-hosts-first",
+   "question": "What is the average memory of the hosts?",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 2,
+   "text": "The average memory of the hosts is 865.79 GB.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "and-for-vms",
+   "question": "And for VMs?",
+   "intent": "attribute_stats",
+   "skill": "cmdb.attributes",
+   "figures": 2,
+   "text": "The average memory (GB) of 1,500 virtual machines is 23.95 GB.",
+   "grounded": true,
+   "evidence": [
+    "cmdb.attributes:postgres:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-uptime-first",
+   "question": "ما هو توافر خدمات الأعمال هذا الشهر؟",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "التوافر خدمات الأعمال هذا الشهر هو 15 خدمة، بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "ar-and-last-month",
+   "question": "والشهر الماضي؟",
+   "intent": "availability",
+   "skill": "services.availability",
+   "figures": 4,
+   "text": "الشهر الماضي، كانت 15 خدمة أعمال متاحة بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
+   "grounded": true,
+   "evidence": [
+    "services.availability:clickhouse:15"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "cpu-of-host",
+   "question": "CPU utilisation of host ahv-dmm-c01-01",
+   "intent": "measurement",
+   "skill": "metrics.latest",
+   "figures": 2,
+   "text": "The average host CPU utilisation across 1 hosts is 31.8%, from the latest samples as of Oct 1, 2026.",
+   "grounded": false,
+   "evidence": [
+    "metrics.latest:clickhouse:1"
+   ],
+   "ok": true,
+   "why": []
+  },
+  {
+   "id": "and-last-7-days",
+   "question": "And over the last 7 days?",
+   "intent": "measurement",
+   "skill": "metrics.series",
+   "figures": 0,
+   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c01-01 over the last 7 days.",
+   "grounded": true,
+   "evidence": [
+    "metrics.series:clickhouse:0"
    ],
    "ok": true,
    "why": []

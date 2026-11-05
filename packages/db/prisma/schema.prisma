@@ -530,6 +530,7 @@ model Tenant {
   auditLogs               AuditLog[]
   userPreferences         UserPreference[]
   dashboards           Dashboard[]
+  assistantConversations AssistantConversation[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -1536,4 +1537,47 @@ model PendingRelationship {
 
   @@index([tenantId, createdAt])
   @@map("pending_relationships")
+}
+
+/// REQ-AI-008 (ADR-028) — a person's conversation with the assistant. Owned by the user who asked, scoped to the
+/// tenant; the title is the first question clipped. Deleting a conversation removes its turns.
+model AssistantConversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  userId    String
+  title     String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  turns  AssistantTurn[]
+
+  @@index([tenantId, userId, updatedAt(sort: Desc)])
+  @@map("assistant_conversations")
+}
+
+/// How a turn ended: answered, a clarifying question back, or every retrieval step failed.
+enum AssistantTurnOutcome {
+  answered
+  clarified
+  failed
+}
+
+/// One exchange: the question as asked and the answer as returned (assistantTurnAnswerSchema in
+/// @openmap/contracts: text, intent, confidence, figures, evidence, follow-ups, clarification, grounded, CI ids and
+/// the resolved reading the next turn fills its gaps from).
+model AssistantTurn {
+  id             String               @id @default(uuid()) @db.Uuid
+  tenantId       String               @db.Uuid
+  conversationId String               @db.Uuid
+  at             DateTime             @default(now()) @db.Timestamptz(3)
+  outcome        AssistantTurnOutcome
+  locale         Locale
+  question       String
+  answer         Json
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, conversationId, at])
+  @@map("assistant_turns")
 }

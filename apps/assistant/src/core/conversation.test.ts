@@ -1,12 +1,21 @@
-// T-142 REQ-AI-007 — the conversational levels offline: the classifier reads English and Arabic questions into the
+// T-142 REQ-AI-007 T-145 REQ-AI-008 — the conversational levels offline: the classifier reads English and Arabic questions into the
 // intended intent and entities (every evaluation-set question included), the planner turns them into the expected
 // skill or clarification, the composer words every summary kind in both locales with its figures, the grounding
-// guard rejects invented numbers and names, and the model's verdict only fills gaps.
+// guard rejects invented numbers and names, and the model's verdict only fills gaps. T-145: a follow-up ("and last
+// month?", "and for VMs?") is resolved against the previous turn, a window turns a measurement into a series, and
+// the series summary is worded in both locales.
 import { describe, expect, it } from 'vitest';
 import { ASSISTANT, LOCALES } from '@openmap/constants';
 import { createTranslator } from '@openmap/i18n';
-import { composeAll, composeSummary, formatNumber, listItems } from './compose.js';
-import { EVAL_QUESTIONS } from '../eval/questions.js';
+import { composeAll, composeSummary, formatNumber, hasContent, listItems } from './compose.js';
+import {
+  isFollowUp,
+  measurementFor,
+  parseTurnContext,
+  resolveFollowUp,
+  turnContextOf,
+} from './conversation.js';
+import { EVAL_CONVERSATIONS, EVAL_QUESTIONS } from '../eval/questions.js';
 import { suggestFollowUps } from './followups.js';
 import { checkGrounding, numbersIn, sentenceCount } from './guard.js';
 import { classify } from './intent.js';
@@ -14,7 +23,7 @@ import { applyVerdict, parseVerdict } from './llm-intent.js';
 import { howtoTopic, isSmallTalk, plan } from './plan.js';
 import { extractProse, proseMessages } from './prose.js';
 import type { Summary } from './types.js';
-import { containsTerm, locateTerm, normalise } from './vocabulary.js';
+import { containsTerm, locateTerm, normalise, rangeOf, startsWithContinuation } from './vocabulary.js';
 
 describe('vocabulary', () => {
   it('normalises Arabic diacritics, alef forms and Arabic-Indic digits', () => {
@@ -300,6 +309,42 @@ const summaries: Summary[] = [
   },
   { kind: 'history', ci: { ciId: 'h1', name: 'ledger-db' }, versions: 0, latestAt: null, changedKeys: [] },
   { kind: 'howto', topic: 'ipam' },
+  {
+    kind: 'series',
+    metric: 'host.cpu.utilisation_percent',
+    type: 'host',
+    ci: { ciId: 'h1', name: 'srv-01' },
+    count: 1,
+    samples: 336,
+    from: '2026-10-29T10:00:00.000Z',
+    to: new Date().toISOString(),
+    hours: 168,
+    avg: 48.3,
+    min: 12.1,
+    max: 97.2,
+    first: 40,
+    last: 52,
+    trendPercent: 30,
+    unit: '%',
+  },
+  {
+    kind: 'series',
+    metric: 'vm.cpu.utilisation_percent',
+    type: 'vm',
+    ci: null,
+    count: 0,
+    samples: 0,
+    from: '2026-10-29T10:00:00.000Z',
+    to: '2026-11-05T10:00:00.000Z',
+    hours: 168,
+    avg: null,
+    min: null,
+    max: null,
+    first: null,
+    last: null,
+    trendPercent: null,
+    unit: '%',
+  },
   { kind: 'graph', rows: [{ name: 'a' }, { name: 'b' }], truncated: false },
   { kind: 'graph', rows: [{ hosts: 3 }], truncated: false },
   { kind: 'graph', rows: [], truncated: false },
@@ -403,5 +448,151 @@ describe('model prompts', () => {
     expect(filled.matched).toContain('llm:count');
     const confident = classify('How many hosts are there?');
     expect(applyVerdict(confident, { intent: 'impact', confidence: 1 })).toBe(confident);
+  });
+});
+
+describe('follow-up resolution (REQ-AI-008)', () => {
+  const turn = (question: string) => turnContextOf(classify(question));
+
+  it('reads rolling windows in both scripts and continuation openers', () => {
+    expect(rangeOf(normalise('CPU of host x over the last 7 days'))?.hours).toBe(168);
+    expect(rangeOf(normalise('last 24 hours'))?.hours).toBe(24);
+    expect(rangeOf(normalise('استخدام المعالج آخر ٧ أيام'))?.hours).toBe(168);
+    expect(rangeOf(normalise('الأسبوع الماضي'))?.hours).toBe(168);
+    expect(rangeOf(normalise('how many hosts'))).toBeNull();
+    expect(startsWithContinuation(normalise('And last month?'))).toBe(true);
+    expect(startsWithContinuation(normalise('والشهر الماضي؟'))).toBe(true);
+    expect(startsWithContinuation(normalise('What about VMs?'))).toBe(true);
+    expect(startsWithContinuation(normalise('How many hosts?'))).toBe(false);
+  });
+
+  it('tells a follow-up from a question that stands on its own', () => {
+    expect(isFollowUp(classify('and last month?'))).toBe(true);
+    expect(isFollowUp(classify('hosts in riyadh'))).toBe(true);
+    expect(isFollowUp(classify('Which incidents are open?'))).toBe(false);
+    expect(isFollowUp(classify('How many hosts are there?'))).toBe(false);
+    expect(isFollowUp(classify('What changed on srv-dmm-hadoop-0180 recently?'))).toBe(false);
+  });
+
+  it('re-runs an availability question for the previous month on "and last month?" in en and ar', () => {
+    for (const [first, second] of [
+      ['What is the uptime of business services this month?', 'And last month?'],
+      ['ما هو توافر خدمات الأعمال هذا الشهر؟', 'والشهر الماضي؟'],
+    ] as const) {
+      const resolved = resolveFollowUp(classify(second), turn(first));
+      expect(resolved.intent).toBe('availability');
+      expect(resolved.entities.period?.back).toBe(1);
+      expect(resolved.matched).toContain('followup:intent');
+      expect(resolved.confidence).toBeGreaterThanOrEqual(ASSISTANT.minIntentConfidence);
+      expect(plan(resolved, second).steps[0]).toMatchObject({ skill: 'services.availability', back: 1 });
+    }
+  });
+
+  it('swaps the subject type on "and for VMs?" and keeps the attribute, the aggregate and the intent', () => {
+    const resolved = resolveFollowUp(classify('And for VMs?'), turn('What is the average memory of the hosts?'));
+    expect(resolved.intent).toBe('attribute_stats');
+    expect(resolved.entities.types).toEqual(['vm']);
+    expect(resolved.entities.attribute).toBe('memory');
+    expect(plan(resolved, '').steps[0]).toMatchObject({
+      skill: 'cmdb.attributes',
+      type: 'vm',
+      family: 'memory',
+      aggregate: 'avg',
+    });
+  });
+
+  it('carries a measurement to the equivalent metric of the new type and to a window', () => {
+    expect(measurementFor('host.cpu.utilisation_percent', 'vm')).toBe('vm.cpu.utilisation_percent');
+    expect(measurementFor('dcim.power.watts', 'vm')).toBeNull();
+    const vms = resolveFollowUp(classify('what about VMs?'), turn('Average CPU utilisation of hosts'));
+    expect(vms.entities.measurement).toBe('vm.cpu.utilisation_percent');
+    expect(plan(vms, '').steps[0]).toMatchObject({ skill: 'metrics.latest', type: 'vm' });
+    const first = turn('CPU utilisation of host srv-dmm-hadoop-0180');
+    expect(plan(classify('CPU utilisation of host srv-dmm-hadoop-0180'), '').steps[0]).toMatchObject({
+      skill: 'metrics.latest',
+      names: ['srv-dmm-hadoop-0180'],
+    });
+    const window = resolveFollowUp(classify('And over the last 7 days?'), first);
+    expect(window.entities.names).toEqual(['srv-dmm-hadoop-0180']);
+    expect(plan(window, '').steps[0]).toMatchObject({
+      skill: 'metrics.series',
+      metric: 'host.cpu.utilisation_percent',
+      names: ['srv-dmm-hadoop-0180'],
+      hours: 168,
+      offsetHours: 0,
+    });
+    // A calendar period on a measurement is a rolling window of the same length, ending that long ago.
+    const month = resolveFollowUp(classify('and last month?'), first);
+    expect(plan(month, '').steps[0]).toMatchObject({ skill: 'metrics.series', hours: 720, offsetHours: 720 });
+  });
+
+  it('adds a grouping, a scope or a name to the previous question', () => {
+    const perSite = resolveFollowUp(classify('and per site?'), turn('How many hosts are there?'));
+    expect(plan(perSite, '').steps[0]).toMatchObject({
+      skill: 'cmdb.attributes',
+      type: 'host',
+      aggregate: 'count',
+      groupBy: { kind: 'attribute', family: 'site' },
+    });
+    const scoped = resolveFollowUp(classify('hosts in riyadh'), turn('How many hosts are there?'));
+    expect(plan(scoped, '').steps[0]).toMatchObject({ skill: 'cmdb.attributes', filters: ['riyadh'] });
+    const other = resolveFollowUp(
+      classify('and web-01?'),
+      turn('Which business services depend on the host named ledger-db?'),
+    );
+    expect(plan(other, '').steps[0]).toMatchObject({ skill: 'impact', names: ['web-01'] });
+  });
+
+  it('leaves a complete question, or one with nothing before it, as it was', () => {
+    const complete = classify('Which incidents are open?');
+    expect(resolveFollowUp(complete, turn('How many hosts are there?'))).toBe(complete);
+    const alone = classify('and last month?');
+    expect(resolveFollowUp(alone, null)).toBe(alone);
+    // An availability reading does not carry over to a subject it cannot apply to.
+    const hosts = resolveFollowUp(classify('and for hosts?'), turn('uptime of business services this month'));
+    expect(hosts.intent).not.toBe('availability');
+  });
+
+  it('round-trips the persisted reading and rejects a foreign shape', () => {
+    const context = turn('What was the availability of "Online banking" last month?');
+    const back = parseTurnContext(JSON.parse(JSON.stringify(context)));
+    expect(back?.intent).toBe('availability');
+    expect(back?.entities.names).toEqual(['Online banking']);
+    expect(back?.entities.period?.back).toBe(1);
+    expect(parseTurnContext({ intent: 'nope' })).toBeNull();
+  });
+
+  it('resolves and plans every multi-turn evaluation case as the set expects', () => {
+    for (const conversation of EVAL_CONVERSATIONS) {
+      let previous = null as ReturnType<typeof turnContextOf> | null;
+      for (const q of conversation.turns) {
+        const question = q.question.replace('{name}', 'sample-ci-01');
+        const resolved = resolveFollowUp(classify(question), previous);
+        const first = plan(resolved, question).steps[0];
+        expect({ id: q.id, intent: resolved.intent, skill: first?.skill ?? null }).toEqual({
+          id: q.id,
+          intent: q.expect.intent,
+          skill: q.expect.skill,
+        });
+        expect(resolved.locale, q.id).toBe(q.locale);
+        previous = turnContextOf(resolved);
+      }
+    }
+  });
+
+  it('words a series with its figures and treats an empty window as content-free', () => {
+    const series = summaries.find((s) => s.kind === 'series' && s.samples > 0);
+    const empty = summaries.find((s) => s.kind === 'series' && s.samples === 0);
+    if (series === undefined || empty === undefined) throw new Error('series summaries missing');
+    for (const locale of LOCALES) {
+      const t = createTranslator(locale);
+      const c = composeSummary(series, t, locale);
+      expect(c.text).toContain('srv-01');
+      expect(c.text).toContain(formatNumber(locale, 48.3));
+      expect(c.figures.map((f) => f.value)).toEqual([48.3, 12.1, 97.2, 52, 336]);
+      expect(composeSummary(empty, t, locale).figures).toEqual([]);
+    }
+    expect(hasContent(series)).toBe(true);
+    expect(hasContent(empty)).toBe(false);
   });
 });

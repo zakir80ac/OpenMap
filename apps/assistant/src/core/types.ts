@@ -1,4 +1,4 @@
-// REQ-AI-007 (ADR-028) — the shapes the levels of a conversation hand each other: a plan of skill steps with
+// REQ-AI-007 REQ-AI-008 (ADR-028) — the shapes the levels of a conversation hand each other: a plan of skill steps with
 // validated parameters, the structured result each step returns (query, rows, duration, a typed summary), and the
 // clarification the plan asks for instead of guessing. The API executes steps; this package decides and composes.
 import type {
@@ -48,8 +48,22 @@ export type SkillParams =
       metric: MeasurementName;
       type: CiType;
       aggregate: AssistantAggregate;
+      /** REQ-AI-008: a named CI narrows the latest sample to it ("CPU of host X"). */
+      names: string[];
       filters: string[];
       topN: number;
+    }
+  | {
+      /** REQ-AI-008: a measurement over a rolling window ("CPU of host X over the last 7 days"). */
+      skill: 'metrics.series';
+      metric: MeasurementName;
+      type: CiType;
+      aggregate: AssistantAggregate;
+      names: string[];
+      filters: string[];
+      /** Window length and how far back it ends (0 = up to now): "last month" as a window is 720 h ending 720 h ago. */
+      hours: number;
+      offsetHours: number;
     }
   | { skill: 'services.availability'; granularity: PeriodSpec['granularity']; back: number; names: string[] }
   | { skill: 'incidents'; open: boolean; names: string[] }
@@ -156,6 +170,27 @@ export type Summary =
       asOf: string | null;
       ranked: RankedCi[];
       filters: string[];
+    }
+  | {
+      /** REQ-AI-008: a measurement over a window, averaged into buckets; `ci` is the named CI or null for a type. */
+      kind: 'series';
+      metric: MeasurementName;
+      type: CiType;
+      ci: { ciId: string; name: string } | null;
+      /** CIs that contributed samples. */
+      count: number;
+      samples: number;
+      from: string;
+      to: string;
+      hours: number;
+      avg: number | null;
+      min: number | null;
+      max: number | null;
+      first: number | null;
+      last: number | null;
+      /** Change from the first to the last bucket as a percentage of the first, or null when it cannot be computed. */
+      trendPercent: number | null;
+      unit: string;
     }
   | {
       kind: 'availability';

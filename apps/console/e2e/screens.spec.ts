@@ -116,7 +116,8 @@ test('Assistant: an example question is answered or explicitly refused', async (
   await page.goto('/' + locale + '/assistant');
   await signIn(page, locale);
   await page.getByRole('button', { name: translate(locale, 'assistant.example.hosts') }).click();
-  const conversation = page.getByRole('list', { name: translate(locale, 'assistant.conversation') });
+  // REQ-AI-008: exact, because "Conversation" is also a substring of the "Past conversations" list beside the thread.
+  const conversation = page.getByRole('list', { name: translate(locale, 'assistant.conversation'), exact: true });
   await expect(conversation.getByText(translate(locale, 'assistant.example.hosts'))).toBeVisible();
   // REQ-AI-007 (ADR-028): an answer carries its evidence and follow-ups; a count question also shows figures.
   const answered = conversation.getByTestId('assistant-evidence');

@@ -1,8 +1,8 @@
-// REQ-AI-007 (ADR-028) — level two: plan. A classification becomes a short list of skill steps with validated
+// REQ-AI-007 REQ-AI-008 (ADR-028) — level two: plan. A classification becomes a short list of skill steps with validated
 // parameters, or a clarifying question when the plan would otherwise have to guess (an impact question with no
 // CI named, an intent nothing in the catalogue explains). Every rule here is deterministic and unit-tested; the
 // skills themselves run in the API against the stores.
-import { ASSISTANT } from '@openmap/constants';
+import { ASSISTANT, TIME } from '@openmap/constants';
 import type { CiType } from '@openmap/contracts';
 import type { Classification } from './intent.js';
 import {
@@ -231,11 +231,26 @@ export function plan(c: Classification, question: string): Plan {
     case 'measurement': {
       if (e.measurement === null) return graph(question);
       const type: CiType = subject ?? MEASUREMENTS[e.measurement].subjects[0];
+      // REQ-AI-008: a window ("over the last 7 days") or a calendar period ("last month", read as a rolling window
+      // of the same length) asks for the series; otherwise the latest sample answers.
+      const window = windowOf(e);
+      if (window !== null)
+        return steps({
+          skill: 'metrics.series',
+          metric: e.measurement,
+          type,
+          aggregate: e.aggregate ?? 'avg',
+          names: e.names,
+          filters: e.filters,
+          hours: window.hours,
+          offsetHours: window.offsetHours,
+        });
       return steps({
         skill: 'metrics.latest',
         metric: e.measurement,
         type,
         aggregate: e.aggregate ?? 'avg',
+        names: e.names,
         filters: e.filters,
         topN,
       });
@@ -288,6 +303,16 @@ export function plan(c: Classification, question: string): Plan {
     case 'unknown':
       return clarify(unknownClarification());
   }
+}
+
+/** The rolling window a measurement question asks for: an explicit range, or a calendar period of the same length. */
+export function windowOf(e: Classification['entities']): { hours: number; offsetHours: number } | null {
+  if (e.range !== null) return { hours: e.range.hours, offsetHours: 0 };
+  if (e.period !== null) {
+    const hours = ASSISTANT.rollingDays[e.period.granularity] * TIME.hoursPerDay;
+    return { hours, offsetHours: e.period.back * hours };
+  }
+  return null;
 }
 
 /** True when the question is plainly outside the estate (greetings, chit-chat), so no skill should run. */

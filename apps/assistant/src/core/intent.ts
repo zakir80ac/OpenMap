@@ -21,9 +21,11 @@ import {
   matchCatalogue,
   matchTerms,
   normalise,
+  rangeOf,
   type AttributeFamilyId,
   type MeasurementName,
   type PeriodSpec,
+  type RangeSpec,
   type TermHit,
 } from './vocabulary.js';
 
@@ -42,6 +44,8 @@ export interface Entities {
   filters: string[];
   health: HealthState | null;
   period: PeriodSpec | null;
+  /** REQ-AI-008: a rolling window ("over the last 7 days") that turns a measurement question into a series. */
+  range: RangeSpec | null;
   /** "top 5": how many rows a ranking should list. */
   topN: number | null;
 }
@@ -149,7 +153,12 @@ function tokensOf(text: string): string[] {
 }
 
 /** Catalogue entries in order of first appearance, each masked out of the working text so shorter terms do not re-match. */
-function typesInOrder(text: string): { types: CiType[]; masked: string; matched: string[] } {
+function typesInOrder(text: string): {
+  types: CiType[];
+  masked: string;
+  matched: string[];
+  found: Array<{ type: CiType; index: number; term: string }>;
+} {
   let working = text;
   const found: Array<{ type: CiType; index: number; term: string }> = [];
   // Longest terms first: "esxi host" is a hypervisor and must blank "host" before the host terms run.
@@ -163,7 +172,7 @@ function typesInOrder(text: string): { types: CiType[]; masked: string; matched:
   found.sort((a, b) => a.index - b.index);
   const types: CiType[] = [];
   for (const f of found) if (!types.includes(f.type)) types.push(f.type);
-  return { types, masked: working, matched: found.map((f) => f.term) };
+  return { types, masked: working, matched: found.map((f) => f.term), found };
 }
 
 function groupByOf(
@@ -172,14 +181,16 @@ function groupByOf(
 ): { groupBy: GroupBy | null; matched: string[]; attributeHit: TermHit | null } {
   const marker = matchTerms(text, GROUP_TERMS);
   if (marker === null) return { groupBy: null, matched: [], attributeHit: null };
-  const after = text.slice(marker.start + marker.length);
+  const offset = marker.start + marker.length;
+  const after = text.slice(offset);
   const attribute = matchCatalogue(after, ATTRIBUTE_FAMILIES)[0];
   const type = matchCatalogue(after, TYPE_TERMS)[0];
   if (attribute !== undefined && (type === undefined || attribute.hit.index <= type.hit.index)) {
+    // The hit is reported at its offset in the whole text so callers can match it against other hits.
     return {
       groupBy: { kind: 'attribute', family: attribute.key },
       matched: [marker.term, attribute.hit.term],
-      attributeHit: attribute.hit,
+      attributeHit: { ...attribute.hit, index: attribute.hit.index + offset, start: attribute.hit.start + offset },
     };
   }
   if (type !== undefined) {
@@ -241,7 +252,7 @@ function filtersOf(normalised: string, consumed: ReadonlySet<string>, names: rea
   return out;
 }
 
-function intentMarker(text: string): { intent: AssistantIntent; term: string } | null {
+export function intentMarker(text: string): { intent: AssistantIntent; term: string } | null {
   // Order matters: "how do I export the uptime report" is a how-to before it is a report or availability question.
   const order: Array<keyof typeof INTENT_TERMS> = [
     'howto',
@@ -322,6 +333,11 @@ export function classify(question: string): Classification {
   const attributeHits = matchCatalogue(typed.masked, ATTRIBUTE_FAMILIES);
   const grouped = groupByOf(normalised, types[0] ?? null);
   grouped.matched.forEach(remember);
+  // "per site" groups by the site attribute; the word is not a second subject ("and per site?" after a host count).
+  if (grouped.attributeHit !== null) {
+    const groupedIndex = grouped.attributeHit.index;
+    types = types.filter((type) => !typed.found.some((f) => f.type === type && f.index === groupedIndex));
+  }
   // The attribute named after "per"/"by" is the grouping, not the measured attribute.
   const attributeHit =
     attributeHits.find((h) => grouped.attributeHit === null || h.hit.index !== grouped.attributeHit.index) ??
@@ -335,6 +351,8 @@ export function classify(question: string): Classification {
   remember(health.term);
   const period = periodOf(normalised);
   remember(period.term);
+  const range = rangeOf(normalised);
+  remember(range?.term ?? null);
   const topMatch = TOP_N.exec(normalised);
   const topN = topMatch?.[1] !== undefined ? Number(topMatch[1]) : null;
 
@@ -351,14 +369,27 @@ export function classify(question: string): Classification {
     filters,
     health: health.health,
     period: period.period,
+    range,
     topN,
   };
+  const derived = deriveIntent(entities, marker?.intent ?? null);
+  return { intent: derived.intent, confidence: derived.confidence, locale, entities, matched, normalised };
+}
 
+/**
+ * The intent the entities support and the confidence of that reading: an intent marker wins, then a measurement,
+ * then an attribute on a subject, then a count, then a bare lookup. Shared with the follow-up resolution of
+ * REQ-AI-008, which re-derives the intent from the entities merged with the previous turn's.
+ */
+export function deriveIntent(
+  entities: Entities,
+  marker: AssistantIntent | null,
+): { intent: AssistantIntent; confidence: number } {
   let intent: AssistantIntent;
   let confidence: number = CONFIDENCE.base;
-  const subject = types[0] ?? null;
+  const subject = entities.types[0] ?? null;
   if (marker !== null) {
-    intent = marker.intent;
+    intent = marker;
     confidence += CONFIDENCE.marker;
   } else if (entities.measurement !== null) {
     intent = 'measurement';
@@ -372,16 +403,15 @@ export function classify(question: string): Classification {
   } else if (entities.groupBy !== null && subject !== null) {
     intent = 'count';
     confidence += CONFIDENCE.aggregate;
-  } else if (subject !== null || names.length > 0) {
+  } else if (subject !== null || entities.names.length > 0) {
     intent = 'lookup';
   } else {
     intent = 'unknown';
   }
   if (subject !== null) confidence += CONFIDENCE.type;
-  if (names.length > 0) confidence += CONFIDENCE.name;
+  if (entities.names.length > 0) confidence += CONFIDENCE.name;
   if (entities.aggregate !== null && intent !== 'count') confidence += CONFIDENCE.aggregate;
   if (intent === 'unknown')
     confidence = Math.min(confidence, ASSISTANT.minIntentConfidence - CONFIDENCE.aggregate);
-
-  return { intent, confidence: clamp(confidence), locale, entities, matched, normalised };
+  return { intent, confidence: clamp(confidence) };
 }
