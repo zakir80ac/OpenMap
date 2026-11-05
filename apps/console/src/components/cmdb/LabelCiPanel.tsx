@@ -1,6 +1,7 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-012 — "Label this CI": classifies a CI discovered as `unknown` through the labelCi mutation
-// (title, description, layer, optional type constrained to the chosen layer). The label outranks every collector.
+// REQ-UI-008 REQ-CMDB-012 REQ-CMDB-040 — "Label this CI": classifies a CI discovered as `unknown` through the labelCi
+// mutation (title, description, layer, optional type constrained to the chosen layer). The label outranks every
+// collector. The Assets screen mounts it with the diagnosis's suggested layer and type preset (ADR-023).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '@openmap/constants';
 import { useCan } from '@/lib/auth';
@@ -10,34 +11,41 @@ import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'r
 import { Icon } from '@/components/icons';
 import { labelableLayers } from '@/lib/attributes';
 import { layerKey } from '@/lib/keys';
-import { labelCi, type CiDetail } from '@/lib/queries';
+import { labelCi, type CiDetail, type CiSummary } from '@/lib/queries';
 import { useT } from '@/providers';
 
 export interface LabelCiPanelProps {
-  ci: CiDetail;
+  ci: Pick<CiDetail, 'id' | 'displayName' | 'userLabel'>;
+  /** Layer and type to start from, e.g. the remediation diagnosis of an unknown device. */
+  preset?: { layer: CiLayer; type?: string };
+  onLabelled?: (ci: CiSummary) => void;
 }
 
 const fieldClass =
   'h-10 w-full rounded-om-control-lg border border-om-border-glass bg-om-surface1/80 px-om-10 text-om-sm text-om-primary outline-none transition-[border-color,box-shadow] duration-om-base ease-om-standard focus:border-om-violet/40 focus:shadow-om-glow-bar-violet';
 
-export function LabelCiPanel({ ci }: LabelCiPanelProps): ReactNode {
+export function LabelCiPanel({ ci, preset, onLabelled }: LabelCiPanelProps): ReactNode {
   const t = useT();
   const ids = { title: useId(), description: useId(), layer: useId(), type: useId() };
   const queryClient = useQueryClient();
   const layers = useMemo(() => labelableLayers(CI_LAYERS), []);
   const [title, setTitle] = useState(ci.userLabel?.title ?? ci.displayName);
   const [description, setDescription] = useState(ci.userLabel?.description ?? '');
-  const [layer, setLayer] = useState<CiLayer>(ci.userLabel?.layer ?? layers[0] ?? 'applications');
-  const [type, setType] = useState<string>(ci.userLabel?.type ?? '');
+  const [layer, setLayer] = useState<CiLayer>(ci.userLabel?.layer ?? preset?.layer ?? layers[0] ?? 'applications');
+  const [type, setType] = useState<string>(ci.userLabel?.type ?? preset?.type ?? '');
   const types = useMemo(() => CI_TYPES.filter((candidate) => CI_TYPE_LAYER[candidate] === layer), [layer]);
 
   const can = useCan();
   const allowed = can(ROLES.operator);
   const mutation = useMutation({
     mutationFn: labelCi,
-    onSuccess: async () => {
+    onSuccess: async (labelled) => {
       await queryClient.invalidateQueries({ queryKey: ['ci', ci.id] });
       await queryClient.invalidateQueries({ queryKey: ['layers'] });
+      await queryClient.invalidateQueries({ queryKey: ['unknownCis'] });
+      await queryClient.invalidateQueries({ queryKey: ['assets'] });
+      await queryClient.invalidateQueries({ queryKey: ['assetSummary'] });
+      onLabelled?.(labelled);
     },
   });
 

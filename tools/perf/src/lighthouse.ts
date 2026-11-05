@@ -128,6 +128,36 @@ function score(categories: Record<string, { score: number | null }>, id: string)
   return value === null || value === undefined ? 0 : Math.round(value * SCORE_DECIMALS) / SCORE_DECIMALS;
 }
 
+/**
+ * `--only a,b` re-measures the named screens after a fix and merges them into the last full sweep's results, so one
+ * screen can be re-run without the ten-minute sweep; the other pages keep their scores. Without it every screen runs.
+ */
+function parseOnly(argv: readonly string[]): string[] | null {
+  const at = argv.indexOf('--only');
+  if (at < 0) return null;
+  const list = (argv[at + 1] ?? '').split(',').map((v) => v.trim()).filter((v) => v.length > 0);
+  if (list.length === 0) throw new Error('--only needs a comma-separated list of screens');
+  for (const screen of list) if (!(SCREENS as readonly string[]).includes(screen)) throw new Error('unknown screen ' + screen + '; known: ' + SCREENS.join(', '));
+  return list;
+}
+const only = parseOnly(process.argv.slice(2));
+
+function screensToMeasure(): readonly string[] {
+  return only === null ? SCREENS : SCREENS.filter((screen) => only.includes(screen));
+}
+
+/** With --only, pages not re-measured keep the scores of the last results file; the sign-in step is always re-measured. */
+function mergeWithPrevious(measured: readonly PageScore[]): PageScore[] {
+  if (only === null) return [...measured];
+  const file = resultsDir + 'lighthouse.json';
+  if (!existsSync(file)) throw new Error('--only needs a previous full sweep in ' + file);
+  const previous = (JSON.parse(readFileSync(file, 'utf8')) as { pages: PageScore[] }).pages;
+  const fresh = new Map(measured.map((p) => [p.label, p]));
+  const merged = previous.map((p) => fresh.get(p.label) ?? p);
+  for (const p of measured) if (!previous.some((q) => q.label === p.label)) merged.push(p);
+  return merged;
+}
+
 async function main(): Promise<void> {
   const env = loadEnv();
   const consoleUrl = env.PUBLIC_CONSOLE_URL.replace(/\/$/, '');
@@ -152,12 +182,12 @@ async function main(): Promise<void> {
   await flow.endNavigation().catch(() => undefined);
   await signIn(page, consoleUrl);
   // Warm: every signed-in screen as its own navigation (the session restores from the stored refresh token).
-  for (const screen of SCREENS) {
+  for (const screen of screensToMeasure()) {
     await flow.navigate(consoleUrl + '/' + LOCALE + '/' + screen, { name: screen });
   }
 
   const result = await flow.createFlowResult();
-  const pages: PageScore[] = result.steps.map((step) => ({
+  const measured: PageScore[] = result.steps.map((step) => ({
     label: step.name,
     url: step.lhr.finalDisplayedUrl,
     performance: score(step.lhr.categories, 'performance'),
@@ -169,9 +199,10 @@ async function main(): Promise<void> {
     runtimeError: step.lhr.runtimeError === undefined ? null : step.lhr.runtimeError.code + ': ' + step.lhr.runtimeError.message,
     warnings: step.lhr.runWarnings,
   }));
+  const pages = mergeWithPrevious(measured);
   mkdirSync(resultsDir, { recursive: true });
   writeFileSync(resultsDir + 'lighthouse.json', JSON.stringify({ name: 'lighthouse', formFactor: FORM_FACTOR, budgets: { performance: PERF_BUDGETS.lighthousePerformanceMin, accessibility: PERF_BUDGETS.lighthouseAccessibilityMin, bestPractices: PERF_BUDGETS.lighthouseBestPracticesMin }, pages, generatedAt: new Date().toISOString() }, null, 2) + '\n');
-  writeFileSync(resultsDir + 'lighthouse-flow.html', await flow.generateReport());
+  writeFileSync(resultsDir + (only === null ? 'lighthouse-flow.html' : 'lighthouse-flow-' + only.join('-') + '.html'), await flow.generateReport());
   await browser.disconnect();
   await context.close();
 

@@ -2,7 +2,35 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 15: the Layers equipment scene and the formal profile)
+## Last session · 2026-11-05 (checkpoint 16: the asset register follows the CMDB)
+
+Syed's next statement: asset management must show everything the organisation owns across every layer plus the
+unknown devices (with remediation or manual entry where a device has no out-of-band management), every asset with
+warranty, support and end-of-life dates; then SLA assignment with continuous monitoring, alerting, incident response,
+audit and RCA; then sites and their connectivity for HA/DR; later in the session: best-in-class uptime monitoring by
+month, quarter and year, and the assistant to be grounded so it stops failing on questions like "OS per server
+average" or "VMs per host" (REQ-BSM-008, REQ-AI-007 added). Done this session, ADR-023 (REQ-CMDB-039, REQ-CMDB-040):
+the asset contract names the owned CI types; the reconciler creates one register row per owned CI in the same
+transaction as the CI and refreshes what discovery observes on later sweeps without touching a person's entries
+(array statements, tag fallback, unique per CI); migration 0015 backfilled the dev estate (9,481 rows: 2,000 hosts
+with vendor warranty, 252 network devices, 26 licences with their expiry as subscription cover, 7,200 rows with at
+least one gap); the API gained `assetSummary`, `assets(filter:)` (layer, type, stage, source, data gap, text),
+`updateAsset` (audited per field, `openmap.asset.updated`) and `createAsset` (a CI through the outbox plus the row,
+`openmap.asset.created`); labelling an unknown CI into an owned type registers it at once. The Assets screen is the
+register per layer (strip with counts and gap counts, filters, cover columns with missing/expired tones, a details
+panel with audit trail), the attention table, unknown devices with a rule-based diagnosis (`diagnoseUnknown`:
+stale, SNMP power gear, SNMP device, unknown service on a non-standard port, no management, web-only endpoint) that
+opens the label panel preset, manual entry for unmanaged equipment, and the plans. GraphQL is 1.0.0 (manufacturer
+and model nullable is breaking), asset 0.2.0, event 0.3.0. Tests: T-127 (reconciler mapping), T-128 (diagnosis),
+T-100 (view, en/ar), T-129 (e2e, en/ar), T-130 (API integration), T-131 (reconciler sync against Postgres).
+Lessons: Python `write_text` on Windows turns LF into CRLF — write bytes; the i18n package must be rebuilt before the
+console typecheck sees new keys; `pnpm contracts:check` reads the committed schema, so a breaking change needs the
+major bump before the check passes. ClickHouse `ci_history.source_run_id` is a UUID column: a CI the API creates
+must carry a UUID run id (the manual asset first stamped the literal `manual-asset`, and the one event poisoned every
+ClickHouse batch of the dispatcher until it was fixed and the leftover test tenant purged). Docker Desktop's WSL engine
+died during an image build and had to be restarted by hand; containers came back on their old images until recreated.
+
+## Previous session · 2026-11-05 (checkpoint 15: the Layers equipment scene and the formal profile)
 
 Syed rejected the first Layers revision (holographic wafers and abstract glyphs, projected labels) as "horrible",
 "game inspired" and unreadable, and asked for realistic objects (switches, firewalls, racks, servers, storage) with
@@ -18,7 +46,7 @@ profile removed the holographic borders, HUD brackets, grid floor, aurora, sheen
 rises from `packages/ui`; cards are plain bordered surfaces with an opt-in float shadow; pills and bars glow only
 on request; the sidebar active item is a quiet tint. Memory `ui-direction-obsidian-pro` carries the rules.
 
-## Previous session · 2026-11-04 (checkpoint 14: dashboard wizard, role templates, Horizon refinements)
+## Earlier session · 2026-11-04 (checkpoint 14: dashboard wizard, role templates, Horizon refinements)
 
 Syed's next asks after the what-if fix: a dashboard wizard and customisation with real templates for Admin, CTO/CIO,
 CISO and Finance; more professional type and floating effects; a Superset that matches the theme. ADR-020.
@@ -220,21 +248,25 @@ tracker is the truth.
 
 ## Next three
 
-1. REQ-CORE-019 (OpenAPI for the REST surface and a generated SDK); REQ-PERF-002 k6 threshold wired into the e2e CI job; REQ-PERF-005 (platform health screen over the
-   Prometheus metrics that now exist).
-2. REQ-CORE-013 scale-1 replay; REQ-AI-002/003; REQ-UI-021/022/023 reports, DOQL, BI; a synthetic CI health event
-   feed so the BSM engine propagates service health on the dev estate; paging for the setup scopes table.
-3. Lint scripts for apps/api, apps/assistant and the remaining packages (their test files sit outside tsconfig, so the
-   root ESLint project service cannot parse them); then the DISC rows that need no vendor lab (REQ-DISC-001 SNMP against
-   the recorded fixtures already in packages/testing/fixtures).
+1. REQ-BSM-006 + REQ-BSM-008 (ADR-024): SLA assignment per service, continuous monitoring with availability by
+   month, quarter and year from `service_health_history`, alerting, incident response (acknowledge, assign, resolve
+   against targets), audit logging and a structured RCA section on incidents.
+2. REQ-BSM-007 (ADR-025): sites and their connectivity, inter-site links probed by the Nodes into ClickHouse, link CI
+   health, HA/DR readiness rules and incidents; relates to REQ-UI-026.
+3. REQ-AI-007: assistant grounding (schema and measurement catalogue, store routing for measurements, Cypher
+   validation and repair, checked-in question set in CI); then the finance module (costing, ROI, budgeting).
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migration 0010
-is applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0015
+are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
+0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
+   console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
+   Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)
+   with Superset kept for ad-hoc exploration only? That is the only way to the 0.90 budget on that screen.
 1. Export the planning document to `docs/SPEC.md` so the tracker can be re-seeded and the contracts frozen against it.
 2. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE
    iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.

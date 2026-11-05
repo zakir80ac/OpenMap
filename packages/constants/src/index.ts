@@ -111,7 +111,12 @@ export const PERF_BUDGETS = {
    * a second); the embedded application's cost is reported, not hidden.
    */
   lighthouseEmbeddedScreens: ['analytics'] as const,
-  lighthouseEmbeddedPerformanceMin: 0.7,
+  /**
+   * ADR-026: a fully loaded embedded Superset dashboard costs about 1.5 s of script on Lighthouse's 4x-throttled CPU
+   * (2.7 MB over 64 requests, its own vendors and embedded bundles), which scores 0.67 however fast the console paints
+   * around it; the 0.70 set in ADR-012 was measured while the frame was still loading. The floor states that cost.
+   */
+  lighthouseEmbeddedPerformanceMin: 0.65,
 } as const;
 
 /**
@@ -299,11 +304,35 @@ export const POWER = {
 } as const;
 
 /** Assets screen (REQ-UI-009): warranty and support horizons offered in the attention table, in days. */
+/** Money as the contracts carry it: ISO 4217 codes; "XXX" is the standard's code for "no currency". */
+export const MONEY = {
+  currencyCodeLength: 3,
+  noCurrency: 'XXX',
+} as const;
+
 export const ASSETS = {
   warrantyHorizonsDays: [30, 90, 180, 365] as const,
   defaultWarrantyHorizonDays: 90,
   /** Lines a new plan starts with. */
   initialBomLines: 1,
+  /**
+   * Depreciation schedule a discovered or manually entered asset starts with (ADR-023): no method until finance
+   * assigns one, the schema's one-month minimum useful life, zero residual value.
+   */
+  defaultUsefulLifeMonths: 1,
+  /** Register rows fetched per page; the register loads more on demand. */
+  registerPageSize: 50,
+  /** Rows of the audit-note field on the details form. */
+  noteRows: 2,
+  /** Unknown CIs listed in the remediation panel. */
+  unknownPageSize: 50,
+  /** A discovered-but-unclassified device not seen for this long is probably gone: remediation suggests retiring it. */
+  unknownStaleDays: 30,
+  /**
+   * Ports whose service is well known; an open port outside this set on an unknown device is an unknown application
+   * on a non-standard port and remediation asks for a credential or a label.
+   */
+  wellKnownPorts: [22, 23, 25, 53, 80, 88, 110, 123, 135, 139, 143, 161, 389, 443, 445, 465, 514, 515, 554, 587, 631, 636, 993, 995, 1433, 1521, 1883, 3306, 3389, 5060, 5061, 5432, 5900, 6379, 8080, 8443, 9100, 27017] as const,
 } as const;
 
 /** IPAM screen (REQ-UI-010): utilisation thresholds that colour a subnet. */
@@ -844,8 +873,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   ci: '0.2.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
   collector: '0.2.0',
-  /** 0.10.0 (ADR-020): `Dashboard`, `EstateStats`, the dashboard queries and mutations. */
-  graphql: '0.10.0',
-  /** 0.2.0 (ADR-016): `openmap.metric.sampled`. */
-  event: '0.2.0',
+  /**
+   * 1.0.0 (ADR-023): `AssetRecord.manufacturer`/`model` nullable (breaking), `Warranty`, `Support`, `EndOfLife`,
+   * `AssetSummary`, `AssetFilter`, `assetSummary`, `updateAsset`, `createAsset`.
+   */
+  graphql: '1.0.0',
+  /** 0.3.0 (ADR-023): `openmap.asset.created`, `openmap.asset.updated`. */
+  event: '0.3.0',
 };

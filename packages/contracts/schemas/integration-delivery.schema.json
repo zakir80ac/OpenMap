@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/integration-delivery/0.2.0",
+  "$id": "https://openmap.dev/contracts/integration-delivery/0.3.0",
   "title": "integration-delivery",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

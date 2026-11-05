@@ -27,6 +27,111 @@
         }
       ]
     },
+    "ciType": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "host",
+            "chassis",
+            "blade",
+            "bmc",
+            "hypervisor",
+            "vm_cluster",
+            "vm",
+            "operating_system",
+            "container",
+            "k8s_cluster",
+            "k8s_namespace",
+            "k8s_workload",
+            "k8s_service",
+            "container_registry",
+            "network_device",
+            "interface",
+            "port",
+            "vlan",
+            "vrf",
+            "ip_address",
+            "subnet",
+            "dns_zone",
+            "dns_record",
+            "dhcp_scope",
+            "dhcp_lease",
+            "load_balancer",
+            "firewall_rule",
+            "site_link",
+            "storage_array",
+            "lun",
+            "fc_switch",
+            "fc_fabric",
+            "fc_zone",
+            "nas_share",
+            "object_bucket",
+            "database",
+            "database_cluster",
+            "certificate",
+            "application",
+            "application_component",
+            "listening_service",
+            "business_service",
+            "software",
+            "software_instance",
+            "licence",
+            "vulnerability",
+            "site",
+            "building",
+            "room",
+            "row",
+            "rack",
+            "pdu",
+            "power_feed",
+            "power_circuit",
+            "ups",
+            "cooling_unit",
+            "cable",
+            "patch_panel",
+            "cloud_account",
+            "cloud_resource",
+            "saas_application",
+            "saas_tenant",
+            "user_account",
+            "service_account",
+            "vendor",
+            "contract",
+            "cost_centre",
+            "unknown"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "layer": {
+      "type": "string",
+      "enum": [
+        "dc",
+        "network_security",
+        "hardware",
+        "storage",
+        "virtualization",
+        "cloud",
+        "os",
+        "containers",
+        "databases",
+        "applications",
+        "saas",
+        "unknown"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "plan",
+        "discovery",
+        "manual"
+      ]
+    },
     "assetTag": {
       "type": "string",
       "minLength": 1
@@ -38,12 +143,26 @@
       ]
     },
     "manufacturer": {
-      "type": "string",
-      "minLength": 1
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "model": {
-      "type": "string",
-      "minLength": 1
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "partNumber": {
       "type": [
@@ -198,13 +317,27 @@
               "minLength": 1
             },
             "level": {
-              "type": "string",
-              "minLength": 1
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "startsAt": {
-              "type": "string",
-              "format": "date",
-              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "endsAt": {
               "type": "string",
@@ -236,6 +369,77 @@
             "provider",
             "level",
             "startsAt",
+            "endsAt",
+            "source",
+            "verifiedAt"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "support": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "minLength": 1
+            },
+            "contractNumber": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "level": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endsAt": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "source": {
+              "type": "string",
+              "enum": [
+                "vendor_api",
+                "purchase_record",
+                "manual"
+              ]
+            },
+            "verifiedAt": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "contractNumber",
+            "level",
             "endsAt",
             "source",
             "verifiedAt"
@@ -392,6 +596,9 @@
     "id",
     "tenantId",
     "ciId",
+    "ciType",
+    "layer",
+    "source",
     "assetTag",
     "serialNumber",
     "manufacturer",
@@ -407,6 +614,7 @@
     "purchaseCost",
     "depreciation",
     "warranty",
+    "support",
     "supportContractId",
     "endOfLife",
     "stock",

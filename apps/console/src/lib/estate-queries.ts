@@ -1,11 +1,11 @@
-// REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-017 REQ-UI-018 — GraphQL operations behind the assets, IPAM, DCIM,
+// REQ-UI-009 REQ-UI-010 REQ-UI-011 REQ-UI-014 REQ-UI-017 REQ-UI-018 REQ-CMDB-039 REQ-CMDB-040 — GraphQL operations behind the assets, IPAM, DCIM,
 // integrations, analytics and assistant screens. Same conventions as queries.ts: TanStack Query options for reads,
 // plain async functions for mutations, every field list spelled once.
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
-import { CONSOLE } from '@openmap/constants';
+import { ASSETS, CONSOLE } from '@openmap/constants';
 import type { CiLayer } from '@openmap/contracts';
 import { gql } from './graphql';
-import { CI_SUMMARY_FIELDS, type CiRef, type CiSummary } from './queries';
+import { CI_SUMMARY_FIELDS, type CiRef, type CiSummary, type JsonValue } from './queries';
 
 // ---------------------------------------------------------------------------------------------------------------
 // Assets — REQ-UI-009
@@ -39,19 +39,102 @@ export interface SupportContract {
   primaryContact: VendorContact | null;
 }
 
+export type AssetSource = 'plan' | 'discovery' | 'manual';
+export type AssetDataGap = 'warranty' | 'support' | 'end_of_life';
+export const ASSET_DATA_GAPS: readonly AssetDataGap[] = ['warranty', 'support', 'end_of_life'];
+
+export interface Warranty {
+  provider: string;
+  level: string | null;
+  startsAt: string | null;
+  endsAt: string;
+  source: string;
+  verifiedAt: string | null;
+}
+export interface Support {
+  provider: string;
+  contractNumber: string | null;
+  level: string | null;
+  endsAt: string;
+  source: string;
+  verifiedAt: string | null;
+}
+export interface EndOfLife {
+  endOfSale: string | null;
+  endOfSoftwareMaintenance: string | null;
+  endOfSupport: string | null;
+  source: string;
+  verifiedAt: string | null;
+}
+export interface AssetAudit {
+  id: string;
+  actor: string;
+  at: string;
+  field: string;
+  fromValue: string | null;
+  toValue: string | null;
+  note: string | null;
+}
+
+/** REQ-CMDB-039 (ADR-023) — a register row: an owned CI, a planned BOM unit or a manual entry, with its cover dates. */
 export interface AssetRecord {
   id: string;
   ci: CiSummary | null;
+  ciType: string | null;
+  layer: CiLayer;
+  source: AssetSource;
   assetTag: string;
   serialNumber: string | null;
-  manufacturer: string;
-  model: string;
+  manufacturer: string | null;
+  model: string | null;
+  partNumber: string | null;
   stage: AssetStage;
+  custodian: string | null;
+  purchasedAt: string | null;
+  warranty: Warranty | null;
   warrantyEndsAt: string | null;
+  support: Support | null;
   supportContract: SupportContract | null;
+  supportEndsAt: string | null;
+  endOfLife: EndOfLife | null;
   endOfSupport: string | null;
+  dataGaps: AssetDataGap[];
   plan: { id: string; number: string; name: string; status: PlanStatus } | null;
   purchaseCost: Money | null;
+}
+
+export interface AssetSummary {
+  layer: CiLayer;
+  count: number;
+  needsData: number;
+  warrantyExpired: number;
+  supportExpired: number;
+  endOfSupportPassed: number;
+}
+
+/** Fields a person records on an asset; an omitted field is left alone, null clears it. */
+export interface AssetDetailsInput {
+  manufacturer?: string | null;
+  model?: string | null;
+  serialNumber?: string | null;
+  partNumber?: string | null;
+  custodian?: string | null;
+  purchasedAt?: string | null;
+  purchaseCostAmount?: number | null;
+  purchaseCostCurrency?: string | null;
+  warranty?: { provider: string; level?: string | null; startsAt?: string | null; endsAt: string } | null;
+  support?: { provider: string; contractNumber?: string | null; level?: string | null; endsAt: string } | null;
+  endOfLife?: { endOfSale?: string | null; endOfSoftwareMaintenance?: string | null; endOfSupport?: string | null } | null;
+  note?: string | null;
+}
+
+export interface ManualAssetInput {
+  layer: CiLayer;
+  type: string;
+  name: string;
+  assetTag?: string | null;
+  locationCiId?: string | null;
+  details: AssetDetailsInput;
 }
 
 export interface BomLine {
@@ -101,8 +184,10 @@ export interface PlanInput {
 }
 
 const MONEY_FIELDS = '{ amount currency }';
+const COVER_FIELDS = 'warranty { provider level startsAt endsAt source verifiedAt } support { provider contractNumber level endsAt source verifiedAt } endOfLife { endOfSale endOfSoftwareMaintenance endOfSupport source verifiedAt }';
 const ASSET_FIELDS = [
-  'id assetTag serialNumber manufacturer model stage warrantyEndsAt endOfSupport',
+  'id ciType layer source assetTag serialNumber manufacturer model partNumber stage custodian purchasedAt warrantyEndsAt supportEndsAt endOfSupport dataGaps',
+  COVER_FIELDS,
   'ci { ' + CI_SUMMARY_FIELDS + ' }',
   'supportContract { id contractNumber level endsAt vendor { id displayName } primaryContact { id name role email phone portalUrl } }',
   'plan { id number name status }',
@@ -116,7 +201,12 @@ const PLAN_FIELDS = [
   'assets { id assetTag stage }',
 ].join(' ');
 
-const ASSETS_QUERY = 'query Assets($stage: [AssetStage!], $warrantyExpiringWithinDays: Int, $first: Int) { assets(stage: $stage, warrantyExpiringWithinDays: $warrantyExpiringWithinDays, first: $first) { ' + ASSET_FIELDS + ' } }';
+const ASSETS_QUERY = 'query Assets($filter: AssetFilter, $stage: [AssetStage!], $warrantyExpiringWithinDays: Int, $first: Int, $after: String) { assets(filter: $filter, stage: $stage, warrantyExpiringWithinDays: $warrantyExpiringWithinDays, first: $first, after: $after) { ' + ASSET_FIELDS + ' } }';
+const ASSET_SUMMARY_QUERY = 'query AssetSummary { assetSummary { layer count needsData warrantyExpired supportExpired endOfSupportPassed } }';
+const ASSET_AUDITS_QUERY = 'query AssetAudits($filter: AssetFilter) { assets(filter: $filter, first: 1) { id audits { id actor at field fromValue toValue note } } }';
+const UPDATE_ASSET_MUTATION = 'mutation UpdateAsset($assetId: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $assetId, input: $input) { ' + ASSET_FIELDS + ' } }';
+const CREATE_ASSET_MUTATION = 'mutation CreateAsset($input: ManualAssetInput!) { createAsset(input: $input) { ' + ASSET_FIELDS + ' } }';
+const UNKNOWN_CIS_QUERY = 'query UnknownCis($first: Int) { unknownCis(first: $first) { totalCount edges { node { ' + CI_SUMMARY_FIELDS + ' attributes observedAt } } } }';
 const PLANS_QUERY = 'query Plans($status: [PlanStatus!]) { plans(status: $status) { ' + PLAN_FIELDS + ' } }';
 const CREATE_PLAN_MUTATION = 'mutation CreatePlan($input: PlanInput!) { createPlan(input: $input) { ' + PLAN_FIELDS + ' } }';
 const SET_PLAN_STATUS_MUTATION = 'mutation SetPlanStatus($planId: UUID!, $status: PlanStatus!) { setPlanStatus(planId: $planId, status: $status) { ' + PLAN_FIELDS + ' } }';
@@ -125,12 +215,67 @@ const SET_ASSET_STAGE_MUTATION = 'mutation SetAssetStage($assetId: UUID!, $stage
 export interface AssetsFilter {
   stage?: AssetStage[] | null;
   warrantyExpiringWithinDays?: number | null;
+  layers?: CiLayer[] | null;
+  types?: string[] | null;
+  sources?: AssetSource[] | null;
+  dataGaps?: AssetDataGap[] | null;
+  text?: string | null;
+}
+
+function filterVariables(filter: AssetsFilter): Record<string, unknown> {
+  const register = filter.layers || filter.types || filter.sources || filter.dataGaps || filter.text;
+  return {
+    filter: register ? { layers: filter.layers ?? null, types: filter.types ?? null, stages: filter.stage ?? null, sources: filter.sources ?? null, dataGaps: filter.dataGaps ?? null, text: filter.text ?? null, warrantyExpiringWithinDays: filter.warrantyExpiringWithinDays ?? null } : null,
+    stage: filter.stage ?? null,
+    warrantyExpiringWithinDays: filter.warrantyExpiringWithinDays ?? null,
+  };
 }
 
 export function assetsQuery(filter: AssetsFilter, first: number = CONSOLE.explorerPageSize) {
   return queryOptions({
     queryKey: ['assets', filter, first] as const,
-    queryFn: ({ signal }) => gql<{ assets: AssetRecord[] }>(ASSETS_QUERY, { stage: filter.stage ?? null, warrantyExpiringWithinDays: filter.warrantyExpiringWithinDays ?? null, first }, signal).then((d) => d.assets),
+    queryFn: ({ signal }) => gql<{ assets: AssetRecord[] }>(ASSETS_QUERY, { ...filterVariables(filter), first }, signal).then((d) => d.assets),
+  });
+}
+
+/** The register page after the last row seen: the cursor is the row id, as the API's `after` expects it. */
+export function assetsAfter(filter: AssetsFilter, afterId: string, first: number = CONSOLE.explorerPageSize): Promise<AssetRecord[]> {
+  const after = typeof btoa === 'function' ? btoa(JSON.stringify({ id: afterId })) : afterId;
+  return gql<{ assets: AssetRecord[] }>(ASSETS_QUERY, { ...filterVariables(filter), first, after }).then((d) => d.assets);
+}
+
+export function assetSummaryQuery() {
+  return queryOptions({
+    queryKey: ['assetSummary'] as const,
+    queryFn: ({ signal }) => gql<{ assetSummary: AssetSummary[] }>(ASSET_SUMMARY_QUERY, {}, signal).then((d) => d.assetSummary),
+  });
+}
+
+export function assetAuditsQuery(assetTag: string) {
+  return queryOptions({
+    queryKey: ['assetAudits', assetTag] as const,
+    queryFn: ({ signal }) => gql<{ assets: Array<{ id: string; audits: AssetAudit[] }> }>(ASSET_AUDITS_QUERY, { filter: { text: assetTag } }, signal).then((d) => d.assets[0]?.audits ?? []),
+  });
+}
+
+export function updateAsset(assetId: string, input: AssetDetailsInput): Promise<AssetRecord> {
+  return gql<{ updateAsset: AssetRecord }>(UPDATE_ASSET_MUTATION, { assetId, input }).then((d) => d.updateAsset);
+}
+
+export function createAsset(input: ManualAssetInput): Promise<AssetRecord> {
+  return gql<{ createAsset: AssetRecord }>(CREATE_ASSET_MUTATION, { input }).then((d) => d.createAsset);
+}
+
+/** REQ-CMDB-040 — the unknown layer's CIs with the attributes the scanners recorded, for diagnosis and labelling. */
+export interface UnknownCi extends CiSummary {
+  attributes: Record<string, JsonValue>;
+  observedAt: string;
+}
+
+export function unknownCisQuery(first: number = ASSETS.unknownPageSize) {
+  return queryOptions({
+    queryKey: ['unknownCis', first] as const,
+    queryFn: ({ signal }) => gql<{ unknownCis: { totalCount: number; edges: Array<{ node: UnknownCi }> } }>(UNKNOWN_CIS_QUERY, { first }, signal).then((d) => ({ total: d.unknownCis.totalCount, items: d.unknownCis.edges.map((e) => e.node) })),
   });
 }
 

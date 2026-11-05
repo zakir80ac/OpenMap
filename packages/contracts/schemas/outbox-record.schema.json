@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/outbox-record/0.2.0",
+  "$id": "https://openmap.dev/contracts/outbox-record/0.3.0",
   "title": "outbox-record",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -63,6 +63,8 @@
             "openmap.security.alert.received",
             "openmap.security.response.executed",
             "openmap.asset.stage.changed",
+            "openmap.asset.created",
+            "openmap.asset.updated",
             "openmap.asset.warranty.expiring",
             "openmap.asset.eos.approaching",
             "openmap.plan.status.changed",

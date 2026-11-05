@@ -39,6 +39,8 @@ async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, sinks:
   // behind would point at an estate that no longer exists (and break the non-null Incident.service).
   await prisma.incidentLink.deleteMany({ where: { tenantId } });
   await prisma.incident.deleteMany({ where: { tenantId } });
+  // Discovery-sourced asset rows belong to the CIs being replaced; plan and manual rows keep their tags and lose the CI.
+  await prisma.assetRecord.deleteMany({ where: { tenantId, source: 'discovery' } });
   await prisma.impactValidation.deleteMany({ where: { tenantId } });
   await prisma.impactSimulation.deleteMany({ where: { tenantId } });
   await prisma.impactScenario.deleteMany({ where: { tenantId } });

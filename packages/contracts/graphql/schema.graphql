@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 0.10.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.0.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -10,6 +10,8 @@ enum Lifecycle { discovered managed planned retired }
 enum HealthState { healthy degraded down unknown }
 enum PredictedState { down degraded at_risk unaffected }
 enum AssetStage { planned in_stock deployed spare rma retired disposed }
+enum AssetSource { plan discovery manual }
+enum AssetDataGap { warranty support end_of_life }
 enum PlanStatus { draft approved building live cancelled }
 enum IntegrationHealth { healthy warning failing disabled }
 enum Direction { upstream downstream both }
@@ -124,20 +126,44 @@ type Rack { ci: Ci! units: Int! occupiedUnits: Int! devices: [RackDevice!]! powe
 type RackDevice { ci: Ci! startUnit: Int! heightUnits: Int! face: String! }
 type PowerFeed { ci: Ci! ratedWatts: Int! currentWatts: Int! }
 
+# REQ-CMDB-039 REQ-CMDB-040 (ADR-023) — the register: one row per owned CI (discovery), per BOM unit (plan) or per
+# manual entry; warranty, support and end-of-life carried on the row, the missing ones listed as dataGaps.
 type AssetRecord {
   id: UUID!
   ci: Ci
+  """The CI's type at creation; null for a planned asset with no CI yet."""
+  ciType: String
+  layer: CiLayer!
+  source: AssetSource!
   assetTag: String!
   serialNumber: String
-  manufacturer: String!
-  model: String!
+  manufacturer: String
+  model: String
+  partNumber: String
   stage: AssetStage!
-  warrantyEndsAt: DateTime
-  supportContract: SupportContract
-  endOfSupport: DateTime
-  plan: InfraPlan
+  stageChangedAt: DateTime!
+  custodian: String
+  locationCi: Ci
+  purchasedAt: DateTime
   purchaseCost: Money
+  warranty: Warranty
+  warrantyEndsAt: DateTime
+  support: Support
+  supportContract: SupportContract
+  """The support end date from the row's own support entry or its support contract, whichever is set."""
+  supportEndsAt: DateTime
+  endOfLife: EndOfLife
+  endOfSupport: DateTime
+  dataGaps: [AssetDataGap!]!
+  plan: InfraPlan
+  audits: [AssetAudit!]!
 }
+type Warranty { provider: String! level: String startsAt: DateTime endsAt: DateTime! source: String! verifiedAt: DateTime }
+type Support { provider: String! contractNumber: String level: String endsAt: DateTime! source: String! verifiedAt: DateTime }
+type EndOfLife { endOfSale: DateTime endOfSoftwareMaintenance: DateTime endOfSupport: DateTime source: String! verifiedAt: DateTime }
+type AssetAudit { id: UUID! actor: String! at: DateTime! field: String! fromValue: String toValue: String note: String }
+"""Register totals per layer: rows, rows with a data gap, and rows whose cover has already ended."""
+type AssetSummary { layer: CiLayer! count: Int! needsData: Int! warrantyExpired: Int! supportExpired: Int! endOfSupportPassed: Int! }
 type SupportContract { id: UUID! vendor: Ci! contractNumber: String! level: String! endsAt: DateTime! primaryContact: VendorContact }
 type VendorContact { id: UUID! name: String! role: String! email: String phone: String portalUrl: String }
 type InfraPlan { id: UUID! number: String! name: String! kind: String! status: PlanStatus! bom: [BomLine!]! estimatedCost: Money targetSite: Ci targetRacks: [Ci!]! plannedLiveAt: DateTime assets: [AssetRecord!]! }
@@ -258,7 +284,8 @@ type Query {
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
-  assets(stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
+  assets(filter: AssetFilter, stage: [AssetStage!], warrantyExpiringWithinDays: Int, first: Int = 50, after: String): [AssetRecord!]!
+  assetSummary: [AssetSummary!]!
   plans(status: [PlanStatus!]): [InfraPlan!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   vulnerabilitySummaries(minCvss: Float, exploitedOnly: Boolean, internetFacing: Boolean): [VulnerabilitySummary!]!
@@ -283,6 +310,15 @@ input LabelCiInput { ciId: UUID! title: String! description: String! layer: CiLa
 input ScenarioInput { name: String! kind: String! failedCiIds: [UUID!]! maxDepth: Int = 0 honourRedundancy: Boolean = true includeSharedServices: Boolean = true at: DateTime }
 input PlanInput { name: String! description: String! kind: String! targetSiteId: UUID targetRackIds: [UUID!] bom: [BomLineInput!]! plannedLiveAt: DateTime }
 input BomLineInput { description: String! manufacturer: String model: String sku: String layer: CiLayer! quantity: Int! unitCostAmount: Float unitCostCurrency: String }
+input AssetFilter { layers: [CiLayer!] types: [String!] stages: [AssetStage!] sources: [AssetSource!] dataGaps: [AssetDataGap!] text: String warrantyExpiringWithinDays: Int }
+"""Dates are calendar dates (YYYY-MM-DD)."""
+input WarrantyInput { provider: String! level: String startsAt: String endsAt: String! }
+input SupportInput { provider: String! contractNumber: String level: String endsAt: String! }
+input EndOfLifeInput { endOfSale: String endOfSoftwareMaintenance: String endOfSupport: String }
+"""Fields a person records on an asset; every change is audited per field. A null object clears that cover."""
+input AssetDetailsInput { manufacturer: String model: String serialNumber: String partNumber: String custodian: String purchasedAt: String purchaseCostAmount: Float purchaseCostCurrency: String warranty: WarrantyInput support: SupportInput endOfLife: EndOfLifeInput note: String }
+"""An asset with no network presence (an unmetered PDU, a device without out-of-band management): a CI of the chosen type is created with it."""
+input ManualAssetInput { layer: CiLayer! type: String! name: String! assetTag: String locationCiId: UUID details: AssetDetailsInput! }
 input IntegrationInput { category: String! vendor: String! name: String! endpoint: String! credentialRef: String! direction: String! settings: JSON fieldMappings: JSON classMappings: JSON subscribedEvents: [String!] }
 
 type Mutation {
@@ -304,6 +340,8 @@ type Mutation {
   createPlan(input: PlanInput!): InfraPlan!
   setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
   setAssetStage(assetId: UUID!, stage: AssetStage!, note: String): AssetRecord!
+  updateAsset(assetId: UUID!, input: AssetDetailsInput!): AssetRecord!
+  createAsset(input: ManualAssetInput!): AssetRecord!
   upsertIntegration(id: UUID, input: IntegrationInput!): Integration!
   testIntegration(id: UUID!): Integration!
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!

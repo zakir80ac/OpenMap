@@ -796,6 +796,63 @@ describe('OpenMap API (integration)', () => {
     expect(listed.data?.plans.map((p) => p.number)).toEqual([plan?.number]);
   });
 
+  it('keeps the asset register across layers: manual entry creates a CI, details are audited, gaps and the summary follow, labelling an unknown device registers it (REQ-CMDB-039, REQ-CMDB-040)', async () => {
+    type Asset = {
+      id: string;
+      assetTag: string;
+      layer: string;
+      ciType: string | null;
+      source: string;
+      serialNumber: string | null;
+      manufacturer: string | null;
+      dataGaps: string[];
+      warranty: { provider: string; endsAt: string; source: string } | null;
+      ci: { id: string; type: string; layer: string } | null;
+      audits: Array<{ field: string; actor: string }>;
+    };
+    const fields = 'id assetTag layer ciType source serialNumber manufacturer dataGaps warranty { provider endsAt source } ci { id type layer } audits { field actor }';
+    const created = await gql<{ createAsset: Asset }>(
+      'mutation C($input: ManualAssetInput!) { createAsset(input: $input) { ' + fields + ' } }',
+      { input: { layer: 'dc', type: 'pdu', name: 'PDU rack 7 left', details: { manufacturer: 'APC', model: 'AP7921', serialNumber: 'PDU-7L' } } },
+    );
+    expect(created.errors).toBeUndefined();
+    const asset = created.data?.createAsset;
+    expect(asset).toMatchObject({ layer: 'dc', ciType: 'pdu', source: 'manual', serialNumber: 'PDU-7L', dataGaps: ['warranty', 'support', 'end_of_life'] });
+    expect(asset?.ci).toMatchObject({ type: 'pdu', layer: 'dc' });
+    expect(asset?.audits.map((a) => a.field).sort()).toEqual(['manufacturer', 'model', 'serialNumber', 'stage']);
+    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.ci.created', subject: asset?.ci?.id } })).toBe(1);
+    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.created', subject: asset?.id } })).toBe(1);
+
+    const updated = await gql<{ updateAsset: Asset }>(
+      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' + fields + ' } }',
+      { id: asset?.id, input: { warranty: { provider: 'APC', endsAt: '2029-03-31' }, note: 'from the invoice' } },
+    );
+    expect(updated.errors).toBeUndefined();
+    expect(updated.data?.updateAsset.warranty).toMatchObject({ provider: 'APC', endsAt: '2029-03-31T00:00:00.000Z', source: 'manual' });
+    expect(updated.data?.updateAsset.dataGaps).toEqual(['support', 'end_of_life']);
+    expect(updated.data?.updateAsset.audits.some((a) => a.field === 'warranty' && a.actor === 'tester')).toBe(true);
+    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.updated', subject: asset?.id } })).toBe(1);
+
+    const gaps = await gql<{ assets: Asset[]; assetSummary: Array<{ layer: string; count: number; needsData: number }> }>(
+      '{ assets(filter: { layers: [dc], dataGaps: [warranty] }) { id } assetSummary { layer count needsData } }',
+    );
+    expect(gaps.errors).toBeUndefined();
+    expect(gaps.data?.assets.map((a) => a.id)).not.toContain(asset?.id);
+    expect(gaps.data?.assetSummary.find((row) => row.layer === 'dc')).toMatchObject({ count: 1, needsData: 1 });
+    const text = await gql<{ assets: Asset[] }>('{ assets(filter: { text: "rack 7 left" }) { id } }');
+    expect(text.data?.assets.map((a) => a.id)).toContain(asset?.id);
+
+    const unknownId = randomUUID();
+    await prisma.ci.create({ data: ciRow(unknownId, 'unknown', 'unknown', 'ups_card-4416', { deviceKind: 'ups_card', snmpReachable: true, manufacturer: 'Schneider Electric', model: 'AP9641', serialNumber: 'UPS-4416' }) });
+    const labelled = await gql<{ labelCi: { id: string; type: string; asset: Asset | null } }>(
+      'mutation L($input: LabelCiInput!) { labelCi(input: $input) { id type asset { ' + fields + ' } } }',
+      { input: { ciId: unknownId, title: 'UPS card rack 12', description: 'APC network management card', layer: 'dc', type: 'ups' } },
+    );
+    expect(labelled.errors).toBeUndefined();
+    expect(labelled.data?.labelCi.type).toBe('ups');
+    expect(labelled.data?.labelCi.asset).toMatchObject({ ciType: 'ups', layer: 'dc', source: 'discovery', serialNumber: 'UPS-4416', manufacturer: 'Schneider Electric' });
+  });
+
   it('builds the subnet tree, utilisation and the next free address from stored CIs', async () => {
     type Subnets = {
       subnets: Array<{

@@ -5,6 +5,7 @@
 import { RECONCILER } from '@openmap/constants';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
+import { insertAssetsBatch, refreshAssetsBatch } from './assets.js';
 import { identityKeyOf } from './lookup.js';
 import type { ReconcileOutput } from '../core/reconcile.js';
 
@@ -142,6 +143,8 @@ export interface PersistSummary {
   relationships: number;
   conflicts: number;
   events: number;
+  /** Asset register rows created for owned CIs in this result (ADR-023). */
+  assets: number;
 }
 
 export async function persist(
@@ -157,6 +160,8 @@ export async function persist(
     );
     if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
     await updateCisBatch(tx, out.updated);
+    const assets = await insertAssetsBatch(tx, out.created);
+    await refreshAssetsBatch(tx, out.updated);
     await insertRelationshipsBatch(tx, out.relationshipsCreated);
     if (out.relationshipsSeen.length)
       await tx.relationship.updateMany({
@@ -181,6 +186,7 @@ export async function persist(
       relationships: out.relationshipsCreated.length,
       conflicts: out.conflicts.length,
       events: out.events.length,
+      assets,
     };
   }, { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs });
 }

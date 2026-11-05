@@ -1,26 +1,56 @@
-// REQ-CMDB-002 — asset management use cases: listing, infrastructure plans (BOM → planned assets in
-// one transaction), plan status and audited asset stage changes.
+// REQ-CMDB-002 REQ-CMDB-039 REQ-CMDB-040 — asset management use cases: the register with its filters and per-layer
+// summary, infrastructure plans (BOM → planned assets in one transaction), plan status, audited stage changes,
+// audited detail entry (warranty, support, end of life, purchase, custodian), manual assets for items with no
+// network presence (a CI is created with them), and the row an owned CI gets when a person labels it (ADR-023).
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { BSM } from '@openmap/constants';
+import { BSM, RECONCILIATION } from '@openmap/constants';
+import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer } from '@openmap/contracts';
+import type { Prisma } from '@openmap/db';
+import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
+import type { CiRecord } from '../ci/ci.types.js';
 import { clampPageSize, decodeCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { OutboxService } from '../outbox/outbox.service.js';
-import { ASSETS_REPOSITORY, type AssetsRepository } from './assets.repository.js';
-import type { PlanInput } from './assets.schemas.js';
-import type { AssetRecordView, AssetStage, InfraPlanView, PlanStatus, SupportContractView, VendorContactView } from './assets.types.js';
+import { ASSETS_REPOSITORY, type AssetsQuery, type AssetsRepository } from './assets.repository.js';
+import type { AssetDetailsInput, AssetFilterInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
+import type { AssetAuditView, AssetRecordView, AssetStage, AssetSummaryView, InfraPlanView, PlanStatus, SupportContractView, VendorContactView } from './assets.types.js';
 
 export const PLAN_NUMBER_PREFIX = 'PLAN-';
+
+function horizonIso(days: number | null): string | null {
+  return days === null ? null : new Date(Date.now() + days * BSM.minutesPerDay * BSM.msPerMinute).toISOString();
+}
 
 @Injectable()
 export class AssetsService {
   constructor(
     @Inject(ASSETS_REPOSITORY) private readonly repo: AssetsRepository,
+    @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
     private readonly outbox: OutboxService,
   ) {}
 
-  assets(tenantId: string, stages: readonly AssetStage[], warrantyExpiringWithinDays: number | null, first: number | null | undefined, after: string | null | undefined): Promise<AssetRecordView[]> {
-    const warrantyEndsBefore = warrantyExpiringWithinDays === null ? null : new Date(Date.now() + warrantyExpiringWithinDays * BSM.minutesPerDay * BSM.msPerMinute).toISOString();
-    return this.repo.assets(tenantId, { stages, warrantyEndsBefore, first: clampPageSize(first), afterId: after ? decodeCursor(after).id : null });
+  assets(tenantId: string, filter: AssetFilterInput | null, stages: readonly AssetStage[], warrantyExpiringWithinDays: number | null, first: number | null | undefined, after: string | null | undefined): Promise<AssetRecordView[]> {
+    const query: AssetsQuery = {
+      layers: filter?.layers ?? [],
+      types: filter?.types ?? [],
+      stages: filter?.stages ?? stages,
+      sources: filter?.sources ?? [],
+      dataGaps: filter?.dataGaps ?? [],
+      text: filter?.text?.trim() || null,
+      warrantyEndsBefore: horizonIso(filter?.warrantyExpiringWithinDays ?? warrantyExpiringWithinDays),
+      first: clampPageSize(first),
+      afterId: after ? decodeCursor(after).id : null,
+    };
+    return this.repo.assets(tenantId, query);
+  }
+
+  summary(tenantId: string): Promise<AssetSummaryView[]> {
+    return this.repo.summary(tenantId, nowIso());
+  }
+
+  audits(tenantId: string, assetId: string): Promise<AssetAuditView[]> {
+    return this.repo.audits(tenantId, assetId);
   }
 
   assetsByCiIds(tenantId: string, ciIds: readonly string[]): Promise<AssetRecordView[]> {
@@ -75,5 +105,57 @@ export class AssetsService {
       await emit({ type: 'openmap.asset.stage.changed', subject: asset.id, data: { assetId: asset.id, ciId: asset.ciId, stage: asset.stage, previous: before.stage, note, by: actor } });
       return asset;
     });
+  }
+
+  /** Records what a person knows about an asset; each changed field is an audit row and the event lists them. */
+  updateAsset(tenantId: string, actor: string, assetId: string, input: AssetDetailsInput): Promise<AssetRecordView> {
+    return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+      const before = await this.repo.asset(tenantId, assetId);
+      if (!before) throw new NotFoundException('asset ' + assetId + ' not found');
+      const { asset, changed } = await this.repo.updateDetails(tx, tenantId, assetId, input, actor, nowIso());
+      if (changed.length > 0) await emit({ type: 'openmap.asset.updated', subject: asset.id, data: { assetId: asset.id, ciId: asset.ciId, changed, dataGaps: asset.dataGaps, by: actor } });
+      return asset;
+    });
+  }
+
+  /**
+   * A manual asset for something discovery cannot see: the CI is created first (through the outbox like any CI, so
+   * the graph and the search index carry it), then its register row with the entered details.
+   */
+  createAsset(tenantId: string, actor: string, input: ManualAssetInput): Promise<AssetRecordView> {
+    return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+      const serial = input.details.serialNumber ?? null;
+      const ci = await this.cis.create(tx, tenantId, {
+        type: input.type,
+        identity: serial === null ? { name: input.name } : { serialNumber: serial },
+        name: input.name,
+        attributes: {
+          ...(input.details.manufacturer ? { manufacturer: input.details.manufacturer } : {}),
+          ...(input.details.model ? { model: input.details.model } : {}),
+          ...(serial === null ? {} : { serialNumber: serial }),
+          ...(input.assetTag ? { assetTag: input.assetTag } : {}),
+          entryMethod: 'manual',
+          enteredBy: actor,
+        },
+        tags: ['manual'],
+        lifecycle: 'managed',
+        // Run ids are UUIDs everywhere (ClickHouse ci_history types the column so); a manual entry is its own run.
+        runId: randomUUID(),
+        confidence: RECONCILIATION.userLabelConfidence,
+      });
+      await emit({ type: 'openmap.ci.created', subject: ci.id, data: { ci } });
+      const asset = await this.repo.createManual(tx, tenantId, actor, ci, input, nowIso());
+      await emit({ type: 'openmap.asset.created', subject: asset.id, data: { assetId: asset.id, ciId: ci.id, source: 'manual', layer: asset.layer, dataGaps: asset.dataGaps, by: actor } });
+      return asset;
+    });
+  }
+
+  /**
+   * Called when a person labels a CI (an unknown device classified into an owned type, or a layer override): the CI
+   * gets its register row if it has none yet. Labelling into a non-owned type leaves the register alone.
+   */
+  async ensureForLabelledCi(tx: Prisma.TransactionClient, tenantId: string, actor: string, ci: CiRecord, layer: CiLayer): Promise<AssetRecordView | null> {
+    if (!isOwnedCiType(ci.type)) return null;
+    return this.repo.ensureForCi(tx, tenantId, actor, ci, layer ?? CI_TYPE_LAYER[ci.type], nowIso());
   }
 }

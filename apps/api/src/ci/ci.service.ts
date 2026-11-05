@@ -2,7 +2,8 @@
 // edits and relationship writes. Every write goes through the outbox in one Postgres transaction.
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RECONCILIATION } from '@openmap/constants';
-import { CI_TYPE_LAYER, type CiLayer, type RelationshipType, type UserLabel } from '@openmap/contracts';
+import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer, type RelationshipType, type UserLabel } from '@openmap/contracts';
+import { ensureAssetForCi } from '../assets/assets.repository.js';
 import { clampPageSize, decodeCursor, encodeCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { booleanAttribute, numberAttribute, stringAttribute } from '../common/validation.js';
@@ -224,6 +225,12 @@ export class CiService {
         subject: ci.id,
         data: { ciId: ci.id, label, layer: ci.layer, type: ci.type, derivedLayer: CI_TYPE_LAYER[ci.type] },
       });
+      // REQ-CMDB-040 (ADR-023): an unknown device classified into an owned type joins the asset register at once,
+      // with whatever its attributes already say; the person then fills warranty, support and end of life.
+      if (isOwnedCiType(ci.type)) {
+        const asset = await ensureAssetForCi(tx, actor.tenantId, actor.username, ci, ci.layer, nowIso());
+        await emit({ type: 'openmap.asset.created', subject: asset.id, data: { assetId: asset.id, ciId: ci.id, source: asset.source, layer: asset.layer, dataGaps: asset.dataGaps, by: actor.username } });
+      }
       return ci;
     });
   }

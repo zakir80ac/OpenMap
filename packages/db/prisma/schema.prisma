@@ -333,6 +333,13 @@ enum AssetStage {
   disposed
 }
 
+/// ADR-023: a plan's BOM unit, a row the reconciler keeps for an owned CI, or a manual entry.
+enum AssetSource {
+  plan
+  discovery
+  manual
+}
+
 /// SUPPORT_LEVELS (asset.ts)
 enum SupportLevel {
   none
@@ -969,10 +976,15 @@ model AssetRecord {
   id                    String             @id @default(uuid()) @db.Uuid
   tenantId              String             @db.Uuid
   ciId                  String?            @db.Uuid
+  /// The CI's type when the row was created; a planned asset has none.
+  ciType                CiType?
+  /// Register layer: the CI's layer, the BOM line's layer or the manual choice.
+  layer                 CiLayer
+  source                AssetSource
   assetTag              String
   serialNumber          String?
-  manufacturer          String
-  model                 String
+  manufacturer          String?
+  model                 String?
   partNumber            String?
   stage                 AssetStage
   stageChangedAt        DateTime           @db.Timestamptz(3)
@@ -988,6 +1000,8 @@ model AssetRecord {
   residualValueAmount   Decimal            @db.Decimal(18, 2)
   residualValueCurrency String             @db.Char(3)
   warranty              Json?
+  /// supportSchema or null: cover entered on the row itself (a SupportContract row is the other way).
+  support               Json?
   supportContractId     String?            @db.Uuid
   endOfLife             Json?
   stockOnHand           Int?
@@ -1004,7 +1018,10 @@ model AssetRecord {
   audits          AssetAudit[]
 
   @@unique([tenantId, assetTag])
+  @@unique([tenantId, ciId])
   @@index([tenantId, stage])
+  @@index([tenantId, layer])
+  @@index([tenantId, source])
   @@index([tenantId, serialNumber])
   @@index([ciId])
   @@index([planId])

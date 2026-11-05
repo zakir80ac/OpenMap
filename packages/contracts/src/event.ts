@@ -38,6 +38,8 @@ export const EVENT_TYPES = [
   'openmap.security.alert.received',
   'openmap.security.response.executed',
   'openmap.asset.stage.changed',
+  'openmap.asset.created',
+  'openmap.asset.updated',
   'openmap.asset.warranty.expiring',
   'openmap.asset.eos.approaching',
   'openmap.plan.status.changed',
