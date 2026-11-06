@@ -143,9 +143,13 @@ type systemDoc struct {
 		ManagedBy []odataRef `json:"ManagedBy"`
 	} `json:"Links"`
 	EthernetInterfaces odataRef `json:"EthernetInterfaces"`
+	Processors         odataRef `json:"Processors"`
+	Memory             odataRef `json:"Memory"`
+	Storage            odataRef `json:"Storage"`
 }
 
 type chassisDoc struct {
+	ODataID      string `json:"@odata.id"`
 	ID           string `json:"Id"`
 	ChassisType  string `json:"ChassisType"`
 	Manufacturer string `json:"Manufacturer"`
@@ -163,9 +167,10 @@ type chassisDoc struct {
 			Row        string `json:"Row"`
 		} `json:"Placement"`
 	} `json:"Location"`
-	Power   odataRef `json:"Power"`
-	Thermal odataRef `json:"Thermal"`
-	Status  status   `json:"Status"`
+	Power           odataRef `json:"Power"`
+	Thermal         odataRef `json:"Thermal"`
+	NetworkAdapters odataRef `json:"NetworkAdapters"`
+	Status          status   `json:"Status"`
 }
 
 type managerDoc struct {
@@ -219,6 +224,8 @@ type Inventory struct {
 	Power    map[string]powerDoc   // keyed by chassis id
 	Thermal  map[string]thermalDoc // keyed by chassis id
 	Macs     map[string][]ethernetDoc
+	Parts    map[string]parts        // keyed by system id (REQ-CMDB-014)
+	Adapters map[string][]adapterDoc // keyed by chassis id
 	Raw      [][]byte
 }
 
@@ -233,7 +240,7 @@ func (c *Client) members(ctx context.Context, path string) ([]odataRef, []byte, 
 
 // Walk fetches the service root, systems, chassis (with power and thermal) and managers.
 func (c *Client) Walk(ctx context.Context) (*Inventory, error) {
-	inv := &Inventory{Power: map[string]powerDoc{}, Thermal: map[string]thermalDoc{}, Macs: map[string][]ethernetDoc{}}
+	inv := &Inventory{Power: map[string]powerDoc{}, Thermal: map[string]thermalDoc{}, Macs: map[string][]ethernetDoc{}, Parts: map[string]parts{}, Adapters: map[string][]adapterDoc{}}
 	raw, err := c.Get(ctx, serviceRoot, &inv.Root)
 	if err != nil {
 		return nil, err
@@ -253,6 +260,7 @@ func (c *Client) Walk(ctx context.Context) (*Inventory, error) {
 			}
 			inv.Raw = append(inv.Raw, raw)
 			inv.Systems = append(inv.Systems, s)
+			inv.Parts[s.ID] = c.walkParts(ctx, s, inv)
 			if s.EthernetInterfaces.ID != "" {
 				if eth, raw, err := c.members(ctx, s.EthernetInterfaces.ID); err == nil {
 					inv.Raw = append(inv.Raw, raw)
@@ -279,6 +287,9 @@ func (c *Client) Walk(ctx context.Context) (*Inventory, error) {
 				}
 				inv.Raw = append(inv.Raw, raw)
 				inv.Chassis = append(inv.Chassis, ch)
+				if adapters := c.walkAdapters(ctx, ch, inv); len(adapters) > 0 {
+					inv.Adapters[ch.ID] = adapters
+				}
 				if ch.Power.ID != "" {
 					var p powerDoc
 					if raw, err := c.Get(ctx, ch.Power.ID, &p); err == nil {
@@ -412,7 +423,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 			}
 		}
 		name := firstNonEmpty(s.HostName, s.Name, s.SerialNumber, target.Value)
-		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeHost, Identity: identity, Name: name, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeHost, Identity: identity, Name: name, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at, Components: Components(inv, s)})
 		hostRef := contract.CiRef{Type: typeHost, Identity: identity}
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relManages, From: bmcRef, To: hostRef, Attributes: map[string]any{"protocol": "redfish"}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: hostRef, To: bmcRef, Attributes: map[string]any{}, ObservedAt: at})

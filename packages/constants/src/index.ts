@@ -401,6 +401,18 @@ export const CERTIFICATES = {
   expiryHorizonsDays: [7, 30, 60, 90] as const,
 } as const;
 
+/** REQ-CMDB-014 (ADR-037) — the parts register: page sizes and how many model rows it summarises. */
+export const COMPONENTS = {
+  /** Parts per page of the estate-wide register (GraphQL default of `components(first)`). */
+  pageSize: 100,
+  /** The largest page a client may ask for. */
+  maxPageSize: 500,
+  /** Most common kind-and-model rows returned with a page. */
+  topModels: 12,
+  /** Most common models shown as headline figures beside the total. */
+  headlineModels: 3,
+} as const;
+
 /** REQ-CMDB-026..029 (ADR-035) — the Commercial screen's horizons and limits. */
 export const COMMERCIAL = {
   /** "Ending within" horizons the contract register offers, in days. */
@@ -1193,10 +1205,13 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 
 /** Current contract versions. Bumping one requires an ADR and a tracker row. */
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
-  /** 0.2.0 (ADR-016): metric samples, HEALTH_STATES and the ClickHouse metric name per layer headline. */
-  ci: '0.2.0',
-  /** 0.2.0 (ADR-016): optional `samples` on a collector result. */
-  collector: '0.2.0',
+  /**
+   * 0.2.0 (ADR-016): metric samples, HEALTH_STATES and the ClickHouse metric name per layer headline.
+   * 0.3.0 (REQ-CMDB-014, ADR-037): `component.ts`, the `components` part list on a CI's attributes.
+   */
+  ci: '0.3.0',
+  /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`. */
+  collector: '0.3.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1228,12 +1243,15 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * mutations `upsertContract`, `upsertVendor`, `upsertCostCentre`, `upsertVendorContact`, `deleteVendorContact`,
    * `setAssetContract`.
    * 1.14.0 (REQ-CMDB-032, ADR-036): `Certificate`, `CertificateEndpoint`, `CertificateFilter`, query `certificates`.
+   * 1.15.0 (REQ-CMDB-014, ADR-037): `ComponentKind`, `HardwareComponent`, `ComponentModelCount`, `ComponentPage`,
+   * `ComponentFilter`, `Ci.components`, query `components`.
    */
-  graphql: '1.14.0',
+  graphql: '1.15.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
    * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`. 0.9.0 (REQ-CMDB-032, ADR-036): `openmap.certificate.expiring`.
+   * 0.10.0 (REQ-CMDB-014, ADR-037): `openmap.component.changed`.
    */
-  event: '0.9.0',
+  event: '0.10.0',
 };

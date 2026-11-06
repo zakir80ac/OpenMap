@@ -524,6 +524,7 @@ model Tenant {
   importJobs              ImportJob[]
   planReceipts            PlanReceipt[]
   certificateAlerts       CertificateAlert[]
+  ciComponents            CiComponent[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -689,6 +690,7 @@ model Ci {
   coveredAssets     AssetRecord[]      @relation("AssetSupportContract")
   ownedAssets       AssetRecord[]      @relation("AssetOwnerCostCentre")
   certificateAlerts CertificateAlert[]
+  components        CiComponent[]
 
   @@index([tenantId, type])
   @@index([tenantId, code])
@@ -1657,4 +1659,31 @@ model CertificateAlert {
   @@unique([ciId, notAfter, thresholdDays])
   @@index([tenantId, createdAt])
   @@map("certificate_alerts")
+}
+
+/// REQ-CMDB-014 (ADR-037): parts and components of a CI, mirrored from its `components` attribute; kept after removal.
+model CiComponent {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @db.Uuid
+  ciId          String    @db.Uuid
+  kind          String
+  slot          String
+  model         String?
+  manufacturer  String?
+  serialNumber  String?
+  partNumber    String?
+  capacityBytes Float?
+  firmware      String?
+  details       Json      @default("{}")
+  firstSeenAt   DateTime  @db.Timestamptz(3)
+  lastSeenAt    DateTime  @db.Timestamptz(3)
+  removedAt     DateTime? @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci     Ci     @relation(fields: [ciId], references: [id], onDelete: Cascade)
+
+  @@unique([ciId, kind, slot])
+  @@index([tenantId, kind, model])
+  @@index([tenantId, serialNumber])
+  @@map("ci_components")
 }

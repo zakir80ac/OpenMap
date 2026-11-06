@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CI_TYPE_LAYER, COLLECTOR_FAMILIES, CONTRACT_VERSIONS, LAYER_HEADLINE_METRIC, collectorResultSchema, type CollectorFamily, type CollectorResult, type HeadlineMetricKey, type MetricSample, type ObservedCi, type ObservedRelationship } from '@openmap/contracts';
+import { CI_TYPE_LAYER, COLLECTOR_FAMILIES, CONTRACT_VERSIONS, LAYER_HEADLINE_METRIC, collectorResultSchema, componentSchema, type CollectorFamily, type CollectorResult, type HeadlineMetricKey, type MetricSample, type ObservedCi, type ObservedRelationship } from '@openmap/contracts';
 import { summarise, type Estate, type EstateCi, type EstateSummary, type Slot } from './estate.js';
 import { Rng } from './rng.js';
 import { ESTATE_EPOCH_MS } from './time.js';
@@ -137,7 +137,10 @@ export function buildResult(estate: Estate, slot: Slot, ciIdx: readonly number[]
   const { builder } = estate;
   const cis: ObservedCi[] = ciIdx.map((i) => {
     const ci = builder.get(i);
-    return { type: ci.type, identity: ci.identity, name: ci.name, attributes: ci.attributes, tags: ci.tags, externalIds: ci.externalIds, observedAt: slot.observedAt };
+    const observed: ObservedCi = { type: ci.type, identity: ci.identity, name: ci.name, attributes: ci.attributes, tags: ci.tags, externalIds: ci.externalIds, observedAt: slot.observedAt };
+    // Schema key order, so the evidence digest matches the result as a validator re-serialises it.
+    if (ci.components !== undefined) observed.components = ci.components.map((c) => componentSchema.parse(c));
+    return observed;
   });
   const relationships: ObservedRelationship[] = relIdx.map((i) => {
     const rel = builder.rels[i];

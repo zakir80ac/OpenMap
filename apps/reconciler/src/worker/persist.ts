@@ -6,6 +6,7 @@ import { RECONCILER } from '@openmap/constants';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import { Prisma, refreshCoveringContracts, type PrismaClient } from '@openmap/db';
 import { claimReceivedAssets, insertAssetsBatch, refreshAssetsBatch, type ClaimedAsset } from './assets.js';
+import { syncComponents } from './components.js';
 import { envelope } from '../core/events.js';
 import { identityKeyOf } from './lookup.js';
 import type { ReconcileOutput } from '../core/reconcile.js';
@@ -148,6 +149,9 @@ export interface PersistSummary {
   assets: number;
   /** Received plan units discovery linked to their new CI and moved to deployed (ADR-034). */
   claimed: number;
+  /** ADR-037: parts upserted from observed part lists, and parts closed because a sweep no longer reports them. */
+  componentsUpserted: number;
+  componentsRemoved: number;
 }
 
 /** ADR-034: the stage change of each claimed unit, carried by the outbox like the API's. */
@@ -181,6 +185,8 @@ export async function persist(
     const claimed = await claimReceivedAssets(tx, out.created);
     const assets = await insertAssetsBatch(tx, out.created);
     await refreshAssetsBatch(tx, out.updated);
+    // ADR-037: the part lists the observations carried, mirrored into ci_components.
+    const parts = await syncComponents(tx, out.components);
     await insertRelationshipsBatch(tx, out.relationshipsCreated);
     // ADR-035: a covered_by a sweep or an import created gives the covered CI's asset its support contract.
     await refreshCoveringContracts(
@@ -203,15 +209,17 @@ export async function persist(
         })),
       });
     }
-    await insertOutboxBatch(tx, [...out.events, ...claimEvents(claimed)]);
+    await insertOutboxBatch(tx, [...out.events, ...claimEvents(claimed), ...parts.events]);
     return {
       created: out.created.length,
       updated: out.updated.length,
       relationships: out.relationshipsCreated.length,
       conflicts: out.conflicts.length,
-      events: out.events.length + claimed.length,
+      events: out.events.length + claimed.length + parts.events.length,
       assets,
       claimed: claimed.length,
+      componentsUpserted: parts.upserted,
+      componentsRemoved: parts.removed,
     };
   }, { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs });
 }

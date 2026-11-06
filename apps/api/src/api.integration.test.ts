@@ -1908,6 +1908,52 @@ describe('OpenMap API (integration)', () => {
     const strong = await gql<{ certificates: Cert[] }>(query, { filter: { text: stamp, weak: false, includeAuthorities: true } });
     expect(strong.data?.certificates.map((c) => c.ci.id)).toEqual([ca]);
   });
+  it('lists the parts inside a CI and across the estate, with removed parts on request and the common models (REQ-CMDB-014)', async () => {
+    // T-197 ADR-037
+    const stamp = String(Date.now());
+    const now = new Date();
+    const hostId = randomUUID();
+    await prisma.ci.create({
+      data: {
+        id: hostId, tenantId, type: 'host', identity: { serialNumber: 'PARTS-' + stamp }, identityKey: 'parts-' + stamp, name: 'parts-host-' + stamp, displayName: 'parts-host-' + stamp,
+        code: 'HW-PARTS-' + stamp, layer: 'hardware', lifecycle: 'managed', attributes: {}, tags: [], sourceCollectorId: 'ssh-agentless', sourceNodeId: 'test',
+        sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now, checksum: 'e'.repeat(64),
+      },
+    });
+    const gib = 1024 ** 3;
+    const part = (kind: string, slot: string, extra: Record<string, unknown>) => ({ tenantId, ciId: hostId, kind, slot, firstSeenAt: now, lastSeenAt: now, ...extra });
+    await prisma.ciComponent.createMany({
+      data: [
+        part('cpu', 'CPU1', { model: 'EPYC-' + stamp, manufacturer: 'AMD', details: { cores: 32, threads: 64 } }),
+        part('memory', 'DIMM A1', { manufacturer: 'Samsung', serialNumber: 'M-' + stamp, capacityBytes: 64 * gib }),
+        part('disk', 'Bay 1', { model: 'PM893-' + stamp, serialNumber: 'D1-' + stamp, capacityBytes: 960 * gib }),
+        part('disk', 'Bay 2', { model: 'PM893-' + stamp, serialNumber: 'D2-' + stamp, capacityBytes: 960 * gib, removedAt: now }),
+      ],
+    });
+    type Part = { kind: string; slot: string; model: string | null; serialNumber: string | null; capacityBytes: number | null; details: Record<string, unknown>; removedAt: string | null; ci: { id: string } };
+    const fields = 'kind slot model serialNumber capacityBytes details removedAt ci { id }';
+    const ofCi = await gql<{ ci: { components: Part[]; all: Part[] } }>('query P($id: UUID!) { ci(id: $id) { components { ' + fields + ' } all: components(includeRemoved: true) { slot removedAt } } }', { id: hostId });
+    expect(ofCi.errors).toBeUndefined();
+    expect(ofCi.data?.ci.components.map((c) => c.kind + ':' + c.slot)).toEqual(['cpu:CPU1', 'disk:Bay 1', 'memory:DIMM A1']);
+    expect(ofCi.data?.ci.components[0]?.details).toEqual({ cores: 32, threads: 64 });
+    expect(ofCi.data?.ci.all.map((c) => c.slot)).toEqual(['CPU1', 'Bay 1', 'Bay 2', 'DIMM A1']);
+
+    const pageQuery = 'query R($filter: ComponentFilter, $first: Int) { components(filter: $filter, first: $first) { total items { ' + fields + ' } models { kind model count } } }';
+    type Page = { components: { total: number; items: Part[]; models: Array<{ kind: string; model: string | null; count: number }> } };
+    const disks = await gql<Page>(pageQuery, { filter: { kind: 'disk', text: stamp } });
+    expect(disks.errors).toBeUndefined();
+    expect(disks.data?.components.total).toBe(1);
+    expect(disks.data?.components.items[0]?.ci.id).toBe(hostId);
+    const withRemoved = await gql<Page>(pageQuery, { filter: { text: 'PM893-' + stamp, includeRemoved: true } });
+    expect(withRemoved.data?.components.total).toBe(2);
+    expect(withRemoved.data?.components.models).toEqual([{ kind: 'disk', model: 'PM893-' + stamp, count: 2 }]);
+    const byHost = await gql<Page>(pageQuery, { filter: { text: 'parts-host-' + stamp }, first: 2 });
+    expect(byHost.data?.components.total).toBe(3);
+    expect(byHost.data?.components.items).toHaveLength(2);
+    const tooMany = await gql<Page>(pageQuery, { filter: { text: stamp }, first: 100000 });
+    expect(tooMany.errors?.[0]?.message).toBeDefined();
+  });
+
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';

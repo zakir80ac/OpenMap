@@ -1,6 +1,7 @@
 // REQ-CORE-001 — Configuration Item (CI) contract, version CONTRACT_VERSIONS.ci.
 // Every store (Postgres, Memgraph, ClickHouse, Meilisearch) and every collector speaks this shape.
 import { z } from 'zod';
+import { componentSchema } from './component.js';
 
 /**
  * Layers give layered visibility: every CI lives in exactly one layer, derived from its type
@@ -470,6 +471,8 @@ export const observedCiSchema = z.object({
   tags: z.array(z.string().min(1)),
   externalIds: z.array(externalIdSchema),
   observedAt: z.iso.datetime(),
+  /** REQ-CMDB-014 (ADR-037): the full part list when the collector sees parts; absent leaves stored parts alone. */
+  components: z.array(componentSchema).optional(),
 });
 export type ObservedCi = z.infer<typeof observedCiSchema>;
 

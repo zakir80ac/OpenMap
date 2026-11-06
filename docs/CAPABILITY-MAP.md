@@ -45,7 +45,7 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | Device42 feature | OpenMap | Parity | WS |
 | --- | --- | --- | --- |
 | Devices (physical, virtual, blade, cluster, other) with lifecycle | CI types per `packages/contracts/ci.ts`, lifecycle discovered/managed/planned/retired | = | CMDB |
-| Device parts/components (CPU, memory, disks, NICs, HBAs) | `attributes` plus child CIs for interfaces and LUNs; parts in asset record | = | CMDB |
+| Device parts/components (CPU, memory, disks, NICs, HBAs) | Parts from SSH, WMI and Redfish on `ObservedCi.components`, kept per kind and slot in `ci_components` with removal, replacement and move tracking by serial; `openmap.component.changed`; Parts tab and Parts register (ADR-037) | = | CMDB |
 | Custom fields on every object | `attributes` typed JSON; tenant-defined schema with validation and search | = | CMDB |
 | Object categories, tags, labels | `tags`, `layer`, user labels | + | CMDB |
 | Asset management: tag, purchase, cost, depreciation | `assetRecordSchema` | = | CMDB |

@@ -1,5 +1,5 @@
 'use client';
-// REQ-UI-013 REQ-BSM-003 REQ-AI-004 — Impact modeling ("What if…"): component explorer (search + layer filter,
+// REQ-UI-013 REQ-BSM-003 REQ-AI-004 REQ-CMDB-021 — Impact modeling ("What if…"): component explorer (search + layer filter,
 // multi-select) → condition picker (applicability from type and layer) → Run model: saveScenario then
 // runSimulation → results (totals, propagation chains, affected services with predicted state, SLA budget and
 // recovery) → assistant suggestions (askAssistant grounded on the scenario, plus the engine's recommendations) and
@@ -37,6 +37,8 @@ import {
   type ImpactSimulation,
 } from '@/lib/queries';
 import { useFormatters, useT, type Translate } from '@/providers';
+import { HiddenLayersNotice, visibleLayersFilter } from '@/components/common/HiddenLayersNotice';
+import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 
 export interface ImpactViewProps {
   locale: Locale;
@@ -90,7 +92,9 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
   const [condition, setCondition] = useState<ImpactCondition | undefined>(undefined);
   const debounced = useDebounced(text.trim(), CONSOLE.searchDebounceMs);
 
-  const layers = layer === undefined ? undefined : [layer];
+  const { visibility } = useLayerVisibility();
+  // REQ-CMDB-021: layers hidden on this device stay out of the explorer unless one is picked.
+  const layers = visibleLayersFilter(visibility, layer) ?? undefined;
   const page = useQuery({
     ...cisPageQuery(layers === undefined ? {} : { layers }),
     enabled: debounced === '',
@@ -263,6 +267,7 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
                 </span>
               ) : null}
             </label>
+            <HiddenLayersNotice locale={locale} />
             <div role="group" aria-label={t('impact.explorer.layers')} className="flex flex-wrap gap-om-4">
               <Pill
                 variant={layer === undefined ? 'primary' : 'default'}
@@ -287,6 +292,7 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
                       style={{ background: layerColor(candidate) }}
                     />
                   }
+                  className={cx(!visibility[candidate] && layer !== candidate && 'opacity-60')}
                   onClick={() => {
                     setLayer(layer === candidate ? undefined : candidate);
                   }}

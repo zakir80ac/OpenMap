@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.14.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.15.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -134,6 +134,8 @@ type Ci {
   asset: AssetRecord
   vulnerabilities: [Vulnerability!]!
   history(from: DateTime, to: DateTime): [CiVersion!]!
+  "REQ-CMDB-014 (ADR-037): the parts inside this CI, by kind then slot; removed parts only on request."
+  components(includeRemoved: Boolean = false): [HardwareComponent!]!
 }
 
 type CiVersion {
@@ -670,6 +672,47 @@ type CertificateEndpoint {
   port: Int
   serverName: String
   tlsVersion: String
+}
+# REQ-CMDB-014 (ADR-037): device parts and components mirrored from collectors' part lists.
+enum ComponentKind {
+  cpu
+  memory
+  disk
+  nic
+  hba
+  gpu
+  psu
+  controller
+}
+"A part inside a CI: kept after a sweep stops reporting it (removedAt), so replacements and moves stay traceable."
+type HardwareComponent {
+  id: UUID!
+  kind: ComponentKind!
+  slot: String!
+  model: String
+  manufacturer: String
+  serialNumber: String
+  partNumber: String
+  "Bytes for memory and disks."
+  capacityBytes: Float
+  firmware: String
+  "Kind-specific values: cores, threads, speed, MAC, WWPN, media, capacity in watts."
+  details: JSON!
+  firstSeenAt: DateTime!
+  lastSeenAt: DateTime!
+  removedAt: DateTime
+  ci: Ci!
+}
+type ComponentModelCount {
+  kind: ComponentKind!
+  model: String
+  count: Int!
+}
+type ComponentPage {
+  items: [HardwareComponent!]!
+  total: Int!
+  "Part counts per kind and model across the whole filter, most common first."
+  models: [ComponentModelCount!]!
 }
 type Certificate {
   ci: Ci!
@@ -1624,6 +1667,8 @@ type Query {
   vendor(id: UUID!): VendorDetail
   costCentres: [CostCentre!]!
   certificates(filter: CertificateFilter): [Certificate!]!
+  "REQ-CMDB-014 (ADR-037): parts across the estate."
+  components(filter: ComponentFilter, first: Int = 100, offset: Int = 0): ComponentPage!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   vulnerabilitySummaries(
     minCvss: Float
@@ -1678,6 +1723,12 @@ input PlanInput {
   targetRackIds: [UUID!]
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
+}
+input ComponentFilter {
+  kind: ComponentKind
+  "Matches model, manufacturer, serial number, part number, slot or the parent CI's name."
+  text: String
+  includeRemoved: Boolean
 }
 input CertificateFilter {
   text: String

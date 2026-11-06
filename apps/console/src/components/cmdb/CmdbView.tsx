@@ -1,17 +1,25 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-038 REQ-CMDB-013 REQ-CMDB-016 — CMDB: virtualised CI list (TanStack Virtual) over the
+// REQ-UI-008 REQ-CMDB-038 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-021 — CMDB: virtualised CI list (TanStack Virtual) over the
 // cursor-paginated `cis` query, with layer filter chips, type, lifecycle and tag filters, and the layer's headline
 // metric on every row. Hidden layers (per-device visibility) are
 // excluded unless a chip selects one explicitly.
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Link from 'next/link';
-import { CI_LAYERS, CI_TYPES, CI_TYPE_LAYER, LIFECYCLES, readCustomFieldValue, type CiLayer } from '@openmap/contracts';
+import {
+  CI_LAYERS,
+  CI_TYPES,
+  CI_TYPE_LAYER,
+  LIFECYCLES,
+  readCustomFieldValue,
+  type CiLayer,
+} from '@openmap/contracts';
 import { Card, LayerBadge, Pill, SectionTitle, StateBadge, cx, layerColor, spacing } from '@openmap/ui';
 import { useMemo, useRef, useState, type ReactNode, type UIEvent } from 'react';
 import { HeadlineMetric } from '@/components/common/HeadlineMetric';
 import { QueryState } from '@/components/common/QueryState';
 import { useLayerVisibility } from '@/hooks/useLayerVisibility';
+import { HiddenLayersNotice } from '@/components/common/HiddenLayersNotice';
 import { healthKey, layerKey } from '@/lib/keys';
 import { customFieldDefinitionsQuery } from '@/lib/custom-field-queries';
 import { exportCis, type ExportFormat } from '@/lib/import-queries';
@@ -60,10 +68,16 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const fieldDef = fields.data?.find((d) => d.key === fieldKey);
   const fieldValue = useMemo(() => {
     if (fieldDef === undefined || fieldText.trim() === '') return null;
-    const read = readCustomFieldValue(fieldDef, fieldDef.type === 'boolean' ? fieldText === 'true' : fieldText);
+    const read = readCustomFieldValue(
+      fieldDef,
+      fieldDef.type === 'boolean' ? fieldText === 'true' : fieldText,
+    );
     return 'error' in read ? null : read.value;
   }, [fieldDef, fieldText]);
-  const types = useMemo(() => CI_TYPES.filter((ciType) => selected === undefined || CI_TYPE_LAYER[ciType] === selected), [selected]);
+  const types = useMemo(
+    () => CI_TYPES.filter((ciType) => selected === undefined || CI_TYPE_LAYER[ciType] === selected),
+    [selected],
+  );
 
   const filter = useMemo<CiFilterInput>(() => {
     const next: CiFilterInput = {};
@@ -141,6 +155,8 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
       >
         {t('nav.cmdb')}
       </SectionTitle>
+
+      <HiddenLayersNotice locale={locale} />
 
       <div role="group" aria-label={t('cmdb.filter.label')} className="flex flex-wrap items-center gap-om-8">
         <Pill
@@ -265,7 +281,9 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
                     <option value="">{t('cmdb.filter.any')}</option>
                     {(fieldDef.type === 'boolean' ? ['true', 'false'] : fieldDef.options).map((o) => (
                       <option key={o} value={o}>
-                        {fieldDef.type === 'boolean' ? t(o === 'true' ? 'customFields.yes' : 'customFields.no') : o}
+                        {fieldDef.type === 'boolean'
+                          ? t(o === 'true' ? 'customFields.yes' : 'customFields.no')
+                          : o}
                       </option>
                     ))}
                   </select>
@@ -288,6 +306,7 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
       <Card padding="4" className="overflow-hidden">
         <div
           role="table"
+          data-testid="ci-list"
           aria-rowcount={totalCount ?? -1}
           aria-busy={query.isPending || query.isFetchingNextPage}
           className="flex flex-col"
@@ -333,6 +352,7 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
                     <div
                       key={row.id}
                       role="row"
+                      data-layer={row.layer}
                       aria-rowindex={item.index + 1}
                       className={cx(
                         columns,

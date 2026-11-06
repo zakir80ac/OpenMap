@@ -3,7 +3,7 @@
 // collector id, Discovery Node, target, sweep chunk) that will later emit it. Relationships point
 // at CI indices so the model stays compact at scale 1 (hundreds of thousands of CIs).
 import { PERF_BUDGETS } from '@openmap/constants';
-import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, siteSchema, type Attributes, type CiLayer, type CiType, type CollectorFamily, type Organization, type RelationshipType, type Site, type SiteLink, type Target } from '@openmap/contracts';
+import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, siteSchema, type Attributes, type CiLayer, type CiType, type CollectorFamily, type Component, type Organization, type RelationshipType, type Site, type SiteLink, type Target } from '@openmap/contracts';
 import { Rng } from './rng.js';
 import { isoAt, MS_PER_SECOND } from './time.js';
 import type { World } from './world.js';
@@ -50,6 +50,7 @@ export interface EstateCi {
   tags: string[];
   externalIds: Array<{ source: string; id: string }>;
   siteCode: string;
+  components?: Component[];
 }
 
 export interface EstateRel {
@@ -65,6 +66,8 @@ export interface CiOptions {
   externalIds?: Array<{ source: string; id: string }>;
   /** Counts toward the slot's sweep-chunk size. */
   primary?: boolean;
+  /** ADR-037: the parts inside the CI, as a parts-aware collector reports them. */
+  components?: Component[];
 }
 
 const EMPTY_TAGS: string[] = [];
@@ -116,7 +119,9 @@ export class EstateBuilder {
       if (value === undefined || value.length === 0) throw new Error('missing identity key ' + key + ' for ' + type + ' ' + name);
     }
     const idx = this.cis.length;
-    this.cis.push({ idx, slot: slot.id, type, identity, name, attributes, tags: options.tags ?? EMPTY_TAGS, externalIds: options.externalIds ?? EMPTY_EXTERNAL, siteCode });
+    const rec: EstateCi = { idx, slot: slot.id, type, identity, name, attributes, tags: options.tags ?? EMPTY_TAGS, externalIds: options.externalIds ?? EMPTY_EXTERNAL, siteCode };
+    if (options.components !== undefined) rec.components = options.components;
+    this.cis.push(rec);
     if (options.primary === true) slot.primaryCount++;
     return idx;
   }

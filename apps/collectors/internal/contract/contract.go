@@ -6,7 +6,7 @@ package contract
 import "time"
 
 // Version is the collector contract version this binary speaks.
-const Version = "0.2.0"
+const Version = "0.3.0"
 
 type Target struct {
 	Kind  string `json:"kind"`
@@ -47,6 +47,8 @@ type ObservedCi struct {
 	Tags        []string          `json:"tags"`
 	ExternalIDs []ExternalID      `json:"externalIds"`
 	ObservedAt  time.Time         `json:"observedAt"`
+	// Components is the full part list when the collector sees parts (REQ-CMDB-014, ADR-037); nil leaves stored parts alone.
+	Components []Component `json:"components,omitempty"`
 }
 
 // CiRef is either {id} or {type, identity}; exactly one form is populated.

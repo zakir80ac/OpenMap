@@ -212,6 +212,7 @@ describe('asset, impact and integration contracts', () => {
         custodian: null,
         ownerCostCentreCiId: null,
         planId: uuid,
+        bomLineId: null,
         purchasedAt: null,
         purchaseCost: null,
         depreciation: {

@@ -54,6 +54,8 @@ export const EVENT_TYPES = [
   'openmap.plan.line.received',
   /** REQ-CMDB-032 (ADR-036): a certificate reached an expiry alert threshold (0 = expired). */
   'openmap.certificate.expiring',
+  /** REQ-CMDB-014 (ADR-037): a sweep found parts added, removed or replaced inside a CI. */
+  'openmap.component.changed',
   'openmap.ci.labelled',
   /** ADR-016: a batch of metric samples resolved to CI ids; ClickHouse `metrics` is the only store that keeps them. */
   'openmap.metric.sampled',

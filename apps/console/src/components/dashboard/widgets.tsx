@@ -1,5 +1,5 @@
 'use client';
-// REQ-UI-030 — the widget catalogue (ADR-020): one component per contract widget kind, every one painted from live
+// REQ-UI-030 REQ-CMDB-021 — the widget catalogue (ADR-020): one component per contract widget kind, every one painted from live
 // queries (the estate aggregate, the screens' own queries), plus the registry the wizard, the customiser and the
 // grid read: title, description, area, icon, the screen it links to and the default size.
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -51,6 +51,8 @@ import {
   type AvailabilityPeriod,
 } from '@/lib/queries';
 import { useFormatters, useLocale, useT } from '@/providers';
+import { HiddenLayersNotice } from '@/components/common/HiddenLayersNotice';
+import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 
 export type WidgetArea =
   'estate' | 'services' | 'operations' | 'security' | 'software' | 'assets' | 'finance' | 'platform';
@@ -199,33 +201,42 @@ function EstateLayers(): ReactNode {
   const format = useFormatters();
   const layers = useQuery(layersQuery());
   const byLayer = useMemo(() => new Map((layers.data ?? []).map((s) => [s.layer, s])), [layers.data]);
-  const max = (layers.data ?? []).reduce((m, l) => Math.max(m, l.count), 0);
+  const locale = useLocale();
+  // REQ-CMDB-021: the layers this device hides are left out of the breakdown, with the notice to bring them back.
+  const { visibility } = useLayerVisibility();
+  const shown = CI_LAYERS.filter((layer) => visibility[layer]);
+  const max = (layers.data ?? [])
+    .filter((l) => visibility[l.layer])
+    .reduce((m, l) => Math.max(m, l.count), 0);
   if (!layers.isSuccess) return <Loading error={layers.isError} onRetry={() => void layers.refetch()} />;
   return (
-    <ul className="flex flex-col gap-om-4">
-      {CI_LAYERS.map((layer) => {
-        const summary = byLayer.get(layer);
-        const label = t(layerKey(layer));
-        return (
-          <li key={layer} className="flex items-center gap-om-10 py-om-4">
-            <span className="w-36 shrink-0">
-              <LayerBadge layer={layer} label={label} />
-            </span>
-            <Bar
-              value={summary?.count ?? 0}
-              max={max}
-              accent={layerColor(layer)}
-              label={label}
-              className="flex-1"
-              glowing={false}
-            />
-            <span className="w-14 text-end font-om-mono text-om-xs tabular-nums text-om-secondary">
-              {format.integer(summary?.count ?? 0)}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="flex flex-col gap-om-8">
+      <HiddenLayersNotice locale={locale} />
+      <ul className="flex flex-col gap-om-4">
+        {shown.map((layer) => {
+          const summary = byLayer.get(layer);
+          const label = t(layerKey(layer));
+          return (
+            <li key={layer} className="flex items-center gap-om-10 py-om-4">
+              <span className="w-36 shrink-0">
+                <LayerBadge layer={layer} label={label} />
+              </span>
+              <Bar
+                value={summary?.count ?? 0}
+                max={max}
+                accent={layerColor(layer)}
+                label={label}
+                className="flex-1"
+                glowing={false}
+              />
+              <span className="w-14 text-end font-om-mono text-om-xs tabular-nums text-om-secondary">
+                {format.integer(summary?.count ?? 0)}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 

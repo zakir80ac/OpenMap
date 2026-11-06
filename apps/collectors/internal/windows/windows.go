@@ -58,8 +58,8 @@ $cs   = Sec { Get-CimInstance Win32_ComputerSystem | Select-Object Name,Domain,M
 $bios = Sec { Get-CimInstance Win32_BIOS | Select-Object SerialNumber,SMBIOSBIOSVersion,Manufacturer,ReleaseDate }
 $prod = Sec { Get-CimInstance Win32_ComputerSystemProduct | Select-Object UUID,IdentifyingNumber,Vendor,Name }
 $os   = Sec { Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture,InstallDate,LastBootUpTime,ServicePackMajorVersion }
-$cpu  = Sec { Get-CimInstance Win32_Processor | Select-Object Name,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed }
-$nics = Sec { Get-NetAdapter | Select-Object Name,InterfaceDescription,InterfaceIndex,MacAddress,LinkSpeed,Status,ifOperStatus }
+$cpu  = Sec { Get-CimInstance Win32_Processor | Select-Object DeviceID,SocketDesignation,Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed }
+$nics = Sec { Get-NetAdapter | Select-Object Name,InterfaceDescription,InterfaceIndex,MacAddress,LinkSpeed,Status,ifOperStatus,HardwareInterface,DriverVersion }
 $ips  = Sec { Get-NetIPAddress -AddressFamily IPv4,IPv6 | Where-Object { $_.AddressState -ne 'Tentative' } | Select-Object InterfaceIndex,IPAddress,PrefixLength,AddressFamily,PrefixOrigin }
 $tcp  = Sec { Get-NetTCPConnection -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess }
 $udp  = Sec { Get-NetUDPEndpoint | Select-Object LocalAddress,LocalPort,OwningProcess }
@@ -68,9 +68,12 @@ $sw   = Sec { Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\
 $svc  = Sec { Get-CimInstance Win32_Service | Select-Object Name,DisplayName,State,StartMode,PathName,StartName }
 $hot  = Sec { Get-HotFix | Select-Object HotFixID,Description,InstalledOn }
 $disk = Sec { Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' | Select-Object DeviceID,Size,FreeSpace,FileSystem,VolumeName }
+$mem  = Sec { Get-CimInstance Win32_PhysicalMemory | Select-Object BankLabel,DeviceLocator,Capacity,Manufacturer,SerialNumber,PartNumber,ConfiguredClockSpeed }
+$drv  = Sec { Get-CimInstance Win32_DiskDrive | Select-Object Index,Model,SerialNumber,Size,FirmwareRevision,InterfaceType,MediaType }
+$hba  = Sec { Get-InitiatorPort | Where-Object { $_.ConnectionType -eq 'Fibre Channel' } | Select-Object InstanceName,PortAddress,NodeAddress,OperationalStatus }
 $fqdn = Sec { [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName }
 $feat = Sec { Get-WindowsFeature | Where-Object Installed | Select-Object -ExpandProperty Name }
-[pscustomobject]@{ computer=$cs; bios=$bios; product=$prod; os=$os; cpu=@($cpu); nics=@($nics); ips=@($ips); tcp=@($tcp); udp=@($udp); processes=@($proc); software=@($sw); services=@($svc); hotfixes=@($hot); disks=@($disk); fqdn=$fqdn; features=@($feat) } | ConvertTo-Json -Depth 5 -Compress
+[pscustomobject]@{ computer=$cs; bios=$bios; product=$prod; os=$os; cpu=@($cpu); nics=@($nics); ips=@($ips); tcp=@($tcp); udp=@($udp); processes=@($proc); software=@($sw); services=@($svc); hotfixes=@($hot); disks=@($disk); memory=@($mem); drives=@($drv); hbas=@($hba); fqdn=$fqdn; features=@($feat) } | ConvertTo-Json -Depth 5 -Compress
 `
 
 // Inventory mirrors the JSON document the script prints. CIM date strings are kept raw.
@@ -107,6 +110,9 @@ type Inventory struct {
 		LastBootUpTime any    `json:"LastBootUpTime"`
 	} `json:"os"`
 	CPU []struct {
+		DeviceID                  string `json:"DeviceID"`
+		SocketDesignation         string `json:"SocketDesignation"`
+		Manufacturer              string `json:"Manufacturer"`
 		Name                      string `json:"Name"`
 		NumberOfCores             int    `json:"NumberOfCores"`
 		NumberOfLogicalProcessors int    `json:"NumberOfLogicalProcessors"`
@@ -118,6 +124,8 @@ type Inventory struct {
 		MacAddress           string `json:"MacAddress"`
 		LinkSpeed            string `json:"LinkSpeed"`
 		Status               string `json:"Status"`
+		HardwareInterface    bool   `json:"HardwareInterface"`
+		DriverVersion        string `json:"DriverVersion"`
 	} `json:"nics"`
 	IPs []struct {
 		InterfaceIndex int    `json:"InterfaceIndex"`
@@ -168,6 +176,30 @@ type Inventory struct {
 		FileSystem string `json:"FileSystem"`
 		VolumeName string `json:"VolumeName"`
 	} `json:"disks"`
+	Memory []struct {
+		BankLabel            string `json:"BankLabel"`
+		DeviceLocator        string `json:"DeviceLocator"`
+		Capacity             int64  `json:"Capacity"`
+		Manufacturer         string `json:"Manufacturer"`
+		SerialNumber         string `json:"SerialNumber"`
+		PartNumber           string `json:"PartNumber"`
+		ConfiguredClockSpeed int    `json:"ConfiguredClockSpeed"`
+	} `json:"memory"`
+	Drives []struct {
+		Index            int    `json:"Index"`
+		Model            string `json:"Model"`
+		SerialNumber     string `json:"SerialNumber"`
+		Size             int64  `json:"Size"`
+		FirmwareRevision string `json:"FirmwareRevision"`
+		InterfaceType    string `json:"InterfaceType"`
+		MediaType        string `json:"MediaType"`
+	} `json:"drives"`
+	HBAs []struct {
+		InstanceName      string `json:"InstanceName"`
+		PortAddress       string `json:"PortAddress"`
+		NodeAddress       string `json:"NodeAddress"`
+		OperationalStatus any    `json:"OperationalStatus"`
+	} `json:"hbas"`
 	FQDN     string   `json:"fqdn"`
 	Features []string `json:"features"`
 }
@@ -270,7 +302,7 @@ func Emit(inv *Inventory, target contract.Target, raw []byte, at time.Time) coll
 		"cpuModel": cpuModel, "cpuSockets": inv.Computer.NumberOfProcessors, "cpuCores": cores, "cpuCount": logical, "memoryMb": inv.Computer.TotalPhysicalMemory / (1 << 20),
 		"diskBytes": diskBytes, "disks": disks, "macAddresses": macs, "managementIp": target.Value, "hotfixes": hotfixes, "windowsFeatures": inv.Features, "virtual": virtual,
 	}
-	hostCi := contract.ObservedCi{Type: hostType, Identity: identity, Name: fqdn, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at}
+	hostCi := contract.ObservedCi{Type: hostType, Identity: identity, Name: fqdn, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at, Components: Components(inv)}
 	obs.Cis = append(obs.Cis, hostCi)
 	hostRefCi := contract.CiRef{Type: hostType, Identity: identity}
 

@@ -1,11 +1,13 @@
 // REQ-QA-001 — physical hosts: Dell/HPE/Lenovo servers with serials, system UUIDs, BMCs on the
 // OOB network, operating systems, dual power feeds, ToR cabling and base software installs.
 import { HYPERVISOR_PREFIX, POOL, SOFTWARE, VENDORS, VLAN_ID, type OsDef, type SoftwareDef } from '../catalog.js';
+import type { Attributes } from '@openmap/contracts';
 import type { Slot } from '../estate.js';
 import { cidr, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
 import { allocateIp, attachIp, ensureSoftware, fqdnOf, installPath, pad, type HostRec, type SiteWorld, type World } from '../world.js';
+import { hostComponents } from './components.js';
 import { allocateHostPort } from './network.js';
 
 const BARE_METAL_PURPOSES = ['oracle', 'sql', 'hadoop', 'backup', 'batch', 'file', 'sas', 'build', 'gpu', 'hsm'] as const;
@@ -104,12 +106,7 @@ export function generateHosts(world: World, rng: Rng): void {
       const purchaseAge = rng.int(PURCHASE_AGE_DAYS_MIN, PURCHASE_AGE_DAYS_MAX);
       const warrantyYears = rng.pick(WARRANTY_YEARS_OPTIONS);
       const warrantyEndOffset = -purchaseAge + warrantyYears * DAYS_PER_YEAR;
-      const hostIdx = b.ci(
-        slot,
-        'host',
-        { serialNumber: serial, systemUuid, fqdn, primaryMac },
-        hostname,
-        {
+      const hostAttributes: Attributes = {
           hostname,
           fqdn,
           manufacturer: plan.model.manufacturer,
@@ -140,9 +137,17 @@ export function generateHosts(world: World, rng: Rng): void {
           warrantyLevel: rng.chance(0.7) ? 'ProSupport Plus 4h' : 'Basic NBD',
           uptimeSeconds: rng.int(3600, 300 * 24 * 3600),
           site: site.def.code,
-        },
+        };
+      // ADR-037: the parts the collectors report, on a stream of their own (no other value moves).
+      const components = hostComponents({ model: plan.model, cpuModel: String(hostAttributes['cpuModel']), serial, hypervisor: plan.platform !== null });
+      const hostIdx = b.ci(
+        slot,
+        'host',
+        { serialNumber: serial, systemUuid, fqdn, primaryMac },
+        hostname,
+        hostAttributes,
         site.def.code,
-        { tags: ['hardware', plan.platform === null ? 'bare-metal' : 'hypervisor'], primary: true },
+        { tags: ['hardware', plan.platform === null ? 'bare-metal' : 'hypervisor'], primary: true, components },
       );
       b.rel(slot, 'located_in', hostIdx, rack.idx, { uPosition: plan.uPosition, heightU: plan.model.heightU });
       b.rel(slot, 'powered_by', hostIdx, rack.pduA, { feed: 'A', psu: 1 });

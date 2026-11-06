@@ -58,6 +58,7 @@ func Assemble(parts map[string]string) Facts {
 	f.Packages = ParsePackages(parts["packages"])
 	f.Disks = ParseLsblk(parts["lsblk"])
 	f.Mounts = ParseDF(parts["df"])
+	f.Components = Components(parts)
 	return f
 }
 
@@ -129,7 +130,7 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		}
 		attrs["disks"] = disks
 	}
-	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: hostType, Identity: identity, Name: name, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: hostType, Identity: identity, Name: name, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at, Components: f.Components})
 
 	if f.OS.ID != "" || f.OS.Pretty != "" {
 		osIdentity := map[string]string{"hostRef": hostRef, "family": firstNonEmpty(f.OS.ID, "linux"), "version": firstNonEmpty(f.OS.VersionID, f.OS.Version, f.Kernel)}

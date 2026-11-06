@@ -1,5 +1,5 @@
 'use client';
-// REQ-UI-009 REQ-CMDB-030 REQ-CMDB-039 REQ-CMDB-040 — Assets: the register of everything the organisation owns across
+// REQ-UI-009 REQ-CMDB-030 REQ-CMDB-039 REQ-CMDB-040 REQ-CMDB-021 — Assets: the register of everything the organisation owns across
 // every layer (ADR-023) with its warranty, support and end-of-life cover and the rows still missing a date; the
 // attention table (cover ending within the chosen horizon); unknown devices with their diagnosis and remediation;
 // manual entry for unmanaged equipment; and infrastructure plans with their bill of materials (ADR-005: plans, not
@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ASSETS, ROLES, TIME } from '@openmap/constants';
 import { CI_LAYERS, PLAN_KINDS, canReceive, isSubscriptionCiType, type CiLayer } from '@openmap/contracts';
 import type { Locale, MessageKey } from '@openmap/i18n';
-import { Card, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, Tag, layerColor } from '@openmap/ui';
+import { Card, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx, layerColor } from '@openmap/ui';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
@@ -48,6 +48,8 @@ import {
   type PlanStatus,
 } from '@/lib/estate-queries';
 import { layerKey } from '@/lib/keys';
+import { HiddenLayersNotice, visibleLayersFilter } from '@/components/common/HiddenLayersNotice';
+import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 import { AssetDetailsPanel } from './AssetDetailsPanel';
@@ -179,6 +181,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   const searchId = useId();
   const [stage, setStage] = useState<AssetStage | ''>('');
   const [layer, setLayer] = useState<CiLayer | ''>('');
+  const { visibility } = useLayerVisibility();
   const [source, setSource] = useState<AssetSource | ''>('');
   const [data, setData] = useState<DataFilter>('');
   const [text, setText] = useState('');
@@ -202,13 +205,14 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   const filter = useMemo<AssetsFilter>(
     () => ({
       stage: stage === '' ? null : [stage],
-      layers: layer === '' ? null : [layer],
+      // REQ-CMDB-021: layers hidden on this device stay out unless one is picked.
+      layers: visibleLayersFilter(visibility, layer === '' ? null : layer),
       sources: source === '' ? null : [source],
       dataGaps: data === '' ? null : data === 'any' ? [...ASSET_DATA_GAPS] : [data],
       text: text.trim() === '' ? null : text.trim(),
       belowReorderPoint: lowStock ? true : null,
     }),
-    [stage, layer, source, data, text, lowStock],
+    [stage, layer, visibility, source, data, text, lowStock],
   );
   const assets = useQuery(assetPageQuery(filter, page));
   const summary = useQuery(assetSummaryQuery());
@@ -304,6 +308,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
         <SectionTitle as="h2" size="sm" description={t('assets.register.subtitle')}>
           {t('assets.register.title')}
         </SectionTitle>
+        <HiddenLayersNotice locale={locale} />
         {/* Layer strip: one pill per layer with its register count; the active one filters the table. */}
         <div
           className="flex flex-wrap gap-om-6"
@@ -333,6 +338,7 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                     style={{ background: layerColor(candidate) }}
                   />
                 }
+                className={cx(!visibility[candidate] && layer !== candidate && 'opacity-60')}
                 onClick={() => {
                   setLayer(layer === candidate ? '' : candidate);
                   resetPages();
@@ -954,7 +960,9 @@ function PlanCard({ plan, canOperate, busy, onStatus, onReceived }: PlanCardProp
                         {t('assets.receive.action')}
                       </Button>
                     ) : (
-                      <span className="text-om-2xs text-om-state-healthy">{t('assets.receive.complete')}</span>
+                      <span className="text-om-2xs text-om-state-healthy">
+                        {t('assets.receive.complete')}
+                      </span>
                     )}
                   </td>
                 ) : null}
@@ -971,7 +979,10 @@ function PlanCard({ plan, canOperate, busy, onStatus, onReceived }: PlanCardProp
           onReceived={(receipt) => {
             setReceiving(null);
             setLastReceipt(
-              t('assets.receive.done', { count: format.integer(receipt.quantity), line: receipt.description }),
+              t('assets.receive.done', {
+                count: format.integer(receipt.quantity),
+                line: receipt.description,
+              }),
             );
             onReceived();
           }}

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/openmap/openmap/apps/collectors/internal/contract"
 )
 
 // Facts is the parsed view of one host.
@@ -32,6 +34,8 @@ type Facts struct {
 	Packages     []Package
 	Disks        []Disk
 	Mounts       []Mount
+	// Parts inside the host (REQ-CMDB-014, ADR-037).
+	Components []contract.Component
 }
 
 type OSRelease struct {

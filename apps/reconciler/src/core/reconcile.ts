@@ -2,7 +2,7 @@
 // writes and outbox events the stores apply. Pure: the caller supplies lookups and persists outputs.
 import { randomUUID } from 'node:crypto';
 import { IMPORTS, RECONCILER, RECONCILIATION } from '@openmap/constants';
-import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type EventEnvelope, type MetricSample, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
+import { CI_TYPE_LAYER, ciCode, type Ci, type CollectorResult, type Component, type EventEnvelope, type MetricSample, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
 import { identityKeysOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { envelope } from './events.js';
@@ -28,6 +28,15 @@ export interface ReconcileOutput {
   samples: number;
   /** Samples whose CI neither this result nor the store knows; they are not parked, the next sweep samples again. */
   samplesDropped: number;
+  /** ADR-037: the part lists observations carried, by resolved CI; `existed` is false for a CI this result created. */
+  components: ObservedComponents[];
+}
+
+export interface ObservedComponents {
+  ciId: string;
+  tenantId: string;
+  existed: boolean;
+  components: Component[];
 }
 
 /** A sample as the dispatcher writes it to ClickHouse: the CI reference replaced by the stored id. */
@@ -48,7 +57,7 @@ function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, create
 
 export function reconcile(input: CollectorResult, lookup: StoredLookup): ReconcileOutput {
   const result = sanitizeResult(input);
-  const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [], samples: 0, samplesDropped: 0 };
+  const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [], samples: 0, samplesDropped: 0, components: [] };
   const createdByKey = new Map<string, string>();
   const provenance = { collectorId: result.collectorId, nodeId: result.nodeId, runId: result.runId };
 
@@ -63,8 +72,10 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     if (resolution.kind === 'new') {
       const id = randomUUID();
       const layer = CI_TYPE_LAYER[observed.type];
+      const { components: parts, ...fields } = observed;
+      if (parts !== undefined) out.components.push({ ciId: id, tenantId: result.tenantId, existed: false, components: parts });
       const ci: Ci = {
-        ...observed,
+        ...fields,
         id,
         tenantId: result.tenantId,
         displayName: observed.name,
@@ -84,6 +95,7 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     }
     const existing = lookup.getCi(resolution.ciId);
     if (!existing) continue;
+    if (observed.components !== undefined) out.components.push({ ciId: existing.id, tenantId: result.tenantId, existed: true, components: observed.components });
     const merged = merge({ attributes: existing.attributes, source: existing.source, observedAt: existing.observedAt }, { attributes: observed.attributes, source, observedAt: observed.observedAt });
     // Identity values are stable once stored; new keys are added, existing ones keep their canonical spelling.
     const identity = { ...observed.identity, ...existing.identity };

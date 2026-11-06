@@ -38,6 +38,7 @@ export const ICON_NAMES = [
   'arrowLeft',
   'close',
   'contract',
+  'chip',
   'certificate',
 ] as const;
 
@@ -228,6 +229,12 @@ const glyphs: Record<IconName, ReactNode> = {
     <>
       <path d="M7 3h7l5 5v13H7Z" />
       <path d="M14 3v5h5M10 12h6M10 16h6" />
+    </>
+  ),
+  chip: (
+    <>
+      <path d="M7 7h10v10H7Z" />
+      <path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4" />
     </>
   ),
   software: (

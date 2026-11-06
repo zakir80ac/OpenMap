@@ -1,7 +1,7 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 — CI detail: header (code, name, type, layer, health, headline
+// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 REQ-CMDB-014 — CI detail: header (code, name, type, layer, health, headline
 // metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
-// link), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
+// link), Parts (the components inside it, ADR-037), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
 // re-fetches `ci(id, asOf)` and the attribute diff against now). Unknown-layer CIs get the "Label this CI" panel.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -40,13 +40,14 @@ import type { Formatters } from '@/lib/format';
 import { LifecycleField, TagEditor } from './CiEditors';
 import { CustomFieldsEditor } from './CustomFieldsEditor';
 import { LabelCiPanel } from './LabelCiPanel';
+import { CiPartsPanel } from '@/components/parts/CiPartsPanel';
 
 export interface CiDetailViewProps {
   locale: Locale;
   id: string;
 }
 
-const TABS = ['overview', 'relationships', 'impact', 'history'] as const;
+const TABS = ['overview', 'relationships', 'parts', 'impact', 'history'] as const;
 type Tab = (typeof TABS)[number];
 
 const changeKey = {
@@ -572,6 +573,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
           </div>
         ) : null}
 
+        {tab === 'parts' ? <CiPartsPanel ciId={ci.id} locale={locale} /> : null}
         {tab === 'history' ? <HistoryTab ci={ci} /> : null}
       </div>
     </div>

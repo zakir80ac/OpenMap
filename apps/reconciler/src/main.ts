@@ -32,6 +32,7 @@ export function createReconcilerMetrics() {
     // REQ-DEP-002 (ADR-029): dependency-mapping passes and the edges they created, refreshed or retired.
     admPasses: new Counter({ name: 'openmap_reconciler_adm_passes_total', help: 'Dependency-mapping passes, by outcome', labelNames: ['outcome'], registers: [registry] }),
     admEdges: new Counter({ name: 'openmap_reconciler_adm_edges_total', help: 'Derived dependency edges, by action (created, refreshed, retired)', labelNames: ['action'], registers: [registry] }),
+    components: new Counter({ name: 'openmap_reconciler_components_total', help: 'Device parts synced from observed part lists, by action (upserted, removed)', labelNames: ['action'], registers: [registry] }),
     admDuration: new Histogram({ name: 'openmap_reconciler_adm_duration_seconds', help: 'Dependency-mapping pass duration', registers: [registry] }),
   };
 }
@@ -71,6 +72,8 @@ async function main(): Promise<void> {
         metrics.results.inc({ collector: result.collectorId, outcome: 'ok' });
         metrics.samples.inc({ outcome: 'stored' }, summary.samples);
         metrics.samples.inc({ outcome: 'dropped' }, summary.samplesDropped);
+        metrics.components.inc({ action: 'upserted' }, summary.componentsUpserted);
+        metrics.components.inc({ action: 'removed' }, summary.componentsRemoved);
         if (triggersAdm(result)) adm.schedule(result.tenantId);
         console.log(JSON.stringify({ msg: 'reconciled', runId: result.runId, collector: result.collectorId, ...summary, pendingResolved: retried.resolved }));
         return summary;

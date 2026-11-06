@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as AuthModule from '@/lib/auth';
 import type { AuthValue } from '@/lib/auth';
 import { Providers } from '@/providers';
+import { LAYER_VISIBILITY_STORAGE_KEY } from '@/hooks/useLayerVisibility';
 import { localToday } from './PlanReceiving';
 
 const navigation = {
@@ -1098,5 +1099,33 @@ describe('AssetsView (analyst)', () => {
     expect(screen.queryByLabelText(translate('en', 'assets.setStage', { tag: 'AST-0001' }))).toBeNull();
     expect(screen.queryByRole('form', { name: translate('en', 'assets.plans.new') })).toBeNull();
     expect(screen.getByText(translate('en', 'assets.plans.readOnly'))).toBeTruthy();
+  });
+});
+
+describe('AssetsView and per-device layer visibility (REQ-CMDB-021)', () => {
+  afterEach(() => {
+    window.localStorage.removeItem(LAYER_VISIBILITY_STORAGE_KEY);
+  });
+
+  it('leaves hidden layers out of the register, says so, and brings them back on request', async () => {
+    // T-200
+    window.localStorage.setItem(LAYER_VISIBILITY_STORAGE_KEY, JSON.stringify({ applications: false }));
+    mount('en');
+    const notice = await screen.findByTestId('hidden-layers');
+    expect(notice.textContent).toContain(translate('en', 'layer.applications'));
+    await waitFor(() => {
+      const page = state.calls.find((c) => c.op === 'AssetPage');
+      const layers = (page?.variables['filter'] as { layers?: string[] } | undefined)?.layers ?? [];
+      expect(layers).not.toContain('applications');
+      expect(layers).toContain('hardware');
+    });
+    fireEvent.click(within(notice).getByRole('button', { name: translate('en', 'layers.hidden.showAll') }));
+    await waitFor(() => {
+      expect(screen.queryByTestId('hidden-layers')).toBeNull();
+    });
+    await waitFor(() => {
+      const last = state.calls.filter((c) => c.op === 'AssetPage').at(-1);
+      expect((last?.variables['filter'] as { layers?: string[] | null } | null)?.layers ?? null).toBeNull();
+    });
   });
 });
