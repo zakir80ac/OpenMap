@@ -2,7 +2,45 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-05 (checkpoint 22: CMDB import and export, depreciation and spare stock)
+## Last session · 2026-11-06 (checkpoint 23: receiving, vendors and contracts, certificates)
+
+Syed's direction: keep going with the remaining CMDB rows. The dev stack is back after a Windows restart.
+
+**Closed in the tracker:** REQ-CMDB-033, 036 (import and export) and 017, 019 (depreciation, spare stock), commit
+80d90d6; REQ-CMDB-020 (receiving), commit f2ce51d. The e2e run that closed them also fixed two things: the API's CORS
+now exposes `content-disposition` (the export kept a fallback file name), and asset edit buttons are located exactly.
+
+**Committed, tracker closure queued** (Excel holds `tracker/OpenMap-Tracker.xlsx` open, so every `pnpm tracker set`
+fails with EBUSY; close Excel and run `bash .local/tracker-queue.sh`, then commit the workbook and summary):
+- REQ-CMDB-026, 027, 028, 029 — vendors and contracts, commit 2f2762e, tests T-181…T-185, evidence
+  `docs/evidence/commercial.md`.
+- REQ-CMDB-032 — certificates, commit 7076134, tests T-186…T-191, evidence `docs/evidence/certificates.md`.
+
+What was built:
+- **Receiving (ADR-034, REQ-CMDB-020).** ADR-005 keeps purchase orders in the finance system; a plan's BOM is the
+  line list. `receivePlanLine` takes a line's oldest planned units into stock with serials, tags, the receipt day,
+  the ERP reference and a storage location; the line counts them; an approved plan moves to building
+  (migration 0022: `asset_records.bomLineId`, `plan_receipts`). The reconciler lets a new CI claim the received unit
+  with its serial (deployed, no second register row). GraphQL 1.12.0, event 0.8.0.
+- **Vendors and contracts (ADR-035, REQ-CMDB-026…029).** Vendors, contracts and cost centres are CIs. Migration 0023
+  drops the unused `support_contracts` table; an asset's support contract is the covering contract CI (2,269 dev
+  assets no longer flagged as missing support), kept in step with `covered_by` by `refreshCoveringContracts`
+  (packages/db; reconciler and API). GraphQL 1.13.0: contracts (kinds, renewal, notice date, documents by
+  reference), vendors with escalation contacts, cost centres (cost centre, department, customer) and the mutations;
+  the console's Vendors and contracts screen and the asset panel's contract and owner.
+- **Certificates (ADR-036, REQ-CMDB-032).** The BSM engine raises `openmap.certificate.expiring` once per certificate
+  at 60, 30, 14, 7 and 1 days and on expiry (migration 0024 `certificate_alerts`, event 0.9.0); GraphQL 1.14.0
+  `certificates(filter)`; the console's Certificates screen under Insight. The dev estate has no certificates from
+  discovery (the synthetic estate does not generate them); the e2e imports two through the pipeline.
+- **Sign-in at 127.0.0.1 (e4d6d80).** `PUBLIC_CONSOLE_ALIAS_URL` (compose default `http://127.0.0.1:3000`) is
+  accepted by Keycloak's console client and the API's CORS; the running realm was updated through the admin API.
+
+Migrations through 0024 are applied to the dev database (0015 reports a checksum mismatch that predates this work).
+
+**Next CMDB rows:** 023 OS inventory and 025 EoX need a lifecycle catalogue (see Questions for Syed); 021 layer
+visibility on the remaining screens, 014 parts, 034 utilisation can proceed without it.
+
+## Previous session · 2026-11-05 (checkpoint 22: CMDB import and export, depreciation and spare stock)
 
 Syed's direction: keep going with the remaining CMDB rows.
 
@@ -51,7 +89,7 @@ dev stack's images and volumes. A Windows restart is the expected fix.
 contracts, 027 vendors and contacts, 028 cost centres, 029 general contracts and documents, 032 certificates, 023 OS
 inventory, 025 EoX, 021 layer visibility, 014 parts, 034 utilisation.
 
-## Previous session · 2026-11-05 (checkpoint 21: discovery re-statused, dependency mapping, network topology)
+## Earlier session · 2026-11-05 (checkpoint 21: discovery re-statused, dependency mapping, network topology)
 
 Syed's direction after checkpoint 20: finish the pending discovery and collector, application dependency mapping and
 CMDB rows before BSM-007 or finance.
@@ -520,28 +558,30 @@ tracker is the truth.
 
 ## Blocked
 
-- The dev stack: Docker Desktop cannot start while AF_UNIX sockets fail on this machine (checkpoint 22).
+- Tracker writes: Excel holds the workbook open (closures queued in `.local/tracker-queue.sh`).
 - docs/SPEC.md still missing (risk R-001). Vendor lab fixtures (risk R-004). CI never ran (no remote).
 
 ## Next three
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. Close REQ-CMDB-033, 036, 017 and 019 once the stack is back (checkpoint 22). Then the open CMDB rows, in this
-   order: 020 purchase orders and receiving, 026 support contracts (nothing writes the table), 027 vendors and
-   contacts, 028 cost centres linked to units, assets and plans, 029 general contracts and documents, 032 certificate
-   inventory and expiry event, 023 OS inventory and EoL, 025 EoX feeds, 021 layer visibility on the remaining screens,
-   014 parts, 034 utilisation from collectors. 024 needs vendor warranty credentials (Syed).
+1. Run `.local/tracker-queue.sh` once Excel is closed. Then the open CMDB rows: 021 layer visibility on the remaining
+   screens, 014 parts and components, 034 resource utilisation from collectors; 023 OS inventory and 025 EoX once
+   the lifecycle-catalogue question is answered. 024 needs vendor warranty credentials, 022 SaaS credentials.
 2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
 3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0021
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0024
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
+00. REQ-CMDB-023 / 025 end-of-life dates: OpenMap needs a product lifecycle catalogue (OS versions, firmware and
+hardware end of sale and end of support). Options: (a) a snapshot of endoflife.date (MIT-licensed data) bundled
+with each release and refreshed by an optional, tenant-enabled sync; (b) only vendor EoX APIs (Cisco EoX and the
+warranty APIs of REQ-CMDB-024, which need credentials); (c) both. Dates will not be typed in from memory.
 0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
 and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
 the lab) so the next list shows the SLA, assistant and finance work you asked for?
