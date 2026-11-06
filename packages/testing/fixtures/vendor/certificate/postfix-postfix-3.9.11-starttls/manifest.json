@@ -1,0 +1,43 @@
+{
+  "family": "certificate",
+  "vendor": "Postfix",
+  "model": "Postfix smtpd (Alpine 3.20 package postfix 3.9.11-r0, OpenSSL 3.3.7), SMTP port 25, smtpd_tls_security_level=may",
+  "firmware": "3.9.11",
+  "capturedAt": "2026-11-06T21:46:58Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-025",
+  "collector": "internal/certificate",
+  "capture": {
+    "image": "alpine:3.20",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "setup": "lab PKI: the batch-1 container-lab root (RSA 4096, SHA-384) with its RSA 2048 and ECDSA P-384 issuing CAs, leaves issued with OpenSSL 3.5.5 in registry.access.redhat.com/ubi9/ubi@sha256:a729da793c5f57633fc0dfbe99ced541aedde3ea653d5344af5aabb49f5aeb89: leaf mail.fxlab.test RSA 2048, SHA-256, 365 days (SAN mail/smtp/imap.fxlab.test, 127.0.0.1) under the RSA issuing CA; smtpd_tls_chain_files=mail.key,mail-chain.crt (leaf + intermediate); container on the dedicated fxlab-g Docker network, plaintext port published on 127.0.0.1",
+    "command": "certificate.ProbeStartTLS(host 127.0.0.1, port 12525 -> container :25, serverName mail.fxlab.test, protocol smtp) from the OpenMap certificate collector, run by a throwaway lab program through a recording TCP proxy; the presented chain (ConnectionState.PeerCertificates DER) PEM-encoded into chain.pem, version/cipher/verification into handshake.json, and every byte both sides exchanged before the client's first TLS record into dialogue.server.bin / dialogue.client.bin with the turn order and sizes in dialogue.json"
+  },
+  "files": [
+    {
+      "name": "chain.pem",
+      "description": "certificate chain exactly as presented after the StartTLS upgrade (leaf first), PEM of the DER bytes"
+    },
+    {
+      "name": "handshake.json",
+      "description": "StartTLS protocol, endpoint port, negotiated TLS version and cipher, SNI and the verification result against the capture host's system roots"
+    },
+    {
+      "name": "dialogue.server.bin",
+      "description": "plaintext bytes the server sent before the TLS handshake, unchanged"
+    },
+    {
+      "name": "dialogue.client.bin",
+      "description": "plaintext bytes the collector sent before the TLS handshake, unchanged"
+    },
+    {
+      "name": "dialogue.json",
+      "description": "turn order of the plaintext dialogue (who spoke, how many bytes)"
+    },
+    {
+      "name": "lab-root-ca.crt",
+      "description": "public certificate of the lab root CA (not presented by the server; the trust anchor for chain verification)"
+    }
+  ],
+  "redactions": []
+}

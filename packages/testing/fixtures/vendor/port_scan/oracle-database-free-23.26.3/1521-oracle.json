@@ -1,0 +1,10 @@
+{
+  "host": "fxlab-k-oracle",
+  "port": 1521,
+  "mode": "banner",
+  "bannerFile": "1521-oracle.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "tlsError": "EOF",
+  "capturedAt": "2026-11-06T21:59:19Z"
+}

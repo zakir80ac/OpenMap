@@ -1,0 +1,10 @@
+{
+  "host": "fxlab-k-samba",
+  "port": 111,
+  "mode": "banner",
+  "bannerFile": "111-rpcbind.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "tlsError": "read tcp 192.168.112.14:36150-\u003e192.168.112.6:111: read: connection reset by peer",
+  "capturedAt": "2026-11-06T21:55:41Z"
+}

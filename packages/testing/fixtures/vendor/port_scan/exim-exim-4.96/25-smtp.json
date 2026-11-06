@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-k-exim",
+  "port": 25,
+  "mode": "banner",
+  "bannerFile": "25-smtp.banner",
+  "bannerBytes": 66,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:55:41Z"
+}

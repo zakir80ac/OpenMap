@@ -1,0 +1,13 @@
+{
+  "protocol": "postgres",
+  "steps": [
+    {
+      "from": "client",
+      "bytes": 8
+    },
+    {
+      "from": "server",
+      "bytes": 1
+    }
+  ]
+}

@@ -213,14 +213,18 @@ func Emit(rows []Row, target contract.Target, serverHeader string, raw []byte, a
 		up := 0
 		// HAProxy hides server addresses from the stats CSV unless `stats show-legends` is set, so the
 		// member names and health always travel on the pool even when no member listener can be keyed.
-		memberList := []map[string]any{}
+		// Attribute values are scalars or arrays of scalars (attributesSchema), so members are parallel
+		// string arrays: name, "name=state" and "name=address" (address empty when hidden).
+		memberNames, memberStates, memberAddrs := []string{}, []string{}, []string{}
 		for _, m := range members {
 			if stateOf(m.Status) == "up" {
 				up++
 			}
-			memberList = append(memberList, map[string]any{"server": m.Server, "address": m.Addr, "state": stateOf(m.Status), "checkStatus": m.CheckStatus, "weight": m.Weight})
+			memberNames = append(memberNames, m.Server)
+			memberStates = append(memberStates, m.Server+"="+stateOf(m.Status))
+			memberAddrs = append(memberAddrs, m.Server+"="+m.Addr)
 		}
-		attrs := map[string]any{"vendor": vendor, "backend": name, "protocol": proto, "role": "backend-pool", "balance": meta.Algo, "state": stateOf(meta.Status), "memberCount": len(members), "membersUp": up, "members": memberList, "sessionsCurrent": meta.Current, "sessionsMax": meta.Max, "sessionsLimit": meta.Limit, "sessionsTotal": meta.Total, "bytesIn": meta.BytesIn, "bytesOut": meta.BytesOut, "downtimeSeconds": meta.Downtime, "source": collectorID}
+		attrs := map[string]any{"vendor": vendor, "backend": name, "protocol": proto, "role": "backend-pool", "balance": meta.Algo, "state": stateOf(meta.Status), "memberCount": len(members), "membersUp": up, "members": memberNames, "memberStates": memberStates, "memberAddresses": memberAddrs, "sessionsCurrent": meta.Current, "sessionsMax": meta.Max, "sessionsLimit": meta.Limit, "sessionsTotal": meta.Total, "bytesIn": meta.BytesIn, "bytesOut": meta.BytesOut, "downtimeSeconds": meta.Downtime, "source": collectorID}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: identity, Name: name + " (backend, " + proto + ")", Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: lb, To: pool, Attributes: map[string]any{}, ObservedAt: at})
 		for _, m := range members {

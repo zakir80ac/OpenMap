@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "ISC",
+  "model": "BIND 9 named (official image), default configuration",
+  "firmware": "9.20.30 (Stable Release) <id:769c3fb>",
+  "capturedAt": "2026-11-06T21:55:52Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "internetsystemsconsortium/bind9:9.20",
+    "digest": "internetsystemsconsortium/bind9@sha256:66092edb53c081fa11b1fa8219e99065b0f497cb38f568ba789702a4c10e2590",
+    "target": "fxlab-k-bind 192.168.112.9 on docker bridge fxlab-k (192.168.112.0/20)",
+    "ports": [
+      53
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout and, when the service stays silent, a second connection attempting a TLS handshake (InsecureSkipVerify; peer chain saved as DER on success); on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS-first ports outside the web list (636, 6443, 10250) only the handshake, nothing written or read); run from the lab manager container fxlab-k-mgr (alpine:3.20) on the fxlab-k bridge: pscap -host <container> -port <port> -mode <banner|http|tls-silent> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "53-dns.banner",
+      "description": "raw bytes the service sent (what Probe's banner read returns before printable()); empty when the service waits for the client"
+    },
+    {
+      "name": "53-dns.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome and error, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "DNS over TCP waits for a length-prefixed query: empty banner; the TLS retry timed out."
+}

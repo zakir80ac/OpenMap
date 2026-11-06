@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "Microsoft",
+  "model": "SQL Server 2022 Developer Edition on Linux (official image)",
+  "firmware": "16.0.4305.5 (RTM-CU27-GDR, KB5126934)",
+  "capturedAt": "2026-11-06T21:55:58Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "mcr.microsoft.com/mssql/server:2022-latest",
+    "digest": "mcr.microsoft.com/mssql/server@sha256:cf8f0ab2ebe61feec2eed2629061a07d247f791c2a8ddda74a4ac9f06a291718",
+    "target": "fxlab-k-mssql 192.168.112.13 on docker bridge fxlab-k (192.168.112.0/20)",
+    "ports": [
+      1433
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout and, when the service stays silent, a second connection attempting a TLS handshake (InsecureSkipVerify; peer chain saved as DER on success); on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS-first ports outside the web list (636, 6443, 10250) only the handshake, nothing written or read); run from the lab manager container fxlab-k-mgr (alpine:3.20) on the fxlab-k bridge: pscap -host <container> -port <port> -mode <banner|http|tls-silent> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "1433-mssql.banner",
+      "description": "raw bytes the service sent (what Probe's banner read returns before printable()); empty when the service waits for the client"
+    },
+    {
+      "name": "1433-mssql.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome and error, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "ACCEPT_EULA=Y, MSSQL_PID=Developer, random SA password (not recorded). TDS is client-first (PRELOGIN): empty banner, the TLS retry was closed (EOF)."
+}

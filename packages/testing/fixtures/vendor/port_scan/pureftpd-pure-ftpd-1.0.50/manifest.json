@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "Pure-FTPd",
+  "model": "Pure-FTPd on Debian 12",
+  "firmware": "pure-ftpd 1.0.50-2.1+b2",
+  "capturedAt": "2026-11-06T21:55:41Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "debian:12 (+ apt: pure-ftpd; container run with --cap-add SYS_NICE DAC_READ_SEARCH SYS_RESOURCE, without which pure-ftpd exits 252 under Docker's default capability set)",
+    "digest": "debian@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "target": "fxlab-k-pureftpd 192.168.112.5 on docker bridge fxlab-k (192.168.112.0/20)",
+    "ports": [
+      21
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout and, when the service stays silent, a second connection attempting a TLS handshake (InsecureSkipVerify; peer chain saved as DER on success); on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS-first ports outside the web list (636, 6443, 10250) only the handshake, nothing written or read); run from the lab manager container fxlab-k-mgr (alpine:3.20) on the fxlab-k bridge: pscap -host <container> -port <port> -mode <banner|http|tls-silent> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "21-ftp.banner",
+      "description": "raw bytes the service sent (what Probe's banner read returns before printable()); empty when the service waits for the client"
+    },
+    {
+      "name": "21-ftp.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome and error, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "pure-ftpd -l unix -E (Unix accounts, no anonymous login). The multi-line 220 greeting is sent before any command."
+}

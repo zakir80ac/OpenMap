@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-k-proftpd",
+  "port": 21,
+  "mode": "banner",
+  "bannerFile": "21-ftp.banner",
+  "bannerBytes": 52,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:55:41Z"
+}

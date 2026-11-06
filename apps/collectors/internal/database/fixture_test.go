@@ -114,8 +114,11 @@ func TestREQDISC024_T312_RecordedVendorFixtures(t *testing.T) {
 		if !e.IsDir() {
 			continue
 		}
-		seen++
 		name := e.Name()
+		if strings.HasPrefix(name, oracleFixturePrefix) {
+			continue // Oracle recordings run under T-319 (oracle_fixture_test.go)
+		}
+		seen++
 		dir := filepath.Join(fixtureRoot, name)
 		t.Run(name, func(t *testing.T) {
 			want, ok := fixtureExpectations[name]
@@ -417,6 +420,8 @@ func newFramer(engine string) framer {
 		return mysqlFramer{}
 	case EngineMSSQL:
 		return tdsFramer{}
+	case EngineOracle:
+		return tnsFramer{}
 	default:
 		return redisFramer{}
 	}

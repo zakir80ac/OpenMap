@@ -1,0 +1,26 @@
+{
+  "family": "snmp",
+  "vendor": "Net-SNMP",
+  "model": "snmpd on Alpine Linux 3.20 (walked over SNMPv1)",
+  "firmware": "net-snmp 5.9.4",
+  "capturedAt": "2026-11-06T21:45:47Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-001",
+  "collector": "internal/snmp",
+  "capture": {
+    "image": "alpine:3.20 (+ apk: net-snmp net-snmp-tools)",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "manager": "alpine:3.20 (+ apk: net-snmp-tools 5.9.4) alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "agentConfig": "agentAddress udp:161; rocommunity <community> default; rouser fxlabv3 priv; createUser fxlabv3 SHA <authPassphrase> AES <privPassphrase>; sysLocation OpenMap container lab, rack B; sysContact noc@lab.openmap.test (the same agent configuration, hostname fxlab-snmp-alp320, MAC 56:10:ad:7d:b1:9c and address 192.168.128.3 as the batch-1 net-snmp-snmpd-alpine3.20-5.9.4 agent, re-created on a dedicated bridge)",
+    "command": "for r in .1.3.6.1.2.1.1 .1.3.6.1.2.1.2.2 .1.3.6.1.2.1.31.1.1 .1.3.6.1.2.1.4.20 .1.3.6.1.2.1.4.22 .1.3.6.1.2.1.47.1.1.1 .1.3.6.1.2.1.17.1.4 .1.3.6.1.2.1.17.7.1.4 .1.0.8802.1.1.2.1.3 .1.0.8802.1.1.2.1.4.1 .1.3.6.1.2.1.33.1 .1.3.6.1.2.1.99.1.1; do snmpwalk -v1 -c <community> -m '' -On 192.168.128.3 $r >> v1.walk 2>&1; done",
+    "network": "dedicated docker bridge fxlab-h (192.168.128.0/20, gateway 192.168.128.1); manager 192.168.128.4 (MAC 9e:5c:65:b7:96:50)"
+  },
+  "files": [
+    { "name": "v1.walk", "description": "snmpwalk -v1 -On (GETNEXT; SNMPv1 has no GETBULK) output for every subtree the collector reads. SNMPv1 cannot carry Counter64, so the agent skips the ifXTable HC counter columns (20 ifXTable varbinds against 36 over v2c); absent MIBs (ENTITY, BRIDGE/Q-BRIDGE, LLDP, UPS, ENTITY-SENSOR) return nothing over v1 instead of noSuchObject" }
+  ],
+  "redactions": [
+    { "file": "manifest.json", "what": "v1/v2c community string in the documented command and agent config (never present in the walk output)", "replacement": "<community>" },
+    { "file": "manifest.json", "what": "v3 authentication and privacy passphrases in the documented agent config (never present in the walk output)", "replacement": "<authPassphrase>, <privPassphrase>" }
+  ],
+  "notes": "Validated live as well: the real snmp collector binary (linux build of apps/collectors/cmd/snmp) ran in the manager container with an snmp_v2c credential and option snmpVersion \"1\" against this agent: status success, the same network_device / interface / ip_address CIs as its v2c run. Before the getScalars fix the v1 run failed with unsupported_device, because one absent scalar (lldpLocChassisId) made the agent answer the whole v1 GET with noSuchName. The ARP table holds the bridge gateway (192.168.128.1) because the agent had just fetched its packages through it."
+}

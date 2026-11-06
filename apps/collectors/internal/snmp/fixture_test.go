@@ -183,6 +183,15 @@ var snmpExpectations = map[string]snmpExpect{
 		addresses:  map[string]string{"192.168.128.3": "2"},
 		arp:        map[string]string{"192.168.128.4": "9e:5c:65:b7:96:50"},
 	},
+	// The same agent configuration, hostname, MAC and address re-created and walked over SNMPv1 (T-317);
+	// its ARP table also holds the bridge gateway it had just fetched packages through.
+	"net-snmp-snmpd-alpine3.20-5.9.4-v1": {
+		sysName: "fxlab-snmp-alp320", sysObjectID: ".1.3.6.1.4.1.8072.3.2.10", vendor: "Net-SNMP",
+		location: "OpenMap container lab, rack B", descrPrefix: "Linux fxlab-snmp-alp320 6.6.87.2-microsoft-standard-WSL2", totalIfCount: 2,
+		interfaces: []snmpIface{{ifIndex: "2", name: "eth0", mac: "56:10:ad:7d:b1:9c", mtu: 1500, speed: 10_000_000_000}},
+		addresses:  map[string]string{"192.168.128.3": "2"},
+		arp:        map[string]string{"192.168.128.1": "e6:87:77:aa:4c:af", "192.168.128.4": "9e:5c:65:b7:96:50"},
+	},
 }
 
 func TestREQDISC001_T301_RecordedVendorFixtures(t *testing.T) {
@@ -199,6 +208,13 @@ func TestREQDISC001_T301_RecordedVendorFixtures(t *testing.T) {
 		exp, ok := snmpExpectations[e.Name()]
 		if !ok {
 			t.Errorf("fixture %s has no expectation row", e.Name())
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(snmpFixtureRoot, e.Name(), "v2c.walk")); err != nil {
+			if _, v1 := os.Stat(filepath.Join(snmpFixtureRoot, e.Name(), v1WalkFile)); v1 == nil {
+				continue // an SNMPv1-only capture; T-317 runs it
+			}
+			t.Errorf("fixture %s has neither v2c.walk nor %s", e.Name(), v1WalkFile)
 			continue
 		}
 		for _, walkFile := range []string{"v2c.walk", "v3.walk"} {

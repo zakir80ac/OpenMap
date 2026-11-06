@@ -141,9 +141,11 @@ func TestREQDISC018_T305_RecordedVendorFixtures(t *testing.T) {
 			if web.Attributes["role"] != "backend-pool" || web.Attributes["balance"] != want.webBalance || web.Attributes["membersUp"] != want.webMembersUp || web.Attributes["memberCount"] != want.webMembers || web.Attributes["state"] != "up" {
 				t.Fatalf("be_web pool %+v", web.Attributes)
 			}
-			members, _ := web.Attributes["members"].([]map[string]any)
-			if len(members) != want.webMembers || members[2]["server"] != "web3" || members[2]["state"] != "down" {
-				t.Fatalf("be_web members %+v", members)
+			members, _ := web.Attributes["members"].([]string)
+			states, _ := web.Attributes["memberStates"].([]string)
+			addrs, _ := web.Attributes["memberAddresses"].([]string)
+			if len(members) != want.webMembers || len(states) != want.webMembers || len(addrs) != want.webMembers || members[2] != "web3" || states[2] != "web3=down" {
+				t.Fatalf("be_web members %v %v %v", members, states, addrs)
 			}
 			api := byPort["api"]
 			if api.Attributes["role"] != "backend-pool" || api.Attributes["balance"] != want.apiBalance {

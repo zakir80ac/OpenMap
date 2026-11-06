@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -75,7 +76,8 @@ func TestREQDISC025_T313_RecordedVendorFixtures(t *testing.T) {
 	}
 	seen := 0
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || strings.HasSuffix(entry.Name(), startTLSFixtureSuffix) {
+			// StartTLS recordings (dialogue + chain) are covered by T-316 in starttls_fixture_test.go.
 			continue
 		}
 		seen++

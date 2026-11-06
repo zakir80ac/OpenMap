@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-k-opensearch",
+  "port": 9200,
+  "mode": "http",
+  "bannerFile": "9200-elasticsearch.banner",
+  "bannerBytes": 87,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:55:58Z"
+}

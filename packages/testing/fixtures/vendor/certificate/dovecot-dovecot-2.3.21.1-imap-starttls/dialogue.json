@@ -1,0 +1,17 @@
+{
+  "protocol": "imap",
+  "steps": [
+    {
+      "from": "server",
+      "bytes": 115
+    },
+    {
+      "from": "client",
+      "bytes": 14
+    },
+    {
+      "from": "server",
+      "bytes": 35
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "host": "fxlab-k-mongo",
+  "port": 27017,
+  "mode": "banner",
+  "bannerFile": "27017-mongodb.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "tlsError": "EOF",
+  "capturedAt": "2026-11-06T21:55:48Z"
+}

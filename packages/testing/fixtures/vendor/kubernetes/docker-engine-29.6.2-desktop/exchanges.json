@@ -1,0 +1,94 @@
+[
+  {
+    "method": "GET",
+    "path": "/_ping",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "text/plain; charset=utf-8",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)",
+      "Swarm": "inactive"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/version",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "002.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/info",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "003.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/containers/json?all=1\u0026filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "004.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/images/json",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "005.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/networks?filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "006.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/volumes?filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.55",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.6.2 (linux)"
+    },
+    "body": "007.body"
+  }
+]

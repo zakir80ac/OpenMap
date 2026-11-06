@@ -7,6 +7,7 @@ package vulnfeed
 import (
 	"context"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -46,6 +47,8 @@ func (Collector) Manifest() contract.Manifest {
 }
 
 type cvssMetric struct {
+	Source   string `json:"source"`
+	Type     string `json:"type"` // Primary (the NVD's own score) or Secondary (a CNA's)
 	CvssData struct {
 		Version      string  `json:"version"`
 		VectorString string  `json:"vectorString"`
@@ -63,7 +66,12 @@ type cveItem struct {
 		Published    string `json:"published"`
 		LastModified string `json:"lastModified"`
 		VulnStatus   string `json:"vulnStatus"`
-		Descriptions []struct {
+		// CISA Known Exploited Vulnerabilities catalogue entry, present only for listed CVEs.
+		CisaExploitAdd        string `json:"cisaExploitAdd"`
+		CisaActionDue         string `json:"cisaActionDue"`
+		CisaRequiredAction    string `json:"cisaRequiredAction"`
+		CisaVulnerabilityName string `json:"cisaVulnerabilityName"`
+		Descriptions          []struct {
 			Lang  string `json:"lang"`
 			Value string `json:"value"`
 		} `json:"descriptions"`
@@ -124,17 +132,37 @@ func Fetch(ctx context.Context, c *restjson.Client, basePath string, window time
 	return items, c.Raw(), nil
 }
 
+// metricTypePrimary marks the score the NVD itself assigned; CNAs publish theirs as Secondary.
+const metricTypePrimary = "Primary"
+
+// primaryMetric takes the newest CVSS version present and, within it, the NVD's Primary score: the
+// NVD lists CNA (Secondary) scores first for some records (CVE-2024-3094 starts with Red Hat's).
 func primaryMetric(item cveItem) (cvssMetric, bool) {
 	m := item.Cve.Metrics
-	switch {
-	case len(m.CvssMetricV40) > 0:
-		return m.CvssMetricV40[0], true
-	case len(m.CvssMetricV31) > 0:
-		return m.CvssMetricV31[0], true
-	case len(m.CvssMetricV2) > 0:
-		return m.CvssMetricV2[0], true
+	for _, list := range [][]cvssMetric{m.CvssMetricV40, m.CvssMetricV31, m.CvssMetricV2} {
+		if len(list) == 0 {
+			continue
+		}
+		for _, metric := range list {
+			if metric.Type == metricTypePrimary {
+				return metric, true
+			}
+		}
+		return list[0], true
 	}
 	return cvssMetric{}, false
+}
+
+// cpeMatchText renders one vulnerable CPE match as a scalar (attributes carry scalars or arrays of
+// scalars only): the criteria followed by whichever version bounds the NVD gives.
+func cpeMatchText(criteria, startIncluding, endExcluding, endIncluding string) string {
+	s := criteria
+	for _, b := range []struct{ key, value string }{{"versionStartIncluding", startIncluding}, {"versionEndExcluding", endExcluding}, {"versionEndIncluding", endIncluding}} {
+		if b.value != "" {
+			s += " " + b.key + "=" + b.value
+		}
+	}
+	return s
 }
 
 func severityOf(m cvssMetric) string {
@@ -164,7 +192,7 @@ func Emit(items []cveItem, raw [][]byte, minimumSeverity string, at time.Time) c
 				break
 			}
 		}
-		cpes := []map[string]any{}
+		cpes := []string{}
 		products := map[string]bool{}
 		for _, cfg := range item.Cve.Configurations {
 			for _, n := range cfg.Nodes {
@@ -172,7 +200,7 @@ func Emit(items []cveItem, raw [][]byte, minimumSeverity string, at time.Time) c
 					if !m.Vulnerable {
 						continue
 					}
-					cpes = append(cpes, map[string]any{"cpe": m.Criteria, "versionStartIncluding": m.VersionStartIncluding, "versionEndExcluding": m.VersionEndExcluding, "versionEndIncluding": m.VersionEndIncluding})
+					cpes = append(cpes, cpeMatchText(m.Criteria, m.VersionStartIncluding, m.VersionEndExcluding, m.VersionEndIncluding))
 					if parts := strings.Split(m.Criteria, ":"); len(parts) > 4 {
 						products[parts[3]+":"+parts[4]] = true // vendor:product
 					}
@@ -183,14 +211,22 @@ func Emit(items []cveItem, raw [][]byte, minimumSeverity string, at time.Time) c
 		for p := range products {
 			productList = append(productList, p)
 		}
+		sort.Strings(productList)
+		// The NVD and the CNA often both list the same CWE; keep each once.
 		cwes := []string{}
+		seenCwe := map[string]bool{}
 		for _, w := range item.Cve.Weaknesses {
 			for _, d := range w.Description {
-				cwes = append(cwes, d.Value)
+				if !seenCwe[d.Value] {
+					seenCwe[d.Value] = true
+					cwes = append(cwes, d.Value)
+				}
 			}
 		}
 		refs := []string{}
-		exploitKnown := false
+		// A CISA KEV listing means exploitation in the wild is confirmed.
+		kev := item.Cve.CisaExploitAdd != ""
+		exploitKnown := kev
 		for _, ref := range item.Cve.References {
 			refs = append(refs, ref.URL)
 			for _, tag := range ref.Tags {
@@ -202,7 +238,8 @@ func Emit(items []cveItem, raw [][]byte, minimumSeverity string, at time.Time) c
 		identity := map[string]string{"cveId": item.Cve.ID}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeVuln, Identity: identity, Name: item.Cve.ID,
 			Attributes: map[string]any{"severity": sev, "cvssScore": metric.CvssData.BaseScore, "cvssVector": metric.CvssData.VectorString, "cvssVersion": metric.CvssData.Version, "exploitabilityScore": metric.ExploitabilityScore, "impactScore": metric.ImpactScore,
-				"published": item.Cve.Published, "lastModified": item.Cve.LastModified, "status": item.Cve.VulnStatus, "description": description, "cpeMatches": cpes, "affectedProducts": productList, "cwe": cwes, "references": refs, "exploitKnown": exploitKnown, "source": "nvd"},
+				"published": item.Cve.Published, "lastModified": item.Cve.LastModified, "status": item.Cve.VulnStatus, "description": description, "cpeMatches": cpes, "affectedProducts": productList, "cwe": cwes, "references": refs, "exploitKnown": exploitKnown, "source": "nvd",
+				"cvssSource": metric.Source, "kev": kev, "kevDateAdded": item.Cve.CisaExploitAdd, "kevDueDate": item.Cve.CisaActionDue, "kevRequiredAction": item.Cve.CisaRequiredAction, "kevName": item.Cve.CisaVulnerabilityName},
 			Tags: []string{}, ExternalIDs: []contract.ExternalID{{Source: "nvd", ID: item.Cve.ID}}, ObservedAt: at})
 	}
 	return obs

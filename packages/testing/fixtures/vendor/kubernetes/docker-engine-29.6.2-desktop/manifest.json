@@ -1,0 +1,58 @@
+{
+  "family": "kubernetes",
+  "vendor": "Docker Inc.",
+  "model": "Docker Desktop 4.84.0 (234817) Docker Engine on the docker-desktop WSL2 VM, containerd image store",
+  "firmware": "Docker Engine 29.6.2 (API 1.55, min 1.40), containerd v2.2.5, runc 1.3.6",
+  "capturedAt": "2026-11-06T21:48:20Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-011",
+  "collector": "internal/docker",
+  "capture": {
+    "image": "alpine:3.20",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "setup": "The local Docker Desktop engine as it runs the OpenMap dev compose stack (project openmap); nothing was created or changed on it.",
+    "command": "docker run --rm --user 0 -v /var/run/docker.sock:/var/run/docker.sock:ro -v <scratch>:/work alpine:3.20: recproxy unix:/tmp/rec.sock -> unix:/var/run/docker.sock, then apps/collectors/cmd/docker_engine (GOOS=linux build) with target unix:///tmp/rec.sock and options {labelFilter: com.docker.compose.project=openmap} (scopes containers, networks and volumes to the OpenMap stack; images are listed in full). Recording reverse proxy (throwaway lab tool, not checked in) between the collector and the engine stores each response status, the listed headers and the body bytes unchanged. The engine socket was mounted read-only and the collector issues only GET requests."
+  },
+  "files": [
+    {
+      "name": "exchanges.json",
+      "description": "Ordered exchanges: method, request URI, status, Content-Type/Api-Version/Server/Docker-Experimental/Ostype/Swarm headers, body file"
+    },
+    {
+      "name": "001.body",
+      "description": "GET /_ping"
+    },
+    {
+      "name": "002.body",
+      "description": "GET /version"
+    },
+    {
+      "name": "003.body",
+      "description": "GET /v1.47/info"
+    },
+    {
+      "name": "004.body",
+      "description": "GET /v1.47/containers/json?all=1&filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D"
+    },
+    {
+      "name": "005.body",
+      "description": "GET /v1.47/images/json"
+    },
+    {
+      "name": "006.body",
+      "description": "GET /v1.47/networks?filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D"
+    },
+    {
+      "name": "007.body",
+      "description": "GET /v1.47/volumes?filters=%7B%22label%22%3A%5B%22com.docker.compose.project%3Dopenmap%22%5D%7D"
+    }
+  ],
+  "redactions": [
+    {
+      "file": "004.body",
+      "what": "OpenBao dev root token in the openmap-openbao-1 container Command (-dev-root-token-id=...)",
+      "replacement": "xxxxxxxxxxxxxxxx (same length)"
+    }
+  ],
+  "notes": "005.body (GET /images/json, 91 KB) lists every image on the engine, including images of the workstation's unrelated projects: image names, digests and labels only, no credentials."
+}

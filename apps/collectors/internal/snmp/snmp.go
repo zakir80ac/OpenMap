@@ -1,5 +1,7 @@
-// REQ-DISC-001 — SNMP collector: v2c and v3 (authPriv) over gosnmp, bulk walks of the standard
-// tables, parsed by parse.go and emitted by emit.go. Credentials arrive from the Node per job.
+// REQ-DISC-001 — SNMP collector: v1, v2c and v3 (authPriv) over gosnmp, bulk walks of the standard
+// tables (GETNEXT walks on v1, which has no GETBULK), parsed by parse.go and emitted by emit.go.
+// Credentials arrive from the Node per job; v1 uses the community credential (snmp_v2c) with the job
+// option snmpVersion "1", since the credential contract carries no separate v1 type.
 package snmp
 
 import (
@@ -27,6 +29,8 @@ const (
 	maxRepeaters  = 25
 	optionPort    = "port"
 	optionNoArp   = "skipArp"
+	optionVersion = "snmpVersion" // "1" walks a community-based agent over SNMPv1 instead of v2c
+	versionV1     = "1"
 	credCommunity = "community"
 	credUser      = "username"
 	credAuthProto = "authProtocol"
@@ -52,7 +56,7 @@ type Collector struct{}
 func (Collector) Manifest() contract.Manifest {
 	return contract.Manifest{
 		ID: collectorID, Family: "snmp", Version: version, Language: "go",
-		Protocols: []string{"snmp-v2c", "snmp-v3"}, CredentialTypes: []string{"snmp_v2c", "snmp_v3"},
+		Protocols: []string{"snmp-v1", "snmp-v2c", "snmp-v3"}, CredentialTypes: []string{"snmp_v2c", "snmp_v3"},
 		TargetKinds: []string{"host"}, Emits: []string{typeNetworkDevice, typeInterface, typeVlan, typeIPAddress, typeUnknown},
 		ContractVersion: contract.Version,
 	}
@@ -78,6 +82,9 @@ func clientFor(target contract.Target, cred *contract.Credential, options map[st
 	switch cred.Type {
 	case "snmp_v2c":
 		c.Version = g.Version2c
+		if v := strings.TrimPrefix(strings.ToLower(fmt.Sprint(options[optionVersion])), "v"); v == versionV1 {
+			c.Version = g.Version1
+		}
 		c.Community = cred.Fields[credCommunity]
 		if c.Community == "" {
 			return nil, collector.Errorf(contract.ErrAuthFailed, false, "snmp_v2c credential has no community")
@@ -168,6 +175,27 @@ func decode(pdu g.SnmpPDU) any {
 	}
 }
 
+// getScalars GETs a list of scalars. SNMPv1 has no per-varbind exceptions: one absent OID fails the whole
+// request with error-status noSuchName (RFC 1157) and no values, so on v1 a failed multi-OID GET is
+// retried one OID at a time and the absent ones are dropped, as v2c's noSuchObject would be.
+func getScalars(c *g.GoSNMP, oids []string) (*g.SnmpPacket, error) {
+	res, err := c.Get(oids)
+	if err != nil || c.Version != g.Version1 || res.Error == g.NoError || len(oids) == 1 {
+		return res, err
+	}
+	merged := &g.SnmpPacket{Version: res.Version, Community: res.Community, PDUType: res.PDUType, RequestID: res.RequestID}
+	for _, oid := range oids {
+		one, err := c.Get([]string{oid})
+		if err != nil {
+			return nil, err
+		}
+		if one.Error == g.NoError {
+			merged.Variables = append(merged.Variables, one.Variables...)
+		}
+	}
+	return merged, nil
+}
+
 // walkDevice performs the scalar GET and all table walks for one target.
 func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipArp bool) (*Walk, error) {
 	if err := c.Connect(); err != nil {
@@ -175,7 +203,7 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 	}
 	defer c.Conn.Close()
 	w := &Walk{Target: target, Scalars: map[string]any{}, Tables: map[string][]Varbind{}, At: time.Now().UTC()}
-	res, err := c.Get(scalarOIDs)
+	res, err := getScalars(c, scalarOIDs)
 	if err != nil {
 		return nil, classify(target, err)
 	}
@@ -188,7 +216,7 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 		return nil, collector.Errorf(contract.ErrUnsupportedDevice, false, "%s answered without sysDescr or sysName", target.Value)
 	}
 	// Power MIBs: one extra GET; agents without them answer noSuchObject, which decode drops.
-	if power, err := c.Get(powerScalarOIDs); err == nil {
+	if power, err := getScalars(c, powerScalarOIDs); err == nil {
 		for _, pdu := range power.Variables {
 			if v := decode(pdu); v != nil {
 				w.Scalars[pdu.Name] = v
@@ -196,7 +224,7 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 		}
 	}
 	// Cooling MIBs (REQ-DISC-026): the same one-GET probe; CRAC units answer, everything else returns noSuchObject.
-	if cooling, err := c.Get(coolingScalarOIDs); err == nil {
+	if cooling, err := getScalars(c, coolingScalarOIDs); err == nil {
 		for _, pdu := range cooling.Variables {
 			if v := decode(pdu); v != nil {
 				w.Scalars[pdu.Name] = v

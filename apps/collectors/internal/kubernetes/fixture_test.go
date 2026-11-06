@@ -110,6 +110,16 @@ func TestREQDISC011_T302_RecordedVendorFixtures(t *testing.T) {
 		if !entry.IsDir() {
 			continue
 		}
+		// The family also holds Docker Engine captures (internal/docker, T-318).
+		var m struct {
+			Collector string `json:"collector"`
+		}
+		if mb, err := os.ReadFile(filepath.Join(fixtureFamily, entry.Name(), "manifest.json")); err != nil || json.Unmarshal(mb, &m) != nil {
+			t.Fatalf("fixture %s: unreadable manifest", entry.Name())
+		}
+		if m.Collector != "internal/kubernetes" {
+			continue
+		}
 		seen++
 		want, ok := clusterFixtures[entry.Name()]
 		if !ok {

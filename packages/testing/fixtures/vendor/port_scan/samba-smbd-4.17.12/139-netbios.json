@@ -1,0 +1,10 @@
+{
+  "host": "fxlab-k-samba",
+  "port": 139,
+  "mode": "banner",
+  "bannerFile": "139-netbios.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "tlsError": "read tcp 192.168.112.14:59690-\u003e192.168.112.6:139: i/o timeout",
+  "capturedAt": "2026-11-06T21:55:42Z"
+}

@@ -1,0 +1,10 @@
+{
+  "chainLength": 2,
+  "cipherSuite": "TLS_AES_128_GCM_SHA256",
+  "port": 110,
+  "serverName": "imap.fxlab.test",
+  "startTls": "pop3",
+  "tlsVersion": "TLS 1.3",
+  "verifiedAgainstSystemRoots": false,
+  "verifyError": "x509: certificate signed by unknown authority"
+}

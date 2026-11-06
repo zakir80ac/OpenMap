@@ -1,0 +1,27 @@
+{
+  "family": "netflow",
+  "vendor": "softflowd / pmacct",
+  "model": "softflowd NetFlow v9 / IPFIX probe and pmacctd sfprobe (sFlow v5 agent) on Alpine Linux 3.20, exporting IPv6 traffic",
+  "firmware": "softflowd 1.1.0 (libpcap 1.10), pmacct 1.7.8",
+  "capturedAt": "2026-11-06T21:55:07Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-019",
+  "collector": "internal/netflow",
+  "capture": {
+    "image": "alpine:3.20 (+ apk on the exporter: softflowd 1.1.0-r0, pmacct 1.7.8-r1, tcpdump 4.99.4-r1, curl 8.14.1-r2, busybox-extras; on the receiver: tcpdump 4.99.4-r1; on the web target: busybox-extras for httpd)",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "command": "exporter (fd00:f1ab::5 / 192.168.144.5): tcpdump -i eth0 -U -w traffic.pcap 'ip6 host fd00:f1ab::7 and (tcp port 80 or udp port 5514)'; pmacctd -f sfprobe.conf (sfprobe_receiver 192.168.144.6:6343, sampling_rate 1, same pcap filter); 3x curl -6 http://[fd00:f1ab::7]/blob.bin (64 KiB, busybox httpd), 1x curl -6 http://[fd00:f1ab::7]/index.html, 4x echo 'openmap flow lab datagram N' | nc -u -w1 fd00:f1ab::7 5514; then softflowd -d -r traffic.pcap -v 9 -n 192.168.144.6:2056 and -v 10 -n 192.168.144.6:2057. Receiver (192.168.144.6): tcpdump -i eth0 -U -w netflow-v9.pcap 'udp dst port 2056' (2057 -> ipfix.pcap, 6343 -> sflow-v5.pcap). NetFlow v5 cannot carry IPv6 and was not run.",
+    "network": "dedicated dual-stack docker bridge fxlab-h6 (fd00:f1ab::/64 ULA and 192.168.144.0/20); flows are IPv6, the exports travel over IPv4"
+  },
+  "files": [
+    { "name": "netflow-v9.pcap", "description": "softflowd NetFlow v9 export datagram (Ethernet / IPv4 / UDP) with an IPv6 template (fields 27/28) and 12 data records" },
+    { "name": "ipfix.pcap", "description": "softflowd IPFIX (version 10) export datagram with an IPv6 template and 12 data records" },
+    { "name": "sflow-v5.pcap", "description": "pmacctd sfprobe sFlow v5 datagrams exported live: one raw-packet-header flow sample per IPv6 packet (sampling rate 1)" },
+    { "name": "traffic.pcap", "description": "the IPv6 traffic both exporters accounted (ground truth): 4 HTTP connections (84 packets, 203846 IPv6 octets) and 4 UDP datagrams (304 octets)" },
+    { "name": "sfprobe.conf", "description": "the pmacctd configuration used" },
+    { "name": "softflowd-v9.log", "description": "softflowd's own statistics for the v9 export run" },
+    { "name": "softflowd-v10.log", "description": "softflowd's own statistics for the IPFIX export run" }
+  ],
+  "redactions": [],
+  "notes": "Same procedure as the batch-1 IPv4 fixtures (softflowd-softflowd-1.1.0, pmacct-pmacctd-sfprobe-1.7.8): softflowd 1.1.0 does not dispatch live packets with libpcap 1.10, so it exported from the live-recorded traffic with its -r mode; pmacct exported live. Addresses are a ULA lab prefix and private IPv4."
+}

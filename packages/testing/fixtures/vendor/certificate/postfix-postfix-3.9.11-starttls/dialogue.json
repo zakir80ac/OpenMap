@@ -1,0 +1,25 @@
+{
+  "protocol": "smtp",
+  "steps": [
+    {
+      "from": "server",
+      "bytes": 35
+    },
+    {
+      "from": "client",
+      "bytes": 24
+    },
+    {
+      "from": "server",
+      "bytes": 166
+    },
+    {
+      "from": "client",
+      "bytes": 10
+    },
+    {
+      "from": "server",
+      "bytes": 30
+    }
+  ]
+}

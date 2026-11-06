@@ -31,7 +31,7 @@ const (
 	dialTimeout    = 10 * time.Second
 	optionPorts    = "ports"
 	optionSNI      = "serverName"
-	optionStartTLS = "startTls" // smtp | imap | pop3 | ldap (plain TLS when empty)
+	optionStartTLS = "startTls" // smtp | imap | pop3 | ldap | postgres | auto/true (by port); direct TLS when empty (starttls.go)
 	hoursPerDay    = 24
 
 	typeCertificate = "certificate"
@@ -45,7 +45,7 @@ type Collector struct{}
 func (Collector) Manifest() contract.Manifest {
 	return contract.Manifest{
 		ID: collectorID, Family: "certificate", Version: version, Language: "go",
-		Protocols: []string{"tls"}, CredentialTypes: []string{"none"},
+		Protocols: []string{"tls", StartTLSSMTP, StartTLSIMAP, StartTLSPOP3, StartTLSLDAP, StartTLSPostgres}, CredentialTypes: []string{"none"},
 		TargetKinds: []string{"host", "url"}, Emits: []string{typeCertificate, typeListener},
 		ContractVersion: contract.Version,
 	}
@@ -56,6 +56,7 @@ type Endpoint struct {
 	Host       string
 	Port       int
 	ServerName string
+	StartTLS   string // protocol negotiated in plaintext before the handshake; empty for direct TLS
 	Version    string
 	Cipher     string
 	Chain      []*x509.Certificate
@@ -79,9 +80,16 @@ func tlsVersion(v uint16) string {
 	}
 }
 
-// Probe performs one handshake and returns the presented chain without failing on untrusted roots.
+// Probe performs one direct-TLS handshake and returns the presented chain without failing on untrusted roots.
 func Probe(ctx context.Context, host string, port int, serverName string) Endpoint {
-	ep := Endpoint{Host: host, Port: port, ServerName: serverName}
+	return ProbeStartTLS(ctx, host, port, serverName, "")
+}
+
+// ProbeStartTLS is Probe for services that upgrade in-band: the plaintext StartTLS dialogue of
+// protocol (see starttls.go) runs first, then the same handshake and chain recording. An empty
+// protocol is direct TLS.
+func ProbeStartTLS(ctx context.Context, host string, port int, serverName, protocol string) Endpoint {
+	ep := Endpoint{Host: host, Port: port, ServerName: serverName, StartTLS: protocol}
 	dialer := &net.Dialer{Timeout: dialTimeout}
 	raw, err := dialer.DialContext(ctx, "tcp", net.JoinHostPort(host, strconv.Itoa(port)))
 	if err != nil {
@@ -90,6 +98,12 @@ func Probe(ctx context.Context, host string, port int, serverName string) Endpoi
 	}
 	defer raw.Close()
 	_ = raw.SetDeadline(time.Now().Add(dialTimeout))
+	if protocol != "" {
+		if err := negotiateStartTLS(raw, protocol); err != nil {
+			ep.Error = err.Error()
+			return ep
+		}
+	}
 	cfg := &tls.Config{ServerName: serverName, InsecureSkipVerify: true, MinVersion: tls.VersionTLS10} //nolint:gosec // inventory collector: the chain is recorded and verified separately below.
 	conn := tls.Client(raw, cfg)
 	if err := conn.HandshakeContext(ctx); err != nil {
@@ -202,8 +216,12 @@ func Emit(endpoints []Endpoint, target contract.Target, at time.Time) collector.
 		}
 		leaf := contract.CiRef{Type: typeCertificate, Identity: map[string]string{"fingerprintSha256": fingerprint(ep.Chain[0])}}
 		lsIdentity := map[string]string{"hostRef": ep.Host, "protocol": "tcp", "port": strconv.Itoa(ep.Port)}
-		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: lsIdentity, Name: "tcp/" + strconv.Itoa(ep.Port) + " tls",
-			Attributes: map[string]any{"protocol": "tcp", "port": ep.Port, "tls": true, "tlsVersion": ep.Version, "cipherSuite": ep.Cipher, "serverName": ep.ServerName, "chainVerified": ep.Verified, "chainVerifyError": ep.VerifyErr, "target": target.Value},
+		lsName := "tcp/" + strconv.Itoa(ep.Port) + " tls"
+		if ep.StartTLS != "" {
+			lsName = "tcp/" + strconv.Itoa(ep.Port) + " " + ep.StartTLS + " starttls"
+		}
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: lsIdentity, Name: lsName,
+			Attributes: map[string]any{"protocol": "tcp", "port": ep.Port, "tls": true, "startTls": ep.StartTLS, "tlsVersion": ep.Version, "cipherSuite": ep.Cipher, "serverName": ep.ServerName, "chainVerified": ep.Verified, "chainVerifyError": ep.VerifyErr, "target": target.Value},
 			Tags:       []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relSecuredBy, From: contract.CiRef{Type: typeListener, Identity: lsIdentity}, To: leaf, Attributes: map[string]any{}, ObservedAt: at})
 	}
@@ -265,7 +283,11 @@ func (Collector) Collect(ctx context.Context, target contract.Target, _ *contrac
 	var endpoints []Endpoint
 	failures := 0
 	for _, p := range list {
-		ep := Probe(ctx, host, p, sni)
+		startTLS, err := StartTLSProtocol(options[optionStartTLS], p)
+		if err != nil {
+			return collector.Observation{}, collector.Errorf(contract.ErrUnsupportedDevice, false, "%s: %v", target.Value, err)
+		}
+		ep := ProbeStartTLS(ctx, host, p, sni, startTLS)
 		if ep.Error != "" {
 			failures++
 		}

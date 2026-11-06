@@ -1,5 +1,5 @@
 // REQ-DISC-024 — database discovery collector: connects to PostgreSQL, MySQL/MariaDB, SQL Server,
-// MongoDB and Redis/Valkey with a read-only account and emits the database cluster (engine, cluster
+// MongoDB, Redis/Valkey and Oracle Database with a read-only account and emits the database cluster (engine, cluster
 // identity, version, role, replication), every database with its size, the listening service and
 // the host it runs on. Engine is taken from the job or inferred from the port.
 package database
@@ -21,7 +21,7 @@ const (
 	collectorID  = "database"
 	version      = "0.1.0"
 	evidenceKind = "api_response"
-	optionEngine = "engine" // postgresql | mysql | mssql | mongodb | redis
+	optionEngine = "engine" // postgresql | mysql | mssql | mongodb | redis | oracle
 	optionPort   = "port"
 	optionTLS    = "tls"
 	optionDbName = "database" // initial database for engines that need one
@@ -34,12 +34,14 @@ const (
 	EngineMSSQL    = "mssql"
 	EngineMongo    = "mongodb"
 	EngineRedis    = "redis"
+	EngineOracle   = "oracle"
 
 	portPostgres = 5432
 	portMySQL    = 3306
 	portMSSQL    = 1433
 	portMongo    = 27017
 	portRedis    = 6379
+	portOracle   = 1521
 
 	connectTimeout = 15 * time.Second
 
@@ -54,15 +56,15 @@ const (
 	relReplicate = "replicates_to"
 )
 
-var defaultPorts = map[string]int{EnginePostgres: portPostgres, EngineMySQL: portMySQL, EngineMSSQL: portMSSQL, EngineMongo: portMongo, EngineRedis: portRedis}
-var enginesByPort = map[int]string{portPostgres: EnginePostgres, portMySQL: EngineMySQL, portMSSQL: EngineMSSQL, portMongo: EngineMongo, portRedis: EngineRedis}
+var defaultPorts = map[string]int{EnginePostgres: portPostgres, EngineMySQL: portMySQL, EngineMSSQL: portMSSQL, EngineMongo: portMongo, EngineRedis: portRedis, EngineOracle: portOracle}
+var enginesByPort = map[int]string{portPostgres: EnginePostgres, portMySQL: EngineMySQL, portMSSQL: EngineMSSQL, portMongo: EngineMongo, portRedis: EngineRedis, portOracle: EngineOracle}
 
 type Collector struct{}
 
 func (Collector) Manifest() contract.Manifest {
 	return contract.Manifest{
 		ID: collectorID, Family: "database", Version: version, Language: "go",
-		Protocols: []string{"postgresql", "mysql", "tds", "mongodb", "resp"}, CredentialTypes: []string{"password", "none"},
+		Protocols: []string{"postgresql", "mysql", "tds", "mongodb", "resp", "tns"}, CredentialTypes: []string{"password", "none"},
 		TargetKinds: []string{"host"}, Emits: []string{typeCluster, typeDatabase, typeListener, typeIP},
 		ContractVersion: contract.Version,
 	}
@@ -107,6 +109,7 @@ var probers = map[string]Prober{
 	EngineMSSQL:    mssqlProber{},
 	EngineMongo:    mongoProber{},
 	EngineRedis:    redisProber{},
+	EngineOracle:   oracleProber{},
 }
 
 // Emit converts the inventory into contract observations.
@@ -184,7 +187,7 @@ func classify(target string, err error) error {
 	}
 	msg := strings.ToLower(err.Error())
 	switch {
-	case strings.Contains(msg, "password authentication failed") || strings.Contains(msg, "access denied") || strings.Contains(msg, "login failed") || strings.Contains(msg, "authentication failed") || strings.Contains(msg, "noauth") || strings.Contains(msg, "wrongpass"):
+	case strings.Contains(msg, "password authentication failed") || strings.Contains(msg, "access denied") || strings.Contains(msg, "login failed") || strings.Contains(msg, "authentication failed") || strings.Contains(msg, "noauth") || strings.Contains(msg, "wrongpass") || strings.Contains(msg, "logon denied"):
 		return collector.Errorf(contract.ErrAuthFailed, false, "%s rejected the credential: %v", target, err)
 	case strings.Contains(msg, "permission denied") || strings.Contains(msg, "not authorized"):
 		return collector.Errorf(contract.ErrPermissionDenied, false, "%s: %v", target, err)
@@ -223,7 +226,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		engine = enginesByPort[port]
 	}
 	if engine == "" {
-		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "database job must name engine (postgresql|mysql|mssql|mongodb|redis) or a well-known port")
+		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "database job must name engine (postgresql|mysql|mssql|mongodb|redis|oracle) or a well-known port")
 	}
 	prober, ok := probers[engine]
 	if !ok {

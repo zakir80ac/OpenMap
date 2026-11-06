@@ -1,0 +1,51 @@
+{
+  "family": "kubernetes",
+  "vendor": "Docker Inc.",
+  "model": "Docker Engine (docker:dind, fresh engine), containerd image store",
+  "firmware": "Docker Engine 29.9.3",
+  "capturedAt": "2026-11-06T21:55:30Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-011",
+  "collector": "internal/docker",
+  "capture": {
+    "image": "docker:dind",
+    "digest": "docker@sha256:08a98015fce594af7c382883bea080ea206de74402a95da9dc52b6428c8cd121",
+    "setup": "privileged docker:dind on the dedicated fxlab-i network, DOCKER_TLS_CERTDIR empty, API on tcp 2375 published on 127.0.0.1 only; inside: network shop (10.89.0.0/24), volume shop-cache, images pulled from Docker Hub and Quay (nginx:1.29-alpine, redis:7.4-alpine, alpine:3.20, quay.io/prometheus/busybox:latest) plus a locally built shop/tools:1.0 (FROM alpine:3.20); containers web (nginx, -p 8080:80), cache (redis, volume shop-cache), sidecar (busybox), tools (local image) on shop, probe-default (alpine) on bridge, batch-once (alpine, exited)",
+    "command": "apps/collectors/cmd/docker_engine (Windows build) with target tcp://127.0.0.1:23751 (recproxy tcp:127.0.0.1:23751 -> tcp:127.0.0.1:23750 -> dind :2375), options {}. Recording reverse proxy (throwaway lab tool, not checked in) between the collector and the engine stores each response status, the listed headers and the body bytes unchanged."
+  },
+  "files": [
+    {
+      "name": "exchanges.json",
+      "description": "Ordered exchanges: method, request URI, status, Content-Type/Api-Version/Server/Docker-Experimental/Ostype/Swarm headers, body file"
+    },
+    {
+      "name": "001.body",
+      "description": "GET /_ping"
+    },
+    {
+      "name": "002.body",
+      "description": "GET /version"
+    },
+    {
+      "name": "003.body",
+      "description": "GET /v1.47/info"
+    },
+    {
+      "name": "004.body",
+      "description": "GET /v1.47/containers/json?all=1"
+    },
+    {
+      "name": "005.body",
+      "description": "GET /v1.47/images/json"
+    },
+    {
+      "name": "006.body",
+      "description": "GET /v1.47/networks"
+    },
+    {
+      "name": "007.body",
+      "description": "GET /v1.47/volumes"
+    }
+  ],
+  "redactions": []
+}

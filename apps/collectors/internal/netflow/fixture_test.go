@@ -173,6 +173,12 @@ var flowExpectations = map[string]flowExpect{
 		captures: []string{"sflow-v5.pcap"}, exporter: "192.168.128.5", sflow: true,
 		client: "192.168.128.5", server: "192.168.128.7", httpPort: 80, udpPort: 5514, udpDatagrams: 4, httpConns: 4,
 	},
+	// IPv6 traffic (T-322 runs it with an IPv6 ground truth; no IPv4 captures for T-307): exports
+	// travelled over IPv4 from the exporter's 192.168.144.5.
+	ipv6FlowFixture: {
+		exporter: "192.168.144.5",
+		client:   "fd00:f1ab::5", server: "fd00:f1ab::7", httpPort: 80, udpPort: 5514, udpDatagrams: 4, httpConns: 4,
+	},
 }
 
 func TestREQDISC019_T307_RecordedVendorFixtures(t *testing.T) {

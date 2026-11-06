@@ -1,0 +1,94 @@
+[
+  {
+    "method": "GET",
+    "path": "/_ping",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "text/plain; charset=utf-8",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)",
+      "Swarm": "inactive"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/version",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "002.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/info",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "003.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/containers/json?all=1",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "004.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/images/json",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "005.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/networks",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "006.body"
+  },
+  {
+    "method": "GET",
+    "path": "/v1.47/volumes",
+    "status": 200,
+    "headers": {
+      "Api-Version": "1.56",
+      "Content-Type": "application/json",
+      "Docker-Experimental": "false",
+      "Ostype": "linux",
+      "Server": "Docker/29.9.3 (linux)"
+    },
+    "body": "007.body"
+  }
+]

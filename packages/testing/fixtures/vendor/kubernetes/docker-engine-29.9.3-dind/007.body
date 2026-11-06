@@ -1,0 +1,1 @@
+{"Volumes":[{"CreatedAt":"2026-11-06T21:52:35Z","Driver":"local","Labels":null,"Mountpoint":"/var/lib/docker/volumes/shop-cache/_data","Name":"shop-cache","Options":null,"Scope":"local"}],"Warnings":null}

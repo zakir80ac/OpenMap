@@ -1,0 +1,13 @@
+{
+  "protocol": "ldap",
+  "steps": [
+    {
+      "from": "client",
+      "bytes": 31
+    },
+    {
+      "from": "server",
+      "bytes": 14
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "host": "192.168.96.2",
+  "port": 6443,
+  "mode": "tls-silent",
+  "bannerFile": "6443-kubernetes-api.banner",
+  "bannerBytes": 0,
+  "tls": true,
+  "tlsVersion": "TLS 1.3",
+  "chainFiles": [
+    "6443-kubernetes-api.chain0.der"
+  ],
+  "capturedAt": "2026-11-06T21:47:09Z"
+}

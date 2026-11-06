@@ -1,0 +1,17 @@
+{
+  "protocol": "pop3",
+  "steps": [
+    {
+      "from": "server",
+      "bytes": 20
+    },
+    {
+      "from": "client",
+      "bytes": 6
+    },
+    {
+      "from": "server",
+      "bytes": 32
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "host": "fxlab-k-xrdp",
+  "port": 3389,
+  "mode": "banner",
+  "bannerFile": "3389-rdp.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "tlsError": "tls: first record does not look like a TLS handshake",
+  "capturedAt": "2026-11-06T21:55:39Z"
+}

@@ -1,0 +1,51 @@
+{
+  "family": "database",
+  "vendor": "Oracle",
+  "model": "Oracle AI Database 26ai Free, session on the PDB service FREEPDB1 of CDB FREE, on Oracle Linux 8.10",
+  "firmware": "23.26.3.0.0",
+  "capturedAt": "2026-11-06T21:58:55Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "gvenzl/oracle-free:23-slim",
+    "digest": "sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd",
+    "command": "Container fxlab-j-oracle (hostname ora-lab) on the dedicated fxlab-j network, listener published on 127.0.0.1:15210, ORACLE_PASSWORD set from a lab secret. As SYSDBA: CREATE USER c##openmap CONTAINER=ALL; GRANT CREATE SESSION, SELECT_CATALOG_ROLE TO c##openmap CONTAINER=ALL; ALTER USER c##openmap SET CONTAINER_DATA=ALL CONTAINER=CURRENT (root-level v$ views then show every PDB); CREATE PLUGGABLE DATABASE INVENTORY (from the seed, db_create_file_dest=/opt/oracle/oradata) and OPEN; in FREEPDB1 a table shop.orders with 5000 rows. The real database collector binary (apps/collectors/cmd/database, go-ora v2.9.0) ran one invocation with options {engine: oracle, port: 15211, database: FREEPDB1} (the PDB service, so v$ views show only that container) and credential c##openmap through an ordered TCP recording proxy 127.0.0.1:15211 -> 127.0.0.1:15210 that wrote both directions of the TNS session verbatim in arrival order (wire/conn-1.bin, steps in wire.json). The collector stored its query results as api_response evidence; results.json is that evidence file byte-for-byte. Job status success: 1 database_cluster, 1 listening_service, 1 database CI (FREEPDB1; the CDB root is not visible from a PDB session)."
+  },
+  "files": [
+    {
+      "name": "wire/conn-1.bin",
+      "description": "The TNS session (connect, ANO and TTC negotiation, O5LOGON, the probe's ten queries) as both sides sent it"
+    },
+    {
+      "name": "wire.json",
+      "description": "Ordered steps (client/server, offset, length) into wire/conn-1.bin"
+    },
+    {
+      "name": "results.json",
+      "description": "The collector's raw evidence for the run: every probe query's rows as the server returned them (text), keyed by query name"
+    }
+  ],
+  "redactions": [
+    {
+      "file": "wire/conn-1.bin",
+      "what": "Capture workstation host name in the connect descriptor HOST= (CONNECT packet and AUTH_CONNECT_STRING), AUTH_TERMINAL and AUTH_MACHINE (6 occurrences)",
+      "replacement": "XXXXXX (same length)"
+    },
+    {
+      "file": "wire/conn-1.bin",
+      "what": "Capture workstation OS user in the connect descriptor USER= (CONNECT packet and AUTH_CONNECT_STRING) and AUTH_SID (4 occurrences)",
+      "replacement": "XXXXX (same length)"
+    },
+    {
+      "file": "wire/conn-1.bin",
+      "what": "Directory part of the collector executable path in the connect descriptor PROGRAM= and AUTH_CONNECT_STRING (2 occurrences); the file name database.exe is kept",
+      "replacement": "X characters (same length)"
+    },
+    {
+      "file": "wire/conn-1.bin",
+      "what": "O5LOGON material from which the lab password could be attacked offline: client and server AUTH_SESSKEY, AUTH_PASSWORD, AUTH_PBKDF2_SPEEDY_KEY, AUTH_VFR_DATA (verifier salt), AUTH_PBKDF2_CSK_SALT, AUTH_SVR_RESPONSE",
+      "replacement": "hex digit 0 (same length); the replay never checks them"
+    }
+  ]
+}

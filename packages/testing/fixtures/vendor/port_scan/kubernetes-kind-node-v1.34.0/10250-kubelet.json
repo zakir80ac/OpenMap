@@ -1,0 +1,14 @@
+{
+  "host": "192.168.96.2",
+  "port": 10250,
+  "mode": "tls-silent",
+  "bannerFile": "10250-kubelet.banner",
+  "bannerBytes": 0,
+  "tls": true,
+  "tlsVersion": "TLS 1.3",
+  "chainFiles": [
+    "10250-kubelet.chain0.der",
+    "10250-kubelet.chain1.der"
+  ],
+  "capturedAt": "2026-11-06T21:47:09Z"
+}

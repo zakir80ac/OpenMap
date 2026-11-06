@@ -182,6 +182,9 @@ func TestREQDISC020_T308_RecordedVendorFixtures(t *testing.T) {
 		if !e.IsDir() {
 			continue
 		}
+		if _, portOnly := portOnlyExpectations[e.Name()]; portOnly {
+			continue // T-321 replays these
+		}
 		dirs++
 		exp, ok := portExpectations[e.Name()]
 		if !ok {

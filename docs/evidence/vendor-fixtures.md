@@ -1,11 +1,12 @@
 # Recorded vendor fixtures (risk R-004, REQ-DISC-001…027)
 
 Each collector must parse at least one fixture recorded from a real product for every vendor it claims
-(`packages/testing/fixtures/vendor/README.md`). These fixtures came from a container lab on 2026-11-06/07:
+(`packages/testing/fixtures/vendor/README.md`). These fixtures came from a container lab on 2026-11-06/07 (batch 1) and 2026-11-07 (batch 2):
 real, vendor-published or distro-packaged products ran in Docker on dedicated `fxlab-*` networks. The
 real OpenMap collector code ran against them, either the collector binary or its own probe, transfer
 and search functions. The raw bytes were saved as the collector read them: SSH transcripts, SNMP walks,
-HTTP bodies, TCP/UDP wire captures, LDAP BER, DNS AXFR messages, BSON replies and PEM chains.
+HTTP bodies, TCP/UDP wire captures, LDAP BER, DNS AXFR messages, BSON replies, TNS packets, StartTLS dialogues, Docker Engine API bodies and PEM chains.
+The one outside source is the public NVD CVE API 2.0: three small unauthenticated requests made 7 s apart.
 
 Each fixture directory has a `manifest.json` with the image, digest, exact command and redactions.
 `packages/testing/fixtures/vendor/.gitattributes` (`* -text`) keeps every capture byte-exact in git.
@@ -68,8 +69,37 @@ Result column: `go test -count=3 -run REQDISC ./internal/...` in `apps/collector
 | certificate | NGINX 1.29.5 TLS 1.3, RSA chain (root, intermediate, leaf) | `certificate/nginx-nginx-1.29.5` | T-313 `TestREQDISC025_T313_RecordedVendorFixtures` | PASS |
 | certificate | HAProxy 3.2.26 TLS 1.3, ECDSA chain | `certificate/haproxy-haproxy-3.2.26` | T-313 | PASS |
 | kvm_libvirt | libvirt 9.0.0 + QEMU 7.2.22 (TCG), one running and one stopped domain | `kvm_libvirt/libvirt-libvirt-9.0.0` | T-315 `TestREQDISC007_T315_RecordedVendorFixtures` | PASS |
+| snmp | Net-SNMP snmpd 5.9.4 (Alpine 3.20) walked over SNMPv1 | `snmp/net-snmp-snmpd-alpine3.20-5.9.4-v1` | T-317 `TestREQDISC001_T317_RecordedV1Fixtures` | PASS |
+| kubernetes | Docker Desktop 4.84.0, Docker Engine 29.6.2 (unix socket, read-only) | `kubernetes/docker-engine-29.6.2-desktop` | T-318 `TestREQDISC011_T318_RecordedDockerEngineFixtures` | PASS |
+| kubernetes | Docker Engine 29.9.3 (docker:dind, TCP) | `kubernetes/docker-engine-29.9.3-dind` | T-318 | PASS |
+| database | Oracle AI Database 26ai Free 23.26.3.0.0, CDB FREE with PDBs | `database/oracle-database-free-23.26.3.0.0` | T-319 `TestREQDISC024_T319_RecordedOracleFixtures` | PASS |
+| database | Oracle AI Database 26ai Free 23.26.3.0.0, session on PDB service FREEPDB1 | `database/oracle-database-free-23.26.3.0.0-pdb-service` | T-319 | PASS |
+| vulnerability_feed | NIST NVD CVE API 2.0 (Fetch window query, CVE-2014-0160, CVE-2024-3094) | `vulnerability_feed/nist-nvd-cve-api-2.0` | T-320 `TestREQDISC027_T320_RecordedNVDFixtures` | PASS |
+| port_scan | xrdp 0.9.21.1 (RDP 3389) | `port_scan/neutrinolabs-xrdp-0.9.21.1` | T-321 `TestREQDISC020_T321_RecordedPortOnlyFixtures` | PASS |
+| port_scan | SQL Server 2022 16.0.4305.5 (1433) | `port_scan/microsoft-sqlserver-2022-16.0.4305.5` | T-321 | PASS |
+| port_scan | Oracle Database Free 23.26.3 (1521) | `port_scan/oracle-database-free-23.26.3` | T-321 | PASS |
+| port_scan | kind node v1.34.0: etcd 2379, kube-apiserver 6443, kubelet 10250 (TLS) | `port_scan/kubernetes-kind-node-v1.34.0` | T-321 | PASS |
+| port_scan | Exim 4.96 (SMTP) | `port_scan/exim-exim-4.96` | T-321 | PASS |
+| port_scan | ProFTPD 1.3.8 | `port_scan/proftpd-proftpd-1.3.8` | T-321 | PASS |
+| port_scan | Pure-FTPd 1.0.50 | `port_scan/pureftpd-pure-ftpd-1.0.50` | T-321 | PASS |
+| port_scan | Samba smbd 4.17.12 (111, 139, 445) | `port_scan/samba-smbd-4.17.12` | T-321 | PASS |
+| port_scan | MongoDB 8.0.34 (27017) | `port_scan/mongodb-mongodb-8.0.34` | T-321 | PASS |
+| port_scan | OpenLDAP slapd 2.4.57 (389, 636 TLS) | `port_scan/openldap-slapd-2.4.57` | T-321 | PASS |
+| port_scan | BIND 9.20.30 (53) | `port_scan/isc-bind-9.20.30` | T-321 | PASS |
+| port_scan | Docker Engine 28.5.2 (2375) | `port_scan/docker-engine-28.5.2` | T-321 | PASS |
+| port_scan | RabbitMQ 3.13.7 (AMQP 5672) | `port_scan/rabbitmq-rabbitmq-3.13.7` | T-321 | PASS |
+| port_scan | OpenSearch 2.19.1 (9200) | `port_scan/opensearch-opensearch-2.19.1` | T-321 | PASS |
+| netflow | softflowd 1.1.0 (NetFlow v9, IPFIX) and pmacct 1.7.8 sfprobe (sFlow v5) over IPv6 traffic | `netflow/softflowd-pmacct-ipv6-1.1.0-1.7.8` | T-322 `TestREQDISC019_T322_RecordedIPv6Fixtures` | PASS |
+| certificate | Postfix 3.9.11, SMTP 25 STARTTLS | `certificate/postfix-postfix-3.9.11-starttls` | T-316 `TestREQDISC025_T316_RecordedStartTLSFixtures` | PASS |
+| certificate | Postfix 3.9.11, submission 587 STARTTLS | `certificate/postfix-postfix-3.9.11-submission-starttls` | T-316 | PASS |
+| certificate | Dovecot 2.3.21.1, IMAP 143 STARTTLS | `certificate/dovecot-dovecot-2.3.21.1-imap-starttls` | T-316 | PASS |
+| certificate | Dovecot 2.3.21.1, POP3 110 STLS | `certificate/dovecot-dovecot-2.3.21.1-pop3-starttls` | T-316 | PASS |
+| certificate | OpenLDAP slapd 2.6.10, LDAP StartTLS extended operation | `certificate/openldap-slapd-2.6.10-starttls` | T-316 | PASS |
+| certificate | PostgreSQL 17.11, SSLRequest | `certificate/postgresql-postgresql-17.11-starttls` | T-316 | PASS |
 
-T-314 (vulnerability feed) and T-316…T-349 are unused; no fixture was capturable for them (see below).
+T-314 (vulnerability feed, batch 1) was not used; NVD is T-320. T-323…T-349 are unused. T-313 skips the `-starttls` dirs (T-316);
+T-312 skips `oracle-database-*` (T-319); T-302 skips the Docker Engine dirs (T-318); T-308 skips the T-321 dirs; T-301 skips the v1 dir
+(T-317); T-307 leaves the IPv6 dir to T-322.
 
 ## Claimed vendors per row
 
@@ -78,8 +108,7 @@ vendor tables and code branches. Captured means a recorded fixture above runs th
 
 | Row | Claimed vendor / platform | Status |
 | --- | --- | --- |
-| REQ-DISC-001 SNMP v1/v2c/v3 | Net-SNMP (generic MIB-II, IF-MIB, IP-MIB, LLDP-MIB) v2c and v3 | captured |
-| | SNMP v1 | not captured (lab agents were walked over v2c/v3 only) |
+| REQ-DISC-001 SNMP v1/v2c/v3 | Net-SNMP (generic MIB-II, IF-MIB, IP-MIB, LLDP-MIB) v1, v2c and v3 | captured (v1 via job option `snmpVersion: "1"`, batch 2) |
 | | ENTITY-MIB serials, Q-BRIDGE VLANs | not capturable (Net-SNMP on Linux implements no agent for them) |
 | | Cisco, Arista, Juniper, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell, HPE ProLiant (sysObjectID table) | not capturable (proprietary hardware or licensed images) |
 | REQ-DISC-002 WMI/WinRM | Windows Server | not capturable (licence) |
@@ -96,7 +125,7 @@ vendor tables and code branches. Captured means a recorded fixture above runs th
 | REQ-DISC-010 Cloud | AWS, Azure, GCP, OCI, Alibaba | not capturable (cloud accounts) |
 | REQ-DISC-011 Kubernetes/OpenShift/Docker | Kubernetes (kind), K3s | captured |
 | | OpenShift, EKS, AKS, GKE | not capturable (proprietary or cloud) |
-| | Docker Engine | no collector reads the Docker Engine API; nothing to capture |
+| | Docker Engine (new `docker_engine` collector, batch 2) | captured (Docker Desktop engine read-only, docker:dind); TLS client-cert engine not captured |
 | REQ-DISC-012 IPMI/Redfish | iLO, iDRAC, XClarity, CIMC, generic BMC | not capturable (hardware) |
 | REQ-DISC-013 Blade/UCS/OneView | Cisco UCS, HPE OneView | not capturable (hardware) |
 | REQ-DISC-014 Storage arrays | Pure, NetApp, Dell EMC, HPE, IBM, Hitachi | not capturable (hardware) |
@@ -109,10 +138,13 @@ vendor tables and code branches. Captured means a recorded fixture above runs th
 | REQ-DISC-018 Load balancers | HAProxy (two versions), NGINX Open Source stub_status | captured |
 | | NGINX Plus API | not capturable (commercial) |
 | | F5 BIG-IP, Citrix ADC, A10 | not capturable (proprietary) |
-| REQ-DISC-019 Flow | NetFlow v5, v9, IPFIX (softflowd), sFlow v5 (pmacct sfprobe) | captured (IPv4 flows only; IPv6 decode paths not covered) |
+| REQ-DISC-019 Flow | NetFlow v5, v9, IPFIX (softflowd), sFlow v5 (pmacct sfprobe) | captured over IPv4 and IPv6 (v9, IPFIX, sFlow; NetFlow v5 cannot carry IPv6) |
 | | Router/switch hardware exporters | not capturable (hardware) |
 | REQ-DISC-020 Port scan | ssh, http (nginx, Apache), https, smtp (Postfix), ftp (vsftpd), pop3/imap (Dovecot), telnet, mysql (MySQL, MariaDB), redis, postgresql | captured |
-| | Exim, Exchange, FileZilla, ProFTPD banners; port-only classes (proxmox, vmware-authd, nutanix-prism, kubelet, winrm, rdp, mssql, oracle) | not captured (licensed, or not run in this lab) |
+| | rdp (xrdp), mssql, oracle, kubelet, etcd, kubernetes-api, Exim, ProFTPD, Pure-FTPd, smb/netbios/rpcbind, mongodb, ldap/ldaps, dns, docker, amqp, elasticsearch (OpenSearch) | captured (batch 2) |
+| | winrm, MS RPC, Exchange, FileZilla Server | not capturable (Windows only) |
+| | vmware-authd, proxmox, nutanix-prism | not capturable (proprietary appliances or hypervisor hosts) |
+| | VNC, SIP, Kerberos, global catalog, NFS, squid, real Elasticsearch | not captured (not run in this lab) |
 | REQ-DISC-021 DNS | BIND, Knot DNS, PowerDNS | captured (AXFR without TSIG; TSIG MACs cannot be replayed) |
 | | Windows DNS, Infoblox, Route 53 | not capturable (licence, appliance, cloud; the collector only does AXFR) |
 | REQ-DISC-022 DHCP | ISC dhcpd, Kea | captured |
@@ -120,11 +152,11 @@ vendor tables and code branches. Captured means a recorded fixture above runs th
 | REQ-DISC-023 Directory | OpenLDAP, Samba AD DC | captured (plain LDAP, simple bind; LDAPS/StartTLS not replayable) |
 | | Microsoft Active Directory | not capturable (Windows DC) |
 | REQ-DISC-024 Databases | PostgreSQL, MySQL, MariaDB, SQL Server, MongoDB, Redis, Valkey | captured |
-| | Oracle Database | not capturable: the collector has no Oracle prober (claimed by the title only; needs a new driver dependency) |
+| | Oracle Database (new prober on go-ora, ADR-040, batch 2) | captured (Oracle Database Free 23ai, CDB and PDB service); Data Guard standby not capturable (Free has no Data Guard) |
 | REQ-DISC-025 TLS certificates | RSA and ECDSA chains over TLS 1.3 from NGINX and HAProxy | captured |
-| | StartTLS endpoints | not capturable (the `startTls` option is not implemented by `Probe`) |
+| | StartTLS: SMTP (Postfix 25/587), IMAP and POP3 (Dovecot), LDAP (OpenLDAP), PostgreSQL SSLRequest | captured (batch 2, `startTls` option implemented) |
 | REQ-DISC-026 PDU/UPS/CRAC | UPS-MIB, APC PowerNet, Raritan PX, Liebert/Vertiv, ENTITY-SENSOR-MIB | not capturable (needs real power and cooling equipment; Net-SNMP walks return noSuchObject) |
-| REQ-DISC-027 Vulnerability feed | NVD CVE API 2.0 | not capturable offline (public service; no NVD download or API call was made) |
+| REQ-DISC-027 Vulnerability feed | NVD CVE API 2.0 | captured (batch 2: three small public API responses; CVSS v3.0 metrics not present in them) |
 | | Tenable, Qualys, Rapid7 imports | not capturable, and the collector has no code path for them |
 
 ## Collector fixes the fixtures exposed
@@ -143,10 +175,25 @@ vendor tables and code branches. Captured means a recorded fixture above runs th
 - `internal/database/mssql.go`: `user connections` = 0 is reported as the engine maximum, 32767.
 - `internal/database/redis.go`: keyspaces are sorted so every run emits the same order.
 
+## Collector changes in batch 2
+
+- `internal/certificate/starttls.go` (new): the `startTls` option for SMTP, IMAP, POP3, LDAP and PostgreSQL, chosen by name or by `auto` and the well-known port. Unknown values are errors, not a silent fall back to direct TLS.
+- `internal/snmp/snmp.go`: SNMPv1 via the job option `snmpVersion: "1"`. A v1 agent rejects a whole GET when any scalar is absent (noSuchName), so v1 now retries one OID at a time and drops the absent ones. Before, the real agent made the collector fail with `unsupported_device`.
+- `internal/docker` + `cmd/docker_engine` (new): a Docker Engine API collector. It emits the engine as `host` with its `operating_system`, `container`, `ip_address` and `subnet` (with `vrfRef docker:<engine id>`) and `container_registry`. Relationships are runs_on, uses_ip, in_subnet, backed_by and installed_on. It never inspects containers, so environment values are never read. Images built by Compose are treated as local, so they are not linked to Docker Hub.
+- `internal/database/oracle.go` (new, `github.com/sijms/go-ora/v2` v2.9.0, MIT, ADR-040): an Oracle prober reading v$instance, v$database, v$pdbs, parameters, datafiles and archive destinations. ORA-01017 is classified as `auth_failed`.
+- `internal/vulnfeed/vulnfeed.go`:
+  - NVD's own CVSS score is preferred over the first entry, which can be a CNA's score; the source is recorded in `cvssSource`.
+  - `cpeMatches` is a string array instead of nested maps.
+  - `affectedProducts` is sorted, duplicate CWEs are removed, and the CISA KEV fields are added.
+- `internal/portscan/portscan.go`: an HTTP reply without a Server header on a port registered to an HTTP API service (OpenSearch/Elasticsearch on 9200) now reports that service, not plain `http`.
+- `internal/haproxy/haproxy.go`: the batch-1 `members` attribute was a list of objects, which breaks the attribute rule (scalars or arrays of scalars). It is now the parallel string arrays `members`, `memberStates` and `memberAddresses`.
+
 ## Findings left open
 
 - objectstore, Ceph RGW: `?publicAccessBlock` returns an all-false configuration even when none was set, so the collector marks every bucket `internetExposed=true`.
 - objectstore, MinIO: MinIO does not implement `publicAccessBlock` (it returns 501), so the anonymous-download bucket is not flagged. Reading the bucket policy status would fix both cases; that is feature work.
-- certificate: the `startTls` option is declared but not implemented.
 - libvirt header: it claims Proxmox, which libvirt does not serve.
-- Oracle Database: claimed by REQ-DISC-024 but has no prober.
+- docker_engine: every Docker Desktop engine is named `docker-desktop`. With `fqdn` the only identity key, engine hosts from different workstations would merge.
+- docker_engine: a plain `docker build -t team/app` image is indistinguishable from a Docker Hub pull, so it is linked as `registry-assumed` (`verified: false`).
+- portscan: xrdp hosts are classified `windows-host` (RDP-only hosts are guessed by port). Proxmox 8006 is probed in plaintext, though it serves HTTPS; not changed without a capture. SMB, DNS, Docker and AMQP hosts have no host class.
+- Oracle via go-ora: the driver does not verify the server's login response, so jobs should use TCPS on untrusted networks (ADR-040).
