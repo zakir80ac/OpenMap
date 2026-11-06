@@ -13,11 +13,19 @@ export const EXPOSED_HEADERS = { contentDisposition: 'content-disposition' } as 
 /** Dual-stack wildcard: binds every IPv6 and IPv4 interface so the container port maps work. */
 export const LISTEN_HOST = '::';
 
+/** Origins the console is served at: its public URL and, when configured, the alias it is also opened at. */
+export function consoleOrigins(env: Pick<Env, 'PUBLIC_CONSOLE_URL' | 'PUBLIC_CONSOLE_ALIAS_URL'>): string[] {
+  const origins = [env.PUBLIC_CONSOLE_URL, env.PUBLIC_CONSOLE_ALIAS_URL]
+    .filter((u): u is string => u !== undefined)
+    .map((u) => new URL(u).origin);
+  return [...new Set(origins)];
+}
+
 export async function createApp(env: Env = loadEnv()): Promise<NestFastifyApplication> {
   // REQ-CMDB-033: an import file travels as base64 in a GraphQL body, so the body limit is the import limit.
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter({ bodyLimit: IMPORTS.maxBodyBytes }), { logger: ['error', 'warn', 'log'] });
   // REQ-CMDB-033: the export's file name travels in content-disposition, which a cross-origin fetch only sees when exposed.
-  app.enableCors({ origin: env.PUBLIC_CONSOLE_URL, credentials: true, exposedHeaders: [EXPOSED_HEADERS.contentDisposition] });
+  app.enableCors({ origin: consoleOrigins(env), credentials: true, exposedHeaders: [EXPOSED_HEADERS.contentDisposition] });
   app.enableShutdownHooks();
   return app;
 }

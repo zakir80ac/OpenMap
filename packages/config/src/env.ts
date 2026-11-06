@@ -73,6 +73,12 @@ export const envSchema = z.object({
   BSM_ENGINE_PORT: port.default(4400),
   /** Public origins, used for OIDC redirects and CORS. */
   PUBLIC_CONSOLE_URL: url.default('http://localhost:3000'),
+  /**
+   * A second address the same console is opened at (a loopback IP beside `localhost`, or a host name beside an IP).
+   * The console signs in from whichever origin it was opened on, so Keycloak's redirect URIs and the API's CORS
+   * must accept both. Unset: only PUBLIC_CONSOLE_URL.
+   */
+  PUBLIC_CONSOLE_ALIAS_URL: url.optional(),
   PUBLIC_API_URL: url.default('http://localhost:4000'),
   /**
    * Keycloak as the browser reaches it. The console's OIDC flow (discovery, authorize, token, end_session) runs

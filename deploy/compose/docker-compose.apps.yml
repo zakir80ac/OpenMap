@@ -32,6 +32,8 @@ x-app-env: &app-env
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
   PUBLIC_CONSOLE_URL: ${PUBLIC_CONSOLE_URL:-http://localhost:3000}
+  # The loopback IP form of the console's address, so a browser opened on 127.0.0.1 signs in and reaches the API too.
+  PUBLIC_CONSOLE_ALIAS_URL: ${PUBLIC_CONSOLE_ALIAS_URL:-http://127.0.0.1:3000}
   PUBLIC_KEYCLOAK_URL: ${PUBLIC_KEYCLOAK_URL:-http://localhost:8080}
 
 x-app-depends: &app-depends

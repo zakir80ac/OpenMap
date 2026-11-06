@@ -49,6 +49,7 @@ spec:
             - { name: KC_HOSTNAME, value: {{ .Values.keycloak.publicUrl | quote }} }
             # Substituted into the realm import: redirect URIs and web origins of the console client.
             - { name: CONSOLE_PUBLIC_URL, value: {{ .Values.console.publicUrl | quote }} }
+            - { name: CONSOLE_ALIAS_URL, value: {{ .Values.console.aliasUrl | default .Values.console.publicUrl | quote }} }
           ports: [{ containerPort: 8080 }]
           volumeMounts:
             - { name: realm, mountPath: /opt/keycloak/data/import, readOnly: true }

@@ -97,6 +97,7 @@ services:
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
       # Substituted into the realm import (redirect URIs and web origins of the console client).
       CONSOLE_PUBLIC_URL: ${PUBLIC_CONSOLE_URL:-http://localhost:3000}
+      CONSOLE_ALIAS_URL: ${PUBLIC_CONSOLE_ALIAS_URL:-http://127.0.0.1:3000}
     ports: ["${KEYCLOAK_PORT:-8080}:8080"]
     volumes: ["./keycloak/realm-openmap.json:/opt/keycloak/data/import/realm-openmap.json:ro"]
     depends_on:

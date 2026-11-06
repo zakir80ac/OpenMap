@@ -75,6 +75,10 @@ app.kubernetes.io/component: {{ .component }}
   value: {{ .Values.api.publicUrl | quote }}
 - name: PUBLIC_CONSOLE_URL
   value: {{ .Values.console.publicUrl | quote }}
+{{- if .Values.console.aliasUrl }}
+- name: PUBLIC_CONSOLE_ALIAS_URL
+  value: {{ .Values.console.aliasUrl | quote }}
+{{- end }}
 - name: PUBLIC_KEYCLOAK_URL
   value: {{ .Values.keycloak.publicUrl | quote }}
 {{- if .Values.llm.enabled }}

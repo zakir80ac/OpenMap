@@ -24,6 +24,8 @@ console:
   replicas: 2
   port: 3000
   publicUrl: http://openmap.localhost
+  # A second address the console is opened at (PUBLIC_CONSOLE_ALIAS_URL); empty: only publicUrl.
+  aliasUrl: ""
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: "1", memory: 1Gi }
