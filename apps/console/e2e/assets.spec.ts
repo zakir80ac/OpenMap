@@ -60,7 +60,7 @@ test('the register covers every layer, flags missing cover, saves details and re
   await expect(firstRow).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
   const tag = await firstRow.getAttribute('data-asset-tag');
   if (tag === null) throw new Error('register rows carry their tag');
-  await firstRow.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag }) }).click();
+  await firstRow.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag }), exact: true }).click();
   const panel = page.getByTestId('asset-details-panel');
   await expect(panel).toBeVisible();
   const form = panel.getByRole('form', { name: translate(locale, 'assets.details.title') });
@@ -89,7 +89,7 @@ test('the register covers every layer, flags missing cover, saves details and re
   const subscriptionTag = await register.getByRole('row').nth(1).getAttribute('data-asset-tag');
   if (subscriptionTag === null) throw new Error('register rows carry their tag');
   await register
-    .getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: subscriptionTag }) })
+    .getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: subscriptionTag }), exact: true })
     .click();
   const subscriptionPanel = page.getByTestId('asset-details-panel');
   await expect(

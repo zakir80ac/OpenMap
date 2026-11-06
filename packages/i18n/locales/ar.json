@@ -1922,7 +1922,7 @@
   "import.rejected": "الصفوف المرفوضة",
   "import.rejectedRow": "الصف {row}: {reason}",
   "import.recheck": "تحقق مجدداً",
-  "import.run": "استيراد {count} صف",
+  "import.run": "استيراد الصفوف: {count}",
   "import.precedence": "القيم المكتشفة تتقدم على القيم المستوردة.",
   "import.jobs": "عمليات الاستيراد",
   "import.noJobs": "لم يُستورد شيء بعد.",

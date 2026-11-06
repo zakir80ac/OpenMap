@@ -52,7 +52,7 @@ test('a spare is valued under its schedule and flagged below its reorder point (
 
   const tag = await row.getAttribute('data-asset-tag');
   if (tag === null) throw new Error('register rows carry their tag');
-  await row.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag }) }).click();
+  await row.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag }), exact: true }).click();
   const panel = page.getByTestId('asset-details-panel');
   await expect(panel.getByTestId('asset-book-value')).toContainText('SAR');
   await panel.getByTestId('asset-book-value').scrollIntoViewIfNeeded();

@@ -71,7 +71,7 @@ test('Assets: a stage change is audited with its new value (REQ-CMDB-018)', asyn
   const next = before === 'spare' ? 'deployed' : 'spare';
   await stage.selectOption(next);
   await expect(stage).toHaveValue(next, { timeout: PAINT_TIMEOUT_MS });
-  await row.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: assetTag }) }).click();
+  await row.getByRole('button', { name: translate(locale, 'assets.table.edit', { tag: assetTag }), exact: true }).click();
   const panel = page.getByTestId('asset-details-panel');
   await expect(panel).toBeVisible();
   const entry = panel.locator('li').filter({ hasText: translate(locale, 'assets.details.audits.entry', { actor: 'admin', field: 'stage' }) }).first();

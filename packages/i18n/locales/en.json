@@ -1922,7 +1922,7 @@
   "import.rejected": "Refused rows",
   "import.rejectedRow": "Row {row}: {reason}",
   "import.recheck": "Check again",
-  "import.run": "Import {count} rows",
+  "import.run": "Import rows: {count}",
   "import.precedence": "Discovered values win over imported ones.",
   "import.jobs": "Imports",
   "import.noJobs": "Nothing imported yet.",
