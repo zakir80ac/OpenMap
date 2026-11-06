@@ -1849,6 +1849,65 @@ describe('OpenMap API (integration)', () => {
     const audits = await prisma.assetAudit.findMany({ where: { tenantId, assetId: asset?.id, field: { in: ['supportContract', 'ownerCostCentreCiId'] } }, select: { field: true } });
     expect(audits.map((a) => a.field).sort()).toEqual(['ownerCostCentreCiId', 'supportContract', 'supportContract']);
   });
+  it('lists certificates with days left, weak keys, the endpoints they secure, their issuer and last alert (REQ-CMDB-032)', async () => {
+    // T-189 ADR-036
+    const stamp = String(Date.now());
+    const now = new Date();
+    const dayMs = 86_400_000;
+    const store = async (type: 'certificate' | 'listening_service', name: string, identity: Record<string, string>, attributes: Record<string, unknown>): Promise<string> => {
+      const id = randomUUID();
+      await prisma.ci.create({
+        data: {
+          id, tenantId, type, identity, identityKey: name, name, displayName: name, code: 'CRT-' + id.slice(0, 8).toUpperCase(),
+          layer: type === 'certificate' ? 'network_security' : 'applications', lifecycle: 'managed', attributes: attributes as object, tags: [],
+          sourceCollectorId: 'certificate', sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now, checksum: 'd'.repeat(64),
+        },
+      });
+      return id;
+    };
+    const ca = await store('certificate', 'Bank Issuing CA ' + stamp, { fingerprintSha256: 'ca' + stamp }, {
+      subject: 'CN=Bank Issuing CA ' + stamp, issuer: 'CN=Bank Root CA', notAfter: new Date(now.getTime() + 2000 * dayMs).toISOString(), isCa: true, keyAlgorithm: 'RSA', keyBits: 4096, signatureAlgorithm: 'SHA256-RSA',
+    });
+    const leaf = await store('certificate', 'portal-' + stamp + '.bank.example', { fingerprintSha256: 'leaf' + stamp }, {
+      subject: 'CN=portal-' + stamp + '.bank.example', issuer: 'CN=Bank Issuing CA ' + stamp, serial: '0A1B', notBefore: new Date(now.getTime() - 345 * dayMs).toISOString(),
+      notAfter: new Date(now.getTime() + 20 * dayMs + dayMs / 2).toISOString(), isCa: false, selfSigned: false, keyAlgorithm: 'RSA', keyBits: 1024, signatureAlgorithm: 'SHA1-RSA',
+      dnsNames: ['portal-' + stamp + '.bank.example', 'www.portal-' + stamp + '.bank.example'],
+    });
+    const listener = await store('listening_service', 'tcp/443 tls', { hostRef: 'web-' + stamp, protocol: 'tcp', port: '443' }, { port: 443, tls: true, target: 'web-' + stamp + '.bank.example', serverName: 'portal-' + stamp + '.bank.example', tlsVersion: 'TLS 1.2' });
+    const link = (type: 'secured_by' | 'depends_on', fromCiId: string, toCiId: string) =>
+      prisma.relationship.create({ data: { tenantId, type, fromCiId, toCiId, attributes: {}, sourceCollectorId: 'certificate', sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now } });
+    await link('secured_by', listener, leaf);
+    await link('depends_on', leaf, ca);
+    await prisma.certificateAlert.create({ data: { tenantId, ciId: leaf, notAfter: new Date(now.getTime() + 20 * dayMs + dayMs / 2), thresholdDays: 30, daysLeft: 20, eventId: randomUUID() } });
+
+    type Cert = { ci: { id: string }; subject: string; daysLeft: number; expired: boolean; isCa: boolean; weaknesses: string[]; dnsNames: string[]; endpoints: Array<{ listener: { id: string }; host: string; port: number; tlsVersion: string }>; issuedBy: { id: string } | null; lastAlertDays: number | null };
+    const fields = 'ci { id } subject daysLeft expired isCa weaknesses dnsNames endpoints { listener { id } host port tlsVersion } issuedBy { id } lastAlertDays';
+    const query = 'query C($filter: CertificateFilter) { certificates(filter: $filter) { ' + fields + ' } }';
+    const all = await gql<{ certificates: Cert[] }>(query, { filter: { text: stamp } });
+    expect(all.errors).toBeUndefined();
+    expect(all.data?.certificates).toEqual([
+      {
+        ci: { id: leaf },
+        subject: 'CN=portal-' + stamp + '.bank.example',
+        daysLeft: 20,
+        expired: false,
+        isCa: false,
+        weaknesses: ['short_key', 'weak_signature'],
+        dnsNames: ['portal-' + stamp + '.bank.example', 'www.portal-' + stamp + '.bank.example'],
+        endpoints: [{ listener: { id: listener }, host: 'web-' + stamp + '.bank.example', port: 443, tlsVersion: 'TLS 1.2' }],
+        issuedBy: { id: ca },
+        lastAlertDays: 30,
+      },
+    ]);
+    const withCa = await gql<{ certificates: Cert[] }>(query, { filter: { text: stamp, includeAuthorities: true } });
+    expect(withCa.data?.certificates.map((c) => c.ci.id)).toEqual([leaf, ca]);
+    const soon = await gql<{ certificates: Cert[] }>(query, { filter: { text: stamp, expiringWithinDays: 10 } });
+    expect(soon.data?.certificates).toEqual([]);
+    const weak = await gql<{ certificates: Cert[] }>(query, { filter: { text: 'www.portal-' + stamp, weak: true, expiringWithinDays: 30 } });
+    expect(weak.data?.certificates.map((c) => c.ci.id)).toEqual([leaf]);
+    const strong = await gql<{ certificates: Cert[] }>(query, { filter: { text: stamp, weak: false, includeAuthorities: true } });
+    expect(strong.data?.certificates.map((c) => c.ci.id)).toEqual([ca]);
+  });
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';

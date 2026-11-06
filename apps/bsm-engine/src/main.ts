@@ -6,7 +6,7 @@ import './instrumentation.js';
 import { createClient } from '@clickhouse/client';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { BSM, RECONCILER } from '@openmap/constants';
+import { BSM, CERTIFICATES, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
@@ -14,6 +14,7 @@ import { createGraphRepository } from '@openmap/graph';
 import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } from '@openmap/telemetry';
 import { createHistoryReader } from './core/history.js';
 import { createOpenBaoReader } from './service/openbao.js';
+import { checkCertificates } from './service/certificates.js';
 import { createEngine } from './service/engine.js';
 
 const TRACER = 'openmap-bsm-engine';
@@ -47,6 +48,12 @@ export function createBsmMetrics() {
     slaEvaluations: new Counter({
       name: 'openmap_bsm_sla_evaluations_total',
       help: 'SLA-assigned services evaluated, by outcome',
+      labelNames: ['outcome'],
+      registers: [registry],
+    }),
+    certificateAlerts: new Counter({
+      name: 'openmap_bsm_certificate_alerts_total',
+      help: 'Certificate expiry alerts raised (REQ-CMDB-032), and failed checks',
       labelNames: ['outcome'],
       registers: [registry],
     }),
@@ -161,6 +168,21 @@ async function main(): Promise<void> {
   const tick = setInterval(() => {
     for (const tenantId of known) void recompute(tenantId);
   }, BSM.tickMs);
+  // REQ-CMDB-032 (ADR-036): certificates crossing an expiry threshold raise one alert each.
+  const certificateCheck = async (): Promise<void> => {
+    try {
+      const report = await withSpan(TRACER, 'bsm.check_certificates', {}, () => checkCertificates(prisma, new Date()));
+      metrics.certificateAlerts.inc({ outcome: 'raised' }, report.raised);
+      if (report.raised > 0) log({ msg: 'certificate alerts raised', ...report });
+    } catch (err) {
+      metrics.certificateAlerts.inc({ outcome: 'error' });
+      log({ msg: 'certificate check failed', error: err instanceof Error ? err.message : String(err) });
+    }
+  };
+  const certificateTick = setInterval(() => {
+    void certificateCheck();
+  }, CERTIFICATES.checkEveryMs);
+  void certificateCheck();
   const metricsServer = await createMetricsServer({
     registry: metrics.registry,
     port: env.BSM_ENGINE_PORT,
@@ -174,6 +196,7 @@ async function main(): Promise<void> {
   const shutdown = async (): Promise<void> => {
     await metricsServer.close();
     clearInterval(tick);
+    clearInterval(certificateTick);
     for (const t of pending.values()) clearTimeout(t);
     await worker.close();
     await clickhouse.close();

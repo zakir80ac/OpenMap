@@ -63,7 +63,7 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | Contracts (general) and documents | `contract` CIs of every kind (support, maintenance, warranty extension, licence, SaaS, lease, service) with documents by reference (title and location in the organisation's document system) (ADR-035) | = | CMDB |
 | Software inventory, versions, services | `software`, `software_instance`, `listening_service` | = | CMDB |
 | Software licence management and compliance (per core, per user, per socket, subscriptions) | `licence` CI, compliance engine in `apps/bsm-engine` | = | CMDB |
-| Certificates inventory and expiry alerts | `certificate` CI, events | = | CMDB |
+| Certificates inventory and expiry alerts | `certificate` CIs from the certificate collector with the TLS endpoints they secure and their issuer; the Certificates screen (days left, expired, weak key or signature, self-signed); `openmap.certificate.expiring` raised once at 60, 30, 14, 7 and 1 days and on expiry by the BSM engine (ADR-036) | = | CMDB |
 | Password / secret vault for device credentials | OpenBao, referenced not stored | ~ | SEC |
 | Audit log of every change | outbox events `openmap.audit.action`, ClickHouse retention | = | SEC |
 | Bulk import/export: CSV, Excel, API | `/import` jobs with mapping templates, `/export` CSV, XLSX, JSON | = | CMDB |

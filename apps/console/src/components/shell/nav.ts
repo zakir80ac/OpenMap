@@ -54,6 +54,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     key: 'nav.group.insight',
     items: [
       { key: 'nav.vulnerabilities', href: '/vulnerabilities', icon: 'shield' },
+      { key: 'nav.certificates', href: '/certificates', icon: 'certificate' },
       { key: 'nav.analytics', href: '/analytics', icon: 'analytics' },
       { key: 'nav.assistant', href: '/assistant', icon: 'assistant' },
     ],

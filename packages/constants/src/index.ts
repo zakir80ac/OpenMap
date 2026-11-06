@@ -1227,8 +1227,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `AssetDetailsInput.ownerCostCentreId`, queries `contracts`, `contract`, `vendors`, `vendor`, `costCentres`,
    * mutations `upsertContract`, `upsertVendor`, `upsertCostCentre`, `upsertVendorContact`, `deleteVendorContact`,
    * `setAssetContract`.
+   * 1.14.0 (REQ-CMDB-032, ADR-036): `Certificate`, `CertificateEndpoint`, `CertificateFilter`, query `certificates`.
    */
-  graphql: '1.13.0',
+  graphql: '1.14.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

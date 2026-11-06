@@ -153,7 +153,7 @@ function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 }
 
-function envelope(
+export function envelope(
   tenantId: string,
   type: EventType,
   subject: string,

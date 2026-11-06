@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.13.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.14.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -662,6 +662,39 @@ type Contract {
   vendor: Ci
   costCentre: Ci
   documents: [ContractDocument!]!
+}
+# REQ-CMDB-032 (ADR-036) — the certificate register over the certificate collector's CIs.
+type CertificateEndpoint {
+  listener: Ci!
+  host: String
+  port: Int
+  serverName: String
+  tlsVersion: String
+}
+type Certificate {
+  ci: Ci!
+  subject: String!
+  issuer: String
+  serial: String
+  notBefore: DateTime
+  notAfter: DateTime
+  "Whole days left before notAfter, negative once expired."
+  daysLeft: Int
+  expired: Boolean!
+  selfSigned: Boolean!
+  isCa: Boolean!
+  keyAlgorithm: String
+  keyBits: Int
+  signatureAlgorithm: String
+  "short_key and weak_signature under the deployment's key policy."
+  weaknesses: [String!]!
+  dnsNames: [String!]!
+  "The TLS endpoints this certificate secures."
+  endpoints: [CertificateEndpoint!]!
+  "The certificate that issued this one, when discovered."
+  issuedBy: Ci
+  "The last expiry alert raised for it: the threshold in days (0 = expired)."
+  lastAlertDays: Int
 }
 type Vendor {
   ci: Ci!
@@ -1590,6 +1623,7 @@ type Query {
   vendors(text: String): [Vendor!]!
   vendor(id: UUID!): VendorDetail
   costCentres: [CostCentre!]!
+  certificates(filter: CertificateFilter): [Certificate!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   vulnerabilitySummaries(
     minCvss: Float
@@ -1644,6 +1678,15 @@ input PlanInput {
   targetRackIds: [UUID!]
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
+}
+input CertificateFilter {
+  text: String
+  expiringWithinDays: Int
+  expired: Boolean
+  selfSigned: Boolean
+  weak: Boolean
+  "Certificate authorities in discovered chains are left out unless asked for."
+  includeAuthorities: Boolean
 }
 input ContractFilter {
   kinds: [ContractKind!]
