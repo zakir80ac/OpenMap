@@ -10,6 +10,7 @@ export { migratePostgres } from './migrate-postgres.js';
 export { listMigrationFiles, splitStatements, substitute, CLICKHOUSE_DIR, MEMGRAPH_DIR, type MigrationFile } from './files.js';
 export { IMPACT_CLOSURE_DEPTH, clickhouseParameters, memgraphParameters } from './parameters.js';
 export { refreshCoveringContracts, type RawExecutor } from './asset-contracts.js';
+export { fetchEndOfLifeCatalogue, loadLifecycleSnapshot, readLifecycleSnapshot, snapshotEntries, LIFECYCLE_SNAPSHOT_PATH, type LifecycleSnapshot, type FetchReport } from './lifecycle.js';
 
 /** Query logging follows LOG_LEVEL: queries at trace/debug, otherwise warnings and errors only. */
 function logLevels(env: Env): Array<'query' | 'info' | 'warn' | 'error'> {

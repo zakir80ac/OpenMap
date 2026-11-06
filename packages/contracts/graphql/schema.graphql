@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.16.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.17.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -780,6 +780,95 @@ type UtilisationPage {
   averageMemory: Float
   "Sum of the latest power draw across the filter."
   powerWatts: Float
+}
+# REQ-CMDB-023 REQ-CMDB-025 (ADR-039): the product lifecycle catalogue and what the estate runs against it.
+enum LifecycleKind {
+  os
+  hypervisor
+  network_os
+  database
+  platform
+  hardware
+}
+"supported; ending inside the deployment's horizon; ended; unknown when the catalogue has no date."
+enum LifecycleState {
+  supported
+  ending
+  ended
+  unknown
+}
+"One release as the catalogue records it; dates are calendar dates (YYYY-MM-DD)."
+type LifecycleEntry {
+  source: String!
+  product: String!
+  cycle: String!
+  label: String!
+  releaseDate: String
+  "End of active support."
+  supportEnd: String
+  "End of security support: end of life."
+  endOfSupport: String
+  supportEnded: Boolean!
+  extendedSupportEnd: String
+  latest: String
+  lts: Boolean!
+  link: String
+}
+"A release the estate runs, with the CIs on it; product and cycle are null when the catalogue does not cover it."
+type LifecycleRelease {
+  key: String!
+  kind: LifecycleKind!
+  product: String
+  cycle: String
+  label: String!
+  count: Int!
+  versions: [String!]!
+  entry: LifecycleEntry
+  state: LifecycleState!
+  daysLeft: Int
+  "Operating systems last patched longer ago than the deployment's patch horizon; null for other kinds."
+  patchBehind: Int
+  oldestPatchAt: String
+  instances(first: Int): [Ci!]!
+}
+"Counts are CIs, across the filter before the state filter."
+type LifecycleReleasePage {
+  rows: [LifecycleRelease!]!
+  supported: Int!
+  ending: Int!
+  ended: Int!
+  unknown: Int!
+}
+"Hardware end of sale and support by model, from the asset register; the earliest recorded date governs."
+type LifecycleHardware {
+  key: String!
+  ciType: String!
+  manufacturer: String
+  model: String
+  count: Int!
+  dated: Int!
+  endOfSale: String
+  endOfSupport: String
+  sources: [String!]!
+  state: LifecycleState!
+  daysLeft: Int
+}
+type LifecycleCatalogueSource {
+  source: String!
+  products: Int!
+  releases: Int!
+  fetchedAt: DateTime!
+}
+type LifecycleCatalogue {
+  sources: [LifecycleCatalogueSource!]!
+  url: String!
+  "True when this deployment and tenant allow the outbound sync."
+  syncAllowed: Boolean!
+}
+type LifecycleSyncResult {
+  catalogue: LifecycleCatalogue!
+  "Products the sync could not fetch, with the reason."
+  failed: [String!]!
 }
 type Certificate {
   ci: Ci!
@@ -1736,6 +1825,11 @@ type Query {
   certificates(filter: CertificateFilter): [Certificate!]!
   "REQ-CMDB-034: the latest utilisation of every CI that reports it, hottest first by the chosen measure."
   utilisation(filter: UtilisationFilter, sort: UtilisationSort = cpu, first: Int = 100, offset: Int = 0): UtilisationPage!
+  "REQ-CMDB-023 (ADR-039): the releases the estate's operating systems, hypervisors and network operating systems run."
+  lifecycleReleases(filter: LifecycleReleaseFilter): LifecycleReleasePage!
+  "REQ-CMDB-025 (ADR-039): hardware end of sale and support by model."
+  lifecycleHardware(filter: LifecycleHardwareFilter): [LifecycleHardware!]!
+  lifecycleCatalogue: LifecycleCatalogue!
   "REQ-CMDB-014 (ADR-037): parts across the estate."
   components(filter: ComponentFilter, first: Int = 100, offset: Int = 0): ComponentPage!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
@@ -1798,6 +1892,17 @@ input UtilisationFilter {
   types: [String!]
   state: UtilisationState
   "Matches the CI's name."
+  text: String
+}
+input LifecycleReleaseFilter {
+  kind: LifecycleKind
+  state: LifecycleState
+  "Matches the release label, product, a version or the name of a CI on it."
+  text: String
+}
+input LifecycleHardwareFilter {
+  state: LifecycleState
+  "Matches manufacturer or model."
   text: String
 }
 input ComponentFilter {
@@ -2026,6 +2131,8 @@ input RcaInput {
 }
 
 type Mutation {
+  "REQ-CMDB-023 (ADR-039): refreshes the lifecycle catalogue; admin only, refused unless outbound calls are allowed."
+  syncLifecycleCatalogue: LifecycleSyncResult!
   createDashboard(input: DashboardInput!): Dashboard!
   updateDashboard(id: UUID!, input: DashboardInput!): Dashboard!
   deleteDashboard(id: UUID!): Boolean!

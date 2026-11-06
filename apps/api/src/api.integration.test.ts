@@ -13,6 +13,7 @@ import { createPrismaClient, type Prisma } from '@openmap/db';
 import { createGraphRepository, type GraphCi, type GraphRelationship } from '@openmap/graph';
 import { AppModule } from './app.module.js';
 import { ClickHouseService } from './db/clickhouse.service.js';
+import { LIFECYCLE_SNAPSHOT_PATH, loadLifecycleSnapshot, readLifecycleSnapshot } from '@openmap/db';
 import { JWKS, realmUrl } from './auth/jwks.provider.js';
 import { SIGNING_ALGORITHM } from './auth/auth.service.js';
 import { ROLES } from './auth/roles.js';
@@ -2024,6 +2025,77 @@ describe('OpenMap API (integration)', () => {
     expect(week.data?.ci.utilisation?.series.find((x) => x.measure === 'cpu')?.points.length).toBeGreaterThanOrEqual(2);
     const tooLong = await gql<Detail>('query D($id: UUID!) { ci(id: $id) { utilisation(hours: 100000) { hours } } }', { id: hot });
     expect(tooLong.errors?.[0]?.message).toBeDefined();
+  });
+
+  it('matches operating systems and network OSes to catalogue releases, flags unpatched hosts, groups hardware end of support, and refuses the sync while outbound calls are off (REQ-CMDB-023, REQ-CMDB-025)', async () => {
+    // T-209 ADR-039
+    await loadLifecycleSnapshot(prisma, readLifecycleSnapshot(LIFECYCLE_SNAPSHOT_PATH));
+    const stamp = String(Date.now());
+    const now = new Date();
+    const old = new Date(now.getTime() - 400 * 86_400_000).toISOString();
+    const make = async (type: 'operating_system' | 'network_device' | 'host', name: string, attributes: Record<string, unknown>): Promise<string> => {
+      const id = randomUUID();
+      await prisma.ci.create({
+        data: {
+          id, tenantId, type, identity: { name }, identityKey: name, name, displayName: name, code: 'LC-' + id.slice(0, 8).toUpperCase(),
+          layer: type === 'operating_system' ? 'os' : type === 'host' ? 'hardware' : 'network_security', lifecycle: 'managed', attributes: attributes as object, tags: [],
+          sourceCollectorId: 'ssh-agentless', sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now, checksum: 'a'.repeat(64),
+        },
+      });
+      return id;
+    };
+    const legacy = 'Microsoft Windows Server 2012 R2 Datacenter ' + stamp;
+    const w1 = await make('operating_system', 'win-' + stamp + '-1', { caption: legacy, version: '6.3.9600' });
+    await make('operating_system', 'win-' + stamp + '-2', { caption: legacy, version: '6.3.9600', lastPatchedAt: old });
+    await make('operating_system', 'ahv-' + stamp, { name: 'Nutanix AHV ' + stamp, version: '10.0' });
+    await make('network_device', 'edge-' + stamp, { osName: 'IOS-XE', osVersion: '17.12.4', model: 'C9300-' + stamp });
+
+    type Release = { key: string; kind: string; product: string | null; cycle: string | null; label: string; count: number; state: string; daysLeft: number | null; patchBehind: number | null; entry: { endOfSupport: string | null } | null; instances: Array<{ id: string }> };
+    type Page = { lifecycleReleases: { rows: Release[]; ended: number } };
+    const q = 'query L($filter: LifecycleReleaseFilter) { lifecycleReleases(filter: $filter) { ended rows { key kind product cycle label count state daysLeft patchBehind entry { endOfSupport } instances(first: 1) { id } } } }';
+    const os = await gql<Page>(q, { filter: { kind: 'os', text: stamp } });
+    expect(os.errors).toBeUndefined();
+    const win = os.data?.lifecycleReleases.rows.find((r) => r.product === 'windows-server');
+    // Windows Server 2012 R2 security support ended (the date comes from the bundled catalogue).
+    expect(win).toMatchObject({ cycle: '2012-r2', kind: 'os', count: 2, state: 'ended', patchBehind: 1 });
+    expect(win?.entry?.endOfSupport).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(win?.instances.map((c) => c.id)).toEqual([w1]);
+    const ahv = os.data?.lifecycleReleases.rows.find((r) => r.label.includes('Nutanix AHV'));
+    expect(ahv).toMatchObject({ product: null, cycle: null, state: 'unknown', entry: null, count: 1 });
+    expect(os.data?.lifecycleReleases.rows[0]?.state).toBe('ended');
+    const network = await gql<Page>(q, { filter: { kind: 'network_os', text: '17.12.4' } });
+    const iosxe = network.data?.lifecycleReleases.rows.find((r) => r.product === 'cisco-ios-xe');
+    expect(iosxe).toMatchObject({ cycle: '17.12', kind: 'network_os' });
+    expect(['supported', 'ending', 'ended']).toContain(iosxe?.state);
+    const endedOnly = await gql<Page>(q, { filter: { text: stamp, state: 'ended' } });
+    expect(endedOnly.data?.lifecycleReleases.rows.every((r) => r.state === 'ended')).toBe(true);
+
+    // Hardware: two units of one model, one with an end of support recorded.
+    const model = 'R720-' + stamp;
+    for (const [i, eol] of [[0, '2020-12-31'], [1, null]] as const) {
+      const ciId = await make('host', 'hw-' + stamp + '-' + String(i), {});
+      await prisma.assetRecord.create({
+        data: {
+          tenantId, ciId, ciType: 'host', layer: 'hardware', source: 'discovery', assetTag: 'LC-' + stamp + '-' + String(i), stage: 'deployed', stageChangedAt: now,
+          manufacturer: 'Dell Inc.', model, depreciationMethod: 'straight_line', usefulLifeMonths: 60, residualValueAmount: 0, residualValueCurrency: 'SAR', tags: [], customFields: {},
+          ...(eol === null ? {} : { endOfLife: { endOfSale: '2018-05-01', endOfSoftwareMaintenance: null, endOfSupport: eol, source: 'manual', verifiedAt: now.toISOString() } }),
+        },
+      });
+    }
+    type Hw = { lifecycleHardware: Array<{ model: string | null; count: number; dated: number; endOfSale: string | null; endOfSupport: string | null; sources: string[]; state: string }> };
+    const hw = await gql<Hw>('query H($filter: LifecycleHardwareFilter) { lifecycleHardware(filter: $filter) { model count dated endOfSale endOfSupport sources state } }', { filter: { text: model } });
+    expect(hw.errors).toBeUndefined();
+    expect(hw.data?.lifecycleHardware).toEqual([{ model, count: 2, dated: 1, endOfSale: '2018-05-01', endOfSupport: '2020-12-31', sources: ['manual'], state: 'ended' }]);
+
+    const cat = await gql<{ lifecycleCatalogue: { sources: Array<{ source: string; products: number; releases: number }>; syncAllowed: boolean } }>('{ lifecycleCatalogue { syncAllowed sources { source products releases } } }');
+    expect(cat.data?.lifecycleCatalogue.syncAllowed).toBe(false);
+    expect(cat.data?.lifecycleCatalogue.sources.find((x) => x.source === 'endoflife.date')?.products).toBeGreaterThan(20);
+    // Operators may not sync; an admin is refused while outbound calls are off for the tenant.
+    const asOperator = await gql('mutation { syncLifecycleCatalogue { failed } }');
+    expect(asOperator.errors?.[0]?.message).toBeDefined();
+    const adminToken = await mint([ROLES.admin], keys.privateKey);
+    const sync = await gql('mutation { syncLifecycleCatalogue { failed } }', {}, adminToken);
+    expect(sync.errors?.[0]?.message).toMatch(/outbound/);
   });
 
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
