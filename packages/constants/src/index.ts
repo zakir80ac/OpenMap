@@ -413,6 +413,34 @@ export const COMPONENTS = {
   headlineModels: 3,
 } as const;
 
+/** REQ-CMDB-034 — resource utilisation: when a CI runs hot or sits idle, and the windows the console offers. */
+export const UTILISATION = {
+  /** CPU, memory or the fullest filesystem at or above this share is running hot (capacity at risk). */
+  hotPercent: 85,
+  /** CPU and memory both at or below this share is idle (a rightsizing or reclaim candidate). */
+  idlePercent: 10,
+  /** History windows a CI's Utilisation tab offers, in hours. */
+  windowsHours: [24, 168, 720] as const,
+  /** Default history window, in hours. */
+  defaultWindowHours: 168,
+  /** Points a history window is bucketed into for the chart. */
+  seriesPoints: 56,
+  /** A share this close below the hot threshold is shown as a warning. */
+  warningMarginPercent: 15,
+  /** The whole of a capacity, as the bars draw it. */
+  fullPercent: 100,
+  /** Decimals a utilisation percentage is shown with. */
+  percentDecimals: 1,
+  /** Power totals are shown in kilowatts. */
+  wattsPerKilowatt: 1000,
+  /** Rows per page of the utilisation register. */
+  pageSize: 100,
+  /** The largest page a client may ask for. */
+  maxPageSize: 500,
+  /** Seconds between the two CPU counter reads an agentless collector takes to compute utilisation. */
+  cpuSampleSeconds: 1,
+} as const;
+
 /** REQ-CMDB-026..029 (ADR-035) — the Commercial screen's horizons and limits. */
 export const COMMERCIAL = {
   /** "Ending within" horizons the contract register offers, in days. */
@@ -1207,11 +1235,13 @@ export type ContractName = (typeof CONTRACT_NAMES)[number];
 export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   /**
    * 0.2.0 (ADR-016): metric samples, HEALTH_STATES and the ClickHouse metric name per layer headline.
-   * 0.3.0 (REQ-CMDB-014, ADR-037): `component.ts`, the `components` part list on a CI's attributes.
+   * 0.3.0 (REQ-CMDB-014, ADR-037): `component.ts`, the `components` part list on an observed CI.
+   * 0.4.0 (REQ-CMDB-034): `utilisation.ts`, the CPU, memory, disk and power metric names per CI type.
    */
-  ci: '0.3.0',
-  /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`. */
-  collector: '0.3.0',
+  ci: '0.4.0',
+  /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
+   * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names. */
+  collector: '0.4.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1245,8 +1275,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.14.0 (REQ-CMDB-032, ADR-036): `Certificate`, `CertificateEndpoint`, `CertificateFilter`, query `certificates`.
    * 1.15.0 (REQ-CMDB-014, ADR-037): `ComponentKind`, `HardwareComponent`, `ComponentModelCount`, `ComponentPage`,
    * `ComponentFilter`, `Ci.components`, query `components`.
+   * 1.16.0 (REQ-CMDB-034): `UtilisationMeasure`, `UtilisationState`, `UtilisationSort`, `UtilisationPoint`,
+   * `UtilisationSeries`, `CiUtilisation`, `UtilisationRow`, `UtilisationPage`, `UtilisationFilter`, `Ci.utilisation`, query
+   * `utilisation`.
    */
-  graphql: '1.15.0',
+  graphql: '1.16.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

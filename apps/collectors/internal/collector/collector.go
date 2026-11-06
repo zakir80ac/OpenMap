@@ -32,6 +32,8 @@ type Observation struct {
 	Relationships []contract.ObservedRelationship
 	// Raw evidence bytes; the runtime digests them and the Node stores them.
 	Evidence []RawEvidence
+	// Samples are metric measurements taken during the visit (ADR-016; utilisation REQ-CMDB-034).
+	Samples []contract.MetricSample
 }
 
 type RawEvidence struct {
@@ -153,6 +155,7 @@ func Execute(ctx context.Context, impl Implementation, inv contract.Invocation) 
 			reached++
 			result.Cis = append(result.Cis, obs.Cis...)
 			result.Relationships = append(result.Relationships, obs.Relationships...)
+			result.Samples = append(result.Samples, obs.Samples...)
 			for _, ev := range obs.Evidence {
 				sum := sha256.Sum256(ev.Data)
 				digest := hex.EncodeToString(sum[:])

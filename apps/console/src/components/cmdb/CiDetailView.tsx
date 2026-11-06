@@ -1,7 +1,7 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 REQ-CMDB-014 — CI detail: header (code, name, type, layer, health, headline
+// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 REQ-CMDB-014 REQ-CMDB-034 — CI detail: header (code, name, type, layer, health, headline
 // metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
-// link), Parts (the components inside it, ADR-037), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
+// link), Parts (the components inside it, ADR-037), Utilisation (CPU, memory, disk, power for types that report it), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
 // re-fetches `ci(id, asOf)` and the attribute diff against now). Unknown-layer CIs get the "Label this CI" panel.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -41,13 +41,15 @@ import { LifecycleField, TagEditor } from './CiEditors';
 import { CustomFieldsEditor } from './CustomFieldsEditor';
 import { LabelCiPanel } from './LabelCiPanel';
 import { CiPartsPanel } from '@/components/parts/CiPartsPanel';
+import { CiUtilisationPanel } from '@/components/utilisation/CiUtilisationPanel';
+import { UTILISATION_METRICS, type CiType } from '@openmap/contracts';
 
 export interface CiDetailViewProps {
   locale: Locale;
   id: string;
 }
 
-const TABS = ['overview', 'relationships', 'parts', 'impact', 'history'] as const;
+const TABS = ['overview', 'relationships', 'parts', 'utilisation', 'impact', 'history'] as const;
 type Tab = (typeof TABS)[number];
 
 const changeKey = {
@@ -400,7 +402,9 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
         aria-label={t('cmdb.detail.tabs')}
         className="flex gap-om-4 border-b border-om-border-glass"
       >
-        {TABS.map((candidate) => {
+        {TABS.filter(
+          (candidate) => candidate !== 'utilisation' || UTILISATION_METRICS[ci.type as CiType] !== undefined,
+        ).map((candidate) => {
           const selected = candidate === tab;
           const count =
             candidate === 'relationships'
@@ -574,6 +578,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
         ) : null}
 
         {tab === 'parts' ? <CiPartsPanel ciId={ci.id} locale={locale} /> : null}
+        {tab === 'utilisation' ? <CiUtilisationPanel ciId={ci.id} /> : null}
         {tab === 'history' ? <HistoryTab ci={ci} /> : null}
       </div>
     </div>

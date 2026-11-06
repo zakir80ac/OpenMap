@@ -8,6 +8,7 @@ import { AssistantModule } from './assistant/assistant.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { CertificatesModule } from './certificates/certificates.module.js';
 import { ComponentsModule } from './components/components.module.js';
+import { UtilisationModule } from './utilisation/utilisation.module.js';
 import { CommercialModule } from './commercial/commercial.module.js';
 import { SoftwareModule } from './software/software.module.js';
 import { AuditModule } from './audit/audit.module.js';
@@ -67,6 +68,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     CommercialModule,
     CertificatesModule,
     ComponentsModule,
+    UtilisationModule,
     GraphQLModule.forRootAsync<MercuriusDriverConfig>({
       driver: MercuriusDriver,
       imports: [CiModule],

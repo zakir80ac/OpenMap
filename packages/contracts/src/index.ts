@@ -6,6 +6,7 @@ export * from './asset.js';
 export * from './commercial.js';
 export * from './certificate.js';
 export * from './component.js';
+export * from './utilisation.js';
 export * from './impact.js';
 export * from './integration.js';
 export * from './organization.js';

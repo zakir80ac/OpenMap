@@ -220,7 +220,7 @@ describe.each(LOCALES)('CiDetailView in %s', (locale) => {
     expect(screen.getByText('eno2')).toBeTruthy();
     expect(screen.getByText('CI0012345')).toBeTruthy();
     const tabs = screen.getByRole('tablist', { name: translate(locale, 'cmdb.detail.tabs') });
-    expect(within(tabs).getAllByRole('tab')).toHaveLength(5);
+    expect(within(tabs).getAllByRole('tab')).toHaveLength(6);
   });
 
   it('groups relationships by type with links to the other CI', async () => {

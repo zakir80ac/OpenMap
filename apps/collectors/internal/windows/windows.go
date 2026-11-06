@@ -57,7 +57,8 @@ function Sec($block) { try { & $block } catch { $null } }
 $cs   = Sec { Get-CimInstance Win32_ComputerSystem | Select-Object Name,Domain,Manufacturer,Model,TotalPhysicalMemory,NumberOfProcessors,NumberOfLogicalProcessors,HypervisorPresent,DomainRole,PartOfDomain }
 $bios = Sec { Get-CimInstance Win32_BIOS | Select-Object SerialNumber,SMBIOSBIOSVersion,Manufacturer,ReleaseDate }
 $prod = Sec { Get-CimInstance Win32_ComputerSystemProduct | Select-Object UUID,IdentifyingNumber,Vendor,Name }
-$os   = Sec { Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture,InstallDate,LastBootUpTime,ServicePackMajorVersion }
+$os   = Sec { Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture,InstallDate,LastBootUpTime,ServicePackMajorVersion,TotalVisibleMemorySize,FreePhysicalMemory }
+$load = Sec { Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'" | Select-Object -ExpandProperty PercentProcessorTime }
 $cpu  = Sec { Get-CimInstance Win32_Processor | Select-Object DeviceID,SocketDesignation,Name,Manufacturer,NumberOfCores,NumberOfLogicalProcessors,MaxClockSpeed }
 $nics = Sec { Get-NetAdapter | Select-Object Name,InterfaceDescription,InterfaceIndex,MacAddress,LinkSpeed,Status,ifOperStatus,HardwareInterface,DriverVersion }
 $ips  = Sec { Get-NetIPAddress -AddressFamily IPv4,IPv6 | Where-Object { $_.AddressState -ne 'Tentative' } | Select-Object InterfaceIndex,IPAddress,PrefixLength,AddressFamily,PrefixOrigin }
@@ -73,7 +74,7 @@ $drv  = Sec { Get-CimInstance Win32_DiskDrive | Select-Object Index,Model,Serial
 $hba  = Sec { Get-InitiatorPort | Where-Object { $_.ConnectionType -eq 'Fibre Channel' } | Select-Object InstanceName,PortAddress,NodeAddress,OperationalStatus }
 $fqdn = Sec { [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName }
 $feat = Sec { Get-WindowsFeature | Where-Object Installed | Select-Object -ExpandProperty Name }
-[pscustomobject]@{ computer=$cs; bios=$bios; product=$prod; os=$os; cpu=@($cpu); nics=@($nics); ips=@($ips); tcp=@($tcp); udp=@($udp); processes=@($proc); software=@($sw); services=@($svc); hotfixes=@($hot); disks=@($disk); memory=@($mem); drives=@($drv); hbas=@($hba); fqdn=$fqdn; features=@($feat) } | ConvertTo-Json -Depth 5 -Compress
+[pscustomobject]@{ computer=$cs; bios=$bios; product=$prod; os=$os; cpu=@($cpu); nics=@($nics); ips=@($ips); tcp=@($tcp); udp=@($udp); processes=@($proc); software=@($sw); services=@($svc); hotfixes=@($hot); disks=@($disk); memory=@($mem); drives=@($drv); hbas=@($hba); cpuLoad=$load; fqdn=$fqdn; features=@($feat) } | ConvertTo-Json -Depth 5 -Compress
 `
 
 // Inventory mirrors the JSON document the script prints. CIM date strings are kept raw.
@@ -108,6 +109,9 @@ type Inventory struct {
 		OSArchitecture string `json:"OSArchitecture"`
 		InstallDate    any    `json:"InstallDate"`
 		LastBootUpTime any    `json:"LastBootUpTime"`
+		// Kilobytes (REQ-CMDB-034).
+		TotalVisibleMemorySize int64 `json:"TotalVisibleMemorySize"`
+		FreePhysicalMemory     int64 `json:"FreePhysicalMemory"`
 	} `json:"os"`
 	CPU []struct {
 		DeviceID                  string `json:"DeviceID"`
@@ -200,6 +204,8 @@ type Inventory struct {
 		NodeAddress       string `json:"NodeAddress"`
 		OperationalStatus any    `json:"OperationalStatus"`
 	} `json:"hbas"`
+	// CPULoad is the _Total processor time share; nil when the counter was unreadable (REQ-CMDB-034).
+	CPULoad  *float64 `json:"cpuLoad"`
 	FQDN     string   `json:"fqdn"`
 	Features []string `json:"features"`
 }
@@ -305,6 +311,7 @@ func Emit(inv *Inventory, target contract.Target, raw []byte, at time.Time) coll
 	hostCi := contract.ObservedCi{Type: hostType, Identity: identity, Name: fqdn, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at, Components: Components(inv)}
 	obs.Cis = append(obs.Cis, hostCi)
 	hostRefCi := contract.CiRef{Type: hostType, Identity: identity}
+	obs.Samples = Samples(inv, hostRefCi, at)
 
 	if inv.OS.Caption != "" {
 		osIdentity := map[string]string{"hostRef": hostRef, "family": "windows", "version": firstNonEmpty(inv.OS.Version, inv.OS.BuildNumber)}

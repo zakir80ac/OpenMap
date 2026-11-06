@@ -69,7 +69,7 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | Bulk import/export: CSV, Excel, API | `/import` jobs with mapping templates, `/export` CSV, XLSX, JSON | = | CMDB |
 | Object merge, duplicates, reconciliation rules | reconciler identity keys, precedence by confidence, conflict events | + | CORE |
 | Time-travel / history of any object | validFrom/validTo bitemporal rows, ClickHouse snapshots | + | CORE |
-| Resource utilisation (CPU, memory, disk, power) | ClickHouse metrics from collectors, rightsizing in analytics | = | CMDB |
+| Resource utilisation (CPU, memory, disk, power) | SSH, WMI and Redfish sample CPU, memory, fullest disk and power under the `utilisation.ts` names into ClickHouse; the Utilisation register (hot and idle under deployment thresholds, average and total power) and each CI's Utilisation tab with history (ADR-038) | = | CMDB |
 | Cloud recommendation engine (rightsizing, unused) | analytics models over utilisation and cost | = | AI |
 
 ## 3. IPAM, DNS, DHCP, network

@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.15.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.16.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -136,6 +136,8 @@ type Ci {
   history(from: DateTime, to: DateTime): [CiVersion!]!
   "REQ-CMDB-014 (ADR-037): the parts inside this CI, by kind then slot; removed parts only on request."
   components(includeRemoved: Boolean = false): [HardwareComponent!]!
+  "REQ-CMDB-034: CPU, memory, disk and power over the last `hours` (default 168); null for types without utilisation."
+  utilisation(hours: Int): CiUtilisation
 }
 
 type CiVersion {
@@ -713,6 +715,71 @@ type ComponentPage {
   total: Int!
   "Part counts per kind and model across the whole filter, most common first."
   models: [ComponentModelCount!]!
+}
+# REQ-CMDB-034: resource utilisation from collector samples.
+enum UtilisationMeasure {
+  cpu
+  memory
+  disk
+  power
+}
+"hot: CPU, memory or disk at or above the hot share; idle: CPU and memory at or below the idle share."
+enum UtilisationState {
+  hot
+  idle
+  normal
+  unknown
+}
+enum UtilisationSort {
+  cpu
+  memory
+  disk
+  power
+  name
+}
+type UtilisationPoint {
+  at: DateTime!
+  "Average over the bucket."
+  value: Float!
+  "Highest sample in the bucket."
+  peak: Float!
+}
+type UtilisationSeries {
+  measure: UtilisationMeasure!
+  metric: String!
+  "percent or W."
+  unit: String!
+  latest: Float
+  latestAt: DateTime
+  average: Float
+  peak: Float
+  points: [UtilisationPoint!]!
+}
+type CiUtilisation {
+  state: UtilisationState!
+  hours: Int!
+  series: [UtilisationSeries!]!
+}
+type UtilisationRow {
+  ci: Ci!
+  state: UtilisationState!
+  cpu: Float
+  memory: Float
+  "The fullest filesystem."
+  disk: Float
+  "Watts drawn."
+  power: Float
+  observedAt: DateTime
+}
+type UtilisationPage {
+  items: [UtilisationRow!]!
+  total: Int!
+  hot: Int!
+  idle: Int!
+  averageCpu: Float
+  averageMemory: Float
+  "Sum of the latest power draw across the filter."
+  powerWatts: Float
 }
 type Certificate {
   ci: Ci!
@@ -1667,6 +1734,8 @@ type Query {
   vendor(id: UUID!): VendorDetail
   costCentres: [CostCentre!]!
   certificates(filter: CertificateFilter): [Certificate!]!
+  "REQ-CMDB-034: the latest utilisation of every CI that reports it, hottest first by the chosen measure."
+  utilisation(filter: UtilisationFilter, sort: UtilisationSort = cpu, first: Int = 100, offset: Int = 0): UtilisationPage!
   "REQ-CMDB-014 (ADR-037): parts across the estate."
   components(filter: ComponentFilter, first: Int = 100, offset: Int = 0): ComponentPage!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
@@ -1723,6 +1792,13 @@ input PlanInput {
   targetRackIds: [UUID!]
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
+}
+input UtilisationFilter {
+  "CI types, e.g. host, vm, pdu; all types with utilisation when absent."
+  types: [String!]
+  state: UtilisationState
+  "Matches the CI's name."
+  text: String
 }
 input ComponentFilter {
   kind: ComponentKind

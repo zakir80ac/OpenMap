@@ -36,6 +36,8 @@ type Facts struct {
 	Mounts       []Mount
 	// Parts inside the host (REQ-CMDB-014, ADR-037).
 	Components []contract.Component
+	// Utilisation measured during the visit (REQ-CMDB-034).
+	Utilisation Utilisation
 }
 
 type OSRelease struct {

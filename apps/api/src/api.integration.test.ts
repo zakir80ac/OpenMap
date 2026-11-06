@@ -1954,6 +1954,78 @@ describe('OpenMap API (integration)', () => {
     expect(tooMany.errors?.[0]?.message).toBeDefined();
   });
 
+  it('lists utilisation hottest first with hot and idle CIs, and charts one CI over a window (REQ-CMDB-034)', async () => {
+    // T-205
+    const stamp = String(Date.now());
+    const now = new Date();
+    const hourMs = 3_600_000;
+    const make = async (type: 'host' | 'vm', name: string): Promise<string> => {
+      const id = randomUUID();
+      await prisma.ci.create({
+        data: {
+          id, tenantId, type, identity: { fqdn: name }, identityKey: name, name, displayName: name, code: 'UT-' + id.slice(0, 8).toUpperCase(),
+          layer: type === 'host' ? 'hardware' : 'virtualization', lifecycle: 'managed', attributes: {}, tags: [], sourceCollectorId: 'ssh-agentless',
+          sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now, checksum: 'f'.repeat(64),
+        },
+      });
+      return id;
+    };
+    const hot = await make('host', 'util-hot-' + stamp);
+    const idle = await make('host', 'util-idle-' + stamp);
+    const guest = await make('vm', 'util-vm-' + stamp);
+    const at = (hoursAgo: number): string => new Date(now.getTime() - hoursAgo * hourMs).toISOString().replace('T', ' ').replace('Z', '');
+    const sample = (ci: string, metric: string, hoursAgo: number, value: number, unit = 'percent') => ({ tenant_id: tenantId, ci_id: ci, metric, ts: at(hoursAgo), value, unit, labels: {}, source_run_id: randomUUID() });
+    const clickhouse = app.get(ClickHouseService);
+    await clickhouse.insert('metrics', [
+      sample(hot, 'host.cpu.utilisation_percent', 30, 60),
+      sample(hot, 'host.cpu.utilisation_percent', 2, 80),
+      sample(hot, 'host.cpu.utilisation_percent', 1, 95),
+      sample(hot, 'host.memory.utilisation_percent', 1, 70),
+      sample(hot, 'host.disk.utilisation_percent', 1, 40),
+      sample(hot, 'host.power.watts', 1, 610, 'W'),
+      sample(idle, 'host.cpu.utilisation_percent', 1, 3),
+      sample(idle, 'host.memory.utilisation_percent', 1, 8),
+      sample(idle, 'host.power.watts', 1, 290, 'W'),
+      sample(guest, 'vm.cpu.utilisation_percent', 1, 45),
+      sample(guest, 'vm.memory.utilisation_percent', 1, 50),
+    ]);
+
+    type Row = { ci: { id: string }; state: string; cpu: number | null; memory: number | null; disk: number | null; power: number | null };
+    type Page = { utilisation: { total: number; hot: number; idle: number; averageCpu: number | null; powerWatts: number | null; items: Row[] } };
+    const query = 'query U($filter: UtilisationFilter, $sort: UtilisationSort) { utilisation(filter: $filter, sort: $sort) { total hot idle averageCpu powerWatts items { ci { id } state cpu memory disk power } } }';
+    const all = await gql<Page>(query, { filter: { text: stamp } });
+    expect(all.errors).toBeUndefined();
+    expect(all.data?.utilisation.items.map((r) => r.ci.id)).toEqual([hot, guest, idle]);
+    expect(all.data?.utilisation.items[0]).toMatchObject({ state: 'hot', cpu: 95, memory: 70, disk: 40, power: 610 });
+    expect(all.data?.utilisation.items[2]?.state).toBe('idle');
+    expect(all.data?.utilisation).toMatchObject({ total: 3, hot: 1, idle: 1, powerWatts: 900 });
+    expect(all.data?.utilisation.averageCpu).toBeCloseTo((95 + 3 + 45) / 3);
+    const byPower = await gql<Page>(query, { filter: { text: stamp }, sort: 'power' });
+    expect(byPower.data?.utilisation.items.map((r) => r.ci.id)).toEqual([hot, idle, guest]);
+    const idleOnly = await gql<Page>(query, { filter: { text: stamp, state: 'idle' } });
+    expect(idleOnly.data?.utilisation.items.map((r) => r.ci.id)).toEqual([idle]);
+    const vms = await gql<Page>(query, { filter: { text: stamp, types: ['vm'] } });
+    expect(vms.data?.utilisation.items.map((r) => r.ci.id)).toEqual([guest]);
+
+    type Series = { measure: string; unit: string; latest: number | null; average: number | null; peak: number | null; points: Array<{ value: number }> };
+    type Detail = { ci: { utilisation: { state: string; hours: number; series: Series[] } | null } };
+    const detail = await gql<Detail>('query D($id: UUID!, $hours: Int) { ci(id: $id) { utilisation(hours: $hours) { state hours series { measure unit latest average peak points { value } } } } }', { id: hot, hours: 24 });
+    expect(detail.errors).toBeUndefined();
+    const u = detail.data?.ci.utilisation;
+    expect(u?.state).toBe('hot');
+    expect(u?.hours).toBe(24);
+    const cpu = u?.series.find((x) => x.measure === 'cpu');
+    // The 30-hour-old sample is outside a 24-hour window.
+    expect(cpu?.points.map((p) => p.value)).toEqual([80, 95]);
+    expect(cpu).toMatchObject({ latest: 95, peak: 95, average: 87.5, unit: 'percent' });
+    expect(u?.series.find((x) => x.measure === 'power')).toMatchObject({ latest: 610, unit: 'W' });
+    const week = await gql<Detail>('query D($id: UUID!) { ci(id: $id) { utilisation { hours series { measure points { value } } } } }', { id: hot });
+    expect(week.data?.ci.utilisation?.hours).toBe(168);
+    expect(week.data?.ci.utilisation?.series.find((x) => x.measure === 'cpu')?.points.length).toBeGreaterThanOrEqual(2);
+    const tooLong = await gql<Detail>('query D($id: UUID!) { ci(id: $id) { utilisation(hours: 100000) { hours } } }', { id: hot });
+    expect(tooLong.errors?.[0]?.message).toBeDefined();
+  });
+
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';

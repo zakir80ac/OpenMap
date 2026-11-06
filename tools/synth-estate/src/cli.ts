@@ -1,12 +1,16 @@
 // REQ-QA-001 REQ-BSM-008 — synth-estate CLI: `generate` writes one NDJSON file per collector family plus
 // estate-summary.json, services.json and organization.json; `stats` summarises an output directory; `health-history`
-// draws the deterministic outage history of the business services into health-history.json (ADR-024).
+// draws the deterministic outage history of the business services into health-history.json (ADR-024);
+// `utilisation-history` writes sample-only results with the servers' and VMs' utilisation over recent days (REQ-CMDB-034).
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { SLA } from '@openmap/constants';
 import { join, resolve } from 'node:path';
 import { buildEstate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.js';
 import { generateHealthHistory, HEALTH_HISTORY_FILE } from './health.js';
+import { UTILISATION_HISTORY_FILE, utilisationHistory } from './utilisation.js';
+import type { CollectorResult } from '@openmap/contracts';
+import { copyFileSync, mkdirSync } from 'node:fs';
 import type { BusinessServiceRecord } from './gen/applications.js';
 
 const DEFAULT_SEED = 42;
@@ -188,12 +192,43 @@ function healthHistory(flags: Flags): void {
   );
 }
 
+const DEFAULT_HISTORY_DAYS = 14;
+const DEFAULT_HISTORY_EVERY_HOURS = 6;
+const COPIED_FILES = ['estate-summary.json', 'organization.json', 'services.json'];
+
+/** Reads every result of an emitted estate and writes the utilisation history beside its summary in `--out`. */
+function utilisation(flags: Flags): void {
+  const dir = resolve(process.cwd(), stringFlag(flags, 'dir', DEFAULT_OUT));
+  const out = resolve(process.cwd(), stringFlag(flags, 'out', join(dir, 'utilisation')));
+  const seed = numberFlag(flags, 'seed', DEFAULT_SEED);
+  const days = numberFlag(flags, 'days', DEFAULT_HISTORY_DAYS);
+  const every = numberFlag(flags, 'every', DEFAULT_HISTORY_EVERY_HOURS);
+  const now = stringFlag(flags, 'now', new Date().toISOString());
+  const results: CollectorResult[] = [];
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(NDJSON_SUFFIX)).sort())
+    for (const line of readFileSync(join(dir, file), 'utf8').split('\n')) if (line.trim() !== '') results.push(JSON.parse(line) as CollectorResult);
+  const history = utilisationHistory(results, seed, now, days, every);
+  mkdirSync(out, { recursive: true });
+  for (const f of COPIED_FILES) if (existsSync(join(dir, f))) copyFileSync(join(dir, f), join(out, f));
+  writeFileSync(join(out, UTILISATION_HISTORY_FILE), history.map((r) => JSON.stringify(r)).join('\n') + '\n');
+  console.log(
+    table([
+      ['results', history.length],
+      ['samples', history.reduce((n, r) => n + r.samples.length, 0)],
+      ['days', days],
+      ['every (hours)', every],
+      ['dir', out],
+    ]),
+  );
+}
+
 function usage(): string {
   return [
     'usage:',
     '  synth generate [--seed N] [--scale F] [--out DIR]',
     '  synth stats [DIR|--dir DIR]',
     '  synth health-history [--dir DIR] [--seed N] [--months M] [--now ISO]',
+    '  synth utilisation-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO]',
   ].join('\n');
 }
 
@@ -207,6 +242,9 @@ async function main(): Promise<void> {
     case 'stats':
       await stats(positional.slice(1), flags);
       return;
+    case 'utilisation-history':
+      utilisation(flags);
+      break;
     case 'health-history':
       healthHistory(flags);
       return;

@@ -83,6 +83,10 @@ func TestWalkAndEmit(t *testing.T) {
 	if host.Attributes["powerWatts"] != 612.0 || host.Attributes["powerSuppliesHealthy"] != 1 || host.Attributes["inletTempC"] != 23.5 || host.Attributes["rack"] != "R12" {
 		t.Fatalf("host attributes wrong: %+v", host.Attributes)
 	}
+	// T-203 REQ-CMDB-034: power drawn is sampled for the utilisation register.
+	if len(obs.Samples) != 1 || obs.Samples[0].Metric != contract.MetricHostPower || obs.Samples[0].Value != 612 || obs.Samples[0].Unit != contract.UnitWatts {
+		t.Fatalf("power sample wrong: %+v", obs.Samples)
+	}
 	bmc := obs.Cis[0]
 	if bmc.Type != typeBmc || bmc.Attributes["model"] != "iDRAC9" || bmc.Attributes["firmware"] != "7.10.30.00" {
 		t.Fatalf("bmc wrong: %+v", bmc)

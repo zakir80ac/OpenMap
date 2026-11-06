@@ -425,6 +425,10 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		name := firstNonEmpty(s.HostName, s.Name, s.SerialNumber, target.Value)
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeHost, Identity: identity, Name: name, Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at, Components: Components(inv, s)})
 		hostRef := contract.CiRef{Type: typeHost, Identity: identity}
+		// REQ-CMDB-034: power drawn, as the chassis PowerControl reports it.
+		if w, ok := attrs["powerWatts"].(float64); ok && w > 0 {
+			obs.Samples = append(obs.Samples, contract.MetricSample{Ci: hostRef, Metric: contract.MetricHostPower, Ts: at, Value: w, Unit: contract.UnitWatts, Labels: map[string]string{}})
+		}
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relManages, From: bmcRef, To: hostRef, Attributes: map[string]any{"protocol": "redfish"}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: hostRef, To: bmcRef, Attributes: map[string]any{}, ObservedAt: at})
 	}

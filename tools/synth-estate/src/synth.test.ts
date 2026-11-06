@@ -8,6 +8,7 @@ import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, collectorResultSchema, HEADLINE_METRIC
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildEstate, summarise, type Estate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.js';
+import { utilisationHistory } from './utilisation.js';
 
 const SCALE = 0.01;
 const SEED = 42;
@@ -53,6 +54,30 @@ describe('synth-estate', () => {
   afterAll(() => {
     rmSync(dirA, { recursive: true, force: true });
     rmSync(dirB, { recursive: true, force: true });
+  });
+
+  it('draws a deterministic utilisation history of servers and VMs with hot and idle CIs (REQ-CMDB-034)', () => {
+    // T-204
+    const now = '2026-11-07T00:00:00.000Z';
+    const days = 2;
+    const every = 6;
+    const history = utilisationHistory(results, SEED, now, days, every);
+    expect(JSON.stringify(utilisationHistory(results, SEED, now, days, every))).toBe(JSON.stringify(history));
+    expect(history.length).toBeGreaterThan(0);
+    for (const r of history) {
+      expect(collectorResultSchema.safeParse(r).success).toBe(true);
+      expect(r.cis).toHaveLength(0);
+    }
+    const instants = new Set(history.flatMap((r) => r.samples.map((x) => x.ts)));
+    expect(instants.size).toBe((days * 24) / every + 1);
+    const latest = new Map<string, number>();
+    for (const r of history) for (const x of r.samples) if (x.metric === 'host.cpu.utilisation_percent') latest.set(JSON.stringify(x.ci), x.value);
+    const values = [...latest.values()];
+    expect(values.every((v) => v >= 0 && v <= 100)).toBe(true);
+    expect(values.some((v) => v >= 75)).toBe(true);
+    expect(values.some((v) => v <= 10)).toBe(true);
+    expect(history.some((r) => r.samples.some((x) => x.metric === 'host.power.watts' && x.unit === 'W'))).toBe(true);
+    expect(history.some((r) => r.samples.some((x) => x.metric === 'vm.memory.utilisation_percent'))).toBe(true);
   });
 
   it('produces byte-identical output for the same seed', () => {
