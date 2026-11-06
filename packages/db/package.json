@@ -15,7 +15,8 @@
     "dist",
     "prisma",
     "clickhouse",
-    "memgraph"
+    "memgraph",
+    "lifecycle"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",

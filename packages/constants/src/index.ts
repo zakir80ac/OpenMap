@@ -441,6 +441,70 @@ export const UTILISATION = {
   cpuSampleSeconds: 1,
 } as const;
 
+/**
+ * REQ-CMDB-023 REQ-CMDB-025 (ADR-039) — the product lifecycle catalogue: the endoflife.date products bundled in the
+ * snapshot (packages/db/lifecycle) and refreshed by the optional sync, with the kind and display title of each, and the
+ * horizons the Lifecycle screen uses.
+ */
+export const LIFECYCLE = {
+  products: [
+    { product: 'ubuntu', kind: 'os', title: 'Ubuntu' },
+    { product: 'debian', kind: 'os', title: 'Debian' },
+    { product: 'rhel', kind: 'os', title: 'Red Hat Enterprise Linux' },
+    { product: 'centos', kind: 'os', title: 'CentOS' },
+    { product: 'rocky-linux', kind: 'os', title: 'Rocky Linux' },
+    { product: 'almalinux', kind: 'os', title: 'AlmaLinux' },
+    { product: 'oracle-linux', kind: 'os', title: 'Oracle Linux' },
+    { product: 'sles', kind: 'os', title: 'SUSE Linux Enterprise Server' },
+    { product: 'opensuse', kind: 'os', title: 'openSUSE Leap' },
+    { product: 'amazon-linux', kind: 'os', title: 'Amazon Linux' },
+    { product: 'fedora', kind: 'os', title: 'Fedora' },
+    { product: 'alpine-linux', kind: 'os', title: 'Alpine Linux' },
+    { product: 'windows-server', kind: 'os', title: 'Windows Server' },
+    { product: 'proxmox-ve', kind: 'hypervisor', title: 'Proxmox VE' },
+    { product: 'esxi', kind: 'hypervisor', title: 'VMware ESXi' },
+    { product: 'vcenter', kind: 'hypervisor', title: 'VMware vCenter' },
+    { product: 'nutanix-aos', kind: 'hypervisor', title: 'Nutanix AOS' },
+    { product: 'cisco-ios-xe', kind: 'network_os', title: 'Cisco IOS XE' },
+    { product: 'panos', kind: 'network_os', title: 'Palo Alto PAN-OS' },
+    { product: 'fortios', kind: 'network_os', title: 'FortiOS' },
+    { product: 'big-ip', kind: 'network_os', title: 'F5 BIG-IP' },
+    { product: 'postgresql', kind: 'database', title: 'PostgreSQL' },
+    { product: 'mysql', kind: 'database', title: 'MySQL' },
+    { product: 'mssqlserver', kind: 'database', title: 'Microsoft SQL Server' },
+    { product: 'oracle-database', kind: 'database', title: 'Oracle Database' },
+    { product: 'mongodb', kind: 'database', title: 'MongoDB' },
+    { product: 'redis', kind: 'database', title: 'Redis' },
+    { product: 'kubernetes', kind: 'platform', title: 'Kubernetes' },
+    { product: 'red-hat-openshift', kind: 'platform', title: 'Red Hat OpenShift' },
+    { product: 'nginx', kind: 'platform', title: 'NGINX' },
+    { product: 'tomcat', kind: 'platform', title: 'Apache Tomcat' },
+    { product: 'nodejs', kind: 'platform', title: 'Node.js' },
+    { product: 'python', kind: 'platform', title: 'Python' },
+    { product: 'dotnet', kind: 'platform', title: '.NET' },
+  ] as const,
+  /** A release whose security support ends within this many days is shown as ending. */
+  endingDays: 180,
+  /** An OS last patched longer ago than this is flagged as behind on patches. */
+  patchStaleDays: 90,
+  /** Hosts listed per release when a row is opened. */
+  instancesPerRelease: 50,
+  /** Snapshot file bundled with each release (packages/db/lifecycle). */
+  snapshotFile: 'endoflife-date.json',
+  /** Concurrent product requests while fetching the catalogue. */
+  fetchConcurrency: 4,
+} as const;
+
+/** REQ-CMDB-022 — the SaaS inventory: when a subscription is renewing and when its seats are underused. */
+export const SAAS = {
+  /** A subscription ending within this many days is renewing (the renewal decision is due). */
+  renewalHorizonDays: 90,
+  /** Fewer seats assigned than this share of those bought is underused (a true-down candidate). */
+  underusedPercent: 60,
+  /** The whole of a seat count, as utilisation is expressed. */
+  fullPercent: 100,
+} as const;
+
 /** REQ-CMDB-026..029 (ADR-035) — the Commercial screen's horizons and limits. */
 export const COMMERCIAL = {
   /** "Ending within" horizons the contract register offers, in days. */
@@ -1237,11 +1301,13 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.2.0 (ADR-016): metric samples, HEALTH_STATES and the ClickHouse metric name per layer headline.
    * 0.3.0 (REQ-CMDB-014, ADR-037): `component.ts`, the `components` part list on an observed CI.
    * 0.4.0 (REQ-CMDB-034): `utilisation.ts`, the CPU, memory, disk and power metric names per CI type.
+   * 0.5.0 (REQ-CMDB-023, REQ-CMDB-025, ADR-039): `lifecycle.ts`, catalogue entries, support states, OS and platform releases.
    */
-  ci: '0.4.0',
+  ci: '0.5.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
-   * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names. */
-  collector: '0.4.0',
+   * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
+   * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version). */
+  collector: '0.5.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1278,8 +1344,13 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.16.0 (REQ-CMDB-034): `UtilisationMeasure`, `UtilisationState`, `UtilisationSort`, `UtilisationPoint`,
    * `UtilisationSeries`, `CiUtilisation`, `UtilisationRow`, `UtilisationPage`, `UtilisationFilter`, `Ci.utilisation`, query
    * `utilisation`.
+   * 1.17.0 (REQ-CMDB-023, REQ-CMDB-025, ADR-039): `LifecycleKind`, `LifecycleState`, `LifecycleEntry`, `LifecycleRelease`,
+   * `LifecycleReleasePage`, `LifecycleHardware`, `LifecycleCatalogue`, `LifecycleCatalogueSource`, `LifecycleSyncResult`, the
+   * filters, queries `lifecycleReleases`, `lifecycleHardware`, `lifecycleCatalogue`, mutation `syncLifecycleCatalogue`.
+   * 1.18.0 (REQ-CMDB-022): `SaasSubscriptionState`, `SaasDataFlow`, `SaasSubscription`, `SaasTenant`, `SaasInventory`, query
+   * `saasInventory`.
    */
-  graphql: '1.16.0',
+  graphql: '1.18.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

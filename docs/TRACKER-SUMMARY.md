@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-06T21:28:37.464Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-06T21:56:19.743Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 45 |
-| In progress | 2 |
-| Blocked | 0 |
-| In review | 30 |
-| Done | 129 |
+| Not started | 42 |
+| In progress | 1 |
+| Blocked | 1 |
+| In review | 31 |
+| Done | 131 |
 | **Total** | **206** |
 
 ## By workstream
@@ -18,7 +18,7 @@ Generated 2026-11-06T21:28:37.464Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | CORE | 19 | 17 | 1 | 0 | 89% |
 | DISC | 31 | 3 | 0 | 0 | 10% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
-| CMDB | 42 | 38 | 1 | 0 | 90% |
+| CMDB | 42 | 40 | 0 | 1 | 95% |
 | IPAM | 7 | 3 | 0 | 0 | 43% |
 | DCIM | 9 | 2 | 0 | 0 | 22% |
 | BSM | 8 | 5 | 0 | 0 | 63% |
@@ -32,15 +32,14 @@ Generated 2026-11-06T21:28:37.464Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## In progress
 
 - REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
-- REQ-CMDB-022 · SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows
 
 ## Blocked
 
+- REQ-CMDB-024 · Warranty tracking with vendor API lookups (Dell, HPE, Lenovo, Cisco, IBM) — Vendor warranty and EoX lookups (Dell TechDirect, HPE, Lenovo, Cisco SN2INFO/EoX, IBM) need tenant API credentials and recorded responses before adapters can be written and tested without inventing response shapes (R-004). Integration vendors already registered (dell_techdirect, hpe_warranty, lenovo_warranty, cisco_sntc, ibm_support); lifecycle catalogue and asset endOfLife already consume their dates (ADR-039).
 
 ## Next up
 
 - REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
-- REQ-CMDB-022 [P1] SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows
 - REQ-BSM-004 [P0] Impact prediction accuracy
 - REQ-BSM-005 [P0] Runbooks attached to scenarios and incidents with automation hooks per step
 - REQ-BSM-007 [P0] Sites and connectivity monitoring for HA / DR readiness
@@ -49,6 +48,7 @@ Generated 2026-11-06T21:28:37.464Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-PERF-004 [P0] 10000 devices discovered in under 15 minutes
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
 - REQ-UI-026 [P0] Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards
+- REQ-UI-027 [P0] Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex
 
 ## Open risks
 

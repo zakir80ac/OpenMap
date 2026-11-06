@@ -79,6 +79,8 @@ export const envSchema = z.object({
    * must accept both. Unset: only PUBLIC_CONSOLE_URL.
    */
   PUBLIC_CONSOLE_ALIAS_URL: url.optional(),
+  /** REQ-CMDB-023 (ADR-039): the product lifecycle catalogue the snapshot and the optional tenant-enabled sync read. */
+  LIFECYCLE_CATALOGUE_URL: url.default('https://endoflife.date/api'),
   PUBLIC_API_URL: url.default('http://localhost:4000'),
   /**
    * Keycloak as the browser reaches it. The console's OIDC flow (discovery, authorize, token, end_session) runs

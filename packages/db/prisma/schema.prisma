@@ -1687,3 +1687,26 @@ model CiComponent {
   @@index([tenantId, serialNumber])
   @@map("ci_components")
 }
+
+/// REQ-CMDB-023 REQ-CMDB-025 (ADR-039): the product lifecycle catalogue, shared by every tenant.
+model LifecycleEntry {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source             String
+  product            String
+  cycle              String
+  kind               String
+  label              String
+  releaseDate        DateTime? @db.Date
+  supportEnd         DateTime? @db.Date
+  endOfSupport       DateTime? @db.Date
+  supportEnded       Boolean   @default(false)
+  extendedSupportEnd DateTime? @db.Date
+  latest             String?
+  lts                Boolean   @default(false)
+  link               String?
+  fetchedAt          DateTime  @db.Timestamptz(3)
+
+  @@unique([source, product, cycle])
+  @@index([product, cycle])
+  @@map("lifecycle_entries")
+}
