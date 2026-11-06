@@ -1,0 +1,482 @@
+
+@@OPENMAP:hostname@@
+lab-alma9
+
+@@OPENMAP:fqdn@@
+lab-alma9
+
+@@OPENMAP:machine_id@@
+
+@@OPENMAP:os_release@@
+NAME="AlmaLinux"
+VERSION="9.8 (Olive Jaguar)"
+ID="almalinux"
+ID_LIKE="rhel centos fedora"
+VERSION_ID="9.8"
+PLATFORM_ID="platform:el9"
+PRETTY_NAME="AlmaLinux 9.8 (Olive Jaguar)"
+ANSI_COLOR="0;34"
+LOGO="fedora-logo-icon"
+CPE_NAME="cpe:/o:almalinux:almalinux:9::baseos"
+HOME_URL="https://almalinux.org/"
+DOCUMENTATION_URL="https://wiki.almalinux.org/"
+BUG_REPORT_URL="https://bugs.almalinux.org/"
+
+ALMALINUX_MANTISBT_PROJECT="AlmaLinux-9"
+ALMALINUX_MANTISBT_PROJECT_VERSION="9.8"
+REDHAT_SUPPORT_PRODUCT="AlmaLinux"
+REDHAT_SUPPORT_PRODUCT_VERSION="9.8"
+SUPPORT_END=2032-06-01
+
+@@OPENMAP:kernel@@
+6.6.87.2-microsoft-standard-WSL2
+
+@@OPENMAP:arch@@
+x86_64
+
+@@OPENMAP:uptime@@
+11566.54 61201.99
+
+@@OPENMAP:cpuinfo@@
+processor	: 0
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 3
+initial apicid	: 3
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 4
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 5
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 5
+initial apicid	: 5
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 6
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 7
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 7
+initial apicid	: 7
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+
+@@OPENMAP:meminfo@@
+MemTotal:       24611036 kB
+
+@@OPENMAP:dmi@@
+product_serial=
+product_uuid=
+sys_vendor=
+product_name=
+bios_version=
+virt=wsl
+
+@@OPENMAP:ip_addr@@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host proto kernel_lo 
+       valid_lft forever preferred_lft forever
+2: eth0@if506: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 5a:d7:56:2b:57:a1 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.112.4/20 brd 192.168.127.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+@@OPENMAP:ss@@
+udp UNCONN 0      0      127.0.0.11:42589 0.0.0.0:*
+tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
+tcp LISTEN 0      511       0.0.0.0:80    0.0.0.0:*
+tcp LISTEN 0      4096   127.0.0.11:44697 0.0.0.0:*
+tcp LISTEN 0      128          [::]:22       [::]:*
+tcp LISTEN 0      511          [::]:80       [::]:*
+
+@@OPENMAP:packages@@
+gpg-pubkey	b86b3716-61e69f29	(none)
+tzdata	2026e-1.el9_8	noarch
+python3-setuptools-wheel	53.0.0-15.el9	noarch
+pcre2-syntax	10.40-7.el9_8	noarch
+ncurses-base	6.2-12.20210508.el9	noarch
+libreport-filesystem	2.15.2-6.el9.alma	noarch
+dnf-data	4.14.0-34.el9_8.alma.1	noarch
+almalinux-gpg-keys	9.8-1.el9	x86_64
+almalinux-release	9.8-1.el9	x86_64
+almalinux-repos	9.8-1.el9	x86_64
+setup	2.13.7-10.el9	noarch
+filesystem	3.16-5.el9	x86_64
+basesystem	11-13.el9	noarch
+ncurses-libs	6.2-12.20210508.el9	x86_64
+bash	5.1.8-9.el9	x86_64
+libgcc	11.5.0-14.el9.alma.1	x86_64
+glibc-minimal-langpack	2.34-283.el9_8	x86_64
+glibc-common	2.34-283.el9_8	x86_64
+glibc	2.34-283.el9_8	x86_64
+zlib	1.2.11-40.el9	x86_64
+xz-libs	5.2.5-8.el9_8.1	x86_64
+libacl	2.4.0-1.el9_8	x86_64
+bzip2-libs	1.0.8-11.el9	x86_64
+libzstd	1.5.5-1.el9	x86_64
+libcap	2.48-10.el9_8.1	x86_64
+libxcrypt	4.4.18-3.el9	x86_64
+sqlite-libs	3.34.1-11.el9_8	x86_64
+libuuid	2.37.4-25.el9	x86_64
+libgpg-error	1.42-5.el9	x86_64
+libstdc++	11.5.0-14.el9.alma.1	x86_64
+libxml2	2.9.13-14.el9_8.5	x86_64
+libffi	3.4.2-8.el9	x86_64
+libsmartcols	2.37.4-25.el9	x86_64
+popt	1.18-8.el9	x86_64
+readline	8.1-4.el9	x86_64
+crypto-policies	20260224-1.gitea0f072.el9_8	noarch
+libgcrypt	1.10.0-13.el9_8	x86_64
+elfutils-libelf	0.194-1.el9.alma.1	x86_64
+expat	2.5.0-6.el9_8.7	x86_64
+json-c	0.14-11.el9	x86_64
+keyutils-libs	1.6.3-1.el9	x86_64
+libattr	2.6.0-1.el9_8	x86_64
+libcap-ng	0.8.2-7.el9	x86_64
+audit-libs	3.1.5-8.el9	x86_64
+libcom_err	1.46.5-8.el9	x86_64
+libtasn1	4.16.0-10.el9_8	x86_64
+p11-kit	0.26.4-1.el9_8	x86_64
+lua-libs	5.4.4-4.el9	x86_64
+lz4-libs	1.9.3-5.el9	x86_64
+libassuan	2.5.5-3.el9	x86_64
+file-libs	5.39-17.el9	x86_64
+alternatives	1.24-2.el9	x86_64
+p11-kit-trust	0.26.4-1.el9_8	x86_64
+gdbm-libs	1.23-1.el9	x86_64
+gmp	6.2.0-13.el9	x86_64
+libsepol	3.6-3.el9	x86_64
+libsigsegv	2.13-4.el9	x86_64
+libunistring	0.9.10-15.el9	x86_64
+libidn2	2.3.0-7.el9	x86_64
+pcre	8.44-4.el9	x86_64
+grep	3.6-5.el9	x86_64
+pcre2	10.40-7.el9_8	x86_64
+libselinux	3.6-3.el9	x86_64
+coreutils-single	8.32-41.el9_8.1	x86_64
+libblkid	2.37.4-25.el9	x86_64
+libmount	2.37.4-25.el9	x86_64
+sed	4.8-10.el9	x86_64
+libfdisk	2.37.4-25.el9	x86_64
+gzip	1.12-2.el9_8	x86_64
+cracklib	2.9.6-28.el9	x86_64
+cracklib-dicts	2.9.6-28.el9	x86_64
+findutils	4.8.0-7.el9	x86_64
+ca-certificates	2026.2.92_v9.0.319-90.3.el9_8	noarch
+openssl-fips-provider	3.5.8-2.el9_8	x86_64
+openssl-libs	3.5.8-2.el9_8	x86_64
+systemd-libs	252-67.el9_8.6.alma.1	x86_64
+dbus-libs	1.12.20-8.el9	x86_64
+util-linux-core	2.37.4-25.el9	x86_64
+kmod-libs	28-11.el9	x86_64
+libarchive	3.5.3-11.el9_8	x86_64
+libevent	2.1.13-1.el9_8	x86_64
+openssl	3.5.8-2.el9_8	x86_64
+python3-pip-wheel	21.3.1-2.el9_8	noarch
+python3	3.9.25-7.el9_8.6	x86_64
+python3-libs	3.9.25-7.el9_8.6	x86_64
+python3-six	1.15.0-9.el9	noarch
+python3-dateutil	2.9.0.post0-1.el9_7	noarch
+python3-systemd	234-19.el9	x86_64
+libsemanage	3.6-5.el9_6	x86_64
+shadow-utils	4.9-16.el9	x86_64
+libutempter	1.2.1-6.el9	x86_64
+mpfr	4.1.0-10.el9	x86_64
+gawk	5.1.0-6.el9_8.1	x86_64
+attr	2.6.0-1.el9_8	x86_64
+keyutils	1.6.3-1.el9	x86_64
+libcomps	0.1.18-1.el9	x86_64
+python3-libcomps	0.1.18-1.el9	x86_64
+libksba	1.5.1-7.el9	x86_64
+acl	2.4.0-1.el9_8	x86_64
+libdb	5.3.28-57.el9_6	x86_64
+libeconf	0.4.1-7.el9_8	x86_64
+libpwquality	1.4.4-8.el9	x86_64
+pam	1.5.1-28.el9_8.1	x86_64
+util-linux	2.37.4-25.el9	x86_64
+libgomp	11.5.0-14.el9.alma.1	x86_64
+libnghttp2	1.43.0-6.el9_8.2	x86_64
+libseccomp	2.5.2-2.el9	x86_64
+libtool-ltdl	2.4.6-46.el9	x86_64
+libverto	0.3.2-3.el9	x86_64
+libcurl-minimal	7.76.1-40.el9_8.8	x86_64
+curl-minimal	7.76.1-40.el9_8.8	x86_64
+rpm-libs	4.16.1.3-40.el9	x86_64
+rpm	4.16.1.3-40.el9	x86_64
+libsolv	0.7.24-6.el9_8	x86_64
+tpm2-tss	3.2.3-1.el9	x86_64
+ima-evm-utils	1.6.2-2.el9	x86_64
+cyrus-sasl-lib	2.1.27-22.el9	x86_64
+openldap	2.6.8-4.el9	x86_64
+libyaml	0.2.5-7.el9	x86_64
+nettle	3.10.1-1.el9	x86_64
+gnutls	3.8.10-9.el9_8	x86_64
+glib2	2.68.4-19.el9_8.10	x86_64
+libmodulemd	2.13.0-2.el9	x86_64
+python3-dbus	1.2.18-2.el9	x86_64
+npth	1.6-8.el9	x86_64
+gnupg2	2.3.3-5.el9_7	x86_64
+gpgme	1.15.1-6.el9	x86_64
+librepo	1.19.0-1.el9	x86_64
+libdnf	0.69.0-18.el9.alma.1	x86_64
+python3-libdnf	0.69.0-18.el9.alma.1	x86_64
+python3-hawkey	0.69.0-18.el9.alma.1	x86_64
+python3-gpg	1.15.1-6.el9	x86_64
+rpm-sign-libs	4.16.1.3-40.el9	x86_64
+systemd-rpm-macros	252-67.el9_8.6.alma.1	noarch
+dbus	1.12.20-8.el9	x86_64
+systemd-pam	252-67.el9_8.6.alma.1	x86_64
+systemd	252-67.el9_8.6.alma.1	x86_64
+dbus-common	1.12.20-8.el9	noarch
+dbus-broker	28-9.el9_8	x86_64
+elfutils-default-yama-scope	0.194-1.el9.alma.1	noarch
+elfutils-libs	0.194-1.el9.alma.1	x86_64
+elfutils-debuginfod-client	0.194-1.el9.alma.1	x86_64
+binutils-gold	2.35.2-72.el9	x86_64
+binutils	2.35.2-72.el9	x86_64
+rpm-build-libs	4.16.1.3-40.el9	x86_64
+python3-rpm	4.16.1.3-40.el9	x86_64
+python3-dnf	4.14.0-34.el9_8.alma.1	noarch
+dnf	4.14.0-34.el9_8.alma.1	noarch
+yum	4.14.0-34.el9_8.alma.1	noarch
+python3-dnf-plugins-core	4.3.0-26.el9	noarch
+iputils	20210202-15.el9_7	x86_64
+crypto-policies-scripts	20260224-1.gitea0f072.el9_8	noarch
+tar	1.34-13.el9_8	x86_64
+vim-minimal	8.2.2637-26.el9_8.23	x86_64
+xz	5.2.5-8.el9_8.1	x86_64
+hostname	3.23-6.el9	x86_64
+less	590-6.el9	x86_64
+rootfiles	8.1-35.el9	noarch
+krb5-libs	1.21.1-10.el9_8	x86_64
+nginx-filesystem	1.20.1-28.el9_8.6.alma.1	noarch
+nginx-core	1.20.1-28.el9_8.6.alma.1	x86_64
+psmisc	23.4-3.el9	x86_64
+openssh	9.9p1-13.el9_8.alma.1	x86_64
+logrotate	3.18.0-12.el9	x86_64
+libmnl	1.0.4-16.el9_4	x86_64
+libbpf	1.5.0-3.el9	x86_64
+almalinux-logos-httpd	90.7-1.el9	noarch
+nginx	1.20.1-28.el9_8.6.alma.1	x86_64
+iproute	6.17.0-2.el9	x86_64
+openssh-server	9.9p1-13.el9_8.alma.1	x86_64
+procps-ng	3.3.17-14.el9	x86_64
+
+@@OPENMAP:lsblk@@
+loop0 754.6M loop 
+loop1   727M loop 
+sda   388.6M disk Virtual Disk    
+sdb     186M disk Virtual Disk    
+sdc       4G disk Virtual Disk    
+sdd       1T disk Virtual Disk    
+sde     141M disk Virtual Disk    
+sdf       1T disk Virtual Disk    
+
+@@OPENMAP:df@@
+Filesystem     1024-blocks      Used Available Capacity Mounted on
+/dev/sdd        1055762868 678791668 323267728      68% /etc/hosts

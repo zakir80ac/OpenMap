@@ -1,0 +1,22 @@
+{
+  "family": "dns",
+  "vendor": "ISC",
+  "model": "BIND 9 (named), primary for lab.openmap.test and 70.250.10.in-addr.arpa",
+  "firmware": "9.20.30 (Stable Release) <id:769c3fb>",
+  "capturedAt": "2026-11-06T20:58:17Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-021",
+  "collector": "internal/dnszone",
+  "capture": {
+    "image": "internetsystemsconsortium/bind9:9.20",
+    "digest": "internetsystemsconsortium/bind9@sha256:66092edb53c081fa11b1fa8219e99065b0f497cb38f568ba789702a4c10e2590",
+    "command": "named on docker network fxlab-e (10.250.70.53) with allow-transfer { 10.250.70.0/24; }, TCP 53 published on 127.0.0.1:15353; a throwaway capture program inside apps/collectors ran the collector's own dnszone.Transfer(ctx, <recording proxy>, zone, nil) through a TCP proxy that relayed to 127.0.0.1:15353 and wrote both directions byte for byte, once per zone (lab.openmap.test, 70.250.10.in-addr.arpa). No TSIG (TSIG MACs bind to the request MAC and cannot be replayed)."
+  },
+  "files": [
+    { "name": "axfr-lab.openmap.test.client.bin", "description": "DNS-over-TCP stream the collector sent (2-byte length prefix + AXFR query)" },
+    { "name": "axfr-lab.openmap.test.server.bin", "description": "DNS-over-TCP stream BIND answered with (length-prefixed AXFR response messages, SOA ... SOA)" },
+    { "name": "axfr-70.250.10.in-addr.arpa.client.bin", "description": "AXFR query stream for the reverse zone" },
+    { "name": "axfr-70.250.10.in-addr.arpa.server.bin", "description": "AXFR response stream for the reverse zone (PTR records)" }
+  ],
+  "redactions": []
+}

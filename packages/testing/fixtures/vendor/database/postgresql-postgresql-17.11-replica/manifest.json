@@ -1,0 +1,27 @@
+{
+  "family": "database",
+  "vendor": "PostgreSQL Global Development Group",
+  "model": "PostgreSQL (hot-standby streaming replica)",
+  "firmware": "17.11 (Debian 17.11-1.pgdg13+2)",
+  "capturedAt": "2026-11-06T20:53:59Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "postgres:17",
+    "digest": "postgres@sha256:b8faeff7712663c2773a190181e1246e37e364b887611c04658c28b44e2408fe",
+    "setup": "docker run --name fxlab-d-pg1 --hostname pg-primary -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17 -c wal_level=replica -c max_wal_senders=5 -c cluster_name=fxlab-pg; roles: openmap LOGIN with pg_monitor (the read-only discovery account), replicator REPLICATION; databases inventory (5000 rows) and billing (20000 rows); replica fxlab-d-pg2 (hostname pg-replica) built with pg_basebackup -R -X stream and started with cluster_name=fxlab-pg-replica, streaming from fxlab-d-pg1.",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:55433 (pg-replica), user openmap, trust authentication."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": []
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/",
+    "status": 404,
+    "headers": {
+      "Content-Type": "text/html",
+      "Server": "nginx/1.29.5"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/stub_status",
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain",
+      "Server": "nginx/1.29.5"
+    },
+    "body": "002.body"
+  }
+]

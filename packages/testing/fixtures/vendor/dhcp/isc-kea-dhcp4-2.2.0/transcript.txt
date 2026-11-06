@@ -1,0 +1,37 @@
+
+@@OPENMAP:config@@
+// OpenMap container lab: Kea DHCPv4 serving the fxlab-e bridge
+{
+  "Dhcp4": {
+    "interfaces-config": { "interfaces": [ "eth0" ] },
+    "lease-database": { "type": "memfile", "persist": true, "name": "/var/lib/kea/kea-leases4.csv", "lfc-interval": 3600 },
+    "valid-lifetime": 900,
+    "renew-timer": 300,
+    "rebind-timer": 600,
+    "subnet4": [
+      {
+        "id": 1,
+        "subnet": "10.250.70.0/24",
+        "pools": [ { "pool": "10.250.70.160 - 10.250.70.199" } ],
+        "option-data": [
+          { "name": "routers", "data": "10.250.70.1" },
+          { "name": "domain-name-servers", "data": "10.250.70.53, 10.250.70.54" }
+        ]
+      },
+      {
+        "id": 2,
+        "subnet": "10.250.72.0/24",
+        "pools": [ { "pool": "10.250.72.20 - 10.250.72.80" } ],
+        "option-data": [ { "name": "routers", "data": "10.250.72.1" } ]
+      }
+    ],
+    "loggers": [ { "name": "kea-dhcp4", "output_options": [ { "output": "stdout" } ], "severity": "INFO" } ]
+  }
+}
+
+@@OPENMAP:leases@@
+address,hwaddr,client_id,valid_lifetime,expire,subnet_id,fqdn_fwd,fqdn_rev,hostname,state,user_context
+10.250.70.160,f2:d6:45:3f:31:e2,01:f2:d6:45:3f:31:e2,900,1793999904,1,0,0,nas-04,0,
+10.250.70.161,3e:4f:7a:5d:aa:c5,01:3e:4f:7a:5d:aa:c5,900,1793999905,1,0,0,cam-05,0,
+10.250.70.162,76:39:dc:0d:17:ec,01:76:39:dc:0d:17:ec,900,1793999907,1,0,0,kiosk-06,0,
+10.250.70.163,c2:ad:d1:34:38:ca,01:c2:ad:d1:34:38:ca,900,1793999908,1,0,0,guest-07,0,

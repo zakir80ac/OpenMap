@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-b-ps-host",
+  "port": 21,
+  "mode": "banner",
+  "bannerFile": "21-ftp.banner",
+  "bannerBytes": 20,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:09:15Z"
+}

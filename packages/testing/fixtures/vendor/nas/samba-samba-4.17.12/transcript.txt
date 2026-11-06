@@ -1,0 +1,63 @@
+
+@@OPENMAP:samba@@
+# Global parameters
+[global]
+	log file = /var/log/samba/log.%m
+	logging = file
+	map to guest = Bad User
+	max log size = 1000
+	obey pam restrictions = Yes
+	pam password change = Yes
+	panic action = /usr/share/samba/panic-action %d
+	passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+	passwd program = /usr/bin/passwd %u
+	server role = standalone server
+	unix password sync = Yes
+	usershare allow guests = Yes
+	idmap config * : backend = tdb
+
+
+[homes]
+	browseable = No
+	comment = Home Directories
+	create mask = 0700
+	directory mask = 0700
+	valid users = %S
+
+
+[printers]
+	browseable = No
+	comment = All Printers
+	create mask = 0700
+	path = /var/tmp
+	printable = Yes
+
+
+[print$]
+	comment = Printer Drivers
+	path = /var/lib/samba/printers
+
+
+[finance]
+	comment = Finance department share
+	path = /srv/samba/finance
+	read only = No
+	valid users = @finance svc-backup
+
+
+[public]
+	comment = Public read-only drop
+	guest ok = Yes
+	path = /srv/samba/public
+
+
+[archive]
+	available = No
+	comment = Retired archive
+	path = /srv/samba/archive
+
+@@OPENMAP:nfs@@
+/srv/nfs/home 	lab-app01(sync,wdelay,hide,no_subtree_check,sec=sys,rw,root_squash,no_all_squash)
+/srv/nfs/backup
+		lab-backup01(sync,wdelay,hide,no_subtree_check,sec=sys,ro,no_root_squash,no_all_squash)
+/srv/nfs/home 	192.168.112.0/20(sync,wdelay,hide,no_subtree_check,sec=sys,rw,root_squash,no_all_squash)

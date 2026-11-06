@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "Apache Software Foundation",
+  "model": "Apache HTTP Server (official image)",
+  "firmware": "httpd 2.4.69",
+  "capturedAt": "2026-11-06T21:09:15Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "httpd:alpine",
+    "digest": "httpd@sha256:d72968666c0a6961b07036d85fc053bc3cf640583cb1ff8360e1617818f164dc",
+    "target": "fxlab-b-ps-httpd 192.168.128.12 on docker bridge fxlab-b (192.168.128.0/20)",
+    "ports": [
+      80
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout; on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS ports handshake with InsecureSkipVerify, save the peer chain as DER, then send the HEAD); run from the lab manager container 192.168.128.4 on the fxlab-b bridge: pscap -host <container> -port <port> -mode <banner|http|tls> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "80-http.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "80-http.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "Default configuration."
+}

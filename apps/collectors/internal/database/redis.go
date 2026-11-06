@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -81,6 +82,8 @@ func (redisProber) Probe(ctx context.Context, host string, port int, user, passw
 		}
 		inv.Databases = append(inv.Databases, Database{Name: k, State: "online", Extra: map[string]any{"keys": keys, "keyspace": v}})
 	}
+	// INFO is parsed into a map; order the keyspaces so every run emits the same sequence.
+	sort.Slice(inv.Databases, func(i, j int) bool { return inv.Databases[i].Name < inv.Databases[j].Name })
 	return inv, nil
 }
 

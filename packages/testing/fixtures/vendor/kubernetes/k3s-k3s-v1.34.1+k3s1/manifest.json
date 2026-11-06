@@ -1,0 +1,63 @@
+{
+  "family": "kubernetes",
+  "vendor": "k3s",
+  "model": "K3s server (single node, embedded containerd, Traefik ingress, ServiceLB)",
+  "firmware": "v1.34.1+k3s1 (containerd 2.1.4-k3s2)",
+  "capturedAt": "2026-11-06T20:59:47Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-011",
+  "collector": "internal/kubernetes",
+  "capture": {
+    "image": "rancher/k3s:v1.34.1-k3s1",
+    "digest": "rancher/k3s@sha256:5e0707cfd1239b358ef73f3254bc3eadc027dd30cd5ec6ca41e29e47652a1b8c",
+    "setup": "privileged `k3s server --disable=metrics-server --tls-san 127.0.0.1` on the lab network; namespace shop with Deployment web (2 x nginx:alpine), StatefulSet cache (redis:7-alpine), ClusterIP service web, headless service cache and Ingress shop.fxlab.test -> web; Traefik installed by the bundled Helm controller",
+    "command": "apps/collectors/cmd/kubernetes invoked with target http://127.0.0.1:19643 (proxy -> API server https://127.0.0.1:16443), options {clusterName: fxlab-k3s}; authenticated with a bound token of a temporary ServiceAccount `fxlab-reader` whose ClusterRole grants only get/list on namespaces, nodes, pods, services, deployments, statefulsets, daemonsets, replicasets and ingresses (no Secrets or ConfigMaps); the ServiceAccount, ClusterRole and binding were deleted after the capture and the token is not stored; recording HTTP proxy (throwaway lab tool, not checked in) between the collector and the container; it stores each response status, Content-Type/Server/ETag headers and the body bytes unchanged; request Authorization headers are forwarded and never stored"
+  },
+  "files": [
+    {
+      "name": "001.body",
+      "description": "GET /version"
+    },
+    {
+      "name": "002.body",
+      "description": "GET /api/v1/namespaces"
+    },
+    {
+      "name": "003.body",
+      "description": "GET /api/v1/nodes"
+    },
+    {
+      "name": "004.body",
+      "description": "GET /apis/apps/v1/deployments"
+    },
+    {
+      "name": "005.body",
+      "description": "GET /apis/apps/v1/statefulsets"
+    },
+    {
+      "name": "006.body",
+      "description": "GET /apis/apps/v1/daemonsets"
+    },
+    {
+      "name": "007.body",
+      "description": "GET /apis/apps/v1/replicasets"
+    },
+    {
+      "name": "008.body",
+      "description": "GET /api/v1/pods"
+    },
+    {
+      "name": "009.body",
+      "description": "GET /api/v1/services"
+    },
+    {
+      "name": "010.body",
+      "description": "GET /apis/networking.k8s.io/v1/ingresses"
+    },
+    {
+      "name": "exchanges.json",
+      "description": "ordered list of the collector's API requests (/version, namespaces, nodes, deployments, statefulsets, daemonsets, replicasets, pods, services, ingresses) with status"
+    }
+  ],
+  "redactions": []
+}

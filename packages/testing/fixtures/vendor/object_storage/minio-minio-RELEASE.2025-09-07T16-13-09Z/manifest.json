@@ -1,0 +1,87 @@
+{
+  "family": "object_storage",
+  "vendor": "minio",
+  "model": "MinIO server (single node, single drive)",
+  "firmware": "RELEASE.2025-09-07T16-13-09Z (commit 07c3a429bfed433e49018cb0f78a52145d4bedeb)",
+  "capturedAt": "2026-11-06T20:49:11Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-017",
+  "collector": "internal/objectstore",
+  "capture": {
+    "image": "minio/minio:latest",
+    "digest": "minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+    "setup": "random root credentials and a static MINIO_KMS_SECRET_KEY; seeded with minio/mc (minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727): buckets app-assets (versioning enabled, 3 objects, one overwritten), backups (SSE-S3 default encryption, 64 KiB object), public-downloads (anonymous download policy, 1 object)",
+    "command": "apps/collectors/cmd/object_storage invoked with target http://127.0.0.1:19900 (proxy keeping the Host header so SigV4 validates -> container :9000), options {pathStyle: true}, api_token credential with the lab root access key; recording HTTP proxy (throwaway lab tool, not checked in) between the collector and the container; it stores each response status, Content-Type/Server/ETag headers and the body bytes unchanged; request Authorization headers are forwarded and never stored"
+  },
+  "files": [
+    {
+      "name": "001.body",
+      "description": "ListAllMyBucketsResult"
+    },
+    {
+      "name": "002.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "003.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "004.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "005.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "006.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "007.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "008.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "009.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "010.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "011.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "012.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "013.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "014.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "015.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "016.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "exchanges.json",
+      "description": "ordered list of the collector's signed S3 requests (ListBuckets, then per bucket ?location, ?versioning, ?encryption, ?publicAccessBlock, ListObjectsV2) with status"
+    }
+  ],
+  "redactions": []
+}

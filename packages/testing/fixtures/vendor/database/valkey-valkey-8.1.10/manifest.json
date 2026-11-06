@@ -1,0 +1,27 @@
+{
+  "family": "database",
+  "vendor": "Linux Foundation (Valkey project)",
+  "model": "Valkey (standalone)",
+  "firmware": "8.1.10",
+  "capturedAt": "2026-11-06T20:53:14Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "valkey/valkey:8",
+    "digest": "valkey/valkey@sha256:640c5e62cea04b6d6f2084232651d0cc70362d31f4f805e7be94dbed6855e8f2",
+    "setup": "docker run --name fxlab-d-valkey valkey/valkey:8 (2 keys in db0, 1 list in db1); no auth.",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:56379, no auth."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": []
+}

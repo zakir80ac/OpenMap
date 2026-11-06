@@ -1,0 +1,33 @@
+{
+  "family": "database",
+  "vendor": "MariaDB Foundation",
+  "model": "MariaDB Server (standalone)",
+  "firmware": "11.4.13-MariaDB-ubu2404",
+  "capturedAt": "2026-11-06T20:54:21Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "mariadb:11.4",
+    "digest": "mariadb@sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620",
+    "setup": "docker run --name fxlab-d-maria --hostname mariadb-lab mariadb:11.4; schemas shop (orders 8000 rows, customers 500) and hr (staff 40); discovery account openmap@'%' (mysql_native_password) with SELECT, PROCESS, SLAVE MONITOR, BINLOG MONITOR.",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:53307 (mariadb-lab), user openmap, mysql_native_password, no TLS."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": [
+    {
+      "file": "wire/conn-1.bin",
+      "what": "client HandshakeResponse41 auth-response (20-byte mysql_native_password scramble of the lab account password) at byte offset 140",
+      "replacement": "20 zero bytes (same length; replay does not read client content)"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "family": "database",
+  "vendor": "Oracle",
+  "model": "MySQL Community Server (GTID replica)",
+  "firmware": "8.4.13",
+  "capturedAt": "2026-11-06T20:56:20Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "mysql:8.4",
+    "digest": "mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902",
+    "setup": "docker run --name fxlab-d-mysql1 --hostname mysql-primary mysql:8.4 --server-id=1 --log-bin=binlog --gtid-mode=ON --enforce-gtid-consistency=ON; fxlab-d-mysql2 --hostname mysql-replica same flags with --server-id=2 --read-only=ON, CHANGE REPLICATION SOURCE TO SOURCE_HOST='fxlab-d-mysql1', SOURCE_AUTO_POSITION=1, GET_SOURCE_PUBLIC_KEY=1; START REPLICA; discovery account openmap@'%' (caching_sha2_password) with SELECT, PROCESS, REPLICATION CLIENT; schemas crm (3000 rows) and ledger (12000 + 2 rows).",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:53308 (mysql-replica), user openmap; caching_sha2_password, no TLS."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": [
+    {
+      "file": "wire/conn-1.bin",
+      "what": "client HandshakeResponse41 auth-response (32-byte caching_sha2_password scramble of the lab account password) at byte offset 123",
+      "replacement": "32 zero bytes (same length; replay does not read client content)"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+[
+  {
+    "method": "GET",
+    "path": "/version",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "64a00f66-ffa5-463b-b351-d880edd278f5",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/namespaces",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "2badbd36-ae37-4356-b070-9061fdf38aff",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "002.body"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/nodes",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "3558cd7d-76dc-45f8-a03d-9399fabe3260",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "003.body"
+  },
+  {
+    "method": "GET",
+    "path": "/apis/apps/v1/deployments",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "61a982e6-c30a-4b2c-8794-ef96b7ecfaea",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "004.body"
+  },
+  {
+    "method": "GET",
+    "path": "/apis/apps/v1/statefulsets",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "ff9e93d4-8f13-4b96-aa4a-fd520726423b",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "005.body"
+  },
+  {
+    "method": "GET",
+    "path": "/apis/apps/v1/daemonsets",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "8346bb7e-19a1-4043-b4ad-531af03f1d42",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "006.body"
+  },
+  {
+    "method": "GET",
+    "path": "/apis/apps/v1/replicasets",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "8639ac06-c4c8-4c93-a52e-f87be39fca97",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "007.body"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pods",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "43244fb4-3030-4581-be91-cfe75e61c732",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "008.body"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/services",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "e2cf6c6f-95c8-4748-932c-4009d9da12ab",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "009.body"
+  },
+  {
+    "method": "GET",
+    "path": "/apis/networking.k8s.io/v1/ingresses",
+    "status": 200,
+    "headers": {
+      "Audit-Id": "289bd1a4-ab7d-441e-8738-56f906515f66",
+      "Content-Type": "application/json",
+      "X-Kubernetes-Pf-Flowschema-Uid": "b9fc4b7d-cc88-4821-96ee-8f66cd4becda"
+    },
+    "body": "010.body"
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "protocol": "redis",
+  "connections": [
+    {
+      "file": "wire/conn-1.bin",
+      "steps": [
+        {
+          "dir": "client",
+          "offset": 0,
+          "length": 59
+        },
+        {
+          "dir": "server",
+          "offset": 59,
+          "length": 146
+        },
+        {
+          "dir": "client",
+          "offset": 205,
+          "length": 53
+        },
+        {
+          "dir": "server",
+          "offset": 258,
+          "length": 5
+        },
+        {
+          "dir": "client",
+          "offset": 263,
+          "length": 95
+        },
+        {
+          "dir": "server",
+          "offset": 358,
+          "length": 65
+        },
+        {
+          "dir": "client",
+          "offset": 423,
+          "length": 123
+        },
+        {
+          "dir": "server",
+          "offset": 546,
+          "length": 10
+        },
+        {
+          "dir": "client",
+          "offset": 556,
+          "length": 14
+        },
+        {
+          "dir": "server",
+          "offset": 570,
+          "length": 5747
+        }
+      ]
+    }
+  ]
+}

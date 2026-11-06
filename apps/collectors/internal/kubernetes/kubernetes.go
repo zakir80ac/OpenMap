@@ -565,6 +565,8 @@ func distribution(inv *Inventory) string {
 			return "aks-or-self-managed-azure"
 		case strings.HasPrefix(n.Spec.ProviderID, "gce://"):
 			return "gke-or-self-managed-gcp"
+		case strings.HasPrefix(n.Spec.ProviderID, "kind://"):
+			return "kind"
 		}
 	}
 	if strings.Contains(inv.Version.GitVersion, "k3s") {

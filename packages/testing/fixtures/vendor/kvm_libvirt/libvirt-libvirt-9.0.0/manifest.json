@@ -1,0 +1,19 @@
+{
+  "family": "kvm_libvirt",
+  "vendor": "libvirt project / QEMU (Debian build)",
+  "model": "libvirtd + QEMU system emulator on Debian 12",
+  "firmware": "libvirt 9.0.0-4+deb12u2, QEMU 7.2.22 (qemu-system-x86 1:7.2+dfsg-7+deb12u18+b3)",
+  "capturedAt": "2026-11-06T21:25:57Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-007",
+  "collector": "internal/libvirt",
+  "capture": {
+    "image": "debian:12",
+    "digest": "sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "Privileged container run with --init; apt-get install --no-install-recommends libvirt-daemon-system libvirt-clients qemu-system-x86 qemu-utils openssh-server netbase dnsmasq-base iptables iproute2; virtlogd -d; libvirtd -d (libvirtd.conf: unix_sock_group = libvirt, unix_sock_rw_perms = 0770, auth_unix_rw = none, as polkit has no D-Bus in the lab); dir pool 'lab' with qcow2 volumes app01-root (2G) and db01-root (4G); network 'default' started; domain lab-app01 (type qemu, 1 vCPU, 256 MiB, virtio disk volume, virtio NIC on network default, autostart, running) and lab-db01 (2 vCPU, 512 MiB, virtio disk volume, empty SATA cdrom, user-mode e1000 NIC, shut off). Neither guest has an operating system, so guest-agent and lease addresses are empty. The real kvm_libvirt collector binary (apps/collectors/cmd/kvm_libvirt) ran libvirt.Script() over SSH as unprivileged user 'openmap' (member of group libvirt) against 127.0.0.1:<published sshd port>; the raw stdout it stored as cli_output evidence is copied here byte-for-byte."
+  },
+  "files": [
+    { "name": "transcript.txt", "description": "Raw stdout of libvirt.Script(): virsh version/nodeinfo/pool-list/net-list/list and per-domain dominfo, domiflist, domblklist, domifaddr, guestinfo sections" }
+  ],
+  "redactions": []
+}

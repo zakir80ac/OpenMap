@@ -1,0 +1,27 @@
+{
+  "family": "snmp",
+  "vendor": "Net-SNMP",
+  "model": "snmpd on Debian GNU/Linux 12 (bookworm), with lldpd 1.0.16 as AgentX subagent",
+  "firmware": "net-snmp 5.9.3+dfsg-2+deb12u1",
+  "capturedAt": "2026-11-06T20:52:00Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-001",
+  "collector": "internal/snmp",
+  "capture": {
+    "image": "debian:12 (+ apt: snmpd snmp lldpd iproute2)",
+    "digest": "debian@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "manager": "alpine:3.20 (+ apk: net-snmp-tools 5.9.4) alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "agentConfig": "agentAddress udp:161; rocommunity <community> default; rouser fxlabv3 priv; createUser fxlabv3 SHA <authPassphrase> AES <privPassphrase>; sysLocation OpenMap container lab, rack B; sysContact noc@lab.openmap.test; master agentx. lldpd -x on eth0 and swp1; swp1 is a veth to a peer network namespace running a second lldpd (system name lab-peer-sw01), so lldpRemTable holds a real neighbour.",
+    "command": "for r in .1.3.6.1.2.1.1 .1.3.6.1.2.1.2.2 .1.3.6.1.2.1.31.1.1 .1.3.6.1.2.1.4.20 .1.3.6.1.2.1.4.22 .1.3.6.1.2.1.47.1.1.1 .1.3.6.1.2.1.17.1.4 .1.3.6.1.2.1.17.7.1.4 .1.0.8802.1.1.2.1.3 .1.0.8802.1.1.2.1.4.1 .1.3.6.1.2.1.33.1 .1.3.6.1.2.1.99.1.1; do snmpbulkwalk -v2c -c <community> -m '' -On -Cr25 fxlab-b-snmp-debian $r >> v2c.walk; snmpbulkwalk -v3 -l authPriv -u fxlabv3 -a SHA -A <authPassphrase> -x AES -X <privPassphrase> -m '' -On -Cr25 fxlab-b-snmp-debian $r >> v3.walk; done",
+    "network": "dedicated docker bridge fxlab-b (192.168.128.0/20); manager 192.168.128.4"
+  },
+  "files": [
+    { "name": "v2c.walk", "description": "snmpbulkwalk -On output over SNMPv2c for every subtree the collector reads (system, ifTable, ifXTable, ipAddrTable, ipNetToMediaTable, ENTITY-MIB, BRIDGE/Q-BRIDGE, LLDP local and remote, UPS-MIB, ENTITY-SENSOR-MIB); absent MIBs answer noSuchObject" },
+    { "name": "v3.walk", "description": "the same walk over SNMPv3 authPriv (SHA / AES-128), user fxlabv3" }
+  ],
+  "redactions": [
+    { "file": "manifest.json", "what": "v2c community string in the documented command and agent config (never present in the walk output)", "replacement": "<community>" },
+    { "file": "manifest.json", "what": "v3 authentication and privacy passphrases in the documented command and agent config (never present in the walk output)", "replacement": "<authPassphrase>, <privPassphrase>" }
+  ],
+  "notes": "Container agent: interface MACs are Docker-assigned locally administered addresses, addresses are on the private lab bridge, there is no ENTITY-MIB serial. Validated live as well: the snmp collector binary (gosnmp) walked both lab agents over v2c and v3 authPriv with status success."
+}

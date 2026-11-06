@@ -1,0 +1,8 @@
+{
+  "chainLength": 2,
+  "cipherSuite": "TLS_AES_128_GCM_SHA256",
+  "serverName": "nginx.fxlab.test",
+  "tlsVersion": "TLS 1.3",
+  "verifiedAgainstSystemRoots": false,
+  "verifyError": "x509: certificate signed by unknown authority"
+}

@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "Oracle",
+  "model": "MySQL Community Server (official image)",
+  "firmware": "8.4.13",
+  "capturedAt": "2026-11-06T21:09:15Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "mysql:8.4",
+    "digest": "mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902",
+    "target": "fxlab-b-ps-mysql 192.168.128.8 on docker bridge fxlab-b (192.168.128.0/20)",
+    "ports": [
+      3306
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout; on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS ports handshake with InsecureSkipVerify, save the peer chain as DER, then send the HEAD); run from the lab manager container 192.168.128.4 on the fxlab-b bridge: pscap -host <container> -port <port> -mode <banner|http|tls> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "3306-mysql.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "3306-mysql.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "MYSQL_RANDOM_ROOT_PASSWORD=yes. The banner is the protocol-10 handshake; its auth-plugin-data is a per-connection random scramble, not a credential."
+}

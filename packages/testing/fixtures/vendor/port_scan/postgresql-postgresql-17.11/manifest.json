@@ -1,0 +1,31 @@
+{
+  "family": "port_scan",
+  "vendor": "PostgreSQL Global Development Group",
+  "model": "PostgreSQL (official image)",
+  "firmware": "17.11",
+  "capturedAt": "2026-11-06T21:09:15Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "postgres:17-alpine",
+    "digest": "postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24",
+    "target": "fxlab-b-ps-pg 192.168.128.11 on docker bridge fxlab-b (192.168.128.0/20)",
+    "ports": [
+      5432
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout; on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS ports handshake with InsecureSkipVerify, save the peer chain as DER, then send the HEAD); run from the lab manager container 192.168.128.4 on the fxlab-b bridge: pscap -host <container> -port <port> -mode <banner|http|tls> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "5432-postgresql.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "5432-postgresql.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "PostgreSQL waits for a startup message: the recorded banner is empty and the TLS retry (no SSLRequest) failed, so classification falls back on the port."
+}

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>public-downloads</Name><Prefix></Prefix><KeyCount>1</KeyCount><MaxKeys>1000</MaxKeys><IsTruncated>false</IsTruncated><Contents><Key>readme.txt</Key><LastModified>2026-11-06T20:48:52.302Z</LastModified><ETag>&#34;3c7253c0b17971959285c18f6eea6509&#34;</ETag><Size>15</Size><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>

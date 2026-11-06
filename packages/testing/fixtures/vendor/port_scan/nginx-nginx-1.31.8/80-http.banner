@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Server: nginx/1.31.8
+Date: Fri, 06 Nov 2026 21:09:15 GMT
+Content-Type: text/html
+Content-Length: 896
+Last-Modified: Wed, 21 Oct 2026 17:54:44 GMT
+Connection: close
+ETag: "6ad8fc64-380"
+Accept-Ranges: bytes
+

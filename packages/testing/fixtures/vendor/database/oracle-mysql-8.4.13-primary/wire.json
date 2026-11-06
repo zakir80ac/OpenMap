@@ -1,0 +1,200 @@
+{
+  "protocol": "mysql",
+  "connections": [
+    {
+      "file": "wire/conn-1.bin",
+      "steps": [
+        {
+          "dir": "server",
+          "offset": 0,
+          "length": 78
+        },
+        {
+          "dir": "client",
+          "offset": 78,
+          "length": 191
+        },
+        {
+          "dir": "server",
+          "offset": 269,
+          "length": 17
+        },
+        {
+          "dir": "client",
+          "offset": 286,
+          "length": 5
+        },
+        {
+          "dir": "server",
+          "offset": 291,
+          "length": 11
+        },
+        {
+          "dir": "client",
+          "offset": 302,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 323,
+          "length": 62
+        },
+        {
+          "dir": "client",
+          "offset": 385,
+          "length": 22
+        },
+        {
+          "dir": "server",
+          "offset": 407,
+          "length": 70
+        },
+        {
+          "dir": "client",
+          "offset": 477,
+          "length": 29
+        },
+        {
+          "dir": "server",
+          "offset": 506,
+          "length": 92
+        },
+        {
+          "dir": "client",
+          "offset": 598,
+          "length": 25
+        },
+        {
+          "dir": "server",
+          "offset": 623,
+          "length": 96
+        },
+        {
+          "dir": "client",
+          "offset": 719,
+          "length": 37
+        },
+        {
+          "dir": "server",
+          "offset": 756,
+          "length": 206
+        },
+        {
+          "dir": "client",
+          "offset": 962,
+          "length": 48
+        },
+        {
+          "dir": "server",
+          "offset": 1010,
+          "length": 216
+        },
+        {
+          "dir": "client",
+          "offset": 1226,
+          "length": 51
+        },
+        {
+          "dir": "server",
+          "offset": 1277,
+          "length": 219
+        },
+        {
+          "dir": "client",
+          "offset": 1496,
+          "length": 29
+        },
+        {
+          "dir": "server",
+          "offset": 1525,
+          "length": 67
+        },
+        {
+          "dir": "client",
+          "offset": 1592,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 1613,
+          "length": 71
+        },
+        {
+          "dir": "client",
+          "offset": 1684,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 1705,
+          "length": 57
+        },
+        {
+          "dir": "client",
+          "offset": 1762,
+          "length": 23
+        },
+        {
+          "dir": "server",
+          "offset": 1785,
+          "length": 60
+        },
+        {
+          "dir": "client",
+          "offset": 1845,
+          "length": 37
+        },
+        {
+          "dir": "server",
+          "offset": 1882,
+          "length": 81
+        },
+        {
+          "dir": "client",
+          "offset": 1963,
+          "length": 23
+        },
+        {
+          "dir": "server",
+          "offset": 1986,
+          "length": 59
+        },
+        {
+          "dir": "client",
+          "offset": 2045,
+          "length": 24
+        },
+        {
+          "dir": "server",
+          "offset": 2069,
+          "length": 2582
+        },
+        {
+          "dir": "client",
+          "offset": 4651,
+          "length": 104
+        },
+        {
+          "dir": "server",
+          "offset": 4755,
+          "length": 114
+        },
+        {
+          "dir": "client",
+          "offset": 4869,
+          "length": 239
+        },
+        {
+          "dir": "server",
+          "offset": 5108,
+          "length": 240
+        },
+        {
+          "dir": "client",
+          "offset": 5348,
+          "length": 5
+        }
+      ]
+    }
+  ]
+}

@@ -441,14 +441,20 @@ type Edge struct {
 }
 
 // Aggregate folds flows into edges keyed by source, destination, destination port and protocol.
-// Server-side ports are assumed to be the lower well-known side: when the source port is below the
-// destination port and under the registered range, the edge is recorded in the reverse direction.
+// Server-side ports are assumed to be the lower well-known side: a reply flow (source port below the
+// destination port, destination port in a client ephemeral range or the source a well-known port) is
+// recorded in the reverse direction so both halves of a conversation fold into one edge.
 func Aggregate(flows []Flow, minBytes uint64) map[string]*Edge {
-	const registeredPortLimit = 49152
+	// Linux clients draw ephemeral ports from 32768 (ip_local_port_range); the IANA / Windows dynamic
+	// range (49152) lies above it, so the lower bound covers both.
+	const ephemeralPortFloor = 32768
+	const wellKnownPortLimit = 1024
 	edges := map[string]*Edge{}
 	for _, f := range flows {
 		src, dst, port := f.Src, f.Dst, f.DstPort
-		if f.SrcPort > 0 && f.SrcPort < f.DstPort && f.SrcPort < registeredPortLimit && f.DstPort >= registeredPortLimit {
+		reply := f.SrcPort > 0 && f.SrcPort < f.DstPort &&
+			(f.DstPort >= ephemeralPortFloor || f.SrcPort < wellKnownPortLimit && f.DstPort >= wellKnownPortLimit)
+		if reply {
 			src, dst, port = f.Dst, f.Src, f.SrcPort
 		}
 		key := src + ">" + dst + ":" + strconv.Itoa(port) + "/" + strconv.Itoa(f.Protocol)

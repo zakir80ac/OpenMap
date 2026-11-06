@@ -6,6 +6,7 @@ package portscan
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"net"
@@ -72,6 +73,8 @@ type Port struct {
 	Service string
 	Product string
 	Version string
+	// raw is the banner as received, kept for parsers that need the binary framing printable() hides.
+	raw []byte
 }
 
 var bannerRules = []struct {
@@ -81,7 +84,9 @@ var bannerRules = []struct {
 	{"ssh", regexp.MustCompile(`^SSH-[\d.]+-(\S+)`)},
 	{"http", regexp.MustCompile(`^HTTP/[\d.]+ \d+`)},
 	{"smtp", regexp.MustCompile(`^220[ -].*(SMTP|ESMTP|Postfix|Exim|Exchange)`)},
-	{"ftp", regexp.MustCompile(`^220[ -].*(FTP|FileZilla|vsftpd|ProFTPD)`)},
+	// Product names before the generic keyword, case-insensitive and leftmost: "220 (vsFTPd 3.0.5)"
+	// must yield vsFTPd, not the "FTP" inside it.
+	{"ftp", regexp.MustCompile(`(?i)^220[ -].*?(FileZilla|vsftpd|ProFTPD|Pure-FTPd|FTP)`)},
 	{"pop3", regexp.MustCompile(`^\+OK`)},
 	{"imap", regexp.MustCompile(`^\* OK`)},
 	{"mysql", regexp.MustCompile(`^.{4}\n([\d.]+-?[\w.-]*)\.`)},
@@ -111,6 +116,11 @@ func Classify(p *Port) {
 			p.Product = strings.TrimSpace(m[1])
 		}
 	}
+	if p.Service == "mysql" {
+		if v := mysqlHandshakeVersion(p.raw); v != "" {
+			p.Product = v
+		}
+	}
 	if p.Service == "ssh" {
 		if i := strings.Index(p.Product, "_"); i > 0 {
 			p.Version = p.Product[i+1:]
@@ -129,10 +139,35 @@ func Classify(p *Port) {
 }
 
 func readBanner(conn net.Conn, timeout time.Duration) string {
+	return printable(readRaw(conn, timeout))
+}
+
+func readRaw(conn net.Conn, timeout time.Duration) []byte {
 	_ = conn.SetReadDeadline(time.Now().Add(timeout))
 	buf := make([]byte, bannerBytes)
 	n, _ := bufio.NewReader(conn).Read(buf)
-	return printable(buf[:n])
+	return buf[:n]
+}
+
+// mysqlHandshakeVersion reads the server version from a MySQL / MariaDB protocol-10 handshake
+// (3-byte length, sequence id, 0x0a, NUL-terminated version). printable() turns the terminator and
+// the connection id into '.', which the version itself may contain, so the boundary needs the raw bytes.
+func mysqlHandshakeVersion(raw []byte) string {
+	const headerLen, protocolV10 = 4, 0x0a
+	if len(raw) <= headerLen+1 || raw[headerLen] != protocolV10 {
+		return ""
+	}
+	end := bytes.IndexByte(raw[headerLen+1:], 0)
+	if end <= 0 {
+		return ""
+	}
+	v := raw[headerLen+1 : headerLen+1+end]
+	for _, c := range v {
+		if c < ' ' || c >= 0x7f {
+			return ""
+		}
+	}
+	return string(v)
 }
 
 // printable keeps the banner as text: binary protocol bytes (MySQL, Postgres, RDP) become '.',
@@ -194,7 +229,8 @@ func Probe(ctx context.Context, host string, port int, connectTimeout, bannerTim
 		_ = conn.SetWriteDeadline(time.Now().Add(bannerTimeout))
 		_, _ = conn.Write([]byte("HEAD / HTTP/1.0\r\nHost: " + host + "\r\n\r\n"))
 	}
-	p.Banner = readBanner(conn, bannerTimeout)
+	p.raw = readRaw(conn, bannerTimeout)
+	p.Banner = printable(p.raw)
 	_ = conn.Close()
 	if p.Banner == "" && !httpPorts[port] {
 		// Silent service: a TLS handshake tells us whether it is an unlisted TLS port.

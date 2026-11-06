@@ -1,0 +1,76 @@
+{
+  "family": "port_scan",
+  "vendor": "Alpine Linux",
+  "model": "Linux host with OpenSSH, Postfix, vsftpd, Dovecot and BusyBox telnetd",
+  "firmware": "alpine 3.20: openssh-server 9.7_p1-r6, postfix 3.9.11-r0, vsftpd 3.0.5-r2, dovecot 2.3.21.1-r0 (+ dovecot-pop3d), busybox-extras 1.36.1-r31",
+  "capturedAt": "2026-11-06T21:09:15Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "alpine:3.20 (+ apk: openssh postfix vsftpd dovecot dovecot-pop3d busybox-extras)",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "target": "fxlab-b-ps-host 192.168.128.14 on docker bridge fxlab-b (192.168.128.0/20)",
+    "ports": [
+      21,
+      22,
+      23,
+      25,
+      110,
+      143
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout; on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS ports handshake with InsecureSkipVerify, save the peer chain as DER, then send the HEAD); run from the lab manager container 192.168.128.4 on the fxlab-b bridge: pscap -host <container> -port <port> -mode <banner|http|tls> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "110-pop3.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "110-pop3.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "143-imap.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "143-imap.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "21-ftp.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "21-ftp.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "22-ssh.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "22-ssh.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "23-telnet.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "23-telnet.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "25-smtp.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "25-smtp.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "Services started with distro defaults (sshd, postfix start with myhostname fxlab-linuxhost.lab.openmap.test, vsftpd anonymous listen, dovecot imap/pop3 without TLS, telnetd -l /bin/login)."
+}

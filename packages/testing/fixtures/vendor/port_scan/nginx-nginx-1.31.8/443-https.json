@@ -1,0 +1,14 @@
+{
+  "host": "fxlab-b-ps-nginx",
+  "port": 443,
+  "mode": "tls+http",
+  "bannerFile": "443-https.banner",
+  "bannerBytes": 233,
+  "tls": true,
+  "tlsVersion": "TLS 1.3",
+  "chainFiles": [
+    "443-https.chain0.der",
+    "443-https.chain1.der"
+  ],
+  "capturedAt": "2026-11-06T21:09:15Z"
+}

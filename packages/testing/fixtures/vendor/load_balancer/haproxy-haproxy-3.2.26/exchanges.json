@@ -1,0 +1,11 @@
+[
+  {
+    "method": "GET",
+    "path": "/stats;csv",
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/plain"
+    },
+    "body": "001.body"
+  }
+]

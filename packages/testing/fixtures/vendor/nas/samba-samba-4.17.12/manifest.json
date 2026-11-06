@@ -1,0 +1,19 @@
+{
+  "family": "nas",
+  "vendor": "Samba Team (Debian build) + Linux nfs-utils",
+  "model": "Samba standalone file server with knfsd export table on Debian 12",
+  "firmware": "Samba 4.17.12-Debian (2:4.17.12+dfsg-0+deb12u4); nfs-kernel-server 1:2.6.2-4+deb12u1",
+  "capturedAt": "2026-11-06T21:05:40Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-016",
+  "collector": "internal/nas",
+  "capture": {
+    "image": "debian:12",
+    "digest": "sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "apt-get install samba nfs-kernel-server openssh-server sudo; Debian default smb.conf plus shares [finance] (valid users = @finance svc-backup, read only = no), [public] (guest ok = yes, read only = yes), [archive] (available = no); /etc/exports with /srv/nfs/home (192.168.112.0/20 and lab-app01, rw) and /srv/nfs/backup (lab-backup01, ro,no_root_squash); exportfs -ra; sudoers lets user 'openmap' run /usr/sbin/exportfs. The real nas collector binary (apps/collectors/cmd/nas, options mode=linux, password credential, trustOnFirstUse) ran nas.LinuxScript over SSH against 127.0.0.1:<published sshd port>; the raw stdout it stored as cli_transcript evidence is copied here byte-for-byte (exportfs -v answered through sudo -n)."
+  },
+  "files": [
+    { "name": "transcript.txt", "description": "Raw stdout of nas.LinuxScript: @@OPENMAP:samba@@ testparm -s dump and @@OPENMAP:nfs@@ exportfs -v table (with the wrapped-line form)" }
+  ],
+  "redactions": []
+}

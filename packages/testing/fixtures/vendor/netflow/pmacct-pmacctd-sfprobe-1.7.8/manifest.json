@@ -1,0 +1,23 @@
+{
+  "family": "netflow",
+  "vendor": "pmacct",
+  "model": "pmacctd with the sfprobe plugin (sFlow v5 agent) on Alpine Linux 3.20",
+  "firmware": "pmacct 1.7.8-r1",
+  "capturedAt": "2026-11-06T21:02:00Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-019",
+  "collector": "internal/netflow",
+  "capture": {
+    "image": "alpine:3.20 (+ apk: pmacct 1.7.8-r1, tcpdump 4.99.4-r1, curl)",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "command": "exporter 192.168.128.5: pmacctd -f sfprobe.conf (live on eth0, sampling_rate 1) and tcpdump -i eth0 -U -w traffic.pcap with the same filter, while running 3x curl http://192.168.128.7/blob.bin (16 KiB), 1x curl http://192.168.128.7/index.html and 4x echo 'openmap flow lab datagram N' | nc -u -w1 192.168.128.7 5514. Receiver 192.168.128.6: tcpdump -i eth0 -U -w sflow-v5.pcap 'udp dst port 6343'.",
+    "network": "dedicated docker bridge fxlab-b (192.168.128.0/20)"
+  },
+  "files": [
+    { "name": "sflow-v5.pcap", "description": "sFlow v5 datagrams as received on the wire: flow samples with raw packet header records (frame_length includes the 4-byte FCS, stripped=4)" },
+    { "name": "traffic.pcap", "description": "the traffic pmacctd sampled (ground truth), recorded at the same time on the exporter" },
+    { "name": "sfprobe.conf", "description": "the pmacctd configuration used" }
+  ],
+  "redactions": [],
+  "notes": "Live export: pmacctd sampled every packet (rate 1) from eth0."
+}
