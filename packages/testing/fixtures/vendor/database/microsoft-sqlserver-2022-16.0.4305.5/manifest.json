@@ -1,0 +1,43 @@
+{
+  "family": "database",
+  "vendor": "Microsoft",
+  "model": "SQL Server 2022 Developer Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS), standalone",
+  "firmware": "16.0.4305.5 (RTM-CU27-GDR, KB5126934)",
+  "capturedAt": "2026-11-06T21:06:02Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "mcr.microsoft.com/mssql/server:2022-latest",
+    "digest": "mcr.microsoft.com/mssql/server@sha256:cf8f0ab2ebe61feec2eed2629061a07d247f791c2a8ddda74a4ac9f06a291718",
+    "setup": "docker run --name fxlab-d-mssql --hostname mssql-lab -e ACCEPT_EULA=Y -e MSSQL_PID=Developer mcr.microsoft.com/mssql/server:2022-latest; sqlcmd as sa: databases Inventory (FULL recovery, 5000 rows) and Payroll (SIMPLE recovery); discovery login openmap (SQL authentication) with VIEW SERVER STATE, VIEW ANY DEFINITION, VIEW ANY DATABASE and a user in master.",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:41433 (mssql-lab), login openmap, encrypt=disable: the driver offers ENCRYPT_NOT_SUP in PRELOGIN and the server (default, encryption not forced) answers without TLS, so LOGIN7 and every query travel in clear TDS and can be replayed."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": [
+    {
+      "file": "wire/conn-1.bin",
+      "what": "LOGIN7 HostName (Windows workstation name of the capture machine, 6 UCS-2 characters at byte offset 238)",
+      "replacement": "XXXXXX (same length)"
+    },
+    {
+      "file": "wire/conn-1.bin",
+      "what": "LOGIN7 Password (obfuscated lab password, 28 bytes at byte offset 264)",
+      "replacement": "28 zero bytes"
+    },
+    {
+      "file": "wire/conn-1.bin",
+      "what": "LOGIN7 ClientID (MAC address of the capture machine, 6 bytes at byte offset 216)",
+      "replacement": "6 zero bytes"
+    }
+  ]
+}

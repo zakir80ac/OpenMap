@@ -1,0 +1,90 @@
+{
+  "protocol": "mssql",
+  "connections": [
+    {
+      "file": "wire/conn-1.bin",
+      "steps": [
+        {
+          "dir": "client",
+          "offset": 0,
+          "length": 88
+        },
+        {
+          "dir": "server",
+          "offset": 88,
+          "length": 48
+        },
+        {
+          "dir": "client",
+          "offset": 136,
+          "length": 240
+        },
+        {
+          "dir": "server",
+          "offset": 376,
+          "length": 389
+        },
+        {
+          "dir": "client",
+          "offset": 765,
+          "length": 48
+        },
+        {
+          "dir": "server",
+          "offset": 813,
+          "length": 43
+        },
+        {
+          "dir": "client",
+          "offset": 856,
+          "length": 528
+        },
+        {
+          "dir": "server",
+          "offset": 1384,
+          "length": 623
+        },
+        {
+          "dir": "client",
+          "offset": 2007,
+          "length": 198
+        },
+        {
+          "dir": "server",
+          "offset": 2205,
+          "length": 45
+        },
+        {
+          "dir": "client",
+          "offset": 2250,
+          "length": 164
+        },
+        {
+          "dir": "server",
+          "offset": 2414,
+          "length": 45
+        },
+        {
+          "dir": "client",
+          "offset": 2459,
+          "length": 208
+        },
+        {
+          "dir": "server",
+          "offset": 2667,
+          "length": 45
+        },
+        {
+          "dir": "client",
+          "offset": 2712,
+          "length": 688
+        },
+        {
+          "dir": "server",
+          "offset": 3400,
+          "length": 311
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "family": "dns",
+  "vendor": "CZ.NIC",
+  "model": "Knot DNS (knotd), primary for lab.openmap.test and 70.250.10.in-addr.arpa",
+  "firmware": "3.4.11",
+  "capturedAt": "2026-11-06T20:58:43Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-021",
+  "collector": "internal/dnszone",
+  "capture": {
+    "image": "cznic/knot:3.4",
+    "digest": "cznic/knot@sha256:87c31a79960b8401eda340e121c8110e02176496693e1ca2eae2a97bf6978f92",
+    "command": "knotd -c /config/knot.conf on docker network fxlab-e (10.250.70.54), acl action transfer for 10.250.70.0/24, TCP 53 published on 127.0.0.1:15354; the collector's own dnszone.Transfer ran through a byte-recording TCP proxy once per zone. No TSIG."
+  },
+  "files": [
+    { "name": "axfr-lab.openmap.test.client.bin", "description": "DNS-over-TCP stream the collector sent (AXFR query)" },
+    { "name": "axfr-lab.openmap.test.server.bin", "description": "DNS-over-TCP stream Knot answered with (AXFR response messages)" },
+    { "name": "axfr-70.250.10.in-addr.arpa.client.bin", "description": "AXFR query stream for the reverse zone" },
+    { "name": "axfr-70.250.10.in-addr.arpa.server.bin", "description": "AXFR response stream for the reverse zone" }
+  ],
+  "redactions": []
+}

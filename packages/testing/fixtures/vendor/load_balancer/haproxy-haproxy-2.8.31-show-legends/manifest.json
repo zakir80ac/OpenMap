@@ -1,0 +1,27 @@
+{
+  "family": "load_balancer",
+  "vendor": "haproxy",
+  "model": "HAProxy (community)",
+  "firmware": "2.8.31-5260599",
+  "capturedAt": "2026-11-06T20:51:10Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-018",
+  "collector": "internal/haproxy",
+  "capture": {
+    "image": "haproxy:2.8",
+    "digest": "haproxy@sha256:f9e68f79bc73bd2e50527f8263e6a58ce875a2db695423c268bf95ee7230d641",
+    "setup": "same topology as the 3.2 capture with `stats show-legends` added to the stats frontend; 30 requests driven through fe_web and api from a curlimages/curl container on the lab network",
+    "command": "apps/collectors/cmd/haproxy invoked with target http://127.0.0.1:19405 (proxy -> container :8404), options {}; recording HTTP proxy (throwaway lab tool, not checked in) between the collector and the container; it stores each response status, Content-Type/Server/ETag headers and the body bytes unchanged; request Authorization headers are forwarded and never stored"
+  },
+  "files": [
+    {
+      "name": "001.body",
+      "description": "GET /stats;csv response: HAProxy 2.8 statistics CSV with server addresses"
+    },
+    {
+      "name": "exchanges.json",
+      "description": "ordered list of the collector's HTTP exchanges"
+    }
+  ],
+  "redactions": []
+}

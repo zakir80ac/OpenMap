@@ -155,8 +155,10 @@ func ParseIPAddr(text string) []NetInterface {
 }
 
 var ssUsers = regexp.MustCompile(`users:\(\("([^"]+)",pid=(\d+)`)
+var netstatProgram = regexp.MustCompile(`^(\d+)/(\S+)$`)
 
-// ParseSS parses `ss -Hltunp` (no header, listening, tcp+udp, numeric, processes).
+// ParseSS parses `ss -Hltunp` (no header, listening, tcp+udp, numeric, processes) and the
+// `netstat -ltunp` fallback (BusyBox on Alpine has no ss): Proto Recv-Q Send-Q Local Foreign [State] PID/Program.
 func ParseSS(text string) []Listener {
 	var out []Listener
 	seen := map[string]bool{}
@@ -165,9 +167,21 @@ func ParseSS(text string) []Listener {
 		if len(f) < 5 {
 			continue
 		}
-		proto := f[0]
+		proto := strings.TrimSuffix(strings.TrimSuffix(f[0], "6"), "4")
 		local := f[4]
-		if proto == "tcp" && f[1] != "LISTEN" {
+		state := f[1]
+		netstat := isDigits(f[1]) && isDigits(f[2])
+		if netstat {
+			local = f[3]
+			state = ""
+			if len(f) > 5 {
+				state = f[5]
+			}
+		}
+		if proto != "tcp" && proto != "udp" {
+			continue
+		}
+		if proto == "tcp" && state != "LISTEN" {
 			continue
 		}
 		idx := strings.LastIndex(local, ":")
@@ -186,6 +200,9 @@ func ParseSS(text string) []Listener {
 		if m := ssUsers.FindStringSubmatch(line); m != nil {
 			l.Process = m[1]
 			l.PID, _ = strconv.Atoi(m[2])
+		} else if m := netstatProgram.FindStringSubmatch(f[len(f)-1]); netstat && m != nil {
+			l.PID, _ = strconv.Atoi(m[1])
+			l.Process = m[2]
 		}
 		key := proto + "/" + addr + "/" + strconv.Itoa(port)
 		if seen[key] {
@@ -195,6 +212,18 @@ func ParseSS(text string) []Listener {
 		out = append(out, l)
 	}
 	return out
+}
+
+func isDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // ParsePackages parses `dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\n'` or

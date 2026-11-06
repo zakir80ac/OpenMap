@@ -1,0 +1,31 @@
+{
+  "family": "certificate",
+  "vendor": "haproxy",
+  "model": "HAProxy (community, OpenSSL 3.5.7)",
+  "firmware": "3.2.26-3e0f11a",
+  "capturedAt": "2026-11-06T20:47:52Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-025",
+  "collector": "internal/certificate",
+  "capture": {
+    "image": "haproxy:3.2",
+    "digest": "haproxy@sha256:1242e4006ac3f1ed15871efadca3d8d089e76f720017a1c51747133ee40cc953",
+    "setup": "same lab root -> issuing CA ECDSA P-384 (SHA-384) -> leaf haproxy.fxlab.test ECDSA P-256 (SAN haproxy.fxlab.test, 127.0.0.1, 30 days); HAProxy `bind :8443 ssl crt haproxy.pem` (leaf + intermediate + key)",
+    "command": "certificate.Probe(host 127.0.0.1, port 18443 -> container :8443, serverName haproxy.fxlab.test) from the OpenMap certificate collector, run by a throwaway lab program; chain.pem and handshake.json written as for the nginx capture"
+  },
+  "files": [
+    {
+      "name": "chain.pem",
+      "description": "certificate chain exactly as presented in the handshake (leaf first), PEM of the DER bytes"
+    },
+    {
+      "name": "handshake.json",
+      "description": "negotiated TLS version, cipher suite, SNI and the Probe verification result against the capture host's system roots"
+    },
+    {
+      "name": "lab-root-ca.crt",
+      "description": "public certificate of the lab root CA (not presented by the server; the trust anchor for chain verification)"
+    }
+  ],
+  "redactions": []
+}

@@ -1,0 +1,19 @@
+{
+  "family": "dhcp",
+  "vendor": "ISC",
+  "model": "ISC DHCP server (dhcpd -4), Debian 12 package isc-dhcp-server 4.4.3-P1-2",
+  "firmware": "4.4.3-P1",
+  "capturedAt": "2026-11-06T21:02:47Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-022",
+  "collector": "internal/dhcp",
+  "capture": {
+    "image": "debian:12",
+    "digest": "debian@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "apt-get install isc-dhcp-server; dhcpd -4 -f -d -cf /etc/dhcp/dhcpd.conf -lf /var/lib/dhcp/dhcpd.leases eth0 on docker network fxlab-e (server 10.250.70.67); three busybox:1.37 (busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec) clients ran `udhcpc -i eth0 -f -q -n -x hostname:<name> -s /bin/true` for web-01, app-02, printer-03 and obtained real leases; then the collector's exact dhcp.IscScript(\"/etc/dhcp/dhcpd.conf\", \"/var/lib/dhcp/dhcpd.leases\") was fed to `docker exec -i fxlab-e-dhcp sh` and stdout saved unmodified."
+  },
+  "files": [
+    { "name": "transcript.txt", "description": "stdout of IscScript: @@OPENMAP:config@@ (dhcpd.conf) and @@OPENMAP:leases@@ (dhcpd.leases written by dhcpd)" }
+  ],
+  "redactions": []
+}

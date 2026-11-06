@@ -1,0 +1,97 @@
+[
+  {
+    "method": "GET",
+    "path": "/",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/archive?location=",
+    "status": 200,
+    "headers": {},
+    "body": "002.body"
+  },
+  {
+    "method": "GET",
+    "path": "/archive?versioning=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "003.body"
+  },
+  {
+    "method": "GET",
+    "path": "/archive?encryption=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "004.body"
+  },
+  {
+    "method": "GET",
+    "path": "/archive?publicAccessBlock=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "005.body"
+  },
+  {
+    "method": "GET",
+    "path": "/archive?list-type=2\u0026max-keys=1000",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "006.body"
+  },
+  {
+    "method": "GET",
+    "path": "/inventory-exports?location=",
+    "status": 200,
+    "headers": {},
+    "body": "007.body"
+  },
+  {
+    "method": "GET",
+    "path": "/inventory-exports?versioning=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "008.body"
+  },
+  {
+    "method": "GET",
+    "path": "/inventory-exports?encryption=",
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "009.body"
+  },
+  {
+    "method": "GET",
+    "path": "/inventory-exports?publicAccessBlock=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "010.body"
+  },
+  {
+    "method": "GET",
+    "path": "/inventory-exports?list-type=2\u0026max-keys=1000",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml"
+    },
+    "body": "011.body"
+  }
+]

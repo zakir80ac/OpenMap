@@ -1,0 +1,19 @@
+{
+  "family": "ssh_agentless",
+  "vendor": "Canonical",
+  "model": "Ubuntu Server (container userland)",
+  "firmware": "24.04.5 LTS (Noble Numbat)",
+  "capturedAt": "2026-11-06T20:56:32Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-003",
+  "collector": "internal/sshlinux",
+  "capture": {
+    "image": "ubuntu:24.04",
+    "digest": "sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852",
+    "command": "Container on a dedicated Docker network (WSL2 kernel host) with distro packages openssh-server openssl nginx iproute2 util-linux procps installed by apt, unprivileged login user 'openmap' (password auth), nginx and sshd started. The real ssh_agentless collector binary (apps/collectors/cmd/ssh_agentless) ran one invocation against 127.0.0.1:<published sshd port> with trustOnFirstUse; sshexec.Run executed sshlinux.Script() under `sh -c` in one SSH session and the collector stored the raw stdout as cli_output evidence, copied here byte-for-byte."
+  },
+  "files": [
+    { "name": "transcript.txt", "description": "Raw stdout of sshlinux.Script() over SSH (delimited @@OPENMAP:<key>@@ sections)" }
+  ],
+  "redactions": []
+}

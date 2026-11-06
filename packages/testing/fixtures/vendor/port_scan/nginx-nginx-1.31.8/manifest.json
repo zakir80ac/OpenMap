@@ -1,0 +1,48 @@
+{
+  "family": "port_scan",
+  "vendor": "F5 / NGINX",
+  "model": "nginx (official image)",
+  "firmware": "nginx 1.31.8",
+  "capturedAt": "2026-11-06T21:09:15Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-020",
+  "collector": "internal/portscan",
+  "capture": {
+    "image": "nginx:alpine",
+    "digest": "nginx@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11",
+    "target": "fxlab-b-ps-nginx 192.168.128.13 on docker bridge fxlab-b (192.168.128.0/20)",
+    "ports": [
+      80,
+      443
+    ],
+    "command": "pscap (scratch Go tool performing internal/portscan Probe's socket IO: one 512-byte banner read with 1.5 s timeout; on HTTP ports write 'HEAD / HTTP/1.0\\r\\nHost: <host>\\r\\n\\r\\n' first; on TLS ports handshake with InsecureSkipVerify, save the peer chain as DER, then send the HEAD); run from the lab manager container 192.168.128.4 on the fxlab-b bridge: pscap -host <container> -port <port> -mode <banner|http|tls> -name <port>-<service>"
+  },
+  "files": [
+    {
+      "name": "443-https.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "443-https.chain0.der",
+      "description": "peer certificate presented in the TLS handshake (DER), chain position in the name"
+    },
+    {
+      "name": "443-https.chain1.der",
+      "description": "peer certificate presented in the TLS handshake (DER), chain position in the name"
+    },
+    {
+      "name": "443-https.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    },
+    {
+      "name": "80-http.banner",
+      "description": "raw bytes the service sent (what readBanner reads before printable())"
+    },
+    {
+      "name": "80-http.json",
+      "description": "capture record: host, port, mode, byte count, TLS outcome, chain files"
+    }
+  ],
+  "redactions": [],
+  "notes": "Port 443 serves a lab chain generated with openssl for this capture: leaf CN fxlab-web.lab.openmap.test (EC P-256) signed by 'OpenMap Lab Root CA' (RSA 2048). The private keys stayed in the capture scratch area and are not part of the fixture."
+}

@@ -1,0 +1,22 @@
+{
+  "family": "ldap",
+  "vendor": "OpenLDAP",
+  "model": "slapd (mdb backend), base dc=lab,dc=openmap,dc=test with inetOrgPerson/posixAccount users, a Service Accounts OU, groupOfNames and posixGroup groups",
+  "firmware": "2.6.10",
+  "capturedAt": "2026-11-06T21:04:43Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-023",
+  "collector": "internal/directory",
+  "capture": {
+    "image": "bitnamilegacy/openldap:2.6",
+    "digest": "bitnamilegacy/openldap@sha256:687f14a22b5c74fb057a57221acdbe7b8c82e2d3619fc380db3af48ec4aa04ed",
+    "command": "slapd on docker network fxlab-e (10.250.70.30) with LDAP_ROOT=dc=lab,dc=openmap,dc=test and the lab tree loaded from LDAP_CUSTOM_LDIF_DIR, port 1389 published on 127.0.0.1:13890; a throwaway capture program inside apps/collectors ran the collector's own directory.Search(host, port, useTLS=false, startTLS=false, verify=false, \"cn=admin,dc=lab,dc=openmap,dc=test\", <random lab password>, baseDN=\"\" (root DSE path), includeComputers=true) through a TCP proxy that wrote both directions byte for byte. Plain LDAP with simple bind so the conversation can be replayed."
+  },
+  "files": [
+    { "name": "ldap.client.ber", "description": "BER LDAPMessage stream the collector sent: bind, root DSE search, paged user/computer/group searches, unbind" },
+    { "name": "ldap.server.ber", "description": "BER LDAPMessage stream slapd answered with: bind response, root DSE, search entries and done messages with paged-results controls" }
+  ],
+  "redactions": [
+    { "file": "ldap.client.ber", "what": "simple-bind password in the BindRequest (random per-run lab password)", "replacement": "same-length run of 'x' (0x78) bytes so BER lengths stay valid" }
+  ]
+}

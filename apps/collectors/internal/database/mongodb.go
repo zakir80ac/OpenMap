@@ -34,15 +34,50 @@ func (mongoProber) Probe(ctx context.Context, host string, port int, user, passw
 		return nil, err
 	}
 	defer func() { _ = client.Disconnect(context.Background()) }()
-	admin := client.Database("admin")
+	replies, err := runMongoCommands(ctx, client.Database("admin"))
+	if err != nil {
+		return nil, err
+	}
+	return mongoInventory(replies)
+}
+
+// mongoReplies holds the raw command replies the probe reads; a nil reply means the server refused
+// that command (buildInfo is the only one that must succeed).
+type mongoReplies struct {
+	BuildInfo     bson.Raw
+	Hello         bson.Raw
+	ServerStatus  bson.Raw
+	ListDatabases bson.Raw
+}
+
+func runMongoCommands(ctx context.Context, admin *mongo.Database) (mongoReplies, error) {
+	var r mongoReplies
+	var err error
+	if r.BuildInfo, err = admin.RunCommand(ctx, bson.D{{Key: "buildInfo", Value: 1}}).Raw(); err != nil {
+		return r, err
+	}
+	if raw, err := admin.RunCommand(ctx, bson.D{{Key: "hello", Value: 1}}).Raw(); err == nil {
+		r.Hello = raw
+	}
+	if raw, err := admin.RunCommand(ctx, bson.D{{Key: "serverStatus", Value: 1}}).Raw(); err == nil {
+		r.ServerStatus = raw
+	}
+	if raw, err := admin.RunCommand(ctx, bson.D{{Key: "listDatabases", Value: 1}}).Raw(); err == nil {
+		r.ListDatabases = raw
+	}
+	return r, nil
+}
+
+// mongoInventory turns the command replies into the engine-neutral inventory.
+func mongoInventory(r mongoReplies) (*Inventory, error) {
 	inv := &Inventory{Engine: EngineMongo, Settings: map[string]any{}, Role: "standalone"}
 	var build bson.M
-	if err := admin.RunCommand(ctx, bson.D{{Key: "buildInfo", Value: 1}}).Decode(&build); err != nil {
+	if err := bson.Unmarshal(r.BuildInfo, &build); err != nil {
 		return nil, err
 	}
 	inv.Version, _ = build["version"].(string)
 	var hello bson.M
-	if err := admin.RunCommand(ctx, bson.D{{Key: "hello", Value: 1}}).Decode(&hello); err == nil {
+	if r.Hello != nil && bson.Unmarshal(r.Hello, &hello) == nil {
 		if set, ok := hello["setName"].(string); ok && set != "" {
 			inv.ClusterID = set
 			inv.ClusterName = set
@@ -67,9 +102,9 @@ func (mongoProber) Probe(ctx context.Context, host string, port int, user, passw
 		}
 	}
 	var status bson.M
-	if err := admin.RunCommand(ctx, bson.D{{Key: "serverStatus", Value: 1}}).Decode(&status); err == nil {
+	if r.ServerStatus != nil && bson.Unmarshal(r.ServerStatus, &status) == nil {
 		inv.UptimeSeconds = toInt64(status["uptime"])
-		if conns, ok := status["connections"].(bson.M); ok {
+		if conns, ok := asDocument(status["connections"]); ok {
 			inv.Connections = int(toInt64(conns["current"]))
 			inv.MaxConn = int(toInt64(conns["available"])) + inv.Connections
 		}
@@ -78,15 +113,15 @@ func (mongoProber) Probe(ctx context.Context, host string, port int, user, passw
 			inv.ClusterName = h
 		}
 		inv.Settings["storageEngine"] = ""
-		if se, ok := status["storageEngine"].(bson.M); ok {
+		if se, ok := asDocument(status["storageEngine"]); ok {
 			inv.Settings["storageEngine"] = se["name"]
 		}
 	}
 	var dbs bson.M
-	if err := admin.RunCommand(ctx, bson.D{{Key: "listDatabases", Value: 1}}).Decode(&dbs); err == nil {
+	if r.ListDatabases != nil && bson.Unmarshal(r.ListDatabases, &dbs) == nil {
 		if list, ok := dbs["databases"].(bson.A); ok {
 			for _, item := range list {
-				if m, ok := item.(bson.M); ok {
+				if m, ok := asDocument(item); ok {
 					name, _ := m["name"].(string)
 					if name == "local" || name == "config" {
 						continue
@@ -98,6 +133,23 @@ func (mongoProber) Probe(ctx context.Context, host string, port int, user, passw
 	}
 	inv.Raw = marshal(map[string]any{"version": inv.Version, "role": inv.Role, "replicaSet": inv.ClusterName, "databases": inv.Databases, "replicas": inv.Replicas})
 	return inv, nil
+}
+
+// asDocument reads an embedded document whichever way the driver decoded it: driver v2 decodes
+// documents nested inside a bson.M as bson.D, so a bson.M type assertion alone never matches.
+func asDocument(v any) (bson.M, bool) {
+	switch d := v.(type) {
+	case bson.M:
+		return d, true
+	case bson.D:
+		m := make(bson.M, len(d))
+		for _, e := range d {
+			m[e.Key] = e.Value
+		}
+		return m, true
+	default:
+		return nil, false
+	}
 }
 
 func toInt64(v any) int64 {

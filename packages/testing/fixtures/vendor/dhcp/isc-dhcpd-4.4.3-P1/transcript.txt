@@ -1,0 +1,69 @@
+
+@@OPENMAP:config@@
+# OpenMap container lab: ISC dhcpd serving the fxlab-e bridge
+authoritative;
+option domain-name "lab.openmap.test";
+default-lease-time 600;
+max-lease-time 7200;
+ddns-update-style none;
+
+subnet 10.250.70.0 netmask 255.255.255.0 {
+  range 10.250.70.100 10.250.70.150;
+  option routers 10.250.70.1;
+  option domain-name-servers 10.250.70.53, 10.250.70.54;
+  default-lease-time 600;
+}
+
+# a second scope served through a relay (declared, no leases in the lab)
+subnet 10.250.71.0 netmask 255.255.255.0 {
+  range 10.250.71.50 10.250.71.99;
+  option routers 10.250.71.1;
+  option domain-name-servers 10.250.70.53;
+  default-lease-time 3600;
+}
+
+@@OPENMAP:leases@@
+# The format of this file is documented in the dhcpd.leases(5) manual page.
+# This lease file was written by isc-dhcp-4.4.3-P1
+
+# authoring-byte-order entry is generated, DO NOT DELETE
+authoring-byte-order little-endian;
+
+server-duid "\000\001\000\0012\200\374\273\326\225\000\275\307\217";
+
+lease 10.250.70.100 {
+  starts 5 2026/11/06 21:02:05;
+  ends 5 2026/11/06 21:12:05;
+  cltt 5 2026/11/06 21:02:05;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet 16:1c:b6:f2:44:12;
+  uid "\001\026\034\266\362D\022";
+  set vendor-class-identifier = "udhcp 1.37.0";
+  client-hostname "web-01";
+}
+lease 10.250.70.101 {
+  starts 5 2026/11/06 21:02:07;
+  ends 5 2026/11/06 21:12:07;
+  cltt 5 2026/11/06 21:02:07;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet b2:af:94:5c:b8:b3;
+  uid "\001\262\257\224\\\270\263";
+  set vendor-class-identifier = "udhcp 1.37.0";
+  client-hostname "app-02";
+}
+lease 10.250.70.102 {
+  starts 5 2026/11/06 21:02:09;
+  ends 5 2026/11/06 21:12:09;
+  cltt 5 2026/11/06 21:02:09;
+  binding state active;
+  next binding state free;
+  rewind binding state free;
+  hardware ethernet c6:06:e5:ab:23:0a;
+  uid "\001\306\006\345\253#\012";
+  set vendor-class-identifier = "udhcp 1.37.0";
+  client-hostname "printer-03";
+}

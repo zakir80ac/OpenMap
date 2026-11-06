@@ -1,0 +1,25 @@
+{
+  "family": "netflow",
+  "vendor": "softflowd",
+  "model": "softflowd NetFlow / IPFIX probe on Alpine Linux 3.20",
+  "firmware": "softflowd 1.1.0 (libpcap 1.10)",
+  "capturedAt": "2026-11-06T21:02:00Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-019",
+  "collector": "internal/netflow",
+  "capture": {
+    "image": "alpine:3.20 (+ apk: softflowd 1.1.0-r0, pmacct 1.7.8-r1, tcpdump 4.99.4-r1, curl, busybox-extras)",
+    "digest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc",
+    "command": "exporter 192.168.128.5: tcpdump -i eth0 -U -w traffic.pcap 'host 192.168.128.7 and (tcp port 80 or udp port 5514)' while running 3x curl http://192.168.128.7/blob.bin (16 KiB, busybox httpd), 1x curl http://192.168.128.7/index.html and 4x echo 'openmap flow lab datagram N' | nc -u -w1 192.168.128.7 5514; then softflowd -d -r traffic.pcap -v 5 -n 192.168.128.6:2055, -v 9 -n 192.168.128.6:2056, -v 10 -n 192.168.128.6:2057. Receiver 192.168.128.6: tcpdump -i eth0 -U -w netflow-v5.pcap 'udp dst port 2055' (and 2056 -> netflow-v9.pcap, 2057 -> ipfix.pcap).",
+    "network": "dedicated docker bridge fxlab-b (192.168.128.0/20)"
+  },
+  "files": [
+    { "name": "netflow-v5.pcap", "description": "NetFlow v5 export datagram(s) as received on the wire (Ethernet / IPv4 / UDP), 12 flow records" },
+    { "name": "netflow-v9.pcap", "description": "NetFlow v9 export datagram(s) with template and data flowsets, 12 records" },
+    { "name": "ipfix.pcap", "description": "IPFIX (version 10) export datagram(s) with template and data sets, 12 records" },
+    { "name": "traffic.pcap", "description": "the traffic softflowd accounted (ground truth): 4 HTTP connections (60 packets, 53455 IP bytes) and 4 UDP datagrams (224 IP bytes)" },
+    { "name": "softflowd-stdout.log", "description": "softflowd's own statistics for each export run" }
+  ],
+  "redactions": [],
+  "notes": "softflowd 1.1.0 receives but never dispatches live packets with libpcap 1.10 (Alpine 3.20 and Debian 12 alike: 'Packets received by libpcap: 269, Packets processed: 0'), so it exported from the live-recorded traffic capture with its documented -r mode; the export datagrams are softflowd's real output and the capture is the real traffic."
+}

@@ -12,6 +12,10 @@ import (
 	_ "github.com/microsoft/go-mssqldb" // registers the "sqlserver" driver
 )
 
+// mssqlMaxUserConnections is SQL Server's documented ceiling for 'user connections' (the value in
+// effect when the option is left at its default of 0).
+const mssqlMaxUserConnections = 32767
+
 type mssqlProber struct{}
 
 func (mssqlProber) Probe(ctx context.Context, host string, port int, user, password string, tls bool, dbName string) (*Inventory, error) {
@@ -52,6 +56,10 @@ func (mssqlProber) Probe(ctx context.Context, host string, port int, user, passw
 	var maxConn sql.NullInt64
 	if err := db.QueryRowContext(ctx, "SELECT CONVERT(int, value_in_use) FROM sys.configurations WHERE name = 'user connections'").Scan(&maxConn); err == nil {
 		inv.MaxConn = int(maxConn.Int64)
+		if inv.MaxConn == 0 {
+			// 'user connections' 0 is the default and means "the engine maximum", not "none allowed".
+			inv.MaxConn = mssqlMaxUserConnections
+		}
 	}
 	if hadr.Valid && hadr.Int64 == 1 {
 		var agID, agName, role sql.NullString

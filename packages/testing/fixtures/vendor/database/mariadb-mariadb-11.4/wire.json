@@ -1,0 +1,210 @@
+{
+  "protocol": "mysql",
+  "connections": [
+    {
+      "file": "wire/conn-1.bin",
+      "steps": [
+        {
+          "dir": "server",
+          "offset": 0,
+          "length": 95
+        },
+        {
+          "dir": "client",
+          "offset": 95,
+          "length": 178
+        },
+        {
+          "dir": "server",
+          "offset": 273,
+          "length": 77
+        },
+        {
+          "dir": "client",
+          "offset": 350,
+          "length": 5
+        },
+        {
+          "dir": "server",
+          "offset": 355,
+          "length": 11
+        },
+        {
+          "dir": "client",
+          "offset": 366,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 387,
+          "length": 80
+        },
+        {
+          "dir": "client",
+          "offset": 467,
+          "length": 22
+        },
+        {
+          "dir": "server",
+          "offset": 489,
+          "length": 69
+        },
+        {
+          "dir": "client",
+          "offset": 558,
+          "length": 29
+        },
+        {
+          "dir": "server",
+          "offset": 587,
+          "length": 96
+        },
+        {
+          "dir": "client",
+          "offset": 683,
+          "length": 25
+        },
+        {
+          "dir": "server",
+          "offset": 708,
+          "length": 50
+        },
+        {
+          "dir": "client",
+          "offset": 758,
+          "length": 23
+        },
+        {
+          "dir": "server",
+          "offset": 781,
+          "length": 60
+        },
+        {
+          "dir": "client",
+          "offset": 841,
+          "length": 37
+        },
+        {
+          "dir": "server",
+          "offset": 878,
+          "length": 221
+        },
+        {
+          "dir": "client",
+          "offset": 1099,
+          "length": 48
+        },
+        {
+          "dir": "server",
+          "offset": 1147,
+          "length": 230
+        },
+        {
+          "dir": "client",
+          "offset": 1377,
+          "length": 51
+        },
+        {
+          "dir": "server",
+          "offset": 1428,
+          "length": 233
+        },
+        {
+          "dir": "client",
+          "offset": 1661,
+          "length": 29
+        },
+        {
+          "dir": "server",
+          "offset": 1690,
+          "length": 68
+        },
+        {
+          "dir": "client",
+          "offset": 1758,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 1779,
+          "length": 72
+        },
+        {
+          "dir": "client",
+          "offset": 1851,
+          "length": 21
+        },
+        {
+          "dir": "server",
+          "offset": 1872,
+          "length": 58
+        },
+        {
+          "dir": "client",
+          "offset": 1930,
+          "length": 23
+        },
+        {
+          "dir": "server",
+          "offset": 1953,
+          "length": 48
+        },
+        {
+          "dir": "client",
+          "offset": 2001,
+          "length": 37
+        },
+        {
+          "dir": "server",
+          "offset": 2038,
+          "length": 82
+        },
+        {
+          "dir": "client",
+          "offset": 2120,
+          "length": 23
+        },
+        {
+          "dir": "server",
+          "offset": 2143,
+          "length": 60
+        },
+        {
+          "dir": "client",
+          "offset": 2203,
+          "length": 24
+        },
+        {
+          "dir": "server",
+          "offset": 2227,
+          "length": 2334
+        },
+        {
+          "dir": "client",
+          "offset": 4561,
+          "length": 104
+        },
+        {
+          "dir": "server",
+          "offset": 4665,
+          "length": 91
+        },
+        {
+          "dir": "client",
+          "offset": 4756,
+          "length": 239
+        },
+        {
+          "dir": "server",
+          "offset": 4995,
+          "length": 235
+        },
+        {
+          "dir": "client",
+          "offset": 5230,
+          "length": 5
+        }
+      ]
+    }
+  ]
+}

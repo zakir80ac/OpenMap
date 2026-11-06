@@ -1,0 +1,27 @@
+{
+  "family": "database",
+  "vendor": "Redis Ltd.",
+  "model": "Redis Open Source (replica)",
+  "firmware": "7.4.12",
+  "capturedAt": "2026-11-06T20:53:10Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "redis:7.4",
+    "digest": "redis@sha256:2e3eb11462c4e3759e6972678dd051d150ff54b1e60714b3c33b701260172a90",
+    "setup": "docker run --name fxlab-d-redis1 --hostname redis-primary redis:7.4 (7 keys in db0, 2 keys in db3); fxlab-d-redis2 --hostname redis-replica redis:7.4 redis-server --replicaof fxlab-d-redis1 6379.",
+    "command": "Recording TCP proxy (lab-only Go program inside apps/collectors, removed after capture) between the OpenMap database collector's real prober (Collector.Collect from the Windows host, engine option set, port = proxy) and the container's 127.0.0.1-published port; every byte each side sent is stored in order, one file per TCP connection, with wire.json indexing the direction, offset and length of each contiguous segment. Target 127.0.0.1:56381 (redis-replica), no auth."
+  },
+  "files": [
+    {
+      "name": "wire.json",
+      "description": "Index of the recorded conversation: per connection, ordered client/server segments (offset, length) into the .bin file"
+    },
+    {
+      "name": "wire/conn-1.bin",
+      "description": "Raw TCP bytes of connection 1 exactly as exchanged (client and server segments concatenated in order)"
+    }
+  ],
+  "redactions": []
+}

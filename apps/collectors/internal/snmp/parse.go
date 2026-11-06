@@ -314,7 +314,12 @@ func (d *Device) parseNeighbours(w *Walk) {
 		} else {
 			n.RemotePortID = asString(portID[idx])
 		}
-		n.LocalPortID = asString(locPort[parts[1]])
+		// lldpLocPortId is binary when its subtype is macAddress (lldpd, most Linux agents).
+		if mac := macString(locPort[parts[1]]); mac != "" {
+			n.LocalPortID = mac
+		} else {
+			n.LocalPortID = asString(locPort[parts[1]])
+		}
 		d.Neighbours = append(d.Neighbours, n)
 	}
 	sort.Slice(d.Neighbours, func(a, b int) bool {
@@ -347,7 +352,9 @@ func (d *Device) parseAddresses(w *Walk) {
 	ifIdx := w.column(oidIpAdEntIfIndex)
 	masks := w.column(oidIpAdEntNetMask)
 	for ip, v := range ifIdx {
-		if net.ParseIP(ip) == nil {
+		// Loopback addresses (127.0.0.1 on every net-snmp host) identify nothing and would merge
+		// every device's loopback into one ip_address CI.
+		if parsed := net.ParseIP(ip); parsed == nil || parsed.IsLoopback() {
 			continue
 		}
 		ifi, _ := asInt(v)

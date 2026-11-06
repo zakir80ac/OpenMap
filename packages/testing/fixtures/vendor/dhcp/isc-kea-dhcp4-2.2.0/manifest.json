@@ -1,0 +1,19 @@
+{
+  "family": "dhcp",
+  "vendor": "ISC",
+  "model": "Kea DHCPv4 server (kea-dhcp4, memfile lease backend), Debian 12 package kea-dhcp4-server 2.2.0-6",
+  "firmware": "2.2.0",
+  "capturedAt": "2026-11-06T21:03:35Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-022",
+  "collector": "internal/dhcp",
+  "capture": {
+    "image": "debian:12",
+    "digest": "debian@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "apt-get install kea-dhcp4-server; kea-dhcp4 -c /etc/kea/kea-dhcp4.conf on docker network fxlab-e (server 10.250.70.67, ISC dhcpd stopped first); four busybox:1.37 (busybox@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec) clients ran `udhcpc -i eth0 -f -q -n -x hostname:<name> -s /bin/true` for nas-04, cam-05, kiosk-06, guest-07 (guest-07 with -R; its release did not reach the server before the client exited, so the lease stayed active) and obtained real leases; then the collector's exact dhcp.KeaScript(\"/etc/kea/kea-dhcp4.conf\", \"/var/lib/kea/kea-leases4.csv\") was fed to `docker exec -i fxlab-e-dhcp sh` and stdout saved unmodified."
+  },
+  "files": [
+    { "name": "transcript.txt", "description": "stdout of KeaScript: @@OPENMAP:config@@ (kea-dhcp4.conf with // comments) and @@OPENMAP:leases@@ (memfile CSV written by kea-dhcp4)" }
+  ],
+  "redactions": []
+}

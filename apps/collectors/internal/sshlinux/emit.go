@@ -4,6 +4,7 @@
 package sshlinux
 
 import (
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -156,10 +157,18 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		}
 	}
 
+	// One listening_service per protocol/port: the IPv4 and IPv6 wildcard sockets of one daemon share
+	// an identity, and loopback-only sockets (the whole 127/8, e.g. Docker's 127.0.0.11 resolver) are not services.
+	emittedListeners := map[string]bool{}
 	for _, l := range f.Listeners {
-		if l.Address == "127.0.0.1" || l.Address == "::1" {
+		if ip := net.ParseIP(l.Address); ip != nil && ip.IsLoopback() {
 			continue
 		}
+		listenerKey := l.Proto + "/" + strconv.Itoa(l.Port)
+		if emittedListeners[listenerKey] {
+			continue
+		}
+		emittedListeners[listenerKey] = true
 		lsIdentity := map[string]string{"hostRef": hostRef, "protocol": l.Proto, "port": strconv.Itoa(l.Port)}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: lsIdentity, Name: firstNonEmpty(l.Process, l.Proto+"/"+strconv.Itoa(l.Port)), Attributes: map[string]any{"protocol": l.Proto, "port": l.Port, "address": l.Address, "process": l.Process, "pid": l.PID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relRunsOn, From: contract.CiRef{Type: typeListener, Identity: lsIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})

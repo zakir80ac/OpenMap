@@ -79,7 +79,9 @@ func (postgresProber) Probe(ctx context.Context, host string, port int, user, pa
 			for repl.Next() {
 				var addr, state, sync *string
 				if err := repl.Scan(&addr, &state, &sync); err == nil && addr != nil {
-					inv.Replicas = append(inv.Replicas, *addr)
+					// client_addr is inet; its text form carries the mask ("10.0.0.2/32").
+					host, _, _ := strings.Cut(*addr, "/")
+					inv.Replicas = append(inv.Replicas, host)
 				}
 			}
 			repl.Close()

@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-b-ps-redis",
+  "port": 6379,
+  "mode": "banner",
+  "bannerFile": "6379-redis.banner",
+  "bannerBytes": 0,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:09:15Z"
+}

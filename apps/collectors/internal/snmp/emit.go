@@ -26,6 +26,8 @@ const (
 	relInVlan      = "in_vlan"
 
 	evidenceKind = "snmp_walk"
+	// ip_address identity is (address, vrfRef) per CI_IDENTITY_KEYS; SNMP walks the global table.
+	defaultVrf = "default"
 	// Loopback and software interface types that are not physical ports (IANAifType).
 	ifTypeSoftwareLoopback = 24
 	ifTypeOther            = 1
@@ -142,7 +144,7 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: devRef, To: contract.CiRef{Type: typeVlan, Identity: vid}, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	for _, a := range d.Addresses {
-		ipIdentity := map[string]string{"address": a.IP}
+		ipIdentity := map[string]string{"address": a.IP, "vrfRef": defaultVrf}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeIPAddress, Identity: ipIdentity, Name: a.IP, Attributes: map[string]any{"netmask": a.Netmask, "ifIndex": a.IfIndex, "assignedTo": ref}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		from := devRef
 		if it, ok := ifByIndex[a.IfIndex]; ok && it.Type != ifTypeSoftwareLoopback {
@@ -171,7 +173,7 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 	}
 	for _, e := range d.ArpEntries {
 		// ARP tells us an address is live on a segment; the host behind it is resolved by other collectors.
-		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeIPAddress, Identity: map[string]string{"address": e.IP}, Name: e.IP, Attributes: map[string]any{"mac": e.Mac, "seenOnDevice": ref, "seenOnIfIndex": e.IfIndex, "source": "arp"}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeIPAddress, Identity: map[string]string{"address": e.IP, "vrfRef": defaultVrf}, Name: e.IP, Attributes: map[string]any{"mac": e.Mac, "seenOnDevice": ref, "seenOnIfIndex": e.IfIndex, "source": "arp"}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 	}
 	return obs
 }

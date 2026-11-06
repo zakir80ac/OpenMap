@@ -1,0 +1,503 @@
+
+@@OPENMAP:hostname@@
+lab-ubuntu2404
+
+@@OPENMAP:fqdn@@
+lab-ubuntu2404
+
+@@OPENMAP:machine_id@@
+b119510d7faf405ca63a2e8d71df76c2
+
+@@OPENMAP:os_release@@
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.5 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+
+@@OPENMAP:kernel@@
+6.6.87.2-microsoft-standard-WSL2
+
+@@OPENMAP:arch@@
+x86_64
+
+@@OPENMAP:uptime@@
+11565.76 61200.39
+
+@@OPENMAP:cpuinfo@@
+processor	: 0
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 3
+initial apicid	: 3
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 4
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 5
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 5
+initial apicid	: 5
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 6
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 7
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.211
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 7
+initial apicid	: 7
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.42
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+
+@@OPENMAP:meminfo@@
+MemTotal:       24611036 kB
+
+@@OPENMAP:dmi@@
+product_serial=
+product_uuid=
+sys_vendor=
+product_name=
+bios_version=
+virt=wsl
+
+@@OPENMAP:ip_addr@@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0@if504: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 6e:20:d0:45:4e:d7 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.112.2/20 brd 192.168.127.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+@@OPENMAP:ss@@
+udp UNCONN 0      0      127.0.0.11:52376 0.0.0.0:*
+tcp LISTEN 0      4096   127.0.0.11:44163 0.0.0.0:*
+tcp LISTEN 0      511       0.0.0.0:80    0.0.0.0:*
+tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
+tcp LISTEN 0      511          [::]:80       [::]:*
+tcp LISTEN 0      128          [::]:22       [::]:*
+
+@@OPENMAP:packages@@
+adduser	3.137ubuntu1	all
+apt	2.8.3	amd64
+base-files	13ubuntu10.5	amd64
+base-passwd	3.6.3build1	amd64
+bash	5.2.21-2ubuntu4	amd64
+bsdutils	1:2.39.3-9ubuntu6.6	amd64
+ca-certificates	20260816ubuntu0.24.04.2	all
+coreutils	9.4-3ubuntu6.3	amd64
+dash	0.5.12-6ubuntu5	amd64
+dbus	1.14.10-4ubuntu4.1	amd64
+dbus-bin	1.14.10-4ubuntu4.1	amd64
+dbus-daemon	1.14.10-4ubuntu4.1	amd64
+dbus-session-bus-common	1.14.10-4ubuntu4.1	all
+dbus-system-bus-common	1.14.10-4ubuntu4.1	all
+dbus-user-session	1.14.10-4ubuntu4.1	amd64
+debconf	1.5.86ubuntu1	all
+debianutils	5.17build1	amd64
+diffutils	1:3.10-1ubuntu0.1	amd64
+dmsetup	2:1.02.185-3ubuntu3.2	amd64
+dpkg	1.22.6ubuntu6.6	amd64
+e2fsprogs	1.47.0-2.4~exp1ubuntu4.1	amd64
+findutils	4.9.0-5build1	amd64
+gcc-14-base	14.2.0-4ubuntu2~24.04.1	amd64
+gir1.2-girepository-2.0	1.80.1-1	amd64
+gir1.2-glib-2.0	2.80.0-6ubuntu3.10	amd64
+gpgv	2.4.4-2ubuntu17.6	amd64
+grep	3.11-4build1	amd64
+gzip	1.12-1ubuntu3.2	amd64
+hostname	3.23+nmu2ubuntu2	amd64
+init-system-helpers	1.66ubuntu1	all
+iproute2	6.1.0-1ubuntu6.4	amd64
+krb5-locales	1.20.1-6ubuntu2.10	all
+libacl1	2.3.2-1build1.1	amd64
+libapparmor1	4.0.1really4.0.1-0ubuntu0.24.04.9	amd64
+libapt-pkg6.0t64	2.8.3	amd64
+libargon2-1	0~20190702+dfsg-4build1	amd64
+libassuan0	2.5.6-1build1	amd64
+libatm1t64	1:2.5.1-5.1build1	amd64
+libattr1	1:2.5.2-1ubuntu0.1	amd64
+libaudit-common	1:3.1.2-2.1ubuntu0.1	all
+libaudit1	1:3.1.2-2.1ubuntu0.1	amd64
+libblkid1	2.39.3-9ubuntu6.6	amd64
+libbpf1	1:1.3.0-2build2	amd64
+libbsd0	0.12.1-1build1.1	amd64
+libbz2-1.0	1.0.8-5.1ubuntu0.1	amd64
+libc-bin	2.39-0ubuntu8.9	amd64
+libc6	2.39-0ubuntu8.9	amd64
+libcap-ng0	0.8.4-2build2	amd64
+libcap2	1:2.66-5ubuntu2.4	amd64
+libcap2-bin	1:2.66-5ubuntu2.4	amd64
+libcbor0.10	0.10.2-1.2ubuntu2	amd64
+libcom-err2	1.47.0-2.4~exp1ubuntu4.1	amd64
+libcrypt1	1:4.4.36-4build1	amd64
+libcryptsetup12	2:2.7.0-1ubuntu4.2	amd64
+libdb5.3t64	5.3.28+dfsg2-7	amd64
+libdbus-1-3	1.14.10-4ubuntu4.1	amd64
+libdebconfclient0	0.271ubuntu3	amd64
+libdevmapper1.02.1	2:1.02.185-3ubuntu3.2	amd64
+libedit2	3.1-20230828-1build1	amd64
+libelf1t64	0.190-1.1ubuntu0.1	amd64
+libexpat1	2.6.1-2ubuntu0.6	amd64
+libext2fs2t64	1.47.0-2.4~exp1ubuntu4.1	amd64
+libfdisk1	2.39.3-9ubuntu6.6	amd64
+libffi8	3.4.6-1build1	amd64
+libfido2-1	1.14.0-1build3	amd64
+libgcc-s1	14.2.0-4ubuntu2~24.04.1	amd64
+libgcrypt20	1.10.3-2ubuntu0.2	amd64
+libgirepository-1.0-1	1.80.1-1	amd64
+libglib2.0-0t64	2.80.0-6ubuntu3.10	amd64
+libglib2.0-data	2.80.0-6ubuntu3.10	all
+libgmp10	2:6.3.0+dfsg-2ubuntu6.1	amd64
+libgnutls30t64	3.8.3-1.1ubuntu3.6	amd64
+libgpg-error0	1.47-3build2.1	amd64
+libgssapi-krb5-2	1.20.1-6ubuntu2.10	amd64
+libhogweed6t64	3.9.1-2.2build1.1	amd64
+libicu74	74.2-1ubuntu3.1	amd64
+libidn2-0	2.3.7-2build1.1	amd64
+libjson-c5	0.17-1build1	amd64
+libk5crypto3	1.20.1-6ubuntu2.10	amd64
+libkeyutils1	1.6.3-3build1	amd64
+libkmod2	31+20240202-2ubuntu7.2	amd64
+libkrb5-3	1.20.1-6ubuntu2.10	amd64
+libkrb5support0	1.20.1-6ubuntu2.10	amd64
+liblz4-1	1.9.4-1build1.1	amd64
+liblzma5	5.6.1+really5.4.5-1ubuntu0.4	amd64
+libmd0	1.1.0-2build1.1	amd64
+libmnl0	1.0.5-2build1	amd64
+libmount1	2.39.3-9ubuntu6.6	amd64
+libncursesw6	6.4+20240113-1ubuntu2.2	amd64
+libnettle8t64	3.9.1-2.2build1.1	amd64
+libnpth0t64	1.6-3.1build1	amd64
+libnss-systemd	255.4-1ubuntu8.18	amd64
+libp11-kit0	0.25.3-4ubuntu2.2	amd64
+libpam-cap	1:2.66-5ubuntu2.4	amd64
+libpam-modules	1.5.3-5ubuntu5.7	amd64
+libpam-modules-bin	1.5.3-5ubuntu5.7	amd64
+libpam-runtime	1.5.3-5ubuntu5.7	all
+libpam-systemd	255.4-1ubuntu8.18	amd64
+libpam0g	1.5.3-5ubuntu5.7	amd64
+libpcre2-8-0	10.42-4ubuntu2.1	amd64
+libproc2-0	2:4.0.4-4ubuntu3.3	amd64
+libpsl5t64	0.21.2-1.1build1	amd64
+libpython3-stdlib	3.12.3-0ubuntu2.1	amd64
+libpython3.12-minimal	3.12.3-1ubuntu0.17	amd64
+libpython3.12-stdlib	3.12.3-1ubuntu0.17	amd64
+libreadline8t64	8.2-4build1	amd64
+libseccomp2	2.5.5-1ubuntu3.1	amd64
+libselinux1	3.5-2ubuntu2.1	amd64
+libsemanage-common	3.5-1build5	all
+libsemanage2	3.5-1build5	amd64
+libsepol2	3.5-2build1	amd64
+libsmartcols1	2.39.3-9ubuntu6.6	amd64
+libsqlite3-0	3.45.1-1ubuntu2.9	amd64
+libss2	1.47.0-2.4~exp1ubuntu4.1	amd64
+libssl3t64	3.0.13-0ubuntu3.16	amd64
+libstdc++6	14.2.0-4ubuntu2~24.04.1	amd64
+libsystemd-shared	255.4-1ubuntu8.18	amd64
+libsystemd0	255.4-1ubuntu8.18	amd64
+libtasn1-6	4.19.0-3ubuntu0.24.04.2	amd64
+libtinfo6	6.4+20240113-1ubuntu2.2	amd64
+libudev1	255.4-1ubuntu8.18	amd64
+libunistring5	1.1-2build1.1	amd64
+libuuid1	2.39.3-9ubuntu6.6	amd64
+libwrap0	7.6.q-33	amd64
+libx11-6	2:1.8.7-1ubuntu0.1	amd64
+libx11-data	2:1.8.7-1ubuntu0.1	all
+libxau6	1:1.0.9-1build6	amd64
+libxcb1	1.15-1ubuntu2	amd64
+libxdmcp6	1:1.1.3-0ubuntu6	amd64
+libxext6	2:1.3.4-1build2	amd64
+libxml2	2.9.14+dfsg-1.3ubuntu3.10	amd64
+libxmuu1	2:1.1.3-3build2	amd64
+libxtables12	1.8.10-3ubuntu2	amd64
+libxxhash0	0.8.2-2build1	amd64
+libzstd1	1.5.5+dfsg2-2build1.1	amd64
+login	1:4.13+dfsg1-4ubuntu3.2	amd64
+logsave	1.47.0-2.4~exp1ubuntu4.1	amd64
+lsb-release	12.0-2	all
+mawk	1.3.4.20240123-1build1	amd64
+media-types	10.1.0	all
+mount	2.39.3-9ubuntu6.6	amd64
+ncurses-base	6.4+20240113-1ubuntu2.2	all
+ncurses-bin	6.4+20240113-1ubuntu2.2	amd64
+ncurses-term	6.4+20240113-1ubuntu2.2	all
+netbase	6.4	all
+networkd-dispatcher	2.2.4-1	all
+nginx	1.24.0-2ubuntu7.19	amd64
+nginx-common	1.24.0-2ubuntu7.19	all
+openssh-client	1:9.6p1-3ubuntu13.20	amd64
+openssh-server	1:9.6p1-3ubuntu13.20	amd64
+openssh-sftp-server	1:9.6p1-3ubuntu13.20	amd64
+openssl	3.0.13-0ubuntu3.16	amd64
+passwd	1:4.13+dfsg1-4ubuntu3.2	amd64
+perl-base	5.38.2-3.2ubuntu0.6	amd64
+procps	2:4.0.4-4ubuntu3.3	amd64
+publicsuffix	20231001.0357-0.1	all
+python3	3.12.3-0ubuntu2.1	amd64
+python3-blinker	1.7.0-1	all
+python3-cffi-backend	1.16.0-2build1	amd64
+python3-cryptography	41.0.7-4ubuntu0.4	amd64
+python3-dbus	1.3.2-5build3	amd64
+python3-distro	1.9.0-1	all
+python3-gi	3.48.2-1	amd64
+python3-httplib2	0.20.4-3ubuntu0.1	all
+python3-jwt	2.7.0-1ubuntu0.4	all
+python3-launchpadlib	1.11.0-6	all
+python3-lazr.restfulclient	0.14.6-1	all
+python3-lazr.uri	1.0.6-3	all
+python3-minimal	3.12.3-0ubuntu2.1	amd64
+python3-oauthlib	3.2.2-1	all
+python3-pkg-resources	68.1.2-2ubuntu1.2	all
+python3-pyparsing	3.1.1-1	all
+python3-six	1.16.0-4	all
+python3-wadllib	1.3.6-5	all
+python3.12	3.12.3-1ubuntu0.17	amd64
+python3.12-minimal	3.12.3-1ubuntu0.17	amd64
+readline-common	8.2-4build1	all
+sed	4.9-2ubuntu0.24.04.1	amd64
+sensible-utils	0.0.22	all
+shared-mime-info	2.4-4	amd64
+ssh-import-id	5.11-0ubuntu2.24.04.1	all
+systemd	255.4-1ubuntu8.18	amd64
+systemd-dev	255.4-1ubuntu8.18	all
+systemd-resolved	255.4-1ubuntu8.18	amd64
+systemd-sysv	255.4-1ubuntu8.18	amd64
+systemd-timesyncd	255.4-1ubuntu8.18	amd64
+sysvinit-utils	3.08-6ubuntu3	amd64
+tar	1.35+dfsg-3ubuntu0.4	amd64
+tzdata	2026e-0ubuntu0.24.04.1	all
+ubuntu-keyring	2023.11.28.1	all
+ucf	3.0043+nmu1	all
+unminimize	0.2.1	amd64
+util-linux	2.39.3-9ubuntu6.6	amd64
+wget	1.21.4-1ubuntu4.5	amd64
+xauth	1:1.1.2-1build1	amd64
+xdg-user-dirs	0.18-1build1	amd64
+zlib1g	1:1.3.dfsg-3.1ubuntu2.3	amd64
+
+@@OPENMAP:lsblk@@
+loop0 754.6M loop 
+loop1   727M loop 
+sda   388.6M disk Virtual Disk    
+sdb     186M disk Virtual Disk    
+sdc       4G disk Virtual Disk    
+sdd       1T disk Virtual Disk    
+sde     141M disk Virtual Disk    
+sdf       1T disk Virtual Disk    
+
+@@OPENMAP:df@@
+Filesystem     1024-blocks      Used Available Capacity Mounted on
+/dev/sdd        1055762868 678786864 323272532      68% /etc/hosts

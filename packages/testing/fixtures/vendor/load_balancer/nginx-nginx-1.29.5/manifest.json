@@ -1,0 +1,31 @@
+{
+  "family": "load_balancer",
+  "vendor": "nginx",
+  "model": "NGINX Open Source",
+  "firmware": "1.29.5",
+  "capturedAt": "2026-11-06T20:47:00Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-018",
+  "collector": "internal/nginx",
+  "capture": {
+    "image": "nginx:alpine",
+    "digest": "nginx@sha256:1d13701a5f9f3fb01aaa88cef2344d65b6b5bf6b7d9fa4cf0dca557a8d7702ba",
+    "setup": "default.conf: `location = /stub_status { stub_status; }`, `/app/` proxied to an upstream of two nginx:alpine containers, :443 TLS server; 25 requests through /app/",
+    "command": "apps/collectors/cmd/nginx invoked with target http://127.0.0.1:19580 (proxy -> container :80), options {}; the collector first asks for the NGINX Plus API (/api/, answered 404 by open-source NGINX) and then reads /stub_status; recording HTTP proxy (throwaway lab tool, not checked in) between the collector and the container; it stores each response status, Content-Type/Server/ETag headers and the body bytes unchanged; request Authorization headers are forwarded and never stored"
+  },
+  "files": [
+    {
+      "name": "001.body",
+      "description": "GET /api/ response: open-source NGINX 404 page"
+    },
+    {
+      "name": "002.body",
+      "description": "GET /stub_status response"
+    },
+    {
+      "name": "exchanges.json",
+      "description": "ordered list of the collector's HTTP exchanges"
+    }
+  ],
+  "redactions": []
+}

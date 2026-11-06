@@ -1,0 +1,67 @@
+{
+  "family": "object_storage",
+  "vendor": "ceph",
+  "model": "Ceph RADOS Gateway (beast frontend, single-node demo cluster: mon, mgr, directory OSD, rgw)",
+  "firmware": "18.2.4 reef (e7ad5345525c7aa95470c26863873b581076945d)",
+  "capturedAt": "2026-11-06T21:04:01Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-017",
+  "collector": "internal/objectstore",
+  "capture": {
+    "image": "quay.io/ceph/demo:latest-reef",
+    "digest": "quay.io/ceph/demo@sha256:2c5efcb089f5e50f9cd3213b995a6ad7428122b80ac140c41f2d4a780a3b7fc6",
+    "setup": "demo user `fxlab` with random access and secret keys; seeded with minio/mc: buckets inventory-exports (versioning enabled, 2 objects) and archive (default SSE-S3 configuration set; RGW without a KMS then refuses uploads, so the bucket stays empty)",
+    "command": "apps/collectors/cmd/object_storage invoked with target http://127.0.0.1:19900 (proxy keeping the Host header so SigV4 validates -> container :8080), options {pathStyle: true}, api_token credential with the demo user's keys; recording HTTP proxy (throwaway lab tool, not checked in) between the collector and the container; it stores each response status, Content-Type/Server/ETag headers and the body bytes unchanged; request Authorization headers are forwarded and never stored"
+  },
+  "files": [
+    {
+      "name": "001.body",
+      "description": "ListAllMyBucketsResult"
+    },
+    {
+      "name": "002.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "003.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "004.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "005.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "006.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "007.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "008.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "009.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "010.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "011.body",
+      "description": "recorded response body (see exchanges.json for method, path and status)"
+    },
+    {
+      "name": "exchanges.json",
+      "description": "ordered list of the collector's signed S3 requests (ListBuckets, then per bucket ?location, ?versioning, ?encryption, ?publicAccessBlock, ListObjectsV2) with status"
+    }
+  ],
+  "redactions": []
+}

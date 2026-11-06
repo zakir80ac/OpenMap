@@ -1,0 +1,162 @@
+[
+  {
+    "method": "GET",
+    "path": "/",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "001.body"
+  },
+  {
+    "method": "GET",
+    "path": "/app-assets?location=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "002.body"
+  },
+  {
+    "method": "GET",
+    "path": "/app-assets?versioning=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "003.body"
+  },
+  {
+    "method": "GET",
+    "path": "/app-assets?encryption=",
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "004.body"
+  },
+  {
+    "method": "GET",
+    "path": "/app-assets?publicAccessBlock=",
+    "status": 501,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "005.body"
+  },
+  {
+    "method": "GET",
+    "path": "/app-assets?list-type=2\u0026max-keys=1000",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "006.body"
+  },
+  {
+    "method": "GET",
+    "path": "/backups?location=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "007.body"
+  },
+  {
+    "method": "GET",
+    "path": "/backups?versioning=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "008.body"
+  },
+  {
+    "method": "GET",
+    "path": "/backups?encryption=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "009.body"
+  },
+  {
+    "method": "GET",
+    "path": "/backups?publicAccessBlock=",
+    "status": 501,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "010.body"
+  },
+  {
+    "method": "GET",
+    "path": "/backups?list-type=2\u0026max-keys=1000",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "011.body"
+  },
+  {
+    "method": "GET",
+    "path": "/public-downloads?location=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "012.body"
+  },
+  {
+    "method": "GET",
+    "path": "/public-downloads?versioning=",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "013.body"
+  },
+  {
+    "method": "GET",
+    "path": "/public-downloads?encryption=",
+    "status": 404,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "014.body"
+  },
+  {
+    "method": "GET",
+    "path": "/public-downloads?publicAccessBlock=",
+    "status": 501,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "015.body"
+  },
+  {
+    "method": "GET",
+    "path": "/public-downloads?list-type=2\u0026max-keys=1000",
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/xml",
+      "Server": "MinIO"
+    },
+    "body": "016.body"
+  }
+]

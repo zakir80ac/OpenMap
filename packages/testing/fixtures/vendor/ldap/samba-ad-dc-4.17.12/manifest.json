@@ -1,0 +1,22 @@
+{
+  "family": "ldap",
+  "vendor": "Samba",
+  "model": "Samba Active Directory domain controller (samba-tool provisioned, realm LAB.OPENMAP.TEST, DC01), Debian 12 packages samba/samba-ad-dc 2:4.17.12+dfsg-0+deb12u4",
+  "firmware": "4.17.12-Debian",
+  "capturedAt": "2026-11-06T21:07:29Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-023",
+  "collector": "internal/directory",
+  "capture": {
+    "image": "debian:12",
+    "digest": "debian@sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "privileged debian:12 container (hostname dc01, 10.250.70.10 on fxlab-e): apt-get install samba samba-ad-dc samba-ad-provision winbind krb5-user ldb-tools; samba-tool domain provision --realm=LAB.OPENMAP.TEST --domain=LAB --server-role=dc --dns-backend=SAMBA_INTERNAL --use-rfc2307; smb.conf `ldap server require strong auth = no`; samba -i; samba-tool ou create (Service Accounts, Servers), user create aisha.rahman / omar.haddad (then user disable omar.haddad) / svc-sql (spn add MSSQLSvc/db01.lab.openmap.test:1433) / svc-backup (setexpiry --noexpiry), group add NetOps / DBA with addmembers (aisha.rahman also in Domain Admins), computer create APP01 (OU=Servers) / WKS042; port 389 published on 127.0.0.1:13891; the collector's own directory.Search(..., \"Administrator@lab.openmap.test\", <random lab password>, baseDN=\"\" (root DSE defaultNamingContext), includeComputers=true) ran through a byte-recording TCP proxy."
+  },
+  "files": [
+    { "name": "ldap.client.ber", "description": "BER LDAPMessage stream the collector sent: bind, root DSE search, paged user/computer/group searches, unbind" },
+    { "name": "ldap.server.ber", "description": "BER LDAPMessage stream the Samba DC answered with (entries, search done with paged-results controls)" }
+  ],
+  "redactions": [
+    { "file": "ldap.client.ber", "what": "simple-bind password of Administrator in the BindRequest (random per-run lab password)", "replacement": "same-length run of 'x' (0x78) bytes so BER lengths stay valid" }
+  ]
+}

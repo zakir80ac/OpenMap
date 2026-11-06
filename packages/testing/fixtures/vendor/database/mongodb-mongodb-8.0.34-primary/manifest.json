@@ -1,0 +1,35 @@
+{
+  "family": "database",
+  "vendor": "MongoDB Inc.",
+  "model": "MongoDB Community Server (replica set rs-fxlab, PRIMARY)",
+  "firmware": "8.0.34",
+  "capturedAt": "2026-11-06T21:00:06Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-024",
+  "collector": "internal/database",
+  "capture": {
+    "image": "mongo:8.0",
+    "digest": "mongo@sha256:b9924c330a8bbc5800fe9c69f04a84e221eca7b28fd049a0354147d9908fa142",
+    "setup": "docker run --name fxlab-d-mongo1 --hostname mongo-a mongo:8.0 --replSet rs-fxlab --bind_ip_all; fxlab-d-mongo2 --hostname mongo-b same; rs.initiate with mongo-a (priority 2) and mongo-b; databases catalog (3000 docs) and telemetry (1500 docs); no auth (lab).",
+    "command": "Lab-only Go recorder inside apps/collectors (removed after capture) connected with the same URI options the probe uses (directConnection=true, appName=openmap-discovery) and ran the probe's runMongoCommands; each reply is the bson.Raw document the official Go driver v2 returned, written unchanged. Wire replay is not used because the driver opens background monitoring and RTT connections whose order is not deterministic. Target 127.0.0.1:47017 (mongo-a)."
+  },
+  "files": [
+    {
+      "name": "replies/buildInfo.bson",
+      "description": "Raw BSON reply to {buildInfo: 1} on admin"
+    },
+    {
+      "name": "replies/hello.bson",
+      "description": "Raw BSON reply to {hello: 1} on admin"
+    },
+    {
+      "name": "replies/serverStatus.bson",
+      "description": "Raw BSON reply to {serverStatus: 1} on admin"
+    },
+    {
+      "name": "replies/listDatabases.bson",
+      "description": "Raw BSON reply to {listDatabases: 1} on admin"
+    }
+  ],
+  "redactions": []
+}

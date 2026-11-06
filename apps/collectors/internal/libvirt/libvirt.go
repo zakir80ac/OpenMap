@@ -59,8 +59,10 @@ func (Collector) Manifest() contract.Manifest {
 }
 
 // Script is the shell run on the hypervisor. `V` tries virsh directly, then via passwordless sudo.
+// virsh run by a non-root login defaults to qemu:///session (that user's private, empty daemon), so the
+// system URI is exported unless the login environment already names one.
 func Script() string {
-	s := "set +e; export LC_ALL=C;\n" +
+	s := "set +e; export LC_ALL=C; export LIBVIRT_DEFAULT_URI=\"${LIBVIRT_DEFAULT_URI:-qemu:///system}\";\n" +
 		"V() { virsh \"$@\" 2>/dev/null || sudo -n virsh \"$@\" 2>/dev/null; }\n" +
 		sshexec.MarkerPrintf(keyHostname) + "; hostname;\n" +
 		sshexec.MarkerPrintf(keyFQDN) + "; hostname -f 2>/dev/null || hostname;\n" +

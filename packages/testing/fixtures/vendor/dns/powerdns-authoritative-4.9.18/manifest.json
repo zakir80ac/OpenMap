@@ -1,0 +1,22 @@
+{
+  "family": "dns",
+  "vendor": "PowerDNS",
+  "model": "PowerDNS Authoritative Server (gsqlite3 backend), primary for lab.openmap.test and 70.250.10.in-addr.arpa",
+  "firmware": "4.9.18",
+  "capturedAt": "2026-11-06T20:59:14Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-021",
+  "collector": "internal/dnszone",
+  "capture": {
+    "image": "powerdns/pdns-auth-49:latest",
+    "digest": "powerdns/pdns-auth-49@sha256:c8894f243fdaea91901a4836211ecb6c558d6c54e35f043033081e6ce4a87174",
+    "command": "pdns_server --allow-axfr-ips=10.250.70.0/24 --disable-axfr=no on docker network fxlab-e (10.250.70.55); zones loaded with `pdnsutil load-zone`; TCP 53 published on 127.0.0.1:15355; the collector's own dnszone.Transfer ran through a byte-recording TCP proxy once per zone. No TSIG."
+  },
+  "files": [
+    { "name": "axfr-lab.openmap.test.client.bin", "description": "DNS-over-TCP stream the collector sent (AXFR query)" },
+    { "name": "axfr-lab.openmap.test.server.bin", "description": "DNS-over-TCP stream PowerDNS answered with (AXFR response messages)" },
+    { "name": "axfr-70.250.10.in-addr.arpa.client.bin", "description": "AXFR query stream for the reverse zone" },
+    { "name": "axfr-70.250.10.in-addr.arpa.server.bin", "description": "AXFR response stream for the reverse zone" }
+  ],
+  "redactions": []
+}

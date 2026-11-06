@@ -34,6 +34,8 @@ const (
 	defaultVrf   = "default"
 	svFrontend   = "FRONTEND"
 	svBackend    = "BACKEND"
+	// frontendSuffix keeps a `listen` section's frontend identity apart from its backend pool's.
+	frontendSuffix = "#frontend"
 
 	typeLB       = "load_balancer"
 	typeListener = "listening_service"
@@ -209,12 +211,16 @@ func Emit(rows []Row, target contract.Target, serverHeader string, raw []byte, a
 		pool := contract.CiRef{Type: typeListener, Identity: identity}
 		backendRef[name] = pool
 		up := 0
+		// HAProxy hides server addresses from the stats CSV unless `stats show-legends` is set, so the
+		// member names and health always travel on the pool even when no member listener can be keyed.
+		memberList := []map[string]any{}
 		for _, m := range members {
 			if stateOf(m.Status) == "up" {
 				up++
 			}
+			memberList = append(memberList, map[string]any{"server": m.Server, "address": m.Addr, "state": stateOf(m.Status), "checkStatus": m.CheckStatus, "weight": m.Weight})
 		}
-		attrs := map[string]any{"vendor": vendor, "backend": name, "protocol": proto, "role": "backend-pool", "balance": meta.Algo, "state": stateOf(meta.Status), "memberCount": len(members), "membersUp": up, "sessionsCurrent": meta.Current, "sessionsMax": meta.Max, "sessionsLimit": meta.Limit, "sessionsTotal": meta.Total, "bytesIn": meta.BytesIn, "bytesOut": meta.BytesOut, "downtimeSeconds": meta.Downtime, "source": collectorID}
+		attrs := map[string]any{"vendor": vendor, "backend": name, "protocol": proto, "role": "backend-pool", "balance": meta.Algo, "state": stateOf(meta.Status), "memberCount": len(members), "membersUp": up, "members": memberList, "sessionsCurrent": meta.Current, "sessionsMax": meta.Max, "sessionsLimit": meta.Limit, "sessionsTotal": meta.Total, "bytesIn": meta.BytesIn, "bytesOut": meta.BytesOut, "downtimeSeconds": meta.Downtime, "source": collectorID}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: identity, Name: name + " (backend, " + proto + ")", Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: lb, To: pool, Attributes: map[string]any{}, ObservedAt: at})
 		for _, m := range members {
@@ -243,6 +249,11 @@ func Emit(rows []Row, target contract.Target, serverHeader string, raw []byte, a
 		}
 		proto := firstNonEmpty(r.Mode, "tcp")
 		identity := map[string]string{"hostRef": lbRef, "protocol": proto, "port": r.Proxy}
+		if _, sameName := backendRef[r.Proxy]; sameName {
+			// A `listen` section reports a FRONTEND and a BACKEND row under one proxy name; without the
+			// suffix both CIs share one identity and the frontend would depend on itself.
+			identity["port"] = r.Proxy + frontendSuffix
+		}
 		vs := contract.CiRef{Type: typeListener, Identity: identity}
 		attrs := map[string]any{"vendor": vendor, "frontend": r.Proxy, "protocol": proto, "role": "frontend", "state": stateOf(r.Status), "sessionsCurrent": r.Current, "sessionsMax": r.Max, "sessionsLimit": r.Limit, "sessionsTotal": r.Total, "bytesIn": r.BytesIn, "bytesOut": r.BytesOut, "service": "load-balanced-frontend", "source": collectorID}
 		target, linked := backendRef[r.Proxy]

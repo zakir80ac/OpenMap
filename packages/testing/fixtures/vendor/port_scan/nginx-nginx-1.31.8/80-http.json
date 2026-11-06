@@ -1,0 +1,9 @@
+{
+  "host": "fxlab-b-ps-nginx",
+  "port": 80,
+  "mode": "http",
+  "bannerFile": "80-http.banner",
+  "bannerBytes": 233,
+  "tls": false,
+  "capturedAt": "2026-11-06T21:09:15Z"
+}

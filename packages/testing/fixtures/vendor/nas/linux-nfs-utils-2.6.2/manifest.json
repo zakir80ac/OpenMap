@@ -1,0 +1,22 @@
+{
+  "family": "nas",
+  "vendor": "Linux nfs-utils (Debian build)",
+  "model": "knfsd rpc.mountd + rpcbind on Debian 12",
+  "firmware": "nfs-kernel-server 1:2.6.2-4+deb12u1 (rpc.mountd 2.6.2), rpcbind 1.2.6-6+b1",
+  "capturedAt": "2026-11-06T21:10:21Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-016",
+  "collector": "internal/nas",
+  "capture": {
+    "image": "debian:12",
+    "digest": "sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "Same Debian 12 file server as samba-samba-4.17.12 (/etc/exports: /srv/nfs/home 192.168.112.0/20(rw,...) lab-app01(rw,...); /srv/nfs/backup lab-backup01(ro,no_root_squash,...)); apt-get install netbase; rpcbind -w; rpc.mountd -p 20048 -N 2 -V 3 (the kernel nfsd module is not loadable in the lab VM, so only the userland MOUNT service ran; it answers EXPORT from the export table). Ports reached through a socat forwarder container on the lab network; the real nas collector binary (options mode=nfs, portmapPort) called rpcbind GETPORT and MOUNT v3 EXPORT through a TCP recording proxy that wrote each direction of each connection verbatim."
+  },
+  "files": [
+    { "name": "rpcbind-getport.request.bin", "description": "Record-marked ONC RPC call bytes the collector sent to rpcbind (PMAPPROC_GETPORT 100005 v3 tcp)" },
+    { "name": "rpcbind-getport.reply.bin", "description": "rpcbind reply bytes (port 20048)" },
+    { "name": "mount-export.request.bin", "description": "Record-marked MOUNTPROC3_EXPORT call bytes the collector sent" },
+    { "name": "mount-export.reply.bin", "description": "rpc.mountd EXPORT reply bytes (exports and client groups as the server reports them)" }
+  ],
+  "redactions": []
+}

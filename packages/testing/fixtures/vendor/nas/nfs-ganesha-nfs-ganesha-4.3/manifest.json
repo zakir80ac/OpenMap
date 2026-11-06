@@ -1,0 +1,22 @@
+{
+  "family": "nas",
+  "vendor": "NFS-Ganesha (Debian build)",
+  "model": "NFS-Ganesha userspace NFSv3/NFSv4 server, FSAL_VFS, with rpcbind on Debian 12",
+  "firmware": "nfs-ganesha 4.3-2, rpcbind 1.2.6-6+b1",
+  "capturedAt": "2026-11-06T21:09:44Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-016",
+  "collector": "internal/nas",
+  "capture": {
+    "image": "debian:12",
+    "digest": "sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "Privileged container with an ext4 Docker volume at /export; apt-get install rpcbind nfs-ganesha nfs-ganesha-vfs netbase; ganesha.conf: NFS_CORE_PARAM { Protocols = 3, 4; MNT_Port = 20048; }, EXPORT 10 /export/projects (Access_Type = None, CLIENT { Clients = 192.168.112.0/20, lab-app02; Access_Type = RW; }), EXPORT 20 /export/scratch (Access_Type = RO, no client list); rpcbind -w; ganesha.nfsd -f /etc/ganesha/ganesha.conf. The real nas collector binary (options mode=nfs, portmapPort) called rpcbind GETPORT and MOUNT v3 EXPORT against 127.0.0.1 published ports through a TCP recording proxy that wrote each direction of each connection verbatim. lab-app02 does not resolve in the lab, which Ganesha reports as the group string <unknown>."
+  },
+  "files": [
+    { "name": "rpcbind-getport.request.bin", "description": "Record-marked ONC RPC call bytes the collector sent to rpcbind (PMAPPROC_GETPORT 100005 v3 tcp)" },
+    { "name": "rpcbind-getport.reply.bin", "description": "rpcbind reply bytes (port 20048)" },
+    { "name": "mount-export.request.bin", "description": "Record-marked MOUNTPROC3_EXPORT call bytes the collector sent" },
+    { "name": "mount-export.reply.bin", "description": "Ganesha EXPORT reply bytes" }
+  ],
+  "redactions": []
+}

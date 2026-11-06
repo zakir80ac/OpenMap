@@ -1,0 +1,128 @@
+
+@@OPENMAP:hostname@@
+lab-kvm01
+
+@@OPENMAP:fqdn@@
+lab-kvm01
+
+@@OPENMAP:version@@
+Compiled against library: libvirt 9.0.0
+Using library: libvirt 9.0.0
+Using API: QEMU 9.0.0
+Running hypervisor: QEMU 7.2.22
+Running against daemon: 9.0.0
+
+
+@@OPENMAP:nodeinfo@@
+CPU model:           x86_64
+CPU(s):              8
+CPU frequency:       1996 MHz
+CPU socket(s):       1
+Core(s) per socket:  4
+Thread(s) per core:  2
+NUMA cell(s):        1
+Memory size:         24611036 KiB
+
+
+@@OPENMAP:dmi@@
+product_uuid=
+product_serial=
+sys_vendor=
+product_name=
+
+@@OPENMAP:pools@@
+ Name   State     Autostart   Persistent   Capacity      Allocation   Available
+----------------------------------------------------------------------------------
+ lab    running   yes         yes          1006.85 GiB   668.23 GiB   338.62 GiB
+
+
+@@OPENMAP:nets@@
+ Name      State    Autostart   Persistent
+--------------------------------------------
+ default   active   no          yes
+
+
+@@OPENMAP:list@@
+b5bca602-5651-4a02-a97b-ca1ed7238b1c
+06937455-9277-42fd-ad82-ac8493f933b8
+
+
+@@OPENMAP:dom:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+Id:             1
+Name:           lab-app01
+UUID:           b5bca602-5651-4a02-a97b-ca1ed7238b1c
+OS Type:        hvm
+State:          running
+CPU(s):         1
+CPU time:       0.9s
+Max memory:     262144 KiB
+Used memory:    262144 KiB
+Persistent:     yes
+Autostart:      enable
+Managed save:   no
+Security model: none
+Security DOI:   0
+
+
+@@OPENMAP:ifs:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+ Interface   Type      Source    Model    MAC
+-------------------------------------------------------------
+ vnet0       network   default   virtio   52:54:00:6c:ea:86
+
+
+@@OPENMAP:blk:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+ Type     Device   Target   Source
+----------------------------------------------
+ volume   disk     vda      app01-root.qcow2
+
+
+@@OPENMAP:addr:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+
+ Name       MAC address          Protocol     Address
+-------------------------------------------------------------------------------
+
+
+@@OPENMAP:os:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+
+
+@@OPENMAP:ghost:b5bca602-5651-4a02-a97b-ca1ed7238b1c@@
+
+
+@@OPENMAP:dom:06937455-9277-42fd-ad82-ac8493f933b8@@
+Id:             -
+Name:           lab-db01
+UUID:           06937455-9277-42fd-ad82-ac8493f933b8
+OS Type:        hvm
+State:          shut off
+CPU(s):         2
+Max memory:     524288 KiB
+Used memory:    524288 KiB
+Persistent:     yes
+Autostart:      disable
+Managed save:   no
+Security model: none
+Security DOI:   0
+
+
+@@OPENMAP:ifs:06937455-9277-42fd-ad82-ac8493f933b8@@
+ Interface   Type   Source   Model   MAC
+--------------------------------------------------------
+ -           user   -        e1000   52:54:00:c5:11:20
+
+
+@@OPENMAP:blk:06937455-9277-42fd-ad82-ac8493f933b8@@
+ Type     Device   Target   Source
+---------------------------------------------
+ volume   disk     vda      db01-root.qcow2
+ file     cdrom    sda      -
+
+
+@@OPENMAP:addr:06937455-9277-42fd-ad82-ac8493f933b8@@
+
+
+
+@@OPENMAP:os:06937455-9277-42fd-ad82-ac8493f933b8@@
+
+
+@@OPENMAP:ghost:06937455-9277-42fd-ad82-ac8493f933b8@@
+
