@@ -2,7 +2,33 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-06 (checkpoint 23: receiving, vendors and contracts, certificates)
+## Last session · 2026-11-07 (checkpoint 24: CMDB complete bar credentials, discovery fixtures from a container lab)
+
+Syed's direction: finish all CMDB rows and the discovery rows in review; lifecycle source option (c) (bundled
+endoflife.date snapshot plus vendor EoX APIs).
+
+**CMDB: 40 of 42 Done.**
+- REQ-CMDB-014 parts and components (ADR-037, a136cb9): `ObservedCi.components`, `ci_components` (migration 0025) with
+  removal, replacement and move by serial, `openmap.component.changed`; SSH, WMI and Redfish collect parts; Parts tab
+  and Parts register. CI/collector contract 0.3.0, GraphQL 1.15.0.
+- REQ-CMDB-021 layer visibility (a136cb9): Assets, Impact and Dashboard honour per-device visibility with one notice.
+- REQ-CMDB-034 resource utilisation (ADR-038, 6b73f02): `utilisation.ts`, collectors sample CPU, memory, disk and
+  power, Utilisation screen and tab; synth `utilisation-history` (712,500 samples replayed). Contracts 0.4.0, GraphQL
+  1.16.0.
+- REQ-CMDB-023 / 025 lifecycle (ADR-039, 41bd64e): `lifecycle_entries` (migration 0026), bundled snapshot
+  `packages/db/lifecycle/endoflife-date.json` (34 products, 673 releases, fetched 2026-11-07) loaded by `migrate`;
+  admin sync only where outbound calls are allowed; Lifecycle screen. Contracts 0.5.0, GraphQL 1.17.0.
+- REQ-CMDB-022 SaaS (ADR-041, d435514): SaaS inventory read model and screen; synthetic SaaS tenants (the SaaS layer is
+  populated). In review: needs recorded responses from real tenants.
+- REQ-CMDB-024 warranty/EoX vendor APIs: Blocked on credentials and recorded responses (no guessed response shapes).
+
+**Discovery: 5 of 31 Done.** A background agent ran a container lab: 45+ recorded fixtures from real products
+(353d33d, ccfd67b, 2294914; `docs/evidence/vendor-fixtures.md`), 13 parser bugs fixed, StartTLS, SNMP v1, a Docker
+Engine collector, an Oracle prober (go-ora, ADR-040), NVD API captures. REQ-DISC-024 and 025 closed; every other row
+records its tests and exactly which vendors still need hardware, licences, accounts or the code-signing decision.
+SQL Server Developer was run under Microsoft's EULA (`ACCEPT_EULA=Y`) for the capture.
+
+## Previous session · 2026-11-06 (checkpoint 23: receiving, vendors and contracts, certificates)
 
 Syed's direction: keep going with the remaining CMDB rows. The dev stack is back after a Windows restart.
 
@@ -40,7 +66,7 @@ Migrations through 0024 are applied to the dev database (0015 reports a checksum
 **Next CMDB rows:** 023 OS inventory and 025 EoX need a lifecycle catalogue (see Questions for Syed); 021 layer
 visibility on the remaining screens, 014 parts, 034 utilisation can proceed without it.
 
-## Previous session · 2026-11-05 (checkpoint 22: CMDB import and export, depreciation and spare stock)
+## Earlier session · 2026-11-05 (checkpoint 22: CMDB import and export, depreciation and spare stock)
 
 Syed's direction: keep going with the remaining CMDB rows.
 
@@ -558,30 +584,32 @@ tracker is the truth.
 
 ## Blocked
 
-- Tracker writes: Excel holds the workbook open (closures queued in `.local/tracker-queue.sh`).
+- REQ-CMDB-024: vendor warranty/EoX credentials (Dell TechDirect, HPE, Lenovo, Cisco, IBM). REQ-CMDB-022: real SaaS tenants.
+- Discovery rows needing hardware, licences or cloud accounts (see each row's notes).
 - docs/SPEC.md still missing (risk R-001). Vendor lab fixtures (risk R-004). CI never ran (no remote).
 
 ## Next three
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. Run `.local/tracker-queue.sh` once Excel is closed. Then the open CMDB rows: 021 layer visibility on the remaining
-   screens, 014 parts and components, 034 resource utilisation from collectors; 023 OS inventory and 025 EoX once
-   the lifecycle-catalogue question is answered. 024 needs vendor warranty credentials, 022 SaaS credentials.
+1. When Syed provides captures or access: close the remaining discovery rows and REQ-CMDB-022/024 (adapters for the
+   warranty vendors only against recorded responses).
 2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
 3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0024
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0026
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
-00. REQ-CMDB-023 / 025 end-of-life dates: OpenMap needs a product lifecycle catalogue (OS versions, firmware and
-hardware end of sale and end of support). Options: (a) a snapshot of endoflife.date (MIT-licensed data) bundled
-with each release and refreshed by an optional, tenant-enabled sync; (b) only vendor EoX APIs (Cisco EoX and the
-warranty APIs of REQ-CMDB-024, which need credentials); (c) both. Dates will not be typed in from memory.
+00. Answered (c) on 2026-11-06; implemented as ADR-039.
+01. REQ-CMDB-024: API credentials for Dell TechDirect, HPE, Lenovo, Cisco (SN2INFO and EoX) and IBM, so the warranty and
+EoX adapters are written against recorded responses.
+02. REQ-CMDB-022: developer tenants or recordings for Microsoft 365, Salesforce, ServiceNow, Google Workspace, Workday.
+03. Discovery rows 002, 005, 006, 008–010, 012–015, 026 (and the commercial vendors listed on 001, 011, 016–023, 027):
+lab access or recorded captures. 004/031: the code-signing decision for release tarballs.
 0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
 and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
 the lab) so the next list shows the SLA, assistant and finance work you asked for?
