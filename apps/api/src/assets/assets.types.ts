@@ -81,6 +81,8 @@ export interface AssetRecordView {
   endOfSupport: string | null;
   dataGaps: AssetDataGap[];
   planId: string | null;
+  /** ADR-034: the plan's BOM line this unit belongs to. */
+  bomLineId: string | null;
 }
 
 export interface AssetAuditView {
@@ -105,6 +107,8 @@ export interface AssetSummaryView {
 }
 
 export interface BomLineView {
+  id: string;
+  position: number;
   description: string;
   manufacturer: string | null;
   model: string | null;
@@ -112,6 +116,7 @@ export interface BomLineView {
   layer: CiLayer;
   quantity: number;
   received: number;
+  outstanding: number;
   unitCost: Money | null;
 }
 
@@ -119,13 +124,32 @@ export interface InfraPlanView {
   id: string;
   number: string;
   name: string;
+  description: string;
   kind: string;
   status: PlanStatus;
+  owner: string;
   bom: BomLineView[];
   estimatedCost: Money | null;
   targetSiteCiId: string | null;
   targetRackCiIds: string[];
   plannedLiveAt: string | null;
+}
+
+/** REQ-CMDB-020 (ADR-034): one delivery against a BOM line. */
+export interface PlanReceiptView {
+  id: string;
+  planId: string;
+  bomLineId: string;
+  position: number;
+  description: string;
+  quantity: number;
+  /** Calendar day as an ISO instant (midnight UTC), the DateTime scalar's form. */
+  receivedOn: string;
+  receivedBy: string;
+  reference: string | null;
+  locationCiId: string | null;
+  assetIds: string[];
+  createdAt: string;
 }
 
 export interface SupportContractView {

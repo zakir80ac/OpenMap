@@ -51,7 +51,7 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | Asset management: tag, purchase, cost, depreciation | `assetRecordSchema` | = | CMDB |
 | Asset lifecycle: planned → in stock → deployed → spare → RMA → retired → disposed, audited | `ASSET_STAGES`, `assetAuditSchema` | + | CMDB |
 | Spare parts inventory and reorder points | `assetRecord.stock` | = | CMDB |
-| Purchase orders and line items, receiving | Infrastructure plans with a BOM (`infraPlanSchema`): plan new infra or a stack, enter BOM, target site and racks; assets created as `planned`; procurement stays in the ERP and is linked by reference | ~ | CMDB |
+| Purchase orders and line items, receiving | Infrastructure plans with a BOM (`infraPlanSchema`): plan new infra or a stack, enter BOM, target site and racks; assets created as `planned`; receiving per BOM line (`receivePlanLine`, ADR-034) takes units into stock with serials, tags, the ERP order or delivery note reference and a storage location, and keeps each receipt; discovery claims a received unit by its serial and moves it to deployed; procurement stays in the ERP and is linked by reference | ~ | CMDB |
 | Layered visibility: DC, network and security, hardware, storage, virtualization, cloud, OS, containers, databases, applications, SaaS, unknown | `CI_LAYERS`, `CI_TYPE_LAYER`, per-layer visibility on every screen | + | CMDB |
 | SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows | `saas_application`, `saas_tenant`, `collectors/saas` | + | CMDB |
 | Operating system inventory: family, version, patch level, end of life | `operating_system`, `collectors/os_patch` | + | CMDB |

@@ -4,9 +4,10 @@
 // attention table (cover ending within the chosen horizon); unknown devices with their diagnosis and remediation;
 // manual entry for unmanaged equipment; and infrastructure plans with their bill of materials (ADR-005: plans, not
 // purchase orders). Operators edit details, change stages and create plans; everyone else reads.
+// REQ-CMDB-020 — each line of an approved or building plan is received into stock from its card (ADR-034).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ASSETS, ROLES, TIME } from '@openmap/constants';
-import { CI_LAYERS, PLAN_KINDS, isSubscriptionCiType, type CiLayer } from '@openmap/contracts';
+import { CI_LAYERS, PLAN_KINDS, canReceive, isSubscriptionCiType, type CiLayer } from '@openmap/contracts';
 import type { Locale, MessageKey } from '@openmap/i18n';
 import { Card, Kpi, LayerBadge, Pill, SectionTitle, StateBadge, Tag, layerColor } from '@openmap/ui';
 import Link from 'next/link';
@@ -51,6 +52,7 @@ import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 import { AssetDetailsPanel } from './AssetDetailsPanel';
 import { ManualAssetForm } from './ManualAssetForm';
+import { PlanReceipts, ReceiveLineForm } from './PlanReceiving';
 import { UnknownDevices } from './UnknownDevices';
 
 export interface AssetsViewProps {
@@ -821,6 +823,11 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
                 onStatus={(next) => {
                   statusMutation.mutate({ planId: plan.id, next });
                 }}
+                onReceived={() => {
+                  void queryClient.invalidateQueries({ queryKey: ['plans'] });
+                  void queryClient.invalidateQueries({ queryKey: ['assets'] });
+                  void queryClient.invalidateQueries({ queryKey: ['assetSummary'] });
+                }}
               />
             ))}
           </div>
@@ -846,12 +853,17 @@ interface PlanCardProps {
   canOperate: boolean;
   busy: boolean;
   onStatus: (next: PlanStatus) => void;
+  onReceived: () => void;
 }
 
-function PlanCard({ plan, canOperate, busy, onStatus }: PlanCardProps): ReactNode {
+function PlanCard({ plan, canOperate, busy, onStatus, onReceived }: PlanCardProps): ReactNode {
   const t = useT();
   const format = useFormatters();
   const next = PLAN_NEXT[plan.status];
+  const [receiving, setReceiving] = useState<number | null>(null);
+  const [lastReceipt, setLastReceipt] = useState<string | null>(null);
+  const receivable = canOperate && canReceive(plan.status);
+  const receivingLine = receiving === null ? undefined : plan.bom.find((l) => l.position === receiving);
   return (
     <article
       className="flex flex-col gap-om-10 rounded-om-panel border border-om-border-glass bg-om-surface2 p-om-16"
@@ -885,11 +897,16 @@ function PlanCard({ plan, canOperate, busy, onStatus }: PlanCardProps): ReactNod
               <th scope="col" className={thClass}>
                 {t('assets.plans.bom.unitCost')}
               </th>
+              {receivable ? (
+                <th scope="col" className={thClass}>
+                  <span className="sr-only">{t('assets.receive.action')}</span>
+                </th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
-            {plan.bom.map((line, index) => (
-              <tr key={index} className={rowClass}>
+            {plan.bom.map((line) => (
+              <tr key={line.position} className={rowClass}>
                 <td className={tdClass + ' text-om-primary'}>
                   {line.description}
                   <span className="block text-om-2xs text-om-muted">
@@ -914,16 +931,61 @@ function PlanCard({ plan, canOperate, busy, onStatus }: PlanCardProps): ReactNod
                   {format.integer(line.quantity)}
                 </td>
                 <td className={tdClass + ' font-om-mono text-om-secondary'}>
-                  {format.integer(line.received)}
+                  {t('assets.receive.receivedOf', {
+                    received: format.integer(line.received),
+                    quantity: format.integer(line.quantity),
+                  })}
                 </td>
                 <td className={tdClass + ' font-om-mono text-om-secondary'}>
                   {money(format, line.unitCost)}
                 </td>
+                {receivable ? (
+                  <td className={tdClass + ' text-end'}>
+                    {line.outstanding > 0 ? (
+                      <Button
+                        tone="quiet"
+                        aria-label={t('assets.receive.open', { line: line.description })}
+                        aria-pressed={receiving === line.position}
+                        onClick={() => {
+                          setLastReceipt(null);
+                          setReceiving(receiving === line.position ? null : line.position);
+                        }}
+                      >
+                        {t('assets.receive.action')}
+                      </Button>
+                    ) : (
+                      <span className="text-om-2xs text-om-state-healthy">{t('assets.receive.complete')}</span>
+                    )}
+                  </td>
+                ) : null}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {receivingLine !== undefined ? (
+        <ReceiveLineForm
+          key={receivingLine.position}
+          plan={plan}
+          line={receivingLine}
+          onReceived={(receipt) => {
+            setReceiving(null);
+            setLastReceipt(
+              t('assets.receive.done', { count: format.integer(receipt.quantity), line: receipt.description }),
+            );
+            onReceived();
+          }}
+          onCancel={() => {
+            setReceiving(null);
+          }}
+        />
+      ) : null}
+      {lastReceipt !== null ? (
+        <span role="status" className="text-om-xs text-om-state-healthy">
+          {lastReceipt}
+        </span>
+      ) : null}
+      {plan.receipts.length > 0 ? <PlanReceipts receipts={plan.receipts} /> : null}
       <div className="flex flex-wrap items-center gap-om-10 text-om-xs text-om-secondary">
         <span>
           {t('assets.plans.estimated', { cost: money(format, plan.estimatedCost) || t('common.none') })}

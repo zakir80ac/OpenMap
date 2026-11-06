@@ -2,6 +2,7 @@
 // first time it is persisted, and the fields discovery observes (serial, make and model, warranty, subscription)
 // are refreshed on every later update without touching what a person entered. One array-based statement per batch,
 // like the CI writes, so a 10k-device sweep stays inside its budget.
+// REQ-CMDB-020 (ADR-034): a new CI whose serial matches a received plan unit claims that unit instead of a new row.
 import { ASSETS, MONEY } from '@openmap/constants';
 import { assetFieldsFromCi, isOwnedCiType, type Ci } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
@@ -60,6 +61,63 @@ export function assetRowFor(ci: Ci): AssetRow | null {
 
 export function assetRowsFor(cis: readonly Ci[]): AssetRow[] {
   return cis.map(assetRowFor).filter((row): row is AssetRow => row !== null);
+}
+
+/** A received plan unit that discovery linked to its CI and moved to deployed. */
+export interface ClaimedAsset {
+  assetId: string;
+  tenantId: string;
+  ciId: string;
+  planId: string | null;
+  assetTag: string;
+  serialNumber: string;
+  actor: string;
+}
+
+/**
+ * ADR-034 — newly created CIs of owned types claim the received (`in_stock`) plan unit carrying the same serial and no
+ * CI yet: the unit takes the CI and its layer and moves to `deployed`, keeping its plan, tag, cost and schedule, and
+ * gets an audit row for the stage and the link with the discovery run as the actor. One statement for the batch; each
+ * CI claims at most one unit and each unit at most one CI. Runs before the inserts, which then skip the claimed CIs.
+ */
+export async function claimReceivedAssets(tx: Tx, cis: readonly Ci[]): Promise<ClaimedAsset[]> {
+  const rows = assetRowsFor(cis).filter((r) => r.serialNumber !== null);
+  if (rows.length === 0) return [];
+  const actorOf = new Map(cis.map((c) => [c.id, ASSETS.discoveryActorPrefix + c.source.runId]));
+  const claimed = await tx.$queryRaw<Array<Omit<ClaimedAsset, 'actor'>>>(Prisma.sql`
+    WITH u AS (
+      SELECT * FROM unnest(
+        ${rows.map((r) => r.tenantId)}::uuid[], ${rows.map((r) => r.ciId)}::uuid[], ${rows.map((r) => r.ciType)}::text[],
+        ${rows.map((r) => r.layer)}::text[], ${rows.map((r) => r.serialNumber)}::text[]
+      ) AS u(tenant_id, ci_id, ci_type, layer, serial)
+    ),
+    per_ci AS (
+      SELECT DISTINCT ON (u.ci_id) a.id AS asset_id, u.ci_id, u.ci_type, u.layer
+      FROM u JOIN asset_records a ON a."tenantId" = u.tenant_id AND a."serialNumber" = u.serial
+      WHERE a."ciId" IS NULL AND a.source = 'plan'::"AssetSource" AND a.stage = 'in_stock'::"AssetStage"
+      ORDER BY u.ci_id, a."stageChangedAt", a.id
+    ),
+    pick AS (SELECT DISTINCT ON (asset_id) * FROM per_ci ORDER BY asset_id, ci_id)
+    UPDATE asset_records a SET "ciId" = p.ci_id, "ciType" = p.ci_type::"CiType", layer = p.layer::"CiLayer",
+      stage = 'deployed'::"AssetStage", "stageChangedAt" = now(), "updatedAt" = now()
+    FROM pick p
+    WHERE a.id = p.asset_id
+    RETURNING a.id AS "assetId", a."tenantId" AS "tenantId", a."ciId" AS "ciId", a."planId" AS "planId",
+      a."assetTag" AS "assetTag", a."serialNumber" AS "serialNumber"`);
+  if (claimed.length === 0) return [];
+  const withActor = claimed.map((c) => ({ ...c, actor: actorOf.get(c.ciId) ?? ASSETS.discoveryActorPrefix }));
+  const audits = withActor.flatMap((c) => [
+    { tenantId: c.tenantId, assetId: c.assetId, actor: c.actor, field: 'stage', fromValue: 'in_stock', toValue: 'deployed' },
+    { tenantId: c.tenantId, assetId: c.assetId, actor: c.actor, field: 'ciId', fromValue: null, toValue: c.ciId },
+  ]);
+  await tx.$executeRaw(Prisma.sql`
+    INSERT INTO asset_audits (id, "tenantId", "assetId", actor, at, field, "fromValue", "toValue", note, "createdAt")
+    SELECT gen_random_uuid(), u.tenant_id, u.asset_id, u.actor, now(), u.field, u.from_value, u.to_value, NULL, now()
+    FROM unnest(
+      ${audits.map((a) => a.tenantId)}::uuid[], ${audits.map((a) => a.assetId)}::uuid[], ${audits.map((a) => a.actor)}::text[],
+      ${audits.map((a) => a.field)}::text[], ${audits.map((a) => a.fromValue)}::text[], ${audits.map((a) => a.toValue)}::text[]
+    ) AS u(tenant_id, asset_id, actor, field, from_value, to_value)`);
+  return withActor;
 }
 
 async function insertRows(tx: Tx, rows: readonly AssetRow[], tag: (row: AssetRow) => string): Promise<void> {

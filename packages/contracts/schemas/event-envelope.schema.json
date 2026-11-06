@@ -64,6 +64,7 @@
         "openmap.asset.warranty.expiring",
         "openmap.asset.eos.approaching",
         "openmap.plan.status.changed",
+        "openmap.plan.line.received",
         "openmap.ci.labelled",
         "openmap.metric.sampled"
       ]

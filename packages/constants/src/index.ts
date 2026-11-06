@@ -397,6 +397,12 @@ export const ASSETS = {
   defaultUsefulLifeMonths: 1,
   /** REQ-CMDB-017: the longest useful life a schedule may state (fifty years). */
   maxUsefulLifeMonths: 600,
+  /** REQ-CMDB-020: longest ERP order or delivery note reference a receipt keeps. */
+  receiptReferenceMaxLength: 200,
+  /** Rows of the serial-number box on the receive form; it grows with what is typed or scanned. */
+  receiptSerialRows: 4,
+  /** Audit actor of a unit discovery linked to its CI (ADR-034), followed by the discovery run id. */
+  discoveryActorPrefix: 'discovery:',
   /** Register rows fetched per page; the register loads more on demand. */
   registerPageSize: 50,
   /** Most rows one register page may ask for (REQ-CMDB-041). */
@@ -1184,11 +1190,14 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `ImportJob`, query `importJobs`, mutations `previewImport`, `runImport`.
    * 1.11.0 (REQ-CMDB-017, REQ-CMDB-019, ADR-033): `Depreciation`, `DepreciationInput`, `Stock`, `StockInput`,
    * `AssetRecord.depreciation`/`bookValue`/`stock`, `AssetFilter.belowReorderPoint`, `AssetSummary.belowReorderPoint`.
+   * 1.12.0 (REQ-CMDB-020, ADR-034): `PlanReceipt`, `ReceiptInput`, `ReceivedUnitInput`, `InfraPlan.description`/
+   * `owner`/`receipts`, `BomLine.position`/`outstanding`, mutation `receivePlanLine`.
    */
-  graphql: '1.11.0',
+  graphql: '1.12.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
+   * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`.
    */
-  event: '0.7.0',
+  event: '0.8.0',
 };

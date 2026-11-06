@@ -306,6 +306,8 @@ export const assetRecordSchema = z.object({
   ownerCostCentreCiId: z.uuid().nullable(),
   /** The plan whose BOM created this asset; null for assets discovered or imported directly. */
   planId: z.uuid().nullable(),
+  /** ADR-034: the BOM line of that plan this unit belongs to. */
+  bomLineId: z.uuid().nullable(),
   purchasedAt: z.iso.date().nullable(),
   purchaseCost: money.nullable(),
   depreciation: z.object({
@@ -538,4 +540,76 @@ const CENTS = 100;
 /** REQ-CMDB-019 — a stocked spare is low when what is on hand has fallen to its reorder point. */
 export function belowReorderPoint(stock: { onHand: number; reorderPoint: number } | null): boolean {
   return stock !== null && stock.onHand <= stock.reorderPoint;
+}
+
+/** ADR-034 — a plan takes deliveries once approved; the first receipt moves an approved plan to building. */
+export const PLAN_RECEIVING_STATUSES = ['approved', 'building'] as const;
+
+export function canReceive(status: string): boolean {
+  return (PLAN_RECEIVING_STATUSES as readonly string[]).includes(status);
+}
+
+/** Units of a BOM line not yet received. */
+export function outstanding(line: { quantity: number; received: number }): number {
+  return Math.max(0, line.quantity - line.received);
+}
+
+/** One unit taken into stock: its serial and, when the organisation labels on arrival, its asset tag. */
+export const receivedUnitSchema = z.object({
+  serialNumber: z.string().trim().min(1),
+  assetTag: z.string().trim().min(1).nullable(),
+});
+export type ReceivedUnit = z.infer<typeof receivedUnitSchema>;
+
+/** REQ-CMDB-020 — goods received against one BOM line (ADR-034). */
+export const planReceiptSchema = z.object({
+  id: z.uuid(),
+  tenantId: z.uuid(),
+  planId: z.uuid(),
+  bomLineId: z.uuid(),
+  /** Position of the line in the plan's BOM, from 0. */
+  position: z.number().int().min(0),
+  quantity: z.number().int().positive(),
+  receivedOn: z.iso.date(),
+  receivedBy: z.string().min(1),
+  /** ERP order or delivery note number; procurement stays in the finance system (ADR-005). */
+  reference: z.string().min(1).nullable(),
+  locationCiId: z.uuid().nullable(),
+  assetIds: z.array(z.uuid()).min(1),
+  createdAt: z.iso.datetime(),
+});
+export type PlanReceipt = z.infer<typeof planReceiptSchema>;
+
+const LINE_BREAK = /\r?\n/;
+/** A comma or a tab separates a unit's serial from its tag (a scanner or a spreadsheet column paste). */
+const UNIT_FIELD_SEPARATOR = /[,\t]/;
+
+export type ReceivedUnitsProblem =
+  | { kind: 'empty' }
+  | { kind: 'too_many'; count: number; outstanding: number }
+  | { kind: 'duplicate'; serialNumber: string };
+
+/**
+ * Reads the units a person types or scans when goods arrive: one per line, the serial first and an optional asset tag
+ * after a comma or a tab. Blank lines are skipped; a serial may appear once, and no more units than are outstanding.
+ */
+export function parseReceivedUnits(
+  text: string,
+  outstandingUnits: number,
+): { units: ReceivedUnit[]; problem: ReceivedUnitsProblem | null } {
+  const units: ReceivedUnit[] = [];
+  const seen = new Set<string>();
+  for (const raw of text.split(LINE_BREAK)) {
+    const [serialPart = '', tagPart = ''] = raw.split(UNIT_FIELD_SEPARATOR, 2);
+    const serialNumber = serialPart.trim();
+    if (serialNumber === '') continue;
+    if (seen.has(serialNumber)) return { units, problem: { kind: 'duplicate', serialNumber } };
+    seen.add(serialNumber);
+    const tag = tagPart.trim();
+    units.push({ serialNumber, assetTag: tag === '' ? null : tag });
+  }
+  if (units.length === 0) return { units, problem: { kind: 'empty' } };
+  if (units.length > outstandingUnits)
+    return { units, problem: { kind: 'too_many', count: units.length, outstanding: outstandingUnits } };
+  return { units, problem: null };
 }

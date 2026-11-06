@@ -8,6 +8,7 @@ import {
   AssetsResolver,
   CiAssetFieldResolver,
   InfraPlanFieldsResolver,
+  PlanReceiptFieldsResolver,
   SupportContractFieldsResolver,
 } from './assets.resolver.js';
 import { AssetsService } from './assets.service.js';
@@ -20,6 +21,7 @@ import { AssetsService } from './assets.service.js';
     AssetsResolver,
     AssetRecordFieldsResolver,
     InfraPlanFieldsResolver,
+    PlanReceiptFieldsResolver,
     SupportContractFieldsResolver,
     CiAssetFieldResolver,
   ],

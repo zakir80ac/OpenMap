@@ -136,6 +136,26 @@ export type ManualAssetInput = z.infer<typeof manualAssetInputSchema>;
 export const updateAssetArgsSchema = z.object({ assetId: z.uuid(), input: assetDetailsInputSchema });
 export const plansArgsSchema = z.object({ status: z.array(z.enum(PLAN_STATUSES)).nullish() });
 export const setPlanStatusSchema = z.object({ planId: z.uuid(), status: z.enum(PLAN_STATUSES) });
+/** REQ-CMDB-020 (ADR-034) — a delivery against one BOM line; serials and tags must not repeat within it. */
+export const receiptInputSchema = z
+  .object({
+    planId: z.uuid(),
+    position: z.number().int().min(0),
+    receivedOn: calendarDate,
+    reference: z.string().trim().min(1).max(ASSETS.receiptReferenceMaxLength).nullish(),
+    locationId: z.uuid().nullish(),
+    units: z.array(z.object({ serialNumber: trimmed, assetTag: trimmed.nullish() })).min(1),
+  })
+  .superRefine((input, ctx) => {
+    const serials = input.units.map((u) => u.serialNumber);
+    const tags = input.units.map((u) => u.assetTag).filter((t): t is string => typeof t === 'string');
+    if (new Set(serials).size !== serials.length)
+      ctx.addIssue({ code: 'custom', path: ['units'], message: 'a serial number appears more than once' });
+    if (new Set(tags).size !== tags.length)
+      ctx.addIssue({ code: 'custom', path: ['units'], message: 'an asset tag appears more than once' });
+  });
+export type ReceiptInput = z.infer<typeof receiptInputSchema>;
+
 export const setAssetStageSchema = z.object({
   assetId: z.uuid(),
   stage: z.enum(ASSET_STAGES),

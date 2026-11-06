@@ -2,6 +2,7 @@
 // summary, infrastructure plans (BOM → planned assets in one transaction), plan status, audited stage changes,
 // audited detail entry (warranty, support, end of life, purchase, custodian), manual assets for items with no
 // network presence (a CI is created with them), and the row an owned CI gets when a person labels it (ADR-023).
+// REQ-CMDB-020 — receiving against a plan's BOM line (ADR-034).
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ASSETS, BSM, RECONCILIATION } from '@openmap/constants';
@@ -13,7 +14,7 @@ import { clampPageSize, decodeIdCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
 import { OutboxService, type OutboxDraft } from '../outbox/outbox.service.js';
 import { ASSETS_REPOSITORY, type AssetsQuery, type AssetsRepository } from './assets.repository.js';
-import type { AssetDetailsInput, AssetFilterInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
+import type { AssetDetailsInput, AssetFilterInput, ManualAssetInput, PlanInput, ReceiptInput } from './assets.schemas.js';
 import type {
   AssetAuditView,
   AssetPageView,
@@ -21,6 +22,7 @@ import type {
   AssetStage,
   AssetSummaryView,
   InfraPlanView,
+  PlanReceiptView,
   PlanStatus,
   SupportContractView,
   VendorContactView,
@@ -123,6 +125,67 @@ export class AssetsService {
 
   plan(tenantId: string, id: string): Promise<InfraPlanView | null> {
     return this.repo.plan(tenantId, id);
+  }
+
+  assetsByIds(tenantId: string, ids: readonly string[]): Promise<AssetRecordView[]> {
+    return this.repo.assetsByIds(tenantId, ids);
+  }
+
+  receipts(tenantId: string, planId: string): Promise<PlanReceiptView[]> {
+    return this.repo.receipts(tenantId, planId);
+  }
+
+  /**
+   * REQ-CMDB-020 (ADR-034) — goods received against one BOM line: the units move to stock in one transaction with
+   * an event per unit, one for the line, and one for the plan when the first receipt moves it to building.
+   */
+  receivePlanLine(tenantId: string, actor: string, input: ReceiptInput): Promise<PlanReceiptView> {
+    return this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+      const done = await this.repo.receive(tx, tenantId, actor, input, nowIso());
+      for (const asset of done.assets)
+        await emit({
+          type: 'openmap.asset.stage.changed',
+          subject: asset.id,
+          data: {
+            assetId: asset.id,
+            planId: done.receipt.planId,
+            stage: asset.stage,
+            previous: 'planned',
+            serialNumber: asset.serialNumber,
+            note: done.receipt.reference,
+            by: actor,
+          },
+        });
+      await emit({
+        type: 'openmap.plan.line.received',
+        subject: done.receipt.planId,
+        data: {
+          planId: done.receipt.planId,
+          number: done.planNumber,
+          receiptId: done.receipt.id,
+          position: done.receipt.position,
+          quantity: done.receipt.quantity,
+          outstanding: done.outstanding,
+          receivedOn: input.receivedOn,
+          reference: done.receipt.reference,
+          assetIds: done.receipt.assetIds,
+          by: actor,
+        },
+      });
+      if (done.status !== done.previousStatus)
+        await emit({
+          type: 'openmap.plan.status.changed',
+          subject: done.receipt.planId,
+          data: {
+            planId: done.receipt.planId,
+            number: done.planNumber,
+            status: done.status,
+            previous: done.previousStatus,
+            by: actor,
+          },
+        });
+      return done.receipt;
+    });
   }
 
   supportContract(tenantId: string, id: string): Promise<SupportContractView | null> {

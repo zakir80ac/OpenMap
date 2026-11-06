@@ -2,7 +2,7 @@
 // Interface plus Prisma implementation; createPlan writes the plan, its lines and `quantity` planned assets per
 // line; the register queries filter by layer, type, stage, source, text and data gap; detail entry audits each
 // changed field; ensureAssetForCi gives a labelled CI its register row (ADR-023).
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ASSETS, MONEY } from '@openmap/constants';
 import {
   type AssetDataGap,
@@ -18,7 +18,9 @@ import {
   assetFieldsFromCi,
   belowReorderPoint,
   bookValue,
+  canReceive,
   endOfLifeSchema,
+  outstanding,
   subscriptionSchema,
   supportSchema,
   warrantySchema,
@@ -28,7 +30,7 @@ import type { CiRecord } from '../ci/ci.types.js';
 import { NO_CURRENCY, toMoney, type Money } from '../common/money.js';
 import { isoOf, nowIso, toIso } from '../common/time.js';
 import { PrismaService } from '../db/prisma.service.js';
-import type { AssetDetailsInput, ManualAssetInput, PlanInput } from './assets.schemas.js';
+import type { AssetDetailsInput, ManualAssetInput, PlanInput, ReceiptInput } from './assets.schemas.js';
 import type {
   AssetAuditView,
   AssetPageView,
@@ -37,6 +39,7 @@ import type {
   AssetSummaryView,
   EndOfLifeView,
   InfraPlanView,
+  PlanReceiptView,
   PlanStatus,
   SubscriptionView,
   SupportContractView,
@@ -122,6 +125,45 @@ export interface AssetsRepository {
   ): Promise<AssetRecordView>;
   supportContract(tenantId: string, id: string): Promise<SupportContractView | null>;
   vendorContact(tenantId: string, id: string): Promise<VendorContactView | null>;
+  assetsByIds(tenantId: string, ids: readonly string[]): Promise<AssetRecordView[]>;
+  receipts(tenantId: string, planId: string): Promise<PlanReceiptView[]>;
+  receive(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    input: ReceiptInput,
+    at: string,
+  ): Promise<ReceiveOutcome>;
+}
+
+/** What one receipt did: the receipt, the units it took into stock and the plan status before and after. */
+export interface ReceiveOutcome {
+  receipt: PlanReceiptView;
+  assets: AssetRecordView[];
+  outstanding: number;
+  planNumber: string;
+  previousStatus: PlanStatus;
+  status: PlanStatus;
+}
+
+const RECEIPT_INCLUDE = { bomLine: { select: { position: true, description: true } } } as const satisfies Prisma.PlanReceiptInclude;
+type ReceiptRow = Prisma.PlanReceiptGetPayload<{ include: typeof RECEIPT_INCLUDE }>;
+
+function toReceipt(row: ReceiptRow): PlanReceiptView {
+  return {
+    id: row.id,
+    planId: row.planId,
+    bomLineId: row.bomLineId,
+    position: row.bomLine.position,
+    description: row.bomLine.description,
+    quantity: row.quantity,
+    receivedOn: isoOf(row.receivedOn),
+    receivedBy: row.receivedBy,
+    reference: row.reference,
+    locationCiId: row.locationCiId,
+    assetIds: row.assetIds,
+    createdAt: isoOf(row.createdAt),
+  };
 }
 
 type AssetRow = Awaited<ReturnType<PrismaClient['assetRecord']['findUniqueOrThrow']>>;
@@ -230,6 +272,7 @@ export function toAsset(row: AssetRow): AssetRecordView {
       endOfLife,
     }),
     planId: row.planId,
+    bomLineId: row.bomLineId,
   };
 }
 
@@ -238,9 +281,13 @@ export function toPlan(row: PlanRow): InfraPlanView {
     id: row.id,
     number: row.number,
     name: row.name,
+    description: row.description,
     kind: row.kind,
     status: row.status,
+    owner: row.owner,
     bom: row.bom.map((l) => ({
+      id: l.id,
+      position: l.position,
       description: l.description,
       manufacturer: l.manufacturer,
       model: l.model,
@@ -248,6 +295,7 @@ export function toPlan(row: PlanRow): InfraPlanView {
       layer: l.layer,
       quantity: l.quantity,
       received: l.received,
+      outstanding: outstanding(l),
       unitCost: toMoney(l.unitCostAmount, l.unitCostCurrency),
     })),
     estimatedCost: toMoney(row.estimatedCostAmount, row.estimatedCostCurrency),
@@ -676,11 +724,13 @@ export class PrismaAssetsRepository implements AssetsRepository {
     const now = new Date();
     const assetIds: string[] = [];
     for (const [position, line] of input.bom.entries()) {
+      const bomLineId = plan.bom.find((l) => l.position === position)?.id ?? null;
       for (let unit = 0; unit < line.quantity; unit++) {
         const asset = await tx.assetRecord.create({
           data: {
             tenantId,
             planId: plan.id,
+            bomLineId,
             layer: line.layer,
             source: 'plan',
             assetTag: number + '-' + String(position + 1) + '-' + String(unit + 1),
@@ -729,6 +779,137 @@ export class PrismaAssetsRepository implements AssetsRepository {
     if (!existing) throw new NotFoundException('plan ' + id + ' not found');
     const row = await tx.infraPlan.update({ where: { id }, data: { status }, include: PLAN_INCLUDE });
     return toPlan(row);
+  }
+
+  async assetsByIds(tenantId: string, ids: readonly string[]): Promise<AssetRecordView[]> {
+    if (ids.length === 0) return [];
+    const rows = await this.prisma.client.assetRecord.findMany({
+      where: { tenantId, id: { in: [...ids] } },
+      orderBy: { assetTag: 'asc' },
+    });
+    return rows.map(toAsset);
+  }
+
+  async receipts(tenantId: string, planId: string): Promise<PlanReceiptView[]> {
+    const rows = await this.prisma.client.planReceipt.findMany({
+      where: { tenantId, planId },
+      include: RECEIPT_INCLUDE,
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows.map(toReceipt);
+  }
+
+  /**
+   * REQ-CMDB-020 (ADR-034) — takes the line's oldest planned units into stock with the serials (and tags) given,
+   * audits every change, counts them as received, records the receipt and moves an approved plan to building.
+   */
+  async receive(
+    tx: Prisma.TransactionClient,
+    tenantId: string,
+    actor: string,
+    input: ReceiptInput,
+    at: string,
+  ): Promise<ReceiveOutcome> {
+    const plan = await tx.infraPlan.findFirst({ where: { id: input.planId, tenantId }, include: PLAN_INCLUDE });
+    if (!plan) throw new NotFoundException('plan ' + input.planId + ' not found');
+    if (!canReceive(plan.status))
+      throw new ConflictException('plan ' + plan.number + ' is ' + plan.status + '; goods are received on an approved or building plan');
+    const line = plan.bom.find((l) => l.position === input.position);
+    if (!line) throw new NotFoundException('plan ' + plan.number + ' has no BOM line at position ' + String(input.position));
+    const left = outstanding(line);
+    if (input.units.length > left)
+      throw new ConflictException(
+        'line ' + String(input.position + 1) + ' of ' + plan.number + ' has ' + String(left) + ' units outstanding, ' + String(input.units.length) + ' received',
+      );
+    if (input.locationId) {
+      const location = await tx.ci.findFirst({ where: { id: input.locationId, tenantId }, select: { id: true } });
+      if (!location) throw new NotFoundException('location ' + input.locationId + ' not found');
+    }
+    const serials = input.units.map((u) => u.serialNumber);
+    const serialHolder = await tx.assetRecord.findFirst({
+      where: { tenantId, serialNumber: { in: serials } },
+      select: { assetTag: true, serialNumber: true },
+    });
+    if (serialHolder)
+      throw new ConflictException('serial ' + String(serialHolder.serialNumber) + ' is already in the register as ' + serialHolder.assetTag);
+    const tags = input.units.map((u) => u.assetTag).filter((t): t is string => typeof t === 'string');
+    if (tags.length > 0) {
+      const tagHolder = await tx.assetRecord.findFirst({ where: { tenantId, assetTag: { in: tags } }, select: { assetTag: true } });
+      if (tagHolder) throw new ConflictException('asset tag ' + tagHolder.assetTag + ' is already in use');
+    }
+    const planned = await tx.assetRecord.findMany({
+      where: { tenantId, bomLineId: line.id, stage: 'planned' },
+      orderBy: [{ createdAt: 'asc' }, { assetTag: 'asc' }],
+      take: input.units.length,
+    });
+    if (planned.length < input.units.length)
+      throw new ConflictException(
+        'line ' + String(input.position + 1) + ' of ' + plan.number + ' has ' + String(planned.length) + ' planned units left to receive',
+      );
+    const when = new Date(at);
+    const receivedOn = new Date(input.receivedOn);
+    const reference = input.reference ?? null;
+    const note = reference === null ? 'received' : 'received under ' + reference;
+    const assets: AssetRecordView[] = [];
+    for (const [index, unit] of input.units.entries()) {
+      const before = planned[index];
+      if (before === undefined) continue;
+      const tag = unit.assetTag ?? before.assetTag;
+      const purchasedAt = before.purchasedAt ?? receivedOn;
+      const locationCiId = input.locationId ?? before.locationCiId;
+      const row = await tx.assetRecord.update({
+        where: { id: before.id },
+        data: {
+          stage: 'in_stock',
+          stageChangedAt: when,
+          serialNumber: unit.serialNumber,
+          assetTag: tag,
+          purchasedAt,
+          locationCiId,
+        },
+      });
+      const audit = (field: string, fromValue: string | null, toValue: string | null): Prisma.AssetAuditCreateManyInput => ({
+        tenantId,
+        assetId: before.id,
+        actor,
+        at: when,
+        field,
+        fromValue,
+        toValue,
+        note,
+      });
+      const audits = [audit('stage', before.stage, 'in_stock'), audit('serialNumber', before.serialNumber, unit.serialNumber)];
+      if (tag !== before.assetTag) audits.push(audit('assetTag', before.assetTag, tag));
+      if (before.purchasedAt === null) audits.push(audit('purchasedAt', null, input.receivedOn));
+      if (locationCiId !== before.locationCiId) audits.push(audit('locationCiId', before.locationCiId, locationCiId));
+      await tx.assetAudit.createMany({ data: audits });
+      assets.push(toAsset(row));
+    }
+    await tx.bomLine.update({ where: { id: line.id }, data: { received: { increment: assets.length } } });
+    const status: PlanStatus = plan.status === 'approved' ? 'building' : plan.status;
+    if (status !== plan.status) await tx.infraPlan.update({ where: { id: plan.id }, data: { status } });
+    const receipt = await tx.planReceipt.create({
+      data: {
+        tenantId,
+        planId: plan.id,
+        bomLineId: line.id,
+        quantity: assets.length,
+        receivedOn,
+        receivedBy: actor,
+        reference,
+        locationCiId: input.locationId ?? null,
+        assetIds: assets.map((a) => a.id),
+      },
+      include: RECEIPT_INCLUDE,
+    });
+    return {
+      receipt: toReceipt(receipt),
+      assets,
+      outstanding: left - assets.length,
+      planNumber: plan.number,
+      previousStatus: plan.status,
+      status,
+    };
   }
 
   async setAssetStage(

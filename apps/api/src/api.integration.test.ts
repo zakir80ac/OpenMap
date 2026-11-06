@@ -1609,6 +1609,96 @@ describe('OpenMap API (integration)', () => {
     expect(cleared.data?.updateAsset.stock).toBeNull();
   });
 
+  it('receives goods against a plan line: units into stock with serials, the line counted, the receipt kept, the plan building (REQ-CMDB-020)', async () => {
+    // T-176 ADR-034
+    const stamp = String(Date.now());
+    type Line = { position: number; quantity: number; received: number; outstanding: number };
+    type PlanShape = { id: string; number: string; status: string; owner: string; description: string; bom: Line[] };
+    const created = await gql<{ createPlan: PlanShape }>(
+      'mutation P($input: PlanInput!) { createPlan(input: $input) { id number status owner description bom { position quantity received outstanding } } }',
+      {
+        input: {
+          name: 'Edge expansion ' + stamp,
+          description: 'Two hosts and a switch for the edge pod',
+          kind: 'stack_expansion',
+          bom: [
+            { description: 'Edge host', manufacturer: 'Dell', model: 'R660', layer: 'hardware', quantity: 3, unitCostAmount: 38_000, unitCostCurrency: 'SAR' },
+            { description: 'Edge switch', manufacturer: 'Arista', model: '7010', layer: 'network_security', quantity: 1 },
+          ],
+        },
+      },
+    );
+    expect(created.errors).toBeUndefined();
+    const plan = created.data?.createPlan;
+    expect(plan?.bom.map((l) => [l.position, l.outstanding])).toEqual([[0, 3], [1, 1]]);
+    expect(plan?.description).toBe('Two hosts and a switch for the edge pod');
+    const lineIds = await prisma.assetRecord.findMany({ where: { tenantId, planId: plan?.id }, select: { bomLineId: true } });
+    expect(lineIds.every((a) => a.bomLineId !== null)).toBe(true);
+
+    const receive = 'mutation R($input: ReceiptInput!) { receivePlanLine(input: $input) { id position description quantity receivedOn receivedBy reference location { id } assets { id assetTag serialNumber stage purchasedAt } } }';
+    const today = new Date().toISOString().slice(0, 'YYYY-MM-DD'.length);
+    const units = [
+      { serialNumber: 'EDGE-' + stamp + '-A', assetTag: 'TAG-' + stamp + '-A' },
+      { serialNumber: 'EDGE-' + stamp + '-B' },
+    ];
+    const draft = await gql(receive, { input: { planId: plan?.id, position: 0, receivedOn: today, units } });
+    expect(draft.errors?.[0]?.message).toMatch(/approved or building/);
+    await gql('mutation A($id: UUID!) { setPlanStatus(planId: $id, status: approved) { status } }', { id: plan?.id });
+
+    const tooMany = await gql(receive, {
+      input: { planId: plan?.id, position: 1, receivedOn: today, units: [{ serialNumber: 'SW-' + stamp + '-1' }, { serialNumber: 'SW-' + stamp + '-2' }] },
+    });
+    expect(tooMany.errors?.[0]?.message).toMatch(/1 units outstanding/);
+    const repeated = await gql(receive, {
+      input: { planId: plan?.id, position: 0, receivedOn: today, units: [{ serialNumber: 'DUP-' + stamp }, { serialNumber: 'DUP-' + stamp }] },
+    });
+    expect(repeated.errors?.[0]?.message).toMatch(/more than once/);
+    const viewer = await gql(receive, { input: { planId: plan?.id, position: 0, receivedOn: today, units } }, viewerToken);
+    expect(viewer.errors?.[0]?.message).toMatch(/roles/i);
+
+    type Receipt = {
+      id: string;
+      position: number;
+      description: string;
+      quantity: number;
+      receivedOn: string;
+      receivedBy: string;
+      reference: string | null;
+      location: { id: string } | null;
+      assets: Array<{ id: string; assetTag: string; serialNumber: string | null; stage: string; purchasedAt: string | null }>;
+    };
+    const received = await gql<{ receivePlanLine: Receipt }>(receive, {
+      input: { planId: plan?.id, position: 0, receivedOn: today, reference: 'PO-' + stamp, locationId: ids.pdu, units },
+    });
+    expect(received.errors).toBeUndefined();
+    const receipt = received.data?.receivePlanLine;
+    expect(receipt).toMatchObject({ position: 0, description: 'Edge host', quantity: 2, reference: 'PO-' + stamp, location: { id: ids.pdu } });
+    expect(receipt?.receivedOn.slice(0, 'YYYY-MM-DD'.length)).toBe(today);
+    expect(receipt?.assets.map((a) => a.serialNumber).sort()).toEqual(units.map((u) => u.serialNumber).sort());
+    expect(receipt?.assets.every((a) => a.stage === 'in_stock' && a.purchasedAt?.startsWith(today) === true)).toBe(true);
+    expect(receipt?.assets.map((a) => a.assetTag)).toContain('TAG-' + stamp + '-A');
+
+    const after = await gql<{ plans: Array<PlanShape & { receipts: Array<{ id: string; quantity: number }> }> }>(
+      '{ plans(status: [building]) { id number status owner description bom { position quantity received outstanding } receipts { id quantity } } }',
+    );
+    const building = after.data?.plans.find((p) => p.id === plan?.id);
+    expect(building?.status).toBe('building');
+    expect(building?.bom.map((l) => [l.received, l.outstanding])).toEqual([[2, 1], [0, 1]]);
+    expect(building?.receipts).toEqual([{ id: receipt?.id, quantity: 2 }]);
+
+    const clash = await gql(receive, { input: { planId: plan?.id, position: 0, receivedOn: today, units: [{ serialNumber: units[0]?.serialNumber }] } });
+    expect(clash.errors?.[0]?.message).toMatch(/already in the register/);
+
+    const unitAudits = await prisma.assetAudit.findMany({ where: { tenantId, assetId: receipt?.assets[0]?.id }, select: { field: true, note: true } });
+    expect(unitAudits.map((a) => a.field)).toEqual(expect.arrayContaining(['stage', 'serialNumber', 'purchasedAt', 'locationCiId']));
+    expect(unitAudits.some((a) => a.note === 'received under PO-' + stamp)).toBe(true);
+    const lineEvent = await prisma.outboxEvent.findFirst({ where: { tenantId, type: 'openmap.plan.line.received', subject: plan?.id } });
+    expect((lineEvent?.envelope as { data: Record<string, unknown> } | undefined)?.data).toMatchObject({ position: 0, quantity: 2, outstanding: 1, reference: 'PO-' + stamp });
+    expect(await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.plan.status.changed', subject: plan?.id } })).toBe(3);
+    expect(
+      await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.stage.changed', subject: { in: receipt?.assets.map((a) => a.id) ?? [] } } }),
+    ).toBe(4);
+  });
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';

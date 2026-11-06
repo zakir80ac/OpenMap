@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.11.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.12.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -620,16 +620,22 @@ type InfraPlan {
   id: UUID!
   number: String!
   name: String!
+  description: String!
   kind: String!
   status: PlanStatus!
+  owner: String!
   bom: [BomLine!]!
   estimatedCost: Money
   targetSite: Ci
   targetRacks: [Ci!]!
   plannedLiveAt: DateTime
   assets: [AssetRecord!]!
+  "REQ-CMDB-020 (ADR-034): goods received against the plan's lines, oldest first."
+  receipts: [PlanReceipt!]!
 }
 type BomLine {
+  "Position in the plan's bill of materials, from 0; receivePlanLine names a line by it."
+  position: Int!
   description: String!
   manufacturer: String
   model: String
@@ -637,7 +643,23 @@ type BomLine {
   layer: CiLayer!
   quantity: Int!
   received: Int!
+  "Units still to arrive: quantity less received."
+  outstanding: Int!
   unitCost: Money
+}
+"REQ-CMDB-020 (ADR-034): one delivery against a BOM line; the units it took into stock are its assets."
+type PlanReceipt {
+  id: UUID!
+  position: Int!
+  description: String!
+  quantity: Int!
+  receivedOn: DateTime!
+  receivedBy: String!
+  "ERP order or delivery note number, kept as text; procurement stays in the finance system (ADR-005)."
+  reference: String
+  location: Ci
+  assets: [AssetRecord!]!
+  createdAt: DateTime!
 }
 
 type Vulnerability {
@@ -1542,6 +1564,21 @@ input PlanInput {
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
 }
+"One unit taken into stock: its serial and, when the organisation labels on arrival, its asset tag."
+input ReceivedUnitInput {
+  serialNumber: String!
+  assetTag: String
+}
+"REQ-CMDB-020 (ADR-034): a delivery against one BOM line of an approved or building plan."
+input ReceiptInput {
+  planId: UUID!
+  position: Int!
+  "Calendar date the goods arrived (YYYY-MM-DD)."
+  receivedOn: String!
+  reference: String
+  locationId: UUID
+  units: [ReceivedUnitInput!]!
+}
 input BomLineInput {
   description: String!
   manufacturer: String
@@ -1729,6 +1766,7 @@ type Mutation {
   runSimulation(scenarioId: UUID!): ImpactSimulation!
   createPlan(input: PlanInput!): InfraPlan!
   setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
+  receivePlanLine(input: ReceiptInput!): PlanReceipt!
   setAssetStage(assetId: UUID!, stage: AssetStage!, note: String): AssetRecord!
   updateAsset(assetId: UUID!, input: AssetDetailsInput!): AssetRecord!
   createAsset(input: ManualAssetInput!): AssetRecord!

@@ -5,7 +5,8 @@
 import { RECONCILER } from '@openmap/constants';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
-import { insertAssetsBatch, refreshAssetsBatch } from './assets.js';
+import { claimReceivedAssets, insertAssetsBatch, refreshAssetsBatch, type ClaimedAsset } from './assets.js';
+import { envelope } from '../core/events.js';
 import { identityKeyOf } from './lookup.js';
 import type { ReconcileOutput } from '../core/reconcile.js';
 
@@ -145,6 +146,23 @@ export interface PersistSummary {
   events: number;
   /** Asset register rows created for owned CIs in this result (ADR-023). */
   assets: number;
+  /** Received plan units discovery linked to their new CI and moved to deployed (ADR-034). */
+  claimed: number;
+}
+
+/** ADR-034: the stage change of each claimed unit, carried by the outbox like the API's. */
+export function claimEvents(claimed: readonly ClaimedAsset[]): EventEnvelope[] {
+  return claimed.map((c) =>
+    envelope(c.tenantId, 'openmap.asset.stage.changed', c.assetId, {
+      assetId: c.assetId,
+      ciId: c.ciId,
+      planId: c.planId,
+      stage: 'deployed',
+      previous: 'in_stock',
+      serialNumber: c.serialNumber,
+      by: c.actor,
+    }),
+  );
 }
 
 export async function persist(
@@ -160,6 +178,7 @@ export async function persist(
     );
     if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
     await updateCisBatch(tx, out.updated);
+    const claimed = await claimReceivedAssets(tx, out.created);
     const assets = await insertAssetsBatch(tx, out.created);
     await refreshAssetsBatch(tx, out.updated);
     await insertRelationshipsBatch(tx, out.relationshipsCreated);
@@ -179,14 +198,15 @@ export async function persist(
         })),
       });
     }
-    await insertOutboxBatch(tx, out.events);
+    await insertOutboxBatch(tx, [...out.events, ...claimEvents(claimed)]);
     return {
       created: out.created.length,
       updated: out.updated.length,
       relationships: out.relationshipsCreated.length,
       conflicts: out.conflicts.length,
-      events: out.events.length,
+      events: out.events.length + claimed.length,
       assets,
+      claimed: claimed.length,
     };
   }, { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs });
 }

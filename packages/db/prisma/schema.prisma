@@ -529,10 +529,11 @@ model Tenant {
   securityAlerts          SecurityAlert[]
   auditLogs               AuditLog[]
   userPreferences         UserPreference[]
-  dashboards           Dashboard[]
-  assistantConversations AssistantConversation[]
-  customFieldDefinitions CustomFieldDefinition[]
-  importJobs             ImportJob[]
+  dashboards              Dashboard[]
+  assistantConversations  AssistantConversation[]
+  customFieldDefinitions  CustomFieldDefinition[]
+  importJobs              ImportJob[]
+  planReceipts            PlanReceipt[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -576,27 +577,27 @@ model BusinessUnit {
 
 /// siteSchema
 model Site {
-  id             String         @id @default(uuid()) @db.Uuid
-  organizationId String         @db.Uuid
-  code           String
-  name           String
-  kind           SiteKind
-  tier           Int?
-  address        String
-  city           String
-  countryCode    String         @db.Char(2)
-  geoLat         Float?
-  geoLon         Float?
-  cloudProvider  CloudProvider?
-  cloudRegion    String?
-  locationCount  Int            @default(1)
+  id              String         @id @default(uuid()) @db.Uuid
+  organizationId  String         @db.Uuid
+  code            String
+  name            String
+  kind            SiteKind
+  tier            Int?
+  address         String
+  city            String
+  countryCode     String         @db.Char(2)
+  geoLat          Float?
+  geoLon          Float?
+  cloudProvider   CloudProvider?
+  cloudRegion     String?
+  locationCount   Int            @default(1)
   /// siteSchema.facility (ADR-017): null for cloud regions.
   powerCapacityKw Float?
   rackCount       Int?
   designPue       Float?
-  ciId           String?        @db.Uuid
-  createdAt      DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime       @updatedAt @db.Timestamptz(3)
+  ciId            String?        @db.Uuid
+  createdAt       DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
 
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   linksFrom      SiteLink[]      @relation("SiteLinkFrom")
@@ -999,6 +1000,8 @@ model AssetRecord {
   custodian             String?
   ownerCostCentreCiId   String?            @db.Uuid
   planId                String?            @db.Uuid
+  /// ADR-034: the BOM line a planned unit belongs to; receiving takes units of one line.
+  bomLineId             String?            @db.Uuid
   purchasedAt           DateTime?          @db.Date
   purchaseCostAmount    Decimal?           @db.Decimal(18, 2)
   purchaseCostCurrency  String?            @db.Char(3)
@@ -1023,6 +1026,7 @@ model AssetRecord {
   tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   ci              Ci?              @relation(fields: [ciId], references: [id], onDelete: SetNull)
   plan            InfraPlan?       @relation(fields: [planId], references: [id], onDelete: SetNull)
+  bomLine         BomLine?         @relation(fields: [bomLineId], references: [id], onDelete: SetNull)
   supportContract SupportContract? @relation(fields: [supportContractId], references: [id], onDelete: SetNull)
   audits          AssetAudit[]
 
@@ -1034,6 +1038,7 @@ model AssetRecord {
   @@index([tenantId, serialNumber])
   @@index([ciId])
   @@index([planId])
+  @@index([bomLineId])
   @@map("asset_records")
 }
 
@@ -1078,9 +1083,10 @@ model InfraPlan {
   createdAt             DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime   @updatedAt @db.Timestamptz(3)
 
-  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  bom    BomLine[]
-  assets AssetRecord[]
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bom      BomLine[]
+  assets   AssetRecord[]
+  receipts PlanReceipt[]
 
   @@unique([tenantId, number])
   @@index([tenantId, status])
@@ -1106,11 +1112,36 @@ model BomLine {
   createdAt        DateTime @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime @updatedAt @db.Timestamptz(3)
 
-  tenant Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  plan   InfraPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan     InfraPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  assets   AssetRecord[]
+  receipts PlanReceipt[]
 
   @@unique([planId, position])
   @@map("bom_lines")
+}
+
+/// planReceiptSchema (ADR-034): goods received against one BOM line.
+model PlanReceipt {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
+  planId       String   @db.Uuid
+  bomLineId    String   @db.Uuid
+  quantity     Int
+  receivedOn   DateTime @db.Date
+  receivedBy   String
+  /// ERP order or delivery note number, kept as text (ADR-005: procurement stays in the finance system).
+  reference    String?
+  locationCiId String?  @db.Uuid
+  assetIds     String[] @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant  Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan    InfraPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  bomLine BomLine   @relation(fields: [bomLineId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, planId, createdAt])
+  @@map("plan_receipts")
 }
 
 /// supportContractSchema
@@ -1526,18 +1557,18 @@ model UserPreference {
 /// Relationship observations whose endpoints were not yet known when their result arrived; retried
 /// after later results land (REQ-CORE-013).
 model PendingRelationship {
-  id         String   @id @default(uuid()) @db.Uuid
-  tenantId   String   @db.Uuid
-  type       RelationshipType
-  fromRef    Json
-  toRef      Json
-  attributes Json
-  observedAt DateTime @db.Timestamptz(3)
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  type              RelationshipType
+  fromRef           Json
+  toRef             Json
+  attributes        Json
+  observedAt        DateTime         @db.Timestamptz(3)
   sourceCollectorId String
   sourceNodeId      String
   sourceRunId       String
-  attempts   Int      @default(0)
-  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  attempts          Int              @default(0)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
 
   @@index([tenantId, createdAt])
   @@map("pending_relationships")

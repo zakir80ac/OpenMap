@@ -3,6 +3,9 @@
 // operators, the details panel saving warranty cover through `updateAsset`, unknown devices with their diagnosis,
 // plans with their bill of materials and status transitions, a new plan created from the form with only the filled
 // bill-of-materials lines, and analysts seeing everything read-only.
+// T-179 REQ-CMDB-020 (ADR-034): an approved plan's line is received from its card (serials with optional tags, the
+// day, the reference, a storage location from the plan's site), the form refuses an empty box and too many units,
+// and the receipt is listed; a draft plan offers no Receive action.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ASSETS } from '@openmap/constants';
 import { LOCALES, translate } from '@openmap/i18n';
@@ -10,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as AuthModule from '@/lib/auth';
 import type { AuthValue } from '@/lib/auth';
 import { Providers } from '@/providers';
+import { localToday } from './PlanReceiving';
 
 const navigation = {
   search: new URLSearchParams(),
@@ -329,10 +333,13 @@ const plans = [
     id: 'p1',
     number: 'PLAN-001',
     name: 'Core refresh',
+    description: 'Replace the core servers',
+    owner: 'operator',
     kind: 'refresh',
     status: 'draft',
     bom: [
       {
+        position: 0,
         description: 'Server',
         manufacturer: 'HPE',
         model: 'DL380',
@@ -340,14 +347,16 @@ const plans = [
         layer: 'hardware',
         quantity: 2,
         received: 0,
+        outstanding: 2,
         unitCost: null,
       },
     ],
     estimatedCost: null,
-    targetSite: null,
+    targetSite: { id: 'site-1', displayName: 'DC-RUH-1' },
     targetRacks: [],
     plannedLiveAt: null,
     assets: [{ id: 'a2', assetTag: 'AST-0002', stage: 'planned' }],
+    receipts: [] as Array<Record<string, unknown>>,
   },
 ];
 const state = {
@@ -547,6 +556,27 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
       if (p) p.status = v.status;
       return { data: { setPlanStatus: p } };
     }
+    case 'ReceivePlanLine': {
+      const v = body.variables as { input: { planId: string; position: number; receivedOn: string; reference?: string; units: Array<{ serialNumber: string; assetTag: string | null }> } };
+      const p = plans.find((x) => x.id === v.input.planId);
+      const line = p?.bom.find((l) => l.position === v.input.position);
+      if (!p || !line) return { errors: [{ message: 'no such line' }] };
+      line.received += v.input.units.length;
+      line.outstanding -= v.input.units.length;
+      const receipt = {
+        id: 'r' + String(p.receipts.length + 1),
+        position: line.position,
+        description: line.description,
+        quantity: v.input.units.length,
+        receivedOn: v.input.receivedOn,
+        receivedBy: 'operator',
+        reference: v.input.reference ?? null,
+        location: p.targetSite,
+        assets: v.input.units.map((u, i) => ({ id: 'ra' + String(i), assetTag: u.assetTag ?? 'PLAN-001-1-' + String(i + 1), serialNumber: u.serialNumber })),
+      };
+      p.receipts.push(receipt);
+      return { data: { receivePlanLine: receipt } };
+    }
     case 'CreatePlan': {
       const input = (body.variables as { input: { name: string; bom: unknown[] } }).input;
       return {
@@ -575,7 +605,14 @@ beforeEach(() => {
   navigation.replace.mockClear();
   roles.current = ['openmap-operator'];
   for (const a of assets.slice(0, 1)) a.stage = 'deployed';
-  for (const p of plans.slice(0, 1)) p.status = 'draft';
+  for (const p of plans.slice(0, 1)) {
+    p.status = 'draft';
+    p.receipts = [];
+    for (const line of p.bom) {
+      line.received = 0;
+      line.outstanding = line.quantity;
+    }
+  }
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
@@ -669,6 +706,55 @@ describe.each(LOCALES)('AssetsView (%s)', (locale) => {
         true,
       );
     });
+  });
+
+  it('receives units of an approved plan line into stock and lists the receipt (REQ-CMDB-020)', async () => {
+    mount(locale);
+    await screen.findAllByText('PLAN-001');
+    const receiveName = translate(locale, 'assets.receive.open', { line: 'Server' });
+    // A draft plan takes no deliveries.
+    expect(screen.queryByRole('button', { name: receiveName })).toBeNull();
+    cleanup();
+    const plan = plans[0];
+    if (plan) plan.status = 'approved';
+    mount(locale);
+    fireEvent.click(await screen.findByRole('button', { name: receiveName }));
+    const form = screen.getByRole('form', { name: translate(locale, 'assets.receive.title', { line: 'Server' }) });
+    expect(within(form).getByText(translate(locale, 'assets.receive.outstanding', { count: '2' }))).toBeTruthy();
+    const units = within(form).getByLabelText(translate(locale, 'assets.receive.units'));
+    const submit = (count: string): void => {
+      fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'assets.receive.submit', { count }) }));
+    };
+    submit('0');
+    expect(within(form).getByRole('alert').textContent).toBe(translate(locale, 'assets.receive.problem.empty'));
+    fireEvent.change(units, { target: { value: 'SN-1\nSN-2\nSN-3' } });
+    submit('3');
+    expect(within(form).getByRole('alert').textContent).toBe(translate(locale, 'assets.receive.problem.tooMany', { count: '3', outstanding: '2' }));
+    expect(state.calls.some((c) => c.op === 'ReceivePlanLine')).toBe(false);
+
+    fireEvent.change(units, { target: { value: 'SN-1, TAG-1\n\nSN-2' } });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.receive.reference')), { target: { value: ' PO-77 ' } });
+    fireEvent.change(within(form).getByLabelText(translate(locale, 'assets.receive.location')), { target: { value: 'site-1' } });
+    submit('2');
+    await waitFor(() => {
+      expect(state.calls.find((c) => c.op === 'ReceivePlanLine')?.variables['input']).toEqual({
+        planId: 'p1',
+        position: 0,
+        receivedOn: localToday(),
+        reference: 'PO-77',
+        locationId: 'site-1',
+        units: [
+          { serialNumber: 'SN-1', assetTag: 'TAG-1' },
+          { serialNumber: 'SN-2', assetTag: null },
+        ],
+      });
+    });
+    expect(await screen.findByText(translate(locale, 'assets.receive.done', { count: '2', line: 'Server' }))).toBeTruthy();
+    const receipts = await screen.findByTestId('plan-receipts');
+    expect(within(receipts).getByText('PO-77')).toBeTruthy();
+    expect(within(receipts).getByText(translate(locale, 'assets.receive.storedAt', { location: 'DC-RUH-1' }))).toBeTruthy();
+    expect(await screen.findByText(translate(locale, 'assets.receive.receivedOf', { received: '2', quantity: '2' }))).toBeTruthy();
+    expect(screen.getByText(translate(locale, 'assets.receive.complete'))).toBeTruthy();
   });
 
   it('creates a plan from the form with the filled lines only', async () => {

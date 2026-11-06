@@ -193,6 +193,8 @@ export interface ManualAssetInput {
 }
 
 export interface BomLine {
+  /** Position in the plan's BOM, from 0; receiving names a line by it (ADR-034). */
+  position: number;
   description: string;
   manufacturer: string | null;
   model: string | null;
@@ -200,21 +202,53 @@ export interface BomLine {
   layer: CiLayer;
   quantity: number;
   received: number;
+  outstanding: number;
   unitCost: Money | null;
+}
+
+/** REQ-CMDB-020 (ADR-034): one delivery against a BOM line. */
+export interface PlanReceipt {
+  id: string;
+  position: number;
+  description: string;
+  quantity: number;
+  receivedOn: string;
+  receivedBy: string;
+  reference: string | null;
+  location: CiRef | null;
+  assets: Array<{ id: string; assetTag: string; serialNumber: string | null }>;
+}
+
+export interface ReceivedUnitInput {
+  serialNumber: string;
+  assetTag: string | null;
+}
+
+export interface ReceiptInput {
+  planId: string;
+  position: number;
+  /** Calendar date (YYYY-MM-DD). */
+  receivedOn: string;
+  reference?: string;
+  locationId?: string;
+  units: ReceivedUnitInput[];
 }
 
 export interface InfraPlan {
   id: string;
   number: string;
   name: string;
+  description: string;
   kind: string;
   status: PlanStatus;
+  owner: string;
   bom: BomLine[];
   estimatedCost: Money | null;
   targetSite: CiRef | null;
   targetRacks: CiRef[];
   plannedLiveAt: string | null;
   assets: Array<{ id: string; assetTag: string; stage: AssetStage }>;
+  receipts: PlanReceipt[];
 }
 
 export interface BomLineInput {
@@ -252,12 +286,15 @@ const ASSET_FIELDS = [
   'bookValue ' + MONEY_FIELDS,
   'stock { onHand reorderPoint belowReorderPoint }',
 ].join(' ');
+const RECEIPT_FIELDS =
+  'id position description quantity receivedOn receivedBy reference location { id displayName } assets { id assetTag serialNumber }';
 const PLAN_FIELDS = [
-  'id number name kind status plannedLiveAt',
-  'bom { description manufacturer model sku layer quantity received unitCost ' + MONEY_FIELDS + ' }',
+  'id number name description owner kind status plannedLiveAt',
+  'bom { position description manufacturer model sku layer quantity received outstanding unitCost ' + MONEY_FIELDS + ' }',
   'estimatedCost ' + MONEY_FIELDS,
   'targetSite { id displayName } targetRacks { id displayName }',
   'assets { id assetTag stage }',
+  'receipts { ' + RECEIPT_FIELDS + ' }',
 ].join(' ');
 
 const ASSETS_QUERY =
@@ -285,6 +322,8 @@ const SET_PLAN_STATUS_MUTATION =
   'mutation SetPlanStatus($planId: UUID!, $status: PlanStatus!) { setPlanStatus(planId: $planId, status: $status) { ' +
   PLAN_FIELDS +
   ' } }';
+const RECEIVE_PLAN_LINE_MUTATION =
+  'mutation ReceivePlanLine($input: ReceiptInput!) { receivePlanLine(input: $input) { ' + RECEIPT_FIELDS + ' } }';
 const SET_ASSET_STAGE_MUTATION =
   'mutation SetAssetStage($assetId: UUID!, $stage: AssetStage!, $note: String) { setAssetStage(assetId: $assetId, stage: $stage, note: $note) { ' +
   ASSET_FIELDS +
@@ -445,6 +484,11 @@ export function setPlanStatus(planId: string, status: PlanStatus): Promise<Infra
   return gql<{ setPlanStatus: InfraPlan }>(SET_PLAN_STATUS_MUTATION, { planId, status }).then(
     (d) => d.setPlanStatus,
   );
+}
+
+/** REQ-CMDB-020 — takes units of one BOM line into stock (ADR-034). */
+export function receivePlanLine(input: ReceiptInput): Promise<PlanReceipt> {
+  return gql<{ receivePlanLine: PlanReceipt }>(RECEIVE_PLAN_LINE_MUTATION, { input }).then((d) => d.receivePlanLine);
 }
 
 export function setAssetStage(assetId: string, stage: AssetStage, note?: string): Promise<AssetRecord> {

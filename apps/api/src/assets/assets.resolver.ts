@@ -1,5 +1,6 @@
 // REQ-CMDB-002 REQ-CMDB-039 REQ-CMDB-040 — Query.assets / assetSummary / plans, the plan and asset mutations
 // (stage, details, manual creation), and the AssetRecord / InfraPlan / SupportContract field resolvers plus Ci.asset.
+// REQ-CMDB-020 — receivePlanLine, InfraPlan.receipts and the PlanReceipt field resolvers (ADR-034).
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { Roles } from '../auth/roles.decorator.js';
 import { ROLES } from '../auth/roles.js';
@@ -12,6 +13,7 @@ import {
   manualAssetInputSchema,
   planInputSchema,
   plansArgsSchema,
+  receiptInputSchema,
   setAssetStageSchema,
   setPlanStatusSchema,
   updateAssetArgsSchema,
@@ -23,6 +25,7 @@ import type {
   AssetRecordView,
   AssetSummaryView,
   InfraPlanView,
+  PlanReceiptView,
   SupportContractView,
   VendorContactView,
 } from './assets.types.js';
@@ -93,6 +96,16 @@ export class AssetsResolver {
   setPlanStatus(@Args('planId') planId: unknown, @Args('status') status: unknown): Promise<InfraPlanView> {
     const a = parseInput(setPlanStatusSchema, { planId, status }, 'setPlanStatus arguments');
     return this.service.setPlanStatus(this.tenant.tenantId, this.tenant.username, a.planId, a.status);
+  }
+
+  @Mutation('receivePlanLine')
+  @Roles(ROLES.operator)
+  receivePlanLine(@Args('input') input: unknown): Promise<PlanReceiptView> {
+    return this.service.receivePlanLine(
+      this.tenant.tenantId,
+      this.tenant.username,
+      parseInput(receiptInputSchema, input, 'ReceiptInput'),
+    );
   }
 
   @Mutation('setAssetStage')
@@ -201,6 +214,31 @@ export class InfraPlanFieldsResolver {
   @ResolveField('assets')
   assets(@Parent() plan: InfraPlanView): Promise<AssetRecordView[]> {
     return this.service.assetsByPlan(this.tenant.tenantId, plan.id);
+  }
+
+  @ResolveField('receipts')
+  receipts(@Parent() plan: InfraPlanView): Promise<PlanReceiptView[]> {
+    return this.service.receipts(this.tenant.tenantId, plan.id);
+  }
+}
+
+@Resolver('PlanReceipt')
+export class PlanReceiptFieldsResolver {
+  constructor(
+    private readonly service: AssetsService,
+    private readonly tenant: TenantContext,
+  ) {}
+
+  @ResolveField('location')
+  location(@Parent() receipt: PlanReceiptView): Promise<CiRecord | null> {
+    return receipt.locationCiId === null
+      ? Promise.resolve(null)
+      : this.tenant.loaders.ci.load(receipt.locationCiId);
+  }
+
+  @ResolveField('assets')
+  assets(@Parent() receipt: PlanReceiptView): Promise<AssetRecordView[]> {
+    return this.service.assetsByIds(this.tenant.tenantId, receipt.assetIds);
   }
 }
 
