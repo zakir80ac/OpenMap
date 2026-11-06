@@ -6,7 +6,7 @@ lab-al2023
 lab-al2023
 
 @@OPENMAP:machine_id@@
-d1e65b4908844abeb8253b5a4e7f9fc8
+014034a2f64043d0b07247d6f678b526
 
 @@OPENMAP:os_release@@
 NAME="Amazon Linux"
@@ -33,7 +33,7 @@ SUPPORT_END="2029-06-30"
 x86_64
 
 @@OPENMAP:uptime@@
-11568.06 61203.92
+13968.77 72260.22
 
 @@OPENMAP:cpuinfo@@
 processor	: 0
@@ -279,18 +279,18 @@ virt=wsl
        valid_lft forever preferred_lft forever
     inet6 ::1/128 scope host proto kernel_lo 
        valid_lft forever preferred_lft forever
-2: eth0@if508: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether 9e:6e:a1:bc:fa:fe brd ff:ff:ff:ff:ff:ff link-netnsid 0
+2: eth0@if745: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether da:ad:f8:bb:8d:6d brd ff:ff:ff:ff:ff:ff link-netnsid 0
     inet 192.168.112.6/20 brd 192.168.127.255 scope global eth0
        valid_lft forever preferred_lft forever
 
 @@OPENMAP:ss@@
-udp UNCONN 0      0      127.0.0.11:42113 0.0.0.0:*
-tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
+udp UNCONN 0      0      127.0.0.11:55766 0.0.0.0:*
 tcp LISTEN 0      511       0.0.0.0:80    0.0.0.0:*
-tcp LISTEN 0      4096   127.0.0.11:39537 0.0.0.0:*
-tcp LISTEN 0      128          [::]:22       [::]:*
+tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
+tcp LISTEN 0      4096   127.0.0.11:46135 0.0.0.0:*
 tcp LISTEN 0      511          [::]:80       [::]:*
+tcp LISTEN 0      128          [::]:22       [::]:*
 
 @@OPENMAP:packages@@
 python3-setuptools-wheel	59.6.0-2.amzn2023.0.6	noarch
@@ -471,4 +471,28 @@ sdf       1T disk Virtual Disk
 
 @@OPENMAP:df@@
 Filesystem     1024-blocks      Used Available Capacity Mounted on
-/dev/sdd        1055762868 678909828 323149568      68% /etc/hosts
+/dev/sdd        1055762868 702871080 299188316      71% /etc/hosts
+
+@@OPENMAP:lsblk_pairs@@
+NAME="loop0" SIZE="791226368" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="loop1" SIZE="762304512" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="sda" SIZE="407490560" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdb" SIZE="195080192" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdc" SIZE="4294971392" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdd" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sde" SIZE="147886080" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdf" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+
+@@OPENMAP:nics@@
+
+@@OPENMAP:fc_hosts@@
+
+@@OPENMAP:dmi_memory@@
+
+@@OPENMAP:cpu_stat@@
+cpu  2611174 488 904121 7226056 49640 0 183945 0 0 0
+cpu  2611260 488 904152 7226724 49642 0 183959 0 0 0
+
+@@OPENMAP:mem_available@@
+MemTotal:       24611036 kB
+MemAvailable:   14887828 kB

@@ -6,7 +6,7 @@ lab-ubuntu2404
 lab-ubuntu2404
 
 @@OPENMAP:machine_id@@
-b119510d7faf405ca63a2e8d71df76c2
+921f16fc20de4b42831e333e08f4fd45
 
 @@OPENMAP:os_release@@
 PRETTY_NAME="Ubuntu 24.04.5 LTS"
@@ -30,7 +30,7 @@ LOGO=ubuntu-logo
 x86_64
 
 @@OPENMAP:uptime@@
-11565.76 61200.39
+13963.35 72226.43
 
 @@OPENMAP:cpuinfo@@
 processor	: 0
@@ -276,18 +276,18 @@ virt=wsl
        valid_lft forever preferred_lft forever
     inet6 ::1/128 scope host 
        valid_lft forever preferred_lft forever
-2: eth0@if504: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
-    link/ether 6e:20:d0:45:4e:d7 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+2: eth0@if741: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether e6:44:02:c8:bd:2c brd ff:ff:ff:ff:ff:ff link-netnsid 0
     inet 192.168.112.2/20 brd 192.168.127.255 scope global eth0
        valid_lft forever preferred_lft forever
 
 @@OPENMAP:ss@@
-udp UNCONN 0      0      127.0.0.11:52376 0.0.0.0:*
-tcp LISTEN 0      4096   127.0.0.11:44163 0.0.0.0:*
-tcp LISTEN 0      511       0.0.0.0:80    0.0.0.0:*
+udp UNCONN 0      0      127.0.0.11:40260 0.0.0.0:*
 tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
-tcp LISTEN 0      511          [::]:80       [::]:*
+tcp LISTEN 0      511       0.0.0.0:80    0.0.0.0:*
+tcp LISTEN 0      4096   127.0.0.11:33371 0.0.0.0:*
 tcp LISTEN 0      128          [::]:22       [::]:*
+tcp LISTEN 0      511          [::]:80       [::]:*
 
 @@OPENMAP:packages@@
 adduser	3.137ubuntu1	all
@@ -500,4 +500,28 @@ sdf       1T disk Virtual Disk
 
 @@OPENMAP:df@@
 Filesystem     1024-blocks      Used Available Capacity Mounted on
-/dev/sdd        1055762868 678786864 323272532      68% /etc/hosts
+/dev/sdd        1055762868 702870108 299189288      71% /etc/hosts
+
+@@OPENMAP:lsblk_pairs@@
+NAME="loop0" SIZE="791226368" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="loop1" SIZE="762304512" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="sda" SIZE="407490560" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdb" SIZE="195080192" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdc" SIZE="4294971392" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdd" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sde" SIZE="147886080" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdf" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+
+@@OPENMAP:nics@@
+
+@@OPENMAP:fc_hosts@@
+
+@@OPENMAP:dmi_memory@@
+
+@@OPENMAP:cpu_stat@@
+cpu  2610625 488 903854 7222658 49632 0 183885 0 0 0
+cpu  2610701 488 903887 7223333 49632 0 183892 0 0 0
+
+@@OPENMAP:mem_available@@
+MemTotal:       24611036 kB
+MemAvailable:   15095020 kB

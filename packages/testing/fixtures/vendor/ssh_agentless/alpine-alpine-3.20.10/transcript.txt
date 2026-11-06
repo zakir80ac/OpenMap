@@ -22,7 +22,7 @@ BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
 x86_64
 
 @@OPENMAP:uptime@@
-11566.90 61202.68
+13967.23 72250.32
 
 @@OPENMAP:cpuinfo@@
 processor	: 0
@@ -268,8 +268,8 @@ virt=unknown
        valid_lft forever preferred_lft forever
     inet6 ::1/128 scope host 
        valid_lft forever preferred_lft forever
-2: eth0@if507: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
-    link/ether 16:5a:fa:7f:7d:43 brd ff:ff:ff:ff:ff:ff
+2: eth0@if744: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether fe:16:52:e6:23:51 brd ff:ff:ff:ff:ff:ff
     inet 192.168.112.5/20 brd 192.168.127.255 scope global eth0
        valid_lft forever preferred_lft forever
 
@@ -277,11 +277,11 @@ virt=unknown
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
 tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.11:43055        0.0.0.0:*               LISTEN      -
 tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -
-tcp        0      0 127.0.0.11:34243        0.0.0.0:*               LISTEN      -
 tcp        0      0 :::80                   :::*                    LISTEN      -
 tcp        0      0 :::22                   :::*                    LISTEN      -
-udp        0      0 127.0.0.11:60844        0.0.0.0:*                           -
+udp        0      0 127.0.0.11:43616        0.0.0.0:*                           -
 
 @@OPENMAP:packages@@
 alpine-baselayout	3.6.5-r0
@@ -316,12 +316,12 @@ zlib	1.3.2-r0
 
 @@OPENMAP:df@@
 Filesystem           1024-blocks    Used Available Capacity Mounted on
-overlay              1055762868 678863100 323196296  68% /
+overlay              1055762868 702871340 299188056  70% /
 tmpfs                    65536         0     65536   0% /dev
 shm                      65536         0     65536   0% /dev/shm
-/dev/sdd             1055762868 678863100 323196296  68% /etc/resolv.conf
-/dev/sdd             1055762868 678863100 323196296  68% /etc/hostname
-/dev/sdd             1055762868 678863100 323196296  68% /etc/hosts
+/dev/sdd             1055762868 702871340 299188056  70% /etc/resolv.conf
+/dev/sdd             1055762868 702871340 299188056  70% /etc/hostname
+/dev/sdd             1055762868 702871340 299188056  70% /etc/hosts
 tmpfs                        4         0         4   0% /proc/acpi
 tmpfs                    65536         0     65536   0% /proc/interrupts
 tmpfs                    65536         0     65536   0% /proc/kcore
@@ -330,3 +330,19 @@ tmpfs                    65536         0     65536   0% /proc/latency_stats
 tmpfs                        4         0         4   0% /proc/scsi
 tmpfs                    65536         0     65536   0% /proc/timer_list
 tmpfs                        4         0         4   0% /sys/firmware
+
+@@OPENMAP:lsblk_pairs@@
+
+@@OPENMAP:nics@@
+
+@@OPENMAP:fc_hosts@@
+
+@@OPENMAP:dmi_memory@@
+
+@@OPENMAP:cpu_stat@@
+cpu  2611102 488 904072 7225156 49639 0 183934 0 0 0
+cpu  2611163 488 904101 7225852 49639 0 183942 0 0 0
+
+@@OPENMAP:mem_available@@
+MemTotal:       24611036 kB
+MemAvailable:   15090468 kB

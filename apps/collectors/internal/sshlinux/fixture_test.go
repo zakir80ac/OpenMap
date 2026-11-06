@@ -1,10 +1,12 @@
 // T-300 REQ-DISC-003 — recorded vendor fixtures: raw stdout of Script() captured over SSH by the real
 // ssh_agentless collector from Ubuntu, Debian, AlmaLinux, Alpine and Amazon Linux (container lab,
-// packages/testing/fixtures/vendor/ssh_agentless). Split, Assemble and Emit run over each capture.
+// packages/testing/fixtures/vendor/ssh_agentless). Split, Assemble, Components (REQ-CMDB-014),
+// MeasureUtilisation (REQ-CMDB-034) and Emit run over each capture.
 package sshlinux
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -15,6 +17,18 @@ import (
 )
 
 const fixtureRoot = "../../../../packages/testing/fixtures/vendor/ssh_agentless"
+
+// Facts shared by every capture: all five containers ran on one WSL2 kernel host.
+const (
+	fixtureCPUModel = "AMD Ryzen AI 9 HX 370 w/ Radeon 890M"
+	// The host disk is 66.57% full; every container's fullest df entry is a view of it.
+	fixtureDiskPercent = 66.5746
+	// Expectations were computed independently from the transcripts to four decimals.
+	utilisationTolerance = 0.001
+)
+
+// WSL2 virtual disks as lsblk -b reports them (bytes).
+var wslDiskBytes = map[string]float64{"sda": 407490560, "sdb": 195080192, "sdc": 4294971392, "sdd": 1099511627776, "sde": 147886080, "sdf": 1099511627776}
 
 type fixtureExpect struct {
 	hostname    string
@@ -34,38 +48,48 @@ type fixtureExpect struct {
 	mounts      int
 	listeners   int // parsed sockets (before loopback/duplicate filtering)
 	services    []string
+	// REQ-CMDB-014 parts and REQ-CMDB-034 utilisation, as the capture gives them.
+	diskParts  int     // whole disks from lsblk -P (BusyBox Alpine has no lsblk)
+	cpuPercent float64 // busy share between the two recorded /proc/stat reads
+	memPercent float64 // (MemTotal - MemAvailable) / MemTotal
+	diskMount  string  // fullest filesystem in df
 }
 
 var fixtureExpectations = map[string]fixtureExpect{
 	"canonical-ubuntu-24.04.5": {
 		hostname: "lab-ubuntu2404", osID: "ubuntu", osVersionID: "24.04", osPretty: "Ubuntu 24.04.5 LTS", osName: "Ubuntu",
-		hostType: typeVM, virtual: "wsl", machineID: "b119510d7faf405ca63a2e8d71df76c2", mac: "6e:20:d0:45:4e:d7", ip: "192.168.112.2", cidr: "192.168.112.2/20",
+		hostType: typeVM, virtual: "wsl", machineID: "921f16fc20de4b42831e333e08f4fd45", mac: "e6:44:02:c8:bd:2c", ip: "192.168.112.2", cidr: "192.168.112.2/20",
 		packages: 197, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
-		software: []string{"libc6 2.39-0ubuntu8.9", "nginx 1.24.0-2ubuntu7.19", "openssh-server 1:9.6p1-3ubuntu13.20", "openssl 3.0.13-0ubuntu3.16", "python3 3.12.3-0ubuntu2.1", "systemd 255.4-1ubuntu8.18"},
+		software:  []string{"libc6 2.39-0ubuntu8.9", "nginx 1.24.0-2ubuntu7.19", "openssh-server 1:9.6p1-3ubuntu13.20", "openssl 3.0.13-0ubuntu3.16", "python3 3.12.3-0ubuntu2.1", "systemd 255.4-1ubuntu8.18"},
+		diskParts: 6, cpuPercent: 14.6650, memPercent: 38.6656, diskMount: "/etc/hosts",
 	},
 	"debian-debian-12": {
 		hostname: "lab-debian12", osID: "debian", osVersionID: "12", osPretty: "Debian GNU/Linux 12 (bookworm)", osName: "Debian GNU/Linux",
-		hostType: typeVM, virtual: "wsl", machineID: "ca19c3b9a9644121b6eedf1f44334056", mac: "12:c4:e8:b6:f7:6a", ip: "192.168.112.3", cidr: "192.168.112.3/20",
+		hostType: typeVM, virtual: "wsl", machineID: "699a9e04c4c046178c55fb4190ee0f1d", mac: "e2:65:22:77:30:ca", ip: "192.168.112.3", cidr: "192.168.112.3/20",
 		packages: 157, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
-		software: []string{"libc6 2.36-9+deb12u14", "nginx 1.22.1-9+deb12u10", "openssh-server 1:9.2p1-2+deb12u10", "openssl 3.0.22-1~deb12u2", "systemd 252.39-1~deb12u2"},
+		software:  []string{"libc6 2.36-9+deb12u14", "nginx 1.22.1-9+deb12u10", "openssh-server 1:9.2p1-2+deb12u10", "openssl 3.0.22-1~deb12u2", "systemd 252.39-1~deb12u2"},
+		diskParts: 6, cpuPercent: 21.5013, memPercent: 38.2705, diskMount: "/etc/hosts",
 	},
 	"almalinux-almalinux-9.8": {
 		hostname: "lab-alma9", osID: "almalinux", osVersionID: "9.8", osPretty: "AlmaLinux 9.8 (Olive Jaguar)", osName: "AlmaLinux",
-		hostType: typeVM, virtual: "wsl", machineID: "", mac: "5a:d7:56:2b:57:a1", ip: "192.168.112.4", cidr: "192.168.112.4/20",
+		hostType: typeVM, virtual: "wsl", machineID: "", mac: "82:5a:ec:bc:dc:d5", ip: "192.168.112.4", cidr: "192.168.112.4/20",
 		packages: 171, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
-		software: []string{"glibc 2.34-283.el9_8", "nginx 1.20.1-28.el9_8.6.alma.1", "openssh-server 9.9p1-13.el9_8.alma.1", "openssl 3.5.8-2.el9_8", "python3 3.9.25-7.el9_8.6", "systemd 252-67.el9_8.6.alma.1"},
+		software:  []string{"glibc 2.34-283.el9_8", "nginx 1.20.1-28.el9_8.6.alma.1", "openssh-server 9.9p1-13.el9_8.alma.1", "openssl 3.5.8-2.el9_8", "python3 3.9.25-7.el9_8.6", "systemd 252-67.el9_8.6.alma.1"},
+		diskParts: 6, cpuPercent: 15.9091, memPercent: 38.4133, diskMount: "/etc/hosts",
 	},
 	"alpine-alpine-3.20.10": {
 		hostname: "lab-alpine320", osID: "alpine", osVersionID: "3.20.10", osPretty: "Alpine Linux v3.20", osName: "Alpine Linux",
-		hostType: typeHost, virtual: "unknown", machineID: "", mac: "16:5a:fa:7f:7d:43", ip: "192.168.112.5", cidr: "192.168.112.5/20",
+		hostType: typeHost, virtual: "unknown", machineID: "", mac: "fe:16:52:e6:23:51", ip: "192.168.112.5", cidr: "192.168.112.5/20",
 		packages: 27, disks: 0, mounts: 14, listeners: 6, services: []string{"tcp/22", "tcp/80"},
-		software: []string{"nginx 1.26.3-r0", "openssh-server 9.7_p1-r6", "openssl 3.3.7-r0"},
+		software:  []string{"nginx 1.26.3-r0", "openssh-server 9.7_p1-r6", "openssl 3.3.7-r0"},
+		diskParts: 0, cpuPercent: 12.3426, memPercent: 38.6841, diskMount: "/",
 	},
 	"aws-amazonlinux-2023.12.20261102": {
 		hostname: "lab-al2023", osID: "amzn", osVersionID: "2023", osPretty: "Amazon Linux 2023.12.20261102", osName: "Amazon Linux",
-		hostType: typeVM, virtual: "wsl", machineID: "d1e65b4908844abeb8253b5a4e7f9fc8", mac: "9e:6e:a1:bc:fa:fe", ip: "192.168.112.6", cidr: "192.168.112.6/20",
+		hostType: typeVM, virtual: "wsl", machineID: "014034a2f64043d0b07247d6f678b526", mac: "da:ad:f8:bb:8d:6d", ip: "192.168.112.6", cidr: "192.168.112.6/20",
 		packages: 165, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
-		software: []string{"glibc 2.34-231.amzn2023.0.5", "nginx 1.30.6-1.amzn2023.0.1", "openssh-server 9.9p1-16.amzn2023.0.1", "openssl 3.5.8-1.amzn2023.0.3", "python3 3.9.25-1.amzn2023.0.11", "systemd 252.23-15.amzn2023"},
+		software:  []string{"glibc 2.34-231.amzn2023.0.5", "nginx 1.30.6-1.amzn2023.0.1", "openssh-server 9.9p1-16.amzn2023.0.1", "openssl 3.5.8-1.amzn2023.0.3", "python3 3.9.25-1.amzn2023.0.11", "systemd 252.23-15.amzn2023"},
+		diskParts: 6, cpuPercent: 16.3546, memPercent: 39.5075, diskMount: "/etc/hosts",
 	},
 }
 
@@ -135,6 +159,39 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 				}
 			}
 
+			// REQ-CMDB-014 — the parts a container login sees: one CPU socket (physical id 0, 8 threads,
+			// 4 cores as WSL2 reports), the WSL2 virtual disks from lsblk -P (loop devices are not parts),
+			// no NIC parts (eth0 is a veth without a backing device), no FC HBAs and no memory modules
+			// (dmidecode is absent / needs root).
+			comps := Components(parts)
+			kinds := map[string][]contract.Component{}
+			for _, c := range comps {
+				kinds[c.Kind] = append(kinds[c.Kind], c)
+			}
+			cpus := kinds[contract.ComponentCPU]
+			if len(cpus) != 1 || cpus[0].Slot != "0" || cpus[0].Model != fixtureCPUModel || cpus[0].Manufacturer != "AuthenticAMD" || cpus[0].Details["threads"] != 8 || cpus[0].Details["cores"] != 4 {
+				t.Errorf("cpu sockets %+v", cpus)
+			}
+			diskParts := kinds[contract.ComponentDisk]
+			if len(diskParts) != want.diskParts {
+				t.Errorf("disk parts %d want %d: %+v", len(diskParts), want.diskParts, diskParts)
+			}
+			for _, d := range diskParts {
+				capacity, known := wslDiskBytes[d.Slot]
+				if !known || d.CapacityBytes != capacity || d.Model != "Virtual Disk" || d.Manufacturer != "Msft" || d.Firmware != "1.0" || d.SerialNumber != "" || d.Details["media"] != "hdd" {
+					t.Errorf("disk part %+v", d)
+				}
+			}
+			if len(kinds[contract.ComponentNIC]) != 0 || len(kinds[contract.ComponentHBA]) != 0 || len(kinds[contract.ComponentMemory]) != 0 || len(comps) != 1+want.diskParts {
+				t.Errorf("components %+v", comps)
+			}
+
+			// REQ-CMDB-034 — utilisation from the two /proc/stat reads, MemAvailable and the fullest df mount.
+			u := MeasureUtilisation(parts, f.Mounts)
+			if math.Abs(u.CPUPercent-want.cpuPercent) > utilisationTolerance || math.Abs(u.MemoryPercent-want.memPercent) > utilisationTolerance || math.Abs(u.DiskPercent-fixtureDiskPercent) > utilisationTolerance || u.DiskMount != want.diskMount {
+				t.Errorf("utilisation %+v", u)
+			}
+
 			at := time.Date(2026, 11, 6, 20, 56, 0, 0, time.UTC)
 			obs := Emit(f, contract.Target{Kind: "host", Value: "127.0.0.1"}, raw, at)
 			if len(obs.Evidence) != 1 || string(obs.Evidence[0].Data) != string(raw) {
@@ -157,6 +214,24 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 			}
 			if want.hostType == typeHost && host.Identity["primaryMac"] != want.mac {
 				t.Errorf("host identity %v", host.Identity)
+			}
+			if len(host.Components) != len(comps) {
+				t.Errorf("host CI components %d want %d", len(host.Components), len(comps))
+			}
+			wantMetrics := []string{contract.MetricVMCPU, contract.MetricVMMemory, contract.MetricVMDisk}
+			if want.hostType == typeHost {
+				wantMetrics = []string{contract.MetricHostCPU, contract.MetricHostMemory, contract.MetricHostDisk}
+			}
+			if len(obs.Samples) != len(wantMetrics) {
+				t.Fatalf("samples %+v", obs.Samples)
+			}
+			for i, s := range obs.Samples {
+				if s.Metric != wantMetrics[i] || s.Unit != contract.UnitPercent || s.Ci.Type != want.hostType || !s.Ts.Equal(at) {
+					t.Errorf("sample %+v", s)
+				}
+			}
+			if obs.Samples[2].Labels[contract.LabelMount] != want.diskMount {
+				t.Errorf("disk sample labels %v", obs.Samples[2].Labels)
 			}
 			if host.Attributes["packageCount"] != want.packages || host.Attributes["cpuCount"] != 8 || host.Attributes["memoryGb"] != int64(23) {
 				t.Errorf("host attributes %v %v %v", host.Attributes["packageCount"], host.Attributes["cpuCount"], host.Attributes["memoryGb"])

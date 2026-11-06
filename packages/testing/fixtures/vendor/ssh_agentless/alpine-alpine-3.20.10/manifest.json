@@ -3,7 +3,7 @@
   "vendor": "Alpine Linux",
   "model": "Alpine Linux (musl/BusyBox, container userland)",
   "firmware": "3.20.10",
-  "capturedAt": "2026-11-06T20:56:33Z",
+  "capturedAt": "2026-11-06T21:36:34Z",
   "capturedBy": "OpenMap engineering (container lab)",
   "req": "REQ-DISC-003",
   "collector": "internal/sshlinux",

@@ -3,7 +3,7 @@
   "vendor": "Debian",
   "model": "Debian GNU/Linux (container userland)",
   "firmware": "12 (bookworm)",
-  "capturedAt": "2026-11-06T20:56:33Z",
+  "capturedAt": "2026-11-06T21:36:31Z",
   "capturedBy": "OpenMap engineering (container lab)",
   "req": "REQ-DISC-003",
   "collector": "internal/sshlinux",

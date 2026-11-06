@@ -3,7 +3,7 @@
   "vendor": "Canonical",
   "model": "Ubuntu Server (container userland)",
   "firmware": "24.04.5 LTS (Noble Numbat)",
-  "capturedAt": "2026-11-06T20:56:32Z",
+  "capturedAt": "2026-11-06T21:36:30Z",
   "capturedBy": "OpenMap engineering (container lab)",
   "req": "REQ-DISC-003",
   "collector": "internal/sshlinux",
