@@ -495,6 +495,16 @@ export const LIFECYCLE = {
   fetchConcurrency: 4,
 } as const;
 
+/** REQ-CMDB-022 — the SaaS inventory: when a subscription is renewing and when its seats are underused. */
+export const SAAS = {
+  /** A subscription ending within this many days is renewing (the renewal decision is due). */
+  renewalHorizonDays: 90,
+  /** Fewer seats assigned than this share of those bought is underused (a true-down candidate). */
+  underusedPercent: 60,
+  /** The whole of a seat count, as utilisation is expressed. */
+  fullPercent: 100,
+} as const;
+
 /** REQ-CMDB-026..029 (ADR-035) — the Commercial screen's horizons and limits. */
 export const COMMERCIAL = {
   /** "Ending within" horizons the contract register offers, in days. */
@@ -1337,8 +1347,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.17.0 (REQ-CMDB-023, REQ-CMDB-025, ADR-039): `LifecycleKind`, `LifecycleState`, `LifecycleEntry`, `LifecycleRelease`,
    * `LifecycleReleasePage`, `LifecycleHardware`, `LifecycleCatalogue`, `LifecycleCatalogueSource`, `LifecycleSyncResult`, the
    * filters, queries `lifecycleReleases`, `lifecycleHardware`, `lifecycleCatalogue`, mutation `syncLifecycleCatalogue`.
+   * 1.18.0 (REQ-CMDB-022): `SaasSubscriptionState`, `SaasDataFlow`, `SaasSubscription`, `SaasTenant`, `SaasInventory`, query
+   * `saasInventory`.
    */
-  graphql: '1.17.0',
+  graphql: '1.18.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

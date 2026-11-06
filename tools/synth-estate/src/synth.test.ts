@@ -172,7 +172,7 @@ describe('synth-estate', () => {
     expect(summary.layers).toEqual(expected);
     const written = JSON.parse(readFileSync(join(dirA, SUMMARY_FILE), 'utf8')) as { layers: Record<string, number> };
     expect(written.layers).toEqual(expected);
-    expect(Object.keys(summary.layers).sort()).toEqual(['applications', 'cloud', 'containers', 'databases', 'dc', 'hardware', 'network_security', 'os', 'storage', 'unknown', 'virtualization'].sort());
+    expect(Object.keys(summary.layers).sort()).toEqual(['applications', 'cloud', 'containers', 'databases', 'dc', 'hardware', 'network_security', 'os', 'saas', 'storage', 'unknown', 'virtualization'].sort());
   });
 
   it('emits round(300 × scale) business services', () => {

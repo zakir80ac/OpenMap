@@ -2098,6 +2098,45 @@ describe('OpenMap API (integration)', () => {
     expect(sync.errors?.[0]?.message).toMatch(/outbound/);
   });
 
+  it('inventories SaaS tenants with seats, renewals and the data flows from internal applications (REQ-CMDB-022)', async () => {
+    // T-213
+    const stamp = String(Date.now());
+    const now = new Date();
+    const day = (offset: number): string => new Date(now.getTime() + offset * 86_400_000).toISOString().slice(0, 10);
+    const make = async (type: 'saas_tenant' | 'saas_application' | 'application', name: string, attributes: Record<string, unknown>): Promise<string> => {
+      const id = randomUUID();
+      await prisma.ci.create({
+        data: {
+          id, tenantId, type, identity: { name }, identityKey: name, name, displayName: name, code: 'SA-' + id.slice(0, 8).toUpperCase(),
+          layer: type === 'application' ? 'applications' : 'saas', lifecycle: 'managed', attributes: attributes as object, tags: [],
+          sourceCollectorId: 'saas', sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now, checksum: 'b'.repeat(64),
+        },
+      });
+      return id;
+    };
+    const link = (type: 'licensed_by' | 'communicates_with', fromCiId: string, toCiId: string, attributes: Record<string, unknown> = {}) =>
+      prisma.relationship.create({ data: { tenantId, type, fromCiId, toCiId, attributes: attributes as object, sourceCollectorId: 'saas', sourceNodeId: 'test', sourceRunId: randomUUID(), sourceConfidence: 0.9, observedAt: now, validFrom: now } });
+    const vendor = 'Vendor ' + stamp;
+    const tenantCi = await make('saas_tenant', 'tenant-' + stamp, { vendor, edition: 'Enterprise', users: 500, activeUsers: 410, ssoApplications: 33, domains: ['bank.example'] });
+    const crm = await make('saas_application', 'crm-' + stamp, { product: 'CRM ' + stamp, sku: 'CRM-EE', seatsTotal: 100, seatsAssigned: 40, status: 'enabled', subscriptionEnd: day(30) });
+    const hr = await make('saas_application', 'hr-' + stamp, { product: 'HR ' + stamp, seatsTotal: 500, seatsAssigned: 490, status: 'expired', subscriptionEnd: day(-5) });
+    const portal = await make('application', 'portal-' + stamp, {});
+    await link('licensed_by', crm, tenantCi);
+    await link('licensed_by', hr, tenantCi);
+    await link('communicates_with', portal, crm, { dataClass: 'customer', direction: 'outbound' });
+
+    type Inv = { saasInventory: { tenants: Array<{ ci: { id: string }; vendor: string; users: number; activeUsers: number; ssoApplications: number; domains: string[]; subscriptions: Array<{ ci: { id: string }; product: string; unusedSeats: number; utilisationPercent: number; underused: boolean; daysToRenewal: number; state: string; dataFlows: Array<{ application: { id: string }; dataClass: string; direction: string }> }> }> } };
+    const r = await gql<Inv>('{ saasInventory { tenants { ci { id } vendor users activeUsers ssoApplications domains subscriptions { ci { id } product unusedSeats utilisationPercent underused daysToRenewal state dataFlows { application { id } dataClass direction } } } } }');
+    expect(r.errors).toBeUndefined();
+    const t = r.data?.saasInventory.tenants.find((x) => x.vendor === vendor);
+    expect(t).toMatchObject({ ci: { id: tenantCi }, users: 500, activeUsers: 410, ssoApplications: 33, domains: ['bank.example'] });
+    // Soonest renewal first: the lapsed one, then the one renewing in 30 days.
+    expect(t?.subscriptions.map((s) => s.ci.id)).toEqual([hr, crm]);
+    expect(t?.subscriptions[0]).toMatchObject({ state: 'lapsed', unusedSeats: 10, utilisationPercent: 98, underused: false });
+    expect(t?.subscriptions[1]).toMatchObject({ state: 'renewing', unusedSeats: 60, utilisationPercent: 40, underused: true, dataFlows: [{ application: { id: portal }, dataClass: 'customer', direction: 'outbound' }] });
+    expect(t?.subscriptions[1]?.daysToRenewal).toBeGreaterThanOrEqual(29);
+  });
+
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';

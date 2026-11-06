@@ -20,6 +20,7 @@ import { generateApplications, type BusinessServiceRecord } from './gen/applicat
 import { generateEdge } from './gen/edge.js';
 import { generateCommercial } from './gen/commercial.js';
 import { generateFlows } from './gen/flows.js';
+import { generateSaas } from './gen/saas.js';
 
 export type EvidenceKind = 'snmp_walk' | 'cli_output' | 'api_response' | 'flow_sample' | 'scan_output' | 'agent_report';
 
@@ -214,6 +215,8 @@ export function buildEstate(seed: number, scale: number): Estate {
     edge: root.fork('edge'),
     commercial: root.fork('commercial'),
     flows: root.fork('flows'),
+    // Appended last: earlier streams keep their seeds.
+    saas: root.fork('saas'),
   };
 
   const org = generateSites(world, streams.sites);
@@ -229,6 +232,7 @@ export function buildEstate(seed: number, scale: number): Estate {
   generateEdge(world, streams.edge);
   generateCommercial(world, streams.commercial);
   generateFlows(world, streams.flows);
+  generateSaas(world, streams.saas);
 
   const sites = org.sites.map((site) => {
     const w = world.sites.find((s) => s.def.code === site.code);

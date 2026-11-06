@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.17.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.18.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -869,6 +869,56 @@ type LifecycleSyncResult {
   catalogue: LifecycleCatalogue!
   "Products the sync could not fetch, with the reason."
   failed: [String!]!
+}
+# REQ-CMDB-022: the SaaS inventory.
+"active; renewing inside the deployment's renewal horizon; lapsed; unknown without an end date."
+enum SaasSubscriptionState {
+  active
+  renewing
+  lapsed
+  unknown
+}
+type SaasDataFlow {
+  "The organisation's application that exchanges data with the product."
+  application: Ci!
+  dataClass: String
+  direction: String
+}
+type SaasSubscription {
+  ci: Ci!
+  product: String!
+  sku: String
+  status: String
+  seatsTotal: Int
+  seatsAssigned: Int
+  unusedSeats: Int
+  utilisationPercent: Int
+  "Assigned below the deployment's underused share."
+  underused: Boolean!
+  "Calendar date (YYYY-MM-DD)."
+  subscriptionEnd: String
+  daysToRenewal: Int
+  state: SaasSubscriptionState!
+  dataFlows: [SaasDataFlow!]!
+}
+type SaasTenant {
+  ci: Ci!
+  vendor: String!
+  edition: String
+  users: Int
+  activeUsers: Int
+  ssoApplications: Int
+  domains: [String!]!
+  subscriptions: [SaasSubscription!]!
+}
+type SaasInventory {
+  tenants: [SaasTenant!]!
+  seatsTotal: Int!
+  seatsAssigned: Int!
+  unusedSeats: Int!
+  renewing: Int!
+  lapsed: Int!
+  dataFlows: Int!
 }
 type Certificate {
   ci: Ci!
@@ -1830,6 +1880,8 @@ type Query {
   "REQ-CMDB-025 (ADR-039): hardware end of sale and support by model."
   lifecycleHardware(filter: LifecycleHardwareFilter): [LifecycleHardware!]!
   lifecycleCatalogue: LifecycleCatalogue!
+  "REQ-CMDB-022: SaaS tenants, their subscriptions with seats and renewals, and the data flows to them."
+  saasInventory: SaasInventory!
   "REQ-CMDB-014 (ADR-037): parts across the estate."
   components(filter: ComponentFilter, first: Int = 100, offset: Int = 0): ComponentPage!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!

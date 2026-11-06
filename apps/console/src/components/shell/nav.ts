@@ -33,6 +33,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { key: 'nav.assets', href: '/assets', icon: 'assets' },
       { key: 'nav.parts', href: '/parts', icon: 'chip' },
       { key: 'nav.software', href: '/software', icon: 'software' },
+      { key: 'nav.saas', href: '/saas', icon: 'globe' },
       { key: 'nav.commercial', href: '/commercial', icon: 'contract' },
     ],
   },
