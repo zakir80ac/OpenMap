@@ -340,16 +340,6 @@ enum AssetSource {
   manual
 }
 
-/// SUPPORT_LEVELS (asset.ts)
-enum SupportLevel {
-  none
-  basic
-  next_business_day
-  four_hour
-  mission_critical
-  custom
-}
-
 /// DEPRECIATION_METHODS (asset.ts)
 enum DepreciationMethod {
   straight_line
@@ -515,7 +505,6 @@ model Tenant {
   assetAudits             AssetAudit[]
   infraPlans              InfraPlan[]
   bomLines                BomLine[]
-  supportContracts        SupportContract[]
   vendorContacts          VendorContact[]
   impactScenarios         ImpactScenario[]
   impactSimulations       ImpactSimulation[]
@@ -534,6 +523,7 @@ model Tenant {
   customFieldDefinitions  CustomFieldDefinition[]
   importJobs              ImportJob[]
   planReceipts            PlanReceipt[]
+  certificateAlerts       CertificateAlert[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -691,11 +681,14 @@ model Ci {
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
 
-  tenant            Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   externalIds       CiExternalId[]
-  relationshipsFrom Relationship[] @relation("RelationshipFrom")
-  relationshipsTo   Relationship[] @relation("RelationshipTo")
-  assetRecords      AssetRecord[]
+  relationshipsFrom Relationship[]     @relation("RelationshipFrom")
+  relationshipsTo   Relationship[]     @relation("RelationshipTo")
+  assetRecords      AssetRecord[]      @relation("AssetCi")
+  coveredAssets     AssetRecord[]      @relation("AssetSupportContract")
+  ownedAssets       AssetRecord[]      @relation("AssetOwnerCostCentre")
+  certificateAlerts CertificateAlert[]
 
   @@index([tenantId, type])
   @@index([tenantId, code])
@@ -1012,7 +1005,7 @@ model AssetRecord {
   warranty              Json?
   /// subscriptionSchema or null (ADR-027): term and credits of a software, SaaS or cloud asset.
   subscription          Json?
-  /// supportSchema or null: cover entered on the row itself (a SupportContract row is the other way).
+  /// supportSchema or null: cover entered on the row itself (the covering contract CI, supportContractId, is the other way).
   support               Json?
   supportContractId     String?            @db.Uuid
   endOfLife             Json?
@@ -1023,11 +1016,13 @@ model AssetRecord {
   createdAt             DateTime           @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime           @updatedAt @db.Timestamptz(3)
 
-  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ci              Ci?              @relation(fields: [ciId], references: [id], onDelete: SetNull)
-  plan            InfraPlan?       @relation(fields: [planId], references: [id], onDelete: SetNull)
-  bomLine         BomLine?         @relation(fields: [bomLineId], references: [id], onDelete: SetNull)
-  supportContract SupportContract? @relation(fields: [supportContractId], references: [id], onDelete: SetNull)
+  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci              Ci?          @relation("AssetCi", fields: [ciId], references: [id], onDelete: SetNull)
+  plan            InfraPlan?   @relation(fields: [planId], references: [id], onDelete: SetNull)
+  bomLine         BomLine?     @relation(fields: [bomLineId], references: [id], onDelete: SetNull)
+  /// ADR-035: the contract CI covering this asset.
+  supportContract Ci?          @relation("AssetSupportContract", fields: [supportContractId], references: [id], onDelete: SetNull)
+  ownerCostCentre Ci?          @relation("AssetOwnerCostCentre", fields: [ownerCostCentreCiId], references: [id], onDelete: SetNull)
   audits          AssetAudit[]
 
   @@unique([tenantId, assetTag])
@@ -1039,6 +1034,8 @@ model AssetRecord {
   @@index([ciId])
   @@index([planId])
   @@index([bomLineId])
+  @@index([supportContractId])
+  @@index([ownerCostCentreCiId])
   @@map("asset_records")
 }
 
@@ -1144,37 +1141,6 @@ model PlanReceipt {
   @@map("plan_receipts")
 }
 
-/// supportContractSchema
-model SupportContract {
-  id                 String       @id @default(uuid()) @db.Uuid
-  tenantId           String       @db.Uuid
-  vendorCiId         String       @db.Uuid
-  contractNumber     String
-  title              String
-  level              SupportLevel
-  responseMinutes    Int?
-  startsAt           DateTime     @db.Date
-  endsAt             DateTime     @db.Date
-  autoRenews         Boolean
-  annualCostAmount   Decimal?     @db.Decimal(18, 2)
-  annualCostCurrency String?      @db.Char(3)
-  costCentreCiId     String?      @db.Uuid
-  primaryContactId   String?      @db.Uuid
-  /// Array of { source, id }.
-  externalIds        Json
-  documentRefs       String[]
-  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
-
-  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  primaryContact VendorContact? @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
-  assets         AssetRecord[]
-
-  @@unique([tenantId, vendorCiId, contractNumber])
-  @@index([tenantId, endsAt])
-  @@map("support_contracts")
-}
-
 /// vendorContactSchema
 model VendorContact {
   id              String   @id @default(uuid()) @db.Uuid
@@ -1190,8 +1156,7 @@ model VendorContact {
   createdAt       DateTime @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime @updatedAt @db.Timestamptz(3)
 
-  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contracts SupportContract[]
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, vendorCiId])
   @@map("vendor_contacts")
@@ -1673,4 +1638,23 @@ model ImportJob {
 
   @@index([tenantId, createdAt(sort: Desc)])
   @@map("import_jobs")
+}
+
+/// REQ-CMDB-032 (ADR-036): expiry alerts raised, one per certificate, expiry date and threshold.
+model CertificateAlert {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String   @db.Uuid
+  ciId          String   @db.Uuid
+  notAfter      DateTime @db.Timestamptz(3)
+  thresholdDays Int
+  daysLeft      Int
+  eventId       String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci     Ci     @relation(fields: [ciId], references: [id], onDelete: Cascade)
+
+  @@unique([ciId, notAfter, thresholdDays])
+  @@index([tenantId, createdAt])
+  @@map("certificate_alerts")
 }

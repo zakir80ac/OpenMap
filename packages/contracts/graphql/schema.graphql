@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.12.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.13.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -487,6 +487,7 @@ type AssetRecord {
   stage: AssetStage!
   stageChangedAt: DateTime!
   custodian: String
+  ownerCostCentre: Ci
   locationCi: Ci
   purchasedAt: DateTime
   purchaseCost: Money
@@ -615,6 +616,81 @@ type VendorContact {
   email: String
   phone: String
   portalUrl: String
+  availability: String
+  escalationLevel: Int!
+}
+# REQ-CMDB-026 REQ-CMDB-027 REQ-CMDB-028 REQ-CMDB-029 (ADR-035) — the commercial register over vendor, contract and
+# cost_centre CIs.
+enum ContractKind {
+  support
+  maintenance
+  warranty_extension
+  licence
+  saas
+  lease
+  service
+  other
+}
+enum CostCentreKind {
+  cost_centre
+  department
+  customer
+}
+"A contract document by reference: its title and where it lives; OpenMap keeps the reference, not the file."
+type ContractDocument {
+  title: String!
+  location: String!
+}
+type Contract {
+  ci: Ci!
+  kind: ContractKind!
+  contractNumber: String!
+  title: String!
+  level: String
+  responseMinutes: Int
+  startsAt: DateTime
+  endsAt: DateTime
+  "Whole days to the end, negative once ended."
+  daysToEnd: Int
+  noticeDays: Int
+  "Last day to give notice before the contract renews or lapses."
+  noticeBy: DateTime
+  autoRenews: Boolean!
+  expired: Boolean!
+  annualCost: Money
+  coveredAssets: Int!
+  vendor: Ci
+  costCentre: Ci
+  documents: [ContractDocument!]!
+}
+type Vendor {
+  ci: Ci!
+  category: String
+  supportPortal: String
+  accountManager: String
+  contracts: Int!
+  activeContracts: Int!
+  coveredAssets: Int!
+  "Annual cost of the active contracts when they share one currency."
+  annualCost: Money
+  contacts: Int!
+}
+type VendorDetail {
+  vendor: Vendor!
+  "Contacts in escalation order."
+  contacts: [VendorContact!]!
+  contracts: [Contract!]!
+}
+type CostCentre {
+  ci: Ci!
+  code: String!
+  kind: CostCentreKind!
+  owner: String
+  annualBudget: Money
+  contracts: Int!
+  annualContractCost: Money
+  assets: Int!
+  plans: Int!
 }
 type InfraPlan {
   id: UUID!
@@ -1509,6 +1585,11 @@ type Query {
   assetSummary: [AssetSummary!]!
   assetPage(filter: AssetFilter, page: Int = 1, pageSize: Int): AssetPage!
   plans(status: [PlanStatus!]): [InfraPlan!]!
+  contracts(filter: ContractFilter): [Contract!]!
+  contract(id: UUID!): Contract
+  vendors(text: String): [Vendor!]!
+  vendor(id: UUID!): VendorDetail
+  costCentres: [CostCentre!]!
   vulnerabilities(minCvss: Float, internetFacing: Boolean): [Vulnerability!]!
   vulnerabilitySummaries(
     minCvss: Float
@@ -1563,6 +1644,60 @@ input PlanInput {
   targetRackIds: [UUID!]
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
+}
+input ContractFilter {
+  kinds: [ContractKind!]
+  vendorId: UUID
+  costCentreId: UUID
+  text: String
+  expiringWithinDays: Int
+  expired: Boolean
+}
+input ContractDocumentInput {
+  title: String!
+  location: String!
+}
+"Dates are calendar dates (YYYY-MM-DD); the vendor's name and the contract number identify the contract."
+input ContractInput {
+  vendorId: UUID!
+  costCentreId: UUID
+  contractNumber: String!
+  kind: ContractKind!
+  title: String!
+  level: String
+  responseMinutes: Int
+  startsAt: String!
+  endsAt: String!
+  autoRenews: Boolean!
+  noticeDays: Int
+  annualCost: Float
+  currency: String
+  documents: [ContractDocumentInput!]!
+}
+input VendorInput {
+  name: String!
+  category: String
+  supportPortal: String
+  accountManager: String
+}
+input CostCentreInput {
+  code: String!
+  name: String!
+  kind: CostCentreKind!
+  owner: String
+  annualBudget: Float
+  currency: String
+}
+input VendorContactInput {
+  id: UUID
+  vendorId: UUID!
+  name: String!
+  role: String!
+  email: String
+  phone: String
+  portalUrl: String
+  availability: String
+  escalationLevel: Int!
 }
 "One unit taken into stock: its serial and, when the organisation labels on arrival, its asset tag."
 input ReceivedUnitInput {
@@ -1655,6 +1790,8 @@ input AssetDetailsInput {
   serialNumber: String
   partNumber: String
   custodian: String
+  "ADR-035: a cost_centre CI; null clears the owner."
+  ownerCostCentreId: UUID
   purchasedAt: String
   purchaseCostAmount: Float
   purchaseCostCurrency: String
@@ -1767,6 +1904,12 @@ type Mutation {
   createPlan(input: PlanInput!): InfraPlan!
   setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
   receivePlanLine(input: ReceiptInput!): PlanReceipt!
+  upsertContract(id: UUID, input: ContractInput!): Contract!
+  upsertVendor(id: UUID, input: VendorInput!): Vendor!
+  upsertCostCentre(id: UUID, input: CostCentreInput!): CostCentre!
+  upsertVendorContact(input: VendorContactInput!): VendorContact!
+  deleteVendorContact(id: UUID!): Boolean!
+  setAssetContract(assetId: UUID!, contractId: UUID): AssetRecord!
   setAssetStage(assetId: UUID!, stage: AssetStage!, note: String): AssetRecord!
   updateAsset(assetId: UUID!, input: AssetDetailsInput!): AssetRecord!
   createAsset(input: ManualAssetInput!): AssetRecord!

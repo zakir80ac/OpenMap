@@ -106,6 +106,7 @@ interface FixtureAsset {
   creditsRemaining: number | null;
   support: null;
   supportContract: null;
+  ownerCostCentre: { id: string; displayName: string } | null;
   supportEndsAt: string | null;
   endOfLife: null;
   endOfSupport: string | null;
@@ -153,6 +154,7 @@ const assets: FixtureAsset[] = [
     creditsRemaining: null,
     support: null,
     supportContract: null,
+    ownerCostCentre: null,
     supportEndsAt: null,
     endOfLife: null,
     endOfSupport: null,
@@ -191,6 +193,7 @@ const assets: FixtureAsset[] = [
     creditsRemaining: null,
     support: null,
     supportContract: null,
+    ownerCostCentre: null,
     supportEndsAt: null,
     endOfLife: null,
     endOfSupport: null,
@@ -230,6 +233,7 @@ const assets: FixtureAsset[] = [
     creditsRemaining: null,
     support: null,
     supportContract: null,
+    ownerCostCentre: null,
     supportEndsAt: null,
     endOfLife: null,
     endOfSupport: null,
@@ -277,6 +281,7 @@ const assets: FixtureAsset[] = [
     creditsRemaining: 1250,
     support: null,
     supportContract: null,
+    ownerCostCentre: null,
     supportEndsAt: null,
     endOfLife: null,
     endOfSupport: null,
@@ -592,6 +597,10 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
         },
       };
     }
+    case 'Contracts':
+      return { data: { contracts: [] } };
+    case 'CostCentres':
+      return { data: { costCentres: [] } };
     default:
       return { errors: [{ message: 'unexpected operation ' + op }] };
   }

@@ -115,6 +115,8 @@ export interface AssetRecord {
   partNumber: string | null;
   stage: AssetStage;
   custodian: string | null;
+  /** ADR-035: the cost centre that owns the asset. */
+  ownerCostCentre: CiRef | null;
   purchasedAt: string | null;
   warranty: Warranty | null;
   warrantyEndsAt: string | null;
@@ -154,6 +156,7 @@ export interface AssetDetailsInput {
   serialNumber?: string | null;
   partNumber?: string | null;
   custodian?: string | null;
+  ownerCostCentreId?: string | null;
   purchasedAt?: string | null;
   purchaseCostAmount?: number | null;
   purchaseCostCurrency?: string | null;
@@ -281,6 +284,7 @@ const ASSET_FIELDS = [
   'ci { ' + CI_SUMMARY_FIELDS + ' }',
   'supportContract { id contractNumber level endsAt vendor { id displayName } primaryContact { id name role email phone portalUrl } }',
   'plan { id number name status }',
+  'ownerCostCentre { id displayName }',
   'purchaseCost ' + MONEY_FIELDS,
   'depreciation { method usefulLifeMonths residualValue ' + MONEY_FIELDS + ' }',
   'bookValue ' + MONEY_FIELDS,

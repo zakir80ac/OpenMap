@@ -106,6 +106,8 @@ export const assetDetailsInputSchema = z.object({
   serialNumber: trimmed.nullish(),
   partNumber: trimmed.nullish(),
   custodian: trimmed.nullish(),
+  /** ADR-035: a cost_centre CI; null clears the owner. */
+  ownerCostCentreId: z.uuid().nullish(),
   purchasedAt: calendarDate.nullish(),
   purchaseCostAmount: z.number().min(0).nullish(),
   purchaseCostCurrency: z.string().length(CURRENCY_CODE_LENGTH).nullish(),

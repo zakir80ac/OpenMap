@@ -32,6 +32,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { key: 'nav.cmdb', href: '/cmdb', icon: 'cmdb' },
       { key: 'nav.assets', href: '/assets', icon: 'assets' },
       { key: 'nav.software', href: '/software', icon: 'software' },
+      { key: 'nav.commercial', href: '/commercial', icon: 'contract' },
     ],
   },
   {

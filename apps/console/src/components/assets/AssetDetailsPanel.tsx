@@ -1,6 +1,7 @@
 'use client';
 // REQ-CMDB-039 — the edit panel of a register row (ADR-023): what discovery or a person recorded, the cover dates
 // with their source, the audit trail, and the details form whose save goes through updateAsset.
+// REQ-CMDB-026 REQ-CMDB-028 — the covering contract and the owning cost centre (ADR-035).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isSubscriptionCiType } from '@openmap/contracts';
 import { LayerBadge, SectionTitle, Tag } from '@openmap/ui';
@@ -14,6 +15,7 @@ import {
   type AssetRecord,
 } from '@/lib/estate-queries';
 import { useFormatters, useT } from '@/providers';
+import { AssetCommercialLinks } from './AssetCommercialLinks';
 import { AssetDetailsForm } from './AssetDetailsForm';
 
 export interface AssetDetailsPanelProps {
@@ -128,6 +130,7 @@ export function AssetDetailsPanel({ asset, canEdit, onClose, onSaved }: AssetDet
           asset.endOfLife?.source ?? null,
         )}
       </div>
+      <AssetCommercialLinks asset={asset} canEdit={canEdit} />
       {canEdit ? (
         <AssetDetailsForm
           initial={asset}

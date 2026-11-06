@@ -37,6 +37,7 @@ export const ICON_NAMES = [
   'twin',
   'arrowLeft',
   'close',
+  'contract',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -214,6 +215,12 @@ const glyphs: Record<IconName, ReactNode> = {
     <>
       <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" />
       <path d="m9 12 2 2 4-4.5" />
+    </>
+  ),
+  contract: (
+    <>
+      <path d="M7 3h7l5 5v13H7Z" />
+      <path d="M14 3v5h5M10 12h6M10 16h6" />
     </>
   ),
   software: (

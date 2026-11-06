@@ -177,6 +177,13 @@ export class AssetRecordFieldsResolver {
     return contract?.endsAt ?? null;
   }
 
+  @ResolveField('ownerCostCentre')
+  ownerCostCentre(@Parent() asset: AssetRecordView): Promise<CiRecord | null> {
+    return asset.ownerCostCentreCiId === null
+      ? Promise.resolve(null)
+      : this.tenant.loaders.ci.load(asset.ownerCostCentreCiId);
+  }
+
   @ResolveField('plan')
   plan(@Parent() asset: AssetRecordView): Promise<InfraPlanView | null> {
     return asset.planId === null

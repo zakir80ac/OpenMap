@@ -3,8 +3,11 @@
 // what discovery reports without touching a person's cover, and the rows are idempotent across a second persist.
 // T-177 REQ-CMDB-020 (ADR-034): a new CI whose serial matches a received plan unit claims it (deployed, linked, audited,
 // one stage event) instead of getting a second row; a unit still planned is not claimed.
+// T-183 REQ-CMDB-026 (ADR-035): an asset's support contract follows its CI's covered_by relationships: the contract
+// ending last when it has none, the one a person chose while it still covers, the next one when that link is retired,
+// none when nothing covers it.
 import { randomUUID } from 'node:crypto';
-import { createPrismaClient } from '@openmap/db';
+import { createPrismaClient, refreshCoveringContracts } from '@openmap/db';
 import type { Ci } from '@openmap/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { claimReceivedAssets, insertAssetsBatch, refreshAssetsBatch } from './assets.js';
@@ -165,5 +168,37 @@ describe('asset register sync (integration)', () => {
 
     // A second sweep of the same CIs claims nothing more.
     expect(await prisma.$transaction((tx) => claimReceivedAssets(tx, [racked]))).toEqual([]);
+  });
+
+  it('keeps an asset on the contract that covers its CI (REQ-CMDB-026)', async () => {
+    const host = ci('host', 'hardware', 'covered-01', 'HW-COVERED-01', { serialNumber: 'SN-COV-1' });
+    const early = ci('contract', 'applications', 'Support 2027', 'APP-SUP-2027', { endsAt: '2027-06-30' });
+    const late = ci('contract', 'applications', 'Support 2028', 'APP-SUP-2028', { endsAt: '2028-06-30' });
+    await storeCis([host, early, late]);
+    await prisma.$transaction((tx) => insertAssetsBatch(tx, [host]));
+    const cover = (to: string): Promise<{ id: string }> =>
+      prisma.relationship.create({
+        data: { tenantId, type: 'covered_by', fromCiId: host.id, toCiId: to, attributes: {}, sourceCollectorId: 'test', sourceNodeId: 'test', sourceRunId: 'test', sourceConfidence: 0.9, observedAt: new Date(now), validFrom: new Date(now) },
+        select: { id: true },
+      });
+    const contractOf = async (): Promise<string | null> =>
+      (await prisma.assetRecord.findFirstOrThrow({ where: { tenantId, ciId: host.id }, select: { supportContractId: true } })).supportContractId;
+    const refresh = (): Promise<number> => prisma.$transaction((tx) => refreshCoveringContracts(tx, [host.id]));
+
+    const earlyLink = await cover(early.id);
+    const lateLink = await cover(late.id);
+    expect(await refresh()).toBe(1);
+    expect(await contractOf()).toBe(late.id);
+    expect(await refresh()).toBe(0);
+    // A person chose the earlier contract: it stays while it still covers the host.
+    await prisma.assetRecord.updateMany({ where: { tenantId, ciId: host.id }, data: { supportContractId: early.id } });
+    await refresh();
+    expect(await contractOf()).toBe(early.id);
+    await prisma.relationship.update({ where: { id: earlyLink.id }, data: { validTo: new Date() } });
+    await refresh();
+    expect(await contractOf()).toBe(late.id);
+    await prisma.relationship.update({ where: { id: lateLink.id }, data: { validTo: new Date() } });
+    await refresh();
+    expect(await contractOf()).toBeNull();
   });
 });

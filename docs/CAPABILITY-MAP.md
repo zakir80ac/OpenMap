@@ -57,10 +57,10 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | Operating system inventory: family, version, patch level, end of life | `operating_system`, `collectors/os_patch` | + | CMDB |
 | Warranty tracking with vendor API lookups (Dell, HPE, Lenovo, Cisco, IBM) | `warrantySchema`, INT integrations | = | CMDB |
 | End of sale / end of support tracking (EoX) | `endOfLifeSchema`, Cisco EoX and endoflife.date feeds | + | CMDB |
-| Support contracts, SLA level, renewal, cost | `supportContractSchema` | = | CMDB |
-| Vendors, vendor contacts, escalation paths, portals | `vendor` CI, `vendorContactSchema` | + | CMDB |
-| Customers / departments / cost centres | `cost_centre` CI, tenant customers | = | CMDB |
-| Contracts (general) and documents | `contract` CI with document refs | = | CMDB |
+| Support contracts, SLA level, renewal, cost | `contract` CIs (ADR-035): kind, support level and response time, start, end, days left, notice date, auto-renewal, annual cost; the contract register on the Vendors and contracts screen; an asset's support cover is the contract CI that covers it (`setAssetContract`, kept in step with `covered_by`) | = | CMDB |
+| Vendors, vendor contacts, escalation paths, portals | `vendor` CIs with category, portal and account manager; contacts in escalation order with availability (`vendorContactSchema`); active contracts, covered assets and annual cost per vendor (ADR-035) | + | CMDB |
+| Customers / departments / cost centres | `cost_centre` CIs of kind cost centre, department or customer, with owner and budget against the contracts billed to them; assets and plans they own (`AssetRecord.ownerCostCentre`, ADR-035) | = | CMDB |
+| Contracts (general) and documents | `contract` CIs of every kind (support, maintenance, warranty extension, licence, SaaS, lease, service) with documents by reference (title and location in the organisation's document system) (ADR-035) | = | CMDB |
 | Software inventory, versions, services | `software`, `software_instance`, `listening_service` | = | CMDB |
 | Software licence management and compliance (per core, per user, per socket, subscriptions) | `licence` CI, compliance engine in `apps/bsm-engine` | = | CMDB |
 | Certificates inventory and expiry alerts | `certificate` CI, events | = | CMDB |

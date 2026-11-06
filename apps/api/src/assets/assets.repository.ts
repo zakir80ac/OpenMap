@@ -17,6 +17,7 @@ import {
   assetDataGaps,
   assetFieldsFromCi,
   belowReorderPoint,
+  CONTRACT_ATTRIBUTES,
   bookValue,
   canReceive,
   endOfLifeSchema,
@@ -29,6 +30,7 @@ import { Prisma, type PrismaClient } from '@openmap/db';
 import type { CiRecord } from '../ci/ci.types.js';
 import { NO_CURRENCY, toMoney, type Money } from '../common/money.js';
 import { isoOf, nowIso, toIso } from '../common/time.js';
+import { asRecord, isoAttribute, stringAttribute } from '../common/validation.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { AssetDetailsInput, ManualAssetInput, PlanInput, ReceiptInput } from './assets.schemas.js';
 import type {
@@ -172,6 +174,8 @@ type PlanRow = Prisma.InfraPlanGetPayload<{ include: typeof PLAN_INCLUDE }>;
 /** Stages that no longer count as owned property. */
 const UNOWNED_STAGES: readonly AssetStage[] = ['disposed'];
 const MANUAL_SOURCE = 'manual' as const;
+/** Support level a contract that states none (a lease, a service agreement) is read with. */
+const NO_SUPPORT_LEVEL = 'none';
 
 function parseWarranty(value: Prisma.JsonValue | null): Warranty | null {
   const parsed = warrantySchema.safeParse(value);
@@ -240,6 +244,7 @@ export function toAsset(row: AssetRow): AssetRecordView {
     stage: row.stage,
     stageChangedAt: isoOf(row.stageChangedAt),
     custodian: row.custodian,
+    ownerCostCentreCiId: row.ownerCostCentreCiId,
     locationCiId: row.locationCiId,
     purchasedAt: toIso(row.purchasedAt),
     purchaseCost: toMoney(row.purchaseCostAmount, row.purchaseCostCurrency),
@@ -347,6 +352,7 @@ type DetailsData = Partial<
     | 'serialNumber'
     | 'partNumber'
     | 'custodian'
+    | 'ownerCostCentreCiId'
     | 'purchasedAt'
     | 'purchaseCostAmount'
     | 'purchaseCostCurrency'
@@ -384,6 +390,10 @@ export function detailsData(
   scalar('serialNumber');
   scalar('partNumber');
   scalar('custodian');
+  if (input.ownerCostCentreId !== undefined) {
+    data.ownerCostCentreCiId = input.ownerCostCentreId;
+    set('ownerCostCentreCiId', row?.ownerCostCentreCiId ?? null, input.ownerCostCentreId);
+  }
   if (input.purchasedAt !== undefined) {
     data.purchasedAt = input.purchasedAt === null ? null : new Date(input.purchasedAt);
     set('purchasedAt', dateOnly(row?.purchasedAt ?? null), input.purchasedAt);
@@ -622,10 +632,10 @@ export class PrismaAssetsRepository implements AssetsRepository {
         count(*) FILTER (WHERE (CASE WHEN a."ciType"::text = ANY(${[...SUBSCRIPTION_CI_TYPES]}::text[]) THEN a.subscription IS NULL ELSE a.warranty IS NULL END) OR (a.support IS NULL AND a."supportContractId" IS NULL) OR a."endOfLife" IS NULL OR a."endOfLife"->>'endOfSupport' IS NULL)::int AS "needsData",
         count(*) FILTER (WHERE (a.warranty->>'endsAt')::date < ${today}::date)::int AS "warrantyExpired",
         count(*) FILTER (WHERE (a.subscription->>'endsAt')::date < ${today}::date)::int AS "subscriptionExpired",
-        count(*) FILTER (WHERE (a.support->>'endsAt')::date < ${today}::date OR sc."endsAt" < ${today}::date)::int AS "supportExpired",
+        count(*) FILTER (WHERE (a.support->>'endsAt')::date < ${today}::date OR (sc.attributes->>'endsAt')::date < ${today}::date)::int AS "supportExpired",
         count(*) FILTER (WHERE (a."endOfLife"->>'endOfSupport')::date < ${today}::date)::int AS "endOfSupportPassed",
         count(*) FILTER (WHERE a."stockOnHand" IS NOT NULL AND a."stockOnHand" <= a."stockReorderPoint")::int AS "belowReorderPoint"
-      FROM asset_records a LEFT JOIN support_contracts sc ON sc.id = a."supportContractId"
+      FROM asset_records a LEFT JOIN cis sc ON sc.id = a."supportContractId"
       WHERE a."tenantId" = ${tenantId}::uuid AND a.stage <> ALL(${[...UNOWNED_STAGES]}::"AssetStage"[])
       GROUP BY a.layer`);
     return rows.map((r) => ({
@@ -949,6 +959,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
   ): Promise<{ asset: AssetRecordView; changed: string[] }> {
     const existing = await tx.assetRecord.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('asset ' + id + ' not found');
+    await assertCostCentre(tx, tenantId, input.ownerCostCentreId);
     const { data, changes } = detailsData(input, existing, at);
     if (changes.length === 0) return { asset: toAsset(existing), changed: [] };
     const row = await tx.assetRecord.update({ where: { id }, data });
@@ -975,6 +986,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
     input: ManualAssetInput,
     at: string,
   ): Promise<AssetRecordView> {
+    await assertCostCentre(tx, tenantId, input.details.ownerCostCentreId);
     const { data, changes } = detailsData(input.details, null, at);
     const when = new Date(at);
     const row = await tx.assetRecord.create({
@@ -1035,18 +1047,38 @@ export class PrismaAssetsRepository implements AssetsRepository {
     return ensureAssetForCi(tx, tenantId, actor, ci, layer, at);
   }
 
+  /**
+   * ADR-035 — the covering contract CI read as a support contract: its vendor from `supported_by` (else the vendor CI
+   * named in its identity), and the vendor's first contact in escalation order; null when no vendor is found.
+   */
   async supportContract(tenantId: string, id: string): Promise<SupportContractView | null> {
-    const row = await this.prisma.client.supportContract.findFirst({ where: { id, tenantId } });
-    return row
-      ? {
-          id: row.id,
-          vendorCiId: row.vendorCiId,
-          contractNumber: row.contractNumber,
-          level: row.level,
-          endsAt: isoOf(row.endsAt),
-          primaryContactId: row.primaryContactId,
-        }
-      : null;
+    const client = this.prisma.client;
+    const contract = await client.ci.findFirst({ where: { id, tenantId, type: 'contract', validTo: null } });
+    if (!contract) return null;
+    const attributes = asRecord(contract.attributes);
+    const identity = asRecord(contract.identity);
+    const link = await client.relationship.findFirst({
+      where: { tenantId, fromCiId: id, type: 'supported_by', validTo: null },
+      select: { toCiId: true },
+    });
+    const vendorName = stringAttribute(identity, CONTRACT_ATTRIBUTES.vendorRef);
+    const vendorCiId =
+      link?.toCiId ??
+      (vendorName === null
+        ? null
+        : ((await client.ci.findFirst({ where: { tenantId, type: 'vendor', name: vendorName, validTo: null }, select: { id: true } }))?.id ?? null));
+    // SupportContract.vendor is non-null: a contract no vendor can be found for is not read as support cover.
+    if (vendorCiId === null) return null;
+    const contact = await client.vendorContact.findFirst({ where: { tenantId, vendorCiId }, orderBy: [{ escalationLevel: 'asc' }, { name: 'asc' }], select: { id: true } });
+    const endsAt = isoAttribute(attributes, CONTRACT_ATTRIBUTES.endsAt);
+    return {
+      id: contract.id,
+      vendorCiId,
+      contractNumber: stringAttribute(identity, CONTRACT_ATTRIBUTES.contractNumber) ?? contract.name,
+      level: stringAttribute(attributes, CONTRACT_ATTRIBUTES.level) ?? NO_SUPPORT_LEVEL,
+      endsAt: endsAt ?? isoOf(contract.validFrom),
+      primaryContactId: contact?.id ?? null,
+    };
   }
 
   async vendorContact(tenantId: string, id: string): Promise<VendorContactView | null> {
@@ -1062,6 +1094,13 @@ export class PrismaAssetsRepository implements AssetsRepository {
         }
       : null;
   }
+}
+
+/** ADR-035: an owner given to an asset must be a current cost-centre CI of the tenant. */
+async function assertCostCentre(tx: Prisma.TransactionClient, tenantId: string, id: string | null | undefined): Promise<void> {
+  if (id === null || id === undefined) return;
+  const found = await tx.ci.findFirst({ where: { id, tenantId, type: 'cost_centre', validTo: null }, select: { id: true } });
+  if (!found) throw new NotFoundException('cost centre ' + id + ' not found');
 }
 
 /**

@@ -60,6 +60,8 @@ export interface AssetRecordView {
   stage: AssetStage;
   stageChangedAt: string;
   custodian: string | null;
+  /** ADR-035: the cost_centre CI that owns the asset. */
+  ownerCostCentreCiId: string | null;
   locationCiId: string | null;
   purchasedAt: string | null;
   purchaseCost: Money | null;
@@ -152,6 +154,7 @@ export interface PlanReceiptView {
   createdAt: string;
 }
 
+/** ADR-035: the contract CI covering an asset, in the shape `SupportContract` has always had. */
 export interface SupportContractView {
   id: string;
   vendorCiId: string;

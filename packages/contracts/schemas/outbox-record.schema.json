@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/outbox-record/0.7.0",
+  "$id": "https://openmap.dev/contracts/outbox-record/0.9.0",
   "title": "outbox-record",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -73,6 +73,7 @@
             "openmap.asset.eos.approaching",
             "openmap.plan.status.changed",
             "openmap.plan.line.received",
+            "openmap.certificate.expiring",
             "openmap.ci.labelled",
             "openmap.metric.sampled"
           ]

@@ -4,7 +4,7 @@
 // which is what keeps a 10k-device sweep inside the 15-minute budget.
 import { RECONCILER } from '@openmap/constants';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
-import { Prisma, type PrismaClient } from '@openmap/db';
+import { Prisma, refreshCoveringContracts, type PrismaClient } from '@openmap/db';
 import { claimReceivedAssets, insertAssetsBatch, refreshAssetsBatch, type ClaimedAsset } from './assets.js';
 import { envelope } from '../core/events.js';
 import { identityKeyOf } from './lookup.js';
@@ -182,6 +182,11 @@ export async function persist(
     const assets = await insertAssetsBatch(tx, out.created);
     await refreshAssetsBatch(tx, out.updated);
     await insertRelationshipsBatch(tx, out.relationshipsCreated);
+    // ADR-035: a covered_by a sweep or an import created gives the covered CI's asset its support contract.
+    await refreshCoveringContracts(
+      tx,
+      out.relationshipsCreated.filter((r) => r.type === 'covered_by').map((r) => r.fromCiId),
+    );
     if (out.relationshipsSeen.length)
       await tx.relationship.updateMany({
         where: { id: { in: out.relationshipsSeen } },

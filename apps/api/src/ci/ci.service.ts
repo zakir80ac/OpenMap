@@ -3,6 +3,7 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RECONCILIATION } from '@openmap/constants';
 import { CI_TYPE_LAYER, isOwnedCiType, type CiLayer, type RelationshipType, type UserLabel } from '@openmap/contracts';
+import { refreshCoveringContracts } from '@openmap/db';
 import { ensureAssetForCi } from '../assets/assets.repository.js';
 import { clampPageSize, decodeCursor, decodeIdCursor, encodeCursor } from '../common/cursor.js';
 import { nowIso } from '../common/time.js';
@@ -342,6 +343,8 @@ export class CiService {
         runId: actor.requestId,
         confidence: RECONCILIATION.userLabelConfidence,
       });
+      // ADR-035: a covered_by gives the covered CI's asset its support contract.
+      if (type === 'covered_by') await refreshCoveringContracts(tx, [fromCiId]);
       await emit({
         type: 'openmap.relationship.created',
         subject: rel.id,
@@ -354,6 +357,7 @@ export class CiService {
   async retireRelationship(actor: Actor, id: string): Promise<RelationshipRecord> {
     return this.outbox.transaction(actor.tenantId, async ({ tx, emit }) => {
       const rel = await this.repo.retireRelationship(tx, actor.tenantId, id, nowIso());
+      if (rel.type === 'covered_by') await refreshCoveringContracts(tx, [rel.fromCiId]);
       await emit({
         type: 'openmap.relationship.retired',
         subject: rel.id,

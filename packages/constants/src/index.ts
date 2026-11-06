@@ -385,6 +385,36 @@ export const MONEY = {
   noCurrency: 'XXX',
 } as const;
 
+/** REQ-CMDB-032 (ADR-036) — certificate expiry alerts and key policy. */
+export const CERTIFICATES = {
+  /** Days before notAfter at which an alert is raised, once each; an expired certificate raises one more (threshold 0). */
+  alertThresholdsDays: [60, 30, 14, 7, 1] as const,
+  /** How often the BSM engine looks for certificates that crossed a threshold. */
+  checkEveryMs: 900_000,
+  /** RSA keys shorter than this are weak (NIST SP 800-131A). */
+  minRsaBits: 2048,
+  /** Elliptic-curve keys shorter than this are weak. */
+  minEcBits: 256,
+  /** Signature algorithms whose hash is no longer collision resistant, matched as lower-case fragments. */
+  weakSignatures: ['sha1', 'md5'] as const,
+  /** Expiry horizons the certificate register offers, in days. */
+  expiryHorizonsDays: [7, 30, 60, 90] as const,
+} as const;
+
+/** REQ-CMDB-026..029 (ADR-035) — the Commercial screen's horizons and limits. */
+export const COMMERCIAL = {
+  /** "Ending within" horizons the contract register offers, in days. */
+  expiryHorizonsDays: [30, 90, 180, 365] as const,
+  /** A contract this close to its end is shown at risk (renewal or replacement must be decided). */
+  atRiskDays: 30,
+  /** Escalation level a new vendor contact starts at (1 is the first call). */
+  defaultEscalationLevel: 1,
+  /** Deepest escalation level a vendor contact may sit at. */
+  maxEscalationLevel: 5,
+  /** Document locations opened as links; anything else (a file-share path) is shown as text. */
+  linkProtocols: ['http:', 'https:'] as const,
+} as const;
+
 export const ASSETS = {
   warrantyHorizonsDays: [30, 90, 180, 365] as const,
   defaultWarrantyHorizonDays: 90,
@@ -1192,12 +1222,17 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `AssetRecord.depreciation`/`bookValue`/`stock`, `AssetFilter.belowReorderPoint`, `AssetSummary.belowReorderPoint`.
    * 1.12.0 (REQ-CMDB-020, ADR-034): `PlanReceipt`, `ReceiptInput`, `ReceivedUnitInput`, `InfraPlan.description`/
    * `owner`/`receipts`, `BomLine.position`/`outstanding`, mutation `receivePlanLine`.
+   * 1.13.0 (REQ-CMDB-026..029, ADR-035): `ContractKind`, `CostCentreKind`, `ContractDocument`, `Contract`, `Vendor`,
+   * `VendorDetail`, `CostCentre`, `VendorContact.availability`/`escalationLevel`, `AssetRecord.ownerCostCentre`,
+   * `AssetDetailsInput.ownerCostCentreId`, queries `contracts`, `contract`, `vendors`, `vendor`, `costCentres`,
+   * mutations `upsertContract`, `upsertVendor`, `upsertCostCentre`, `upsertVendorContact`, `deleteVendorContact`,
+   * `setAssetContract`.
    */
-  graphql: '1.12.0',
+  graphql: '1.13.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
-   * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`.
+   * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`. 0.9.0 (REQ-CMDB-032, ADR-036): `openmap.certificate.expiring`.
    */
-  event: '0.8.0',
+  event: '0.9.0',
 };

@@ -1699,6 +1699,156 @@ describe('OpenMap API (integration)', () => {
       await prisma.outboxEvent.count({ where: { tenantId, type: 'openmap.asset.stage.changed', subject: { in: receipt?.assets.map((a) => a.id) ?? [] } } }),
     ).toBe(4);
   });
+  it('keeps the commercial register: vendors with contacts, cost centres, contracts with documents, and assets covered by their contract (REQ-CMDB-026..029)', async () => {
+    // T-182 ADR-035
+    const stamp = String(Date.now());
+    const day = (offset: number): string => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 'YYYY-MM-DD'.length);
+    const vendorRes = await gql<{ upsertVendor: { ci: { id: string; type: string }; category: string } }>(
+      'mutation V($input: VendorInput!) { upsertVendor(input: $input) { ci { id type } category } }',
+      { input: { name: 'Vendor ' + stamp, category: 'hardware', supportPortal: 'https://support.example.org' } },
+    );
+    expect(vendorRes.errors).toBeUndefined();
+    const vendorId = vendorRes.data?.upsertVendor.ci.id ?? '';
+    expect(vendorRes.data?.upsertVendor.ci.type).toBe('vendor');
+    const denied = await gql('mutation V($input: VendorInput!) { upsertVendor(input: $input) { ci { id } } }', { input: { name: 'Viewer ' + stamp } }, viewerToken);
+    expect(denied.errors?.[0]?.message).toMatch(/roles/i);
+    const duplicate = await gql('mutation V($input: VendorInput!) { upsertVendor(input: $input) { ci { id } } }', { input: { name: 'Vendor ' + stamp } });
+    expect(duplicate.errors?.[0]?.message).toMatch(/already exists/);
+
+    const contact = 'mutation C($input: VendorContactInput!) { upsertVendorContact(input: $input) { id name escalationLevel } }';
+    await gql(contact, { input: { vendorId, name: 'Duty manager', role: 'Escalation', escalationLevel: 2, phone: '+966 11 000 0000' } });
+    await gql(contact, { input: { vendorId, name: 'Support desk', role: 'First line', escalationLevel: 1, email: 'desk@example.org', availability: '24x7' } });
+    const badEmail = await gql(contact, { input: { vendorId, name: 'Bad', role: 'x', escalationLevel: 1, email: 'not-an-email' } });
+    expect(badEmail.errors?.[0]?.message).toMatch(/invalid VendorContactInput/);
+
+    const centreRes = await gql<{ upsertCostCentre: { ci: { id: string }; code: string; kind: string; annualBudget: { amount: number; currency: string } } }>(
+      'mutation CC($input: CostCentreInput!) { upsertCostCentre(input: $input) { ci { id } code kind annualBudget { amount currency } } }',
+      { input: { code: 'CC-' + stamp, name: 'Payments ' + stamp, kind: 'department', owner: 'Payments', annualBudget: 1_000_000, currency: 'SAR' } },
+    );
+    expect(centreRes.errors).toBeUndefined();
+    expect(centreRes.data?.upsertCostCentre).toMatchObject({ code: 'CC-' + stamp, kind: 'department', annualBudget: { amount: 1_000_000, currency: 'SAR' } });
+    const centreId = centreRes.data?.upsertCostCentre.ci.id ?? '';
+
+    type Contract = {
+      ci: { id: string };
+      kind: string;
+      contractNumber: string;
+      title: string;
+      daysToEnd: number;
+      noticeBy: string;
+      expired: boolean;
+      annualCost: { amount: number; currency: string };
+      coveredAssets: number;
+      vendor: { id: string } | null;
+      costCentre: { id: string } | null;
+      documents: Array<{ title: string; location: string }>;
+    };
+    const contractFields = 'ci { id } kind contractNumber title daysToEnd noticeBy expired annualCost { amount currency } coveredAssets vendor { id } costCentre { id } documents { title location }';
+    const contractInput = {
+      vendorId,
+      costCentreId: centreId,
+      contractNumber: 'SUP-' + stamp,
+      kind: 'support',
+      title: 'Premium support ' + stamp,
+      level: 'four_hour',
+      responseMinutes: 240,
+      startsAt: day(-335),
+      endsAt: day(30),
+      autoRenews: false,
+      noticeDays: 10,
+      annualCost: 50_000,
+      currency: 'SAR',
+      documents: [{ title: 'Signed agreement', location: 'https://dms.example.org/' + stamp + '.pdf' }],
+    };
+    const upsert = 'mutation U($id: UUID, $input: ContractInput!) { upsertContract(id: $id, input: $input) { ' + contractFields + ' } }';
+    const created = await gql<{ upsertContract: Contract }>(upsert, { input: contractInput });
+    expect(created.errors).toBeUndefined();
+    const contract = created.data?.upsertContract;
+    expect(contract).toMatchObject({
+      kind: 'support',
+      contractNumber: 'SUP-' + stamp,
+      daysToEnd: 30,
+      expired: false,
+      annualCost: { amount: 50_000, currency: 'SAR' },
+      coveredAssets: 0,
+      vendor: { id: vendorId },
+      costCentre: { id: centreId },
+      documents: contractInput.documents,
+    });
+    expect(contract?.noticeBy.slice(0, 'YYYY-MM-DD'.length)).toBe(day(20));
+    const renumbered = await gql(upsert, { id: contract?.ci.id, input: { ...contractInput, contractNumber: 'OTHER-' + stamp } });
+    expect(renumbered.errors?.[0]?.message).toMatch(/cannot change/);
+    const backwards = await gql(upsert, { input: { ...contractInput, contractNumber: 'BAD-' + stamp, endsAt: day(-400) } });
+    expect(backwards.errors?.[0]?.message).toMatch(/invalid upsertContract arguments/);
+    const retitled = await gql<{ upsertContract: Contract }>(upsert, { id: contract?.ci.id, input: { ...contractInput, title: 'Premium support renewed ' + stamp, costCentreId: null } });
+    expect(retitled.data?.upsertContract).toMatchObject({ title: 'Premium support renewed ' + stamp, costCentre: null });
+    await gql(upsert, { id: contract?.ci.id, input: contractInput });
+
+    // An asset covered by the contract: its support gap closes and the counts follow.
+    type Asset = { id: string; ci: { id: string }; dataGaps: string[]; supportContract: { id: string; contractNumber: string; level: string; vendor: { id: string }; primaryContact: { name: string } | null } | null; ownerCostCentre: { id: string } | null };
+    const assetFields = 'id ci { id } dataGaps supportContract { id contractNumber level vendor { id } primaryContact { name } } ownerCostCentre { id }';
+    const made = await gql<{ createAsset: Asset }>('mutation A($input: ManualAssetInput!) { createAsset(input: $input) { ' + assetFields + ' } }', {
+      input: { layer: 'hardware', type: 'host', name: 'Covered host ' + stamp, details: { serialNumber: 'COV-' + stamp } },
+    });
+    const asset = made.data?.createAsset;
+    expect(asset?.dataGaps).toContain('support');
+    const linked = await gql<{ setAssetContract: Asset }>('mutation L($a: UUID!, $c: UUID) { setAssetContract(assetId: $a, contractId: $c) { ' + assetFields + ' } }', {
+      a: asset?.id,
+      c: contract?.ci.id,
+    });
+    expect(linked.errors).toBeUndefined();
+    expect(linked.data?.setAssetContract.supportContract).toMatchObject({
+      id: contract?.ci.id,
+      contractNumber: 'SUP-' + stamp,
+      level: 'four_hour',
+      vendor: { id: vendorId },
+      primaryContact: { name: 'Support desk' },
+    });
+    expect(linked.data?.setAssetContract.dataGaps).not.toContain('support');
+    const owned = await gql<{ updateAsset: Asset }>('mutation O($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { ' + assetFields + ' } }', {
+      id: asset?.id,
+      input: { ownerCostCentreId: centreId },
+    });
+    expect(owned.data?.updateAsset.ownerCostCentre).toEqual({ id: centreId });
+    const wrongOwner = await gql('mutation O($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { id } }', { id: asset?.id, input: { ownerCostCentreId: vendorId } });
+    expect(wrongOwner.errors?.[0]?.message).toMatch(/cost centre .* not found/);
+
+    // A covered_by made through the generic relationship mutation gives a second asset the contract too.
+    const second = await gql<{ createAsset: Asset }>('mutation A($input: ManualAssetInput!) { createAsset(input: $input) { ' + assetFields + ' } }', {
+      input: { layer: 'hardware', type: 'host', name: 'Covered host 2 ' + stamp, details: { serialNumber: 'COV2-' + stamp } },
+    });
+    await gql('mutation Rel($from: UUID!, $to: UUID!) { createRelationship(type: "covered_by", fromCiId: $from, toCiId: $to, attributes: {}) { id } }', {
+      from: second.data?.createAsset.ci.id,
+      to: contract?.ci.id,
+    });
+    const secondRow = await prisma.assetRecord.findUnique({ where: { id: second.data?.createAsset.id }, select: { supportContractId: true } });
+    expect(secondRow?.supportContractId).toBe(contract?.ci.id);
+
+    type Register = {
+      contracts: Contract[];
+      expired: Contract[];
+      vendor: { vendor: { contracts: number; activeContracts: number; coveredAssets: number; annualCost: { amount: number } | null; contacts: number }; contacts: Array<{ name: string; escalationLevel: number }>; contracts: Array<{ contractNumber: string }> };
+      costCentres: Array<{ ci: { id: string }; contracts: number; annualContractCost: { amount: number } | null; assets: number }>;
+    };
+    const register = await gql<Register>(
+      'query R($vendor: UUID!, $text: String) { contracts(filter: { expiringWithinDays: 60, text: $text }) { ' + contractFields + ' } expired: contracts(filter: { expired: true, text: $text }) { ' + contractFields + ' } vendor(id: $vendor) { vendor { contracts activeContracts coveredAssets annualCost { amount } contacts } contacts { name escalationLevel } contracts { contractNumber } } costCentres { ci { id } contracts annualContractCost { amount } assets } }',
+      { vendor: vendorId, text: stamp },
+    );
+    expect(register.errors).toBeUndefined();
+    expect(register.data?.contracts.map((c) => [c.contractNumber, c.coveredAssets])).toEqual([['SUP-' + stamp, 2]]);
+    expect(register.data?.expired).toEqual([]);
+    expect(register.data?.vendor.vendor).toEqual({ contracts: 1, activeContracts: 1, coveredAssets: 2, annualCost: { amount: 50_000 }, contacts: 2 });
+    expect(register.data?.vendor.contacts.map((c) => c.name)).toEqual(['Support desk', 'Duty manager']);
+    expect(register.data?.costCentres.find((c) => c.ci.id === centreId)).toMatchObject({ contracts: 1, annualContractCost: { amount: 50_000 }, assets: 1 });
+
+    const unlinked = await gql<{ setAssetContract: Asset }>('mutation L($a: UUID!) { setAssetContract(assetId: $a, contractId: null) { ' + assetFields + ' } }', { a: asset?.id });
+    expect(unlinked.data?.setAssetContract.supportContract).toBeNull();
+    expect(unlinked.data?.setAssetContract.dataGaps).toContain('support');
+    const after = await gql<{ contract: { coveredAssets: number } }>('query C($id: UUID!) { contract(id: $id) { coveredAssets } }', { id: contract?.ci.id });
+    expect(after.data?.contract.coveredAssets).toBe(1);
+    const audits = await prisma.assetAudit.findMany({ where: { tenantId, assetId: asset?.id, field: { in: ['supportContract', 'ownerCostCentreCiId'] } }, select: { field: true } });
+    expect(audits.map((a) => a.field).sort()).toEqual(['ownerCostCentreCiId', 'supportContract', 'supportContract']);
+  });
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {
     // T-161 REQ-CMDB-013 REQ-CMDB-016
     const lifecycle = 'mutation L($ciId: UUID!, $lifecycle: Lifecycle!) { setCiLifecycle(ciId: $ciId, lifecycle: $lifecycle) { id lifecycle } }';
