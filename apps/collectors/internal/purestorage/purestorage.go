@@ -141,15 +141,19 @@ type Inventory struct {
 	Raw         [][]byte
 }
 
-// Login exchanges an API token for a session token.
-func Login(ctx context.Context, base string, apiVersion string, apiToken string, verify bool) (string, error) {
+// Login exchanges an API token for a session token. caPem pins the array's private CA as the main client does.
+func Login(ctx context.Context, base string, apiVersion string, apiToken string, verify bool, caPem string) (string, error) {
 	u := strings.TrimSuffix(base, "/") + "/api/" + apiVersion + "/login"
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u, nil)
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set(apiTokenHdr, apiToken)
-	client := &http.Client{Timeout: restjsonTimeout, Transport: restjson.Transport(verify)}
+	transport, err := restjson.TransportFor(verify, caPem)
+	if err != nil {
+		return "", err
+	}
+	client := &http.Client{Timeout: restjsonTimeout, Transport: transport}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", restjson.Classify(base, err)
@@ -310,7 +314,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if !strings.HasPrefix(base, "https://") {
 		base = "https://" + base
 	}
-	session, err := Login(ctx, base, apiVersion, cred.Fields[credToken], verify)
+	session, err := Login(ctx, base, apiVersion, cred.Fields[credToken], verify, restjson.StringOption(options, optionCA))
 	if err != nil {
 		return collector.Observation{}, err
 	}

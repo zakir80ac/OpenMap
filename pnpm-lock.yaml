@@ -691,6 +691,8 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
+  tools/simulator: {}
+
   tools/synth-estate:
     dependencies:
       '@openmap/constants':

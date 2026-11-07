@@ -87,6 +87,22 @@ func Transport(verifyTLS bool) *http.Transport {
 	return &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // see New
 }
 
+// TransportFor is Transport with the job's private CA bundle: a non-empty caPem enforces the chain against
+// that bundle (as New does), so token and login endpoints honour caCertPem like the main client.
+func TransportFor(verifyTLS bool, caPem string) (*http.Transport, error) {
+	t := Transport(verifyTLS)
+	if caPem == "" {
+		return t, nil
+	}
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM([]byte(caPem)) {
+		return nil, collector.Errorf(contract.ErrInternal, false, "caCertPem option holds no PEM certificate")
+	}
+	t.TLSClientConfig.RootCAs = pool
+	t.TLSClientConfig.InsecureSkipVerify = false
+	return t, nil
+}
+
 // Raw returns every successful response body captured so far.
 func (c *Client) Raw() [][]byte {
 	c.mu.Lock()

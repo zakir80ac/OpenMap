@@ -1,0 +1,12 @@
+{
+  "name": "@openmap/simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulated mode: vendor API simulators rendered from the synthetic estate, driven by the real collector binaries",
+  "scripts": {
+    "list": "go run ./cmd/simulator list",
+    "verify": "go run ./cmd/simulator verify --out ../../docs/evidence/simulated-mode.json",
+    "serve": "go run ./cmd/simulator serve --plan ../../.local/sim-plan.json",
+    "test:sim": "go test ./..."
+  }
+}

@@ -56,7 +56,7 @@ func server(t *testing.T) *httptest.Server {
 func TestLoginWalkEmit(t *testing.T) {
 	srv := server(t)
 	defer srv.Close()
-	session, err := Login(context.Background(), srv.URL, defaultAPI, "api-token-1", false)
+	session, err := Login(context.Background(), srv.URL, defaultAPI, "api-token-1", false, "")
 	if err != nil || session != "session-1" {
 		t.Fatalf("login failed: %v %q", err, session)
 	}
@@ -96,7 +96,7 @@ func TestLoginWalkEmit(t *testing.T) {
 func TestBadToken(t *testing.T) {
 	srv := server(t)
 	defer srv.Close()
-	if _, err := Login(context.Background(), srv.URL, defaultAPI, "nope", false); err == nil || !strings.Contains(err.Error(), contract.ErrAuthFailed) {
+	if _, err := Login(context.Background(), srv.URL, defaultAPI, "nope", false, ""); err == nil || !strings.Contains(err.Error(), contract.ErrAuthFailed) {
 		t.Fatalf("expected auth_failed, got %v", err)
 	}
 }
