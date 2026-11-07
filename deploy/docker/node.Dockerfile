@@ -11,6 +11,8 @@ WORKDIR /src
 COPY go.work go.work.sum ./
 COPY apps/collectors ./apps/collectors
 COPY apps/node ./apps/node
+# go.work also lists the simulated-mode module; it is copied so workspace resolution succeeds (not built here).
+COPY tools/simulator ./tools/simulator
 RUN --mount=type=cache,target=/go/pkg/mod cd apps/collectors && go mod download && cd ../node && go mod download
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
     mkdir -p /out/collectors && cd apps/collectors && \

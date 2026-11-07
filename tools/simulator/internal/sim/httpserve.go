@@ -53,14 +53,30 @@ func (s *statusRecorder) Flush() {
 	}
 }
 
-// Listen opens a loopback TCP listener on an ephemeral port.
+// Listen opens a TCP listener on an ephemeral port at the bind address (loopback unless Configure changed it).
 func Listen() (net.Listener, int, error) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	ln, err := net.Listen("tcp", net.JoinHostPort(bindHost, "0"))
 	if err != nil {
 		return nil, 0, err
 	}
 	return ln, ln.Addr().(*net.TCPAddr).Port, nil
 }
+
+// ListenUDP opens a UDP socket on an ephemeral port at the bind address.
+func ListenUDP() (*net.UDPConn, int, error) {
+	addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(bindHost, "0"))
+	if err != nil {
+		return nil, 0, err
+	}
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		return nil, 0, err
+	}
+	return conn, conn.LocalAddr().(*net.UDPAddr).Port, nil
+}
+
+// Address is host:port as collectors dial it (the advertised host).
+func Address(port int) string { return net.JoinHostPort(advertiseHost, strconv.Itoa(port)) }
 
 // ServeHTTPS serves h over TLS (the simulated-mode CA) on loopback.
 func ServeHTTPS(env *Env, h http.Handler) (*Endpoint, *RequestLog, error) {
@@ -86,7 +102,7 @@ func serve(env *Env, h http.Handler, secure bool) (*Endpoint, *RequestLog, error
 // target is one appliance. Endpoint.Devices maps each key to its base URL; all share one request log.
 func ServeEach(env *Env, keys []string, secure bool, handler func(key string) http.Handler) (*Endpoint, error) {
 	log := &RequestLog{}
-	group := &Endpoint{Host: "127.0.0.1", State: map[string]any{"log": log}, Devices: map[string]string{}}
+	group := &Endpoint{Host: advertiseHost, State: map[string]any{"log": log}, Devices: map[string]string{}}
 	for _, k := range keys {
 		ep, err := serveWith(env, handler(k), secure, log)
 		if err != nil {
@@ -116,7 +132,7 @@ func serveWith(env *Env, h http.Handler, secure bool, log *RequestLog) (*Endpoin
 		ln = tls.NewListener(ln, env.CA.ServerConfig())
 	}
 	go func() { _ = srv.Serve(ln) }()
-	ep := &Endpoint{Host: "127.0.0.1", Port: port, URL: scheme + "://127.0.0.1:" + strconv.Itoa(port), State: map[string]any{}}
+	ep := &Endpoint{Host: advertiseHost, Port: port, URL: scheme + "://" + Address(port), State: map[string]any{}}
 	ep.OnClose(func() error {
 		ctx, cancel := context.WithTimeout(context.Background(), readHeaderTimeout)
 		defer cancel()

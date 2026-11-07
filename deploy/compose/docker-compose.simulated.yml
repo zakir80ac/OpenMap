@@ -1,0 +1,20 @@
+# REQ-QA-005 (ADR-042) — simulated mode: vendor API simulators on the stack's network, rendered from a synthetic
+# estate, so the containerised Discovery Node runs the real collectors against them end to end. Development and
+# demonstration only: never part of the air-gap bundle or a production deployment.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.simulated.yml \
+#     --profile cpu --profile node --profile simulated up -d --build simulator
+#   pnpm --filter @openmap/scheduler plan:submit -- --tenant <uuid> --node node-compose-01 --plan ../../.local/sim/sim-plan.json
+#
+# The simulator writes its job plan (targets, options, per-run simulated credentials) to OPENMAP_SIM_PLAN_DIR;
+# plan:submit stores those credentials in OpenBao under simulated/ and schedules the jobs.
+services:
+  simulator:
+    profiles: [simulated]
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/simulator:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/simulator.Dockerfile
+    volumes:
+      - "${OPENMAP_SIM_ESTATE:-../../packages/testing/fixtures/synth-small}:/estate:ro"
+      - "${OPENMAP_SIM_PLAN_DIR:-../../.local/sim}:/plan"

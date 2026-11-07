@@ -69,11 +69,14 @@ type common struct {
 }
 
 func parseCommon(fs *flag.FlagSet, args []string) (*common, error) {
-	repo, err := verify.RepoRoot()
-	if err != nil {
-		return nil, err
+	// The repository is needed to build collectors (verify) and for the default estate; serve in a container has neither
+	// and passes --estate.
+	repo, _ := verify.RepoRoot()
+	defaultEstate := ""
+	if repo != "" {
+		defaultEstate = filepath.Join(repo, "packages", "testing", "fixtures", "synth-small")
 	}
-	dir := fs.String("estate", filepath.Join(repo, "packages", "testing", "fixtures", "synth-small"), "synthetic estate directory")
+	dir := fs.String("estate", defaultEstate, "synthetic estate directory")
 	only := fs.String("only", "", "comma-separated simulator ids")
 	if err := fs.Parse(args); err != nil {
 		return nil, err
@@ -124,6 +127,9 @@ func cmdVerify(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
+	if c.repo == "" {
+		return fmt.Errorf("verify builds the collectors and needs the repository (go.work not found)")
+	}
 	bins := verify.NewBinaries(c.repo, binDir)
 	var reports []verify.Report
 	failed := 0
@@ -171,6 +177,8 @@ type planEntry struct {
 func cmdServe(ctx context.Context, args []string) error {
 	fs := flag.NewFlagSet("serve", flag.ExitOnError)
 	planPath := fs.String("plan", "", "write the job plan here (required)")
+	bind := fs.String("bind", "", "listen address (default loopback; 0.0.0.0 inside a container)")
+	advertise := fs.String("advertise", "", "host name collectors are given (default loopback; the compose service name)")
 	c, err := parseCommon(fs, args)
 	if err != nil {
 		return err
@@ -178,12 +186,18 @@ func cmdServe(ctx context.Context, args []string) error {
 	if *planPath == "" {
 		return fmt.Errorf("--plan is required")
 	}
+	sim.Configure(*bind, *advertise)
 	env, err := sim.NewEnv()
 	if err != nil {
 		return err
 	}
 	var plan []planEntry
 	for _, v := range c.selected() {
+		if _, ok := v.(sim.Concurrent); ok {
+			// Exporters send to the collector's own listener, which lives inside the Node; they run under verify only.
+			fmt.Printf("simulator: %s sends to the collector and runs under verify only\n", v.ID())
+			continue
+		}
 		ep, err := v.Start(ctx, c.estate, env)
 		if err != nil {
 			return fmt.Errorf("start %s: %w", v.ID(), err)
@@ -192,11 +206,6 @@ func cmdServe(ctx context.Context, args []string) error {
 		for _, r := range v.Runs(c.estate, ep, env) {
 			plan = append(plan, planEntry{Simulator: v.ID(), Run: r.Name, Collector: v.Collector(), Requirements: v.Requirements(),
 				Targets: r.Targets, Options: r.Options, CredentialType: r.CredentialType, Credential: r.Credential, Provenance: sim.Provenance})
-		}
-		if d, ok := v.(sim.Concurrent); ok {
-			for _, r := range v.Runs(c.estate, ep, env) {
-				go func() { _ = d.Drive(ctx, c.estate, ep, r, env) }()
-			}
 		}
 	}
 	body, err := json.MarshalIndent(plan, "", "  ")

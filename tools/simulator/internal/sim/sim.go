@@ -140,6 +140,27 @@ type Concurrent interface {
 	Drive(ctx context.Context, e *estate.Estate, ep *Endpoint, run Run, env *Env) error
 }
 
+// Loopback by default: verify runs collectors on the same host. `simulator serve --bind 0.0.0.0 --advertise <name>`
+// lets a containerised Discovery Node reach the simulators by service name (deploy/compose profile "simulated").
+var (
+	bindHost      = "127.0.0.1"
+	advertiseHost = "127.0.0.1"
+)
+
+// Configure sets the listen address and the host name collectors are given. Call it before NewEnv: the server
+// certificate names the advertised host.
+func Configure(bind, advertise string) {
+	if bind != "" {
+		bindHost = bind
+	}
+	if advertise != "" {
+		advertiseHost = advertise
+	}
+}
+
+// AdvertiseHost is the host name or address collectors dial.
+func AdvertiseHost() string { return advertiseHost }
+
 // Env is shared by every simulator in one process.
 type Env struct {
 	CA *CA

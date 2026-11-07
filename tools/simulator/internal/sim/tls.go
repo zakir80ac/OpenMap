@@ -69,7 +69,7 @@ func NewCA() (*CA, error) {
 	leafTpl := &x509.Certificate{
 		SerialNumber: sn2, Subject: pkix.Name{CommonName: leafName, Organization: []string{Provenance}},
 		NotBefore: now.Add(-time.Hour), NotAfter: now.Add(certLifetime),
-		DNSNames: []string{"localhost"}, IPAddresses: []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
+		DNSNames: dnsNames(), IPAddresses: ipAddresses(),
 		KeyUsage: x509.KeyUsageDigitalSignature, ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 	leafDer, err := x509.CreateCertificate(rand.Reader, leafTpl, caCert, &leafKey.PublicKey, caKey)
@@ -94,4 +94,20 @@ func NewCA() (*CA, error) {
 
 func (ca *CA) ServerConfig() *tls.Config {
 	return &tls.Config{Certificates: []tls.Certificate{ca.Leaf}, MinVersion: tls.VersionTLS12}
+}
+
+func dnsNames() []string {
+	names := []string{"localhost"}
+	if net.ParseIP(advertiseHost) == nil && advertiseHost != "localhost" {
+		names = append(names, advertiseHost)
+	}
+	return names
+}
+
+func ipAddresses() []net.IP {
+	ips := []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback}
+	if ip := net.ParseIP(advertiseHost); ip != nil && !ip.IsLoopback() {
+		ips = append(ips, ip)
+	}
+	return ips
 }
