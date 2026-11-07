@@ -1,0 +1,37 @@
+{
+  "runs": [
+    {
+      "date": "2026-11-05T05:58:06.959065+00:00",
+      "input_tokens": 805844,
+      "output_tokens": 0,
+      "files": 499
+    },
+    {
+      "date": "2026-11-05T08:57:04.392542+00:00",
+      "input_tokens": 249717,
+      "output_tokens": 0,
+      "files": 78,
+      "note": "two Haiku extraction agents (7 docs, 6 screenshots); totals from their usage reports"
+    },
+    {
+      "date": "2026-11-05T10:08:03.880095+00:00",
+      "input_tokens": 240000,
+      "output_tokens": 32000,
+      "files": 51
+    },
+    {
+      "date": "2026-11-05T11:41:21.648372+00:00",
+      "input_tokens": 260000,
+      "output_tokens": 36000,
+      "files": 62
+    },
+    {
+      "date": "2026-11-05T12:45:34.340863+00:00",
+      "input_tokens": 450833,
+      "output_tokens": 0,
+      "files": 43
+    }
+  ],
+  "total_input_tokens": 2006394,
+  "total_output_tokens": 71200
+}
