@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact prediction accuracy)
+## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks)
 
 Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
 
@@ -55,7 +55,28 @@ business services, which is now the scale-1 tenant `570b1953` (300 services, 40,
 - **Accuracy on the dev stack measures over-prediction:** a shared component predicts every service its applications
   serve (one dev incident predicted all 15, accuracy 0.07).
 
+**4. REQ-BSM-005 runbooks** (ADR-048, migration 0033, GraphQL 1.20.0, Impact contract 1.2.0).
+- **Catalogue:** each tenant has a runbook catalogue (`runbooks`, code unique) storing `runbookSchema`. A step's
+  automation must name a SOAR or automation integration.
+- **Attachment:** scenarios and incidents attach a runbook by reference (`runbookId`), replacing the never-filled JSON
+  column. An incident without one is offered the runbook of the saved scenario of its root cause.
+- **Running a step** (`runRunbookStep`) records a `runbook_step_runs` row.
+  - A manual step is recorded `done`.
+  - An automated step passes the outbound gate, takes its credential from OpenBao and is delivered through the BSM
+    engine's `deliver()`: an AWX job-template launch (`api/v2/job_templates/{action}/launch/`, the incident as
+    `openmap_` extra vars), an XSOAR incident that runs the playbook, or a POST for other vendors. It is recorded
+    `triggered` or `failed`.
+- **Estimates:** a runbook's estimate is the sum of its step minutes. A simulation with a runbook takes that estimate as
+  its outage length and leads its recommendations with the runbook. An incident shows the estimate and the minutes
+  still to go.
+- **Console:** the Impact screen has the runbook catalogue (list and editor) and a runbook picker on each saved
+  scenario. The incident card has a Runbook section: attach, run or mark each step, and the history of runs.
+- **Observability:** metric `openmap_runbook_steps_total{outcome}`; span `runbook.step`.
+
 **Tests:**
+- REQ-BSM-005: T-470 (estimates), T-471 (integration, in-test AWX receiver: gate refused, launch with bearer token and
+  extra vars, `done`, remaining minutes 0), T-472 (vendor requests), T-473 (recommendations), T-474 and T-475
+  (console, en and ar), T-476 (e2e, en and ar).
 - New: T-460…T-463 (assistant), T-464 (health generator), T-465 (contract `compareImpact`), T-466 (integration:
   miss → suggestion → accept → edge in Memgraph → next incident predicted), T-467 (validation rules), T-468 (console
   panel, en and ar), T-469 (e2e, en and ar).
@@ -893,8 +914,8 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. REQ-BSM-005: runbooks attached to scenarios and incidents with automation hooks per step (next by priority).
-2. REQ-BSM-007 (ADR-025), then the finance module. Parked rows close as vendor access arrives.
+1. Next by `pnpm tracker next` (REQ-BSM-007, sites and connectivity for HA/DR readiness, per Syed's earlier order).
+2. The finance module. Parked rows close as vendor access arrives.
 3. REQ-CORE-020: `FOR UPDATE SKIP LOCKED` outbox claim and the concurrent-worker scale-1 measurement; find the
    dispatch target that slows as the stores grow. Also: a cloud-hosted application in the synthetic estate (ADR-031).
    Measure on a fresh seed (44): `replay --reset` on tenant `570b1953` deletes its incidents, validations and health

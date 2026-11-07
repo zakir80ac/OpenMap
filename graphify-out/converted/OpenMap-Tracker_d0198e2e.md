@@ -186,7 +186,7 @@
 | REQ-UI-026 | UI | Screens | Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards |  | Links show carrier, latency, throughput vs capacity, loss, redundancy state; sites show tier, power capacity, racks, PUE, alerts; Playwright en+ar | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-027 | UI | Screens | Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex |  | Backed by ClickHouse metrics; health and category filters; virtualised rows; p95 under budget on 100k CIs | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DEP-005 | DEP | Dependency map | Lane layout mode: layers as horizontal lanes with blast-radius isolation on click |  | Toggle between force and lane layouts; lanes follow CI_LAYERS grouped into six bands; clicking a node dims everything outside its impact closure | P0 | Done |  |  | docs/DESIGN-CUES.md | T-060, T-061 | lane/force layout toggle in the URL, deterministic force layout in the layout worker up to DEPENDENCY_MAP.forceMaxNodes, click isolates the impact closure (Sigma reducers dim the rest), double-click opens the CI; commit bb5e5b9 | 2026-10-22 | 2026-11-01 | Lane layout mode implemented (apps/console/src/lib/graph-layout.ts): lanes per CI_LAYERS order, hidden layers bridged, per-lane chips. Blast-radius isolation on click is the next increment. |
-| REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Done |  |  | docs/DESIGN-CUES.md | T-470, T-471, T-472, T-473, T-474, T-475, T-476 | a9e6f16; ADR-048; e2e screenshots apps/console/e2e/screenshots/runbooks-{en,ar}.png | 2026-10-22 | 2026-11-07 |  |
 | REQ-SEC-012 | SEC | Compliance | Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate |  | Controls mapped to CIs; posture tab on the assets screen; audit pass rate and high-risk CI count computed from evidence | P1 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-037 | CMDB | Identity | CI short codes (layer prefix plus slug) generated, unique per tenant and editable |  | ciCode() applied by the reconciler; uniqueness enforced in Postgres; shown on every card and in search | P0 | Done | Claude |  | docs/DESIGN-CUES.md | T-062, T-111, T-063, T-457 | ciCode() keeps dotted non-domain names apart (10.0.0.1 -> NET-10-0-0-1); Postgres trigger plus partial unique index keep codes unique per tenant (migration 0010, 499 duplicate groups renumbered on the dev estate); Ci.code and setCiCode in GraphQL 0.6.0 (ADR-014); code on CMDB rows, search hits and the CI detail header with operator editing; commit 0d660e0; migrations 0029-0030: colliding codes numbered from a per-base counter seeded through a text_pattern_ops index (d18772e, a5c403a); scale-1 SNMP result 15+ min -> seconds | 2026-10-22 | 2026-11-07 | Console derives and shows the short code via ciCode() on the CI detail header; server-side uniqueness and editing remain. |
 | REQ-CMDB-038 | CMDB | Layers | Headline metric per layer on cards and tables (LAYER_HEADLINE_METRIC) |  | Every card shows the layer's headline metric from ClickHouse; unit and label from the contract | P1 | Done |  |  | docs/DESIGN-CUES.md | T-005, T-008, T-025, T-091, T-093, T-094, T-114, T-115, T-087 | docs/evidence/cmdb/headline-metrics.md; docs/evidence/console/cmdb-en.png, cmdb-ar.png, ci-detail-en.png, ci-detail-ar.png; ADR-016; replay 28,501 samples stored / 0 dropped; API 50-row page with headlines 21-76 ms; e2e walkthrough 3 passed; commit 01df3cf | 2026-10-22 | 2026-11-01 |  |
@@ -220,7 +220,7 @@
 | CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 40 | 95 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
-| BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 6 | 75 |
+| BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 7 | 88 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 31 | 86 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 4 | 50 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
@@ -257,9 +257,9 @@
 | ci | packages/contracts/src/ci.ts | 0.7.0 |  | ADR-045 |
 | collector | packages/contracts/src/collector.ts | 0.7.0 |  | ADR-045 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.19.0 |  | ADR-047 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.20.0 |  | ADR-048 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
-| impact | packages/contracts/src/impact.ts | 1.1.0 |  | ADR-047 |
+| impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
 ## Sheet: Decisions
 | ADR number | Title | Status | Date | Link |
@@ -273,6 +273,7 @@
 | ADR-045 | Reconciliation resolves `*Ref` values and scopes issuer-bound global keys | Accepted | 2026-11-07 | docs/adr/ADR-045-identity-refs-and-scoped-keys.md |
 | ADR-046 | Reconciliation at full scale: identity tokens, code counters and concurrent dispatch | Accepted | 2026-11-07 | docs/adr/ADR-046-reconciliation-at-full-scale.md |
 | ADR-047 | Impact prediction accuracy: incidents validate simulations, misses suggest relationships | Accepted | 2026-11-08 | docs/adr/ADR-047-impact-prediction-accuracy.md |
+| ADR-048 | Runbooks: a tenant catalogue attached to scenarios and incidents, steps that trigger automation | Accepted | 2026-11-08 | docs/adr/ADR-048-runbooks.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -599,6 +600,13 @@
 | T-467 | unit | REQ-BSM-004 | 2026-11-07 | Pass | 0 |
 | T-468 | unit | REQ-BSM-004 | 2026-11-07 | Pass | 0 |
 | T-469 | unit | REQ-BSM-004 | 2026-11-07 | Pass | 0 |
+| T-470 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-471 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-472 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-473 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-474 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-475 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-476 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -629,11 +637,12 @@
 | 2026-11-07 | Checkpoint 27 (ADR-045): reconciliation resolves *Ref identity values to the CI they name and scopes issuer-bound global keys (tenantId by vendor, cloud ids by provider, clusterId/moRef by platform, contractNumber by vendorRef); k8s_namespace.clusterUid is a parent key; migration 0028; NGINX members keyed tcp. Simulated mode 495/495, identity drift 0 (from 284). Dev tenant replayed: 28,221 distinct CIs created, 0 folded, 0 conflicts. | REQ-CORE-013, REQ-QA-005, REQ-QA-001, REQ-DISC-018 | f5ec282, fef02d6, aab3f27 |  |
 | 2026-11-07 | Checkpoint 28: checkpoint-27 follow-ups. saas_application.tenantRef resolves within its vendor (dev pending refs 18->16). Scale-1 replay (550,747 CIs, 45,030 devices, own tenant) inside the discovery budget: 3,175 s, 11.75 min per 10k devices, 0 duplicates; scale bugs fixed (lookup concurrency, bind variables, code-suffix trigger via migrations 0029/0030, Postgres shm, CI reported twice in one result, estate subnet and MAC collisions, identity tokens migration 0031, concurrent dispatch targets); REQ-CORE-013 Done, REQ-CORE-020 opened. Tracker CLI decision/contract commands (ADR-044..046, ci/collector 0.7.0). fcfabric gofmt. node, scheduler and reconciler images rebuilt. graphify full refresh. | REQ-CORE-013, REQ-CORE-007, REQ-CORE-020, REQ-CMDB-037, REQ-QA-001, REQ-QA-005 | a2258ff, 4b1e7b0, 83826ea, d923837, cb0a623, d18772e, a5c403a, 83dfebc, 8cad55e, 96721ec, 4a4173d, c0a121f, 9926bbd, b124678 |  |
 | 2026-11-07 | Checkpoint 29: assistant eval 38/38 at scale 1 (ClickHouse id batching, unmeasured uptime); health outages spread over the month; REQ-BSM-004 impact prediction accuracy (ADR-047, migration 0032, GraphQL 1.19.0) |  |  |  |
+| 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-005 runbooks (ADR-048, migration 0033, GraphQL 1.20.0) |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-07T21:49:09.666Z |  |  |  |  |  |  |
+| Generated | 2026-11-07T22:10:35.750Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 42 | 0 | 28 | 2 | 136 |  |  |
+| All | 41 | 0 | 28 | 2 | 137 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 2 | 0 | 0 | 0 | 18 | 20 | 90 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -641,7 +650,7 @@
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
-| BSM | 2 | 0 | 0 | 0 | 6 | 8 | 75 |
+| BSM | 1 | 0 | 0 | 0 | 7 | 8 | 88 |
 | UI | 5 | 0 | 0 | 0 | 31 | 36 | 86 |
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
@@ -649,7 +658,7 @@
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 8 | 0 | 26 | 1 | 89 | 124 |  |
+| P0 | 7 | 0 | 26 | 1 | 90 | 124 |  |
 | P1 | 31 | 0 | 2 | 1 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
@@ -658,7 +667,7 @@
 | 2026-11-04 | 95 |  |  |  |  |  |  |
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
-| 2026-11-07 | 136 |  |  |  |  |  |  |
+| 2026-11-07 | 137 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |
