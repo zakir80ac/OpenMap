@@ -1,4 +1,4 @@
-// T-066 T-136 REQ-UI-012 REQ-BSM-002 REQ-BSM-006 REQ-BSM-008 — ServicesView groups services by state, filters, links root
+// T-066 T-136 REQ-UI-012 REQ-BSM-002 REQ-BSM-006 REQ-BSM-008 — ServicesView groups services by state, filters, links root T-475 REQ-BSM-005
 // causes, shows the current window and the uptime table with its granularity and export, lets an operator assign and
 // create SLAs, and runs incidents through acknowledge, assign, resolve and RCA over stubbed GraphQL, in en and ar.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -160,6 +160,11 @@ const incident = {
     },
   ],
   rca: null,
+  runbook: null,
+  suggestedRunbook: null,
+  runbookRuns: [],
+  recoveryEstimateMinutes: null,
+  recoveryRemainingMinutes: null,
   timeline: [
     {
       at: '2026-10-22T09:27:15.000Z',
@@ -182,6 +187,22 @@ const report = (granularity: string) =>
 
 const calls: Array<{ op: string; variables: Record<string, unknown> }> = [];
 
+// REQ-BSM-005 (T-475): the runbook the incident is offered, attached and run.
+const runbookFull = {
+  id: 'rb-1',
+  code: 'RB-DB-01',
+  title: 'Database failover',
+  ownerTeam: 'DBA',
+  lastReviewedAt: null,
+  estimatedMinutes: 15,
+  updatedAt: '2026-11-08T00:00:00.000Z',
+  steps: [
+    { order: 1, instruction: 'Fail over the database', estimatedMinutes: 10, automation: { action: '42', integration: { id: 'int-awx', name: 'AWX', vendor: 'ansible_awx' } } },
+    { order: 2, instruction: 'Confirm reconnection', estimatedMinutes: 5, automation: null },
+  ],
+};
+const runbookState = { attached: false, runs: [] as Array<Record<string, unknown>> };
+
 function respond(body: { query: string; variables?: Record<string, unknown> }): unknown {
   const op = /^(query|mutation) (\w+)/.exec(body.query)?.[2] ?? 'unknown';
   const v = body.variables ?? {};
@@ -190,7 +211,30 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
     case 'Services':
       return { data: { services } };
     case 'Incidents':
-      return { data: { incidents: [incident] } };
+      return {
+        data: {
+          incidents: [
+            {
+              ...incident,
+              runbook: runbookState.attached ? runbookFull : null,
+              suggestedRunbook: runbookState.attached ? null : { id: 'rb-1', code: 'RB-DB-01', title: 'Database failover', estimatedMinutes: 15 },
+              runbookRuns: runbookState.runs,
+              recoveryEstimateMinutes: runbookState.attached ? 15 : null,
+              recoveryRemainingMinutes: runbookState.attached ? 15 - runbookState.runs.length * 10 : null,
+            },
+          ],
+        },
+      };
+    case 'Runbooks':
+      return { data: { runbooks: [runbookFull] } };
+    case 'SetIncidentRunbook':
+      runbookState.attached = v['runbookId'] !== null;
+      return { data: { setIncidentRunbook: { id: incident.id } } };
+    case 'RunRunbookStep': {
+      const run = { id: 'run-' + String(runbookState.runs.length), order: v['order'], outcome: 'triggered', actor: 'syed', note: null, remoteId: '9001', error: null, at: '2026-11-08T00:05:00.000Z', integration: { id: 'int-awx', name: 'AWX' } };
+      runbookState.runs.push(run);
+      return { data: { runRunbookStep: run } };
+    }
     case 'Slas':
       return { data: { slas: [gold] } };
     case 'AvailabilityReport':
@@ -273,6 +317,8 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
 
 beforeEach(() => {
   calls.length = 0;
+  runbookState.attached = false;
+  runbookState.runs = [];
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
@@ -476,6 +522,30 @@ describe.each(LOCALES)('ServicesView in %s', (locale) => {
       });
     });
     expect(await screen.findByText(translate(locale, 'services.sla.saved'))).toBeTruthy();
+  });
+
+  it('T-475 attaches the suggested runbook to an incident and triggers its automated step', async () => {
+    mount(locale);
+    const aside = screen.getByRole('complementary');
+    fireEvent.click(await within(aside).findByRole('button', { name: translate(locale, 'services.runbook.title') }));
+    const section = within(aside).getByRole('region', { name: translate(locale, 'services.runbook.title') });
+    expect(within(section).getByText(translate(locale, 'services.runbook.suggested', { code: 'RB-DB-01', title: 'Database failover' }))).toBeTruthy();
+    const pick = await within(section).findByLabelText(translate(locale, 'services.runbook.pick'));
+    expect((pick as HTMLSelectElement).value).toBe('rb-1');
+    fireEvent.click(within(section).getByRole('button', { name: translate(locale, 'services.runbook.attach') }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.op === 'SetIncidentRunbook')?.variables).toEqual({ incidentId: incident.id, runbookId: 'rb-1' });
+    });
+    const steps = await within(aside).findByRole('list', { name: translate(locale, 'services.runbook.steps') });
+    expect(within(steps).getByText('Fail over the database')).toBeTruthy();
+    fireEvent.click(within(steps).getByRole('button', { name: translate(locale, 'services.runbook.trigger') }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.op === 'RunRunbookStep')?.variables).toEqual({ incidentId: incident.id, order: 1 });
+    });
+    await waitFor(() => {
+      expect(within(steps).getByText(translate(locale, 'services.runbook.outcome.triggered'))).toBeTruthy();
+    });
+    expect(within(steps).getByRole('button', { name: translate(locale, 'services.runbook.markDone') })).toBeTruthy();
   });
 
   it('acknowledges, assigns, records the RCA and resolves an incident through the mutations', async () => {

@@ -528,6 +528,8 @@ model Tenant {
   impactSimulations       ImpactSimulation[]
   impactValidations       ImpactValidation[]
   relationshipSuggestions RelationshipSuggestion[]
+  runbooks                Runbook[]
+  runbookStepRuns         RunbookStepRun[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
   slas                    Sla[]
@@ -1232,13 +1234,14 @@ model ImpactScenario {
   createdBy             String
   changeRefSource       String?
   changeRefId           String?
-  /// runbookSchema, or null when no procedure is attached to the scenario.
-  runbook               Json?
+  /// The runbook to follow if this scenario happens for real (ADR-048).
+  runbookId             String?        @db.Uuid
   createdAt             DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt             DateTime       @updatedAt @db.Timestamptz(3)
 
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   simulations ImpactSimulation[]
+  runbook     Runbook?           @relation(fields: [runbookId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, kind])
   @@index([tenantId, origin, createdAt])
@@ -1323,6 +1326,59 @@ model RelationshipSuggestion {
   @@map("relationship_suggestions")
 }
 
+/// runbookRecordSchema (ADR-048): a procedure in the tenant's catalogue; steps are runbookSchema.steps.
+model Runbook {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  code           String
+  title          String
+  ownerTeam      String
+  lastReviewedAt DateTime? @db.Date
+  /// Array of runbookSchema steps: order, instruction, automation, estimatedMinutes.
+  steps          Json
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scenarios ImpactScenario[]
+  incidents Incident[]
+  stepRuns  RunbookStepRun[]
+
+  @@unique([tenantId, code])
+  @@map("runbooks")
+}
+
+/// RUNBOOK_STEP_OUTCOMES (ADR-048).
+enum RunbookStepOutcome {
+  done
+  triggered
+  failed
+}
+
+/// runbookStepRunSchema (ADR-048): one step run on an incident, manual or automated.
+model RunbookStepRun {
+  id            String             @id @default(uuid()) @db.Uuid
+  tenantId      String             @db.Uuid
+  incidentId    String             @db.Uuid
+  runbookId     String?            @db.Uuid
+  order         Int
+  outcome       RunbookStepOutcome
+  actor         String
+  note          String?
+  integrationId String?            @db.Uuid
+  deliveryId    String?            @db.Uuid
+  remoteId      String?
+  error         String?
+  at            DateTime           @db.Timestamptz(3)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  runbook  Runbook? @relation(fields: [runbookId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, at])
+  @@map("runbook_step_runs")
+}
+
 /// Window an SLA's availability target is measured over (ADR-024).
 enum SlaWindow {
   calendar_month
@@ -1401,6 +1457,8 @@ model Incident {
   resolutionNote       String?
   /// Root cause analysis: { summary, rootCauseCiId, contributingFactors[], correctiveActions[{description, owner, dueAt, done}], owner, dueAt, completedAt, updatedBy, updatedAt }.
   rca                  Json?
+  /// The runbook an operator attached (ADR-048).
+  runbookId            String?       @db.Uuid
   createdAt            DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
 
@@ -1408,6 +1466,8 @@ model Incident {
   sla         Sla?               @relation(fields: [slaId], references: [id], onDelete: SetNull)
   links       IncidentLink[]
   validations ImpactValidation[]
+  runbook     Runbook?           @relation(fields: [runbookId], references: [id], onDelete: SetNull)
+  runbookRuns RunbookStepRun[]
 
   @@index([tenantId, state, openedAt])
   @@index([tenantId, source, state])

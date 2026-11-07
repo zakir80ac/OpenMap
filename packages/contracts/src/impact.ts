@@ -76,6 +76,69 @@ export const runbookSchema = z.object({
 });
 export type Runbook = z.infer<typeof runbookSchema>;
 
+/**
+ * REQ-BSM-005 (ADR-048) — a runbook in the tenant's catalogue: the procedure scenarios and incidents attach by
+ * reference. `code` is unique in the tenant.
+ */
+export const runbookRecordSchema = runbookSchema.extend({
+  id: z.uuid(),
+  tenantId: z.uuid(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+export type RunbookRecord = z.infer<typeof runbookRecordSchema>;
+
+/** Integration categories a runbook step may trigger: SOAR playbooks and automation jobs (Ansible AWX and the like). */
+export const RUNBOOK_AUTOMATION_CATEGORIES = ['soar', 'automation'] as const;
+
+/** What running a step recorded: a manual step done, an automation delivered, or an automation that failed. */
+export const RUNBOOK_STEP_OUTCOMES = ['done', 'triggered', 'failed'] as const;
+export type RunbookStepOutcome = (typeof RUNBOOK_STEP_OUTCOMES)[number];
+
+export const runbookStepRunSchema = z.object({
+  id: z.uuid(),
+  incidentId: z.uuid(),
+  runbookId: z.uuid().nullable(),
+  order: z.number().int().positive(),
+  outcome: z.enum(RUNBOOK_STEP_OUTCOMES),
+  actor: z.string().min(1),
+  note: z.string().nullable(),
+  integrationId: z.uuid().nullable(),
+  deliveryId: z.uuid().nullable(),
+  remoteId: z.string().nullable(),
+  error: z.string().nullable(),
+  at: z.iso.datetime(),
+});
+export type RunbookStepRun = z.infer<typeof runbookStepRunSchema>;
+
+/** The runbook's recovery estimate: the sum of its steps' minutes, or null when no step carries an estimate. */
+export function runbookMinutes(runbook: Pick<Runbook, 'steps'>): number | null {
+  const minutes = runbook.steps.map((s) => s.estimatedMinutes).filter((m): m is number => m !== null);
+  return minutes.length === 0 ? null : minutes.reduce((a, b) => a + b, 0);
+}
+
+/**
+ * Minutes still to go: the steps whose latest run is neither done nor triggered. Null when the runbook carries no
+ * estimate at all.
+ */
+export function remainingRunbookMinutes(
+  runbook: Pick<Runbook, 'steps'>,
+  runs: ReadonlyArray<Pick<RunbookStepRun, 'order' | 'outcome' | 'at'>>,
+): number | null {
+  if (runbookMinutes(runbook) === null) return null;
+  const latest = new Map<number, Pick<RunbookStepRun, 'outcome' | 'at'>>();
+  for (const r of runs) {
+    const seen = latest.get(r.order);
+    if (seen === undefined || seen.at <= r.at) latest.set(r.order, r);
+  }
+  return runbook.steps
+    .filter((s) => {
+      const outcome = latest.get(s.order)?.outcome;
+      return outcome !== 'done' && outcome !== 'triggered';
+    })
+    .reduce((n, s) => n + (s.estimatedMinutes ?? 0), 0);
+}
+
 export const impactScenarioSchema = z.object({
   id: z.uuid(),
   tenantId: z.uuid(),

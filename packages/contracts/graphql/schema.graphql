@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.19.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.20.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -247,6 +247,8 @@ type ImpactScenario {
   kind: String!
   "user: a saved what-if model; incident: the replay of a real incident's root cause (ADR-047)."
   origin: String!
+  "The procedure to follow if this scenario happens for real (ADR-048)."
+  runbook: Runbook
   failedCis: [Ci!]!
   options: JSON!
   createdBy: String!
@@ -481,6 +483,70 @@ type Incident {
   links: [IncidentLink!]!
   rca: Rca
   timeline: [IncidentEvent!]!
+  "The runbook an operator attached (REQ-BSM-005, ADR-048)."
+  runbook: Runbook
+  "When none is attached: the runbook of the saved scenario of the incident's root cause, if any."
+  suggestedRunbook: Runbook
+  "Every step run on this incident, oldest first."
+  runbookRuns: [RunbookStepRun!]!
+  "The attached runbook's estimate, the sum of its step minutes."
+  recoveryEstimateMinutes: Int
+  "Minutes of the steps whose latest run is neither done nor triggered."
+  recoveryRemainingMinutes: Int
+}
+"A procedure in the tenant's catalogue, attached to scenarios and incidents (REQ-BSM-005, ADR-048)."
+type Runbook {
+  id: UUID!
+  code: String!
+  title: String!
+  ownerTeam: String!
+  "ISO calendar date (YYYY-MM-DD)."
+  lastReviewedAt: String
+  steps: [RunbookStep!]!
+  "Sum of the steps' estimated minutes; null when no step has one."
+  estimatedMinutes: Int
+  updatedAt: DateTime!
+}
+type RunbookStep {
+  order: Int!
+  instruction: String!
+  automation: RunbookAutomation
+  estimatedMinutes: Int
+}
+"A SOAR playbook or automation job the step triggers through an integration."
+type RunbookAutomation {
+  integration: Integration
+  action: String!
+}
+type RunbookStepRun {
+  id: UUID!
+  order: Int!
+  "done (a manual step), triggered (automation delivered) or failed."
+  outcome: String!
+  actor: String!
+  note: String
+  integration: Integration
+  remoteId: String
+  error: String
+  at: DateTime!
+}
+input RunbookInput {
+  code: String!
+  title: String!
+  ownerTeam: String!
+  "ISO calendar date (YYYY-MM-DD)."
+  lastReviewedAt: String
+  steps: [RunbookStepInput!]!
+}
+input RunbookStepInput {
+  order: Int!
+  instruction: String!
+  estimatedMinutes: Int
+  automation: RunbookAutomationInput
+}
+input RunbookAutomationInput {
+  integrationId: UUID!
+  action: String!
 }
 type IncidentLink {
   integration: Integration!
@@ -1892,6 +1958,9 @@ type Query {
   impactAccuracy(limit: Int = 20): ImpactAccuracy!
   "Relationship suggestions learnt from missed predictions, open ones by default."
   relationshipSuggestions(state: String = "open", limit: Int = 50): [RelationshipSuggestion!]!
+  "The tenant's runbook catalogue, by code (REQ-BSM-005)."
+  runbooks: [Runbook!]!
+  runbook(id: UUID!): Runbook
   services(health: [HealthState!]): [ServiceHealth!]!
   service(id: UUID!): ServiceHealth
   incidents(open: Boolean = true, serviceId: UUID): [Incident!]!
@@ -1980,6 +2049,7 @@ input ScenarioInput {
   honourRedundancy: Boolean = true
   includeSharedServices: Boolean = true
   at: DateTime
+  runbookId: UUID
 }
 input PlanInput {
   name: String!
@@ -2289,6 +2359,14 @@ type Mutation {
   acceptRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   "Marks the suggestion dismissed; the same miss is not suggested again."
   dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
+  "Creates a runbook (id omitted) or replaces one (REQ-BSM-005, ADR-048)."
+  upsertRunbook(id: UUID, input: RunbookInput!): Runbook!
+  "Deletes a runbook; scenarios and incidents that named it keep no runbook."
+  deleteRunbook(id: UUID!): Boolean!
+  setScenarioRunbook(scenarioId: UUID!, runbookId: UUID): ImpactScenario!
+  setIncidentRunbook(incidentId: UUID!, runbookId: UUID): Incident!
+  "Runs one step of the incident's runbook: a manual step is marked done, an automated one is triggered."
+  runRunbookStep(incidentId: UUID!, order: Int!, note: String): RunbookStepRun!
   createPlan(input: PlanInput!): InfraPlan!
   setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
   receivePlanLine(input: ReceiptInput!): PlanReceipt!

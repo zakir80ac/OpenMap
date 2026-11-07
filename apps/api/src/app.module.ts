@@ -30,6 +30,7 @@ import { GraphModule } from './graph/graph.module.js';
 import { graphqlOptions } from './graphql/graphql-options.js';
 import { HealthModule } from './health/health.module.js';
 import { ImpactModule } from './impact/impact.module.js';
+import { RunbooksModule } from './runbooks/runbooks.module.js';
 import { IntegrationsModule } from './integrations/integrations.module.js';
 import { IpamModule } from './ipam/ipam.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
@@ -53,6 +54,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     GraphModule,
     ServicesModule,
     ImpactModule,
+    RunbooksModule,
     AssetsModule,
     DashboardsModule,
     CustomFieldsModule,

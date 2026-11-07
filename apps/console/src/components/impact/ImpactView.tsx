@@ -3,7 +3,8 @@
 // multi-select) → condition picker (applicability from type and layer) → Run model: saveScenario then
 // runSimulation → results (totals, propagation chains, affected services with predicted state, SLA budget and
 // recovery) → assistant suggestions (askAssistant grounded on the scenario, plus the engine's recommendations) and
-// the saved scenarios list from impactScenarios; below, the prediction accuracy against real incidents (REQ-BSM-004).
+// the saved scenarios list from impactScenarios with each one's runbook; below, the runbook catalogue (REQ-BSM-005)
+// and the prediction accuracy against real incidents (REQ-BSM-004).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ROLES } from '@openmap/constants';
 import { useCan } from '@/lib/auth';
@@ -15,6 +16,7 @@ import { Card, Dot, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx, layerCo
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QueryState } from '@/components/common/QueryState';
 import { ImpactAccuracyPanel } from '@/components/impact/ImpactAccuracyPanel';
+import { RunbooksPanel, ScenarioRunbookPicker } from '@/components/impact/RunbooksPanel';
 import { Icon } from '@/components/icons';
 import { predictedUiState } from '@/lib/graph-layout';
 import {
@@ -747,6 +749,7 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
                         · {t('impact.saved.components', { count: format.integer(scenario.failedCis.length) })}
                       </span>
                     </span>
+                    <ScenarioRunbookPicker scenario={scenario} />
                     <Pill
                       variant="primary"
                       glowing={false}
@@ -764,6 +767,7 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
           </Card>
         </div>
       </div>
+      <RunbooksPanel />
       <ImpactAccuracyPanel locale={locale} />
     </div>
   );

@@ -25,6 +25,8 @@ export const APPLICATION_MAP_DURATION_METRIC = 'openmap_application_map_duration
 /** REQ-BSM-004 (ADR-047): incidents compared with a simulation, by outcome, and the accuracy each one scored. */
 export const IMPACT_VALIDATIONS_METRIC = 'openmap_impact_validations_total';
 export const IMPACT_ACCURACY_METRIC = 'openmap_impact_prediction_accuracy';
+/** REQ-BSM-005 (ADR-048): runbook steps run on incidents, by outcome (done, triggered, failed). */
+export const RUNBOOK_STEPS_METRIC = 'openmap_runbook_steps_total';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -61,6 +63,7 @@ export class MetricsService {
   readonly applicationMapDuration: Histogram;
   readonly impactValidations: Counter<'outcome'>;
   readonly impactAccuracy: Histogram;
+  readonly runbookSteps: Counter<'outcome'>;
   readonly importRows: Counter<'outcome'>;
   readonly exportRows: Counter<'format'>;
 
@@ -136,6 +139,7 @@ export class MetricsService {
       buckets: [...IMPACT.accuracyBuckets],
       registers: [this.registry],
     });
+    this.runbookSteps = new Counter({ name: RUNBOOK_STEPS_METRIC, help: 'Runbook steps run on incidents, by outcome (done, triggered, failed)', labelNames: ['outcome'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

@@ -638,6 +638,88 @@ export interface ImpactScenario {
   options: Record<string, JsonValue>;
   createdBy: string;
   createdAt: string;
+  runbook: RunbookSummary | null;
+}
+
+// REQ-BSM-005 (ADR-048) — runbooks: the tenant's catalogue, attached to scenarios and incidents; a step runs by hand
+// or triggers a SOAR playbook or automation job through an integration.
+export interface RunbookStep {
+  order: number;
+  instruction: string;
+  estimatedMinutes: number | null;
+  automation: { action: string; integration: { id: string; name: string; vendor: string } | null } | null;
+}
+
+export interface Runbook {
+  id: string;
+  code: string;
+  title: string;
+  ownerTeam: string;
+  lastReviewedAt: string | null;
+  estimatedMinutes: number | null;
+  steps: RunbookStep[];
+  updatedAt: string;
+}
+
+export type RunbookSummary = Pick<Runbook, 'id' | 'code' | 'title' | 'estimatedMinutes'>;
+
+export interface RunbookStepRun {
+  id: string;
+  order: number;
+  outcome: 'done' | 'triggered' | 'failed';
+  actor: string;
+  note: string | null;
+  remoteId: string | null;
+  error: string | null;
+  at: string;
+  integration: { id: string; name: string } | null;
+}
+
+export interface RunbookInput {
+  code: string;
+  title: string;
+  ownerTeam: string;
+  lastReviewedAt: string | null;
+  steps: Array<{ order: number; instruction: string; estimatedMinutes: number | null; automation: { integrationId: string; action: string } | null }>;
+}
+
+const RUNBOOK_SUMMARY_FIELDS = 'id code title estimatedMinutes';
+const RUNBOOK_FIELDS =
+  'id code title ownerTeam lastReviewedAt estimatedMinutes updatedAt steps { order instruction estimatedMinutes automation { action integration { id name vendor } } }';
+const RUN_FIELDS = 'id order outcome actor note remoteId error at integration { id name }';
+
+const RUNBOOKS_QUERY = 'query Runbooks { runbooks { ' + RUNBOOK_FIELDS + ' } }';
+
+export function runbooksQuery() {
+  return queryOptions({
+    queryKey: ['runbooks'] as const,
+    queryFn: ({ signal }) => gql<{ runbooks: Runbook[] }>(RUNBOOKS_QUERY, undefined, signal),
+    select: (data) => data.runbooks,
+  });
+}
+
+export function upsertRunbook(id: string | null, input: RunbookInput): Promise<Runbook> {
+  return gql<{ upsertRunbook: Runbook }>('mutation UpsertRunbook($id: UUID, $input: RunbookInput!) { upsertRunbook(id: $id, input: $input) { ' + RUNBOOK_FIELDS + ' } }', { id, input }).then(
+    (d) => d.upsertRunbook,
+  );
+}
+
+export function deleteRunbook(id: string): Promise<boolean> {
+  return gql<{ deleteRunbook: boolean }>('mutation DeleteRunbook($id: UUID!) { deleteRunbook(id: $id) }', { id }).then((d) => d.deleteRunbook);
+}
+
+export function setScenarioRunbook(scenarioId: string, runbookId: string | null): Promise<unknown> {
+  return gql('mutation SetScenarioRunbook($scenarioId: UUID!, $runbookId: UUID) { setScenarioRunbook(scenarioId: $scenarioId, runbookId: $runbookId) { id } }', { scenarioId, runbookId });
+}
+
+export function setIncidentRunbook(incidentId: string, runbookId: string | null): Promise<unknown> {
+  return gql('mutation SetIncidentRunbook($incidentId: UUID!, $runbookId: UUID) { setIncidentRunbook(incidentId: $incidentId, runbookId: $runbookId) { id } }', { incidentId, runbookId });
+}
+
+export function runRunbookStep(incidentId: string, order: number): Promise<RunbookStepRun> {
+  return gql<{ runRunbookStep: RunbookStepRun }>('mutation RunRunbookStep($incidentId: UUID!, $order: Int!) { runRunbookStep(incidentId: $incidentId, order: $order) { ' + RUN_FIELDS + ' } }', { incidentId, order }).then(
+    (d) => d.runRunbookStep,
+  );
 }
 
 export interface ImpactTotals {
@@ -665,7 +747,7 @@ export interface ImpactSimulation {
   recommendations: Recommendation[];
 }
 
-const SCENARIO_FIELDS = 'id name kind options createdBy createdAt failedCis { ' + CI_SUMMARY_FIELDS + ' }';
+const SCENARIO_FIELDS = 'id name kind options createdBy createdAt failedCis { ' + CI_SUMMARY_FIELDS + ' } runbook { ' + RUNBOOK_SUMMARY_FIELDS + ' }';
 
 const SIMULATION_FIELDS = [
   'id ranAt durationMs',
@@ -923,6 +1005,11 @@ export interface Incident {
   links: IncidentLink[];
   rca: Rca | null;
   timeline: IncidentEvent[];
+  runbook: Runbook | null;
+  suggestedRunbook: RunbookSummary | null;
+  runbookRuns: RunbookStepRun[];
+  recoveryEstimateMinutes: number | null;
+  recoveryRemainingMinutes: number | null;
 }
 
 const INCIDENT_FIELDS = [
@@ -935,6 +1022,10 @@ const INCIDENT_FIELDS = [
     CI_SUMMARY_FIELDS +
     ' } contributingFactors correctiveActions { description owner dueAt done } owner dueAt completedAt updatedBy updatedAt }',
   'timeline { at actor kind details }',
+  'runbook { ' + RUNBOOK_FIELDS + ' }',
+  'suggestedRunbook { ' + RUNBOOK_SUMMARY_FIELDS + ' }',
+  'runbookRuns { ' + RUN_FIELDS + ' }',
+  'recoveryEstimateMinutes recoveryRemainingMinutes',
 ].join(' ');
 
 const INCIDENTS_QUERY = [

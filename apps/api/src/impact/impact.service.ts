@@ -2,7 +2,7 @@
 // simulate() with service models, facts and live health loaded from the CMDB and the graph.
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { simulate, type ConditionSeverity } from '@openmap/bsm-engine';
-import { SCENARIO_KIND_SEVERITY } from '@openmap/contracts';
+import { runbookMinutes, SCENARIO_KIND_SEVERITY } from '@openmap/contracts';
 import type { ImpactScenario, ImpactSimulation } from '@openmap/contracts';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord } from '../ci/ci.types.js';
@@ -73,9 +73,11 @@ export class ImpactService {
     const memberIds = [...models.values()].flatMap((m) => m.groups.flatMap((g) => g.memberCiIds));
     const health = await this.facts.healthMap(tenantId, [...new Set([...closureIds, ...memberIds, ...services.map((s) => s.id)])]);
     const facts = await this.facts.factsFor(tenantId, services, health);
-    const outageMinutes = Math.max(0, ...[...facts.values()].map((f) => f.recovery?.estimatedMinutes ?? 0));
+    // A scenario with a runbook recovers in the runbook's time (ADR-048); otherwise the slowest service recovery.
+    const runbookEstimate = scenario.runbook === null ? null : runbookMinutes(scenario.runbook);
+    const outageMinutes = runbookEstimate ?? Math.max(0, ...[...facts.values()].map((f) => f.recovery?.estimatedMinutes ?? 0));
     const result = await simulate(this.graph.repo, { scenario, severity, health, models, facts, outageMinutes });
-    result.recommendations = recommendationsFor(result, models);
+    result.recommendations = recommendationsFor(result, models, scenario.runbook);
     const saved = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
       const sim = await this.repo.saveSimulation(tx, result);
       await emit({
@@ -114,9 +116,18 @@ export class ImpactService {
   }
 }
 
-/** Recovery steps for services predicted down, and a redundancy recommendation where no group model protects them. */
-export function recommendationsFor(sim: ImpactSimulation, models: ReadonlyMap<string, { groups: readonly unknown[] }>): ImpactSimulation['recommendations'] {
+/**
+ * The attached runbook first, then recovery steps for services predicted down, and a redundancy recommendation where no
+ * group model protects them.
+ */
+export function recommendationsFor(
+  sim: ImpactSimulation,
+  models: ReadonlyMap<string, { groups: readonly unknown[] }>,
+  runbook: ImpactScenario['runbook'] = null,
+): ImpactSimulation['recommendations'] {
   const out: ImpactSimulation['recommendations'] = [];
+  // The attached procedure leads (ADR-048): its steps in order, its estimate the sum of their minutes.
+  if (runbook !== null) out.push({ title: 'Follow runbook ' + runbook.code + ': ' + runbook.title, rationale: runbook.steps.map((s) => String(s.order) + '. ' + s.instruction).join(' '), estimatedMinutes: runbookMinutes(runbook) });
   for (const s of sim.services) {
     if (s.predicted !== 'down' && s.predicted !== 'degraded') continue;
     if (s.recovery) out.push({ title: 'Recover ' + s.name, rationale: s.recovery.description, estimatedMinutes: s.recovery.estimatedMinutes });

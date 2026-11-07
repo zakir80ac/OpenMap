@@ -1,7 +1,7 @@
 'use client';
 // REQ-UI-012 REQ-BSM-006 — one incident: severity, state, source and SLA, the response and resolution deadlines with
 // their breach marks, the assignee, the operator actions (acknowledge, assign, resolve with a note, close), the root
-// cause analysis form and the audited timeline (ADR-024).
+// cause analysis form and the audited timeline (ADR-024); REQ-BSM-005: the incident's runbook with its steps (ADR-048).
 import Link from 'next/link';
 import { SLA, TIME } from '@openmap/constants';
 import type { Locale } from '@openmap/i18n';
@@ -12,6 +12,7 @@ import { Icon } from '@/components/icons';
 import { localizedHref } from '@/lib/locale-path';
 import type { CiRef, Incident, IncidentSeverity, IncidentState, Rca, RcaInput } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
+import { IncidentRunbook } from './IncidentRunbook';
 import { severityKey } from './SlaPanel';
 import type { IncidentAction, IncidentActions, Work } from './types';
 
@@ -123,6 +124,7 @@ export function IncidentCard({ locale, incident, canOperate, actions }: Incident
   const [note, setNote] = useState('');
   const [showRca, setShowRca] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showRunbook, setShowRunbook] = useState(incident.runbook !== null && incident.state !== 'resolved' && incident.state !== 'closed');
   const [rca, setRca] = useState<RcaDraft>(() => rcaDraftOf(incident.rca, incident.rootCause));
   const active = incident.state !== 'resolved' && incident.state !== 'closed';
   const rcaInput = toRcaInput(rca);
@@ -324,6 +326,16 @@ export function IncidentCard({ locale, incident, canOperate, actions }: Incident
         </Button>
         <Button
           tone="quiet"
+          aria-expanded={showRunbook}
+          aria-controls={formId + '-runbook'}
+          onClick={() => {
+            setShowRunbook((v) => !v);
+          }}
+        >
+          {t('services.runbook.title')}
+        </Button>
+        <Button
+          tone="quiet"
           aria-expanded={showTimeline}
           aria-controls={formId + '-timeline'}
           onClick={() => {
@@ -520,6 +532,15 @@ export function IncidentCard({ locale, incident, canOperate, actions }: Incident
               ) : null}
             </div>
           ) : null}
+        </section>
+      ) : null}
+      {showRunbook ? (
+        <section
+          id={formId + '-runbook'}
+          aria-label={t('services.runbook.title')}
+          className="rounded-om-panel border border-om-border-strong bg-om-surface3 p-om-10"
+        >
+          <IncidentRunbook incident={incident} canOperate={canOperate} />
         </section>
       ) : null}
       {showTimeline ? (

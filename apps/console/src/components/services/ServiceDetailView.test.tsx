@@ -102,6 +102,7 @@ const incident = {
   links: [],
   rca: null,
   timeline: [],
+  runbook: null, suggestedRunbook: null, runbookRuns: [], recoveryEstimateMinutes: null, recoveryRemainingMinutes: null,
 };
 const state = { missing: false };
 

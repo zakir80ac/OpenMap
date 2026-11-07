@@ -1,6 +1,8 @@
-// REQ-INT-005 REQ-INT-007 — maps an incident to each vendor's payload, API route and auth header.
+// REQ-INT-005 REQ-INT-007 REQ-BSM-005 — maps an incident to each vendor's payload, API route and auth header, and a
+// runbook step's automation to the SOAR or automation vendor's request (ADR-048).
 // Routes are the vendors' fixed API paths, identical for every deployment; the host comes from the
 // integration's endpoint and the credential from OpenBao via the caller.
+import { RUNBOOKS } from '@openmap/constants';
 import type { IntegrationConfig } from '@openmap/contracts';
 import { jiraProblem, pagerDutyEvent, serviceNowIncident, splunkHecEvent, type IncidentView } from './payloads.js';
 
@@ -54,9 +56,60 @@ export function authHeaders(vendor: IntegrationConfig['vendor'], fields: Readonl
       // Events API v2 authenticates with the routing key inside the payload; the REST token is optional.
       if (token) headers['authorization'] = 'Token token=' + token;
       return headers;
+    case 'cortex_xsoar':
+      // XSOAR takes the API key as the raw Authorization value (ADR-048).
+      if (token) headers['authorization'] = token;
+      return headers;
     default:
       if (user && (password || token)) headers['authorization'] = 'Basic ' + Buffer.from(user + ':' + (password || token)).toString('base64');
       else if (token) headers['authorization'] = 'Bearer ' + token;
       return headers;
+  }
+}
+
+/** What a runbook step's automation is told about the incident it runs for. */
+export interface AutomationContext {
+  incidentId: string;
+  title: string;
+  severity: keyof typeof RUNBOOKS.xsoarSeverity;
+  rootCause: string | null;
+  services: string[];
+  step: { order: number; instruction: string };
+  runbookCode: string;
+}
+
+/**
+ * The request that runs `action` on the integration (ADR-048): an AWX job-template launch with the incident as extra
+ * vars, an XSOAR incident that runs the playbook, or for any other vendor a POST of the action and the incident to
+ * the configured endpoint.
+ */
+export function automationRequest(action: string, ctx: AutomationContext, config: IntegrationConfig): OutboundRequest {
+  const vars: Record<string, unknown> = {
+    [RUNBOOKS.extraVarsPrefix + 'incident_id']: ctx.incidentId,
+    [RUNBOOKS.extraVarsPrefix + 'incident_title']: ctx.title,
+    [RUNBOOKS.extraVarsPrefix + 'severity']: ctx.severity,
+    [RUNBOOKS.extraVarsPrefix + 'root_cause']: ctx.rootCause,
+    [RUNBOOKS.extraVarsPrefix + 'services']: ctx.services,
+    [RUNBOOKS.extraVarsPrefix + 'runbook']: ctx.runbookCode,
+    [RUNBOOKS.extraVarsPrefix + 'step']: ctx.step.order,
+  };
+  switch (config.vendor) {
+    case 'ansible_awx':
+      return { path: RUNBOOKS.awxLaunchPath.replace(RUNBOOKS.actionToken, encodeURIComponent(action)), method: 'POST', body: { extra_vars: vars } };
+    case 'cortex_xsoar':
+      return {
+        path: RUNBOOKS.xsoarIncidentPath,
+        method: 'POST',
+        body: {
+          name: ctx.title,
+          severity: RUNBOOKS.xsoarSeverity[ctx.severity],
+          details: ctx.step.instruction,
+          playbookId: action,
+          createInvestigation: true,
+          CustomFields: vars,
+        },
+      };
+    default:
+      return { path: '', method: 'POST', body: { action, incident: ctx, step: ctx.step } };
   }
 }

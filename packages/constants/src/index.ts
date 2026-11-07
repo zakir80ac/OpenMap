@@ -375,6 +375,22 @@ export const ITSM = {
   jiraPriorityNames: { 1: 'Highest', 2: 'High', 3: 'Medium' } as const,
 } as const;
 
+/**
+ * REQ-BSM-005 (ADR-048) — runbook automation. The vendors' fixed API routes (identical for every deployment; the host
+ * comes from the integration's endpoint): Ansible AWX launches a job template, Cortex XSOAR creates an incident that
+ * runs the named playbook. XSOAR's incident severity scale (0 unknown, 0.5 informational, 1 low … 4 critical) keyed
+ * by OpenMap's incident severity. The extra-vars prefix keeps OpenMap's variables apart from a template's own.
+ */
+export const RUNBOOKS = {
+  awxLaunchPath: 'api/v2/job_templates/{action}/launch/',
+  xsoarIncidentPath: 'incident',
+  actionToken: '{action}',
+  xsoarSeverity: { informational: 0.5, low: 1, medium: 2, high: 3, critical: 4 } as const,
+  extraVarsPrefix: 'openmap_',
+  maxSteps: 50,
+  maxNoteLength: 2_000,
+} as const;
+
 /** Assistant limits: schema grounding is truncated to keep prompts inside small local models. */
 /** Electrical unit conversions used by DCIM views (REQ-DCIM-001). */
 export const POWER = {
@@ -1429,8 +1445,12 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.19.0 (REQ-BSM-004, ADR-047): `ImpactScenario.origin`, `ImpactValidation`, `ImpactAccuracy`, `RelationshipSuggestion`,
    * queries `impactAccuracy`, `relationshipSuggestions`, mutations `validateImpactPredictions`, `validateImpactPrediction`,
    * `acceptRelationshipSuggestion`, `dismissRelationshipSuggestion`.
+   * 1.20.0 (REQ-BSM-005, ADR-048): `Runbook`, `RunbookStep`, `RunbookAutomation`, `RunbookStepRun`, the runbook inputs,
+   * `ScenarioInput.runbookId`, `ImpactScenario.runbook`, `Incident.runbook`/`suggestedRunbook`/`runbookRuns`/
+   * `recoveryEstimateMinutes`/`recoveryRemainingMinutes`, queries `runbooks`, `runbook`, mutations `upsertRunbook`,
+   * `deleteRunbook`, `setScenarioRunbook`, `setIncidentRunbook`, `runRunbookStep`.
    */
-  graphql: '1.19.0',
+  graphql: '1.20.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

@@ -25,5 +25,6 @@ import { ImpactService } from './impact.service.js';
     ImpactValidationFieldsResolver,
     RelationshipSuggestionFieldsResolver,
   ],
+  exports: [ImpactService],
 })
 export class ImpactModule {}

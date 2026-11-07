@@ -4,7 +4,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { impactScenarioSchema, impactSimulationSchema, type ImpactScenario, type ImpactSimulation, type ScenarioOrigin } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
-import { isoOf, toIso } from '../common/time.js';
+import { isoDateOf, isoOf, toIso } from '../common/time.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { ScenarioInput } from './impact.schemas.js';
 
@@ -18,7 +18,8 @@ export interface ImpactRepository {
   saveSimulation(tx: Prisma.TransactionClient, simulation: ImpactSimulation): Promise<ImpactSimulation>;
 }
 
-type ScenarioRow = Awaited<ReturnType<PrismaClient['impactScenario']['findUniqueOrThrow']>>;
+const WITH_RUNBOOK = { runbook: true } as const;
+type ScenarioRow = Prisma.ImpactScenarioGetPayload<{ include: typeof WITH_RUNBOOK }>;
 type SimulationRow = Awaited<ReturnType<PrismaClient['impactSimulation']['findUniqueOrThrow']>>;
 
 function toScenario(row: ScenarioRow): ImpactScenario {
@@ -33,7 +34,10 @@ function toScenario(row: ScenarioRow): ImpactScenario {
     createdBy: row.createdBy,
     createdAt: isoOf(row.createdAt),
     changeRef: row.changeRefSource !== null && row.changeRefId !== null ? { source: row.changeRefSource, id: row.changeRefId } : null,
-    runbook: row.runbook,
+    runbook:
+      row.runbook === null
+        ? null
+        : { code: row.runbook.code, title: row.runbook.title, ownerTeam: row.runbook.ownerTeam, steps: row.runbook.steps, lastReviewedAt: row.runbook.lastReviewedAt === null ? null : isoDateOf(row.runbook.lastReviewedAt) },
   });
 }
 
@@ -62,12 +66,12 @@ export class PrismaImpactRepository implements ImpactRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async scenarios(tenantId: string): Promise<ImpactScenario[]> {
-    const rows = await this.prisma.client.impactScenario.findMany({ where: { tenantId, origin: 'user' }, orderBy: { createdAt: 'desc' } });
+    const rows = await this.prisma.client.impactScenario.findMany({ where: { tenantId, origin: 'user' }, orderBy: { createdAt: 'desc' }, include: WITH_RUNBOOK });
     return rows.map(toScenario);
   }
 
   async scenario(tenantId: string, id: string): Promise<ImpactScenario | null> {
-    const row = await this.prisma.client.impactScenario.findFirst({ where: { id, tenantId } });
+    const row = await this.prisma.client.impactScenario.findFirst({ where: { id, tenantId }, include: WITH_RUNBOOK });
     return row ? toScenario(row) : null;
   }
 
@@ -83,8 +87,10 @@ export class PrismaImpactRepository implements ImpactRepository {
         honourRedundancy: input.honourRedundancy ?? true,
         includeSharedServices: input.includeSharedServices ?? true,
         evaluatedAt: input.at ? new Date(input.at) : null,
+        runbookId: input.runbookId ?? null,
         createdBy,
       },
+      include: WITH_RUNBOOK,
     });
     return toScenario(row);
   }

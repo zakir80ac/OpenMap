@@ -1,6 +1,7 @@
 // T-065 REQ-UI-013 REQ-BSM-003 REQ-AI-004 — ImpactView: explorer → condition → run (saveScenario, runSimulation) →
 // results and assistant, plus saved scenarios, over stubbed GraphQL in en and ar. T-468 REQ-BSM-004: the prediction
-// accuracy panel shows the mean, the latest validation with its missed service, and accepts a suggestion.
+// accuracy panel shows the mean, the latest validation with its missed service, and accepts a suggestion. T-474
+// REQ-BSM-005: the runbook editor saves a runbook with an automated and a manual step, and a saved scenario takes it.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
@@ -32,6 +33,7 @@ const app = ci('app-1', 'applications', 'application', 'app-ledger-02');
 const svc = ci('svc-1', 'applications', 'business_service', 'Online banking');
 
 const calls: Array<{ op: string; variables: Record<string, unknown> | undefined }> = [];
+const savedRunbooks: Array<Record<string, unknown>> = [];
 
 const comp = ci('cmp-1', 'applications', 'application_component', 'ledger-api');
 const cards = ci('svc-2', 'applications', 'business_service', 'Cards');
@@ -61,7 +63,7 @@ const simulation = {
   id: 'sim-1',
   ranAt: '2026-10-22T09:30:00.000Z',
   durationMs: 212,
-  scenario: { id: 'sc-1', name: 'Failed · pg-core-01', kind: 'failed', options: {}, createdBy: 'syed', createdAt: '2026-10-22T09:29:00.000Z', failedCis: [pg] },
+  scenario: { id: 'sc-1', name: 'Failed · pg-core-01', kind: 'failed', options: {}, createdBy: 'syed', createdAt: '2026-10-22T09:29:00.000Z', failedCis: [pg], runbook: null },
   failedCis: [pg],
   affectedApplications: [app],
   services: [
@@ -102,6 +104,18 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
       return { data: { acceptRelationshipSuggestion: { ...suggestion, state: 'accepted' } } };
     case 'ValidateImpactPredictions':
       return { data: { validateImpactPredictions: accuracy } };
+    case 'Runbooks':
+      return { data: { runbooks: savedRunbooks } };
+    case 'Integrations':
+      return { data: { integrations: [{ id: 'int-awx', category: 'automation', vendor: 'ansible_awx', name: 'AWX', enabled: true, direction: 'outbound', health: 'healthy', lastSuccessAt: null, lastError: null, deliveredLastHour: 0, failedLastHour: 0 }, { id: 'int-sn', category: 'itsm', vendor: 'servicenow', name: 'ServiceNow', enabled: true, direction: 'outbound', health: 'healthy', lastSuccessAt: null, lastError: null, deliveredLastHour: 0, failedLastHour: 0 }] } };
+    case 'UpsertRunbook': {
+      const input = body.variables?.['input'] as { code: string; title: string; ownerTeam: string; steps: unknown[] };
+      const saved = { id: 'rb-1', ...input, lastReviewedAt: null, estimatedMinutes: 15, updatedAt: '2026-11-08T00:00:00.000Z', steps: [] };
+      savedRunbooks.push(saved);
+      return { data: { upsertRunbook: saved } };
+    }
+    case 'SetScenarioRunbook':
+      return { data: { setScenarioRunbook: { id: 'sc-1' } } };
     case 'AskAssistant':
       return { data: { askAssistant: { text: 'Promote the replica first.', cypher: 'MATCH (s:BusinessService) RETURN s', rows: [], cis: [svc] } } };
     default:
@@ -111,6 +125,7 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
 
 beforeEach(() => {
   calls.length = 0;
+  savedRunbooks.length = 0;
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
@@ -209,6 +224,59 @@ describe.each(LOCALES)('ImpactView in %s', (locale) => {
     });
     await waitFor(() => {
       expect(within(panel).getByText(translate(locale, 'impact.suggestions.empty'))).toBeTruthy();
+    });
+  });
+
+  it('T-474 writes a runbook with an automated step and attaches it to a saved scenario', async () => {
+    render(
+      <Providers locale={locale}>
+        <ImpactView locale={locale} />
+      </Providers>,
+    );
+    const panel = await screen.findByRole('region', { name: translate(locale, 'impact.runbooks.title') });
+    await within(panel).findByText(translate(locale, 'impact.runbooks.empty'));
+    fireEvent.click(within(panel).getByRole('button', { name: translate(locale, 'impact.runbooks.new') }));
+    const form = within(panel).getByRole('form', { name: translate(locale, 'impact.runbooks.editor') });
+    const type = (label: string, value: string, nth = 0): void => {
+      const field = within(form).getAllByLabelText(label)[nth];
+      if (field === undefined) throw new Error('no field ' + label);
+      fireEvent.change(field, { target: { value } });
+    };
+    type(translate(locale, 'impact.runbooks.code'), 'RB-DB-01');
+    type(translate(locale, 'impact.runbooks.name'), 'Database failover');
+    type(translate(locale, 'impact.runbooks.owner'), 'DBA');
+    type(translate(locale, 'impact.runbooks.step', { order: new Intl.NumberFormat(locale).format(1) }), 'Fail over the database');
+    type(translate(locale, 'impact.runbooks.stepMinutes'), '10');
+    // Only SOAR and automation integrations are offered.
+    const integration = within(form).getByLabelText(translate(locale, 'impact.runbooks.integration'));
+    expect(within(integration).queryByRole('option', { name: 'ServiceNow' })).toBeNull();
+    await within(integration).findByRole('option', { name: 'AWX' });
+    fireEvent.change(integration, { target: { value: 'int-awx' } });
+    type(translate(locale, 'impact.runbooks.action'), '42');
+    fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'impact.runbooks.addStep') }));
+    type(translate(locale, 'impact.runbooks.step', { order: new Intl.NumberFormat(locale).format(2) }), 'Confirm reconnection');
+    type(translate(locale, 'impact.runbooks.stepMinutes'), '5', 1);
+    fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'impact.runbooks.save') }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.op === 'UpsertRunbook')?.variables).toEqual({
+        id: null,
+        input: {
+          code: 'RB-DB-01',
+          title: 'Database failover',
+          ownerTeam: 'DBA',
+          lastReviewedAt: null,
+          steps: [
+            { order: 1, instruction: 'Fail over the database', estimatedMinutes: 10, automation: { integrationId: 'int-awx', action: '42' } },
+            { order: 2, instruction: 'Confirm reconnection', estimatedMinutes: 5, automation: null },
+          ],
+        },
+      });
+    });
+    const picker = await screen.findByLabelText(translate(locale, 'impact.runbooks.forScenario', { name: 'Failed · pg-core-01' }));
+    await within(picker).findByRole('option', { name: 'RB-DB-01' });
+    fireEvent.change(picker, { target: { value: 'rb-1' } });
+    await waitFor(() => {
+      expect(calls.find((c) => c.op === 'SetScenarioRunbook')?.variables).toEqual({ scenarioId: 'sc-1', runbookId: 'rb-1' });
     });
   });
 

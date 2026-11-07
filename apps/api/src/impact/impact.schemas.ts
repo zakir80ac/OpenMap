@@ -10,5 +10,7 @@ export const scenarioInputSchema = z.object({
   honourRedundancy: z.boolean().nullish(),
   includeSharedServices: z.boolean().nullish(),
   at: z.iso.datetime({ offset: true }).nullish(),
+  /** REQ-BSM-005 (ADR-048): the runbook to follow if the scenario happens for real. */
+  runbookId: z.uuid().nullish(),
 });
 export type ScenarioInput = z.infer<typeof scenarioInputSchema>;

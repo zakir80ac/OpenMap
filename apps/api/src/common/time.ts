@@ -28,3 +28,10 @@ export function relationshipValidAt(asOf: string | null): Prisma.RelationshipWhe
   const at = new Date(asOf);
   return { validFrom: { lte: at }, OR: [{ validTo: null }, { validTo: { gt: at } }] };
 }
+
+const ISO_DATE = 'YYYY-MM-DD';
+
+/** The calendar date (YYYY-MM-DD, UTC) of a Postgres DATE column or an instant. */
+export function isoDateOf(value: Date): string {
+  return value.toISOString().slice(0, ISO_DATE.length);
+}
