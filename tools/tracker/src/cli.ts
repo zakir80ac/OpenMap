@@ -1,10 +1,11 @@
-// REQ-CORE-007 — tracker CLI (CLAUDE.md §3): init, add, set, status, next, report, verify, session.
+// REQ-CORE-007 — tracker CLI (CLAUDE.md §3): init, add, set, status, next, report, verify, session, decision, contract.
 import { writeFileSync, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PRIORITIES, REQ_STATUSES, REPO_PATHS, WORKSTREAMS, GUARD_HEADER_LINES, type ReqStatus, type Workstream } from '@openmap/constants';
 import { readWorkbook, writeWorkbook, workbookExists } from './workbook.js';
 import { loadSeeds, materialise, nextId, seedComponents, seedContracts, seedDecisions, seedRisks } from './seed.js';
 import { today, type Requirement, type TrackerData } from './model.js';
+import { adrFile, contractRow, decisionRow, readAdrHeader, upsertContract, upsertDecision } from './records.js';
 
 const repoRoot = resolve(process.cwd(), '..', '..');
 const trackerPath = join(repoRoot, REPO_PATHS.tracker);
@@ -40,6 +41,15 @@ function str(flags: Flags, key: string): string | undefined {
 function fail(message: string): never {
   console.error('tracker: ' + message);
   process.exit(1);
+}
+
+/** Runs a step whose error message is meant for the operator, and exits with it. */
+function orFail<T>(step: () => T): T {
+  try {
+    return step();
+  } catch (err) {
+    return fail(err instanceof Error ? err.message : String(err));
+  }
 }
 
 async function load(): Promise<TrackerData> {
@@ -301,6 +311,34 @@ async function cmdSession(flags: Flags): Promise<void> {
   console.log('tracker: session recorded');
 }
 
+/** `tracker decision ADR-045 [--title] [--status] [--date] [--link]`: records an ADR in Decisions from its header. */
+async function cmdDecision(positional: string[], flags: Flags): Promise<void> {
+  const adr = positional[0];
+  if (!adr) fail('usage: tracker decision ADR-xxx [--title ...] [--status Accepted] [--date YYYY-MM-DD] [--link docs/adr/...]');
+  const data = await load();
+  const existing = data.decisions.find((d) => d.adr === adr);
+  const link = str(flags, 'link') ?? existing?.link ?? adrFile(join(repoRoot, REPO_PATHS.adrDir), REPO_PATHS.adrDir, adr);
+  if (link === undefined) fail('no ' + adr + '-*.md in ' + REPO_PATHS.adrDir + '; pass --link');
+  const fromFile = readAdrHeader(repoRoot, link, adr);
+  const row = orFail(() => decisionRow({ adr, title: str(flags, 'title'), status: str(flags, 'status'), date: str(flags, 'date'), link }, fromFile, existing, today()));
+  data.decisions = upsertDecision(data.decisions, row);
+  await writeWorkbook(trackerPath, data);
+  console.log('tracker: ' + (existing ? 'updated ' : 'recorded ') + row.adr + ' [' + row.status + ' ' + row.date + '] ' + row.title);
+}
+
+/** `tracker contract <name> --version x.y.z [--adr ADR-xxx] [--file path] [--frozen YYYY-MM-DD]`: records a contract version. */
+async function cmdContract(positional: string[], flags: Flags): Promise<void> {
+  const name = positional[0];
+  if (!name) fail('usage: tracker contract <name> --version x.y.z [--adr ADR-xxx] [--file path] [--frozen YYYY-MM-DD]');
+  const data = await load();
+  const existing = data.contracts.find((c) => c.name === name);
+  if (existing === undefined && str(flags, 'file') === undefined) fail('new contract ' + name + ' needs --file');
+  const row = orFail(() => contractRow({ name, version: str(flags, 'version'), file: str(flags, 'file'), adr: str(flags, 'adr'), frozenOn: str(flags, 'frozen') }, existing));
+  data.contracts = upsertContract(data.contracts, row);
+  await writeWorkbook(trackerPath, data);
+  console.log('tracker: contract ' + row.name + ' ' + (existing ? existing.version + ' → ' : '') + row.version + (row.lastAdr ? ' (' + row.lastAdr + ')' : ''));
+}
+
 async function main(): Promise<void> {
   const { positional, flags } = parseArgs(process.argv.slice(2));
   const [command, ...rest] = positional;
@@ -323,8 +361,12 @@ async function main(): Promise<void> {
       return cmdVerify();
     case 'session':
       return cmdSession(flags);
+    case 'decision':
+      return cmdDecision(rest, flags);
+    case 'contract':
+      return cmdContract(rest, flags);
     default:
-      fail('usage: tracker <init|add|set|status|next|list|report|verify|session>');
+      fail('usage: tracker <init|add|set|status|next|list|report|verify|session|decision|contract>');
   }
 }
 
