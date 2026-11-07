@@ -236,11 +236,9 @@ export async function persist(
       tx,
       out.relationshipsCreated.filter((r) => r.type === 'covered_by').map((r) => r.fromCiId),
     );
+    // One array parameter, not an IN list: a full-scale result re-observes more links than Postgres allows bind variables.
     if (out.relationshipsSeen.length)
-      await tx.relationship.updateMany({
-        where: { id: { in: out.relationshipsSeen } },
-        data: { observedAt: new Date() },
-      });
+      await tx.$executeRaw`UPDATE relationships SET "observedAt" = ${new Date()}, "updatedAt" = ${new Date()} WHERE id = ANY(${out.relationshipsSeen}::uuid[])`;
     if (out.conflicts.length) {
       await tx.reconciliationConflict.createMany({
         data: out.conflicts.map((c) => ({

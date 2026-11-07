@@ -179,7 +179,11 @@ export async function loadLookup(prisma: PrismaClient, result: CollectorResult):
   const index = new MapIdentityIndex();
   for (const ci of cis.values()) index.add(ci, ci.id, storedRefKeys.get(ci.id) ?? null);
   const ids = [...cis.keys()];
-  const relRows = ids.length ? await prisma.relationship.findMany({ where: { tenantId: result.tenantId, validTo: null, fromCiId: { in: ids } } }) : [];
+  // One array parameter: a full-scale result names more CIs than Postgres allows bind variables (32,767) in an IN list.
+  const relRows = ids.length
+    ? await prisma.$queryRaw<RelRow[]>(Prisma.sql`
+        SELECT * FROM relationships WHERE "tenantId" = ${result.tenantId}::uuid AND "validTo" IS NULL AND "fromCiId" = ANY(${ids}::uuid[])`)
+    : [];
   const rels = new Map<string, Relationship>();
   for (const row of relRows) {
     const r = rowToRelationship(row);
