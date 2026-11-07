@@ -410,28 +410,32 @@ export async function dispatchOnce(
     const ci = ciFromEvent(e);
     if (ci) byTenant.set(e.tenantid, [...(byTenant.get(e.tenantid) ?? []), ci]);
   }
-  await attempt('memgraph', () =>
-    deliverMemgraph(
-      sinks.graph,
-      events.filter((_, i) => rows[i]!.pending.includes('memgraph')),
+  // The targets are independent stores, so a batch reaches them concurrently; each keeps its own order and its own
+  // success or failure (REQ-CORE-013 scale-1 replay: one after another, dispatch was half of the run).
+  await Promise.all([
+    attempt('memgraph', () =>
+      deliverMemgraph(
+        sinks.graph,
+        events.filter((_, i) => rows[i]!.pending.includes('memgraph')),
+      ),
     ),
-  );
-  await attempt('clickhouse', () =>
-    deliverClickHouse(
-      sinks.clickhouse,
-      database,
-      events.filter((_, i) => rows[i]!.pending.includes('clickhouse')),
-      sequences,
+    attempt('clickhouse', () =>
+      deliverClickHouse(
+        sinks.clickhouse,
+        database,
+        events.filter((_, i) => rows[i]!.pending.includes('clickhouse')),
+        sequences,
+      ),
     ),
-  );
-  await attempt('meilisearch', async () => {
-    for (const [tenantId, cis] of byTenant) await sinks.search.indexCis(tenantId, cis);
-  });
-  await attempt('bsm', () =>
-    sinks.stream.publishMany(
-      events.filter((_, i) => rows[i]!.pending.includes('bsm') || rows[i]!.pending.includes('websocket')),
+    attempt('meilisearch', async () => {
+      for (const [tenantId, cis] of byTenant) await sinks.search.indexCis(tenantId, cis);
+    }),
+    attempt('bsm', () =>
+      sinks.stream.publishMany(
+        events.filter((_, i) => rows[i]!.pending.includes('bsm') || rows[i]!.pending.includes('websocket')),
+      ),
     ),
-  );
+  ]);
   if (succeeded.has('bsm')) succeeded.add('websocket');
   const allTargets: OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
   if (failures.length === 0 && allTargets.every((t) => succeeded.has(t))) {
