@@ -1419,7 +1419,7 @@ export const GUARD_ALLOWED_NUMERIC_LITERALS = [0, 1, -1] as const;
 export const GUARD_HEADER_LINES = 10;
 
 /** Contract names frozen in docs/CONTRACTS.md (CLAUDE.md §2 row 7). */
-export const CONTRACT_NAMES = ['ci', 'collector', 'graphql', 'event'] as const;
+export const CONTRACT_NAMES = ['ci', 'collector', 'graphql', 'event', 'rest'] as const;
 export type ContractName = (typeof CONTRACT_NAMES)[number];
 
 /** Current contract versions. Bumping one requires an ADR and a tracker row. */
@@ -1502,4 +1502,6 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.10.0 (REQ-CMDB-014, ADR-037): `openmap.component.changed`.
    */
   event: '0.10.0',
+  /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document. */
+  rest: '1.0.0',
 };

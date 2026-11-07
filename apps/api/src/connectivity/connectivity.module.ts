@@ -9,5 +9,6 @@ import { ConnectivityService } from './connectivity.service.js';
 @Module({
   imports: [CiModule, ServicesModule],
   providers: [ConnectivityService, ConnectivityResolver, ReadinessFindingFieldsResolver],
+  exports: [ConnectivityService],
 })
 export class ConnectivityModule {}

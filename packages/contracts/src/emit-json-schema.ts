@@ -10,6 +10,7 @@ import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } fr
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
 import { dashboardInputSchema, dashboardSchema } from './dashboard.js';
+import { openApiDocument } from './rest.js';
 import { impactScenarioSchema, impactSimulationSchema, impactValidationSchema, relationshipSuggestionSchema } from './impact.js';
 import { integrationConfigSchema, integrationDeliverySchema, securityAlertSchema } from './integration.js';
 
@@ -63,4 +64,8 @@ const identity = {
   refDerived: IDENTITY_REF_DERIVED,
 };
 writeFileSync(join(outDir, 'ci-identity.json'), JSON.stringify(identity, null, 2) + '\n');
-console.log('contracts: wrote ' + String(entries.length) + ' JSON schemas and ci-identity.json to ' + outDir);
+// REQ-CORE-019 (ADR-049): the REST API's OpenAPI 3.1 document, from the same route table the API validates against.
+const openApiDir = join(dirname(outDir), 'openapi');
+mkdirSync(openApiDir, { recursive: true });
+writeFileSync(join(openApiDir, 'openapi.json'), JSON.stringify(openApiDocument(CONTRACT_VERSIONS.rest), null, 2) + '\n');
+console.log('contracts: wrote ' + String(entries.length) + ' JSON schemas, ci-identity.json and openapi/openapi.json to ' + dirname(outDir));

@@ -1,5 +1,7 @@
 // T-090 REQ-SEC-005 REQ-UI-003 — Settings in en and ar: the session card shows the signed-in identity, the audit
 // log lists entries newest first with action filter and paging, analysts (no auditor role) see no log at all.
+// T-485 REQ-CORE-019: the API card lists the REST routes from the live OpenAPI document with the addresses.
+import { CONTRACT_VERSIONS, openApiDocument, REST_ROUTES } from '@openmap/contracts';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -47,7 +49,8 @@ beforeEach(() => {
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
-    vi.fn((_url: string, init?: RequestInit) => {
+    vi.fn((url: string, init?: RequestInit) => {
+      if (url.endsWith('/api/v1/openapi.json')) return Promise.resolve(new Response(JSON.stringify(openApiDocument(CONTRACT_VERSIONS.rest)), { status: 200 }));
       const raw = typeof init?.body === 'string' ? init.body : '{}';
       return Promise.resolve(new Response(JSON.stringify(respond(JSON.parse(raw) as { query: string; variables?: Record<string, unknown> })), { status: 200, headers: { 'content-type': 'application/json' } }));
     }),
@@ -73,7 +76,13 @@ describe.each(LOCALES)('SettingsView (%s)', (locale) => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(translate(locale, 'settings.title'));
     expect(screen.getByText('Aisha Auditor')).toBeTruthy();
     expect(screen.getByText('default')).toBeTruthy();
-    const table = await screen.findByRole('table');
+    // The audit log is the unnamed table; the API card's routes table carries a name.
+    const auditTable = (): HTMLElement => {
+      const t = screen.getAllByRole('table').find((el) => el.getAttribute('aria-label') === null);
+      if (t === undefined) throw new Error('no audit table');
+      return t;
+    };
+    const table = await waitFor(auditTable);
     const rows = within(table).getAllByRole('row');
     expect(rows).toHaveLength(3);
     expect(within(rows[1] ?? document.body).getByText('labelCi')).toBeTruthy();
@@ -90,8 +99,21 @@ describe.each(LOCALES)('SettingsView (%s)', (locale) => {
       expect(state.calls.some((c) => c.variables['action'] === 'runDiscovery')).toBe(true);
     });
     await waitFor(() => {
-      expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
+      expect(within(auditTable()).getAllByRole('row')).toHaveLength(2);
     });
+  });
+
+  it('T-485 lists the REST routes from the live OpenAPI document with the addresses', async () => {
+    mount(locale);
+    const card = screen.getByRole('region', { name: translate(locale, 'settings.api.title') });
+    expect(within(card).getByText('http://api.test/api/v1')).toBeTruthy();
+    expect(within(card).getByText('http://api.test/api/v1/openapi.json')).toBeTruthy();
+    expect(within(card).getByText('http://api.test/graphql')).toBeTruthy();
+    const routes = await within(card).findByRole('table', { name: translate(locale, 'settings.api.routes', { version: CONTRACT_VERSIONS.rest }) });
+    // One row per route of the table, plus the header.
+    expect(within(routes).getAllByRole('row')).toHaveLength(Object.keys(REST_ROUTES).length + 1);
+    expect(within(routes).getByText(translate(locale, 'settings.api.op.getCiImpact'))).toBeTruthy();
+    expect(within(routes).getAllByText(translate(locale, 'settings.api.write'))).toHaveLength(Object.values(REST_ROUTES).filter((r) => r.write).length);
   });
 
   it('hides the audit log from roles below auditor', () => {

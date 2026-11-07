@@ -27,6 +27,9 @@ export const IMPACT_VALIDATIONS_METRIC = 'openmap_impact_validations_total';
 export const IMPACT_ACCURACY_METRIC = 'openmap_impact_prediction_accuracy';
 /** REQ-BSM-005 (ADR-048): runbook steps run on incidents, by outcome (done, triggered, failed). */
 export const RUNBOOK_STEPS_METRIC = 'openmap_runbook_steps_total';
+/** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
+export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
+export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -64,6 +67,8 @@ export class MetricsService {
   readonly impactValidations: Counter<'outcome'>;
   readonly impactAccuracy: Histogram;
   readonly runbookSteps: Counter<'outcome'>;
+  readonly restRequests: Counter<'route' | 'status'>;
+  readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
   readonly exportRows: Counter<'format'>;
 
@@ -139,6 +144,8 @@ export class MetricsService {
       buckets: [...IMPACT.accuracyBuckets],
       registers: [this.registry],
     });
+    this.restRequests = new Counter({ name: REST_REQUESTS_METRIC, help: 'REST v1 calls, by route id and HTTP status', labelNames: ['route', 'status'], registers: [this.registry] });
+    this.restDuration = new Histogram({ name: REST_DURATION_METRIC, help: 'REST v1 call duration in seconds, by route id', labelNames: ['route'], buckets: durationBuckets(), registers: [this.registry] });
     this.runbookSteps = new Counter({ name: RUNBOOK_STEPS_METRIC, help: 'Runbook steps run on incidents, by outcome (done, triggered, failed)', labelNames: ['outcome'], registers: [this.registry] });
   }
 

@@ -12,6 +12,7 @@ import { useAuth, useCan } from '@/lib/auth';
 import { auditLogInfiniteQuery, type AuditEntry } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
 import { CustomFieldsCard } from './CustomFieldsCard';
+import { ApiCard } from './ApiCard';
 import { TenantSettingsCard } from './TenantSettingsCard';
 
 /** Actions a mutation can carry, offered as the filter list; the server owns the truth, this is the display order. */
@@ -71,6 +72,8 @@ export function SettingsView(): ReactNode {
       <TenantSettingsCard />
 
       <CustomFieldsCard />
+
+      <ApiCard />
 
       {canAudit ? (
         <Card padding="24" className="flex flex-col gap-om-16">
