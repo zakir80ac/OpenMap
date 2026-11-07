@@ -6,7 +6,6 @@ package haproxy
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/csv"
 	"io"
 	"net"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 )
 
 const (
@@ -27,6 +27,7 @@ const (
 	httpTimeout  = 30 * time.Second
 	optionPath   = "statsPath" // default from HAProxy's conventional `stats uri /stats`
 	optionVerify = "verifyTls"
+	optionCA     = "caCertPem"
 	defaultPath  = "/stats"
 	csvSuffix    = ";csv"
 	credUser     = "username"
@@ -103,8 +104,9 @@ func Parse(text string) ([]Row, error) {
 	return rows, nil
 }
 
-// Fetch downloads the CSV from the stats endpoint.
-func Fetch(ctx context.Context, target string, path string, user, password string, verifyTLS bool) ([]byte, string, error) {
+// Fetch downloads the CSV from the stats endpoint. A non-empty caPem pins the chain to that private CA bundle
+// (option caCertPem), as the REST collectors do through restjson.TransportFor.
+func Fetch(ctx context.Context, target string, path string, user, password string, verifyTLS bool, caPem string) ([]byte, string, error) {
 	base := target
 	if !strings.Contains(base, "://") {
 		base = "http://" + base
@@ -117,7 +119,12 @@ func Fetch(ctx context.Context, target string, path string, user, password strin
 	if user != "" {
 		req.SetBasicAuth(user, password)
 	}
-	client := &http.Client{Timeout: httpTimeout, Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}}} //nolint:gosec // stats pages commonly sit behind self-signed certificates; verifyTls=true enforces the chain.
+	// Stats pages commonly sit behind self-signed certificates; verifyTls=true or caCertPem enforce the chain.
+	transport, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, "", err
+	}
+	client := &http.Client{Timeout: httpTimeout, Transport: transport}
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, "", err
@@ -291,11 +298,12 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		path = defaultPath
 	}
 	verify, _ := options[optionVerify].(bool)
+	caPem, _ := options[optionCA].(string)
 	user, password := "", ""
 	if cred != nil && cred.Type == "password" {
 		user, password = cred.Fields[credUser], cred.Fields[credPassword]
 	}
-	body, server, err := Fetch(ctx, target.Value, path, user, password, verify)
+	body, server, err := Fetch(ctx, target.Value, path, user, password, verify, caPem)
 	if err != nil {
 		if _, ok := err.(*collector.TargetError); ok {
 			return collector.Observation{}, err

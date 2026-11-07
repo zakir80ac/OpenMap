@@ -19,6 +19,7 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 	httpTimeout  = 20 * time.Second
 	optionPort   = "port"
 	optionVerify = "verifyTls" // BMCs ship self-signed certificates; pinning is the job's choice.
+	optionCA     = "caCertPem" // private CA bundle that signed the BMC certificates; enforces the chain.
 	credUser     = "username"
 	credPassword = "password"
 	evidenceKind = "api_response"
@@ -61,6 +63,18 @@ func NewClient(host string, port int, user, pass string, verifyTLS bool) *Client
 	base := &url.URL{Scheme: "https", Host: net.JoinHostPort(host, strconv.Itoa(port))}
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // BMC certificates are self-signed by design; verifyTls=true enforces the chain.
 	return &Client{base: base, http: &http.Client{Timeout: httpTimeout, Transport: tr}, user: user, pass: pass}
+}
+
+// NewClientCA is NewClient with the job's private CA bundle (caCertPem): a non-empty bundle enforces the
+// BMC certificate chain against it (REQ-QA-005: BMCs signed by an enterprise CA).
+func NewClientCA(host string, port int, user, pass string, verifyTLS bool, caPem string) (*Client, error) {
+	tr, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, err
+	}
+	c := NewClient(host, port, user, pass, verifyTLS)
+	c.http.Transport = tr
+	return c, nil
 }
 
 // Get fetches a Redfish resource; `path` may be absolute (@odata.id) or relative to the service root.
@@ -188,6 +202,7 @@ type powerDoc struct {
 		PowerCapacityWatts float64 `json:"PowerCapacityWatts"`
 	} `json:"PowerControl"`
 	PowerSupplies []struct {
+		MemberID           string  `json:"MemberId"`
 		Name               string  `json:"Name"`
 		SerialNumber       string  `json:"SerialNumber"`
 		PowerCapacityWatts float64 `json:"PowerCapacityWatts"`
@@ -365,8 +380,10 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		if s.UUID != "" {
 			identity["systemUuid"] = strings.ToLower(s.UUID)
 		}
-		if s.HostName != "" {
-			identity["fqdn"] = s.HostName
+		// ComputerSystem.HostName is "the DNS host name, without any domain information" (DMTF schema): it is
+		// an fqdn identity only when the BMC reports a dotted name, otherwise it would never match the OS fqdn.
+		if strings.Contains(s.HostName, ".") {
+			identity["fqdn"] = strings.ToLower(s.HostName)
 		}
 		var macs []string
 		var ipv4 []string
@@ -389,7 +406,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		attrs := map[string]any{
 			"manufacturer": s.Manufacturer, "model": s.Model, "sku": s.SKU, "partNumber": s.PartNumber, "biosVersion": s.BiosVersion,
 			"powerState": s.PowerState, "health": healthOf(s.Status), "cpuCount": s.ProcessorSummary.Count, "cpuModel": s.ProcessorSummary.Model,
-			"memoryGb": s.MemorySummary.TotalSystemMemoryGiB, "bmcAddress": target.Value, "macAddresses": macs, "ipv4Addresses": ipv4, "redfishSystemId": s.ID,
+			"memoryGb": s.MemorySummary.TotalSystemMemoryGiB, "hostname": s.HostName, "bmcAddress": target.Value, "macAddresses": macs, "ipv4Addresses": ipv4, "redfishSystemId": s.ID,
 		}
 		for _, ch := range inv.Chassis {
 			if p, ok := inv.Power[ch.ID]; ok && len(p.PowerControl) > 0 {
@@ -458,7 +475,10 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if v, ok := options[optionVerify].(bool); ok {
 		verify = v
 	}
-	c := NewClient(target.Value, port, cred.Fields[credUser], cred.Fields[credPassword], verify)
+	c, err := NewClientCA(target.Value, port, cred.Fields[credUser], cred.Fields[credPassword], verify, restjson.StringOption(options, optionCA))
+	if err != nil {
+		return collector.Observation{}, err
+	}
 	inv, err := c.Walk(ctx)
 	if err != nil {
 		var ne net.Error

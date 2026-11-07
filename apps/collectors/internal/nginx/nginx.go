@@ -36,6 +36,8 @@ const (
 	credUser      = "username"
 	credPassword  = "password"
 	defaultVrf    = "default"
+	// frontendSuffix keeps a server zone's identity apart from the upstream it is named after.
+	frontendSuffix = "#frontend"
 
 	typeLB       = "load_balancer"
 	typeListener = "listening_service"
@@ -162,8 +164,9 @@ func WalkPlus(ctx context.Context, c *restjson.Client, apiPath string) (*Invento
 	return inv, nil
 }
 
-// FetchStub downloads stub_status over the same TLS policy.
-func FetchStub(ctx context.Context, c *restjson.Client, user, password, path string, verify bool) ([]byte, string, error) {
+// FetchStub downloads stub_status over the same TLS policy as the API client: verifyTls, and the job's
+// private CA bundle (caPem) when one is pinned.
+func FetchStub(ctx context.Context, c *restjson.Client, user, password, path string, verify bool, caPem string) ([]byte, string, error) {
 	rel, err := url.Parse(path)
 	if err != nil {
 		return nil, "", err
@@ -176,7 +179,11 @@ func FetchStub(ctx context.Context, c *restjson.Client, user, password, path str
 	if user != "" {
 		req.SetBasicAuth(user, password)
 	}
-	client := &http.Client{Timeout: stubTimeout, Transport: restjson.Transport(verify)}
+	transport, err := restjson.TransportFor(verify, caPem)
+	if err != nil {
+		return nil, "", err
+	}
+	client := &http.Client{Timeout: stubTimeout, Transport: transport}
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, "", restjson.Classify(u.Host, err)
@@ -242,7 +249,7 @@ func Emit(inv *Inventory, target contract.Target, serverHeader string, at time.T
 	zoneNames := sortedKeys(inv.Zones)
 	for _, name := range zoneNames {
 		z := inv.Zones[name]
-		identity := map[string]string{"hostRef": lbRef, "protocol": "http", "port": name}
+		identity := zoneIdentity(lbRef, name, inv.Upstreams)
 		vs := contract.CiRef{Type: typeListener, Identity: identity}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: identity, Name: name + " (server zone)", Attributes: map[string]any{"vendor": vendor, "role": "frontend", "serverZone": name, "protocol": "http", "processing": z.Processing, "requests": z.Requests, "discarded": z.Discarded, "bytesIn": z.Received, "bytesOut": z.Sent, "responses": z.Responses.Total, "service": "load-balanced-frontend", "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: lb, To: vs, Attributes: map[string]any{}, ObservedAt: at})
@@ -264,7 +271,7 @@ func Emit(inv *Inventory, target contract.Target, serverHeader string, at time.T
 		// otherwise a single-upstream instance ties every zone to that upstream.
 		for _, zone := range zoneNames {
 			if zone == name || len(inv.Upstreams) == 1 {
-				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relDependsOn, From: contract.CiRef{Type: typeListener, Identity: map[string]string{"hostRef": lbRef, "protocol": "http", "port": zone}}, To: pool, Attributes: map[string]any{"upstream": name}, ObservedAt: at})
+				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relDependsOn, From: contract.CiRef{Type: typeListener, Identity: zoneIdentity(lbRef, zone, inv.Upstreams)}, To: pool, Attributes: map[string]any{"upstream": name}, ObservedAt: at})
 			}
 		}
 		for _, p := range u.Peers {
@@ -288,6 +295,17 @@ func Emit(inv *Inventory, target contract.Target, serverHeader string, at time.T
 		}
 	}
 	return obs
+}
+
+// zoneIdentity keys a server zone's listener. A zone named after its upstream (the convention the
+// depends_on edge follows) would otherwise share the upstream pool's identity and depend on itself, so it
+// takes frontendSuffix, as the HAProxy collector does for a `listen` section's frontend.
+func zoneIdentity(lbRef, zone string, upstreams map[string]Upstream) map[string]string {
+	port := zone
+	if _, clash := upstreams[zone]; clash {
+		port += frontendSuffix
+	}
+	return map[string]string{"hostRef": lbRef, "protocol": "http", "port": port}
 }
 
 func sortedKeys[T any](m map[string]T) []string {
@@ -318,7 +336,8 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		user, password = cred.Fields[credUser], cred.Fields[credPassword]
 	}
 	verify := restjson.BoolOption(options, optionVerify)
-	opts := restjson.Options{VerifyTLS: verify, CAPem: restjson.StringOption(options, optionCA)}
+	caPem := restjson.StringOption(options, optionCA)
+	opts := restjson.Options{VerifyTLS: verify, CAPem: caPem}
 	base := target.Value
 	if !strings.Contains(base, "://") {
 		base = "http://" + base // stub_status and the Plus API are commonly served on the plain status port
@@ -339,7 +358,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		}
 		inv = &Inventory{Upstreams: map[string]Upstream{}, Zones: map[string]ServerZone{}}
 	}
-	body, server, err := FetchStub(ctx, c, user, password, statusPath, verify)
+	body, server, err := FetchStub(ctx, c, user, password, statusPath, verify, caPem)
 	if err == nil {
 		if stub, ok := ParseStubStatus(string(body)); ok {
 			inv.Stub = stub

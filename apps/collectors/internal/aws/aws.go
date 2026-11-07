@@ -19,18 +19,24 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 	"github.com/openmap/openmap/apps/collectors/internal/sigv4"
 )
 
 const (
-	collectorID     = "cloud_aws"
-	version         = "0.1.0"
-	provider        = "aws"
-	evidenceKind    = "api_response"
-	httpTimeout     = 60 * time.Second
-	optionRegions   = "regions"
-	optionSuffix    = "endpointSuffix" // amazonaws.com, amazonaws.com.cn, or an emulator host
-	optionVerify    = "verifyTls"
+	collectorID   = "cloud_aws"
+	version       = "0.1.0"
+	provider      = "aws"
+	evidenceKind  = "api_response"
+	httpTimeout   = 60 * time.Second
+	optionRegions = "regions"
+	optionSuffix  = "endpointSuffix" // amazonaws.com, amazonaws.com.cn, or an emulator host
+	optionVerify  = "verifyTls"
+	// optionEndpoint is one base URL for every service and region (a VPC-endpoint proxy, a sovereign or
+	// isolated partition fronted by a single gateway, a local emulator). Requests stay signed for the real
+	// service and region, which is how such gateways route.
+	optionEndpoint  = "endpointUrl"
+	optionCA        = "caCertPem"
 	optionInsecure  = "plainHttp"
 	defaultSuffix   = "amazonaws.com"
 	defaultRegion   = "us-east-1"
@@ -83,6 +89,11 @@ func DefaultEndpoint(suffix string, plain bool) Endpoint {
 	}
 }
 
+// FixedEndpoint sends every service and region to one base URL (optionEndpoint).
+func FixedEndpoint(base string) Endpoint {
+	return func(_, _ string) string { return base }
+}
+
 type Client struct {
 	creds    sigv4.Credentials
 	endpoint Endpoint
@@ -95,12 +106,22 @@ func NewClient(creds sigv4.Credentials, endpoint Endpoint, verifyTLS bool) *Clie
 	return &Client{creds: creds, endpoint: endpoint, http: &http.Client{Timeout: httpTimeout, Transport: tr}}
 }
 
+// NewClientCA is NewClient trusting the job's private CA bundle (caCertPem): a non-empty bundle enforces the
+// chain against it, so gateways and sovereign endpoints under a private CA verify instead of being skipped.
+func NewClientCA(creds sigv4.Credentials, endpoint Endpoint, verifyTLS bool, caPem string) (*Client, error) {
+	tr, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{creds: creds, endpoint: endpoint, http: &http.Client{Timeout: httpTimeout, Transport: tr}}, nil
+}
+
 func (c *Client) do(ctx context.Context, service, region, path string, query url.Values, out any) error {
 	base, err := url.Parse(c.endpoint(service, region))
 	if err != nil {
 		return err
 	}
-	base.Path = path
+	base.Path = strings.TrimSuffix(base.Path, "/") + path
 	base.RawQuery = query.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, base.String(), nil)
 	if err != nil {
@@ -333,28 +354,66 @@ func (c *Client) Walk(ctx context.Context, regions []string) (*Inventory, error)
 			return nil, err
 		}
 		r.Subnets = subnets.Items
-		var dbs struct {
-			Items []DBInstance `xml:"DescribeDBInstancesResult>DBInstances>DBInstance"`
+		// RDS, ELBv2 and EKS are optional (a credential may lack their rights); each follows its own page
+		// token (Marker, NextMarker, nextToken) so large accounts are read whole.
+		for marker := ""; ; {
+			var dbs struct {
+				Items  []DBInstance `xml:"DescribeDBInstancesResult>DBInstances>DBInstance"`
+				Marker string       `xml:"DescribeDBInstancesResult>Marker"`
+			}
+			extra := map[string]string{}
+			if marker != "" {
+				extra["Marker"] = marker
+			}
+			if err := c.do(ctx, "rds", region, "/", query("DescribeDBInstances", rdsVersion, extra), &dbs); err != nil {
+				break
+			}
+			r.Databases = append(r.Databases, dbs.Items...)
+			if dbs.Marker == "" {
+				break
+			}
+			marker = dbs.Marker
 		}
-		if err := c.do(ctx, "rds", region, "/", query("DescribeDBInstances", rdsVersion, nil), &dbs); err == nil {
-			r.Databases = dbs.Items
+		for marker := ""; ; {
+			var lbs struct {
+				Items      []LoadBalancer `xml:"DescribeLoadBalancersResult>LoadBalancers>member"`
+				NextMarker string         `xml:"DescribeLoadBalancersResult>NextMarker"`
+			}
+			extra := map[string]string{}
+			if marker != "" {
+				extra["Marker"] = marker
+			}
+			if err := c.do(ctx, "elasticloadbalancing", region, "/", query("DescribeLoadBalancers", elbVersion, extra), &lbs); err != nil {
+				break
+			}
+			r.LoadBalancers = append(r.LoadBalancers, lbs.Items...)
+			if lbs.NextMarker == "" {
+				break
+			}
+			marker = lbs.NextMarker
 		}
-		var lbs struct {
-			Items []LoadBalancer `xml:"DescribeLoadBalancersResult>LoadBalancers>member"`
-		}
-		if err := c.do(ctx, "elasticloadbalancing", region, "/", query("DescribeLoadBalancers", elbVersion, nil), &lbs); err == nil {
-			r.LoadBalancers = lbs.Items
-		}
-		var names struct {
-			Clusters []string `json:"clusters"`
-		}
-		if err := c.do(ctx, "eks", region, "/clusters", url.Values{}, &names); err == nil {
+		for token := ""; ; {
+			var names struct {
+				Clusters  []string `json:"clusters"`
+				NextToken string   `json:"nextToken"`
+			}
+			q := url.Values{}
+			if token != "" {
+				q.Set("nextToken", token)
+			}
+			if err := c.do(ctx, "eks", region, "/clusters", q, &names); err != nil {
+				break
+			}
 			for _, n := range names.Clusters {
 				var cl eksCluster
 				if err := c.do(ctx, "eks", region, "/clusters/"+n, url.Values{}, &cl); err == nil {
 					r.EKSClusters = append(r.EKSClusters, cl)
 				}
 			}
+			if names.NextToken == "" {
+				break
+			}
+			token = names.NextToken
 		}
 		inv.Regions = append(inv.Regions, r)
 	}
@@ -527,7 +586,15 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	}
 	plain, _ := options[optionInsecure].(bool)
 	verify, _ := options[optionVerify].(bool)
-	c := NewClient(sigv4.Credentials{AccessKeyID: cred.Fields[credAccessKey], SecretAccessKey: cred.Fields[credSecretKey], SessionToken: cred.Fields[credSession]}, DefaultEndpoint(suffix, plain), verify || suffix == defaultSuffix)
+	endpoint, verifyTLS := DefaultEndpoint(suffix, plain), verify || suffix == defaultSuffix
+	if base, _ := options[optionEndpoint].(string); base != "" {
+		endpoint, verifyTLS = FixedEndpoint(base), verify
+	}
+	caPem, _ := options[optionCA].(string)
+	c, err := NewClientCA(sigv4.Credentials{AccessKeyID: cred.Fields[credAccessKey], SecretAccessKey: cred.Fields[credSecretKey], SessionToken: cred.Fields[credSession]}, endpoint, verifyTLS, caPem)
+	if err != nil {
+		return collector.Observation{}, err
+	}
 	inv, err := c.Walk(ctx, regions)
 	if err != nil {
 		var ne net.Error

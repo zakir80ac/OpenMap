@@ -111,6 +111,8 @@ func parsePower(w *Walk) *PowerFacts {
 		p.Model = m
 		p.Manufacturer = w.scalarString(oidUpsIdentManufacturer)
 		p.Firmware = w.scalarString(oidUpsIdentSoftware)
+		// UPS-MIB carries no serial; a Liebert Unity card publishes the unit's in its agent identity (T-403).
+		p.Serial = w.scalarString(oidLgpAgentIdentSerial)
 		if v, ok := asInt(w.Scalars[oidUpsBatteryStatus]); ok {
 			p.BatteryStatus = batteryStatusName(v)
 		}

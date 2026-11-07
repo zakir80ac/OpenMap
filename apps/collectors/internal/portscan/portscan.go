@@ -208,6 +208,8 @@ func tlsName(state tls.ConnectionState) string {
 	return ""
 }
 
+func headRequest(host string) string { return "HEAD / HTTP/1.0\r\nHost: " + host + "\r\n\r\n" }
+
 // Probe connects to one port and gathers a banner or TLS facts. nil means closed or filtered.
 func Probe(ctx context.Context, host string, port int, connectTimeout, bannerTimeout time.Duration) *Port {
 	d := &net.Dialer{Timeout: connectTimeout}
@@ -224,7 +226,7 @@ func Probe(ctx context.Context, host string, port int, connectTimeout, bannerTim
 			p.TLS = true
 			p.TLSName = tlsName(tc.ConnectionState())
 			if httpPorts[port] || port == 443 || port == 8443 || port == 4443 || port == 7443 || port == 9440 || port == 8006 {
-				_, _ = tc.Write([]byte("HEAD / HTTP/1.0\r\nHost: " + host + "\r\n\r\n"))
+				_, _ = tc.Write([]byte(headRequest(host)))
 				p.Banner = readBanner(tc, bannerTimeout)
 			}
 		}
@@ -234,12 +236,15 @@ func Probe(ctx context.Context, host string, port int, connectTimeout, bannerTim
 	}
 	if httpPorts[port] {
 		_ = conn.SetWriteDeadline(time.Now().Add(bannerTimeout))
-		_, _ = conn.Write([]byte("HEAD / HTTP/1.0\r\nHost: " + host + "\r\n\r\n"))
+		_, _ = conn.Write([]byte(headRequest(host)))
 	}
 	p.raw = readRaw(conn, bannerTimeout)
 	p.Banner = printable(p.raw)
 	_ = conn.Close()
 	if p.Banner == "" && !httpPorts[port] {
+		// A port no table names may still be a web service (HTTP or HTTPS on 4343, 8834, 9443 ...): such a
+		// silent port is asked with HEAD, inside TLS when the handshake succeeds, in clear text otherwise.
+		unlisted := portServices[port] == ""
 		// Silent service: a TLS handshake tells us whether it is an unlisted TLS port.
 		if conn2, err := d.DialContext(ctx, "tcp", addr); err == nil {
 			tc := tls.Client(conn2, &tls.Config{InsecureSkipVerify: true, ServerName: host, MinVersion: tls.VersionTLS10}) //nolint:gosec // see above
@@ -247,8 +252,22 @@ func Probe(ctx context.Context, host string, port int, connectTimeout, bannerTim
 			if err := tc.HandshakeContext(ctx); err == nil {
 				p.TLS = true
 				p.TLSName = tlsName(tc.ConnectionState())
+				if unlisted {
+					_ = tc.SetDeadline(time.Now().Add(bannerTimeout))
+					_, _ = tc.Write([]byte(headRequest(host)))
+					p.Banner = readBanner(tc, bannerTimeout)
+				}
 			}
 			_ = tc.Close()
+		}
+		if unlisted && !p.TLS {
+			if conn3, err := d.DialContext(ctx, "tcp", addr); err == nil {
+				_ = conn3.SetWriteDeadline(time.Now().Add(bannerTimeout))
+				_, _ = conn3.Write([]byte(headRequest(host)))
+				p.raw = readRaw(conn3, bannerTimeout)
+				p.Banner = printable(p.raw)
+				_ = conn3.Close()
+			}
 		}
 	}
 	Classify(p)

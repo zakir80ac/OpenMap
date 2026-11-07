@@ -35,6 +35,7 @@ const (
 	defaultVrf   = "default"
 	stateUp      = "UP"
 	nsipType     = "NSIP"
+	csPrefix     = "cs/"
 	// NITRO error codes that mean the credential was rejected rather than the object missing.
 	nitroErrBadCredential = 354
 	nitroErrNotAuthorized = 444
@@ -382,12 +383,16 @@ func stateOf(state string) string {
 	}
 }
 
-func listenerIdentity(lbRef, proto string, port int, name string) map[string]string {
-	identity := map[string]string{"hostRef": lbRef, "protocol": proto, "port": strconv.Itoa(port)}
-	if port == 0 {
-		identity["port"] = name
+// ListenerIdentity keys a vserver's listener on the appliance. Many vservers share a port (every SSL VIP
+// listens on 443), so the port key carries the vserver name as well, the way the A10 collector keys its
+// virtual ports; keyed on the port alone, every VIP on 443 merged into one CI. Content-switching and
+// load-balancing vservers live in separate NITRO namespaces, so a cs vserver's key carries csPrefix.
+func ListenerIdentity(lbRef, proto string, port int, name string) map[string]string {
+	key := name
+	if port != 0 {
+		key += ":" + strconv.Itoa(port)
 	}
-	return identity
+	return map[string]string{"hostRef": lbRef, "protocol": proto, "port": key}
 }
 
 func isRealVIP(addr string) bool {
@@ -422,7 +427,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 	memberSeen := map[string]bool{}
 	for _, v := range inv.Virtuals {
 		proto := protoOf(v.ServiceType)
-		identity := listenerIdentity(lbRef, proto, int(v.Port), v.Name)
+		identity := ListenerIdentity(lbRef, proto, int(v.Port), v.Name)
 		vs := contract.CiRef{Type: typeListener, Identity: identity}
 		vsRef[v.Name] = vs
 		members := inv.Members[v.Name]
@@ -461,7 +466,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 	}
 	for _, v := range inv.CSVirtuals {
 		proto := protoOf(v.ServiceType)
-		identity := listenerIdentity(lbRef, proto, int(v.Port), v.Name)
+		identity := ListenerIdentity(lbRef, proto, int(v.Port), csPrefix+v.Name)
 		cs := contract.CiRef{Type: typeListener, Identity: identity}
 		targets := inv.CSTargets[v.Name]
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: identity, Name: v.Name + " (cs " + v.Address + ":" + strconv.Itoa(int(v.Port)) + ")", Attributes: map[string]any{"vendor": vendor, "virtualServer": v.Name, "role": "content-switching", "destination": v.Address, "protocol": proto, "serviceType": v.ServiceType, "port": int(v.Port), "state": stateOf(v.State), "targets": targets, "service": "content-switching-vip", "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{{Source: vendor, ID: v.Name}}, ObservedAt: at})

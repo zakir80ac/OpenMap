@@ -5,6 +5,7 @@ package oneview
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -73,6 +74,7 @@ type Enclosure struct {
 type ServerHardware struct {
 	URI            string `json:"uri"`
 	Name           string `json:"name"`
+	ServerName     string `json:"serverName"`
 	SerialNumber   string `json:"serialNumber"`
 	Model          string `json:"model"`
 	ShortModel     string `json:"shortModel"`
@@ -82,7 +84,7 @@ type ServerHardware struct {
 	PowerState     string `json:"powerState"`
 	UUID           string `json:"uuid"`
 	ProcessorCount int    `json:"processorCount"`
-	ProcessorCore  int    `json:"processorCoreCount"`
+	ProcessorCore  int    `json:"processorCoreCount"` // cores per processor
 	ProcessorType  string `json:"processorType"`
 	MemoryMb       int64  `json:"memoryMb"`
 	RomVersion     string `json:"romVersion"`
@@ -153,6 +155,12 @@ func Login(ctx context.Context, c *restjson.Client, user, password, domain strin
 		return "", collector.Errorf(contract.ErrAuthFailed, false, "login returned no session")
 	}
 	return res.SessionID, nil
+}
+
+// Logout deletes the session (DELETE /rest/login-sessions with the session in the Auth header), so a
+// discovery sweep never leaves sessions open against the appliance's session limit.
+func Logout(ctx context.Context, c *restjson.Client) {
+	_, _ = c.Do(ctx, http.MethodDelete, "/rest/login-sessions", nil, nil)
 }
 
 func listAll[T any](ctx context.Context, c *restjson.Client, path string, out *[]T) error {
@@ -238,12 +246,13 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		if len(macs) > 0 {
 			hostIdentity["primaryMac"] = macs[0]
 		}
-		attrs := map[string]any{"vendor": vendor, "model": firstNonEmpty(s.Model, s.ShortModel), "powerState": s.PowerState, "health": healthOf(s.Status), "cpuSockets": s.ProcessorCount, "cpuCores": s.ProcessorCore, "cpuModel": s.ProcessorType, "memoryMb": s.MemoryMb, "biosVersion": s.RomVersion, "macAddresses": macs, "hbaWwns": wwns, "appliance": appliance, "oneviewName": s.Name}
+		attrs := map[string]any{"vendor": vendor, "model": firstNonEmpty(s.Model, s.ShortModel), "powerState": s.PowerState, "health": healthOf(s.Status), "cpuSockets": s.ProcessorCount, "cpuCores": s.ProcessorCount * s.ProcessorCore, "cpuModel": s.ProcessorType, "memoryMb": s.MemoryMb, "biosVersion": s.RomVersion, "macAddresses": macs, "hbaWwns": wwns, "appliance": appliance, "oneviewName": s.Name, "hostname": s.ServerName}
 		if p, ok := profileByServer[s.URI]; ok {
 			attrs["serverProfile"] = p.Name
 		}
 		hostRef := contract.CiRef{Type: typeHost, Identity: hostIdentity}
-		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeHost, Identity: hostIdentity, Name: firstNonEmpty(s.MpHost.HostName, s.Name), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{{Source: collectorID, ID: s.URI}}, ObservedAt: at})
+		// serverName is the operating system's host name; mpHostName names the iLO, never the server.
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeHost, Identity: hostIdentity, Name: firstNonEmpty(s.ServerName, s.Name), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{{Source: collectorID, ID: s.URI}}, ObservedAt: at})
 		if inEnclosure {
 			bladeIdentity := map[string]string{"chassisRef": enclosure.SerialNumber, "bay": strconv.Itoa(s.Position), "serialNumber": s.SerialNumber}
 			bladeRef := contract.CiRef{Type: typeBlade, Identity: bladeIdentity}
@@ -306,6 +315,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if err != nil {
 		return collector.Observation{}, err
 	}
+	defer Logout(context.WithoutCancel(ctx), c)
 	inv, err := Walk(ctx, c)
 	if err != nil {
 		return collector.Observation{}, restjson.Classify(target.Value, err)

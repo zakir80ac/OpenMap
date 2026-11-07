@@ -52,6 +52,9 @@ var coolingScalarOIDs = []string{
 	oidLgpEnvStateSystem, oidLgpEnvStateCooling, oidLgpEnvStateHeating, oidLgpEnvStateHumidifying, oidLgpEnvStateDehumidifying, oidLgpEnvStateCoolingCapacity,
 }
 
+// coolingStateOIDs are the environmental control states only a cooling unit publishes.
+var coolingStateOIDs = []string{oidLgpEnvStateSystem, oidLgpEnvStateCooling, oidLgpEnvStateHeating, oidLgpEnvStateHumidifying, oidLgpEnvStateDehumidifying, oidLgpEnvStateCoolingCapacity}
+
 var coolingTableOIDs = []string{
 	oidLgpEnvTemperatureDegC, oidLgpEnvTemperatureSetDegC, oidLgpEnvHumidityRel, oidLgpEnvHumiditySetRel,
 	oidEntPhySensorType, oidEntPhySensorScale, oidEntPhySensorPrecision, oidEntPhySensorValue, oidEntPhySensorStatus,
@@ -173,6 +176,16 @@ func entitySensors(w *Walk, names map[string]any) []Sensor {
 
 // parseCooling reads the cooling objects; nil when the device exposes none of them.
 func parseCooling(w *Walk, sysObjectID string) *CoolingFacts {
+	// Every Liebert card publishes the agent identity under the Liebert enterprise sysObjectID, a UPS behind
+	// a Unity card included (REQ-DISC-026, T-403): without environmental state, a device that answers a
+	// UPS or PDU MIB is power equipment, not a cooling unit.
+	envState := false
+	for _, oid := range coolingStateOIDs {
+		envState = envState || w.Scalars[oid] != nil
+	}
+	if !envState && parsePower(w) != nil {
+		return nil
+	}
 	c := &CoolingFacts{}
 	liebert := w.scalarString(oidLgpAgentIdentSerial) != "" || w.scalarString(oidLgpAgentIdentModel) != "" || w.Scalars[oidLgpEnvStateSystem] != nil
 	if liebert {

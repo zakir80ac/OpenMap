@@ -29,6 +29,7 @@ const (
 	relInstalled = "installed_on"
 
 	evidenceKind = "cli_output"
+	familyLinux  = "linux"
 	// Only packages in this allow-list become software CIs by default; the rest stay in attributes.
 	// Everything a security or licence team asks about is here; the list is extended per tenant.
 	maxPackagesInAttributes = 5000
@@ -136,8 +137,8 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 	obs.Samples = f.Utilisation.Samples(hostCiRef, at)
 
 	if f.OS.ID != "" || f.OS.Pretty != "" {
-		osIdentity := map[string]string{"hostRef": hostRef, "family": firstNonEmpty(f.OS.ID, "linux"), "version": firstNonEmpty(f.OS.VersionID, f.OS.Version, f.Kernel)}
-		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeOS, Identity: osIdentity, Name: firstNonEmpty(f.OS.Pretty, f.OS.Name), Attributes: map[string]any{"id": f.OS.ID, "version": f.OS.Version, "versionId": f.OS.VersionID, "kernel": f.Kernel, "arch": f.Arch}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		osIdentity := map[string]string{"hostRef": hostRef, "family": OSFamily(f.OS.ID), "version": firstNonEmpty(f.OS.VersionID, f.OS.Version, f.Kernel)}
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeOS, Identity: osIdentity, Name: firstNonEmpty(f.OS.Pretty, f.OS.Name), Attributes: map[string]any{"id": f.OS.ID, "distribution": f.OS.ID, "version": f.OS.Version, "versionId": f.OS.VersionID, "kernel": f.Kernel, "arch": f.Arch}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relRunsOn, From: contract.CiRef{Type: typeOS, Identity: osIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
 	}
 
@@ -186,6 +187,20 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalled, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	return obs
+}
+
+// bsdFamilies are the os-release IDs of non-Linux systems that ship /etc/os-release.
+var bsdFamilies = map[string]bool{"freebsd": true, "openbsd": true, "netbsd": true, "dragonfly": true}
+
+// OSFamily is the operating_system identity family: "linux" for every Linux distribution, as the agent, libvirt,
+// Kubernetes and Hyper-V collectors and the estate name it, so one host's OS reconciles to one CI whichever
+// collector saw it. The distribution's os-release ID stays in the id / distribution attributes.
+func OSFamily(osReleaseID string) string {
+	id := strings.ToLower(strings.TrimSpace(osReleaseID))
+	if bsdFamilies[id] {
+		return id
+	}
+	return familyLinux
 }
 
 func firstNonEmpty(values ...string) string {

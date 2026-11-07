@@ -354,8 +354,13 @@ func Emit(inv *Inventory, target contract.Target, platform string, at time.Time)
 			Tags:       []string{}, ExternalIDs: []contract.ExternalID{{Source: platform, ID: sd.ID}}, ObservedAt: at})
 	}
 	for _, v := range inv.VMs {
-		hv := hvRef[v.Host.ID]
-		identity := map[string]string{"instanceUuid": strings.ToLower(v.ID), "hypervisorRef": hv.Identity["hostRef"]}
+		hv, placed := hvRef[v.Host.ID]
+		// A VM that is down runs on no host: identity values are never empty, so hypervisorRef is set only
+		// while the engine places the VM on a host.
+		identity := map[string]string{"instanceUuid": strings.ToLower(v.ID)}
+		if placed {
+			identity["hypervisorRef"] = hv.Identity["hostRef"]
+		}
 		if v.FQDN != "" {
 			identity["fqdn"] = strings.ToLower(v.FQDN)
 		}

@@ -1,10 +1,13 @@
-// REQ-DISC-002 REQ-DISC-006 — shared WinRM runner for Windows collectors: NTLM (default), basic or
-// Kerberos transport from the job, HTTP or HTTPS endpoint, one PowerShell script per target whose
-// stdout is a single JSON document. Credentials arrive resolved from OpenBao and are never logged.
+// REQ-DISC-002 REQ-DISC-006 REQ-DISC-016 REQ-DISC-022 — shared WinRM runner for Windows collectors: NTLM
+// (default), basic or Kerberos transport from the job, HTTP or HTTPS endpoint, one PowerShell script per target
+// whose stdout is a single JSON document. Over HTTPS the listener certificate is verified (verifyTls) against the
+// system pool or a private CA (caCertPem), optionally under the name the certificate carries (tlsServerName) when
+// targets are addresses. Credentials arrive resolved from OpenBao and are never logged.
 package winrmexec
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"strings"
@@ -23,6 +26,12 @@ const (
 	OptionPort       = "port"
 	OptionTLS        = "useTls"
 	OptionVerify     = "verifyTls"
+	// OptionCA is a PEM bundle of the private CA that signed the WinRM HTTPS listener certificates; setting it
+	// turns verification on against that pool.
+	OptionCA = "caCertPem"
+	// OptionServerName is the name verified on the listener certificate when targets are addresses and the
+	// certificate carries a host or shared name rather than the address.
+	OptionServerName = "tlsServerName"
 	OptionAuth       = "auth" // ntlm | basic | kerberos
 	OptionRealm      = "kerberosRealm"
 	OptionSPN        = "kerberosSpn"
@@ -57,7 +66,7 @@ func Run(ctx context.Context, target contract.Target, cred *contract.Credential,
 		user = d + "\\" + user
 	}
 	useTLS, _ := options[OptionTLS].(bool)
-	verify, _ := options[OptionVerify].(bool)
+	verify := verifyOption(options)
 	port := DefaultPortHTTP
 	if useTLS {
 		port = DefaultPortHTTPS
@@ -73,7 +82,10 @@ func Run(ctx context.Context, target contract.Target, cred *contract.Credential,
 			timeout = time.Duration(n) * time.Second
 		}
 	}
-	endpoint := winrm.NewEndpoint(target.Value, port, useTLS, !verify, nil, nil, nil, timeout)
+	endpoint, err := Endpoint(target, port, useTLS, options, timeout)
+	if err != nil {
+		return Output{}, err
+	}
 	params := winrm.NewParameters(isoDuration(timeout), locale, envelopeSize)
 	auth, _ := options[OptionAuth].(string)
 	switch strings.ToLower(auth) {
@@ -112,6 +124,30 @@ func Run(ctx context.Context, target contract.Target, cred *contract.Credential,
 		return Output{Stdout: stdout, Stderr: stderr, ExitCode: code}, collector.Errorf(contract.ErrPermissionDenied, false, "%s: access denied running the collector script", target.Value)
 	}
 	return Output{Stdout: stdout, Stderr: stderr, ExitCode: code}, nil
+}
+
+func verifyOption(options map[string]any) bool {
+	verify, _ := options[OptionVerify].(bool)
+	ca, _ := options[OptionCA].(string)
+	return verify || strings.TrimSpace(ca) != ""
+}
+
+// Endpoint builds the WinRM endpoint for a target: certificate verification follows verifyTls, a caCertPem
+// pool replaces the system roots (and implies verification), and tlsServerName is the name checked on the
+// listener certificate.
+func Endpoint(target contract.Target, port int, useTLS bool, options map[string]any, timeout time.Duration) (*winrm.Endpoint, error) {
+	var caPem []byte
+	if ca, _ := options[OptionCA].(string); strings.TrimSpace(ca) != "" {
+		if !x509.NewCertPool().AppendCertsFromPEM([]byte(ca)) {
+			return nil, collector.Errorf(contract.ErrInternal, false, "%s option holds no PEM certificate", OptionCA)
+		}
+		caPem = []byte(ca)
+	}
+	endpoint := winrm.NewEndpoint(target.Value, port, useTLS, !verifyOption(options), caPem, nil, nil, timeout)
+	if name, _ := options[OptionServerName].(string); strings.TrimSpace(name) != "" {
+		endpoint.TLSServerName = strings.TrimSpace(name)
+	}
+	return endpoint, nil
 }
 
 // EncodedCommand renders a script as `powershell -EncodedCommand` (UTF-16LE base64), the form that

@@ -46,6 +46,7 @@ const (
 	optionDatabase  = "databaseUrl"
 	optionContainer = "containerEngineUrl"
 	optionLB        = "loadBalancerUrl"
+	optionCA        = "caCertPem"
 	apiIdentity     = "/20160918"
 	apiCore         = "/20160918"
 	apiDatabase     = "/20160918"
@@ -138,8 +139,14 @@ type Client struct {
 	raw    [][]byte
 }
 
-func newClient(base string, signer *Signer, verify bool) *Client {
-	return &Client{base: strings.TrimSuffix(base, "/"), signer: signer, http: &http.Client{Timeout: httpTimeout, Transport: restjson.Transport(verify)}, now: time.Now}
+// newClientCA builds a signed client for one service base; a non-empty caPem (dedicated regions with a private CA)
+// becomes the trust anchor.
+func newClientCA(base string, signer *Signer, verify bool, caPem string) (*Client, error) {
+	transport, err := restjson.TransportFor(verify, caPem)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{base: strings.TrimSuffix(base, "/"), signer: signer, http: &http.Client{Timeout: httpTimeout, Transport: transport}, now: time.Now}, nil
 }
 
 // getPage performs one signed GET and returns the next-page token, if any.
@@ -651,17 +658,27 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "cloud_oci job must set the %s and %s options", optionIdentity, optionCore)
 	}
 	// Regional OCI endpoints present publicly trusted certificates; dedicated regions with a private CA supply it
-	// through caCertPem, which restjson trusts beside the system roots.
+	// through caCertPem, which then becomes the trust anchor for every service client.
 	verify := true
-	clients := Clients{Identity: newClient(identity, signer, verify), Core: newClient(core, signer, verify)}
-	if v := restjson.StringOption(options, optionDatabase); v != "" {
-		clients.Database = newClient(v, signer, verify)
-	}
-	if v := restjson.StringOption(options, optionContainer); v != "" {
-		clients.Container = newClient(v, signer, verify)
-	}
-	if v := restjson.StringOption(options, optionLB); v != "" {
-		clients.LB = newClient(v, signer, verify)
+	caPem := restjson.StringOption(options, optionCA)
+	clients := Clients{}
+	for _, svc := range []struct {
+		base string
+		into **Client
+	}{
+		{identity, &clients.Identity}, {core, &clients.Core},
+		{restjson.StringOption(options, optionDatabase), &clients.Database},
+		{restjson.StringOption(options, optionContainer), &clients.Container},
+		{restjson.StringOption(options, optionLB), &clients.LB},
+	} {
+		if svc.base == "" {
+			continue
+		}
+		c, err := newClientCA(svc.base, signer, verify, caPem)
+		if err != nil {
+			return collector.Observation{}, err
+		}
+		*svc.into = c
 	}
 	root := firstNonEmpty(strings.TrimSpace(target.Value), cred.Fields[credTenancy])
 	inv, err := Walk(ctx, root, clients)

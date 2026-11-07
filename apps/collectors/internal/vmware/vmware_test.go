@@ -58,7 +58,20 @@ func server(t *testing.T, legacy bool) *httptest.Server {
 			if key == "/rest/com/vmware/cis/session" {
 				key = "/api/session"
 			} else {
-				key = "/api" + strings.TrimPrefix(key, "/rest")
+				// 6.5-6.7 name list filters filter.<field>; a bare 7.0 filter name is an invalid argument.
+				key = "/api" + strings.TrimPrefix(r.URL.Path, "/rest")
+				if r.URL.RawQuery != "" {
+					q := url.Values{}
+					for k, v := range r.URL.Query() {
+						field, ok := strings.CutPrefix(k, legacyFilterPrefix)
+						if !ok {
+							w.WriteHeader(http.StatusBadRequest)
+							return
+						}
+						q[field] = v
+					}
+					key += "?" + q.Encode()
+				}
 			}
 		}
 		if key == "/api/session" {
@@ -90,16 +103,42 @@ func server(t *testing.T, legacy bool) *httptest.Server {
 func writeDoc(w http.ResponseWriter, legacy bool, doc any) {
 	w.Header().Set("Content-Type", "application/json")
 	if legacy {
-		doc = map[string]any{"value": doc}
+		doc = map[string]any{"value": legacyMaps(doc)}
 	}
 	_ = json.NewEncoder(w).Encode(doc)
+}
+
+// legacyMaps renders VM NIC and disk maps the way the 6.5-6.7 /rest envelope does: [{key, value}] arrays.
+func legacyMaps(doc any) any {
+	m, ok := doc.(map[string]any)
+	if !ok {
+		return doc
+	}
+	out := map[string]any{}
+	for k, v := range m {
+		inner, isMap := v.(map[string]any)
+		if (k == "nics" || k == "disks") && isMap {
+			pairs := []map[string]any{}
+			for key, value := range inner {
+				pairs = append(pairs, map[string]any{"key": key, "value": value})
+			}
+			out[k] = pairs
+			continue
+		}
+		out[k] = v
+	}
+	return out
 }
 
 func clientFor(t *testing.T, srv *httptest.Server, user, pass string) *Client {
 	t.Helper()
 	u, _ := url.Parse(srv.URL)
 	port, _ := strconv.Atoi(u.Port())
-	return NewClient(u.Hostname(), port, user, pass, false)
+	c, err := NewClient(u.Hostname(), port, user, pass, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return c
 }
 
 func countType(cis []contract.ObservedCi, typ string) int {

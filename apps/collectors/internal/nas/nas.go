@@ -32,6 +32,7 @@ const (
 	typeShare    = "nas_share"
 	typeHost     = "host"
 	relContains  = "contains"
+	sectionHost  = "host"
 	sectionSmb   = "smb"
 	sectionSmbAc = "smbaccess"
 	sectionNfs   = "nfs"
@@ -69,8 +70,11 @@ type Access struct {
 	Allow   bool
 }
 
-// WindowsScript lists SMB shares, their access entries and open session counts as JSON sections.
+// WindowsScript prints the server's DNS name, then lists SMB shares, their access entries and open session counts as
+// JSON sections.
 const WindowsScript = `$ErrorActionPreference = 'Stop'
+Write-Output '@@OPENMAP:host@@'
+try { [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName } catch { $env:COMPUTERNAME }
 Write-Output '@@OPENMAP:smb@@'
 Get-SmbShare | Where-Object { $_.Special -eq $false } | Select-Object Name, Path, Description, ShareState, ScopeName, CurrentUsers, EncryptData, FolderEnumerationMode | ConvertTo-Json -Compress -Depth 3
 Write-Output '@@OPENMAP:smbaccess@@'
@@ -147,6 +151,13 @@ func ParseWindows(stdout string) ([]Share, error) {
 		out = append(out, Share{Name: s.Name, Path: s.Path, Protocol: protocolSMB, Description: s.Description, State: state, Sessions: s.CurrentUsers, Access: byName[s.Name], Options: encryptOption(s.EncryptData)})
 	}
 	return out, nil
+}
+
+// WindowsHost is the file server's DNS name from WindowsScript ("" when the section is missing), so shares are
+// contained by the server itself rather than by the address the job targeted.
+func WindowsHost(stdout string) string {
+	sections, _ := sshexec.Split(stdout)
+	return strings.ToLower(strings.TrimSuffix(strings.TrimSpace(sections[sectionHost]), "."))
 }
 
 func encryptOption(encrypt bool) []string {
@@ -325,7 +336,11 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		if err != nil {
 			return collector.Observation{}, err
 		}
-		return Emit(shares, target, []byte(out.Stdout), time.Now().UTC()), nil
+		server := target
+		if name := WindowsHost(out.Stdout); name != "" {
+			server.Value = name
+		}
+		return Emit(shares, server, []byte(out.Stdout), time.Now().UTC()), nil
 	case modeLinux:
 		out, err := sshexec.Run(ctx, target, cred, options, LinuxScript)
 		if err != nil {

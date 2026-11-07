@@ -17,6 +17,7 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 	httpTimeout  = 60 * time.Second
 	apiPath      = "/nuova"
 	optionVerify = "verifyTls"
+	optionCA     = "caCertPem"
 	credUser     = "username"
 	credPassword = "password"
 
@@ -65,6 +67,17 @@ func NewClient(host string, verifyTLS bool) *Client {
 	}
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // UCS Manager ships a self-signed certificate; verifyTls=true enforces the chain.
 	return &Client{base: strings.TrimSuffix(base, "/"), http: &http.Client{Timeout: httpTimeout, Transport: tr}}
+}
+
+// NewClientCA is NewClient with the job's private CA bundle (caCertPem), which enforces the chain when set.
+func NewClientCA(host string, verifyTLS bool, caPem string) (*Client, error) {
+	tr, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, err
+	}
+	c := NewClient(host, verifyTLS)
+	c.http.Transport = tr
+	return c, nil
 }
 
 func (c *Client) post(ctx context.Context, body string, out any) error {
@@ -177,8 +190,10 @@ type computeUnit struct {
 	Name         string `xml:"name,attr"`
 }
 
+// mgmtIf carries the CIMC out-of-band address in extIp (UCSM object model); externalIp is read as a fallback.
 type mgmtIf struct {
 	Dn         string `xml:"dn,attr"`
+	ExtIP      string `xml:"extIp,attr"`
 	ExternalIP string `xml:"externalIp,attr"`
 	Mac        string `xml:"mac,attr"`
 	Subject    string `xml:"subject,attr"`
@@ -296,6 +311,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 			hostIdentity["systemUuid"] = strings.ToLower(u.UUID)
 		}
 		cimc, hasCimc := cimcByDn[u.Dn]
+		cimcIP := firstNonEmpty(cimc.ExtIP, cimc.ExternalIP)
 		if hasCimc && cimc.Mac != "" {
 			// CIMC MAC is not a host NIC; keep it as an attribute only.
 			hostIdentity = map[string]string{"serialNumber": u.Serial, "systemUuid": strings.ToLower(u.UUID)}
@@ -317,9 +333,9 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: bladeRef, To: hostRef, Attributes: map[string]any{}, ObservedAt: at})
 			}
 		}
-		if hasCimc && cimc.ExternalIP != "" && cimc.ExternalIP != "0.0.0.0" {
-			bmcIdentity := map[string]string{"managementIp": cimc.ExternalIP}
-			obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeBmc, Identity: bmcIdentity, Name: "CIMC @ " + cimc.ExternalIP, Attributes: map[string]any{"vendor": vendor, "model": "CIMC", "managementIp": cimc.ExternalIP, "mac": strings.ToLower(cimc.Mac), "ucsDn": cimc.Dn}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		if hasCimc && cimcIP != "" && cimcIP != "0.0.0.0" {
+			bmcIdentity := map[string]string{"managementIp": cimcIP}
+			obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeBmc, Identity: bmcIdentity, Name: "CIMC @ " + cimcIP, Attributes: map[string]any{"vendor": vendor, "model": "CIMC", "managementIp": cimcIP, "mac": strings.ToLower(cimc.Mac), "ucsDn": cimc.Dn}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 			obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relManages, From: contract.CiRef{Type: typeBmc, Identity: bmcIdentity}, To: hostRef, Attributes: map[string]any{"protocol": "cimc"}, ObservedAt: at})
 		}
 	}
@@ -346,7 +362,10 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		return collector.Observation{}, collector.Errorf(contract.ErrAuthFailed, false, "ucs requires a password credential with a username")
 	}
 	verify, _ := options[optionVerify].(bool)
-	c := NewClient(target.Value, verify)
+	c, err := NewClientCA(target.Value, verify, restjson.StringOption(options, optionCA))
+	if err != nil {
+		return collector.Observation{}, err
+	}
 	if err := c.Login(ctx, cred.Fields[credUser], cred.Fields[credPassword]); err != nil {
 		return collector.Observation{}, classify(target.Value, err)
 	}

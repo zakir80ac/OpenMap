@@ -17,6 +17,7 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 	"github.com/openmap/openmap/apps/collectors/internal/sigv4"
 )
 
@@ -31,6 +32,7 @@ const (
 	optionRegion    = "region"
 	optionPathStyle = "pathStyle"
 	optionVerify    = "verifyTls"
+	optionCA        = "caCertPem"
 	optionSample    = "sampleObjects"
 	credAccessKey   = "accessKeyId"
 	credSecretKey   = "secretAccessKey"
@@ -69,6 +71,20 @@ func NewClient(endpoint string, creds sigv4.Credentials, region string, pathStyl
 	}
 	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // private S3 endpoints often use enterprise CAs; verifyTls=true enforces them.
 	return &Client{endpoint: u, creds: creds, region: firstNonEmpty(region, defaultRegion), pathStyle: pathStyle, http: &http.Client{Timeout: httpTimeout, Transport: tr}}, nil
+}
+
+// NewClientCA is NewClient with the job's private CA bundle (caCertPem), which enforces the chain when set.
+func NewClientCA(endpoint string, creds sigv4.Credentials, region string, pathStyle, verifyTLS bool, caPem string) (*Client, error) {
+	c, err := NewClient(endpoint, creds, region, pathStyle, verifyTLS)
+	if err != nil {
+		return nil, err
+	}
+	tr, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, err
+	}
+	c.http.Transport = tr
+	return c, nil
 }
 
 func (c *Client) bucketURL(bucket string, query url.Values) *url.URL {
@@ -283,7 +299,8 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if v, ok := options[optionSample].(float64); ok && v > 0 {
 		sample = int(v)
 	}
-	c, err := NewClient(target.Value, sigv4.Credentials{AccessKeyID: cred.Fields[credAccessKey], SecretAccessKey: cred.Fields[credSecretKey], SessionToken: cred.Fields[credSession]}, region, pathStyle, verify)
+	caPem, _ := options[optionCA].(string)
+	c, err := NewClientCA(target.Value, sigv4.Credentials{AccessKeyID: cred.Fields[credAccessKey], SecretAccessKey: cred.Fields[credSecretKey], SessionToken: cred.Fields[credSession]}, region, pathStyle, verify, caPem)
 	if err != nil {
 		return collector.Observation{}, err
 	}

@@ -67,7 +67,7 @@ func TestWalkAndEmit(t *testing.T) {
 		t.Fatalf("load balancer wrong: %+v", lb)
 	}
 	vs := obs.Cis[1]
-	if vs.Identity["hostRef"] != "bigip-ryd-01.corp.example" || vs.Identity["port"] != "443" || vs.Attributes["membersUp"] != 1 || vs.Attributes["destination"] != "10.191.1.10" {
+	if vs.Identity["hostRef"] != "bigip-ryd-01.corp.example" || vs.Identity["port"] != "/Common/vs_web_443:443" || vs.Attributes["membersUp"] != 1 || vs.Attributes["destination"] != "10.191.1.10" {
 		t.Fatalf("virtual server wrong: %+v", vs)
 	}
 	rels := map[string]int{}

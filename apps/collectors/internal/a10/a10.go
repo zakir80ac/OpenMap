@@ -7,6 +7,7 @@ package a10
 import (
 	"context"
 	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -130,9 +131,20 @@ type serviceGroupOper struct {
 	MemberList []memberOper `json:"member-list"`
 }
 
+// ManagementInterface is `/interface/management`: the address of the dedicated management port.
+type ManagementInterface struct {
+	Management struct {
+		IP struct {
+			IPv4Address string `json:"ipv4-address"`
+			IPv4Netmask string `json:"ipv4-netmask"`
+		} `json:"ip"`
+	} `json:"management"`
+}
+
 // Inventory is everything the walk gathered.
 type Inventory struct {
 	Version        VersionOper
+	Management     ManagementInterface
 	VirtualServers []VirtualServer
 	ServiceGroups  []ServiceGroup
 	Servers        []Server
@@ -158,6 +170,11 @@ func Login(ctx context.Context, c *restjson.Client, user, password string) (stri
 func Walk(ctx context.Context, c *restjson.Client) (*Inventory, error) {
 	inv := &Inventory{MemberState: map[string]string{}, GroupState: map[string]string{}}
 	if err := c.Get(ctx, apiBase+"/version/oper", &inv.Version); err != nil {
+		return nil, err
+	}
+	// The management port address keys the appliance: the job target may be a DNS name, a data-plane
+	// address or a URL with a port. Partitions without the object (or without the right) answer 404/403.
+	if err := c.Get(ctx, apiBase+"/interface/management", &inv.Management); err != nil && !restjson.IsNotFound(err) && !restjson.IsForbidden(err) {
 		return nil, err
 	}
 	var vs struct {
@@ -229,11 +246,12 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		obs.Evidence = append(obs.Evidence, collector.RawEvidence{Kind: evidenceKind, Data: r})
 	}
 	v := inv.Version.Version.Oper
-	lbRef := strings.ToLower(firstNonEmpty(v.Hostname, target.Value))
-	lbIdentity := map[string]string{"serialNumber": firstNonEmpty(v.SerialNumber, vendor+":"+lbRef), "managementIp": target.Value}
+	mgmt := ManagementAddress(inv, target.Value)
+	lbRef := strings.ToLower(firstNonEmpty(v.Hostname, mgmt))
+	lbIdentity := map[string]string{"serialNumber": firstNonEmpty(v.SerialNumber, vendor+":"+lbRef), "managementIp": mgmt}
 	lb := contract.CiRef{Type: typeLB, Identity: lbIdentity}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeLB, Identity: lbIdentity, Name: lbRef,
-		Attributes: map[string]any{"vendor": vendor, "model": v.HWPlatform, "version": v.SWVersion, "haState": v.HAState, "upTime": v.UpTime, "virtualServers": len(inv.VirtualServers), "serviceGroups": len(inv.ServiceGroups), "servers": len(inv.Servers), "managementIp": target.Value, "fqdn": lbRef},
+		Attributes: map[string]any{"vendor": vendor, "model": v.HWPlatform, "version": v.SWVersion, "haState": v.HAState, "upTime": v.UpTime, "virtualServers": len(inv.VirtualServers), "serviceGroups": len(inv.ServiceGroups), "servers": len(inv.Servers), "managementIp": mgmt, "fqdn": lbRef},
 		Tags:       []string{}, ExternalIDs: []contract.ExternalID{{Source: vendor, ID: v.SerialNumber}}, ObservedAt: at})
 	serverByName := map[string]Server{}
 	for _, s := range inv.Servers {
@@ -306,6 +324,22 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		}
 	}
 	return obs
+}
+
+// ManagementAddress is the management port's IPv4 address when the appliance reports one, otherwise the
+// target's host (without scheme, port or path), never the raw target string.
+func ManagementAddress(inv *Inventory, target string) string {
+	if ip := inv.Management.Management.IP.IPv4Address; net.ParseIP(ip) != nil {
+		return ip
+	}
+	host := target
+	if u, err := url.Parse(target); err == nil && u.Host != "" {
+		host = u.Host
+	}
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	return strings.TrimSuffix(host, "/")
 }
 
 func firstNonEmpty(values ...string) string {

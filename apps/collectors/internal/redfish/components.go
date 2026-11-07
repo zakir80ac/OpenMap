@@ -211,11 +211,22 @@ func chassisParts(inv *Inventory, chassisID string) []contract.Component {
 		}
 		out = append(out, c)
 	}
-	for _, psu := range inv.Power[chassisID].PowerSupplies {
+	supplies := inv.Power[chassisID].PowerSupplies
+	names := map[string]int{}
+	for _, psu := range supplies {
+		names[psu.Name]++
+	}
+	for _, psu := range supplies {
 		if absent(psu.Status) {
 			continue
 		}
-		c := contract.Component{Kind: contract.ComponentPSU, Slot: psu.Name, SerialNumber: psu.SerialNumber}
+		// HPE iLO names every supply "HpeServerPowerSupply"; the slot then takes the MemberId so each supply
+		// keeps its own component row (unique by kind and slot).
+		slot := psu.Name
+		if (names[psu.Name] > 1 || slot == "") && psu.MemberID != "" {
+			slot = strings.TrimSpace(psu.Name + " " + psu.MemberID)
+		}
+		c := contract.Component{Kind: contract.ComponentPSU, Slot: slot, SerialNumber: psu.SerialNumber}
 		if psu.PowerCapacityWatts > 0 {
 			c.Details = map[string]any{"capacityWatts": psu.PowerCapacityWatts}
 		}

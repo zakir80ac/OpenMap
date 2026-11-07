@@ -43,6 +43,7 @@ const (
 	optionRDS      = "rdsUrl"
 	optionSLB      = "slbUrl"
 	optionCS       = "csUrl"
+	optionCA       = "caCertPem" // private CA of Financial Cloud, Apsara Stack or a proxy
 	ecsVersion     = "2014-05-26"
 	rdsVersion     = "2014-08-15"
 	slbVersion     = "2014-05-15"
@@ -144,12 +145,46 @@ type Client struct {
 	raw    [][]byte
 }
 
-func newClient(base, keyID, secret string) *Client {
-	return &Client{base: strings.TrimSuffix(base, "/"), keyID: keyID, secret: secret, http: &http.Client{Timeout: httpTimeout, Transport: restjson.Transport(true)}, now: time.Now}
+// newClient builds a client for one product endpoint; a non-empty caPem becomes the trust anchor (Financial Cloud,
+// Apsara Stack and proxies sit behind private CAs).
+func newClient(base, keyID, secret, caPem string) (*Client, error) {
+	transport, err := restjson.TransportFor(true, caPem)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{base: strings.TrimSuffix(base, "/"), keyID: keyID, secret: secret, http: &http.Client{Timeout: httpTimeout, Transport: transport}, now: time.Now}, nil
 }
+
+// errorCode is the Code (RPC) or code (ROA) of an Alibaba Cloud error body.
+func errorCode(body []byte) string {
+	var e struct {
+		Code    string `json:"Code"`
+		CodeROA string `json:"code"`
+	}
+	if json.Unmarshal(body, &e) != nil {
+		return ""
+	}
+	return firstNonEmpty(e.Code, e.CodeROA)
+}
+
+// credentialCodes are the error codes Alibaba Cloud answers with HTTP 400 or 404 when the access key or its
+// signature is wrong (InvalidAccessKeyId.NotFound, SignatureDoesNotMatch, IncompleteSignature, InvalidTimeStamp.*,
+// SignatureNonceUsed): they are credential failures, not unreachable or unsupported endpoints.
+var credentialCodes = []string{"InvalidAccessKeyId", "SignatureDoesNotMatch", "IncompleteSignature", "InvalidTimeStamp", "SignatureNonceUsed"}
 
 func (c *Client) classify(res *http.Response, body []byte, what string) error {
 	host := c.base
+	if res.StatusCode >= http.StatusBadRequest {
+		code := errorCode(body)
+		for _, prefix := range credentialCodes {
+			if strings.HasPrefix(code, prefix) {
+				return collector.Errorf(contract.ErrAuthFailed, false, "%s rejected the access key for %s (%s)", host, what, code)
+			}
+		}
+		if strings.HasPrefix(code, "Forbidden") {
+			return collector.Errorf(contract.ErrPermissionDenied, false, "%s denied %s (%s)", host, what, code)
+		}
+	}
 	switch {
 	case res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden:
 		return collector.Errorf(contract.ErrAuthFailed, false, "%s rejected the access key for %s (%d): %s", host, what, res.StatusCode, strings.TrimSpace(string(body)))
@@ -200,11 +235,29 @@ func (c *Client) RPC(ctx context.Context, action, apiVersion string, params map[
 	return nil
 }
 
+// canonicalResource is the ROA CanonicalizedResource: the path, then the query parameters sorted by name.
+func canonicalResource(path string, query url.Values) string {
+	if len(query) == 0 {
+		return path
+	}
+	keys := make([]string, 0, len(query))
+	for k := range query {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		parts = append(parts, k+"="+query.Get(k))
+	}
+	return path + "?" + strings.Join(parts, "&")
+}
+
 // ROA performs one ROA-style GET (Container Service).
-func (c *Client) ROA(ctx context.Context, resource, apiVersion string, out any) error {
+func (c *Client) ROA(ctx context.Context, path string, query url.Values, apiVersion string, out any) error {
 	date := c.now().UTC().Format(http.TimeFormat)
 	accept := "application/json"
 	acs := map[string]string{"x-acs-signature-method": "HMAC-SHA1", "x-acs-signature-nonce": nonce(), "x-acs-version": apiVersion}
+	resource := canonicalResource(path, query)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+resource, nil)
 	if err != nil {
 		return err
@@ -349,6 +402,15 @@ type pagedPayload struct {
 	TotalCount int `json:"TotalCount"`
 	PageNumber int `json:"PageNumber"`
 	PageSize   int `json:"PageSize"`
+	// TotalRecordCount is RDS's name for TotalCount (DescribeDBInstances pages by PageRecordCount).
+	TotalRecordCount int `json:"TotalRecordCount"`
+}
+
+func (p pagedPayload) total() int {
+	if p.TotalCount > 0 {
+		return p.TotalCount
+	}
+	return p.TotalRecordCount
 }
 
 // paged follows PageNumber until TotalCount is reached; decode extracts the page's items.
@@ -365,7 +427,7 @@ func paged[T any](ctx context.Context, c *Client, action, apiVersion, region str
 			return nil, err
 		}
 		out = append(out, items...)
-		if len(items) == 0 || len(out) >= meta.TotalCount {
+		if len(items) == 0 || len(out) >= meta.total() {
 			return out, nil
 		}
 		page++
@@ -424,8 +486,8 @@ func Walk(ctx context.Context, account, region string, c Clients) (*Inventory, e
 		}
 	}
 	if c.CS != nil {
-		var clusters []Cluster
-		if err := c.CS.ROA(ctx, csClustersPath, csVersion, &clusters); err != nil {
+		clusters, err := listClusters(ctx, c.CS)
+		if err != nil {
 			return nil, err
 		}
 		for _, cl := range clusters {
@@ -440,6 +502,40 @@ func Walk(ctx context.Context, account, region string, c Clients) (*Inventory, e
 		}
 	}
 	return inv, nil
+}
+
+// listClusters pages DescribeClustersV1 (GET /api/v1/clusters: {"clusters": [...], "page_info": {...}}) by
+// page_number until page_info.total_count is reached. A bare array (the legacy DescribeClusters shape some
+// Apsara Stack releases still serve on this path) is the whole list.
+func listClusters(ctx context.Context, c *Client) ([]Cluster, error) {
+	var out []Cluster
+	for page := 1; ; page++ {
+		var raw json.RawMessage
+		q := url.Values{"page_number": {strconv.Itoa(page)}, "page_size": {strconv.Itoa(pageSize)}}
+		if err := c.ROA(ctx, csClustersPath, q, csVersion, &raw); err != nil {
+			return nil, err
+		}
+		if trimmed := strings.TrimSpace(string(raw)); strings.HasPrefix(trimmed, "[") {
+			var legacy []Cluster
+			if err := json.Unmarshal(raw, &legacy); err != nil {
+				return nil, collector.Errorf(contract.ErrParse, false, "%s: invalid cluster list: %v", c.base, err)
+			}
+			return append(out, legacy...), nil
+		}
+		var v1 struct {
+			Clusters []Cluster `json:"clusters"`
+			PageInfo struct {
+				TotalCount int `json:"total_count"`
+			} `json:"page_info"`
+		}
+		if err := json.Unmarshal(raw, &v1); err != nil {
+			return nil, collector.Errorf(contract.ErrParse, false, "%s: invalid cluster page: %v", c.base, err)
+		}
+		out = append(out, v1.Clusters...)
+		if len(v1.Clusters) == 0 || len(out) >= v1.PageInfo.TotalCount {
+			return out, nil
+		}
+	}
 }
 
 func lower(s string) string { return strings.ToLower(s) }
@@ -593,16 +689,23 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if region == "" || ecs == "" {
 		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "cloud_alibaba job must set the %s and %s options", optionRegion, optionECS)
 	}
-	keyID, secret := cred.Fields[credKeyID], cred.Fields[credSecret]
-	clients := Clients{ECS: newClient(ecs, keyID, secret)}
-	if v := restjson.StringOption(options, optionRDS); v != "" {
-		clients.RDS = newClient(v, keyID, secret)
-	}
-	if v := restjson.StringOption(options, optionSLB); v != "" {
-		clients.SLB = newClient(v, keyID, secret)
-	}
-	if v := restjson.StringOption(options, optionCS); v != "" {
-		clients.CS = newClient(v, keyID, secret)
+	keyID, secret, caPem := cred.Fields[credKeyID], cred.Fields[credSecret], restjson.StringOption(options, optionCA)
+	clients := Clients{}
+	for _, product := range []struct {
+		base string
+		into **Client
+	}{
+		{ecs, &clients.ECS}, {restjson.StringOption(options, optionRDS), &clients.RDS},
+		{restjson.StringOption(options, optionSLB), &clients.SLB}, {restjson.StringOption(options, optionCS), &clients.CS},
+	} {
+		if product.base == "" {
+			continue
+		}
+		c, err := newClient(product.base, keyID, secret, caPem)
+		if err != nil {
+			return collector.Observation{}, err
+		}
+		*product.into = c
 	}
 	inv, err := Walk(ctx, strings.TrimSpace(target.Value), region, clients)
 	if err != nil {

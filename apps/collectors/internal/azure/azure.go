@@ -27,6 +27,7 @@ const (
 	tokenTimeout    = 30 * time.Second
 	optionAuthority = "authorityUrl"       // e.g. the tenant's login endpoint base
 	optionArm       = "resourceManagerUrl" // the ARM endpoint base
+	optionCA        = "caCertPem"          // private CA of a sovereign cloud, Azure Stack Hub or a proxy
 	credClientID    = "clientId"
 	credSecret      = "clientSecret"
 	credTenant      = "tenantId"
@@ -69,6 +70,15 @@ func (Collector) Manifest() contract.Manifest {
 
 // Token obtains a client-credentials access token for the ARM scope.
 func Token(ctx context.Context, authority, tenantID, clientID, secret, scope string) (string, error) {
+	return TokenCA(ctx, authority, tenantID, clientID, secret, scope, "")
+}
+
+// TokenCA is Token trusting the job's private CA bundle (caCertPem) at the authority, like the ARM client does.
+func TokenCA(ctx context.Context, authority, tenantID, clientID, secret, scope, caPem string) (string, error) {
+	transport, err := restjson.TransportFor(true, caPem)
+	if err != nil {
+		return "", err
+	}
 	form := url.Values{"grant_type": {"client_credentials"}, "client_id": {clientID}, "client_secret": {secret}, "scope": {strings.TrimSuffix(scope, "/") + "/.default"}}
 	endpoint := strings.TrimSuffix(authority, "/") + "/" + tenantID + "/oauth2/v2.0/token"
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
@@ -76,7 +86,7 @@ func Token(ctx context.Context, authority, tenantID, clientID, secret, scope str
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	res, err := (&http.Client{Timeout: tokenTimeout}).Do(req)
+	res, err := (&http.Client{Timeout: tokenTimeout, Transport: transport}).Do(req)
 	if err != nil {
 		return "", restjson.Classify(authority, err)
 	}
@@ -514,11 +524,12 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if authority == "" || arm == "" {
 		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "azure job must name authorityUrl and resourceManagerUrl (cloud-specific endpoints)")
 	}
-	token, err := Token(ctx, authority, cred.Fields[credTenant], cred.Fields[credClientID], cred.Fields[credSecret], arm)
+	caPem := restjson.StringOption(options, optionCA)
+	token, err := TokenCA(ctx, authority, cred.Fields[credTenant], cred.Fields[credClientID], cred.Fields[credSecret], arm, caPem)
 	if err != nil {
 		return collector.Observation{}, err
 	}
-	c, err := restjson.New(arm, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true})
+	c, err := restjson.New(arm, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true, CAPem: caPem})
 	if err != nil {
 		return collector.Observation{}, err
 	}

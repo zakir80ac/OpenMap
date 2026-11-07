@@ -25,7 +25,8 @@ type RequestLog struct {
 	Entries []string
 }
 
-func (l *RequestLog) add(s string) {
+// Add records one request; protocol servers (SSH, SNMP, LDAP ...) call it so verify counts their traffic too.
+func (l *RequestLog) Add(s string) {
 	l.mu.Lock()
 	l.Entries = append(l.Entries, s)
 	l.mu.Unlock()
@@ -123,7 +124,7 @@ func serveWith(env *Env, h http.Handler, secure bool, log *RequestLog) (*Endpoin
 	wrapped := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		h.ServeHTTP(rec, r)
-		log.add(r.Method + " " + r.URL.RequestURI() + " " + strconv.Itoa(rec.status))
+		log.Add(r.Method + " " + r.URL.RequestURI() + " " + strconv.Itoa(rec.status))
 	})
 	srv := &http.Server{Handler: wrapped, ReadHeaderTimeout: readHeaderTimeout}
 	scheme := "http"

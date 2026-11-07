@@ -77,7 +77,7 @@ func TestWalkAndEmit(t *testing.T) {
 		t.Fatalf("expected bmc + host, got %d", len(obs.Cis))
 	}
 	host := obs.Cis[1]
-	if host.Type != typeHost || host.Identity["serialNumber"] != "7KQ2M93" || host.Identity["primaryMac"] != "b4:96:91:aa:bb:01" || host.Identity["fqdn"] != "db-ryd-pg-core-01" {
+	if host.Type != typeHost || host.Identity["serialNumber"] != "7KQ2M93" || host.Identity["primaryMac"] != "b4:96:91:aa:bb:01" || host.Identity["fqdn"] != "" || host.Attributes["hostname"] != "db-ryd-pg-core-01" {
 		t.Fatalf("host identity wrong: %+v", host.Identity)
 	}
 	if host.Attributes["powerWatts"] != 612.0 || host.Attributes["powerSuppliesHealthy"] != 1 || host.Attributes["inletTempC"] != 23.5 || host.Attributes["rack"] != "R12" {

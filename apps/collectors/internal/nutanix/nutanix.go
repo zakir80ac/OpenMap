@@ -28,6 +28,8 @@ const (
 	v3           = "/api/nutanix/v3/"
 	v2Containers = "/PrismGateway/services/rest/v2.0/storage_containers/"
 	defaultVrf   = "default"
+	// prismCentralService marks the Prism Central entity in a v3 cluster list.
+	prismCentralService = "PRISM_CENTRAL"
 
 	typeCluster    = "vm_cluster"
 	typeHypervisor = "hypervisor"
@@ -275,6 +277,9 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 	clusterRef := map[string]contract.CiRef{}
 	clusterName := map[string]string{}
 	for _, cl := range inv.Clusters {
+		if isPrismCentral(cl) {
+			continue
+		}
 		uuid := cl.Metadata.UUID
 		identity := map[string]string{"platform": platform, "clusterId": uuid}
 		clusterRef[uuid] = contract.CiRef{Type: typeCluster, Identity: identity}
@@ -357,7 +362,12 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 	for _, vm := range inv.VMs {
 		r := vm.Status.Resources
 		hv, hasHv := hvRef[r.HostReference.UUID]
-		identity := map[string]string{"instanceUuid": strings.ToLower(vm.Metadata.UUID), "hypervisorRef": hv.Identity["hostRef"]}
+		// A powered-off AHV VM is placed on no host: identity values are never empty, so hypervisorRef is
+		// set only while the VM has a host.
+		identity := map[string]string{"instanceUuid": strings.ToLower(vm.Metadata.UUID)}
+		if hasHv {
+			identity["hypervisorRef"] = hv.Identity["hostRef"]
+		}
 		macs := []string{}
 		ips := []string{}
 		for _, nic := range r.NicList {
@@ -415,6 +425,17 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		}
 	}
 	return obs
+}
+
+// isPrismCentral reports the Prism Central instance itself, which clusters/list returns beside the AOS
+// clusters it manages: it hosts no workloads and is not a VM cluster.
+func isPrismCentral(cl clusterEntity) bool {
+	for _, s := range cl.Status.Resources.Config.ServiceList {
+		if s == prismCentralService {
+			return true
+		}
+	}
+	return false
 }
 
 func firstNonEmpty(values ...string) string {

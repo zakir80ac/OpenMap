@@ -210,6 +210,17 @@ func memberPort(name string) int {
 	return p
 }
 
+// VirtualIdentity keys a virtual server's listener on the BIG-IP. Many virtual servers share a port (every
+// HTTPS VIP listens on 443), so the port key carries the virtual server's full path as well, the way the
+// A10 collector keys its virtual ports; keyed on the port alone, every VIP on 443 merged into one CI.
+func VirtualIdentity(lbRef, proto, fullPath, name string, port int) map[string]string {
+	key := firstNonEmpty(fullPath, name)
+	if port != 0 {
+		key += ":" + strconv.Itoa(port)
+	}
+	return map[string]string{"hostRef": lbRef, "protocol": proto, "port": key}
+}
+
 // Emit converts the inventory into contract observations.
 func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observation {
 	obs := collector.Observation{}
@@ -247,10 +258,7 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 		if proto == "any" {
 			proto = "ip"
 		}
-		identity := map[string]string{"hostRef": lbRef, "protocol": proto, "port": strconv.Itoa(port)}
-		if port == 0 {
-			identity["port"] = v.Name
-		}
+		identity := VirtualIdentity(lbRef, proto, v.FullPath, v.Name, port)
 		profiles := []string{}
 		for _, p := range v.Profiles.Items {
 			profiles = append(profiles, p.Name)

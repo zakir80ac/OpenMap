@@ -34,7 +34,7 @@ func TestParseAndEmit(t *testing.T) {
 		_, _ = w.Write([]byte(statsCsv))
 	}))
 	defer srv.Close()
-	body, server, err := Fetch(context.Background(), srv.URL, defaultPath, "stats", "pw", false)
+	body, server, err := Fetch(context.Background(), srv.URL, defaultPath, "stats", "pw", false, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestParseAndEmit(t *testing.T) {
 	if rels[relContains] != 2 || rels[relDependsOn] != 3 || rels[relUsesIP] != 2 {
 		t.Fatalf("relationship mix wrong: %+v", rels)
 	}
-	if _, _, err := Fetch(context.Background(), srv.URL, defaultPath, "stats", "wrong", false); err == nil || !strings.Contains(err.Error(), contract.ErrAuthFailed) {
+	if _, _, err := Fetch(context.Background(), srv.URL, defaultPath, "stats", "wrong", false, ""); err == nil || !strings.Contains(err.Error(), contract.ErrAuthFailed) {
 		t.Fatalf("expected auth_failed, got %v", err)
 	}
 }

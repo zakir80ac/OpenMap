@@ -235,7 +235,7 @@ func TestREQDISC023_T311_RecordedVendorFixtures(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			// The bind password was redacted in the recording; the replay accepts whatever is sent.
-			inv, err := Search(ctx, host, port, false, false, false, want.bindUser, "redacted", "", true)
+			inv, err := Search(ctx, host, port, false, false, nil, want.bindUser, "redacted", "", true)
 			if err != nil {
 				t.Fatalf("Search over recorded %s: %v", d.Name(), err)
 			}

@@ -95,7 +95,7 @@ func TestWalkAndEmit(t *testing.T) {
 			}
 		}
 	}
-	if web.Identity["port"] != "443" || web.Identity["protocol"] != "tcp" || web.Attributes["membersUp"] != 1 || web.Attributes["memberCount"] != 2 || web.Attributes["loadBalancingMode"] != "LEASTCONNECTION" || web.Attributes["healthPercent"] != 50 {
+	if web.Identity["port"] != "lb_web:443" || web.Identity["protocol"] != "tcp" || web.Attributes["membersUp"] != 1 || web.Attributes["memberCount"] != 2 || web.Attributes["loadBalancingMode"] != "LEASTCONNECTION" || web.Attributes["healthPercent"] != 50 {
 		t.Fatalf("lb_web wrong: %+v", web)
 	}
 	if dns.Identity["protocol"] != "udp" || dns.Attributes["state"] != "down" {
@@ -108,7 +108,7 @@ func TestWalkAndEmit(t *testing.T) {
 	csLinked := false
 	for _, r := range obs.Relationships {
 		rels[r.Type]++
-		if r.Type == relDependsOn && r.From.Identity["port"] == "443" && r.To.Identity["hostRef"] == "ns-lab-01" {
+		if r.Type == relDependsOn && r.From.Identity["port"] == "cs/cs_edge:443" && r.To.Identity["hostRef"] == "ns-lab-01" {
 			csLinked = true
 		}
 		if r.Type == relDependsOn && r.To.Identity["hostRef"] == "10.191.3.12" && r.Attributes["state"] != "disabled" {

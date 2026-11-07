@@ -7,7 +7,6 @@ package vmware
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
 	"github.com/openmap/openmap/apps/collectors/internal/contract"
+	"github.com/openmap/openmap/apps/collectors/internal/restjson"
 )
 
 const (
@@ -33,11 +33,14 @@ const (
 	defaultDetailFanOut = 8
 	optionPort          = "port"
 	optionVerify        = "verifyTls"
+	optionCA            = "caCertPem"
 	optionFanOut        = "detailConcurrency"
 	credUser            = "username"
 	credPassword        = "password"
 	evidenceKind        = "api_response"
 	sessionHeader       = "vmware-api-session-id"
+	// legacyFilterPrefix: the 6.5-6.7 `/rest` namespace names list filters `filter.<field>` where `/api` uses `<field>`.
+	legacyFilterPrefix = "filter."
 
 	typeCluster    = "vm_cluster"
 	typeHypervisor = "hypervisor"
@@ -80,10 +83,15 @@ type Client struct {
 	raw    [][]byte
 }
 
-func NewClient(host string, port int, user, pass string, verifyTLS bool) *Client {
+// NewClient builds a vCenter client. vCenter appliances commonly run the VMCA chain: verifyTLS enforces it
+// against the system pool, a non-empty caPem (the VMCA root) pins it.
+func NewClient(host string, port int, user, pass string, verifyTLS bool, caPem string) (*Client, error) {
 	base := &url.URL{Scheme: "https", Host: net.JoinHostPort(host, strconv.Itoa(port))}
-	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !verifyTLS, MinVersion: tls.VersionTLS12}} //nolint:gosec // vCenter appliances commonly run the VMCA self-signed chain; verifyTls=true enforces it.
-	return &Client{base: base, http: &http.Client{Timeout: httpTimeout, Transport: tr}, user: user, pass: pass}
+	tr, err := restjson.TransportFor(verifyTLS, caPem)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{base: base, http: &http.Client{Timeout: httpTimeout, Transport: tr}, user: user, pass: pass}, nil
 }
 
 func (c *Client) record(raw []byte) {
@@ -92,7 +100,8 @@ func (c *Client) record(raw []byte) {
 	c.mu.Unlock()
 }
 
-// path maps a 7.0 `/api/...` path onto the legacy `/rest/...` namespace when needed.
+// path maps a 7.0 `/api/...` path onto the legacy `/rest/...` namespace when needed, renaming list filters
+// (`hosts=` becomes `filter.hosts=`).
 func (c *Client) path(p string) string {
 	if !c.legacy {
 		return p
@@ -100,7 +109,20 @@ func (c *Client) path(p string) string {
 	if p == "/api/session" {
 		return "/rest/com/vmware/cis/session"
 	}
-	return "/rest" + strings.TrimPrefix(p, "/api")
+	route, query, hasQuery := strings.Cut(p, "?")
+	route = "/rest" + strings.TrimPrefix(route, "/api")
+	if !hasQuery {
+		return route
+	}
+	values, err := url.ParseQuery(query)
+	if err != nil {
+		return route + "?" + query
+	}
+	legacy := url.Values{}
+	for k, v := range values {
+		legacy[legacyFilterPrefix+k] = v
+	}
+	return route + "?" + legacy.Encode()
 }
 
 func (c *Client) do(ctx context.Context, method, p string, body []byte, out any) ([]byte, int, error) {
@@ -236,26 +258,59 @@ type VMDetail struct {
 		InstanceUUID string `json:"instance_uuid"`
 		BiosUUID     string `json:"bios_uuid"`
 	} `json:"identity"`
-	Nics map[string]struct {
-		MacAddress string `json:"mac_address"`
-		State      string `json:"state"`
-		Backing    struct {
-			Network     string `json:"network"`
-			NetworkName string `json:"network_name"`
-		} `json:"backing"`
-	} `json:"nics"`
-	Disks map[string]struct {
-		Capacity int64 `json:"capacity"`
-		Backing  struct {
-			VmdkFile string `json:"vmdk_file"`
-		} `json:"backing"`
-	} `json:"disks"`
-	CPU struct {
+	Nics  KeyedMap[VMNic]  `json:"nics"`
+	Disks KeyedMap[VMDisk] `json:"disks"`
+	CPU   struct {
 		Count int `json:"count"`
 	} `json:"cpu"`
 	Memory struct {
 		SizeMiB int `json:"size_MiB"`
 	} `json:"memory"`
+}
+
+type VMNic struct {
+	MacAddress string `json:"mac_address"`
+	State      string `json:"state"`
+	Backing    struct {
+		Network     string `json:"network"`
+		NetworkName string `json:"network_name"`
+	} `json:"backing"`
+}
+
+type VMDisk struct {
+	Capacity int64 `json:"capacity"`
+	Backing  struct {
+		VmdkFile string `json:"vmdk_file"`
+	} `json:"backing"`
+}
+
+// KeyedMap is a vAPI map: a JSON object under `/api`, an array of {key, value} pairs under the legacy
+// `/rest` envelope (6.5-6.7 serialise every map that way, VM NICs and disks included).
+type KeyedMap[T any] map[string]T
+
+func (m *KeyedMap[T]) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || trimmed[0] != '[' {
+		var obj map[string]T
+		if err := json.Unmarshal(data, &obj); err != nil {
+			return err
+		}
+		*m = obj
+		return nil
+	}
+	var pairs []struct {
+		Key   string `json:"key"`
+		Value T      `json:"value"`
+	}
+	if err := json.Unmarshal(data, &pairs); err != nil {
+		return err
+	}
+	out := make(map[string]T, len(pairs))
+	for _, p := range pairs {
+		out[p.Key] = p.Value
+	}
+	*m = out
+	return nil
 }
 
 type GuestIdentity struct {
@@ -565,7 +620,11 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		return collector.Observation{}, collector.Errorf(contract.ErrAuthFailed, false, "vmware requires a password credential with a username")
 	}
 	verify, _ := options[optionVerify].(bool)
-	c := NewClient(target.Value, intOption(options, optionPort, defaultPort), cred.Fields[credUser], cred.Fields[credPassword], verify)
+	caPem, _ := options[optionCA].(string)
+	c, err := NewClient(target.Value, intOption(options, optionPort, defaultPort), cred.Fields[credUser], cred.Fields[credPassword], verify, caPem)
+	if err != nil {
+		return collector.Observation{}, err
+	}
 	if err := c.Login(ctx); err != nil {
 		return collector.Observation{}, classify(target, err)
 	}

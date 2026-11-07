@@ -42,6 +42,7 @@ const (
 	optionCompute   = "computeUrl"
 	optionSQLAdmin  = "sqlAdminUrl"
 	optionContainer = "containerUrl"
+	optionCA        = "caCertPem"
 	credEmail       = "clientEmail"
 	credPrivateKey  = "privateKeyPem"
 	credType        = "service_account"
@@ -122,13 +123,23 @@ func SignedDelegatedJWT(clientEmail, privateKeyPEM, scope, audience, subject str
 
 // Token exchanges the assertion for a bearer token.
 func Token(ctx context.Context, tokenURL, assertion string) (string, error) {
+	return TokenCA(ctx, tokenURL, assertion, "")
+}
+
+// TokenCA is Token trusting the job's private CA bundle (caCertPem) at the token endpoint, as the API clients
+// do: private-access and sovereign deployments front the token endpoint with the same private CA.
+func TokenCA(ctx context.Context, tokenURL, assertion, caPem string) (string, error) {
+	transport, err := restjson.TransportFor(true, caPem)
+	if err != nil {
+		return "", err
+	}
 	form := url.Values{"grant_type": {grantJWTBearer}, "assertion": {assertion}}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	client := &http.Client{Timeout: tokenTimeout, Transport: restjson.Transport(true)}
+	client := &http.Client{Timeout: tokenTimeout, Transport: transport}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", collector.Errorf(contract.ErrUnreachable, true, "token endpoint: %v", err)
@@ -538,13 +549,14 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if err != nil {
 		return collector.Observation{}, collector.Errorf(contract.ErrAuthFailed, false, "service account key: %v", err)
 	}
-	token, err := Token(ctx, tokenURL, assertion)
+	caPem := restjson.StringOption(options, optionCA)
+	token, err := TokenCA(ctx, tokenURL, assertion, caPem)
 	if err != nil {
 		return collector.Observation{}, err
 	}
 	clients := map[string]*restjson.Client{}
 	for key, base := range bases {
-		c, err := restjson.New(base, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true, CAPem: restjson.StringOption(options, "caCertPem")})
+		c, err := restjson.New(base, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true, CAPem: caPem})
 		if err != nil {
 			return collector.Observation{}, err
 		}

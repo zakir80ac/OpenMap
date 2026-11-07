@@ -3,12 +3,88 @@ package vendors
 
 import (
 	"github.com/openmap/openmap/tools/simulator/internal/sim"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/a10"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/alibaba"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/aws"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/azure"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/citrixadc"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/dhcpssh"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/directory"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/dnszone"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/docker"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/f5"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/fcfabric"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/gcp"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/haproxy"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/hyperv"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/kubernetes"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/kvmlibvirt"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/linuxssh"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/naslinux"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/netflow"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/nginx"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/nutanix"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/objectstore"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/oci"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/oneview"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/ontap"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/ovirt"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/portscan"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/purestorage"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/redfish"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/saas"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/snmpnet"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/snmppower"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/ucs"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/vmware"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/vulnfeed"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/warranty"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/windhcp"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/windows"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/winsmb"
 )
 
 // All returns every simulator.
 func All() []sim.Vendor {
 	return []sim.Vendor{
+		directory.Vendor{},
+		dnszone.Vendor{},
+		dhcpssh.Vendor{},
+		fcfabric.Vendor{},
+		kvmlibvirt.Vendor{},
+		linuxssh.Vendor{},
+		naslinux.Vendor{},
+		netflow.Vendor{},
+		portscan.Vendor{},
 		purestorage.Vendor{},
+		snmpnet.Vendor{},
+		snmppower.Vendor{},
+		vmware.Vendor{},
+		nutanix.Vendor{},
+		ovirt.Vendor{},
+		kubernetes.Vendor{},
+		docker.Vendor{},
+		saas.Vendor{},
+		vulnfeed.Vendor{},
+		warranty.Vendor{},
+		redfish.Vendor{},
+		ucs.Vendor{},
+		oneview.Vendor{},
+		ontap.Vendor{},
+		objectstore.Vendor{},
+		f5.Vendor{},
+		citrixadc.Vendor{},
+		a10.Vendor{},
+		haproxy.Vendor{},
+		nginx.Vendor{},
+		aws.Vendor{},
+		azure.Vendor{},
+		gcp.Vendor{},
+		oci.Vendor{},
+		alibaba.Vendor{},
+		windows.Vendor{},
+		hyperv.Vendor{},
+		winsmb.Vendor{},
+		windhcp.Vendor{},
 	}
 }

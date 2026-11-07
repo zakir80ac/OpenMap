@@ -1,7 +1,10 @@
 // REQ-DISC-027 — vulnerability feed collector: pulls CVE records from an NVD 2.0-compatible API
 // (NVD itself, or a mirror inside an air-gapped estate) for a modification window, and emits
 // `vulnerability` CIs carrying CVSS, severity, affected CPE match strings and references. The CMDB
-// correlates CPEs with discovered software; this collector never touches a device.
+// correlates CPEs with discovered software; this collector never touches a device. A window longer
+// than the API's 120-day range limit is read as consecutive ranges; pages advance by the records a page
+// really held (a mirror may cap resultsPerPage below the request); a mirror behind a private CA is
+// pinned with caCertPem.
 package vulnfeed
 
 import (
@@ -27,10 +30,14 @@ const (
 	optionWindow    = "lastModifiedHours"
 	optionSeverity  = "minimumSeverity" // LOW | MEDIUM | HIGH | CRITICAL
 	optionApiKeyHdr = "apiKeyHeader"
-	defaultKeyHdr   = "apiKey"
-	credField       = "token"
-	typeVuln        = "vulnerability"
-	nvdTimeLayout   = "2006-01-02T15:04:05.000"
+	optionPageSize  = "resultsPerPage" // at most pageSize; a lower value suits mirrors with a smaller cap
+	optionCA        = "caCertPem"
+	// maxRange is the NVD 2.0 limit on one lastModStartDate..lastModEndDate range: 120 consecutive days.
+	maxRange      = 120 * 24 * time.Hour
+	defaultKeyHdr = "apiKey"
+	credField     = "token"
+	typeVuln      = "vulnerability"
+	nvdTimeLayout = "2006-01-02T15:04:05.000"
 )
 
 var severityRank = map[string]int{"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
@@ -110,24 +117,48 @@ type page struct {
 	Vulnerabilities []cveItem `json:"vulnerabilities"`
 }
 
-// Fetch pages through the feed for the modification window ending now.
+// Fetch pages through the feed for the modification window ending now, at the API's maximum page size.
 func Fetch(ctx context.Context, c *restjson.Client, basePath string, window time.Duration, now time.Time) ([]cveItem, [][]byte, error) {
+	return FetchPages(ctx, c, basePath, window, now, pageSize)
+}
+
+// FetchPages is Fetch with a page size (1..pageSize). The window is split into ranges of at most maxRange,
+// oldest first; a CVE modified on a range boundary is returned by both ranges and kept once (the later copy).
+func FetchPages(ctx context.Context, c *restjson.Client, basePath string, window time.Duration, now time.Time, perPage int) ([]cveItem, [][]byte, error) {
+	if perPage <= 0 || perPage > pageSize {
+		perPage = pageSize
+	}
 	var items []cveItem
-	start := now.Add(-window)
-	for index := 0; ; index += pageSize {
-		q := url.Values{}
-		q.Set("lastModStartDate", start.UTC().Format(nvdTimeLayout))
-		q.Set("lastModEndDate", now.UTC().Format(nvdTimeLayout))
-		q.Set("resultsPerPage", strconv.Itoa(pageSize))
-		q.Set("startIndex", strconv.Itoa(index))
-		var p page
-		if err := c.Get(ctx, basePath+"?"+q.Encode(), &p); err != nil {
-			return nil, nil, err
+	seen := map[string]int{}
+	for from := now.Add(-window); from.Before(now); {
+		to := from.Add(maxRange)
+		if to.After(now) {
+			to = now
 		}
-		items = append(items, p.Vulnerabilities...)
-		if index+len(p.Vulnerabilities) >= p.TotalResults || len(p.Vulnerabilities) == 0 {
-			break
+		for index := 0; ; {
+			q := url.Values{}
+			q.Set("lastModStartDate", from.UTC().Format(nvdTimeLayout))
+			q.Set("lastModEndDate", to.UTC().Format(nvdTimeLayout))
+			q.Set("resultsPerPage", strconv.Itoa(perPage))
+			q.Set("startIndex", strconv.Itoa(index))
+			var p page
+			if err := c.Get(ctx, basePath+"?"+q.Encode(), &p); err != nil {
+				return nil, nil, err
+			}
+			for _, it := range p.Vulnerabilities {
+				if i, dup := seen[it.Cve.ID]; dup {
+					items[i] = it
+					continue
+				}
+				seen[it.Cve.ID] = len(items)
+				items = append(items, it)
+			}
+			index += len(p.Vulnerabilities)
+			if index >= p.TotalResults || len(p.Vulnerabilities) == 0 {
+				break
+			}
 		}
+		from = to
 	}
 	return items, c.Raw(), nil
 }
@@ -263,12 +294,12 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if err != nil || base.Host == "" {
 		return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "feed target must be a URL, got %q", target.Value)
 	}
-	c, err := restjson.New(base.Scheme+"://"+base.Host, defaultPort, restjson.Auth{}, restjson.Options{VerifyTLS: true, Headers: headers})
+	c, err := restjson.New(base.Scheme+"://"+base.Host, defaultPort, restjson.Auth{}, restjson.Options{VerifyTLS: true, CAPem: restjson.StringOption(options, optionCA), Headers: headers})
 	if err != nil {
 		return collector.Observation{}, err
 	}
 	window := time.Duration(restjson.IntOption(options, optionWindow, defaultWindowH)) * time.Hour
-	items, raw, err := Fetch(ctx, c, base.Path, window, time.Now())
+	items, raw, err := FetchPages(ctx, c, base.Path, window, time.Now(), restjson.IntOption(options, optionPageSize, pageSize))
 	if err != nil {
 		return collector.Observation{}, restjson.Classify(base.Host, err)
 	}

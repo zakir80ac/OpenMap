@@ -6,6 +6,7 @@ package azure
 import (
 	"context"
 	"encoding/json"
+	"encoding/pem"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -89,8 +90,8 @@ func count(cis []contract.ObservedCi, typ string) int {
 func TestTokenWalkEmit(t *testing.T) {
 	srv := arm(t)
 	defer srv.Close()
-	http.DefaultTransport = srv.Client().Transport // Token uses a plain client; trust the test certificate
-	token, err := Token(context.Background(), srv.URL, "tenant-1", "client", "s3cret", srv.URL)
+	caPem := string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: srv.Certificate().Raw}))
+	token, err := TokenCA(context.Background(), srv.URL, "tenant-1", "client", "s3cret", srv.URL, caPem)
 	if err != nil || token != "tok" {
 		t.Fatalf("token failed: %v %q", err, token)
 	}

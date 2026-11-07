@@ -75,17 +75,27 @@ type Lease struct {
 	Static    bool
 }
 
-// WindowsScript lists scopes, leases and reservations as one JSON document.
+// WindowsScript lists the server's DNS name, scopes, leases and reservations, and the option values (server level,
+// then per scope, which win) as one JSON document.
 const WindowsScript = `
 $ErrorActionPreference = 'SilentlyContinue'
+$server = $env:COMPUTERNAME
+try { $server = [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName } catch { }
 $scopes = @(Get-DhcpServerv4Scope | Select-Object ScopeId,SubnetMask,Name,StartRange,EndRange,LeaseDuration,State)
 $leases = @()
+$options = @(Get-DhcpServerv4OptionValue -All | Select-Object OptionId,Value,ScopeId)
 foreach ($s in $scopes) {
   $leases += @(Get-DhcpServerv4Lease -ScopeId $s.ScopeId -AllLeases | Where-Object { $_.AddressState -like 'Active*' -or $_.AddressState -like '*Reservation*' } | Select-Object IPAddress,ClientId,HostName,LeaseExpiryTime,AddressState,ScopeId)
+  $options += @(Get-DhcpServerv4OptionValue -ScopeId $s.ScopeId | Select-Object OptionId,Value,@{Name='ScopeId';Expression={[string]$s.ScopeId}})
 }
-$options = @(Get-DhcpServerv4OptionValue -All | Select-Object OptionId,Value,ScopeId)
-[pscustomobject]@{ scopes=$scopes; leases=$leases; options=$options } | ConvertTo-Json -Depth 4 -Compress
+[pscustomobject]@{ server=$server; scopes=$scopes; leases=$leases; options=$options } | ConvertTo-Json -Depth 4 -Compress
 `
+
+// DHCP option codes the Windows path reads (RFC 2132).
+const (
+	optionRouter = 3
+	optionDNS    = 6
+)
 
 type windowsDoc struct {
 	Scopes []struct {
@@ -105,6 +115,64 @@ type windowsDoc struct {
 		AddressState    any    `json:"AddressState"`
 		ScopeID         any    `json:"ScopeId"`
 	} `json:"leases"`
+	Options []struct {
+		OptionID any `json:"OptionId"`
+		Value    any `json:"Value"`
+		ScopeID  any `json:"ScopeId"`
+	} `json:"options"`
+	Server string `json:"server"`
+}
+
+// WindowsServer is the DHCP server's DNS name from the Windows script document ("" when it printed none), so
+// scopes reference the server rather than the address the job targeted.
+func WindowsServer(stdout string) string {
+	start := strings.Index(stdout, "{")
+	if start < 0 {
+		return ""
+	}
+	var doc struct {
+		Server string `json:"server"`
+	}
+	if err := json.Unmarshal([]byte(stdout[start:]), &doc); err != nil {
+		return ""
+	}
+	return strings.ToLower(strings.TrimSuffix(strings.TrimSpace(doc.Server), "."))
+}
+
+func optionValues(v any) []string {
+	switch x := v.(type) {
+	case string:
+		return []string{x}
+	case []any:
+		out := make([]string, 0, len(x))
+		for _, e := range x {
+			if s := anyString(e); s != "" {
+				out = append(out, s)
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+// windowsOptions returns router and DNS servers per scope id ("" holds the server-level values).
+func windowsOptions(doc *windowsDoc) (map[string]string, map[string][]string) {
+	routers, dns := map[string]string{}, map[string][]string{}
+	for _, o := range doc.Options {
+		scope := ipString(o.ScopeID)
+		id, err := strconv.Atoi(anyString(o.OptionID))
+		if err != nil {
+			continue
+		}
+		values := optionValues(o.Value)
+		switch {
+		case id == optionRouter && len(values) > 0:
+			routers[scope] = values[0]
+		case id == optionDNS && len(values) > 0:
+			dns[scope] = values
+		}
+	}
+	return routers, dns
 }
 
 // ipString reads PowerShell's IPAddress serialisation (string, or object with IPAddressToString).
@@ -161,12 +229,21 @@ func ParseWindows(stdout string) ([]Scope, []Lease, error) {
 	}
 	var scopes []Scope
 	cidrByScope := map[string]string{}
+	routers, dns := windowsOptions(&doc)
 	for _, s := range doc.Scopes {
 		id := ipString(s.ScopeID)
 		prefix := maskToPrefix(ipString(s.SubnetMask))
 		cidr := id + "/" + strconv.Itoa(prefix)
 		cidrByScope[id] = cidr
-		scopes = append(scopes, Scope{Name: s.Name, CIDR: cidr, Start: ipString(s.StartRange), End: ipString(s.EndRange), LeaseTTL: anyString(s.LeaseDuration), State: anyString(s.State)})
+		router, ok := routers[id]
+		if !ok {
+			router = routers[""]
+		}
+		servers, ok := dns[id]
+		if !ok {
+			servers = dns[""]
+		}
+		scopes = append(scopes, Scope{Name: s.Name, CIDR: cidr, Start: ipString(s.StartRange), End: ipString(s.EndRange), Router: router, DNS: servers, LeaseTTL: anyString(s.LeaseDuration), State: anyString(s.State)})
 	}
 	var leases []Lease
 	for _, l := range doc.Leases {
@@ -479,7 +556,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		if err != nil {
 			return collector.Observation{}, err
 		}
-		return Emit(target.Value, scopes, leases, []byte(out.Stdout), time.Now().UTC()), nil
+		return Emit(firstNonEmpty(WindowsServer(out.Stdout), target.Value), scopes, leases, []byte(out.Stdout), time.Now().UTC()), nil
 	case modeISC, modeKea:
 		if configPath == "" || leasesPath == "" {
 			return collector.Observation{}, collector.Errorf(contract.ErrInternal, false, "dhcp job must name configPath and leasesPath for %s", mode)

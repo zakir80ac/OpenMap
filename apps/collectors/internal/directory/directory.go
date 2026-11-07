@@ -7,6 +7,7 @@ package directory
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"strconv"
@@ -31,6 +32,7 @@ const (
 	optionTLS       = "tls"
 	optionStartTLS  = "startTls"
 	optionVerify    = "verifyTls"
+	optionCAPem     = "caCertPem"        // PEM bundle of the enterprise CA that issued the domain controllers' certificates
 	optionServiceOU = "serviceAccountOu" // substring matched against the DN, e.g. "OU=Service Accounts"
 	optionComputers = "includeComputers"
 	credUser        = "username"
@@ -106,13 +108,27 @@ func pagedSearch(conn *ldap.Conn, baseDN, filter string, attrs []string, object 
 	return out, nil
 }
 
+// TLSConfig is the LDAPS / StartTLS client configuration: verify checks the chain against the system roots, or
+// against caPem (the enterprise CA bundle) when one is given, which also turns verification on.
+func TLSConfig(host string, verify bool, caPem string) (*tls.Config, error) {
+	cfg := &tls.Config{InsecureSkipVerify: !verify, ServerName: host, MinVersion: tls.VersionTLS12} //nolint:gosec // domain controllers commonly present enterprise-CA certificates; verifyTls=true or caCertPem enforce them.
+	if caPem != "" {
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM([]byte(caPem)) {
+			return nil, collector.Errorf(contract.ErrInternal, false, "caCertPem option holds no PEM certificate")
+		}
+		cfg.RootCAs = pool
+		cfg.InsecureSkipVerify = false
+	}
+	return cfg, nil
+}
+
 // Search binds and reads users, computers and groups.
-func Search(ctx context.Context, host string, port int, useTLS, startTLS, verify bool, user, password, baseDN string, includeComputers bool) (*Inventory, error) {
+func Search(ctx context.Context, host string, port int, useTLS, startTLS bool, tlsCfg *tls.Config, user, password, baseDN string, includeComputers bool) (*Inventory, error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	dialer := &net.Dialer{Timeout: dialTimeout}
 	var conn *ldap.Conn
 	var err error
-	tlsCfg := &tls.Config{InsecureSkipVerify: !verify, ServerName: host, MinVersion: tls.VersionTLS12} //nolint:gosec // domain controllers commonly present enterprise-CA certificates; verifyTls=true enforces them.
 	if useTLS {
 		conn, err = ldap.DialURL("ldaps://"+addr, ldap.DialWithDialer(dialer), ldap.DialWithTLSConfig(tlsCfg))
 	} else {
@@ -301,7 +317,12 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	}
 	baseDN, _ := options[optionBaseDN].(string)
 	serviceOU, _ := options[optionServiceOU].(string)
-	inv, err := Search(ctx, target.Value, port, useTLS, startTLS, verify, cred.Fields[credUser], cred.Fields[credPassword], baseDN, includeComputers)
+	caPem, _ := options[optionCAPem].(string)
+	tlsCfg, err := TLSConfig(target.Value, verify, caPem)
+	if err != nil {
+		return collector.Observation{}, err
+	}
+	inv, err := Search(ctx, target.Value, port, useTLS, startTLS, tlsCfg, cred.Fields[credUser], cred.Fields[credPassword], baseDN, includeComputers)
 	if err != nil {
 		return collector.Observation{}, err
 	}

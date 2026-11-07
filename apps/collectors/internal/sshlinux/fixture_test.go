@@ -237,7 +237,7 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 				t.Errorf("host attributes %v %v %v", host.Attributes["packageCount"], host.Attributes["cpuCount"], host.Attributes["memoryGb"])
 			}
 			osCis := byType[typeOS]
-			if len(osCis) != 1 || osCis[0].Identity["family"] != want.osID || osCis[0].Identity["version"] != want.osVersionID || osCis[0].Identity["hostRef"] != want.hostname || osCis[0].Name != want.osPretty {
+			if len(osCis) != 1 || osCis[0].Identity["family"] != "linux" || osCis[0].Attributes["distribution"] != want.osID || osCis[0].Identity["version"] != want.osVersionID || osCis[0].Identity["hostRef"] != want.hostname || osCis[0].Name != want.osPretty {
 				t.Errorf("operating_system %+v", osCis)
 			}
 			if len(byType[typeInterface]) != 1 || len(byType[typeIP]) != 1 || byType[typeIP][0].Identity["address"] != want.ip || byType[typeIP][0].Attributes["cidr"] != want.cidr {

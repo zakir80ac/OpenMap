@@ -4,8 +4,10 @@
 // credentials, SOQL: organization, user licences, active users), ServiceNow (Table and Stats APIs:
 // instance properties, active users, licence details) and Workday (REST: workers). Each tenant becomes
 // a saas_tenant with seat and SSO facts; every licensed product becomes a saas_application; the
-// application is licensed_by the tenant and member_of the vendor. Endpoint bases, token URLs and scopes
-// are job options because they differ per cloud and region; credentials are vault references.
+// application is licensed_by the tenant and member_of the vendor (the company, named as the vendor catalogue
+// names it, so it merges with the supplier record; the adapter key is the provider attribute). Endpoint bases,
+// token URLs and scopes are job options because they differ per cloud and region; a private CA bundle
+// (caCertPem) pins both the token endpoint and the API; credentials are vault references.
 package saas
 
 import (
@@ -35,6 +37,7 @@ const (
 	optionToken  = "tokenUrl"
 	optionScope  = "scope"
 	optionTenant = "tenant"
+	optionCA     = "caCertPem"
 	credClient   = "clientId"
 	credSecret   = "clientSecret"
 	credTenantID = "tenantId"
@@ -49,6 +52,7 @@ const (
 	vendorSalesforce = "salesforce"
 	vendorServiceNow = "servicenow"
 	vendorWorkday    = "workday"
+	grantJWTBearer   = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 	typeTenant      = "saas_tenant"
 	typeApplication = "saas_application"
@@ -57,11 +61,13 @@ const (
 	relMemberOf     = "member_of"
 	relSecuredBy    = "secured_by"
 
-	graphUsersPage  = 999
-	soqlVersionPath = "/services/data/v60.0"
-	snowStatsPath   = "/api/now/stats/"
-	snowTablePath   = "/api/now/table/"
-	workdayPageOne  = 1
+	graphUsersPage   = 999
+	googleUsersPage  = 500
+	googleGroupsPage = 200
+	soqlVersionPath  = "/services/data/v60.0"
+	snowStatsPath    = "/api/now/stats/"
+	snowTablePath    = "/api/now/table/"
+	workdayPageOne   = 1
 )
 
 type Collector struct{}
@@ -73,6 +79,12 @@ func (Collector) Manifest() contract.Manifest {
 		TargetKinds: []string{"account"}, Emits: []string{typeTenant, typeApplication, typeVendor},
 		ContractVersion: contract.Version,
 	}
+}
+
+// vendorNames maps each provider adapter to the company the vendor catalogue knows, so the vendor CI the
+// collector emits is the same CI as the supplier record (contracts, support, renewals).
+var vendorNames = map[string]string{
+	vendorM365: "Microsoft", vendorGoogle: "Google", vendorSalesforce: "Salesforce", vendorServiceNow: "ServiceNow", vendorWorkday: "Workday",
 }
 
 // Product is one licensed SaaS product (SKU, licence, module) inside a tenant.
@@ -105,20 +117,31 @@ type Tenant struct {
 }
 
 // clientCredentials performs an OAuth 2.0 client-credentials grant and returns the bearer token.
-func clientCredentials(ctx context.Context, tokenURL, clientID, secret, scope string, extra url.Values) (string, error) {
+func clientCredentials(ctx context.Context, tokenURL, clientID, secret, scope, caPem string) (string, error) {
 	form := url.Values{"grant_type": {"client_credentials"}, "client_id": {clientID}, "client_secret": {secret}}
 	if scope != "" {
 		form.Set("scope", scope)
 	}
-	for k, v := range extra {
-		form[k] = v
+	return tokenGrant(ctx, tokenURL, form, caPem)
+}
+
+// jwtBearer exchanges a signed service-account assertion for a bearer token (RFC 7523).
+func jwtBearer(ctx context.Context, tokenURL, assertion, caPem string) (string, error) {
+	return tokenGrant(ctx, tokenURL, url.Values{"grant_type": {grantJWTBearer}, "assertion": {assertion}}, caPem)
+}
+
+// tokenGrant posts a token request with TLS verified against the system pool or the job's private CA bundle.
+func tokenGrant(ctx context.Context, tokenURL string, form url.Values, caPem string) (string, error) {
+	transport, err := restjson.TransportFor(true, caPem)
+	if err != nil {
+		return "", err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	client := &http.Client{Timeout: tokenTimeout, Transport: restjson.Transport(true)}
+	client := &http.Client{Timeout: tokenTimeout, Transport: transport}
 	res, err := client.Do(req)
 	if err != nil {
 		return "", collector.Errorf(contract.ErrUnreachable, true, "token endpoint: %v", err)
@@ -253,7 +276,7 @@ func googleWorkspace(ctx context.Context, c *restjson.Client) (*Tenant, error) {
 	t := &Tenant{Vendor: vendorGoogle, TenantID: cust.ID, DisplayName: firstNonEmpty(cust.PostalAddress.OrganizationName, cust.CustomerDomain), Domains: []string{cust.CustomerDomain}, Region: cust.PostalAddress.CountryCode, Facts: map[string]any{"language": cust.Language}}
 	pageToken := ""
 	for {
-		q := "?customer=my_customer&maxResults=500&projection=basic"
+		q := "?customer=my_customer&maxResults=" + strconv.Itoa(googleUsersPage) + "&projection=basic"
 		if pageToken != "" {
 			q += "&pageToken=" + url.QueryEscape(pageToken)
 		}
@@ -277,13 +300,28 @@ func googleWorkspace(ctx context.Context, c *restjson.Client) (*Tenant, error) {
 		}
 		pageToken = page.NextPageToken
 	}
-	var groups struct {
-		Groups []json.RawMessage `json:"groups"`
-	}
-	if err := c.Get(ctx, "/admin/directory/v1/groups?customer=my_customer&maxResults=200", &groups); err == nil {
-		t.Groups = int64(len(groups.Groups))
-	} else if !restjson.IsNotFound(err) {
-		return nil, err
+	// Groups page like users: a customer with more groups than one page holds is counted in full.
+	pageToken = ""
+	for {
+		q := "?customer=my_customer&maxResults=" + strconv.Itoa(googleGroupsPage)
+		if pageToken != "" {
+			q += "&pageToken=" + url.QueryEscape(pageToken)
+		}
+		var page struct {
+			Groups        []json.RawMessage `json:"groups"`
+			NextPageToken string            `json:"nextPageToken"`
+		}
+		if err := c.Get(ctx, "/admin/directory/v1/groups"+q, &page); err != nil {
+			if restjson.IsNotFound(err) {
+				break
+			}
+			return nil, err
+		}
+		t.Groups += int64(len(page.Groups))
+		if page.NextPageToken == "" {
+			break
+		}
+		pageToken = page.NextPageToken
 	}
 	t.Products = []Product{{Name: "Google Workspace", SKU: "workspace", SeatsTotal: t.Users, SeatsAssigned: t.ActiveUsers, Status: "enabled"}}
 	t.Raw = c.Raw()
@@ -433,25 +471,26 @@ func Emit(t *Tenant, at time.Time) collector.Observation {
 	for _, r := range t.Raw {
 		obs.Evidence = append(obs.Evidence, collector.RawEvidence{Kind: evidenceKind, Data: r})
 	}
-	vendorIdentity := map[string]string{"name": t.Vendor}
+	company := firstNonEmpty(vendorNames[t.Vendor], t.Vendor)
+	vendorIdentity := map[string]string{"name": company}
 	vendorRef := contract.CiRef{Type: typeVendor, Identity: vendorIdentity}
-	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeVendor, Identity: vendorIdentity, Name: t.Vendor, Attributes: map[string]any{"kind": "saas", "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
-	tenantIdentity := map[string]string{"vendor": t.Vendor, "tenantId": t.TenantID}
+	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeVendor, Identity: vendorIdentity, Name: company, Attributes: map[string]any{"kind": "saas", "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+	tenantIdentity := map[string]string{"vendor": company, "tenantId": t.TenantID}
 	tenantRef := contract.CiRef{Type: typeTenant, Identity: tenantIdentity}
 	seats, assigned := int64(0), int64(0)
 	for _, p := range t.Products {
 		seats += p.SeatsTotal
 		assigned += p.SeatsAssigned
 	}
-	attrs := map[string]any{"vendor": t.Vendor, "tenantId": t.TenantID, "displayName": t.DisplayName, "domains": t.Domains, "region": t.Region, "edition": t.Edition, "users": t.Users, "activeUsers": t.ActiveUsers, "groups": t.Groups, "ssoApplications": t.SSOApps, "seatsTotal": seats, "seatsAssigned": assigned, "products": len(t.Products), "source": collectorID, "health": "healthy"}
+	attrs := map[string]any{"vendor": company, "provider": t.Vendor, "tenantId": t.TenantID, "displayName": t.DisplayName, "domains": t.Domains, "region": t.Region, "edition": t.Edition, "users": t.Users, "activeUsers": t.ActiveUsers, "groups": t.Groups, "ssoApplications": t.SSOApps, "seatsTotal": seats, "seatsAssigned": assigned, "products": len(t.Products), "source": collectorID, "health": "healthy"}
 	for k, v := range t.Facts {
 		attrs[k] = v
 	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeTenant, Identity: tenantIdentity, Name: firstNonEmpty(t.DisplayName, t.TenantID), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{{Source: t.Vendor, ID: t.TenantID}}, ObservedAt: at})
 	obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relMemberOf, From: tenantRef, To: vendorRef, Attributes: map[string]any{}, ObservedAt: at})
 	for _, p := range t.Products {
-		identity := map[string]string{"vendor": t.Vendor, "product": p.Name, "tenantRef": t.TenantID}
-		pAttrs := map[string]any{"vendor": t.Vendor, "product": p.Name, "sku": p.SKU, "seatsTotal": p.SeatsTotal, "seatsAssigned": p.SeatsAssigned, "status": p.Status, "source": collectorID}
+		identity := map[string]string{"vendor": company, "product": p.Name, "tenantRef": t.TenantID}
+		pAttrs := map[string]any{"vendor": company, "provider": t.Vendor, "product": p.Name, "sku": p.SKU, "seatsTotal": p.SeatsTotal, "seatsAssigned": p.SeatsAssigned, "status": p.Status, "source": collectorID}
 		if p.EndsAt != "" {
 			pAttrs["subscriptionEnd"] = p.EndsAt
 			if p.StartsAt != "" {
@@ -464,7 +503,8 @@ func Emit(t *Tenant, at time.Time) collector.Observation {
 		switch p.Status {
 		case "enabled", "active":
 			pAttrs["health"] = "healthy"
-		case "warning", "suspended", "expired", "inactive":
+		// Salesforce reports a lapsed user licence as Disabled.
+		case "warning", "suspended", "expired", "inactive", "disabled":
 			pAttrs["health"] = "degraded"
 		}
 		ref := contract.CiRef{Type: typeApplication, Identity: identity}
@@ -504,7 +544,8 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if cred == nil {
 		return collector.Observation{}, collector.Errorf(contract.ErrAuthFailed, false, "saas requires a credential")
 	}
-	opts := restjson.Options{VerifyTLS: true}
+	caPem := restjson.StringOption(options, optionCA)
+	opts := restjson.Options{VerifyTLS: true, CAPem: caPem}
 	var tenant *Tenant
 	switch vendor {
 	case vendorM365, vendorSalesforce, vendorWorkday:
@@ -515,7 +556,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		if err != nil {
 			return collector.Observation{}, err
 		}
-		token, err := clientCredentials(ctx, tokenURL, cred.Fields[credClient], cred.Fields[credSecret], restjson.StringOption(options, optionScope), nil)
+		token, err := clientCredentials(ctx, tokenURL, cred.Fields[credClient], cred.Fields[credSecret], restjson.StringOption(options, optionScope), caPem)
 		if err != nil {
 			return collector.Observation{}, err
 		}
@@ -525,7 +566,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		}
 		switch vendor {
 		case vendorM365:
-			counting, err := restjson.New(api, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true, Headers: map[string]string{"ConsistencyLevel": "eventual"}})
+			counting, err := restjson.New(api, defaultPort, restjson.Auth{Bearer: token}, restjson.Options{VerifyTLS: true, CAPem: caPem, Headers: map[string]string{"ConsistencyLevel": "eventual"}})
 			if err != nil {
 				return collector.Observation{}, err
 			}
@@ -554,7 +595,7 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		if err != nil {
 			return collector.Observation{}, collector.Errorf(contract.ErrAuthFailed, false, "service account key: %v", err)
 		}
-		token, err := gcp.Token(ctx, tokenURL, assertion)
+		token, err := jwtBearer(ctx, tokenURL, assertion, caPem)
 		if err != nil {
 			return collector.Observation{}, err
 		}

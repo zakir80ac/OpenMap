@@ -1,0 +1,597 @@
+{
+  "provenance": "simulated",
+  "generatedBy": "tools/simulator verify",
+  "estate": "packages/testing/fixtures/synth-small (seed 42)",
+  "date": "2026-11-07",
+  "runs": 495,
+  "passed": 495,
+  "simulators": [
+    {
+      "simulator": "a10-thunder",
+      "collector": "a10_thunder",
+      "requirements": [
+        "REQ-DISC-018"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 22,
+      "matchedCis": 22,
+      "expectedRelationships": 26,
+      "matchedRelationships": 26,
+      "identityDrift": 15,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "active-directory",
+      "collector": "ldap",
+      "requirements": [
+        "REQ-DISC-023"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 4546,
+      "matchedCis": 4546,
+      "expectedRelationships": 0,
+      "matchedRelationships": 0,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "alibaba",
+      "collector": "cloud_alibaba",
+      "requirements": [
+        "REQ-DISC-010"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 28,
+      "matchedCis": 28,
+      "expectedRelationships": 37,
+      "matchedRelationships": 37,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "aws",
+      "collector": "cloud_aws",
+      "requirements": [
+        "REQ-DISC-010"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 10,
+      "matchedCis": 10,
+      "expectedRelationships": 10,
+      "matchedRelationships": 10,
+      "identityDrift": 2,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "azure",
+      "collector": "cloud_azure",
+      "requirements": [
+        "REQ-DISC-010"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 12,
+      "matchedCis": 12,
+      "expectedRelationships": 12,
+      "matchedRelationships": 12,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "cisco-ucsm",
+      "collector": "cisco_ucs",
+      "requirements": [
+        "REQ-DISC-013"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 32,
+      "matchedCis": 32,
+      "expectedRelationships": 26,
+      "matchedRelationships": 26,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "citrix-adc",
+      "collector": "citrix_adc",
+      "requirements": [
+        "REQ-DISC-018"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 246,
+      "matchedCis": 246,
+      "expectedRelationships": 270,
+      "matchedRelationships": 270,
+      "identityDrift": 188,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "dhcp-linux-ssh",
+      "collector": "dhcp",
+      "requirements": [
+        "REQ-DISC-022"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 56,
+      "matchedCis": 56,
+      "expectedRelationships": 56,
+      "matchedRelationships": 56,
+      "identityDrift": 24,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "dns-authoritative",
+      "collector": "dns",
+      "requirements": [
+        "REQ-DISC-021"
+      ],
+      "runs": 3,
+      "passed": 3,
+      "expectedCis": 21063,
+      "matchedCis": 21063,
+      "expectedRelationships": 21057,
+      "matchedRelationships": 21057,
+      "identityDrift": 10557,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "docker-engine",
+      "collector": "docker_engine",
+      "requirements": [
+        "REQ-DISC-011"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 34,
+      "matchedCis": 34,
+      "expectedRelationships": 40,
+      "matchedRelationships": 40,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "f5-bigip",
+      "collector": "load_balancer",
+      "requirements": [
+        "REQ-DISC-018"
+      ],
+      "runs": 6,
+      "passed": 6,
+      "expectedCis": 302,
+      "matchedCis": 302,
+      "expectedRelationships": 358,
+      "matchedRelationships": 358,
+      "identityDrift": 224,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "fc-fabric",
+      "collector": "fc_fabric",
+      "requirements": [
+        "REQ-DISC-015"
+      ],
+      "runs": 6,
+      "passed": 6,
+      "expectedCis": 578,
+      "matchedCis": 578,
+      "expectedRelationships": 572,
+      "matchedRelationships": 572,
+      "identityDrift": 118,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "flow-exporter",
+      "collector": "netflow",
+      "requirements": [
+        "REQ-DISC-019"
+      ],
+      "runs": 4,
+      "passed": 4,
+      "expectedCis": 14004,
+      "matchedCis": 14004,
+      "expectedRelationships": 29664,
+      "matchedRelationships": 29664,
+      "identityDrift": 14000,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "gcp",
+      "collector": "cloud_gcp",
+      "requirements": [
+        "REQ-DISC-010"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 25,
+      "matchedCis": 25,
+      "expectedRelationships": 30,
+      "matchedRelationships": 30,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "haproxy",
+      "collector": "haproxy",
+      "requirements": [
+        "REQ-DISC-018"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 84,
+      "matchedCis": 84,
+      "expectedRelationships": 100,
+      "matchedRelationships": 100,
+      "identityDrift": 44,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "hpe-oneview",
+      "collector": "hpe_oneview",
+      "requirements": [
+        "REQ-DISC-013"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 1443,
+      "matchedCis": 1443,
+      "expectedRelationships": 728,
+      "matchedRelationships": 728,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "hyperv",
+      "collector": "hyperv",
+      "requirements": [
+        "REQ-DISC-006"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 510,
+      "matchedCis": 510,
+      "expectedRelationships": 497,
+      "matchedRelationships": 497,
+      "identityDrift": 190,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "kubernetes-apiserver",
+      "collector": "kubernetes",
+      "requirements": [
+        "REQ-DISC-011"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 156,
+      "matchedCis": 156,
+      "expectedRelationships": 250,
+      "matchedRelationships": 250,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "kvm-libvirt",
+      "collector": "kvm_libvirt",
+      "requirements": [
+        "REQ-DISC-007"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 20,
+      "matchedCis": 20,
+      "expectedRelationships": 18,
+      "matchedRelationships": 18,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "linux-ssh",
+      "collector": "ssh_agentless",
+      "requirements": [
+        "REQ-DISC-003"
+      ],
+      "runs": 8,
+      "passed": 8,
+      "expectedCis": 156,
+      "matchedCis": 156,
+      "expectedRelationships": 100,
+      "matchedRelationships": 100,
+      "identityDrift": 2,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "nas-linux-ssh",
+      "collector": "nas",
+      "requirements": [
+        "REQ-DISC-016"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 12,
+      "matchedCis": 12,
+      "expectedRelationships": 12,
+      "matchedRelationships": 12,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "netapp-ontap",
+      "collector": "storage_ontap",
+      "requirements": [
+        "REQ-DISC-014",
+        "REQ-DISC-016"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 14,
+      "matchedCis": 14,
+      "expectedRelationships": 29,
+      "matchedRelationships": 29,
+      "identityDrift": 3,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "nginx",
+      "collector": "nginx",
+      "requirements": [
+        "REQ-DISC-018"
+      ],
+      "runs": 36,
+      "passed": 36,
+      "expectedCis": 156,
+      "matchedCis": 156,
+      "expectedRelationships": 133,
+      "matchedRelationships": 133,
+      "identityDrift": 94,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "nutanix-prism",
+      "collector": "nutanix_ahv",
+      "requirements": [
+        "REQ-DISC-008"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 1134,
+      "matchedCis": 1134,
+      "expectedRelationships": 2072,
+      "matchedRelationships": 2072,
+      "identityDrift": 1009,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "nvd-cve-api-2.0",
+      "collector": "vulnerability_feed",
+      "requirements": [
+        "REQ-DISC-027"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 16,
+      "matchedCis": 16,
+      "expectedRelationships": 0,
+      "matchedRelationships": 0,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "oci",
+      "collector": "cloud_oci",
+      "requirements": [
+        "REQ-DISC-010"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 24,
+      "matchedCis": 24,
+      "expectedRelationships": 32,
+      "matchedRelationships": 32,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "ovirt-engine",
+      "collector": "oracle_vm",
+      "requirements": [
+        "REQ-DISC-009",
+        "REQ-DISC-007"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 152,
+      "matchedCis": 152,
+      "expectedRelationships": 180,
+      "matchedRelationships": 180,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "pure-flasharray",
+      "collector": "storage_pure",
+      "requirements": [
+        "REQ-DISC-014"
+      ],
+      "runs": 3,
+      "passed": 3,
+      "expectedCis": 9,
+      "matchedCis": 9,
+      "expectedRelationships": 91,
+      "matchedRelationships": 91,
+      "identityDrift": 6,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "redfish-bmc",
+      "collector": "ipmi_redfish",
+      "requirements": [
+        "REQ-DISC-012"
+      ],
+      "runs": 10,
+      "passed": 10,
+      "expectedCis": 20,
+      "matchedCis": 20,
+      "expectedRelationships": 20,
+      "matchedRelationships": 20,
+      "identityDrift": 8,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "s3-object-storage",
+      "collector": "object_storage",
+      "requirements": [
+        "REQ-DISC-017"
+      ],
+      "runs": 3,
+      "passed": 3,
+      "expectedCis": 7,
+      "matchedCis": 7,
+      "expectedRelationships": 0,
+      "matchedRelationships": 0,
+      "identityDrift": 1,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "saas-tenants",
+      "collector": "saas",
+      "requirements": [
+        "REQ-CMDB-022"
+      ],
+      "runs": 5,
+      "passed": 5,
+      "expectedCis": 19,
+      "matchedCis": 19,
+      "expectedRelationships": 23,
+      "matchedRelationships": 23,
+      "identityDrift": 6,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "service-fingerprint",
+      "collector": "port_scan",
+      "requirements": [
+        "REQ-DISC-020"
+      ],
+      "runs": 21,
+      "passed": 21,
+      "expectedCis": 83,
+      "matchedCis": 83,
+      "expectedRelationships": 62,
+      "matchedRelationships": 62,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "snmp-network",
+      "collector": "snmp",
+      "requirements": [
+        "REQ-DISC-001"
+      ],
+      "runs": 246,
+      "passed": 246,
+      "expectedCis": 7514,
+      "matchedCis": 7514,
+      "expectedRelationships": 13030,
+      "matchedRelationships": 13030,
+      "identityDrift": 6573,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "snmp-power",
+      "collector": "snmp",
+      "requirements": [
+        "REQ-DISC-026"
+      ],
+      "runs": 106,
+      "passed": 106,
+      "expectedCis": 2338,
+      "matchedCis": 2338,
+      "expectedRelationships": 2232,
+      "matchedRelationships": 2232,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "vendor-warranty",
+      "collector": "warranty",
+      "requirements": [
+        "REQ-CMDB-024"
+      ],
+      "runs": 3,
+      "passed": 3,
+      "expectedCis": 1421,
+      "matchedCis": 1421,
+      "expectedRelationships": 0,
+      "matchedRelationships": 0,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "vmware-vcenter",
+      "collector": "vmware",
+      "requirements": [
+        "REQ-DISC-005"
+      ],
+      "runs": 2,
+      "passed": 2,
+      "expectedCis": 2565,
+      "matchedCis": 2565,
+      "expectedRelationships": 3446,
+      "matchedRelationships": 3446,
+      "identityDrift": 1729,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "windows-dhcp",
+      "collector": "dhcp",
+      "requirements": [
+        "REQ-DISC-022"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 28,
+      "matchedCis": 28,
+      "expectedRelationships": 28,
+      "matchedRelationships": 28,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "windows-smb",
+      "collector": "nas",
+      "requirements": [
+        "REQ-DISC-016"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 169,
+      "matchedCis": 169,
+      "expectedRelationships": 169,
+      "matchedRelationships": 169,
+      "identityDrift": 0,
+      "attributeMismatches": 0
+    },
+    {
+      "simulator": "windows-wmi",
+      "collector": "wmi",
+      "requirements": [
+        "REQ-DISC-002"
+      ],
+      "runs": 1,
+      "passed": 1,
+      "expectedCis": 7557,
+      "matchedCis": 7557,
+      "expectedRelationships": 6921,
+      "matchedRelationships": 6921,
+      "identityDrift": 1580,
+      "attributeMismatches": 0
+    }
+  ]
+}
