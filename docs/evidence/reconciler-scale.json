@@ -1,0 +1,52 @@
+{
+  "requirement": "REQ-CORE-013",
+  "date": "2026-11-07",
+  "adr": "ADR-046",
+  "estate": { "seed": 43, "scale": 1, "tenantId": "570b1953-2893-4976-955e-7e6bb7e9e2cc", "cis": 550747, "distinctIdentities": 550746, "relationships": 1321979, "results": 119, "devices": 45030, "hosts": 40000, "networkDevices": 5030 },
+  "budget": { "source": "PERF_BUDGETS.discoverySweepDevices / discoverySweepMinutes", "devices": 10000, "minutes": 15, "minutesForEstate": 67.5 },
+  "conditions": { "workers": 1, "resultsConcurrency": "not used (serial replay)", "postgresShm": "1g", "connectTimeoutSeconds": 30, "composeReconciler": "stopped" },
+  "runs": [
+    {
+      "label": "before",
+      "commit": "4a4173d",
+      "reconcilePhaseMs": 2328264,
+      "lookupMs": 1549077,
+      "persistMs": 338724,
+      "reconcileMs": 36772,
+      "pendingMs": 339414,
+      "dispatchMs": 2343372,
+      "totalMs": 4671636,
+      "minutesPer10kDevices": 17.3,
+      "budgetMet": false
+    },
+    {
+      "label": "after",
+      "commit": "b124678",
+      "reconcilePhaseMs": 1056324,
+      "lookupMs": 423507,
+      "persistMs": 315098,
+      "reconcileMs": 28642,
+      "pendingMs": 246881,
+      "admMs": 26661,
+      "dispatchMs": 2119054,
+      "totalMs": 3175378,
+      "minutesPer10kDevices": 11.75,
+      "budgetMet": true
+    }
+  ],
+  "outcome": {
+    "created": 550746,
+    "updated": 1,
+    "conflicts": 0,
+    "duplicateIdentities": 0,
+    "pendingRelationshipsResolved": 400514,
+    "pendingRelationshipsLeft": 0,
+    "relationshipsInStore": 1473003,
+    "refsResolved": 4284,
+    "refsPendingLeft": 235,
+    "graphNodes": 550746,
+    "clickhouseCis": 550746,
+    "eventsDelivered": 2025274,
+    "dispatchFailures": 0
+  }
+}

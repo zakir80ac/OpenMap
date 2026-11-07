@@ -1,21 +1,21 @@
 # OpenMap tracker summary
 
-Generated 2026-11-07T11:54:56.956Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-07T20:59:12.085Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 42 |
-| In progress | 1 |
+| Not started | 43 |
+| In progress | 0 |
 | Blocked | 28 |
 | In review | 2 |
-| Done | 134 |
-| **Total** | **207** |
+| Done | 135 |
+| **Total** | **208** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 19 | 17 | 1 | 0 | 89% |
+| CORE | 20 | 18 | 0 | 0 | 90% |
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
@@ -31,7 +31,6 @@ Generated 2026-11-07T11:54:56.956Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## In progress
 
-- REQ-CORE-013 · Reconciler and outbox fan-out (apps/reconciler)
 
 ## Blocked
 
@@ -66,7 +65,6 @@ Generated 2026-11-07T11:54:56.956Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-CORE-013 [P0] Reconciler and outbox fan-out (apps/reconciler)
 - REQ-BSM-004 [P0] Impact prediction accuracy
 - REQ-BSM-005 [P0] Runbooks attached to scenarios and incidents with automation hooks per step
 - REQ-BSM-007 [P0] Sites and connectivity monitoring for HA / DR readiness
@@ -76,6 +74,7 @@ Generated 2026-11-07T11:54:56.956Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
 - REQ-UI-026 [P0] Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards
 - REQ-UI-027 [P0] Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex
+- REQ-AI-002 [P1] Classification of unknown CIs and layer suggestions
 
 ## Open risks
 

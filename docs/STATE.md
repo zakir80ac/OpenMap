@@ -2,7 +2,78 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-07 (checkpoint 27: reconciliation resolves `*Ref` values, issuer-scoped global keys)
+## Last session · 2026-11-07 (checkpoint 28: scale-1 replay inside the budget, REQ-CORE-013 Done; checkpoint 27 follow-ups)
+
+Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reconciler session").
+
+**1. A SaaS application's `tenantRef` resolves within its vendor** (`83826ea`, ADR-045 amendment).
+- A ref counts only targets in the issuer scope it shares with them (`refScopeKeys` in
+  `packages/contracts/src/identity.ts`): the scope keys of the target type's scoped global keys that the referring type
+  also declares.
+- Today that is `saas_application.tenantRef` → `saas_tenant`, by `vendor`. The rule is derived from
+  `GLOBAL_IDENTITY_SCOPES`, so `ci-identity.json` and the contract versions are unchanged.
+- The Go harness applies the same rule (T-454).
+- Dev replay: refs pending 18 → 16; the ServiceNow and Workday applications of `horizonbank` name their own tenants.
+
+**2. Scale-1 replay — REQ-CORE-013 Done** (`docs/evidence/reconciler-scale.md`, `.json`, ADR-046).
+- **Estate:** `synth generate --seed 43 --scale 1` gives it its own tenant (`570b1953-…`); the dev tenant's 0.05 estate is
+  untouched. It holds 550,747 CIs, 1,321,979 relationships and 45,030 devices.
+- **Result:** with one serial worker the replay takes 3,175 s end to end, 11.75 min per 10,000 devices, inside the
+  15-minute budget:
+  - reconcile phase 1,056 s, of which lookup 424 s and pending pass 247 s;
+  - dispatch 2,119 s, 2,025,274 events, 0 failures.
+- **Identities:** 550,746 created (every distinct estate identity), 1 updated (vendor Microsoft), 0 conflicts, 0
+  duplicates, 0 pending relationships. Memgraph and ClickHouse each hold 550,746 CIs.
+- **Before the fixes:** the first complete run took 4,671 s (17.3 min per 10,000 devices).
+- **Scale bugs found and fixed on the way:**
+  - unbounded lookup batches (P1001) → `RECONCILER.lookupConcurrency` (`d923837`);
+  - IN lists over 32,767 bind variables → `= ANY($1::uuid[])` (`cb0a623`);
+  - the code-suffix trigger scanned the tenant per colliding row → migrations 0029 (index range) and 0030 (per-base
+    counter, `ci_code_counters`) (`d18772e`, `a5c403a`, T-457);
+  - Postgres `/dev/shm` 64 MB → 1 GiB in compose (`POSTGRES_SHM_SIZE`) and Helm (`postgres.shmSize`) (`83dfebc`);
+  - a CI reported twice in one result became two CIs → one CI (`8cad55e`, T-008);
+  - the estate gave ten HQ floors one subnet (`96721ec`) and drew one MAC for two hosts (`4a4173d`); the 0.05 estates
+    are byte-identical (T-450 now checks the full-scale estate);
+  - jsonb-containment lookups planned as sequential scans → migration 0031, `cis.identityTokens` with a trigger and a
+    partial GIN index, probed 250 values per array overlap (`b124678`, T-458);
+  - the outbox targets now receive a batch concurrently (`c0a121f`).
+- **Host note:** from the Windows host, cold bursts of Prisma connections through Docker Desktop's port forwarding can
+  exceed the 5 s connect timeout, so the replay ran with `connect_timeout=30` in `POSTGRES_URL` (project memory).
+- **Dev tenant replayed on the final code:** 28,221 created, 1 updated, 0 duplicates, 16 refs pending; phase 67 s (was
+  238 s). Utilisation and history were reloaded. The utilisation reload (912 sample-only results) took 285 s, against
+  212 s before: slower, and not yet looked into.
+- **Follow-up:** REQ-CORE-020 (new, P1): an outbox claim safe for concurrent dispatchers (`FOR UPDATE SKIP LOCKED`), the
+  concurrent-worker measurement, and the dispatch target whose rate falls as the stores grow (dispatch is now two thirds
+  of the run).
+
+**3. Tracker CLI writes Decisions and Contracts** (`4b1e7b0`, REQ-CORE-007, T-456).
+- `pnpm tracker decision ADR-xxx` reads title, status and date from the ADR header; flags override.
+- `pnpm tracker contract <name> --version x.y.z [--adr]` records a contract version.
+- Recorded so far: ADR-044, ADR-045 and ADR-046, and CI and collector at 0.7.0. ADR-006 to ADR-043 and the other
+  contracts' versions are not recorded yet.
+
+**4. gofmt:** `tools/simulator/internal/vendors/fcfabric/fcfabric.go` (`a2258ff`).
+
+**5. Images:**
+- `openmap/node:dev` and `openmap/scheduler:dev` were rebuilt and recreated; both node binaries carry 0.7.0, none 0.6.0.
+- `openmap/reconciler:dev` was rebuilt on the final code and restarted.
+- Postgres was recreated once, for `shm_size`.
+
+**6. graphify:** a full refresh of the stale docs and screenshots (105 files, eight extraction agents) plus this
+session's docs. The curated `GRAPH_REPORT.md` and `graph.html` are kept (project memory).
+
+**Tests:**
+- New: T-456 tracker, T-457 codes (integration), T-458 identity tokens (integration).
+- Extended: T-008 (one CI per identity in a result), T-450 (full-scale estate), T-451, T-453 and T-454 (tenantRef within
+  its vendor).
+- Passing: reconciler unit 38 and integration 15, db 86, contracts 55, synth-estate 31, tracker 8, simulator verify package.
+  Guard, `contracts:check` and `i18n:check` are green. (The simulator ran its `go test` suite, not a new 495-run
+  verify.)
+
+**Shared-folder note:** another session ran a `docker compose up` that restarted the stopped compose reconciler at
+18:16:56. Its dispatcher claimed the dev replay's outbox, but no rows were duplicated (ClickHouse checked).
+
+## Previous session · 2026-11-07 (checkpoint 27: reconciliation resolves `*Ref` values, issuer-scoped global keys)
 
 Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
 
@@ -82,7 +153,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
   - `tools/simulator/internal/vendors/fcfabric/fcfabric.go` is not gofmt-clean (already in HEAD).
   - The node and scheduler images still carry contract 0.6.0 until they are rebuilt.
 
-## Previous session · 2026-11-07 (checkpoint 26: estate aligned with the collectors, older db failures fixed)
+## Earlier session · 2026-11-07 (checkpoint 26: estate aligned with the collectors, older db failures fixed)
 
 Syed's direction: fix the two older failures, then align the synthetic estate with the collectors (question 04).
 
@@ -736,10 +807,10 @@ tracker is the truth.
   in GraphQL 0.7.0 per ADR-015, the Discovery screen's scopes card with inline editing, T-010/T-067/T-112 and the e2e
   scope test); it moves to Done with the queued tracker closures. The scope builder now reads the CIDR from the subnet
   identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
-- REQ-CORE-013: scale-1 replay (550k CIs) on this 96 GB / 24-core machine and the concurrent-worker measurement.
-  The outbox claim in `dispatchOnce` is read-then-update: two dispatchers on one database both deliver the same
-  rows (seen with the compose reconciler and a local `replay-history`); a `FOR UPDATE SKIP LOCKED` claim belongs to the
-  multi-worker measurement.
+- REQ-CORE-020 (new, from REQ-CORE-013's closure): the outbox claim in `dispatchOnce` is read-then-update, so two
+  dispatchers on one database both deliver the same rows (seen with the compose reconciler and a local replay). A
+  `FOR UPDATE SKIP LOCKED` claim, then the scale-1 replay with concurrent workers, and the dispatch target whose rate
+  falls as the stores grow (ADR-046).
 - REQ-AI-001 is complete in code (golden set 12/12, T-011/T-113/T-104/T-106); it moves to Done with the queued
   tracker closures. Test files of apps/assistant and apps/api are excluded from their tsconfig, so the root ESLint
   project service cannot parse them (`pnpm exec eslint apps/assistant/src` reports only that); part of the lint item.
@@ -759,11 +830,11 @@ Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB
 
 1. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
 2. REQ-BSM-007 (ADR-025), then the finance module. Parked rows close as vendor access arrives.
-3. REQ-CORE-013 closure: the scale-1 replay (550k CIs) and the concurrent-worker measurement with a
-   `FOR UPDATE SKIP LOCKED` outbox claim. Resolve `saas_application.tenantRef` within the application's vendor.
+3. REQ-CORE-020: `FOR UPDATE SKIP LOCKED` outbox claim and the concurrent-worker scale-1 measurement; find the
+   dispatch target that slows as the stores grow.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0028
+profile); images `openmap/{scheduler,reconciler,node}:dev` were rebuilt this session (api, console and bsm-engine earlier); migrations through 0031
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
