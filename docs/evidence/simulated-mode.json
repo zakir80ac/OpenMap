@@ -5,6 +5,7 @@
   "date": "2026-11-07",
   "runs": 495,
   "passed": 495,
+  "driftRules": "reconciler (packages/contracts/schemas/ci-identity.json, ADR-044)",
   "simulators": [
     {
       "simulator": "a10-thunder",
@@ -18,7 +19,8 @@
       "matchedCis": 22,
       "expectedRelationships": 26,
       "matchedRelationships": 26,
-      "identityDrift": 15,
+      "identityDrift": 9,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -34,6 +36,7 @@
       "expectedRelationships": 0,
       "matchedRelationships": 0,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -49,6 +52,7 @@
       "expectedRelationships": 37,
       "matchedRelationships": 37,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -63,7 +67,8 @@
       "matchedCis": 10,
       "expectedRelationships": 10,
       "matchedRelationships": 10,
-      "identityDrift": 2,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -79,6 +84,7 @@
       "expectedRelationships": 12,
       "matchedRelationships": 12,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -94,6 +100,7 @@
       "expectedRelationships": 26,
       "matchedRelationships": 26,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -108,7 +115,8 @@
       "matchedCis": 246,
       "expectedRelationships": 270,
       "matchedRelationships": 270,
-      "identityDrift": 188,
+      "identityDrift": 94,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -123,7 +131,8 @@
       "matchedCis": 56,
       "expectedRelationships": 56,
       "matchedRelationships": 56,
-      "identityDrift": 24,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -138,7 +147,8 @@
       "matchedCis": 21063,
       "expectedRelationships": 21057,
       "matchedRelationships": 21057,
-      "identityDrift": 10557,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -154,6 +164,7 @@
       "expectedRelationships": 40,
       "matchedRelationships": 40,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -168,7 +179,8 @@
       "matchedCis": 302,
       "expectedRelationships": 358,
       "matchedRelationships": 358,
-      "identityDrift": 224,
+      "identityDrift": 112,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -183,7 +195,8 @@
       "matchedCis": 578,
       "expectedRelationships": 572,
       "matchedRelationships": 572,
-      "identityDrift": 118,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -198,7 +211,8 @@
       "matchedCis": 14004,
       "expectedRelationships": 29664,
       "matchedRelationships": 29664,
-      "identityDrift": 14000,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -214,6 +228,7 @@
       "expectedRelationships": 30,
       "matchedRelationships": 30,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -228,7 +243,8 @@
       "matchedCis": 84,
       "expectedRelationships": 100,
       "matchedRelationships": 100,
-      "identityDrift": 44,
+      "identityDrift": 22,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -244,6 +260,7 @@
       "expectedRelationships": 728,
       "matchedRelationships": 728,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -258,7 +275,8 @@
       "matchedCis": 510,
       "expectedRelationships": 497,
       "matchedRelationships": 497,
-      "identityDrift": 190,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -274,6 +292,7 @@
       "expectedRelationships": 250,
       "matchedRelationships": 250,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -289,6 +308,7 @@
       "expectedRelationships": 18,
       "matchedRelationships": 18,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -301,9 +321,10 @@
       "passed": 8,
       "expectedCis": 156,
       "matchedCis": 156,
-      "expectedRelationships": 100,
-      "matchedRelationships": 100,
-      "identityDrift": 2,
+      "expectedRelationships": 148,
+      "matchedRelationships": 148,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -319,6 +340,7 @@
       "expectedRelationships": 12,
       "matchedRelationships": 12,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -334,7 +356,8 @@
       "matchedCis": 14,
       "expectedRelationships": 29,
       "matchedRelationships": 29,
-      "identityDrift": 3,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -349,7 +372,8 @@
       "matchedCis": 156,
       "expectedRelationships": 133,
       "matchedRelationships": 133,
-      "identityDrift": 94,
+      "identityDrift": 47,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -364,7 +388,8 @@
       "matchedCis": 1134,
       "expectedRelationships": 2072,
       "matchedRelationships": 2072,
-      "identityDrift": 1009,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -380,6 +405,7 @@
       "expectedRelationships": 0,
       "matchedRelationships": 0,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -395,6 +421,7 @@
       "expectedRelationships": 32,
       "matchedRelationships": 32,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -411,6 +438,7 @@
       "expectedRelationships": 180,
       "matchedRelationships": 180,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -425,7 +453,8 @@
       "matchedCis": 9,
       "expectedRelationships": 91,
       "matchedRelationships": 91,
-      "identityDrift": 6,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -440,7 +469,8 @@
       "matchedCis": 20,
       "expectedRelationships": 20,
       "matchedRelationships": 20,
-      "identityDrift": 8,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -455,7 +485,8 @@
       "matchedCis": 7,
       "expectedRelationships": 0,
       "matchedRelationships": 0,
-      "identityDrift": 1,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -470,7 +501,8 @@
       "matchedCis": 19,
       "expectedRelationships": 23,
       "matchedRelationships": 23,
-      "identityDrift": 6,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -486,6 +518,7 @@
       "expectedRelationships": 62,
       "matchedRelationships": 62,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -500,7 +533,8 @@
       "matchedCis": 7514,
       "expectedRelationships": 13030,
       "matchedRelationships": 13030,
-      "identityDrift": 6573,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -516,6 +550,7 @@
       "expectedRelationships": 2232,
       "matchedRelationships": 2232,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -531,6 +566,7 @@
       "expectedRelationships": 0,
       "matchedRelationships": 0,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -545,7 +581,8 @@
       "matchedCis": 2565,
       "expectedRelationships": 3446,
       "matchedRelationships": 3446,
-      "identityDrift": 1729,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -561,6 +598,7 @@
       "expectedRelationships": 28,
       "matchedRelationships": 28,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -576,6 +614,7 @@
       "expectedRelationships": 169,
       "matchedRelationships": 169,
       "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     },
     {
@@ -590,7 +629,8 @@
       "matchedCis": 7557,
       "expectedRelationships": 6921,
       "matchedRelationships": 6921,
-      "identityDrift": 1580,
+      "identityDrift": 0,
+      "relationshipDrift": 0,
       "attributeMismatches": 0
     }
   ]

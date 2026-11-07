@@ -2,7 +2,51 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-07 (checkpoint 25: rows parked, simulated mode, warranty lookups)
+## Last session · 2026-11-07 (checkpoint 26: estate aligned with the collectors, older db failures fixed)
+
+Syed's direction: fix the two older failures, then align the synthetic estate with the collectors (question 04).
+
+**Older failures (dcbf78d):**
+- The db schema and migration tests still expected `support_contracts` and `SupportLevel`, which migration 0023
+  dropped. They now count tables created minus dropped and replay type creates and drops in order.
+- The dev database held a CRLF checksum for 0015 (applied from a CRLF working copy; the committed file is LF and
+  unchanged). The migration runner now rewrites a checksum that differs only in line endings and still reports a real
+  edit (T-447). 0015 was repaired on the dev database.
+
+**Estate aligned with the collectors (ADR-044, T-448…T-450):**
+- The harness now judges drift with the reconciler's own rules, emitted as `packages/contracts/schemas/ci-identity.json`.
+  It also reports relationship drift, and it reads addresses the collector dialled on loopback as the estate's target
+  names (`Run.Aliases`). Under these rules the old estate drifted in 7,894 CIs and 524 relationships; the 36,373 of
+  checkpoint 25 came from a stricter check than the reconciler applies (an IP address in another VRF still merges on
+  its address).
+- The generator now writes the collectors' identities:
+  - network-device children use `serial:<serial>`;
+  - hypervisors use the host FQDN and the platform's moRef or UUID, and clusters vCenter's `domain-c<n>`, Prism's UUID
+    or Hyper-V's GUID;
+  - the relationships read `hypervisor hosted_on host`, `vm runs_on hypervisor` and `os installed_on host`;
+  - a Windows OS identity carries its build;
+  - software is `name@version`, `member_of` its software;
+  - CNAME targets carry the trailing dot, LUN WWNs the array's NAA OUI, ARNs each AWS service's form;
+  - a fabric takes its principal switch's WWN;
+  - SaaS tenant ids take each vendor's shape, and products the name the vendor API reports;
+  - each Kubernetes tier is labelled by its component.
+- Where collectors disagreed among themselves, the majority won:
+  - SSH now links an OS `installed_on` its host;
+  - WMI, SSH and the agent all link `instance installed_on host` and `instance member_of software`. Before, SSH and the
+    agent had no software link, so vulnerability queries found no hosts on discovered data;
+  - the agent's `softwareRef` is `name@version` (T-449).
+- The simulators serve the estate's ids: vCenter moRefs, Prism and Hyper-V cluster ids, ARNs and SaaS tenants (SaaS
+  is now verified against the estate's own tenants). The Brocade `fabricshow` lists the whole fabric.
+- The assistant's grounding follows the stored directions (`Vm RUNS_ON Hypervisor`, `Hypervisor HOSTED_ON Host`,
+  `OperatingSystem INSTALLED_ON Host`).
+- Result: 495/495 runs pass; 66,565 CIs and 82,379 relationships reproduced; identity drift 284, relationship drift
+  0. What is left is load-balancer pool members (`listening_service` keyed by member IP or FQDN where the
+  host's collector uses its serial). Fixing that needs reconciliation to resolve `*Ref` values to the referenced CI,
+  which is a product change (see Next three).
+- The dev tenant still holds the old estate. Replay a regenerated estate with `--reset` before the assistant
+  evaluation, because "VMs per host" now walks `runs_on`.
+
+## Previous session · 2026-11-07 (checkpoint 25: rows parked, simulated mode, warranty lookups)
 
 Syed's direction: no vendor access yet, so park the rows that need it and test the solution in simulated mode; return
 to them later.
@@ -43,7 +87,7 @@ virtualisation ids and directions, the SNMP `deviceRef` form, load-balancer memb
 those estate CIs. Question 04 below. The dev tenant now holds the simulated warranty and SaaS results; four SaaS
 tenants were added rather than merged (tenant-id drift). Replay with `--reset` to restore.
 
-## Previous session · 2026-11-07 (checkpoint 24: CMDB complete bar credentials, discovery fixtures from a container lab)
+## Earlier session · 2026-11-07 (checkpoint 24: CMDB complete bar credentials, discovery fixtures from a container lab)
 
 Syed's direction: finish all CMDB rows and the discovery rows in review; lifecycle source option (c) (bundled
 endoflife.date snapshot plus vendor EoX APIs).
@@ -633,8 +677,9 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. Decide the identity conventions (question 04), then align tools/synth-estate with the real collectors so simulated
-   and real discovery update the estate's CIs instead of adding new ones.
+1. Reconciliation resolves `*Ref` identity values (hostRef, deviceRef, arrayRef…) to the referenced CI, so observers
+   that name one host differently (a load balancer by member IP, the host's collector by serial) update one
+   listening_service. This is the last identity drift simulated mode shows.
 2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
 3. Then REQ-BSM-007 (ADR-025) and the finance module. Parked rows close as vendor access arrives.
 
@@ -646,11 +691,7 @@ Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`
 ## Questions for Syed
 
 00. Answered (c) on 2026-11-06; implemented as ADR-039.
-04. Identity conventions surfaced by simulated mode:
-    - Should discovered IP addresses carry the VRF the estate assigns (`PROD`, `MGMT`, `STORAGE`) or `default` until a
-      collector reads VRF membership?
-    - Should the SNMP interface `deviceRef` be the bare serial (estate) or `serial:<serial>` (collector)?
-    - Should the synthetic estate adopt the collectors' virtualisation ids and relationship directions?
+04. Answered on 2026-11-07: align the estate with the collectors; implemented as ADR-044.
 05. Parked rows stay parked. The simulated runs found and fixed 40+ collector bugs, but every vendor row still closes
     only on real access or captures (questions 01–03).
 01. REQ-CMDB-024: API credentials for Dell TechDirect, HPE, Lenovo, Cisco (SN2INFO and EoX) and IBM, so the warranty and
