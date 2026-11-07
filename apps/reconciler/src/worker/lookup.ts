@@ -130,16 +130,18 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
       SELECT * FROM cis
       WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "refKey" = ANY(${refKeyList}::text[])`));
   }
-  // GIN cannot serve "@> ANY(array)", so containment terms become an OR chain the planner turns into
-  // a BitmapOr of index probes; chunked so one statement never carries thousands of terms.
+  // GIN cannot serve "@> ANY(array)". Each term is its own index probe: a LATERAL subquery per term (OFFSET 0 keeps the
+  // planner from flattening it). An OR chain of the terms was planned as one statement, and on a full-scale tenant its
+  // row estimate tipped it into a sequential scan of cis (6 to 38 s per 500 terms on the scale-1 replay).
   // Chunks are independent; a bounded number run concurrently.
   collect(
-    await perChunk(chunked([...containments]), (chunk) => {
-      const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
-      return prisma.$queryRaw<CiRow[]>(Prisma.sql`
-        SELECT * FROM cis
-        WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND (${terms})`);
-    }),
+    await perChunk(chunked([...containments]), (chunk) =>
+      prisma.$queryRaw<CiRow[]>(Prisma.sql`
+        SELECT c.* FROM unnest(${chunk}::jsonb[]) AS t(term)
+        CROSS JOIN LATERAL (
+          SELECT * FROM cis WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND identity @> t.term OFFSET 0
+        ) c`),
+    ),
   );
   return [...rows.values()];
 }
