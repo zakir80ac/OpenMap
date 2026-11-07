@@ -530,6 +530,7 @@ model Tenant {
   planReceipts            PlanReceipt[]
   certificateAlerts       CertificateAlert[]
   ciComponents            CiComponent[]
+  ciCodeCounters          CiCodeCounter[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -735,6 +736,21 @@ model CiExternalId {
   @@unique([ciId, source, externalId])
   @@index([tenantId, source, externalId])
   @@map("ci_external_ids")
+}
+
+/// REQ-CMDB-037 (migration 0030): the last numeric suffix handed out per code base, so the cis_unique_code trigger
+/// numbers the n-th CI named VLAN100-MGMT without counting the n-1 before it. Written only by that trigger.
+model CiCodeCounter {
+  tenantId  String   @db.Uuid
+  base      String
+  last      Int
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, base])
+  @@map("ci_code_counters")
 }
 
 /// relationshipSchema. Direction is from → to as the type names it.

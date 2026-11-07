@@ -50,6 +50,8 @@ async function resetTenant(prisma: ReturnType<typeof createPrismaClient>, sinks:
   await prisma.reconciliationConflict.deleteMany({ where: { tenantId } });
   await prisma.relationship.deleteMany({ where: { tenantId } });
   await prisma.ci.deleteMany({ where: { tenantId } });
+  // Migration 0030: a reset estate numbers its codes from 2 again, as a fresh tenant does.
+  await prisma.ciCodeCounter.deleteMany({ where: { tenantId } });
   const purged = await sinks.graph.purgeTenant(tenantId);
   for (const table of ['events', 'ci_history', 'relationship_history', 'metrics', 'metrics_latest']) {
     await sinks.clickhouse.command({ query: 'ALTER TABLE ' + database + '.' + table + ' DELETE WHERE tenant_id = {tenantId:String}', query_params: { tenantId }, clickhouse_settings: { mutations_sync: '2' } });
