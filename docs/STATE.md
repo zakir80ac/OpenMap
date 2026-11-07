@@ -2,7 +2,87 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-07 (checkpoint 26: estate aligned with the collectors, older db failures fixed)
+## Last session · 2026-11-07 (checkpoint 27: reconciliation resolves `*Ref` values, issuer-scoped global keys)
+
+Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
+
+**Three identity gaps closed:**
+- **`*Ref` resolution.** A load balancer names a pool member by IP or FQDN; the host's agent names the same listener
+  by the host's UUID or serial. Reconciliation now resolves every `*Ref` value to the id of the one CI it names, then
+  matches on the tuple with refs resolved (the ref key).
+  - It resolves through any of that CI's identity values, its name, its FQDN or address attributes, `serial:<serial>`
+    or `name@version`. Identity values outrank aliases, and an ambiguous value resolves to nothing.
+  - Rules: `IDENTITY_REF_TARGETS`, `IDENTITY_REF_ALIAS_ATTRIBUTES`, `IDENTITY_REF_DERIVED` in
+    `packages/contracts/src/ci.ts`. Pure functions: `packages/contracts/src/identity.ts`, shared with the estate
+    check and, through `ci-identity.json`, the Go harness.
+- **Issuer-scoped global keys.** The ServiceNow and Workday tenants `horizonbank` no longer merge. A key that is unique
+  only within its issuer is now global only with its scope keys (`GLOBAL_IDENTITY_SCOPES`):
+  - `tenantId` by `vendor`;
+  - `accountId` and `resourceId` by `provider`;
+  - `clusterId` by `platform` or `engine`;
+  - `moRef` by `platform`;
+  - `contractNumber` by `vendorRef`.
+- **Parent keys.** The new estate check found every Kubernetes namespace of a cluster merging on its cluster's UID.
+  `PARENT_IDENTITY_KEYS` (`k8s_namespace.clusterUid`) now matches it only inside the tuple.
+
+**Store and order independence (migration 0028):**
+- New `cis` columns:
+  - `refTokens` (GIN): every spelling a ref may name the CI by;
+  - `refKey` (tenant btree): the tuple with refs resolved;
+  - `refsPending` and `refsCheckedAt` (partial index).
+- A trigger leaves a CI pending, with no tokens, when another writer inserts it or changes its identity (the wizard's
+  sites, the register's contracts). The reconciler marks its own transactions with `set_config('openmap.ref_tokens', …)`.
+- The reconciler reconciles each result in ref-depth order. Then `retryPendingRelationships` runs the ref pass first:
+  tokens, pending refs round robin, and folding of CIs that share a ref key. Folding keeps the oldest CI and moves to
+  it:
+  - identity, attributes and tags;
+  - relationships (re-pointed);
+  - parts, external ids and the asset record.
+
+  The copy is retired with `openmap.ci.retired` (`mergedInto`), and dependents re-resolve.
+- Each result also folds its own new ref keys.
+- New span `reconcile.identity_refs` and counter `openmap_reconciler_identity_refs_total{action}`.
+- **NGINX:** upstream members were keyed `protocol: http`; they are now keyed `tcp`, like every other observer
+  (`applicationProtocol: http` attribute, T-455).
+- **Contract versions:** CI 0.7.0 and collector 0.7.0 (they move together; the Go `contract.Version` in apps/collectors
+  and apps/node is checked against both). No payload field changed.
+
+**Results:**
+- `pnpm --filter @openmap/simulator verify`: 495/495 pass; 66,565 CIs and 82,379 relationships reproduced; identity
+  drift **0** (from 284), relationship drift 0 (`docs/evidence/simulated-mode.md`, `.json`).
+- Tests:
+  - T-451 contract rules (9);
+  - T-452 reconciler rules, folding and re-pointing (8);
+  - T-453 integration on the compose Postgres (3): one listener either order, the fold with retire event and moved
+    links, the two tenants, the trigger;
+  - T-454 Go harness, plus synth-small has no self-merges;
+  - T-450 the generated estate has no self-merges;
+  - T-455 NGINX.
+
+  Every other reconciler, contracts, db, collectors (contract, manifests, nginx) and node test passes. Guard,
+  `contracts:check` and `i18n:check` are green.
+- **Dev tenant replay** (`.local/estate-044`, `--reset`):
+  - 28,221 CIs created and 1 updated: the estate holds 28,221 distinct CIs, because the `Microsoft` vendor is in both
+    the agent-sam and the saas results (the ADR-044 replay showed the same split);
+  - the five SaaS tenants are five CIs;
+  - 0 conflicts, 0 folded, 0 duplicate identities, 0 pending relationships;
+  - 258 refs resolved in the pending pass;
+  - 18 refs stay pending and name no single CI: the two `horizonbank` tenantRefs (ambiguous between the vendors), the
+    DHCP server and four rooms' buildings, which the estate does not hold as CIs;
+  - phase 243 s, 116 CIs/s. The ADR-044 replay ran at 145 CIs/s on the same machine with other work running; persist
+    totals over the same results were 40.4 s then and 44.1 s now.
+
+  Utilisation (`.local/estate-044-util`) and health history (`replay-history --reset`) were reloaded, and the compose
+  reconciler was rebuilt and restarted on this code.
+- **Not changed (follow-ups):**
+  - A `saas_application.tenantRef` names its tenant by id only, so two vendors' tenants with one id leave it ambiguous.
+    Resolving the ref within the application's vendor would settle it.
+  - The tracker CLI has no command for the Decisions and Contracts sheets, so ADR-045 and CI 0.7.0 are recorded in
+    docs/adr and docs/CONTRACTS.md only.
+  - `tools/simulator/internal/vendors/fcfabric/fcfabric.go` is not gofmt-clean (already in HEAD).
+  - The node and scheduler images still carry contract 0.6.0 until they are rebuilt.
+
+## Previous session · 2026-11-07 (checkpoint 26: estate aligned with the collectors, older db failures fixed)
 
 Syed's direction: fix the two older failures, then align the synthetic estate with the collectors (question 04).
 
@@ -46,7 +126,7 @@ Syed's direction: fix the two older failures, then align the synthetic estate wi
 - The dev tenant still holds the old estate. Replay a regenerated estate with `--reset` before the assistant
   evaluation, because "VMs per host" now walks `runs_on`.
 
-## Previous session · 2026-11-07 (checkpoint 25: rows parked, simulated mode, warranty lookups)
+## Earlier session · 2026-11-07 (checkpoint 25: rows parked, simulated mode, warranty lookups)
 
 Syed's direction: no vendor access yet, so park the rows that need it and test the solution in simulated mode; return
 to them later.
@@ -677,14 +757,13 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. Reconciliation resolves `*Ref` identity values (hostRef, deviceRef, arrayRef…) to the referenced CI, so observers
-   that name one host differently (a load balancer by member IP, the host's collector by serial) update one
-   listening_service. This is the last identity drift simulated mode shows.
-2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
-3. Then REQ-BSM-007 (ADR-025) and the finance module. Parked rows close as vendor access arrives.
+1. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
+2. REQ-BSM-007 (ADR-025), then the finance module. Parked rows close as vendor access arrives.
+3. REQ-CORE-013 closure: the scale-1 replay (550k CIs) and the concurrent-worker measurement with a
+   `FOR UPDATE SKIP LOCKED` outbox claim. Resolve `saas_application.tenantRef` within the application's vendor.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0027
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0028
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
