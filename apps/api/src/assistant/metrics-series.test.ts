@@ -97,7 +97,8 @@ describe('metrics.series', () => {
       context,
     );
     expect(empty.results[0]?.summary).toMatchObject({ kind: 'series', ci: null, samples: 0, avg: null, trendPercent: null });
-    expect(captured[0]?.params['ids']).toBeUndefined();
+    // Unnamed and unfiltered, the window still covers only CIs of the step's type (T-460); the stand-in holds none.
+    expect(captured[0]?.params['ids']).toEqual([]);
     const unknown = await s.series(
       { skill: 'metrics.series', metric: 'host.cpu.utilisation_percent', type: 'host', aggregate: 'avg', names: ['nope'], filters: [], hours: 24, offsetHours: 0 },
       context,

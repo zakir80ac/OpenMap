@@ -77,12 +77,15 @@ export class MetricsSkill {
     }
     const resolved = await this.catalogue.resolveFilters(context.tenantId, step.filters);
     const notes: Summary[] = resolved.unresolved.map((value) => ({ kind: 'unresolvedFilter', value }));
-    if (resolved.resolved.length === 0)
-      return { scope: { ids: null, named: null, filterTerms: [], notes }, clarification: null };
-    const where = Prisma.join(
-      resolved.resolved.map((f) => Prisma.sql`c.attributes->>${f.key} = ${f.value}`),
-      ' AND ',
-    );
+    // Always scoped to the step's type: a metric is sampled on more than one type (every hardware CI carries the host
+    // load headline, BMCs included), and "CPU of hosts" is about hosts only.
+    const where =
+      resolved.resolved.length === 0
+        ? Prisma.sql`TRUE`
+        : Prisma.join(
+            resolved.resolved.map((f) => Prisma.sql`c.attributes->>${f.key} = ${f.value}`),
+            ' AND ',
+          );
     const rows = await this.prisma.client.$queryRaw<Array<{ id: string }>>(Prisma.sql`SELECT c.id FROM cis c WHERE c."tenantId" = ${context.tenantId}::uuid AND c."validTo" IS NULL AND c.type = ${step.type}::"CiType" AND ${where}`);
     return {
       scope: { ids: rows.map((r) => r.id), named: null, filterTerms: resolved.resolved.map((f) => f.term), notes },

@@ -53,7 +53,8 @@ export class ServicesSkill {
       let below = 0;
       for (const row of report) {
         if (wanted !== null && !wanted.has(row.service.id)) continue;
-        const period = row.periods[step.back];
+        // The report lists periods oldest first and ends with the current one: `back` counts from the end.
+        const period = row.periods[row.periods.length - 1 - step.back];
         if (period === undefined) continue;
         periodStart = period.periodStart;
         lines.push({ ciId: row.service.id, name: row.service.displayName, availabilityPercent: period.availabilityPercent, downtimeMinutes: period.downtimeMinutes, targetPercent: period.targetPercent, met: period.met });
