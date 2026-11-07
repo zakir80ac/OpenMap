@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.18.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.19.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -245,6 +245,8 @@ type ImpactScenario {
   id: UUID!
   name: String!
   kind: String!
+  "user: a saved what-if model; incident: the replay of a real incident's root cause (ADR-047)."
+  origin: String!
   failedCis: [Ci!]!
   options: JSON!
   createdBy: String!
@@ -260,6 +262,51 @@ type ImpactSimulation {
   services: [AffectedService!]!
   totals: ImpactTotals!
   recommendations: [Recommendation!]!
+}
+"A resolved incident compared with the simulation of its root cause (REQ-BSM-004, ADR-047)."
+type ImpactValidation {
+  id: UUID!
+  incident: Incident!
+  simulation: ImpactSimulation!
+  rootCause: Ci
+  predictedServices: [Ci!]!
+  actualServices: [Ci!]!
+  "Services the incident hit that the simulation did not predict."
+  missedServices: [Ci!]!
+  "Services the simulation predicted that the incident spared."
+  unexpectedServices: [Ci!]!
+  "Jaccard similarity of predicted and actual services, 0..1."
+  accuracy: Float!
+  validatedAt: DateTime!
+}
+"Prediction accuracy over a tenant's validated incidents."
+type ImpactAccuracy {
+  validated: Int!
+  "Mean accuracy of the validated incidents; null before the first."
+  meanAccuracy: Float
+  "Validations whose prediction matched the incident exactly."
+  exact: Int!
+  "Resolved incidents with a root cause that are not validated yet."
+  pending: Int!
+  "Resolved incidents the sweep cannot compare because they name no root cause."
+  withoutRootCause: Int!
+  recent: [ImpactValidation!]!
+}
+"A relationship the graph may be missing: an incident caused by `from` hit the service `to`, and no modelled path reached it."
+type RelationshipSuggestion {
+  id: UUID!
+  type: String!
+  from: Ci!
+  to: Ci!
+  reason: String!
+  occurrences: Int!
+  lastIncident: Incident
+  state: String!
+  decidedBy: String
+  decidedAt: DateTime
+  relationship: Relationship
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 type ImpactTotals {
   servicesDown: Int!
@@ -1841,6 +1888,10 @@ type Query {
   path(fromCiId: UUID!, toCiId: UUID!): [Relationship!]!
   impactScenarios: [ImpactScenario!]!
   impactSimulation(id: UUID!): ImpactSimulation
+  "Prediction accuracy and the latest validations (REQ-BSM-004)."
+  impactAccuracy(limit: Int = 20): ImpactAccuracy!
+  "Relationship suggestions learnt from missed predictions, open ones by default."
+  relationshipSuggestions(state: String = "open", limit: Int = 50): [RelationshipSuggestion!]!
   services(health: [HealthState!]): [ServiceHealth!]!
   service(id: UUID!): ServiceHealth
   incidents(open: Boolean = true, serviceId: UUID): [Incident!]!
@@ -2230,6 +2281,14 @@ type Mutation {
   updateDiscoveryScope(ciId: UUID!, input: DiscoveryScopeInput!): DiscoveryScope!
   saveScenario(input: ScenarioInput!): ImpactScenario!
   runSimulation(scenarioId: UUID!): ImpactSimulation!
+  "Validates resolved incidents that are not validated yet, up to limit, and returns the accuracy (REQ-BSM-004)."
+  validateImpactPredictions(limit: Int = 50): ImpactAccuracy!
+  "Compares one resolved incident that names a root cause with a simulation of it, again if it was validated before."
+  validateImpactPrediction(incidentId: UUID!): ImpactValidation!
+  "Creates the suggested relationship and marks the suggestion accepted."
+  acceptRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
+  "Marks the suggestion dismissed; the same miss is not suggested again."
+  dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   createPlan(input: PlanInput!): InfraPlan!
   setPlanStatus(planId: UUID!, status: PlanStatus!): InfraPlan!
   receivePlanLine(input: ReceiptInput!): PlanReceipt!

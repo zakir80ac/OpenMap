@@ -10,7 +10,7 @@ import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } fr
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
 import { dashboardInputSchema, dashboardSchema } from './dashboard.js';
-import { impactScenarioSchema, impactSimulationSchema } from './impact.js';
+import { impactScenarioSchema, impactSimulationSchema, impactValidationSchema, relationshipSuggestionSchema } from './impact.js';
 import { integrationConfigSchema, integrationDeliverySchema, securityAlertSchema } from './integration.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -36,6 +36,8 @@ const entries: Array<[string, z.ZodType, string]> = [
   ['dashboard-input', dashboardInputSchema, CONTRACT_VERSIONS.graphql],
   ['impact-scenario', impactScenarioSchema, CONTRACT_VERSIONS.event],
   ['impact-simulation', impactSimulationSchema, CONTRACT_VERSIONS.event],
+  ['impact-validation', impactValidationSchema, CONTRACT_VERSIONS.event],
+  ['relationship-suggestion', relationshipSuggestionSchema, CONTRACT_VERSIONS.event],
   ['integration-config', integrationConfigSchema, CONTRACT_VERSIONS.event],
   ['integration-delivery', integrationDeliverySchema, CONTRACT_VERSIONS.event],
   ['security-alert', securityAlertSchema, CONTRACT_VERSIONS.event],

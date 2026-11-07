@@ -1,5 +1,6 @@
 // T-065 REQ-UI-013 REQ-BSM-003 REQ-AI-004 — ImpactView: explorer → condition → run (saveScenario, runSimulation) →
-// results and assistant, plus saved scenarios, over stubbed GraphQL in en and ar.
+// results and assistant, plus saved scenarios, over stubbed GraphQL in en and ar. T-468 REQ-BSM-004: the prediction
+// accuracy panel shows the mean, the latest validation with its missed service, and accepts a suggestion.
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
@@ -31,6 +32,30 @@ const app = ci('app-1', 'applications', 'application', 'app-ledger-02');
 const svc = ci('svc-1', 'applications', 'business_service', 'Online banking');
 
 const calls: Array<{ op: string; variables: Record<string, unknown> | undefined }> = [];
+
+const comp = ci('cmp-1', 'applications', 'application_component', 'ledger-api');
+const cards = ci('svc-2', 'applications', 'business_service', 'Cards');
+const loans = ci('svc-3', 'applications', 'business_service', 'Loans');
+const accuracy = {
+  validated: 12,
+  meanAccuracy: 0.75,
+  exact: 7,
+  pending: 3,
+  withoutRootCause: 1,
+  recent: [
+    {
+      incident: { id: 'inc-1', title: 'Cards down', resolvedAt: '2026-11-07T10:00:00.000Z' },
+      rootCause: comp,
+      predictedServices: [cards],
+      actualServices: [cards, loans],
+      missedServices: [loans],
+      unexpectedServices: [],
+      accuracy: 0.5,
+      validatedAt: '2026-11-07T10:01:00.000Z',
+    },
+  ],
+};
+const suggestion = { id: 'sg-1', type: 'part_of_service', occurrences: 2, state: 'open', updatedAt: '2026-11-07T10:01:00.000Z', from: comp, to: loans, lastIncident: { id: 'inc-1', title: 'Cards down' } };
 
 const simulation = {
   id: 'sim-1',
@@ -69,6 +94,14 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
       return { data: { saveScenario: simulation.scenario } };
     case 'RunSimulation':
       return { data: { runSimulation: simulation } };
+    case 'ImpactAccuracy':
+      return { data: { impactAccuracy: accuracy } };
+    case 'RelationshipSuggestions':
+      return { data: { relationshipSuggestions: calls.some((c) => c.op === 'AcceptSuggestion') ? [] : [suggestion] } };
+    case 'AcceptSuggestion':
+      return { data: { acceptRelationshipSuggestion: { ...suggestion, state: 'accepted' } } };
+    case 'ValidateImpactPredictions':
+      return { data: { validateImpactPredictions: accuracy } };
     case 'AskAssistant':
       return { data: { askAssistant: { text: 'Promote the replica first.', cypher: 'MATCH (s:BusinessService) RETURN s', rows: [], cis: [svc] } } };
     default:
@@ -153,6 +186,30 @@ describe.each(LOCALES)('ImpactView in %s', (locale) => {
     expect(calls.some((c) => c.op === 'SaveScenario')).toBe(false);
     expect(screen.getByText(translate(locale, 'impact.explorer.selected', { count: new Intl.NumberFormat(locale).format(1) }))).toBeTruthy();
     expect(screen.getByRole('radio', { name: new RegExp(translate(locale, 'impact.condition.failed.label')) }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('T-468 shows the prediction accuracy and accepts a suggested relationship', async () => {
+    render(
+      <Providers locale={locale}>
+        <ImpactView locale={locale} />
+      </Providers>,
+    );
+    const panel = await screen.findByRole('region', { name: translate(locale, 'impact.accuracy.title') });
+    await waitFor(() => {
+      expect(within(panel).getByText(new Intl.NumberFormat(locale, { minimumFractionDigits: 0, maximumFractionDigits: 3 }).format(75), { exact: false })).toBeTruthy();
+    });
+    const table = within(panel).getByRole('table', { name: translate(locale, 'impact.accuracy.recent') });
+    expect(within(table).getByText('Cards down')).toBeTruthy();
+    expect(within(table).getAllByRole('link', { name: 'Loans' }).length).toBeGreaterThan(0);
+    const edge = translate(locale, 'impact.suggestions.edge', { from: 'ledger-api', to: 'Loans' });
+    expect(within(panel).getByText(edge)).toBeTruthy();
+    fireEvent.click(within(panel).getByRole('button', { name: translate(locale, 'impact.suggestions.accept') }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.op === 'AcceptSuggestion')?.variables).toEqual({ id: 'sg-1' });
+    });
+    await waitFor(() => {
+      expect(within(panel).getByText(translate(locale, 'impact.suggestions.empty'))).toBeTruthy();
+    });
   });
 
   it('narrows the explorer by search text through the search query', async () => {

@@ -2,8 +2,11 @@
 // real pipeline: every outage becomes two back-dated openmap.bsm.health.changed events in the outbox, which the
 // dispatcher writes to ClickHouse (events and service_health_history), and one resolved incident with the response and
 // resolution deadlines the service's SLA (or the defaults) would have set, acknowledged and resolved inside them.
+// REQ-BSM-004 (ADR-047): each incident names a root cause, drawn deterministically (from the service name and the
+// outage start) among the components, databases, VMs, hosts and hypervisors its applications depend on, so the API's
+// impact validation has incidents to compare with a simulation of their root cause.
 // Usage: pnpm --filter @openmap/reconciler replay-history --dir ../../packages/testing/fixtures/synth [--reset]
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { loadEnv } from '@openmap/config';
@@ -25,6 +28,45 @@ const SOURCE = '/openmap/synth-estate';
 const INCIDENT_SOURCE = 'bsm';
 const HEALTH_CHANGED = 'openmap.bsm.health.changed';
 const TIER_ATTRIBUTE = 'tier';
+const SERVICE_EDGE = 'part_of_service';
+
+/**
+ * The failure points each service's applications depend on (downstream closure), sorted, per service id; a service
+ * whose applications reach none falls back to the applications themselves.
+ */
+async function rootCauseCandidates(
+  prisma: ReturnType<typeof createPrismaClient>,
+  graph: ReturnType<typeof createGraphRepository>,
+  tenantId: string,
+  serviceIds: readonly string[],
+): Promise<Map<string, string[]>> {
+  const edges = await prisma.relationship.findMany({
+    where: { tenantId, type: SERVICE_EDGE, toCiId: { in: [...serviceIds] }, validTo: null },
+    select: { fromCiId: true, toCiId: true },
+  });
+  const types = new Set<string>(SLA.synthetic.rootCauseTypes);
+  const byApp = new Map<string, string[]>();
+  for (const appId of new Set(edges.map((e) => e.fromCiId))) {
+    const r = await graph.impact(tenantId, appId, { direction: 'downstream', maxDepth: 0, asOf: null, edgeTypes: [] });
+    byApp.set(appId, r.nodes.filter((n) => types.has(n.ci.type)).map((n) => n.ci.id));
+  }
+  const out = new Map<string, string[]>();
+  for (const e of edges) {
+    const reached = byApp.get(e.fromCiId) ?? [];
+    const list = out.get(e.toCiId) ?? [];
+    list.push(...(reached.length > 0 ? reached : [e.fromCiId]));
+    out.set(e.toCiId, list);
+  }
+  for (const [id, list] of out) out.set(id, [...new Set(list)].sort());
+  return out;
+}
+
+/** A deterministic pick: the same outage of the same service names the same root cause on every replay. */
+function pick(candidates: readonly string[], key: string): string | null {
+  if (candidates.length === 0) return null;
+  const n = Number.parseInt(createHash('sha256').update(key).digest('hex').slice(0, SLA.synthetic.rootCausePickHexDigits), SLA.synthetic.rootCausePickRadix);
+  return candidates[n % candidates.length] ?? null;
+}
 
 interface Outage {
   service: string;
@@ -102,6 +144,7 @@ async function main(): Promise<void> {
     select: { id: true, name: true, displayName: true, attributes: true },
   });
   const byName = new Map(services.map((s) => [s.name, s]));
+  const causes = await rootCauseCandidates(prisma, graph, tenantId, services.map((s) => s.id));
   const assignments = new Map(
     (await prisma.serviceSlaAssignment.findMany({ where: { tenantId }, include: { sla: true } })).map((a) => [
       a.serviceCiId,
@@ -118,6 +161,9 @@ async function main(): Promise<void> {
       where: { tenantId, source: INCIDENT_SOURCE, state: { in: ['resolved', 'closed'] } },
     });
     await prisma.outboxEvent.deleteMany({ where: { tenantId, type: HEALTH_CHANGED } });
+    // The incidents' validations went with them; their replay scenarios and the open suggestions they made go too.
+    await prisma.impactScenario.deleteMany({ where: { tenantId, origin: 'incident' } });
+    await prisma.relationshipSuggestion.deleteMany({ where: { tenantId, state: 'open' } });
     for (const table of ['service_health_history']) {
       await sinks.clickhouse.command({
         query:
@@ -148,11 +194,12 @@ async function main(): Promise<void> {
       unknown++;
       continue;
     }
+    const rootCauseCiId = pick(causes.get(service.id) ?? [], o.service + '|' + o.startedAt);
     const open = envelope(tenantId, service.id, o.startedAt, {
       serviceId: service.id,
       state: o.state,
       previous: 'healthy',
-      rootCauseIds: [],
+      rootCauseIds: rootCauseCiId === null ? [] : [rootCauseCiId],
       groups: [],
       budgetRemainingMinutes: null,
     });
@@ -208,7 +255,7 @@ async function main(): Promise<void> {
       state: 'resolved',
       source: INCIDENT_SOURCE,
       affectedServiceCiIds: [service.id],
-      rootCauseCiId: null,
+      rootCauseCiId,
       correlatedEventIds: [open.id],
       openedAt: new Date(opened),
       acknowledgedAt: new Date(acknowledgedAt),

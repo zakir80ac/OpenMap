@@ -159,6 +159,7 @@ describe('asset, impact and integration contracts', () => {
         tenantId: uuid,
         name: 'R12 power',
         kind: 'power_loss',
+        origin: 'user',
         failedCiIds: [uuid],
         options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null },
         createdBy: 'syed',

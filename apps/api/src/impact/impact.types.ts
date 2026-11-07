@@ -7,6 +7,7 @@ export interface ImpactScenarioView {
   id: string;
   name: string;
   kind: ImpactScenario['kind'];
+  origin: ImpactScenario['origin'];
   failedCiIds: string[];
   options: ImpactScenario['options'];
   createdBy: string;

@@ -224,6 +224,11 @@ export const SLA = {
     tier1OutageFactor: 0.4,
     acknowledgeShare: 0.5,
     eventsPerOutage: 2,
+    /** REQ-BSM-004 (ADR-047): CI types a replayed incident may name as its root cause, the failure points of an app. */
+    rootCauseTypes: ['application_component', 'database_cluster', 'vm', 'host', 'hypervisor'],
+    /** The pick reads this many hex digits of a SHA-256 (32 bits, well inside a safe integer) as base 16. */
+    rootCausePickHexDigits: 8,
+    rootCausePickRadix: 16,
   } as const,
 } as const;
 export type SlaWindow = (typeof SLA.windows)[number];
@@ -755,6 +760,26 @@ export const ASSISTANT = {
    */
   clickhouseIdBatch: 2_000,
   clickhouseBatchConcurrency: 4,
+} as const;
+
+/**
+ * REQ-BSM-004 (ADR-047) — impact prediction accuracy. Each sweep validates at most `sweepBatch` incidents per tenant
+ * (the oldest resolved first), so a backlog of thousands drains over several ticks without holding a connection for
+ * minutes. An incident replay simulates the root cause `failed` over the whole upstream closure (maxDepth 0) with
+ * redundancy honoured, as a person's default scenario does. A missed service is suggested as served by the root cause
+ * (root part_of_service service): the edge the impact traversal follows into services. The accuracy histogram buckets cover 0..1 in tenths; lists default to these lengths and cap at listMax.
+ */
+export const IMPACT = {
+  sweepBatch: 50,
+  replayKind: 'failed',
+  replayMaxDepth: 0,
+  replayActor: 'impact-validation',
+  suggestionType: 'part_of_service',
+  suggestionReason: 'impact_miss',
+  accuracyBuckets: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+  recentDefault: 20,
+  suggestionsDefault: 50,
+  listMax: 200,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */
@@ -1401,8 +1426,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * filters, queries `lifecycleReleases`, `lifecycleHardware`, `lifecycleCatalogue`, mutation `syncLifecycleCatalogue`.
    * 1.18.0 (REQ-CMDB-022): `SaasSubscriptionState`, `SaasDataFlow`, `SaasSubscription`, `SaasTenant`, `SaasInventory`, query
    * `saasInventory`.
+   * 1.19.0 (REQ-BSM-004, ADR-047): `ImpactScenario.origin`, `ImpactValidation`, `ImpactAccuracy`, `RelationshipSuggestion`,
+   * queries `impactAccuracy`, `relationshipSuggestions`, mutations `validateImpactPredictions`, `validateImpactPrediction`,
+   * `acceptRelationshipSuggestion`, `dismissRelationshipSuggestion`.
    */
-  graphql: '1.18.0',
+  graphql: '1.19.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

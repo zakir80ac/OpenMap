@@ -371,6 +371,19 @@ enum PlanStatus {
 }
 
 /// SCENARIO_KINDS (impact.ts)
+/// Who a scenario is for (ADR-047): saved what-if models, or the replay of a real incident's root cause.
+enum ScenarioOrigin {
+  user
+  incident
+}
+
+/// A relationship suggestion's review state (ADR-047).
+enum SuggestionState {
+  open
+  accepted
+  dismissed
+}
+
 enum ScenarioKind {
   failed
   degraded
@@ -514,6 +527,7 @@ model Tenant {
   impactScenarios         ImpactScenario[]
   impactSimulations       ImpactSimulation[]
   impactValidations       ImpactValidation[]
+  relationshipSuggestions RelationshipSuggestion[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
   slas                    Sla[]
@@ -698,14 +712,16 @@ model Ci {
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
 
-  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant            Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   externalIds       CiExternalId[]
-  relationshipsFrom Relationship[]     @relation("RelationshipFrom")
-  relationshipsTo   Relationship[]     @relation("RelationshipTo")
-  assetRecords      AssetRecord[]      @relation("AssetCi")
-  coveredAssets     AssetRecord[]      @relation("AssetSupportContract")
-  ownedAssets       AssetRecord[]      @relation("AssetOwnerCostCentre")
+  relationshipsFrom Relationship[]           @relation("RelationshipFrom")
+  relationshipsTo   Relationship[]           @relation("RelationshipTo")
+  assetRecords      AssetRecord[]            @relation("AssetCi")
+  coveredAssets     AssetRecord[]            @relation("AssetSupportContract")
+  ownedAssets       AssetRecord[]            @relation("AssetOwnerCostCentre")
   certificateAlerts CertificateAlert[]
+  suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
+  suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
   components        CiComponent[]
 
   @@index([tenantId, type])
@@ -1203,27 +1219,29 @@ model VendorContact {
 
 /// impactScenarioSchema
 model ImpactScenario {
-  id                    String       @id @default(uuid()) @db.Uuid
-  tenantId              String       @db.Uuid
+  id                    String         @id @default(uuid()) @db.Uuid
+  tenantId              String         @db.Uuid
   name                  String
   kind                  ScenarioKind
-  failedCiIds           String[]     @db.Uuid
+  origin                ScenarioOrigin @default(user)
+  failedCiIds           String[]       @db.Uuid
   maxDepth              Int
   honourRedundancy      Boolean
   includeSharedServices Boolean
-  evaluatedAt           DateTime?    @db.Timestamptz(3)
+  evaluatedAt           DateTime?      @db.Timestamptz(3)
   createdBy             String
   changeRefSource       String?
   changeRefId           String?
   /// runbookSchema, or null when no procedure is attached to the scenario.
   runbook               Json?
-  createdAt             DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt             DateTime     @updatedAt @db.Timestamptz(3)
+  createdAt             DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime       @updatedAt @db.Timestamptz(3)
 
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   simulations ImpactSimulation[]
 
   @@index([tenantId, kind])
+  @@index([tenantId, origin, createdAt])
   @@map("impact_scenarios")
 }
 
@@ -1273,7 +1291,36 @@ model ImpactValidation {
   incident   Incident         @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 
   @@unique([simulationId, incidentId])
+  /// One current validation per incident (ADR-047): validating again replaces it.
+  @@unique([incidentId])
+  @@index([tenantId, validatedAt])
   @@map("impact_validations")
+}
+
+/// relationshipSuggestionSchema (ADR-047): a dependency an incident showed and the graph lacks, for review.
+model RelationshipSuggestion {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @db.Uuid
+  type           RelationshipType
+  fromCiId       String           @db.Uuid
+  toCiId         String           @db.Uuid
+  reason         String
+  occurrences    Int              @default(1)
+  lastIncidentId String?          @db.Uuid
+  state          SuggestionState  @default(open)
+  decidedBy      String?
+  decidedAt      DateTime?        @db.Timestamptz(3)
+  relationshipId String?          @db.Uuid
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fromCi Ci     @relation("SuggestionFrom", fields: [fromCiId], references: [id], onDelete: Cascade)
+  toCi   Ci     @relation("SuggestionTo", fields: [toCiId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, fromCiId, toCiId, type])
+  @@index([tenantId, state, occurrences])
+  @@map("relationship_suggestions")
 }
 
 /// Window an SLA's availability target is measured over (ADR-024).

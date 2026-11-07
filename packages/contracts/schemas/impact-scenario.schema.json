@@ -35,6 +35,13 @@
         "maintenance"
       ]
     },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "user",
+        "incident"
+      ]
+    },
     "failedCiIds": {
       "minItems": 1,
       "type": "array",
@@ -221,6 +228,7 @@
     "tenantId",
     "name",
     "kind",
+    "origin",
     "failedCiIds",
     "options",
     "createdBy",

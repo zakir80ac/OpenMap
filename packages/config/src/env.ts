@@ -133,6 +133,11 @@ export const envSchema = z.object({
   ASSISTANT_PROSE: bool.default(true),
   /** Locales the model may reword in (comma-separated); the CPU profile's small model is trusted with English only. */
   ASSISTANT_PROSE_LOCALES: z.string().default('en,ar'),
+  /**
+   * REQ-BSM-004 (ADR-047): how often the API compares newly resolved incidents with a simulation of their root
+   * cause. 0 turns the sweep off; validateImpactPredictions still runs it on demand.
+   */
+  IMPACT_VALIDATION_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
 });
 
 export type Env = z.infer<typeof envSchema>;

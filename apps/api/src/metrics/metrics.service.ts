@@ -2,7 +2,7 @@
 // duration histogram. Bucket edges derive from the performance budgets so alerts align with them.
 import { Injectable } from '@nestjs/common';
 import { Counter, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
-import { IPV4, PERF_BUDGETS, TIME } from '@openmap/constants';
+import { IMPACT, IPV4, PERF_BUDGETS, TIME } from '@openmap/constants';
 
 export const GRAPHQL_REQUESTS_METRIC = 'openmap_graphql_requests_total';
 export const GRAPHQL_DURATION_METRIC = 'openmap_graphql_duration_seconds';
@@ -22,6 +22,9 @@ export const IMPORT_ROWS_METRIC = 'openmap_import_rows_total';
 export const EXPORT_ROWS_METRIC = 'openmap_export_rows_total';
 /** REQ-DEP-004 (ADR-031): layered application map duration. */
 export const APPLICATION_MAP_DURATION_METRIC = 'openmap_application_map_duration_seconds';
+/** REQ-BSM-004 (ADR-047): incidents compared with a simulation, by outcome, and the accuracy each one scored. */
+export const IMPACT_VALIDATIONS_METRIC = 'openmap_impact_validations_total';
+export const IMPACT_ACCURACY_METRIC = 'openmap_impact_prediction_accuracy';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -56,6 +59,8 @@ export class MetricsService {
   readonly assistantDuration: Histogram<'intent'>;
   readonly topologyDuration: Histogram<'layer'>;
   readonly applicationMapDuration: Histogram;
+  readonly impactValidations: Counter<'outcome'>;
+  readonly impactAccuracy: Histogram;
   readonly importRows: Counter<'outcome'>;
   readonly exportRows: Counter<'format'>;
 
@@ -117,6 +122,18 @@ export class MetricsService {
       name: APPLICATION_MAP_DURATION_METRIC,
       help: 'Layered application map duration in seconds',
       buckets: durationBuckets(),
+      registers: [this.registry],
+    });
+    this.impactValidations = new Counter({
+      name: IMPACT_VALIDATIONS_METRIC,
+      help: 'Resolved incidents compared with a simulation of their root cause, by outcome (exact, partial, failed)',
+      labelNames: ['outcome'],
+      registers: [this.registry],
+    });
+    this.impactAccuracy = new Histogram({
+      name: IMPACT_ACCURACY_METRIC,
+      help: 'Jaccard accuracy of each validated impact prediction, 0..1',
+      buckets: [...IMPACT.accuracyBuckets],
       registers: [this.registry],
     });
   }

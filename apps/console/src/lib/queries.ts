@@ -740,6 +740,89 @@ export function runSimulation(scenarioId: string): Promise<ImpactSimulation> {
   );
 }
 
+// REQ-BSM-004 (ADR-047) — prediction accuracy: resolved incidents compared with a simulation of their root cause, and
+// the relationships the misses suggest.
+export interface ImpactValidation {
+  incident: { id: string; title: string; resolvedAt: string | null };
+  rootCause: CiSummary | null;
+  predictedServices: CiSummary[];
+  actualServices: CiSummary[];
+  missedServices: CiSummary[];
+  unexpectedServices: CiSummary[];
+  accuracy: number;
+  validatedAt: string;
+}
+
+export interface ImpactAccuracy {
+  validated: number;
+  meanAccuracy: number | null;
+  exact: number;
+  pending: number;
+  withoutRootCause: number;
+  recent: ImpactValidation[];
+}
+
+export interface RelationshipSuggestion {
+  id: string;
+  type: string;
+  from: CiSummary;
+  to: CiSummary;
+  occurrences: number;
+  state: string;
+  lastIncident: { id: string; title: string } | null;
+  updatedAt: string;
+}
+
+const VALIDATION_FIELDS = [
+  'incident { id title resolvedAt }',
+  'rootCause { ' + CI_SUMMARY_FIELDS + ' }',
+  'predictedServices { ' + CI_SUMMARY_FIELDS + ' }',
+  'actualServices { ' + CI_SUMMARY_FIELDS + ' }',
+  'missedServices { ' + CI_SUMMARY_FIELDS + ' }',
+  'unexpectedServices { ' + CI_SUMMARY_FIELDS + ' }',
+  'accuracy validatedAt',
+].join(' ');
+const ACCURACY_FIELDS = 'validated meanAccuracy exact pending withoutRootCause recent { ' + VALIDATION_FIELDS + ' }';
+const SUGGESTION_FIELDS =
+  'id type occurrences state updatedAt from { ' + CI_SUMMARY_FIELDS + ' } to { ' + CI_SUMMARY_FIELDS + ' } lastIncident { id title }';
+
+const ACCURACY_QUERY = 'query ImpactAccuracy($limit: Int) { impactAccuracy(limit: $limit) { ' + ACCURACY_FIELDS + ' } }';
+
+export function impactAccuracyQuery(limit: number) {
+  return queryOptions({
+    queryKey: ['impact-accuracy', limit] as const,
+    queryFn: ({ signal }) => gql<{ impactAccuracy: ImpactAccuracy }>(ACCURACY_QUERY, { limit }, signal),
+    select: (data) => data.impactAccuracy,
+  });
+}
+
+const SUGGESTIONS_QUERY =
+  'query RelationshipSuggestions($state: String, $limit: Int) { relationshipSuggestions(state: $state, limit: $limit) { ' + SUGGESTION_FIELDS + ' } }';
+
+export function relationshipSuggestionsQuery(limit: number) {
+  return queryOptions({
+    queryKey: ['relationship-suggestions', limit] as const,
+    queryFn: ({ signal }) =>
+      gql<{ relationshipSuggestions: RelationshipSuggestion[] }>(SUGGESTIONS_QUERY, { state: 'open', limit }, signal),
+    select: (data) => data.relationshipSuggestions,
+  });
+}
+
+const VALIDATE_MUTATION = 'mutation ValidateImpactPredictions($limit: Int) { validateImpactPredictions(limit: $limit) { ' + ACCURACY_FIELDS + ' } }';
+
+export function validateImpactPredictions(limit: number): Promise<ImpactAccuracy> {
+  return gql<{ validateImpactPredictions: ImpactAccuracy }>(VALIDATE_MUTATION, { limit }).then((d) => d.validateImpactPredictions);
+}
+
+const ACCEPT_MUTATION = 'mutation AcceptSuggestion($id: UUID!) { acceptRelationshipSuggestion(id: $id) { ' + SUGGESTION_FIELDS + ' } }';
+const DISMISS_MUTATION = 'mutation DismissSuggestion($id: UUID!) { dismissRelationshipSuggestion(id: $id) { ' + SUGGESTION_FIELDS + ' } }';
+
+export function decideSuggestion(id: string, decision: 'accept' | 'dismiss'): Promise<RelationshipSuggestion> {
+  return decision === 'accept'
+    ? gql<{ acceptRelationshipSuggestion: RelationshipSuggestion }>(ACCEPT_MUTATION, { id }).then((d) => d.acceptRelationshipSuggestion)
+    : gql<{ dismissRelationshipSuggestion: RelationshipSuggestion }>(DISMISS_MUTATION, { id }).then((d) => d.dismissRelationshipSuggestion);
+}
+
 // REQ-AI-007 (ADR-028) — the conversational answer as the Impact screen reads it; the Assistant screen's richer
 // typing lives in estate-queries.ts and both ask the same mutation.
 export interface AssistantAnswer {

@@ -20,7 +20,7 @@ export function severityFor(kind: ImpactScenario['kind']): ConditionSeverity {
 }
 
 export function toScenarioView(s: ImpactScenario): ImpactScenarioView {
-  return { id: s.id, name: s.name, kind: s.kind, failedCiIds: s.failedCiIds, options: s.options, createdBy: s.createdBy, createdAt: s.createdAt };
+  return { id: s.id, name: s.name, kind: s.kind, origin: s.origin, failedCiIds: s.failedCiIds, options: s.options, createdBy: s.createdBy, createdAt: s.createdAt };
 }
 
 @Injectable()

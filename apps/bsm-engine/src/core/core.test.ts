@@ -55,7 +55,7 @@ describe('simulate', () => {
     durationMs: 1,
   };
   const repo = { impact: async () => impact } as unknown as GraphRepository;
-  const scenario: ImpactScenario = { id: tenantId, tenantId, name: 'pdu', kind: 'power_loss', failedCiIds: ['pdu', 'pg1'], options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null }, createdBy: 'syed', createdAt: '2026-10-22T00:00:00Z', changeRef: null };
+  const scenario: ImpactScenario = { id: tenantId, tenantId, name: 'pdu', kind: 'power_loss', origin: 'user', failedCiIds: ['pdu', 'pg1'], options: { maxDepth: 0, honourRedundancy: true, includeSharedServices: true, at: null }, createdBy: 'syed', createdAt: '2026-10-22T00:00:00Z', changeRef: null };
   const facts = new Map<string, ServiceFacts>([['banking', { serviceCiId: 'banking', name: 'Online banking', tier: 1, usersAffected: 2_100_000, revenuePerHour: { amount: 1_400_000, currency: 'SAR' }, sla: null, recovery: null }]]);
   const models = new Map<string, ServiceModel>([['banking', { serviceCiId: 'banking', groups: [{ name: 'db', memberCiIds: ['pg1', 'pg2'], minHealthy: 1 }] }]]);
 
