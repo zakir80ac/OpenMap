@@ -48,7 +48,7 @@ async function main(): Promise<void> {
   }
   if (target === 'postgres' || target === 'all') {
     const r = await migratePostgres(env);
-    console.log('postgres: applied [' + r.applied.join(', ') + '] skipped [' + r.skipped.join(', ') + ']' + (r.checksumMismatches.length ? ' checksum mismatches [' + r.checksumMismatches.join(', ') + ']' : ''));
+    console.log('postgres: applied [' + r.applied.join(', ') + '] skipped [' + r.skipped.join(', ') + ']' + (r.checksumMismatches.length ? ' checksum mismatches [' + r.checksumMismatches.join(', ') + ']' : '') + (r.checksumsRepaired.length ? ' line-ending checksums repaired [' + r.checksumsRepaired.join(', ') + ']' : ''));
   }
   if (target === 'clickhouse' || target === 'all') {
     const r = await migrateClickHouse(env);

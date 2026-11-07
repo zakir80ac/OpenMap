@@ -25,7 +25,6 @@ import {
   SCENARIO_KINDS,
   DASHBOARD_PERSONAS,
   SITE_KINDS,
-  SUPPORT_LEVELS,
   TARGET_KINDS,
   outboxRecordSchema,
 } from '@openmap/contracts';
@@ -65,7 +64,6 @@ const ENUM_MIRRORS: Array<[string, readonly string[]]> = [
   ['ResultStatus', RESULT_STATUSES],
   ['OutboxTarget', outboxRecordSchema.shape.pending.element.options],
   ['AssetStage', ASSET_STAGES],
-  ['SupportLevel', SUPPORT_LEVELS],
   ['DepreciationMethod', DEPRECIATION_METHODS],
   ['PlanKind', PLAN_KINDS],
   ['PlanStatus', PLAN_STATUSES],
@@ -79,7 +77,7 @@ const ENUM_MIRRORS: Array<[string, readonly string[]]> = [
 const MODELS = [
   'Tenant', 'TenantSettings', 'Organization', 'BusinessUnit', 'Site', 'SiteLink', 'Ci', 'CiExternalId', 'Relationship',
   'CollectorManifest', 'DiscoveryNode', 'DiscoveryJob', 'CollectorRun', 'Evidence', 'ReconciliationConflict', 'OutboxEvent',
-  'AssetRecord', 'AssetAudit', 'InfraPlan', 'BomLine', 'SupportContract', 'VendorContact', 'ImpactScenario', 'ImpactSimulation',
+  'AssetRecord', 'AssetAudit', 'InfraPlan', 'BomLine', 'VendorContact', 'ImpactScenario', 'ImpactSimulation',
   'ImpactValidation', 'Incident', 'IncidentLink', 'IntegrationConfig', 'IntegrationStatus', 'IntegrationDelivery', 'SecurityAlert',
   'AuditLog', 'UserPreference', 'OnboardingState',
 ];

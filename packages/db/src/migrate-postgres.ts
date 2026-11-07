@@ -34,6 +34,28 @@ export interface PostgresMigrationReport {
   applied: string[];
   skipped: string[];
   checksumMismatches: string[];
+  /** Rows whose stored checksum differed only in line endings; rewritten to the committed file's checksum. */
+  checksumsRepaired: string[];
+}
+
+function sha256(text: string): string {
+  return createHash('sha256').update(text).digest('hex');
+}
+
+/**
+ * Checksums of the same SQL with LF and with CRLF line endings. A migration applied from a working copy written with
+ * CRLF (an editor or script on Windows) stores the CRLF hash; the committed file is LF (.gitattributes). Both are the
+ * same migration, so neither counts as an edit.
+ */
+export function lineEndingChecksums(sql: string): string[] {
+  const lf = sql.replace(/\r\n/g, '\n');
+  return [sha256(lf), sha256(lf.replace(/\n/g, '\r\n'))];
+}
+
+/** How a stored checksum relates to the migration on disk. */
+export function compareChecksum(stored: string, migration: PostgresMigration): 'same' | 'line_endings' | 'edited' {
+  if (stored === migration.checksum) return 'same';
+  return lineEndingChecksums(migration.sql).includes(stored) ? 'line_endings' : 'edited';
 }
 
 /** Lists migrations on disk in lexical (timestamp/sequence) order. */
@@ -43,14 +65,14 @@ export function listPostgresMigrations(dir: string = MIGRATIONS_DIR): PostgresMi
     .sort()
     .map((name) => {
       const sql = readFileSync(join(dir, name, MIGRATION_FILE), 'utf8');
-      return { name, checksum: createHash('sha256').update(sql).digest('hex'), sql };
+      return { name, checksum: sha256(sql), sql };
     });
 }
 
 export async function migratePostgres(env: Env = loadEnv(), dir: string = MIGRATIONS_DIR): Promise<PostgresMigrationReport> {
   const client = new pg.Client({ connectionString: env.POSTGRES_URL });
   await client.connect();
-  const report: PostgresMigrationReport = { applied: [], skipped: [], checksumMismatches: [] };
+  const report: PostgresMigrationReport = { applied: [], skipped: [], checksumMismatches: [], checksumsRepaired: [] };
   try {
     await client.query(CREATE_BOOKKEEPING);
     const done = await client.query<{ migration_name: string; checksum: string }>(`SELECT migration_name, checksum FROM "${BOOKKEEPING_TABLE}" WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`);
@@ -58,7 +80,12 @@ export async function migratePostgres(env: Env = loadEnv(), dir: string = MIGRAT
     for (const m of listPostgresMigrations(dir)) {
       const existing = applied.get(m.name);
       if (existing !== undefined) {
-        if (existing !== m.checksum) report.checksumMismatches.push(m.name);
+        const relation = compareChecksum(existing, m);
+        if (relation === 'edited') report.checksumMismatches.push(m.name);
+        if (relation === 'line_endings') {
+          await client.query(`UPDATE "${BOOKKEEPING_TABLE}" SET checksum = $1 WHERE migration_name = $2 AND checksum = $3`, [m.checksum, m.name, existing]);
+          report.checksumsRepaired.push(m.name);
+        }
         report.skipped.push(m.name);
         continue;
       }

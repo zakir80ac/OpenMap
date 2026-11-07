@@ -34,15 +34,23 @@ describe('prisma/migrations/0001_init', () => {
     const tables = mappedTables();
     expect(tables.length).toBeGreaterThanOrEqual(34);
     for (const t of tables) expect(allMigrations).toContain('CREATE TABLE "' + t + '" (');
-    expect((allMigrations.match(/CREATE TABLE "/g) ?? []).length).toBe(tables.length);
+    // A later migration may drop a table it replaced (0023 support_contracts), so count created minus dropped.
+    const created = (allMigrations.match(/CREATE TABLE "/g) ?? []).length;
+    const dropped = (allMigrations.match(/DROP TABLE "/g) ?? []).length;
+    expect(created - dropped).toBe(tables.length);
   });
 
   it('creates a type for every enum', () => {
     const enums = enumNames();
     for (const e of enums) expect(allMigrations).toContain('CREATE TYPE "' + e + '" AS ENUM (');
-    // A later migration may recreate a type to change its members (0012 ScenarioKind), so count distinct names.
-    const created = new Set((allMigrations.match(/CREATE TYPE "([A-Za-z]+)"/g) ?? []).map((m) => m.replace(/^CREATE TYPE "|"$/g, '')));
-    expect(created.size).toBe(enums.length);
+    // A later migration may recreate a type to change its members (0012 ScenarioKind) or drop it (0023 SupportLevel),
+    // so replay creates and drops in order and count the names still standing.
+    const standing = new Set<string>();
+    for (const m of allMigrations.matchAll(/(CREATE|DROP) TYPE "([A-Za-z]+)"/g)) {
+      if (m[1] === 'CREATE') standing.add(m[2] ?? '');
+      else standing.delete(m[2] ?? '');
+    }
+    expect([...standing].sort()).toEqual([...enums].sort());
   });
 
   it('creates the bitemporal and GIN indexes and the outbox bigserial', () => {
