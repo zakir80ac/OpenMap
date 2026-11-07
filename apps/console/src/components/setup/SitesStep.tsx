@@ -5,13 +5,18 @@ import { SETUP_LIMITS } from '@openmap/constants';
 import { SITE_KINDS } from '@openmap/contracts';
 import { Tag } from '@openmap/ui';
 import { useId, useState, type ReactNode, type SyntheticEvent } from 'react';
-import { onboardingQueryKey, removeSite, upsertSite, type Site, type SiteInput, type SiteKind } from '@/lib/setup-queries';
+import { onboardingQueryKey, removeSite, upsertSite, type Site, type SiteDrRole, type SiteInput, type SiteKind } from '@/lib/setup-queries';
 import { useFormatters, useT } from '@/providers';
 import { DANGER_BUTTON, MutationError, numberOrNull, PRIMARY_BUTTON, SECONDARY_BUTTON, SelectInput, StepCard, TABLE_HEAD, TextInput } from './fields';
 import { StepActions, type StepProps } from './SetupView';
 
 const CLOUD_PROVIDERS = ['azure', 'aws', 'gcp', 'oci', 'other'] as const;
 const TIERS = ['1', '2', '3', '4'] as const;
+
+/** ADR-025: a site's DR role and business criticality (1 = most critical) feed the HA / DR readiness rules. */
+const DR_ROLES: readonly SiteDrRole[] = ['primary', 'dr', 'none'];
+const DR_ROLE_KEY = { primary: 'sites.drRole.primary', dr: 'sites.drRole.dr', none: 'sites.drRole.none' } as const;
+const CRITICALITIES = Array.from({ length: SETUP_LIMITS.maxCriticality }, (_, i) => String(i + 1));
 
 interface Draft {
   code: string;
@@ -29,9 +34,11 @@ interface Draft {
   powerCapacityKw: string;
   rackCount: string;
   designPue: string;
+  drRole: SiteDrRole;
+  criticality: string;
 }
 
-const EMPTY: Draft = { code: '', name: '', kind: SITE_KINDS[0], tier: '', address: '', city: '', countryCode: '', lat: '', lon: '', cloudProvider: CLOUD_PROVIDERS[0], cloudRegion: '', locationCount: '1', powerCapacityKw: '', rackCount: '', designPue: '' };
+const EMPTY: Draft = { code: '', name: '', kind: SITE_KINDS[0], tier: '', address: '', city: '', countryCode: '', lat: '', lon: '', cloudProvider: CLOUD_PROVIDERS[0], cloudRegion: '', locationCount: '1', powerCapacityKw: '', rackCount: '', designPue: '', drRole: 'none', criticality: '' };
 
 function draftOf(site: Site): Draft {
   return {
@@ -50,6 +57,8 @@ function draftOf(site: Site): Draft {
     powerCapacityKw: site.facility === null ? '' : String(site.facility.powerCapacityKw),
     rackCount: site.facility === null ? '' : String(site.facility.rackCount),
     designPue: site.facility?.designPue === null || site.facility === null ? '' : String(site.facility.designPue),
+    drRole: site.drRole,
+    criticality: site.criticality === null ? '' : String(site.criticality),
   };
 }
 
@@ -71,6 +80,8 @@ export function toSiteInput(draft: Draft): SiteInput {
     cloud: cloud ? { provider: draft.cloudProvider, region: draft.cloudRegion.trim() } : null,
     locationCount: numberOrNull(draft.locationCount) ?? 1,
     facility: !cloud && power !== null && racks !== null ? { powerCapacityKw: power, rackCount: racks, designPue: numberOrNull(draft.designPue) } : null,
+    drRole: draft.drRole,
+    criticality: numberOrNull(draft.criticality),
   };
 }
 
@@ -173,6 +184,17 @@ export function SitesStep({ state, editable, onContinue, onBack, continuing }: S
             <TextInput id={id + '-lat'} label={t('setup.sites.lat')} inputMode="decimal" value={draft.lat} disabled={!editable} onChange={(e) => { update('lat', e.target.value); }} />
             <TextInput id={id + '-lon'} label={t('setup.sites.lon')} inputMode="decimal" value={draft.lon} disabled={!editable} onChange={(e) => { update('lon', e.target.value); }} />
             <TextInput id={id + '-locations'} label={t('setup.sites.locationCount')} inputMode="numeric" value={draft.locationCount} disabled={!editable} onChange={(e) => { update('locationCount', e.target.value); }} />
+            <SelectInput id={id + '-dr'} label={t('setup.sites.drRole')} value={draft.drRole} disabled={!editable} onChange={(e) => { update('drRole', e.target.value as SiteDrRole); }}>
+              {DR_ROLES.map((role) => (
+                <option key={role} value={role}>{t(DR_ROLE_KEY[role])}</option>
+              ))}
+            </SelectInput>
+            <SelectInput id={id + '-criticality'} label={t('setup.sites.criticality')} value={draft.criticality} disabled={!editable} onChange={(e) => { update('criticality', e.target.value); }}>
+              <option value="">{t('setup.sites.criticality.none')}</option>
+              {CRITICALITIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </SelectInput>
             {isCloud ? (
               <>
                 <SelectInput id={id + '-provider'} label={t('setup.sites.cloudProvider')} value={draft.cloudProvider} disabled={!editable} onChange={(e) => { update('cloudProvider', e.target.value); }}>

@@ -8,6 +8,7 @@ import { loadEnv } from '@openmap/config';
 import { createPrismaClient } from '@openmap/db';
 import { buildApp } from './server/app.js';
 import { createJobStore } from './server/jobs.js';
+import { startLinkProbes } from './server/link-probe-loop.js';
 import { loadCa } from './server/pki.js';
 import { createResultsQueue } from './server/results-queue.js';
 import { createOpenBaoReader } from './server/secrets.js';
@@ -32,7 +33,12 @@ async function main(): Promise<void> {
   const caPem = readFileSync(env.SCHEDULER_CA_CERT_PATH, 'utf8');
   const ca = await loadCa(caPem, readFileSync(env.SCHEDULER_CA_KEY_PATH, 'utf8'));
   const results = createResultsQueue(env);
-  const app = buildApp({ env, prisma, jobs: createJobStore(prisma), results, secrets: createOpenBaoReader(env), ca, caPem });
+  const jobStore = createJobStore(prisma);
+  const app = buildApp({ env, prisma, jobs: jobStore, results, secrets: createOpenBaoReader(env), ca, caPem });
+  // REQ-BSM-007 (ADR-025): inter-site links are probed continuously.
+  const stopLinkProbes = startLinkProbes(prisma, jobStore, env.LINK_PROBE_INTERVAL_MS, (line) => {
+    console.log(JSON.stringify(line));
+  });
   const metrics = createSchedulerMetrics();
   app.addHook('onResponse', (req, reply, done) => {
     const route = req.routeOptions.url ?? req.url;
@@ -66,6 +72,7 @@ async function main(): Promise<void> {
   await app.ready();
   await new Promise<void>((resolve) => listener.listen(env.SCHEDULER_PORT, resolve));
   const shutdown = async (): Promise<void> => {
+    stopLinkProbes();
     await metricsServer.close();
     listener.close();
     await app.close();

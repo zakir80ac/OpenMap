@@ -1,7 +1,7 @@
 // REQ-UI-024 — zod schemas of the setup mutations (ADR-017). They reuse the contract's site and link schemas where
 // the GraphQL input mirrors them, so nothing the organization contract would refuse is stored.
 import { CREDENTIAL_REF_PATTERN, LOCALES, SETUP_LIMITS, SETUP_PATTERNS } from '@openmap/constants';
-import { CREDENTIAL_FIELDS, credentialTypeSchema, LINK_KINDS, ONBOARDING_STEPS, SITE_KINDS } from '@openmap/contracts';
+import { CREDENTIAL_FIELDS, credentialTypeSchema, LINK_KINDS, ONBOARDING_STEPS, SITE_KINDS, siteDrRoleSchema } from '@openmap/contracts';
 import { z } from 'zod';
 
 const SITE_CODE = SETUP_PATTERNS.siteCode;
@@ -36,6 +36,9 @@ export const siteInputSchema = z.object({
   cloud: z.object({ provider: z.enum(['azure', 'aws', 'gcp', 'oci', 'other']), region: z.string().trim().min(1) }).nullish(),
   locationCount: z.number().int().positive(),
   facility: z.object({ powerCapacityKw: z.number().min(0), rackCount: z.number().int().min(0), designPue: z.number().min(1).nullish() }).nullish(),
+  /** ADR-025: the site's part in disaster recovery and its business criticality (1 = most critical). */
+  drRole: siteDrRoleSchema.nullish(),
+  criticality: z.number().int().min(1).max(SETUP_LIMITS.maxCriticality).nullish(),
 });
 export type SiteInput = z.infer<typeof siteInputSchema>;
 
@@ -49,6 +52,9 @@ export const siteLinkInputSchema = z.object({
   diversePaths: z.number().int().positive(),
   role: z.enum(['primary', 'backup', 'overlay']),
   latencyMs: z.number().min(0).nullish(),
+  /** ADR-025: the link carries replication; what a Node at the A end probes (host or host:port). */
+  replication: z.boolean().nullish(),
+  probeTarget: z.string().trim().min(1).nullish(),
 });
 export type SiteLinkInput = z.infer<typeof siteLinkInputSchema>;
 

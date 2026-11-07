@@ -72,6 +72,9 @@ func (n *Node) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// Never nil: a Node whose collectors all failed the version check still reports an empty list, which the
+	// scheduler accepts, rather than null, which it refuses (and with it the heartbeat).
+	n.manifest = make([]string, 0, len(manifests))
 	for _, m := range manifests {
 		n.manifest = append(n.manifest, m.ID)
 	}

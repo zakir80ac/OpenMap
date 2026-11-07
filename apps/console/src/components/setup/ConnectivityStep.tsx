@@ -23,6 +23,8 @@ interface Draft {
   diversePaths: string;
   role: LinkRole;
   latencyMs: string;
+  replication: boolean;
+  probeTarget: string;
 }
 
 export function toLinkInput(draft: Draft): SiteLinkInput {
@@ -36,6 +38,8 @@ export function toLinkInput(draft: Draft): SiteLinkInput {
     diversePaths: numberOrNull(draft.diversePaths) ?? 1,
     role: draft.role,
     latencyMs: numberOrNull(draft.latencyMs),
+    replication: draft.replication,
+    probeTarget: draft.probeTarget.trim() === '' ? null : draft.probeTarget.trim(),
   };
 }
 
@@ -46,7 +50,7 @@ export function ConnectivityStep({ state, editable, onContinue, onBack, continui
   const queryClient = useQueryClient();
   const first = state.sites[0]?.id ?? '';
   const second = state.sites[1]?.id ?? first;
-  const empty: Draft = { fromSiteId: first, toSiteId: second, kind: LINK_KINDS[0], provider: '', circuitId: '', bandwidthMbps: '', diversePaths: '1', role: ROLES_OF_LINK[0], latencyMs: '' };
+  const empty: Draft = { fromSiteId: first, toSiteId: second, kind: LINK_KINDS[0], provider: '', circuitId: '', bandwidthMbps: '', diversePaths: '1', role: ROLES_OF_LINK[0], latencyMs: '', replication: false, probeTarget: '' };
   const [draft, setDraft] = useState<Draft>(empty);
   const [open, setOpen] = useState(false);
   const save = useMutation({
@@ -147,6 +151,11 @@ export function ConnectivityStep({ state, editable, onContinue, onBack, continui
               ))}
             </SelectInput>
             <TextInput id={id + '-latency'} label={t('setup.links.latency')} inputMode="decimal" value={draft.latencyMs} disabled={!editable} onChange={(e) => { update('latencyMs', e.target.value); }} />
+            <TextInput id={id + '-probe'} label={t('setup.links.probeTarget')} value={draft.probeTarget} disabled={!editable} onChange={(e) => { update('probeTarget', e.target.value); }} />
+            <label htmlFor={id + '-replication'} className="flex items-center gap-om-6 text-om-xs text-om-secondary">
+              <input id={id + '-replication'} type="checkbox" checked={draft.replication} disabled={!editable} onChange={(e) => { update('replication', e.target.checked); }} />
+              {t('setup.links.replication')}
+            </label>
           </div>
           <div className="flex flex-wrap items-center gap-om-12">
             <button type="submit" className={PRIMARY_BUTTON} disabled={!editable || !valid || save.isPending}>

@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.20.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.21.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -493,6 +493,53 @@ type Incident {
   recoveryEstimateMinutes: Int
   "Minutes of the steps whose latest run is neither done nor triggered."
   recoveryRemainingMinutes: Int
+}
+"Sites, inter-site links with their latest probes, and the HA / DR readiness findings (REQ-BSM-007, ADR-025)."
+type Connectivity {
+  sites: [ConnectivitySite!]!
+  links: [ConnectivityLink!]!
+  "Open findings, then those cleared in the last READINESS window, newest first."
+  findings: [ReadinessFinding!]!
+  "How often links are probed; 0 when probing is off."
+  probeIntervalSeconds: Int!
+}
+type ConnectivitySite {
+  ci: Ci!
+  code: String!
+  "primary, dr or none."
+  drRole: String!
+  criticality: Int
+  "Healthy paths: healthy links touching the site, counting each link's diverse paths."
+  healthyPaths: Int!
+}
+type ConnectivityLink {
+  ci: Ci!
+  fromSite: String
+  toSite: String
+  kind: String
+  provider: String
+  role: String
+  replication: Boolean!
+  diversePaths: Int!
+  probeTarget: String
+  "From the latest probe; null when the link has not been probed."
+  reachable: Boolean
+  latencyMs: Float
+  lossPercent: Float
+  probedAt: DateTime
+  slaLatencyMs: Int
+}
+type ReadinessFinding {
+  id: UUID!
+  "diverse_paths, dr_reachable or replication_healthy."
+  rule: String!
+  subject: Ci
+  detail: String!
+  "open or cleared."
+  state: String!
+  openedAt: DateTime!
+  clearedAt: DateTime
+  incident: Incident
 }
 "A procedure in the tenant's catalogue, attached to scenarios and incidents (REQ-BSM-005, ADR-048)."
 type Runbook {
@@ -1716,6 +1763,10 @@ type Site {
   cloud: CloudRegion
   locationCount: Int!
   facility: Facility
+  "ADR-025: primary, dr or none."
+  drRole: String!
+  "ADR-025: business criticality, 1 = most critical."
+  criticality: Int
   ci: Ci
   nodes: [DiscoveryNode!]!
 }
@@ -1744,6 +1795,8 @@ input SiteInput {
   cloud: CloudRegionInput
   locationCount: Int!
   facility: FacilityInput
+  drRole: String
+  criticality: Int
 }
 type SiteLink {
   id: UUID!
@@ -1756,6 +1809,9 @@ type SiteLink {
   diversePaths: Int!
   role: String!
   latencyMs: Float
+  "ADR-025: the link carries replication; what a Node at the A end probes."
+  replication: Boolean!
+  probeTarget: String
   ci: Ci
 }
 input SiteLinkInput {
@@ -1768,6 +1824,8 @@ input SiteLinkInput {
   diversePaths: Int!
   role: String!
   latencyMs: Float
+  replication: Boolean
+  probeTarget: String
 }
 """
 Returned once by registerNode: the clear enrolment token is never stored, only its digest.
@@ -1958,6 +2016,8 @@ type Query {
   impactAccuracy(limit: Int = 20): ImpactAccuracy!
   "Relationship suggestions learnt from missed predictions, open ones by default."
   relationshipSuggestions(state: String = "open", limit: Int = 50): [RelationshipSuggestion!]!
+  "Sites and their connectivity for HA / DR readiness (REQ-BSM-007)."
+  connectivity: Connectivity!
   "The tenant's runbook catalogue, by code (REQ-BSM-005)."
   runbooks: [Runbook!]!
   runbook(id: UUID!): Runbook

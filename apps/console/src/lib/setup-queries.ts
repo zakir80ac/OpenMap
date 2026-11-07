@@ -58,9 +58,14 @@ export interface Site {
   cloud: { provider: string; region: string } | null;
   locationCount: number;
   facility: { powerCapacityKw: number; rackCount: number; designPue: number | null } | null;
+  /** ADR-025: the site's part in disaster recovery and its business criticality (1 = most critical). */
+  drRole: SiteDrRole;
+  criticality: number | null;
   ci: SiteCi | null;
   nodes: DiscoveryNode[];
 }
+
+export type SiteDrRole = 'primary' | 'dr' | 'none';
 
 export interface SiteInput {
   code: string;
@@ -74,6 +79,8 @@ export interface SiteInput {
   cloud: { provider: string; region: string } | null;
   locationCount: number;
   facility: { powerCapacityKw: number; rackCount: number; designPue: number | null } | null;
+  drRole: SiteDrRole;
+  criticality: number | null;
 }
 
 export interface SiteLink {
@@ -87,6 +94,9 @@ export interface SiteLink {
   diversePaths: number;
   role: string;
   latencyMs: number | null;
+  /** ADR-025: the link carries replication; what a Node at the A end probes. */
+  replication: boolean;
+  probeTarget: string | null;
   ci: SiteCi | null;
 }
 
@@ -100,6 +110,8 @@ export interface SiteLinkInput {
   diversePaths: number;
   role: string;
   latencyMs: number | null;
+  replication: boolean;
+  probeTarget: string | null;
 }
 
 export interface NodeRegistration {
@@ -155,8 +167,8 @@ export interface OnboardingState {
 const ORGANIZATION_FIELDS = 'id name industry timeZone defaultLocale regulatoryScope airGapped createdAt businessUnits { tenantId name slug }';
 const SITE_CI_FIELDS = 'ci { id code displayName layer }';
 const NODE_FIELDS = 'id status lastHeartbeat activeJobs certificateExpiresAt site { id displayName }';
-const SITE_FIELDS = 'id code name kind tier address city countryCode geo { lat lon } cloud { provider region } locationCount facility { powerCapacityKw rackCount designPue } ' + SITE_CI_FIELDS + ' nodes { ' + NODE_FIELDS + ' }';
-const LINK_FIELDS = 'id fromSite { id code name } toSite { id code name } kind provider circuitId bandwidthMbps diversePaths role latencyMs ' + SITE_CI_FIELDS;
+const SITE_FIELDS = 'id code name kind tier address city countryCode geo { lat lon } cloud { provider region } locationCount facility { powerCapacityKw rackCount designPue } drRole criticality ' + SITE_CI_FIELDS + ' nodes { ' + NODE_FIELDS + ' }';
+const LINK_FIELDS = 'id fromSite { id code name } toSite { id code name } kind provider circuitId bandwidthMbps diversePaths role latencyMs replication probeTarget ' + SITE_CI_FIELDS;
 const SWEEP_FIELDS = 'id startedAt finishedAt targetsTotal targetsDone devicesDiscovered budgetMinutes';
 const SCOPE_FIELDS = 'ci { id code displayName layer } cidr site { id code displayName layer } credentialRef credentialType';
 const INTEGRATION_FIELDS = 'id category vendor name enabled direction health lastSuccessAt lastError deliveredLastHour failedLastHour';

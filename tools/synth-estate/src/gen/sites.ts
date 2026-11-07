@@ -1,7 +1,7 @@
 // REQ-QA-001 — organization, sites, inter-site links and IPAM supernets.
 import { organizationSchema, siteLinkSchema, siteSchema, type LINK_KINDS, type Organization, type Site, type SiteLink } from '@openmap/contracts';
-import { BUSINESS_UNITS, INDUSTRY, ORGANIZATION_NAME, REGULATORY_SCOPE, SITES, TIME_ZONE } from '../catalog.js';
-import { cidr, RFC1918_TEN } from '../ip.js';
+import { BUSINESS_UNITS, INDUSTRY, ORGANIZATION_NAME, POOL, REGULATORY_SCOPE, SITES, TIME_ZONE } from '../catalog.js';
+import { cidr, ip4, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { isoAt } from '../time.js';
 import { dcimSlot, ipamSlot, shortCode, siteOf, type SiteWorld, type World } from '../world.js';
@@ -17,10 +17,11 @@ interface LinkDef {
   diversePaths: number;
   role: 'primary' | 'backup' | 'overlay';
   latencyMs: number;
+  replication?: boolean;
 }
 
 const LINKS: readonly LinkDef[] = [
-  { from: 'RYD', to: 'JED', kind: 'dark_fibre', provider: 'stc', bandwidthMbps: 100_000, diversePaths: 2, role: 'primary', latencyMs: 12.4 },
+  { from: 'RYD', to: 'JED', kind: 'dark_fibre', provider: 'stc', bandwidthMbps: 100_000, diversePaths: 2, role: 'primary', latencyMs: 12.4, replication: true },
   { from: 'RYD', to: 'JED', kind: 'mpls', provider: 'Mobily', bandwidthMbps: 10_000, diversePaths: 1, role: 'backup', latencyMs: 18.9 },
   { from: 'RYD', to: 'DMM-COLO', kind: 'dark_fibre', provider: 'stc', bandwidthMbps: 100_000, diversePaths: 2, role: 'primary', latencyMs: 6.1 },
   { from: 'JED', to: 'DMM-COLO', kind: 'mpls', provider: 'Mobily', bandwidthMbps: 10_000, diversePaths: 1, role: 'backup', latencyMs: 21.3 },
@@ -40,6 +41,9 @@ const SUPERNET_PREFIX_SITE = 12;
 /** Design power capacity by site kind, kW. */
 const FACILITY_KW: Record<string, number> = { datacenter: 4800, colocation: 1200, office: 320, branch: 8 };
 const DESIGN_PUE = 1.4;
+/** ADR-025: link probes connect to the far gateway's HTTPS port; the committed latency is twice the nominal figure. */
+const PROBE_PORT = 443;
+const SLA_LATENCY_HEADROOM = 2;
 
 export interface OrganizationBundle {
   organization: Organization;
@@ -106,6 +110,8 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
       {
         kind: def.kind,
         tier: def.tier,
+        drRole: def.drRole,
+        criticality: def.criticality,
         city: def.city,
         countryCode: def.countryCode,
         address: def.address,
@@ -164,7 +170,21 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
       'site_link',
       { circuitId, fromSiteRef: from.def.code, toSiteRef: to.def.code },
       name,
-      { kind: link.kind, provider: link.provider, bandwidthMbps: link.bandwidthMbps, diversePaths: link.diversePaths, role: link.role, latencyMs: link.latencyMs, status: 'up', utilisationPercent: rng.int(5, 70) },
+      {
+        kind: link.kind,
+        provider: link.provider,
+        bandwidthMbps: link.bandwidthMbps,
+        diversePaths: link.diversePaths,
+        role: link.role,
+        latencyMs: link.latencyMs,
+        status: 'up',
+        utilisationPercent: rng.int(5, 70),
+        // ADR-025: what the A end probes (the far site's WAN gateway), the provider's latency commitment, and whether
+        // the circuit carries storage and database replication (the dark fibre between the primary and DR sites).
+        replication: link.replication === true,
+        probeTarget: ip4(RFC1918_TEN, to.def.octetBase + POOL.links, 0, 1) + ':' + String(PROBE_PORT),
+        slaLatencyMs: Math.ceil(link.latencyMs * SLA_LATENCY_HEADROOM),
+      },
       from.def.code,
       { tags: ['wan', link.kind] },
     );

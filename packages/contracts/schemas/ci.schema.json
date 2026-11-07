@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/ci/0.7.0",
+  "$id": "https://openmap.dev/contracts/ci/0.8.0",
   "title": "ci",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

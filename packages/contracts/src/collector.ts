@@ -46,6 +46,8 @@ export const COLLECTOR_FAMILIES = [
   'os_patch',
   /** Vendor warranty and end-of-life lookups by serial (ADR-043): Dell TechDirect, Lenovo, Cisco SN2INFO and EoX. */
   'warranty',
+  /** Inter-site link probes (ADR-025): TCP connect reachability, latency and loss from the A end of a site link. */
+  'link_probe',
 ] as const;
 export const collectorFamilySchema = z.enum(COLLECTOR_FAMILIES);
 export type CollectorFamily = z.infer<typeof collectorFamilySchema>;
@@ -94,7 +96,10 @@ export const TARGET_KINDS = ['host', 'cidr', 'url', 'cluster', 'account', 'zone'
 export const targetSchema = z.object({
   kind: z.enum(TARGET_KINDS),
   value: z.string().min(1),
-  /** Optional label used in evidence and errors; never used for identity. */
+  /**
+   * Optional label used in evidence and errors; never used for identity. A link_probe target (ADR-025) carries the
+   * site_link CI id here: its samples name that CI by id.
+   */
   label: z.string().optional(),
 });
 export type Target = z.infer<typeof targetSchema>;

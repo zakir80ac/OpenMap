@@ -138,6 +138,8 @@ export const envSchema = z.object({
    * cause. 0 turns the sweep off; validateImpactPredictions still runs it on demand.
    */
   IMPACT_VALIDATION_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
+  /** REQ-BSM-007 (ADR-025): how often the scheduler plans a probe of every inter-site link. 0 turns probing off. */
+  LINK_PROBE_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
 });
 
 export type Env = z.infer<typeof envSchema>;

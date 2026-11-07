@@ -822,6 +822,69 @@ export function runSimulation(scenarioId: string): Promise<ImpactSimulation> {
   );
 }
 
+// REQ-BSM-007 (ADR-025) — sites and their connectivity for HA / DR readiness: the site and link CIs with their DR
+// role, criticality, latest probe figures and healthy paths, and the readiness findings with their incidents.
+export interface ConnectivitySite {
+  ci: CiSummary;
+  code: string;
+  drRole: 'primary' | 'dr' | 'none';
+  criticality: number | null;
+  healthyPaths: number;
+}
+
+export interface ConnectivityLink {
+  ci: CiSummary;
+  fromSite: string | null;
+  toSite: string | null;
+  kind: string | null;
+  provider: string | null;
+  role: string | null;
+  replication: boolean;
+  diversePaths: number;
+  probeTarget: string | null;
+  reachable: boolean | null;
+  latencyMs: number | null;
+  lossPercent: number | null;
+  probedAt: string | null;
+  slaLatencyMs: number | null;
+}
+
+export interface ReadinessFinding {
+  id: string;
+  rule: 'diverse_paths' | 'dr_reachable' | 'replication_healthy';
+  subject: CiSummary | null;
+  detail: string;
+  state: 'open' | 'cleared';
+  openedAt: string;
+  clearedAt: string | null;
+  incident: { id: string; title: string; state: IncidentState; severity: IncidentSeverity } | null;
+}
+
+export interface Connectivity {
+  sites: ConnectivitySite[];
+  links: ConnectivityLink[];
+  findings: ReadinessFinding[];
+  probeIntervalSeconds: number;
+}
+
+const CONNECTIVITY_QUERY = [
+  'query Connectivity { connectivity {',
+  '  sites { ci { ' + CI_SUMMARY_FIELDS + ' } code drRole criticality healthyPaths }',
+  '  links { ci { ' + CI_SUMMARY_FIELDS + ' } fromSite toSite kind provider role replication diversePaths probeTarget reachable latencyMs lossPercent probedAt slaLatencyMs }',
+  '  findings { id rule detail state openedAt clearedAt subject { ' + CI_SUMMARY_FIELDS + ' } incident { id title state severity } }',
+  '  probeIntervalSeconds',
+  '} }',
+].join(' ');
+
+export function connectivityQuery(refetchMs: number) {
+  return queryOptions({
+    queryKey: ['connectivity'] as const,
+    queryFn: ({ signal }) => gql<{ connectivity: Connectivity }>(CONNECTIVITY_QUERY, undefined, signal),
+    select: (data) => data.connectivity,
+    refetchInterval: refetchMs,
+  });
+}
+
 // REQ-BSM-004 (ADR-047) — prediction accuracy: resolved incidents compared with a simulation of their root cause, and
 // the relationships the misses suggest.
 export interface ImpactValidation {

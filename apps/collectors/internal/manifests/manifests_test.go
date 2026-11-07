@@ -32,6 +32,7 @@ import (
 	"github.com/openmap/openmap/apps/collectors/internal/hyperv"
 	"github.com/openmap/openmap/apps/collectors/internal/kubernetes"
 	"github.com/openmap/openmap/apps/collectors/internal/libvirt"
+	"github.com/openmap/openmap/apps/collectors/internal/linkprobe"
 	"github.com/openmap/openmap/apps/collectors/internal/nas"
 	"github.com/openmap/openmap/apps/collectors/internal/netflow"
 	"github.com/openmap/openmap/apps/collectors/internal/nginx"
@@ -126,6 +127,7 @@ func TestManifestsMatchTheContract(t *testing.T) {
 		{"kubernetes", kubernetes.Collector{}},
 		{"kvm_libvirt", libvirt.Collector{}},
 		{"ldap", directory.Collector{}},
+		{"link_probe", linkprobe.Collector{}},
 		{"load_balancer", f5.Collector{}},
 		{"nas", nas.Collector{}},
 		{"netflow", netflow.Collector{}},

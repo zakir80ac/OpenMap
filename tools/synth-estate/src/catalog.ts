@@ -17,6 +17,9 @@ export interface SiteDef {
   name: string;
   kind: 'datacenter' | 'colocation' | 'office' | 'branch' | 'cloud_region';
   tier: number | null;
+  /** ADR-025: the site's part in disaster recovery and its business criticality (1 = most critical). */
+  drRole: 'primary' | 'dr' | 'none';
+  criticality: number;
   city: string;
   countryCode: string;
   address: string;
@@ -32,13 +35,13 @@ export interface SiteDef {
 }
 
 export const SITES: readonly SiteDef[] = [
-  { code: 'RYD', name: 'Riyadh Primary Data Centre', kind: 'datacenter', tier: 3, city: 'Riyadh', countryCode: COUNTRY, address: 'King Abdullah Financial District, Riyadh', lat: 24.7676, lon: 46.6397, cloud: null, hostShare: 0.5, octetBase: 0, nodeIds: ['dn-ryd-01', 'dn-ryd-02'], building: 'DC1' },
-  { code: 'JED', name: 'Jeddah Disaster Recovery Data Centre', kind: 'datacenter', tier: 3, city: 'Jeddah', countryCode: COUNTRY, address: 'Al Rawdah District, Jeddah', lat: 21.5433, lon: 39.1728, cloud: null, hostShare: 0.3, octetBase: 16, nodeIds: ['dn-jed-01'], building: 'DC2' },
-  { code: 'DMM-COLO', name: 'Dammam Colocation Hall', kind: 'colocation', tier: 3, city: 'Dammam', countryCode: COUNTRY, address: 'Second Industrial City, Dammam', lat: 26.3927, lon: 49.9777, cloud: null, hostShare: 0.12, octetBase: 32, nodeIds: ['dn-dmm-01'], building: 'Hall 3' },
-  { code: 'HQ', name: 'Head Office Tower', kind: 'office', tier: null, city: 'Riyadh', countryCode: COUNTRY, address: 'Olaya Street, Riyadh', lat: 24.6911, lon: 46.6855, cloud: null, hostShare: 0.08, octetBase: 48, nodeIds: ['dn-hq-01'], building: 'Tower A' },
-  { code: 'BRANCH', name: 'Branch Network', kind: 'branch', tier: null, city: 'Riyadh', countryCode: COUNTRY, address: 'Nationwide branch bundle', lat: 24.7136, lon: 46.6753, cloud: null, hostShare: 0, octetBase: 64, nodeIds: ['dn-branch-01'], building: 'Branch' },
-  { code: 'AZ-UAEN', name: 'Azure UAE North', kind: 'cloud_region', tier: null, city: 'Dubai', countryCode: 'AE', address: 'Microsoft Azure uaenorth', lat: 25.2048, lon: 55.2708, cloud: { provider: 'azure', region: 'uaenorth' }, hostShare: 0, octetBase: 128, nodeIds: ['dn-az-uaen-01'], building: 'Region' },
-  { code: 'AWS-MES1', name: 'AWS Middle East (Bahrain)', kind: 'cloud_region', tier: null, city: 'Manama', countryCode: 'BH', address: 'Amazon Web Services me-south-1', lat: 26.2235, lon: 50.5876, cloud: { provider: 'aws', region: 'me-south-1' }, hostShare: 0, octetBase: 144, nodeIds: ['dn-aws-mes1-01'], building: 'Region' },
+  { code: 'RYD', name: 'Riyadh Primary Data Centre', kind: 'datacenter', tier: 3, drRole: 'primary', criticality: 1, city: 'Riyadh', countryCode: COUNTRY, address: 'King Abdullah Financial District, Riyadh', lat: 24.7676, lon: 46.6397, cloud: null, hostShare: 0.5, octetBase: 0, nodeIds: ['dn-ryd-01', 'dn-ryd-02'], building: 'DC1' },
+  { code: 'JED', name: 'Jeddah Disaster Recovery Data Centre', kind: 'datacenter', tier: 3, drRole: 'dr', criticality: 1, city: 'Jeddah', countryCode: COUNTRY, address: 'Al Rawdah District, Jeddah', lat: 21.5433, lon: 39.1728, cloud: null, hostShare: 0.3, octetBase: 16, nodeIds: ['dn-jed-01'], building: 'DC2' },
+  { code: 'DMM-COLO', name: 'Dammam Colocation Hall', kind: 'colocation', tier: 3, drRole: 'none', criticality: 2, city: 'Dammam', countryCode: COUNTRY, address: 'Second Industrial City, Dammam', lat: 26.3927, lon: 49.9777, cloud: null, hostShare: 0.12, octetBase: 32, nodeIds: ['dn-dmm-01'], building: 'Hall 3' },
+  { code: 'HQ', name: 'Head Office Tower', kind: 'office', tier: null, drRole: 'none', criticality: 2, city: 'Riyadh', countryCode: COUNTRY, address: 'Olaya Street, Riyadh', lat: 24.6911, lon: 46.6855, cloud: null, hostShare: 0.08, octetBase: 48, nodeIds: ['dn-hq-01'], building: 'Tower A' },
+  { code: 'BRANCH', name: 'Branch Network', kind: 'branch', tier: null, drRole: 'none', criticality: 3, city: 'Riyadh', countryCode: COUNTRY, address: 'Nationwide branch bundle', lat: 24.7136, lon: 46.6753, cloud: null, hostShare: 0, octetBase: 64, nodeIds: ['dn-branch-01'], building: 'Branch' },
+  { code: 'AZ-UAEN', name: 'Azure UAE North', kind: 'cloud_region', tier: null, drRole: 'none', criticality: 2, city: 'Dubai', countryCode: 'AE', address: 'Microsoft Azure uaenorth', lat: 25.2048, lon: 55.2708, cloud: { provider: 'azure', region: 'uaenorth' }, hostShare: 0, octetBase: 128, nodeIds: ['dn-az-uaen-01'], building: 'Region' },
+  { code: 'AWS-MES1', name: 'AWS Middle East (Bahrain)', kind: 'cloud_region', tier: null, drRole: 'none', criticality: 2, city: 'Manama', countryCode: 'BH', address: 'Amazon Web Services me-south-1', lat: 26.2235, lon: 50.5876, cloud: { provider: 'aws', region: 'me-south-1' }, hostShare: 0, octetBase: 144, nodeIds: ['dn-aws-mes1-01'], building: 'Region' },
 ];
 
 /** Offsets added to a site's octetBase for each address pool (each pool is a /16 inside the site /12). */

@@ -39,6 +39,8 @@ export function toSite(row: SiteRow): SiteView {
     cloud: row.cloudProvider !== null && row.cloudRegion !== null ? { provider: row.cloudProvider, region: row.cloudRegion } : null,
     locationCount: row.locationCount,
     facility: row.powerCapacityKw !== null && row.rackCount !== null ? { powerCapacityKw: row.powerCapacityKw, rackCount: row.rackCount, designPue: row.designPue } : null,
+    drRole: row.drRole,
+    criticality: row.criticality,
     ciId: row.ciId,
   };
 }
@@ -55,6 +57,8 @@ export function toLink(row: LinkRow): SiteLinkView {
     diversePaths: row.diversePaths,
     role: row.role,
     latencyMs: row.latencyMs,
+    replication: row.replication,
+    probeTarget: row.probeTarget,
     ciId: row.ciId,
   };
 }
@@ -94,6 +98,8 @@ function siteData(organizationId: string, input: SiteInput): Prisma.SiteUnchecke
     powerCapacityKw: input.facility?.powerCapacityKw ?? null,
     rackCount: input.facility?.rackCount ?? null,
     designPue: input.facility?.designPue ?? null,
+    drRole: input.drRole ?? 'none',
+    criticality: input.criticality ?? null,
   };
 }
 
@@ -197,7 +203,7 @@ export class OnboardingRepository {
 
   async createLink(tx: Tx, organizationId: string, input: SiteLinkInput): Promise<SiteLinkView> {
     const row = await tx.siteLink.create({
-      data: { organizationId, fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null },
+      data: { organizationId, fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null, replication: input.replication ?? false, probeTarget: input.probeTarget ?? null },
     });
     return toLink(row);
   }
@@ -205,7 +211,7 @@ export class OnboardingRepository {
   async updateLink(tx: Tx, id: string, input: SiteLinkInput): Promise<SiteLinkView> {
     const row = await tx.siteLink.update({
       where: { id },
-      data: { fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null },
+      data: { fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null, replication: input.replication ?? false, probeTarget: input.probeTarget ?? null },
     });
     return toLink(row);
   }

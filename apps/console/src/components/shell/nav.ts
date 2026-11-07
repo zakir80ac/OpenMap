@@ -41,6 +41,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     key: 'nav.group.services',
     items: [
       { key: 'nav.services', href: '/services', icon: 'services' },
+      { key: 'nav.sites', href: '/sites', icon: 'site' },
       { key: 'nav.impact', href: '/impact', icon: 'impact' },
       { key: 'nav.integrations', href: '/integrations', icon: 'integrations' },
     ],

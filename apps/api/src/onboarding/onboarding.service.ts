@@ -62,12 +62,14 @@ function siteAttributes(site: SiteView, timeZone: string): Record<string, unknow
     powerCapacityKw: site.facility?.powerCapacityKw ?? null,
     rackCount: site.facility?.rackCount ?? null,
     designPue: site.facility?.designPue ?? null,
+    drRole: site.drRole,
+    criticality: site.criticality,
     timeZone,
   };
 }
 
 function linkAttributes(link: SiteLinkView): Record<string, unknown> {
-  return { kind: link.kind, provider: link.provider, bandwidthMbps: link.bandwidthMbps, diversePaths: link.diversePaths, role: link.role, latencyMs: link.latencyMs, status: 'planned' };
+  return { kind: link.kind, provider: link.provider, bandwidthMbps: link.bandwidthMbps, diversePaths: link.diversePaths, role: link.role, latencyMs: link.latencyMs, replication: link.replication, ...(link.probeTarget === null ? {} : { probeTarget: link.probeTarget }), status: 'planned' };
 }
 
 function linkName(from: SiteView, to: SiteView, link: SiteLinkView): string {

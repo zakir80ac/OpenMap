@@ -38,6 +38,8 @@ export interface SiteView {
   cloud: { provider: string; region: string } | null;
   locationCount: number;
   facility: { powerCapacityKw: number; rackCount: number; designPue: number | null } | null;
+  drRole: 'primary' | 'dr' | 'none';
+  criticality: number | null;
   ciId: string | null;
 }
 
@@ -52,6 +54,8 @@ export interface SiteLinkView {
   diversePaths: number;
   role: string;
   latencyMs: number | null;
+  replication: boolean;
+  probeTarget: string | null;
   ciId: string | null;
 }
 

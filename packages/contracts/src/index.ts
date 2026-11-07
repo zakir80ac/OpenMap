@@ -8,6 +8,7 @@ export * from './commercial.js';
 export * from './certificate.js';
 export * from './component.js';
 export * from './utilisation.js';
+export * from './connectivity.js';
 export * from './lifecycle.js';
 export * from './impact.js';
 export * from './integration.js';

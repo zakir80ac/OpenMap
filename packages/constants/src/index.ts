@@ -336,6 +336,8 @@ export const SETUP_PATTERNS = {
 /** Bounds of the setup inputs: Uptime Institute tiers, WGS 84 coordinates, ISO 3166-1 alpha-2 length. */
 export const SETUP_LIMITS = {
   maxTier: 4,
+  /** ADR-025: site criticality runs 1 (most critical) to this. */
+  maxCriticality: 3,
   latitudeMax: 90,
   longitudeMax: 180,
   countryCodeLength: 2,
@@ -796,6 +798,44 @@ export const IMPACT = {
   recentDefault: 20,
   suggestionsDefault: 50,
   listMax: 200,
+} as const;
+
+/**
+ * REQ-BSM-007 (ADR-025) — inter-site link probes. Each round makes `attempts` TCP connections per link, `gapMs`
+ * apart, each bounded by `timeoutMs`; a target without a port uses `defaultPort` (HTTPS, open on most gateways and
+ * Node hosts). A job may run for every attempt's timeout plus the gaps, rounded up to `jobTimeoutMs`.
+ */
+export const LINK_PROBE = {
+  collectorId: 'link_probe',
+  attempts: 5,
+  timeoutMs: 2_000,
+  gapMs: 100,
+  defaultPort: 443,
+  jobTimeoutMs: 30_000,
+  /** An unfinished probe job older than this no longer holds its Node back (the Node went away mid-round). */
+  staleJobMs: 120_000,
+  /** Finished probe jobs (and their runs) are kept this long; the samples stay in ClickHouse under its own TTL. */
+  retainMs: 86_400_000,
+} as const;
+
+/**
+ * REQ-BSM-007 (ADR-025) — link health and HA / DR readiness. A link losing this share of its probes, or slower than
+ * its committed latency (else `degradedLatencyMs`), is degraded; a link not probed for `staleAfterProbes` probe
+ * intervals is unknown. A criticality-1 site needs `minDiversePaths` healthy paths. Rules are evaluated every
+ * `evaluateMs`; a `dr_reachable` breach opens a high incident, the others medium.
+ */
+export const READINESS = {
+  evaluateMs: 60_000,
+  degradedLossPercent: 5,
+  degradedLatencyMs: 150,
+  staleAfterProbes: 3,
+  minDiversePaths: 2,
+  criticalSite: 1,
+  incidentSource: 'readiness',
+  /** Cleared findings stay listed this long after they cleared. */
+  clearedListedMs: 604_800_000,
+  findingsListLimit: 100,
+  severity: { diverse_paths: 'medium', dr_reachable: 'high', replication_healthy: 'medium' },
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */
@@ -1393,14 +1433,16 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * warranty start and verification instant.
    * 0.7.0 (REQ-CORE-013, ADR-045): `GLOBAL_IDENTITY_SCOPES`, `IDENTITY_REF_TARGETS`, `IDENTITY_REF_ALIAS_ATTRIBUTES`,
    * `IDENTITY_REF_DERIVED` and `identity.ts`: issuer-scoped global keys and `*Ref` resolution. No payload shape changed.
+   * 0.8.0 (REQ-BSM-007, ADR-025): `connectivity.ts`, the link probe metric names, site DR roles and readiness rules.
    */
-  ci: '0.7.0',
+  ci: '0.8.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
    * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family.
-   * 0.7.0 (REQ-CORE-013, ADR-045): moves with the CI contract's identity rules; no result field changed. */
-  collector: '0.7.0',
+   * 0.7.0 (REQ-CORE-013, ADR-045): moves with the CI contract's identity rules; no result field changed.
+   * 0.8.0 (REQ-BSM-007, ADR-025): the `link_probe` family. */
+  collector: '0.8.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1449,8 +1491,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `ScenarioInput.runbookId`, `ImpactScenario.runbook`, `Incident.runbook`/`suggestedRunbook`/`runbookRuns`/
    * `recoveryEstimateMinutes`/`recoveryRemainingMinutes`, queries `runbooks`, `runbook`, mutations `upsertRunbook`,
    * `deleteRunbook`, `setScenarioRunbook`, `setIncidentRunbook`, `runRunbookStep`.
+   * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
+   * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.20.0',
+  graphql: '1.21.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

@@ -6,7 +6,7 @@ import './instrumentation.js';
 import { createClient } from '@clickhouse/client';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { BSM, CERTIFICATES, RECONCILER } from '@openmap/constants';
+import { BSM, CERTIFICATES, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
@@ -16,6 +16,7 @@ import { createHistoryReader } from './core/history.js';
 import { createOpenBaoReader } from './service/openbao.js';
 import { checkCertificates } from './service/certificates.js';
 import { createEngine } from './service/engine.js';
+import { createReadiness } from './service/readiness.js';
 
 const TRACER = 'openmap-bsm-engine';
 
@@ -51,6 +52,8 @@ export function createBsmMetrics() {
       labelNames: ['outcome'],
       registers: [registry],
     }),
+    readiness: new Counter({ name: 'openmap_bsm_readiness_evaluations_total', help: 'HA / DR readiness evaluations of a tenant, by outcome', labelNames: ['outcome'], registers: [registry] }),
+    readinessBreaches: new Counter({ name: 'openmap_bsm_readiness_findings_total', help: 'Readiness findings opened and cleared', labelNames: ['change'], registers: [registry] }),
     certificateAlerts: new Counter({
       name: 'openmap_bsm_certificate_alerts_total',
       help: 'Certificate expiry alerts raised (REQ-CMDB-032), and failed checks',
@@ -168,6 +171,39 @@ async function main(): Promise<void> {
   const tick = setInterval(() => {
     for (const tenantId of known) void recompute(tenantId);
   }, BSM.tickMs);
+  // REQ-BSM-007 (ADR-025): link health from the probes and the HA / DR readiness rules, continuously.
+  const readiness = createReadiness({
+    prisma,
+    graph,
+    query: async (name, sql, params) => {
+      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
+        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      );
+      return result.json();
+    },
+    database: env.CLICKHOUSE_DB,
+    healthMap: (tenantId, ids) => engine.healthMap(tenantId, ids),
+    probeIntervalMs: env.LINK_PROBE_INTERVAL_MS === 0 ? READINESS.evaluateMs : env.LINK_PROBE_INTERVAL_MS,
+    now: () => new Date().toISOString(),
+  });
+  const readinessCheck = async (): Promise<void> => {
+    for (const tenantId of known) {
+      try {
+        const report = await withSpan(TRACER, 'bsm.readiness', { 'openmap.tenant_id': tenantId }, () => readiness.evaluateTenant(tenantId));
+        metrics.readiness.inc({ outcome: 'ok' });
+        metrics.readinessBreaches.inc({ change: 'opened' }, report.opened);
+        metrics.readinessBreaches.inc({ change: 'cleared' }, report.cleared);
+        if (report.linkHealthChanged > 0) schedule(tenantId);
+        if (report.opened + report.cleared + report.linkHealthChanged > 0) log({ msg: 'readiness evaluated', tenantId, ...report });
+      } catch (err) {
+        metrics.readiness.inc({ outcome: 'error' });
+        log({ msg: 'readiness evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  };
+  const readinessTick = setInterval(() => {
+    void readinessCheck();
+  }, READINESS.evaluateMs);
   // REQ-CMDB-032 (ADR-036): certificates crossing an expiry threshold raise one alert each.
   const certificateCheck = async (): Promise<void> => {
     try {
@@ -197,6 +233,7 @@ async function main(): Promise<void> {
     await metricsServer.close();
     clearInterval(tick);
     clearInterval(certificateTick);
+    clearInterval(readinessTick);
     for (const t of pending.values()) clearTimeout(t);
     await worker.close();
     await clickhouse.close();

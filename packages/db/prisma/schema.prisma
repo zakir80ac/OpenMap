@@ -529,6 +529,7 @@ model Tenant {
   impactValidations       ImpactValidation[]
   relationshipSuggestions RelationshipSuggestion[]
   runbooks                Runbook[]
+  readinessFindings       ReadinessFinding[]
   runbookStepRuns         RunbookStepRun[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
@@ -588,6 +589,13 @@ model BusinessUnit {
   @@map("business_units")
 }
 
+/// SITE_DR_ROLES (ADR-025).
+enum SiteDrRole {
+  primary
+  dr
+  none
+}
+
 /// siteSchema
 model Site {
   id              String         @id @default(uuid()) @db.Uuid
@@ -608,6 +616,9 @@ model Site {
   powerCapacityKw Float?
   rackCount       Int?
   designPue       Float?
+  /// ADR-025: the site's part in disaster recovery and its business criticality (1 = most critical).
+  drRole          SiteDrRole     @default(none)
+  criticality     Int?
   ciId            String?        @db.Uuid
   createdAt       DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
@@ -634,6 +645,9 @@ model SiteLink {
   diversePaths   Int
   role           LinkRole
   latencyMs      Float?
+  /// ADR-025: true when the link carries storage or database replication; what a Node at the A end probes.
+  replication    Boolean  @default(false)
+  probeTarget    String?
   ciId           String?  @db.Uuid
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)
@@ -1346,6 +1360,26 @@ model Runbook {
 
   @@unique([tenantId, code])
   @@map("runbooks")
+}
+
+/// readinessFindingSchema (ADR-025): one HA / DR readiness rule breached by one site or link CI, from the moment it
+/// breached until it cleared; at most one open finding per tenant, rule and subject.
+model ReadinessFinding {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  rule        String
+  subjectCiId String    @db.Uuid
+  state       String
+  detail      String
+  openedAt    DateTime  @db.Timestamptz(3)
+  clearedAt   DateTime? @db.Timestamptz(3)
+  incidentId  String?   @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, state])
+  @@index([tenantId, rule, subjectCiId, state])
+  @@map("readiness_findings")
 }
 
 /// RUNBOOK_STEP_OUTCOMES (ADR-048).

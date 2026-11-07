@@ -12,8 +12,7 @@ import {
   type Ci,
   type EventEnvelope,
   type EventType,
-  type IntegrationConfig,
-} from '@openmap/contracts';
+  type IntegrationConfig, CONNECTIVITY_ATTRIBUTES } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import type { GraphRepository } from '@openmap/graph';
 import { z } from 'zod';
@@ -225,6 +224,8 @@ export function createEngine(deps: EngineDeps) {
         list.map((c) => c.id),
       );
       for (const ci of list) {
+        // A probed inter-site link takes its health from its probes (ADR-025, readiness.ts), never from attributes.
+        if (ci.type === 'site_link' && typeof (ci.attributes as Record<string, unknown>)[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string') continue;
         const verdict = deriveHealth(ci, now);
         if (current.get(ci.id) === verdict.health) continue;
         await graph.setHealth(tenantId, ci.id, verdict.health);
