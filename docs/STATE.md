@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks)
+## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites)
 
 Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
 
@@ -73,7 +73,34 @@ business services, which is now the scale-1 tenant `570b1953` (300 services, 40,
   scenario. The incident card has a Runbook section: attach, run or mark each step, and the history of runs.
 - **Observability:** metric `openmap_runbook_steps_total{outcome}`; span `runbook.step`.
 
+**5. REQ-BSM-007 sites and connectivity for HA / DR readiness** (ADR-025, migration 0034, CI and collector 0.8.0,
+GraphQL 1.21.0).
+- **New attributes:**
+  - Site CIs carry `drRole` (primary, dr, none) and `criticality` (1 = most critical); `tier` stays the facility's
+    Uptime tier.
+  - Link CIs carry `replication`, `probeTarget` and `slaLatencyMs`.
+  - Setup writes them, and the synthetic estate generates them: RYD is primary, JED is DR, and the RYD–JED fibre
+    carries replication.
+- **The `link_probe` collector (Go)** makes TCP-connect probes: reachable, median latency, loss. It emits samples on the
+  link CI by id and no CI.
+- **The scheduler** plans a probe job per Node every `LINK_PROBE_INTERVAL_MS` (60 s). A link goes to a Node at its
+  A-end site, else to any capable Node. A busy Node is skipped, and old probe jobs are pruned.
+- **The BSM engine** derives link health from the latest probes, never from attributes.
+  - It evaluates `diverse_paths`, `dr_reachable` and `replication_healthy` every minute.
+  - A breach opens a `readiness_findings` row and an incident (source `readiness`, root cause the site or link, no
+    services). A cleared breach resolves the incident.
+- **Sites screen (`/sites`)** shows the rules with their findings and incidents, the sites with their DR role and
+  healthy paths, and the links with live figures. It is in en and ar.
+- **Dev stack:**
+  - The estate's probe targets are the far WAN gateways, which the dev stack cannot reach, so the links read down and
+    the rules breach.
+  - The healthy path is proven by T-480 (samples in ClickHouse through each transition) and T-477 (real local
+    listeners).
+  - The dev tenant was regenerated and replayed without a reset: 19 site and link CIs updated, ids kept.
+
 **Tests:**
+- REQ-BSM-007: T-477 (Go probe), T-478 (planner), T-479 (rules), T-480 (integration), T-481 (console), T-482 (e2e,
+  en and ar).
 - REQ-BSM-005: T-470 (estimates), T-471 (integration, in-test AWX receiver: gate refused, launch with bearer token and
   extra vars, `done`, remaining minutes 0), T-472 (vendor requests), T-473 (recommendations), T-474 and T-475
   (console, en and ar), T-476 (e2e, en and ar).
@@ -914,7 +941,7 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. Next by `pnpm tracker next` (REQ-BSM-007, sites and connectivity for HA/DR readiness, per Syed's earlier order).
+1. Next by `pnpm tracker next`.
 2. The finance module. Parked rows close as vendor access arrives.
 3. REQ-CORE-020: `FOR UPDATE SKIP LOCKED` outbox claim and the concurrent-worker scale-1 measurement; find the
    dispatch target that slows as the stores grow. Also: a cloud-hosted application in the synthetic estate (ADR-031).
@@ -928,6 +955,9 @@ checkpoint 28; migrations through 0032 and ClickHouse DDL through 0004 are appli
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
+
+06. REQ-BSM-007 (ADR-025): the acceptance's "tier-1 site" is read as business criticality 1, a new site attribute.
+    `tier` stays the facility's Uptime tier. Confirm, or name the field you meant.
 
 00. Answered (c) on 2026-11-06; implemented as ADR-039.
 04. Answered on 2026-11-07: align the estate with the collectors; implemented as ADR-044.

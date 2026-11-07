@@ -186,7 +186,7 @@
 | REQ-UI-026 | UI | Screens | Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards |  | Links show carrier, latency, throughput vs capacity, loss, redundancy state; sites show tier, power capacity, racks, PUE, alerts; Playwright en+ar | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-027 | UI | Screens | Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex |  | Backed by ClickHouse metrics; health and category filters; virtualised rows; p95 under budget on 100k CIs | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DEP-005 | DEP | Dependency map | Lane layout mode: layers as horizontal lanes with blast-radius isolation on click |  | Toggle between force and lane layouts; lanes follow CI_LAYERS grouped into six bands; clicking a node dims everything outside its impact closure | P0 | Done |  |  | docs/DESIGN-CUES.md | T-060, T-061 | lane/force layout toggle in the URL, deterministic force layout in the layout worker up to DEPENDENCY_MAP.forceMaxNodes, click isolates the impact closure (Sigma reducers dim the rest), double-click opens the CI; commit bb5e5b9 | 2026-10-22 | 2026-11-01 | Lane layout mode implemented (apps/console/src/lib/graph-layout.ts): lanes per CI_LAYERS order, hidden layers bridged, per-lane chips. Blast-radius isolation on click is the next increment. |
-| REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Done |  |  | docs/DESIGN-CUES.md | T-470, T-471, T-472, T-473, T-474, T-475, T-476 | a9e6f16; ADR-048; e2e screenshots apps/console/e2e/screenshots/runbooks-{en,ar}.png | 2026-10-22 | 2026-11-07 |  |
+| REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Done |  |  | docs/DESIGN-CUES.md | T-470, T-471, T-472, T-473, T-474, T-475, T-476 | a9e6f16; ADR-048; e2e screenshots apps/console/e2e/screenshots/runbooks-{en,ar}.png; commit is 1dbd6a1 (a9e6f16 above is a typo) | 2026-10-22 | 2026-11-07 |  |
 | REQ-SEC-012 | SEC | Compliance | Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate |  | Controls mapped to CIs; posture tab on the assets screen; audit pass rate and high-risk CI count computed from evidence | P1 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-CMDB-037 | CMDB | Identity | CI short codes (layer prefix plus slug) generated, unique per tenant and editable |  | ciCode() applied by the reconciler; uniqueness enforced in Postgres; shown on every card and in search | P0 | Done | Claude |  | docs/DESIGN-CUES.md | T-062, T-111, T-063, T-457 | ciCode() keeps dotted non-domain names apart (10.0.0.1 -> NET-10-0-0-1); Postgres trigger plus partial unique index keep codes unique per tenant (migration 0010, 499 duplicate groups renumbered on the dev estate); Ci.code and setCiCode in GraphQL 0.6.0 (ADR-014); code on CMDB rows, search hits and the CI detail header with operator editing; commit 0d660e0; migrations 0029-0030: colliding codes numbered from a per-base counter seeded through a text_pattern_ops index (d18772e, a5c403a); scale-1 SNMP result 15+ min -> seconds | 2026-10-22 | 2026-11-07 | Console derives and shows the short code via ciCode() on the CI detail header; server-side uniqueness and editing remain. |
 | REQ-CMDB-038 | CMDB | Layers | Headline metric per layer on cards and tables (LAYER_HEADLINE_METRIC) |  | Every card shows the layer's headline metric from ClickHouse; unit and label from the contract | P1 | Done |  |  | docs/DESIGN-CUES.md | T-005, T-008, T-025, T-091, T-093, T-094, T-114, T-115, T-087 | docs/evidence/cmdb/headline-metrics.md; docs/evidence/console/cmdb-en.png, cmdb-ar.png, ci-detail-en.png, ci-detail-ar.png; ADR-016; replay 28,501 samples stored / 0 dropped; API 50-row page with headlines 21-76 ms; e2e walkthrough 3 passed; commit 01df3cf | 2026-10-22 | 2026-11-01 |  |
@@ -202,7 +202,7 @@
 | REQ-CMDB-039 | CMDB | CMDB | Asset register for every owned CI across all layers, with warranty, support and end-of-life dates and manual data entry |  | Every CI of an owned type (DCIM, network and security, hardware, PCs, storage, virtualization, OS, applications, databases, licences, cloud and SaaS subscriptions) has an asset record kept in sync by the reconciler (created on discovery, retired with the CI); the register lists them per layer with warranty end, support end and end-of-life dates, flags missing dates, and lets an operator enter or correct them with an audit trail; plan-created assets attach to the CI when discovered | P0 | Done | claude |  | ADR-023 | T-100, T-127, T-129, T-130, T-131 | ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-register-{en,ar}.png, assets-details-{en,ar}.png; migration 0015; reconciler worker/assets.ts; API assetSummary/updateAsset/createAsset; commit b63f25e; ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-register-{en,ar}.png, assets-details-{en,ar}.png; migration 0015; reconciler worker/assets.ts; API assetSummary/updateAsset/createAsset; commits b63f25e, cf5a4c0 (register paging fix); docs/evidence/assets-register.md | 2026-11-05 | 2026-11-05 |  |
 | REQ-CMDB-040 | CMDB | CMDB | Unknown CI remediation: diagnosis and manual entry for devices without out-of-band management |  | Each unknown CI shows what was observed (evidence), a diagnosis (unmanaged or unmetered PDU, unknown application on a non-standard port, device without SNMP or management interface) and the remediation (what to enable, or manual entry of type, owner, location, warranty); labelling creates the asset record; en and ar; e2e | P0 | Done | claude |  | ADR-023 | T-100, T-128, T-129, T-130 | ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-unknown-{en,ar}.png; console lib/unknown-remediation.ts, UnknownDevices.tsx, ManualAssetForm.tsx; labelCi registers owned CIs; commit b63f25e; ADR-023; docs/evidence/assets-register.md; docs/evidence/console/assets-unknown-{en,ar}.png; console lib/unknown-remediation.ts, UnknownDevices.tsx, ManualAssetForm.tsx; labelCi registers owned CIs | 2026-11-05 | 2026-11-05 |  |
 | REQ-BSM-006 | BSM | BSM | SLA assignment, continuous SLA monitoring, alerting and incident response with audit and RCA |  | An SLA (availability target, response and resolution targets per severity, window) is assigned to a business service through the console; the BSM engine evaluates it continuously, opens incidents and alerts on breach or budget exhaustion, tracks acknowledgement, assignment and resolution against the targets, writes every step to the audit log, and each incident carries a structured RCA (root cause CI, contributing factors, corrective actions, owner, due date); en and ar; e2e | P0 | Done |  |  | ADR-024 | T-133, T-135, T-136, T-137, T-138 | commit 95faf93; docs/evidence/sla-uptime.md; ADR-024; e2e services.spec.ts en+ar; Lighthouse services 1.0/1.0/1.0 | 2026-11-05 | 2026-11-05 |  |
-| REQ-BSM-007 | BSM | BSM | Sites and connectivity monitoring for HA / DR readiness |  | Every site and inter-site link is shown with live health; Discovery Nodes probe the links continuously (reachability, latency, loss) and the results land in ClickHouse and on the link CI; readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) are evaluated continuously and breaches open incidents; en and ar; e2e | P0 | Not started |  |  | ADR-025 |  |  | 2026-11-05 | 2026-11-05 |  |
+| REQ-BSM-007 | BSM | BSM | Sites and connectivity monitoring for HA / DR readiness |  | Every site and inter-site link is shown with live health; Discovery Nodes probe the links continuously (reachability, latency, loss) and the results land in ClickHouse and on the link CI; readiness rules (diverse paths per tier-1 site, DR site reachable, replication links healthy) are evaluated continuously and breaches open incidents; en and ar; e2e | P0 | Done |  |  | ADR-025 | T-477, T-478, T-479, T-480, T-481, T-482 | 718c39b; ADR-025; e2e screenshots apps/console/e2e/screenshots/sites-{en,ar}.png; dev stack: 12 links probed, 4 readiness findings with incidents | 2026-11-05 | 2026-11-07 |  |
 | REQ-BSM-008 | BSM | Added | Uptime monitoring and availability reporting by month, quarter and year |  | Every service and every monitored CI has an availability figure for the current and past months, quarters and years computed from the health history in ClickHouse; the BSM and service detail screens show uptime per period beside the SLA target with the minutes of downtime and the incidents that caused them; a period report can be exported; k6 budget under 1 s for a yearly roll-up of 300 services; en and ar. | P0 | Done |  |  | CLAUDE.md §0 BSM; Syed 2026-11-05 | T-132, T-134, T-135, T-136, T-137, T-138, T-464 | commit 95faf93; docs/evidence/sla-uptime.md; k6 availability-report p95 629 ms on 299 services (budget 1000 ms); ClickHouse DDL 0004; 215ed8d (outages spread over the whole month) | 2026-11-05 | 2026-11-07 |  |
 | REQ-AI-007 | AI | Added | Assistant grounding: schema catalogue, measurement routing, query validation and a regression suite so Ask answers accurately and never hallucinates properties |  | The assistant answers from a generated catalogue of node labels, properties, relationship types and ClickHouse measurements; questions about measurements (memory, CPU, OS per host, VM density) are routed to the right store instead of failing; generated Cypher is validated and rewritten (no nested aggregates, only known properties) before it runs, with one automatic repair pass; a checked-in question set with expected answers runs in CI and must pass; every failure is logged with the question and the generated query; en and ar. | P0 | Done | Claude |  | CLAUDE.md §0 AI assistant; Syed 2026-11-05 screenshot | T-142, T-143, T-144, T-460, T-461, T-462, T-463 | commits bfd1586 87ada3c a53b195; ADR-028; docs/evidence/assistant-conversation.md; docs/evidence/assistant-eval.json 29/29; conversation.test.ts + compose.test.ts 44; AssistantView.test.tsx 7; screens.spec.ts Assistant e2e en+ar; docs/evidence/console/assistant-conversation-{en,ar}.png; 67e0c9f, 2a56a0a; docs/evidence/assistant-eval.json 38/38 on the scale-1 tenant (Qwen2.5-Coder-1.5B, 2026-11-08) | 2026-11-05 | 2026-11-07 |  |
 | REQ-UI-036 | UI | Added | Overall uptime tile on the main dashboard |  | A small KPI tile on the default dashboard shows the estate's overall availability for the current month (weighted across business services from service_health_history) with the trend against the previous month and the count of services below target; en and ar; e2e; Lighthouse unchanged | P0 | Done |  |  | Syed 2026-11-05; ADR-024 | T-139 | commit 98911d7; docs/evidence/dashboard-uptime-register.md; DashboardView.test.tsx tile test; dashboard.spec.ts e2e en+ar; Lighthouse dashboard 0.99/1/1 | 2026-11-05 | 2026-11-05 |  |
@@ -220,7 +220,7 @@
 | CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 40 | 95 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
-| BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 7 | 88 |
+| BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 31 | 86 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 4 | 50 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
@@ -254,10 +254,10 @@
 ## Sheet: Contracts
 | Name | File | Version | Frozen on | Last ADR |
 | --- | --- | --- | --- | --- |
-| ci | packages/contracts/src/ci.ts | 0.7.0 |  | ADR-045 |
-| collector | packages/contracts/src/collector.ts | 0.7.0 |  | ADR-045 |
+| ci | packages/contracts/src/ci.ts | 0.8.0 |  | ADR-025 |
+| collector | packages/contracts/src/collector.ts | 0.8.0 |  | ADR-025 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.20.0 |  | ADR-048 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.21.0 |  | ADR-025 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
@@ -269,6 +269,7 @@
 | ADR-003 | Go for the Discovery Node and collectors (Rust considered and declined) | Accepted | 2026-10-22 | docs/adr/ADR-003-go-for-node-and-collectors.md |
 | ADR-004 | Twelve-layer model with user-labelled unknowns | Accepted | 2026-10-22 | docs/adr/ADR-004-layer-model.md |
 | ADR-005 | Infrastructure plans with BOM replace purchase orders | Accepted | 2026-10-22 | docs/adr/ADR-005-plans-not-purchase-orders.md |
+| ADR-025 | Sites and connectivity: continuous link probes and HA / DR readiness rules | Accepted | 2026-11-08 | docs/adr/ADR-025-sites-connectivity-readiness.md |
 | ADR-044 | The synthetic estate identifies and links CIs the way the collectors do | Accepted | 2026-11-07 | docs/adr/ADR-044-estate-follows-collector-identities.md |
 | ADR-045 | Reconciliation resolves `*Ref` values and scopes issuer-bound global keys | Accepted | 2026-11-07 | docs/adr/ADR-045-identity-refs-and-scoped-keys.md |
 | ADR-046 | Reconciliation at full scale: identity tokens, code counters and concurrent dispatch | Accepted | 2026-11-07 | docs/adr/ADR-046-reconciliation-at-full-scale.md |
@@ -607,6 +608,12 @@
 | T-474 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
 | T-475 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
 | T-476 | unit | REQ-BSM-005 | 2026-11-07 | Pass | 0 |
+| T-477 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-478 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-479 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-480 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-481 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-482 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -638,11 +645,12 @@
 | 2026-11-07 | Checkpoint 28: checkpoint-27 follow-ups. saas_application.tenantRef resolves within its vendor (dev pending refs 18->16). Scale-1 replay (550,747 CIs, 45,030 devices, own tenant) inside the discovery budget: 3,175 s, 11.75 min per 10k devices, 0 duplicates; scale bugs fixed (lookup concurrency, bind variables, code-suffix trigger via migrations 0029/0030, Postgres shm, CI reported twice in one result, estate subnet and MAC collisions, identity tokens migration 0031, concurrent dispatch targets); REQ-CORE-013 Done, REQ-CORE-020 opened. Tracker CLI decision/contract commands (ADR-044..046, ci/collector 0.7.0). fcfabric gofmt. node, scheduler and reconciler images rebuilt. graphify full refresh. | REQ-CORE-013, REQ-CORE-007, REQ-CORE-020, REQ-CMDB-037, REQ-QA-001, REQ-QA-005 | a2258ff, 4b1e7b0, 83826ea, d923837, cb0a623, d18772e, a5c403a, 83dfebc, 8cad55e, 96721ec, 4a4173d, c0a121f, 9926bbd, b124678 |  |
 | 2026-11-07 | Checkpoint 29: assistant eval 38/38 at scale 1 (ClickHouse id batching, unmeasured uptime); health outages spread over the month; REQ-BSM-004 impact prediction accuracy (ADR-047, migration 0032, GraphQL 1.19.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-005 runbooks (ADR-048, migration 0033, GraphQL 1.20.0) |  |  |  |
+| 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-007 sites and connectivity, link_probe collector, readiness rules (ADR-025, migration 0034, CI/collector 0.8.0, GraphQL 1.21.0) |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-07T22:10:35.750Z |  |  |  |  |  |  |
+| Generated | 2026-11-07T22:51:40.343Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 41 | 0 | 28 | 2 | 137 |  |  |
+| All | 40 | 0 | 28 | 2 | 138 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 2 | 0 | 0 | 0 | 18 | 20 | 90 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -650,7 +658,7 @@
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
-| BSM | 1 | 0 | 0 | 0 | 7 | 8 | 88 |
+| BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | UI | 5 | 0 | 0 | 0 | 31 | 36 | 86 |
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
@@ -658,7 +666,7 @@
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 7 | 0 | 26 | 1 | 90 | 124 |  |
+| P0 | 6 | 0 | 26 | 1 | 91 | 124 |  |
 | P1 | 31 | 0 | 2 | 1 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
@@ -667,7 +675,7 @@
 | 2026-11-04 | 95 |  |  |  |  |  |  |
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
-| 2026-11-07 | 137 |  |  |  |  |  |  |
+| 2026-11-07 | 138 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |

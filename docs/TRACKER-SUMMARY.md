@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-07T22:12:02.132Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-07T22:51:40.425Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 41 |
+| Not started | 40 |
 | In progress | 0 |
 | Blocked | 28 |
 | In review | 2 |
-| Done | 137 |
+| Done | 138 |
 | **Total** | **208** |
 
 ## By workstream
@@ -21,7 +21,7 @@ Generated 2026-11-07T22:12:02.132Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 3 | 0 | 0 | 43% |
 | DCIM | 9 | 2 | 0 | 0 | 22% |
-| BSM | 8 | 7 | 0 | 0 | 88% |
+| BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 31 | 0 | 0 | 86% |
 | AI | 8 | 4 | 0 | 0 | 50% |
 | INT | 19 | 8 | 0 | 0 | 42% |
@@ -65,7 +65,6 @@ Generated 2026-11-07T22:12:02.132Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-BSM-007 [P0] Sites and connectivity monitoring for HA / DR readiness
 - REQ-CORE-019 [P0] REST and GraphQL API, SDKs, OpenAPI
 - REQ-PERF-002 [P0] Impact query under 1000 ms on 100000 nodes
 - REQ-PERF-004 [P0] 10000 devices discovered in under 15 minutes
@@ -75,6 +74,7 @@ Generated 2026-11-07T22:12:02.132Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-AI-002 [P1] Classification of unknown CIs and layer suggestions
 - REQ-AI-003 [P1] Anomaly rules over discovery and health events
 - REQ-AI-005 [P1] Cloud recommendation engine (rightsizing, unused)
+- REQ-AI-006 [P1] AI assistant over the graph (NL to Cypher, explain impact, anomaly rules)
 
 ## Open risks
 
