@@ -33,6 +33,8 @@ export function createReconcilerMetrics() {
     admPasses: new Counter({ name: 'openmap_reconciler_adm_passes_total', help: 'Dependency-mapping passes, by outcome', labelNames: ['outcome'], registers: [registry] }),
     admEdges: new Counter({ name: 'openmap_reconciler_adm_edges_total', help: 'Derived dependency edges, by action (created, refreshed, retired)', labelNames: ['action'], registers: [registry] }),
     components: new Counter({ name: 'openmap_reconciler_components_total', help: 'Device parts synced from observed part lists, by action (upserted, removed)', labelNames: ['action'], registers: [registry] }),
+    // REQ-CORE-013 (ADR-045): `*Ref` resolution: pending refs resolved, ref tokens computed, copies folded by ref key.
+    identityRefs: new Counter({ name: 'openmap_reconciler_identity_refs_total', help: 'Identity ref work, by action (resolved, tokens, folded)', labelNames: ['action'], registers: [registry] }),
     admDuration: new Histogram({ name: 'openmap_reconciler_adm_duration_seconds', help: 'Dependency-mapping pass duration', registers: [registry] }),
   };
 }
@@ -74,8 +76,11 @@ async function main(): Promise<void> {
         metrics.samples.inc({ outcome: 'dropped' }, summary.samplesDropped);
         metrics.components.inc({ action: 'upserted' }, summary.componentsUpserted);
         metrics.components.inc({ action: 'removed' }, summary.componentsRemoved);
+        metrics.identityRefs.inc({ action: 'resolved' }, retried.refs.resolved);
+        metrics.identityRefs.inc({ action: 'tokens' }, retried.refs.tokens);
+        metrics.identityRefs.inc({ action: 'folded' }, summary.folded + retried.refs.folded);
         if (triggersAdm(result)) adm.schedule(result.tenantId);
-        console.log(JSON.stringify({ msg: 'reconciled', runId: result.runId, collector: result.collectorId, ...summary, pendingResolved: retried.resolved }));
+        console.log(JSON.stringify({ msg: 'reconciled', runId: result.runId, collector: result.collectorId, ...summary, pendingResolved: retried.resolved, refs: retried.refs }));
         return summary;
       } catch (err) {
         metrics.results.inc({ collector: result.collectorId, outcome: 'error' });

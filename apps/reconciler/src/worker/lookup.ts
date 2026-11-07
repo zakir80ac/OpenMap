@@ -1,13 +1,15 @@
 // REQ-CORE-013 — Prisma-backed lookup for one collector result: fetches every stored CI whose
 // identity tuple or any globally unique identity value appears in the result, through the
 // (tenantId, type, identityKey) index and the jsonb_path_ops GIN index, then answers resolve() from memory.
+// ADR-045: `*Ref` values are first resolved against the CIs they may name (GIN index on refTokens), so candidates are
+// also fetched by ref key, the tuple with its refs resolved, through the (tenantId, refKey) index.
 import { RECONCILER } from '@openmap/constants';
 import { Prisma, type PrismaClient } from '@openmap/db';
-import type { Ci, CollectorResult, ObservedCi, Relationship } from '@openmap/contracts';
-import { globalPairs, identityTuple, MapIdentityIndex } from '../core/identity.js';
+import { IDENTITY_REF_TARGETS, normIdentity, refPairs, type Ci, type CiType, type CollectorResult, type ObservedCi, type Relationship } from '@openmap/contracts';
+import { globalPairs, identityTuple, MapIdentityIndex, MapRefIndex, refKeyOf } from '../core/identity.js';
 import type { StoredLookup } from '../core/reconcile.js';
 
-type CiRow = Prisma.CiGetPayload<Record<string, never>>;
+export type CiRow = Prisma.CiGetPayload<Record<string, never>>;
 type RelRow = Prisma.RelationshipGetPayload<Record<string, never>>;
 
 export const identityKeyOf = identityTuple;
@@ -50,20 +52,54 @@ export function rowToRelationship(row: RelRow): Relationship {
   };
 }
 
-/** Candidate rows: identityKey tuple matches plus jsonb containment on globally unique values (both spellings). */
-async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: readonly Pick<ObservedCi, 'type' | 'identity'>[]): Promise<CiRow[]> {
+function chunked<T>(list: readonly T[]): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < list.length; i += RECONCILER.lookupBatchSize) chunks.push(list.slice(i, i + RECONCILER.lookupBatchSize));
+  return chunks;
+}
+
+/**
+ * ADR-045: the stored CIs any `*Ref` value of these identities may name. One GIN probe on refTokens per chunk of
+ * distinct values, restricted to the refs' target types.
+ */
+export async function fetchRefTargets(prisma: PrismaClient, tenantId: string, refs: readonly Pick<ObservedCi, 'type' | 'identity'>[]): Promise<CiRow[]> {
+  const values = new Set<string>();
+  const types = new Set<CiType>();
+  for (const r of refs) {
+    for (const { key, value } of refPairs(r)) {
+      values.add(normIdentity(value));
+      for (const t of IDENTITY_REF_TARGETS[key] ?? []) types.add(t);
+    }
+  }
+  if (values.size === 0 || types.size === 0) return [];
+  const typeList = [...types];
+  const batches = await Promise.all(
+    chunked([...values]).map((chunk) =>
+      prisma.$queryRaw<CiRow[]>(Prisma.sql`
+        SELECT * FROM cis
+        WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND type::text = ANY(${typeList}::text[]) AND "refTokens" && ${chunk}::text[]`),
+    ),
+  );
+  return batches.flat();
+}
+
+/**
+ * Candidate rows: identityKey tuple matches, ref key matches, and jsonb containment on globally unique values (with
+ * their issuer scope, both spellings).
+ */
+async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: readonly Pick<ObservedCi, 'type' | 'identity'>[], refKeys: ReadonlySet<string>): Promise<CiRow[]> {
   const tuples = new Set<string>();
   const containments = new Set<string>();
   for (const r of refs) {
     const t = identityTuple(r.type, r.identity);
     if (t !== '') tuples.add(t);
-    for (const { key, value } of globalPairs(r)) {
-      containments.add(JSON.stringify({ [key]: value }));
-      const lower = value.toLowerCase();
-      if (lower !== value) containments.add(JSON.stringify({ [key]: lower }));
+    for (const values of globalPairs(r)) {
+      containments.add(JSON.stringify(values));
+      const lower = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v.toLowerCase()]));
+      containments.add(JSON.stringify(lower));
     }
   }
-  if (tuples.size === 0 && containments.size === 0) return [];
+  if (tuples.size === 0 && containments.size === 0 && refKeys.size === 0) return [];
   const rows = new Map<string, CiRow>();
   const collect = (batch: CiRow[]): void => {
     for (const row of batch) rows.set(row.id, row);
@@ -75,14 +111,18 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
       SELECT * FROM cis
       WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "identityKey" = ANY(${tupleList}::text[])`));
   }
+  if (refKeys.size > 0) {
+    // Btree probe through cis_tenantId_refKey_idx.
+    const refKeyList = [...refKeys];
+    collect(await prisma.$queryRaw<CiRow[]>(Prisma.sql`
+      SELECT * FROM cis
+      WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "refKey" = ANY(${refKeyList}::text[])`));
+  }
   // GIN cannot serve "@> ANY(array)", so containment terms become an OR chain the planner turns into
   // a BitmapOr of index probes; chunked so one statement never carries thousands of terms.
-  const jsonList = [...containments];
-  const chunks: string[][] = [];
-  for (let i = 0; i < jsonList.length; i += RECONCILER.lookupBatchSize) chunks.push(jsonList.slice(i, i + RECONCILER.lookupBatchSize));
   // Chunks are independent; the pool runs them concurrently.
   const batches = await Promise.all(
-    chunks.map((chunk) => {
+    chunked([...containments]).map((chunk) => {
       const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
       return prisma.$queryRaw<CiRow[]>(Prisma.sql`
         SELECT * FROM cis
@@ -93,21 +133,40 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
   return [...rows.values()];
 }
 
-/** Loads current CIs matching any identity in the result, plus current relationships among them. */
-export async function loadLookup(prisma: PrismaClient, result: CollectorResult): Promise<StoredLookup & { cis: Map<string, Ci> }> {
+/** The identities a result names: its CIs, its relationship ends and its samples' CIs. */
+function identitiesOf(result: CollectorResult): Array<Pick<ObservedCi, 'type' | 'identity'>> {
   const refs: Array<Pick<ObservedCi, 'type' | 'identity'>> = [...result.cis];
   for (const r of result.relationships) {
     if ('type' in r.from) refs.push(r.from);
     if ('type' in r.to) refs.push(r.to);
   }
   for (const s of result.samples) if ('type' in s.ci) refs.push(s.ci);
+  return refs;
+}
+
+/** Loads current CIs matching any identity in the result, the CIs its refs may name, and current relationships among them. */
+export async function loadLookup(prisma: PrismaClient, result: CollectorResult): Promise<StoredLookup & { cis: Map<string, Ci> }> {
+  const refs = identitiesOf(result);
   const cis = new Map<string, Ci>();
-  const index = new MapIdentityIndex();
-  for (const row of await fetchCandidates(prisma, result.tenantId, refs)) {
+  const storedRefKeys = new Map<string, string | null>();
+  const refIndex = new MapRefIndex();
+  const addRow = (row: CiRow): void => {
+    if (cis.has(row.id)) return;
     const ci = rowToCi(row);
     cis.set(ci.id, ci);
-    index.add(ci, ci.id);
+    storedRefKeys.set(ci.id, row.refKey);
+    refIndex.add(ci, ci.id);
+  };
+  for (const row of await fetchRefTargets(prisma, result.tenantId, refs)) addRow(row);
+  const refKeys = new Set<string>();
+  for (const r of refs) {
+    if (refPairs(r).length === 0) continue;
+    const k = refKeyOf(r, refIndex);
+    if (k !== null) refKeys.add(k);
   }
+  for (const row of await fetchCandidates(prisma, result.tenantId, refs, refKeys)) addRow(row);
+  const index = new MapIdentityIndex();
+  for (const ci of cis.values()) index.add(ci, ci.id, storedRefKeys.get(ci.id) ?? null);
   const ids = [...cis.keys()];
   const relRows = ids.length ? await prisma.relationship.findMany({ where: { tenantId: result.tenantId, validTo: null, fromCiId: { in: ids } } }) : [];
   const rels = new Map<string, Relationship>();
@@ -117,8 +176,10 @@ export async function loadLookup(prisma: PrismaClient, result: CollectorResult):
   }
   return {
     index,
+    refs: refIndex,
     cis,
     getCi: (id) => cis.get(id),
+    storedRefKey: (id) => (storedRefKeys.has(id) ? (storedRefKeys.get(id) ?? null) : undefined),
     findRelationship: (type, fromCiId, toCiId) => rels.get(type + '|' + fromCiId + '|' + toCiId),
   };
 }

@@ -684,6 +684,13 @@ model Ci {
   validTo           DateTime? @db.Timestamptz(3)
   /// SHA-256 of canonical (type, identity, attributes).
   checksum          String    @db.Char(64)
+  /// ADR-045: normalised spellings under which a `*Ref` may name this CI; empty until the reconciler computes them.
+  refTokens         String[]  @default([])
+  /// ADR-045: identity tuple with each `*Ref` resolved to a CI id; null without refs or while one is unresolved.
+  refKey            String?
+  /// ADR-045: a `*Ref` of this CI names no single known CI yet; the pending pass retries it in refsCheckedAt order.
+  refsPending       Boolean   @default(false)
+  refsCheckedAt     DateTime? @db.Timestamptz(3)
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
 
@@ -707,6 +714,8 @@ model Ci {
   @@index([identity(ops: JsonbPathOps)], type: Gin)
   @@index([tenantId, checksum])
   @@index([attributes(ops: JsonbPathOps)], type: Gin)
+  @@index([refTokens], type: Gin)
+  @@index([tenantId, refKey])
   @@map("cis")
 }
 

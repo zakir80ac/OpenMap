@@ -11,7 +11,7 @@ import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { createClickHouse, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
 import { runAdmPass } from './worker/adm.js';
-import { processResult, retryPendingRelationships } from './worker/pipeline.js';
+import { pendingProgressed, processResult, retryPendingRelationships } from './worker/pipeline.js';
 
 interface Args {
   dir: string;
@@ -99,7 +99,7 @@ async function main(): Promise<void> {
   if (args.reset) await resetTenant(prisma, sinks, env.CLICKHOUSE_DB, summaryTenant);
   const started = Date.now();
   let n = 0;
-  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, samples: 0, samplesDropped: 0, lookupMs: 0, reconcileMs: 0, reconcileCpuMs: 0, persistMs: 0 };
+  const totals = { created: 0, updated: 0, unchanged: 0, relationships: 0, conflicts: 0, unresolved: 0, samples: 0, samplesDropped: 0, folded: 0, lookupMs: 0, reconcileMs: 0, reconcileCpuMs: 0, persistMs: 0 };
   let tenantId = '';
   for await (const raw of results(args.dir)) {
     const result = collectorResultSchema.parse(raw);
@@ -113,6 +113,7 @@ async function main(): Promise<void> {
     totals.unresolved += s.unresolvedRelationships;
     totals.samples += s.samples;
     totals.samplesDropped += s.samplesDropped;
+    totals.folded += s.folded;
     totals.lookupMs += s.lookupMs;
     totals.reconcileMs += s.reconcileMs;
     totals.persistMs += s.persistMs;
@@ -122,11 +123,16 @@ async function main(): Promise<void> {
     if (n % RECONCILER.replayProgressEvery === 0) console.log(JSON.stringify({ msg: 'progress', results: n, ...totals, seconds: Math.round((Date.now() - started) / TIME.msPerSecond) }));
   }
   let pendingResolved = 0;
+  const refs = { tokens: 0, tried: 0, resolved: 0, folded: 0 };
   const pendingStart = Date.now();
   for (;;) {
     const r = await retryPendingRelationships(prisma, tenantId);
     pendingResolved += r.resolved;
-    if (r.tried === 0 || r.resolved === 0) break;
+    refs.tokens += r.refs.tokens;
+    refs.resolved += r.refs.resolved;
+    refs.folded += r.refs.folded;
+    refs.tried = Math.max(refs.tried, r.refs.tried);
+    if (!pendingProgressed(r)) break;
   }
   const pendingMs = Date.now() - pendingStart;
   // REQ-DEP-002: the estate's flows, listeners and components are in; derive the dependencies they imply.
@@ -137,7 +143,7 @@ async function main(): Promise<void> {
   const dupes = await prisma.$queryRaw<Array<{ n: bigint }>>`SELECT count(*) AS n FROM (SELECT "tenantId", type, "identityKey" FROM cis WHERE "validTo" IS NULL GROUP BY 1,2,3 HAVING count(*) > 1) d`;
   const ciCount = await prisma.ci.count({ where: { tenantId, validTo: null } });
   const relCount = await prisma.relationship.count({ where: { tenantId, validTo: null } });
-  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), pendingMs, phaseMs, cisPerSecond: Math.round((ciCount / phaseMs) * TIME.msPerSecond) }));
+  console.log(JSON.stringify({ msg: 'reconciled', results: n, ...totals, pendingResolved, pendingLeft, refsResolved: refs.resolved, refsFolded: refs.folded, refTokens: refs.tokens, refsPendingLeft: await prisma.ci.count({ where: { tenantId, validTo: null, refsPending: true } }), cisInStore: ciCount, relationshipsInStore: relCount, duplicateIdentities: Number(dupes[0]?.n ?? 0n), pendingMs, phaseMs, cisPerSecond: Math.round((ciCount / phaseMs) * TIME.msPerSecond) }));
 
   if (args.dispatch) {
     const dispatchStart = Date.now();

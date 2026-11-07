@@ -1,5 +1,6 @@
 // REQ-CORE-001 REQ-CORE-002 REQ-CORE-005 REQ-CORE-006 — frozen contracts entry point.
 export * from './ci.js';
+export * from './identity.js';
 export * from './collector.js';
 export * from './event.js';
 export * from './asset.js';

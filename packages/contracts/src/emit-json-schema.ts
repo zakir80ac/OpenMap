@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { CONTRACT_VERSIONS } from '@openmap/constants';
-import { CI_IDENTITY_KEYS, GLOBAL_IDENTITY_KEYS, ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
+import { CI_IDENTITY_KEYS, GLOBAL_IDENTITY_KEYS, GLOBAL_IDENTITY_SCOPES, IDENTITY_REF_ALIAS_ATTRIBUTES, IDENTITY_REF_DERIVED, IDENTITY_REF_TARGETS, PARENT_IDENTITY_KEYS, ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
 import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } from './collector.js';
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
@@ -53,6 +53,12 @@ const identity = {
   version: CONTRACT_VERSIONS.ci,
   keys: CI_IDENTITY_KEYS,
   global: [...GLOBAL_IDENTITY_KEYS],
+  // ADR-045: issuer scopes of global keys, and how a `*Ref` value resolves to the CI it names.
+  scopes: GLOBAL_IDENTITY_SCOPES,
+  parentKeys: PARENT_IDENTITY_KEYS,
+  refTargets: IDENTITY_REF_TARGETS,
+  refAliasAttributes: IDENTITY_REF_ALIAS_ATTRIBUTES,
+  refDerived: IDENTITY_REF_DERIVED,
 };
 writeFileSync(join(outDir, 'ci-identity.json'), JSON.stringify(identity, null, 2) + '\n');
 console.log('contracts: wrote ' + String(entries.length) + ' JSON schemas and ci-identity.json to ' + outDir);

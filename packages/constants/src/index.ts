@@ -779,6 +779,18 @@ export const RECONCILER = {
   pendingRelationshipBatch: 10_000,
   pendingRelationshipMaxAttempts: 20,
   /**
+   * ADR-045: CIs whose `*Ref` values the pending pass retries per call, and CIs whose ref tokens it computes per call.
+   * Bounded so the pass that follows every result stays a few hundred milliseconds on a 100k-CI tenant.
+   */
+  pendingRefBatch: 5_000,
+  refTokenBackfillBatch: 5_000,
+  /**
+   * ADR-045 (migration 0028): the transaction setting that tells the cis trigger the reconciler wrote the ref tokens
+   * itself; any other writer that changes a CI's identity, name or attributes empties them for the pending pass.
+   */
+  refTokensSetting: 'openmap.ref_tokens',
+  refTokensWriter: 'reconciler',
+  /**
    * Metric samples carried per `openmap.metric.sampled` event (ADR-016). A sweep of 10k hosts yields tens of
    * thousands of samples; chunking keeps every outbox envelope and ClickHouse insert at a few hundred kilobytes.
    */
@@ -1319,13 +1331,16 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.5.0 (REQ-CMDB-023, REQ-CMDB-025, ADR-039): `lifecycle.ts`, catalogue entries, support states, OS and platform releases.
    * 0.6.0 (REQ-CMDB-024, ADR-043): `endOfLifeFromAttributes`; asset fields carry the vendor-reported end of life, the
    * warranty start and verification instant.
+   * 0.7.0 (REQ-CORE-013, ADR-045): `GLOBAL_IDENTITY_SCOPES`, `IDENTITY_REF_TARGETS`, `IDENTITY_REF_ALIAS_ATTRIBUTES`,
+   * `IDENTITY_REF_DERIVED` and `identity.ts`: issuer-scoped global keys and `*Ref` resolution. No payload shape changed.
    */
-  ci: '0.6.0',
+  ci: '0.7.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
-   * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family. */
-  collector: '0.6.0',
+   * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family.
+   * 0.7.0 (REQ-CORE-013, ADR-045): moves with the CI contract's identity rules; no result field changed. */
+  collector: '0.7.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.

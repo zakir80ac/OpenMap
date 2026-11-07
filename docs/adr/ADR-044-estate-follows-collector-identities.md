@@ -68,6 +68,6 @@ direction.
 - The remaining 284 are load-balancer pool members (`listening_service`). A load balancer names a member by its IP or
   FQDN, while the host's own collector names its listener by the host serial. One estate value cannot match both
   observers. Closing this needs reconciliation to resolve `*Ref` values to the referenced CI, which is a product
-  change, not an estate one.
+  change, not an estate one. ADR-045 made that change; identity drift is now 0.
 - Estates generated before this ADR keep their old identities. Dev stacks should replay a regenerated estate with
   `--reset`.

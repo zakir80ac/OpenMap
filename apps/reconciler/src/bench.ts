@@ -5,12 +5,12 @@ import { readFileSync } from 'node:fs';
 import { TIME } from '@openmap/constants';
 import { collectorResultSchema, type Ci } from '@openmap/contracts';
 import { envelope } from './core/events.js';
-import { MapIdentityIndex } from './core/identity.js';
+import { MapIdentityIndex, MapRefIndex } from './core/identity.js';
 import { checksum } from './core/merge.js';
 import { reconcile, type StoredLookup } from './core/reconcile.js';
 
 function emptyLookup(): StoredLookup {
-  return { index: new MapIdentityIndex(), getCi: () => undefined, findRelationship: () => undefined };
+  return { index: new MapIdentityIndex(), refs: new MapRefIndex(), getCi: () => undefined, storedRefKey: () => undefined, findRelationship: () => undefined };
 }
 
 function main(): void {

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { RECONCILER } from '@openmap/constants';
 import type { Ci, CollectorResult, Relationship } from '@openmap/contracts';
-import { MapIdentityIndex, resolve } from './identity.js';
+import { MapIdentityIndex, MapRefIndex, resolve } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { reconcile, type StoredLookup } from './reconcile.js';
 
@@ -21,8 +21,12 @@ function result(partial: Partial<CollectorResult>): CollectorResult {
 
 function lookupWith(cis: Ci[], rels: Relationship[] = []): StoredLookup {
   const index = new MapIdentityIndex();
-  for (const c of cis) index.add(c, c.id);
-  return { index, getCi: (id) => cis.find((c) => c.id === id), findRelationship: (type, f, t) => rels.find((r) => r.type === type && r.fromCiId === f && r.toCiId === t && r.validTo === null) };
+  const refs = new MapRefIndex();
+  for (const c of cis) {
+    index.add(c, c.id);
+    refs.add(c, c.id);
+  }
+  return { index, refs, storedRefKey: (id) => (cis.some((c) => c.id === id) ? null : undefined), getCi: (id) => cis.find((c) => c.id === id), findRelationship: (type, f, t) => rels.find((r) => r.type === type && r.fromCiId === f && r.toCiId === t && r.validTo === null) };
 }
 
 const storedHost: Ci = {

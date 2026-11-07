@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/ci-identity/0.6.0",
+  "$id": "https://openmap.dev/contracts/ci-identity/0.7.0",
   "title": "ci-identity",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "keys": {
     "host": [
       "serialNumber",
@@ -304,5 +304,125 @@
     "clusterId",
     "accountId",
     "tenantId"
+  ],
+  "scopes": {
+    "tenantId": [
+      "vendor"
+    ],
+    "accountId": [
+      "provider"
+    ],
+    "resourceId": [
+      "provider"
+    ],
+    "clusterId": [
+      "platform",
+      "engine"
+    ],
+    "moRef": [
+      "platform"
+    ],
+    "contractNumber": [
+      "vendorRef"
+    ]
+  },
+  "parentKeys": {
+    "k8s_namespace": [
+      "clusterUid"
+    ]
+  },
+  "refTargets": {
+    "chassisRef": [
+      "chassis"
+    ],
+    "hostRef": [
+      "host",
+      "vm"
+    ],
+    "hypervisorRef": [
+      "hypervisor"
+    ],
+    "tenantRef": [
+      "saas_tenant"
+    ],
+    "fabricRef": [
+      "fc_fabric"
+    ],
+    "arrayRef": [
+      "storage_array"
+    ],
+    "deviceRef": [
+      "network_device",
+      "load_balancer",
+      "host",
+      "vm"
+    ],
+    "vrfRef": [],
+    "zoneRef": [
+      "dns_zone"
+    ],
+    "serverRef": [
+      "host",
+      "vm",
+      "network_device"
+    ],
+    "scopeRef": [
+      "dhcp_scope"
+    ],
+    "fromSiteRef": [
+      "site"
+    ],
+    "toSiteRef": [
+      "site"
+    ],
+    "siteRef": [
+      "site"
+    ],
+    "buildingRef": [
+      "building"
+    ],
+    "roomRef": [
+      "room"
+    ],
+    "rackRef": [
+      "rack"
+    ],
+    "pduRef": [
+      "pdu"
+    ],
+    "applicationRef": [
+      "application"
+    ],
+    "softwareRef": [
+      "software"
+    ],
+    "directoryRef": [],
+    "vendorRef": [
+      "vendor"
+    ]
+  },
+  "refAliasAttributes": [
+    "fqdn",
+    "hostname",
+    "primaryIp",
+    "ipAddress",
+    "managementIp"
+  ],
+  "refDerived": [
+    {
+      "keys": [
+        "serialNumber"
+      ],
+      "prefix": "serial:",
+      "separator": ""
+    },
+    {
+      "keys": [
+        "name",
+        "version"
+      ],
+      "prefix": "",
+      "separator": "@"
+    }
   ]
 }

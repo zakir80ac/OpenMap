@@ -3,7 +3,7 @@
 // Every table is written with one array-based INSERT/UPDATE per batch (unnest of parallel arrays),
 // which is what keeps a 10k-device sweep inside the 15-minute budget.
 import { RECONCILER } from '@openmap/constants';
-import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
+import { refPairs, refTokensOf, type Ci, type EventEnvelope, type Relationship } from '@openmap/contracts';
 import { Prisma, refreshCoveringContracts, type PrismaClient } from '@openmap/db';
 import { claimReceivedAssets, insertAssetsBatch, refreshAssetsBatch, type ClaimedAsset } from './assets.js';
 import { syncComponents } from './components.js';
@@ -57,30 +57,49 @@ async function readBackCodes(tx: Tx, cis: Ci[], events: readonly EventEnvelope[]
   }
 }
 
+/** ADR-045: marks the transaction as the reconciler's, so the cis trigger keeps the ref tokens it writes. */
+export async function asReconciler(tx: Tx): Promise<void> {
+  await tx.$queryRaw(Prisma.sql`SELECT set_config(${RECONCILER.refTokensSetting}, ${RECONCILER.refTokensWriter}, true)`);
+}
+
+/** ADR-045: the ref columns of a CI: its tokens (JSON text), its ref key, and whether a ref is still unresolved. */
+function refColumns(cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null>): { tokens: string[]; keys: Array<string | null>; pending: boolean[] } {
+  const keys = cis.map((c) => refKeys.get(c.id) ?? null);
+  return {
+    tokens: cis.map((c) => JSON.stringify(refTokensOf(c).map((t) => t.token))),
+    keys,
+    pending: cis.map((c, i) => keys[i] === null && refPairs(c).length > 0),
+  };
+}
+
 /** One round trip for every created CI. ON CONFLICT mirrors createMany's skipDuplicates. */
-async function insertCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
+export async function insertCisBatch(tx: Tx, cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null> = new Map()): Promise<void> {
   if (cis.length === 0) return;
+  const refs = refColumns(cis, refKeys);
   await tx.$executeRaw(Prisma.sql`
     INSERT INTO cis (id, "tenantId", type, identity, "identityKey", name, "displayName", code, layer, "userLabel", lifecycle, attributes, tags,
-      "sourceCollectorId", "sourceNodeId", "sourceRunId", "sourceConfidence", "observedAt", "validFrom", "validTo", checksum, "updatedAt")
+      "sourceCollectorId", "sourceNodeId", "sourceRunId", "sourceConfidence", "observedAt", "validFrom", "validTo", checksum, "refTokens", "refKey", "refsPending", "updatedAt")
     SELECT u.id, u.tenant_id, u.type::"CiType", u.identity::jsonb, u.identity_key, u.name, u.display_name, u.code, u.layer::"CiLayer",
       CASE WHEN u.user_label IS NULL THEN NULL ELSE u.user_label::jsonb END, u.lifecycle::"Lifecycle", u.attributes::jsonb,
       ARRAY(SELECT jsonb_array_elements_text(u.tags::jsonb)), u.collector, u.node, u.run, u.confidence, u.observed_at::timestamptz, u.valid_from::timestamptz,
-      CASE WHEN u.valid_to IS NULL THEN NULL ELSE u.valid_to::timestamptz END, u.checksum, now()
+      CASE WHEN u.valid_to IS NULL THEN NULL ELSE u.valid_to::timestamptz END, u.checksum,
+      ARRAY(SELECT jsonb_array_elements_text(u.ref_tokens::jsonb)), u.ref_key, u.refs_pending, now()
     FROM unnest(
       ${cis.map((c) => c.id)}::uuid[], ${cis.map((c) => c.tenantId)}::uuid[], ${cis.map((c) => c.type)}::text[], ${cis.map((c) => JSON.stringify(c.identity))}::text[],
       ${cis.map((c) => identityKeyOf(c.type, c.identity))}::text[], ${cis.map((c) => c.name)}::text[], ${cis.map((c) => c.displayName)}::text[], ${cis.map((c) => c.code)}::text[],
       ${cis.map((c) => c.layer)}::text[], ${cis.map((c) => (c.userLabel ? JSON.stringify(c.userLabel) : null))}::text[], ${cis.map((c) => c.lifecycle)}::text[],
       ${cis.map((c) => JSON.stringify(c.attributes))}::text[], ${cis.map((c) => JSON.stringify(c.tags))}::text[],
       ${cis.map((c) => c.source.collectorId)}::text[], ${cis.map((c) => c.source.nodeId)}::text[], ${cis.map((c) => c.source.runId)}::text[], ${cis.map((c) => c.source.confidence)}::float8[],
-      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.validFrom)}::text[], ${cis.map((c) => nullable(c.validTo))}::text[], ${cis.map((c) => c.checksum)}::text[]
-    ) AS u(id, tenant_id, type, identity, identity_key, name, display_name, code, layer, user_label, lifecycle, attributes, tags, collector, node, run, confidence, observed_at, valid_from, valid_to, checksum)
+      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.validFrom)}::text[], ${cis.map((c) => nullable(c.validTo))}::text[], ${cis.map((c) => c.checksum)}::text[],
+      ${refs.tokens}::text[], ${refs.keys}::text[], ${refs.pending}::boolean[]
+    ) AS u(id, tenant_id, type, identity, identity_key, name, display_name, code, layer, user_label, lifecycle, attributes, tags, collector, node, run, confidence, observed_at, valid_from, valid_to, checksum, ref_tokens, ref_key, refs_pending)
     ON CONFLICT (id) DO NOTHING`);
 }
 
 /** One round trip for every updated CI: unnest parallel arrays and join on id. */
-async function updateCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
+export async function updateCisBatch(tx: Tx, cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null> = new Map()): Promise<void> {
   if (cis.length === 0) return;
+  const refs = refColumns(cis, refKeys);
   await tx.$executeRaw(Prisma.sql`
     UPDATE cis AS c SET
       identity = u.identity::jsonb,
@@ -93,17 +112,38 @@ async function updateCisBatch(tx: Tx, cis: readonly Ci[]): Promise<void> {
       "sourceConfidence" = u.confidence,
       "observedAt" = u.observed_at::timestamptz,
       checksum = u.checksum,
+      "refTokens" = ARRAY(SELECT jsonb_array_elements_text(u.ref_tokens::jsonb)),
+      "refKey" = u.ref_key,
+      "refsPending" = u.refs_pending,
+      "refsCheckedAt" = now(),
       "updatedAt" = now()
     FROM unnest(
       ${cis.map((c) => c.id)}::uuid[], ${cis.map((c) => JSON.stringify(c.identity))}::text[], ${cis.map((c) => identityKeyOf(c.type, c.identity))}::text[],
       ${cis.map((c) => JSON.stringify(c.attributes))}::text[], ${cis.map((c) => JSON.stringify(c.tags))}::text[],
       ${cis.map((c) => c.source.collectorId)}::text[], ${cis.map((c) => c.source.nodeId)}::text[], ${cis.map((c) => c.source.runId)}::text[], ${cis.map((c) => c.source.confidence)}::float8[],
-      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.checksum)}::text[]
-    ) AS u(id, identity, identity_key, attributes, tags, collector, node, run, confidence, observed_at, checksum)
+      ${cis.map((c) => c.observedAt)}::text[], ${cis.map((c) => c.checksum)}::text[],
+      ${refs.tokens}::text[], ${refs.keys}::text[], ${refs.pending}::boolean[]
+    ) AS u(id, identity, identity_key, attributes, tags, collector, node, run, confidence, observed_at, checksum, ref_tokens, ref_key, refs_pending)
     WHERE c.id = u.id`);
 }
 
-async function insertRelationshipsBatch(tx: Tx, rels: readonly Relationship[]): Promise<void> {
+/** ADR-045: a CI's ref key and whether a ref of it is still unresolved, as the pending pass and unchanged CIs record them. */
+export interface RefKeyEntry {
+  ciId: string;
+  refKey: string | null;
+  pending: boolean;
+}
+
+/** ADR-045: ref keys of CIs whose refs now resolve (or no longer do) without any other change. */
+export async function updateRefKeys(tx: Tx, entries: readonly RefKeyEntry[]): Promise<void> {
+  if (entries.length === 0) return;
+  await tx.$executeRaw(Prisma.sql`
+    UPDATE cis AS c SET "refKey" = u.ref_key, "refsPending" = u.pending, "refsCheckedAt" = now()
+    FROM unnest(${entries.map((e) => e.ciId)}::uuid[], ${entries.map((e) => e.refKey)}::text[], ${entries.map((e) => e.pending)}::boolean[]) AS u(id, ref_key, pending)
+    WHERE c.id = u.id`);
+}
+
+export async function insertRelationshipsBatch(tx: Tx, rels: readonly Relationship[]): Promise<void> {
   if (rels.length === 0) return;
   await tx.$executeRaw(Prisma.sql`
     INSERT INTO relationships (id, "tenantId", type, "fromCiId", "toCiId", attributes, "sourceCollectorId", "sourceNodeId", "sourceRunId", "sourceConfidence", "observedAt", "validFrom", "validTo", "updatedAt")
@@ -175,13 +215,16 @@ export async function persist(
   out: ReconcileOutput,
 ): Promise<PersistSummary> {
   return prisma.$transaction(async (tx) => {
-    await insertCisBatch(tx, out.created);
+    await asReconciler(tx);
+    await insertCisBatch(tx, out.created, out.refKeys);
     await readBackCodes(tx, out.created, out.events);
     const externalIds = out.created.flatMap((ci) =>
       ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })),
     );
     if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
-    await updateCisBatch(tx, out.updated);
+    await updateCisBatch(tx, out.updated, out.refKeys);
+    const written = new Set([...out.created, ...out.updated].map((c) => c.id));
+    await updateRefKeys(tx, [...out.refKeys].filter(([id]) => !written.has(id)).map(([ciId, refKey]) => ({ ciId, refKey, pending: refKey === null })));
     const claimed = await claimReceivedAssets(tx, out.created);
     const assets = await insertAssetsBatch(tx, out.created);
     await refreshAssetsBatch(tx, out.updated);

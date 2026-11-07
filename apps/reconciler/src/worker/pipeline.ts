@@ -1,12 +1,14 @@
 // REQ-CORE-013 — one collector result through lookup → reconcile → persist. Relationships whose
 // endpoints are not yet known are parked in pending_relationships and retried after later results
-// land, so a sweep resolves cross-collector references no matter which result arrives first.
+// land, so a sweep resolves cross-collector references no matter which result arrives first. The same pass retries
+// CIs whose `*Ref` values named no single known CI and folds copies that share a ref key (ADR-045).
 import { CONTRACT_VERSIONS, RECONCILER, TIME } from '@openmap/constants';
 import type { CollectorResult, ObservedRelationship } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { reconcile } from '../core/reconcile.js';
 import { loadLookup } from './lookup.js';
 import { persist, type PersistSummary } from './persist.js';
+import { foldRefDuplicates, runRefPass, type RefPassSummary } from './refs.js';
 
 export interface PipelineSummary extends PersistSummary {
   unchanged: number;
@@ -21,6 +23,8 @@ export interface PipelineSummary extends PersistSummary {
   persistMs: number;
   /** CPU time (user + system) the process consumed inside the synchronous reconcile phase. */
   reconcileCpuMs: number;
+  /** ADR-045: CIs folded into another CI with the same ref key after this result landed. */
+  folded: number;
 }
 
 function cpuMs(since: NodeJS.CpuUsage): number {
@@ -81,13 +85,21 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
     unresolved = out2.unresolvedRelationships;
     await timed(() => park(prisma, result, unresolved), (ms) => (persistMs += ms));
   }
-  return { ...summary, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
+  // ADR-045: a CI this result created under a ref key another CI already holds (written concurrently, or before its
+  // parent's identity was known here) is folded into the older one.
+  const refKeys = [...out.refKeys.values()].filter((k): k is string => k !== null);
+  const folded = await timed(() => foldRefDuplicates(prisma, result.tenantId, refKeys), (ms) => (persistMs += ms));
+  return { ...summary, folded, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
 }
 
-/** Retries parked relationships for a tenant; resolved ones are persisted, exhausted ones dropped. */
-export async function retryPendingRelationships(prisma: PrismaClient, tenantId: string): Promise<{ tried: number; resolved: number; dropped: number }> {
+/**
+ * Retries pending refs (ADR-045) and parked relationships for a tenant; resolved ones are persisted, exhausted
+ * relationships dropped. Refs go first: a relationship may name a CI by a ref that only now resolves.
+ */
+export async function retryPendingRelationships(prisma: PrismaClient, tenantId: string): Promise<{ tried: number; resolved: number; dropped: number; refs: RefPassSummary }> {
+  const refs = await runRefPass(prisma, tenantId);
   const rows = await prisma.pendingRelationship.findMany({ where: { tenantId }, orderBy: { createdAt: 'asc' }, take: RECONCILER.pendingRelationshipBatch });
-  if (rows.length === 0) return { tried: 0, resolved: 0, dropped: 0 };
+  if (rows.length === 0) return { tried: 0, resolved: 0, dropped: 0, refs };
   const bySource = new Map<string, { rows: typeof rows; result: CollectorResult }>();
   for (const row of rows) {
     const key = row.sourceRunId;
@@ -121,5 +133,10 @@ export async function retryPendingRelationships(prisma: PrismaClient, tenantId: 
     const bump = remaining.filter((row) => !exhausted.includes(row.id)).map((row) => row.id);
     if (bump.length) await prisma.pendingRelationship.updateMany({ where: { id: { in: bump } }, data: { attempts: { increment: 1 } } });
   }
-  return { tried: rows.length, resolved, dropped };
+  return { tried: rows.length, resolved, dropped, refs };
+}
+
+/** Whether a pending pass changed anything, so a replay knows when another pass has nothing left to do. */
+export function pendingProgressed(r: Awaited<ReturnType<typeof retryPendingRelationships>>): boolean {
+  return (r.tried > 0 && r.resolved > 0) || r.refs.tokens > 0 || r.refs.resolved > 0 || r.refs.folded > 0;
 }

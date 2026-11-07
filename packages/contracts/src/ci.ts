@@ -365,6 +365,76 @@ export const GLOBAL_IDENTITY_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * ADR-045: globally unique keys that are unique only within their issuer. A SaaS tenant id is issued per vendor, an
+ * account or resource id per cloud provider, a cluster id per platform or database engine, a moRef per platform and a
+ * contract number per vendor. Such a key matches on its own only together with the scope keys the CI type declares,
+ * all present and equal; an observation missing one of them is matched by its full tuple only.
+ */
+export const GLOBAL_IDENTITY_SCOPES: Readonly<Record<string, readonly string[]>> = {
+  tenantId: ['vendor'],
+  accountId: ['provider'],
+  resourceId: ['provider'],
+  clusterId: ['platform', 'engine'],
+  moRef: ['platform'],
+  contractNumber: ['vendorRef'],
+};
+
+/**
+ * ADR-045: globally unique keys that, in these types, name the CI's parent rather than the CI: every namespace of a
+ * cluster carries the cluster's UID. They identify such a CI only together with the rest of its tuple.
+ */
+export const PARENT_IDENTITY_KEYS: Readonly<Partial<Record<CiType, readonly string[]>>> = {
+  k8s_namespace: ['clusterUid'],
+};
+
+/**
+ * ADR-045: the CI types each `*Ref` identity key can name. Observers name one CI differently (a load balancer names a
+ * pool member by its IP or FQDN, the host's own collector by its serial), so reconciliation resolves a ref value to the
+ * referenced CI's id before it compares tuples. A key with no target types names something that is not a CI on its own
+ * (a VRF name is only unique within its device, a directory is not a CI type) and is compared as written.
+ */
+export const IDENTITY_REF_TARGETS: Readonly<Record<string, readonly CiType[]>> = {
+  chassisRef: ['chassis'],
+  hostRef: ['host', 'vm'],
+  hypervisorRef: ['hypervisor'],
+  tenantRef: ['saas_tenant'],
+  fabricRef: ['fc_fabric'],
+  arrayRef: ['storage_array'],
+  deviceRef: ['network_device', 'load_balancer', 'host', 'vm'],
+  vrfRef: [],
+  zoneRef: ['dns_zone'],
+  serverRef: ['host', 'vm', 'network_device'],
+  scopeRef: ['dhcp_scope'],
+  fromSiteRef: ['site'],
+  toSiteRef: ['site'],
+  siteRef: ['site'],
+  buildingRef: ['building'],
+  roomRef: ['room'],
+  rackRef: ['rack'],
+  pduRef: ['pdu'],
+  applicationRef: ['application'],
+  softwareRef: ['software'],
+  directoryRef: [],
+  vendorRef: ['vendor'],
+};
+
+/**
+ * ADR-045: attributes whose values also name the CI to a `*Ref` (the name a load balancer or DNS gives it, the address a
+ * scanner dialled). They rank below identity values: a ref that matches one CI by identity and another by attribute
+ * names the first.
+ */
+export const IDENTITY_REF_ALIAS_ATTRIBUTES: readonly string[] = ['fqdn', 'hostname', 'primaryIp', 'ipAddress', 'managementIp'];
+
+/**
+ * ADR-045: ref spellings collectors derive from identity values: SNMP's `serial:<serial>` for a device, and the
+ * `name@version` that SSH, WMI and the agent write for installed software.
+ */
+export const IDENTITY_REF_DERIVED: ReadonlyArray<{ readonly keys: readonly string[]; readonly prefix: string; readonly separator: string }> = [
+  { keys: ['serialNumber'], prefix: 'serial:', separator: '' },
+  { keys: ['name', 'version'], prefix: '', separator: '@' },
+];
+
+/**
  * Attribute names DCIM collectors and the synthetic estate use for rack placement and power (REQ-DCIM-001). Each
  * entry lists the accepted names in precedence order: the first is what collectors emit, the rest are accepted
  * synonyms. Placement attributes live on the located_in / mounted_on relationship, falling back to the device.
