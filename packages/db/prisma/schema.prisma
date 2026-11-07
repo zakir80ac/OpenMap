@@ -692,6 +692,9 @@ model Ci {
   /// ADR-045: a `*Ref` of this CI names no single known CI yet; the pending pass retries it in refsCheckedAt order.
   refsPending       Boolean   @default(false)
   refsCheckedAt     DateTime? @db.Timestamptz(3)
+  /// Migration 0031: every identity value as a normalised "key=value"; filled by the cis_identity_tokens trigger on
+  /// every insert and identity change, and probed (partial GIN index on current rows) to find candidate CIs.
+  identityTokens    String[]  @default([])
   createdAt         DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
 

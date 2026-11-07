@@ -5,7 +5,7 @@
 // also fetched by ref key, the tuple with its refs resolved, through the (tenantId, refKey) index.
 import { RECONCILER } from '@openmap/constants';
 import { Prisma, type PrismaClient } from '@openmap/db';
-import { IDENTITY_REF_TARGETS, normIdentity, refPairs, type Ci, type CiType, type CollectorResult, type ObservedCi, type Relationship } from '@openmap/contracts';
+import { IDENTITY_REF_TARGETS, isGlobalKey, normIdentity, refPairs, type Ci, type CiType, type CollectorResult, type ObservedCi, type Relationship } from '@openmap/contracts';
 import { globalPairs, identityTuple, MapIdentityIndex, MapRefIndex, refKeyOf } from '../core/identity.js';
 import type { StoredLookup } from '../core/reconcile.js';
 
@@ -13,6 +13,11 @@ export type CiRow = Prisma.CiGetPayload<Record<string, never>>;
 type RelRow = Prisma.RelationshipGetPayload<Record<string, never>>;
 
 export const identityKeyOf = identityTuple;
+
+/** The token the cis_identity_tokens trigger (migration 0031) stores for an identity value: "key=<normalised value>". */
+export function identityToken(key: string, value: string): string {
+  return key + '=' + normIdentity(value);
+}
 
 export function rowToCi(row: CiRow): Ci {
   return {
@@ -52,9 +57,9 @@ export function rowToRelationship(row: RelRow): Relationship {
   };
 }
 
-function chunked<T>(list: readonly T[]): T[][] {
+function chunked<T>(list: readonly T[], size: number = RECONCILER.lookupBatchSize): T[][] {
   const chunks: T[][] = [];
-  for (let i = 0; i < list.length; i += RECONCILER.lookupBatchSize) chunks.push(list.slice(i, i + RECONCILER.lookupBatchSize));
+  for (let i = 0; i < list.length; i += size) chunks.push(list.slice(i, i + size));
   return chunks;
 }
 
@@ -96,22 +101,21 @@ export async function fetchRefTargets(prisma: PrismaClient, tenantId: string, re
 }
 
 /**
- * Candidate rows: identityKey tuple matches, ref key matches, and jsonb containment on globally unique values (with
- * their issuer scope, both spellings).
+ * Candidate rows: identityKey tuple matches, ref key matches, and identity-token matches on globally unique values. A
+ * scoped key is probed by its own value; the in-memory index compares its scope (a Workday tenant fetched for a
+ * ServiceNow tenant id never matches it).
  */
 async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: readonly Pick<ObservedCi, 'type' | 'identity'>[], refKeys: ReadonlySet<string>): Promise<CiRow[]> {
   const tuples = new Set<string>();
-  const containments = new Set<string>();
+  const tokens = new Set<string>();
   for (const r of refs) {
     const t = identityTuple(r.type, r.identity);
     if (t !== '') tuples.add(t);
     for (const values of globalPairs(r)) {
-      containments.add(JSON.stringify(values));
-      const lower = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, v.toLowerCase()]));
-      containments.add(JSON.stringify(lower));
+      for (const [key, value] of Object.entries(values)) if (isGlobalKey(r.type, key)) tokens.add(identityToken(key, value));
     }
   }
-  if (tuples.size === 0 && containments.size === 0 && refKeys.size === 0) return [];
+  if (tuples.size === 0 && tokens.size === 0 && refKeys.size === 0) return [];
   const rows = new Map<string, CiRow>();
   const collect = (batch: CiRow[]): void => {
     for (const row of batch) rows.set(row.id, row);
@@ -130,17 +134,14 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
       SELECT * FROM cis
       WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "refKey" = ANY(${refKeyList}::text[])`));
   }
-  // GIN cannot serve "@> ANY(array)". Each term is its own index probe: a LATERAL subquery per term (OFFSET 0 keeps the
-  // planner from flattening it). An OR chain of the terms was planned as one statement, and on a full-scale tenant its
-  // row estimate tipped it into a sequential scan of cis (6 to 38 s per 500 terms on the scale-1 replay).
+  // Migration 0031: one array-overlap probe of cis_identity_tokens_idx per chunk of values. jsonb containment per
+  // value did not hold at full scale: as an OR chain it was planned as a sequential scan of cis (6 to 38 s per 500
+  // values on the scale-1 replay), and one probe per value cost a heap visit each.
   // Chunks are independent; a bounded number run concurrently.
   collect(
-    await perChunk(chunked([...containments]), (chunk) =>
+    await perChunk(chunked([...tokens], RECONCILER.identityTokenBatch), (chunk) =>
       prisma.$queryRaw<CiRow[]>(Prisma.sql`
-        SELECT c.* FROM unnest(${chunk}::jsonb[]) AS t(term)
-        CROSS JOIN LATERAL (
-          SELECT * FROM cis WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND identity @> t.term OFFSET 0
-        ) c`),
+        SELECT * FROM cis WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND "identityTokens" && ${chunk}::text[]`),
     ),
   );
   return [...rows.values()];

@@ -763,6 +763,12 @@ export const RECONCILER = {
    */
   lookupConcurrency: 6,
   /**
+   * Identity tokens per array-overlap probe (migration 0031). The planner overestimates an overlap's rows about ninety
+   * times; on the scale-1 tenant 500 tokens stayed a 85 ms bitmap scan and 5,000 became a 54 s sequential scan, so a
+   * batch stays well under the flip.
+   */
+  identityTokenBatch: 250,
+  /**
    * Budget for the single Postgres transaction that writes one collector result (CIs, relationships, conflicts and
    * outbox rows). Prisma's default of five seconds fits a small sweep chunk but not a 2000-device result on a busy
    * host; a 10k-device sweep must still land inside the fifteen-minute discovery budget, so two minutes per result.
