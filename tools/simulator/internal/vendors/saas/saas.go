@@ -8,18 +8,13 @@
 // with encoded queries, sysparm_fields, sysparm_limit/sysparm_offset, X-Total-Count and Link headers; Stats API)
 // and Workday (client-credentials token per tenant; workers with limit/offset and total).
 //
-// The estate in packages/testing/fixtures/synth-small predates the synthetic estate's SaaS layer, so the
-// tenants are built here, deterministically (hash-seeded, identical on every run), mirroring
-// tools/synth-estate/src/gen/saas.ts: the same five vendors, editions, regions, products and SKUs, seat and
-// assignment ranges, active-user share, SSO-application and group ranges, and 365-day terms ending at the same
-// offsets from the estate epoch (2026-10-01), one lapsed. Two deliberate differences from the generator: tenant
-// ids are shaped as each vendor issues them (Entra GUID, Google customer id, 18-character Salesforce org id,
-// ServiceNow instance and Workday tenant names) where the generator uses a UUID for all five, which no
-// Google, Salesforce, ServiceNow or Workday tenant can have; and the collector names each tenant by the
-// organisation display name the vendor API returns ("Horizon Bank", or the instance or tenant name), where
-// the generator names it "<vendor> <edition>". Expectations carry the mirror's identities, so identity drift
-// between this SaaS layer and what the collector emits is reported (Microsoft 365 products are named by SKU
-// part number, Google Workspace and Workday products by the collector's fixed product name).
+// The tenants are served from the estate's SaaS layer (tools/synth-estate/src/gen/saas.ts): tenant ids shaped as each
+// vendor issues them (Entra GUID, Google customer id, 18-character Salesforce org id, ServiceNow instance and Workday
+// tenant names), products identified by the name the vendor's API reports (Graph's SKU part number, the single
+// Google Workspace and Workday HCM products), seats and terms. An estate without a SaaS layer falls back to a
+// deterministic mirror of the generator (hash-seeded, the same vendors, editions, products and SKUs). The collector
+// names each tenant by the organisation display name the vendor API returns ("Horizon Bank", or the instance or
+// tenant name), where the estate names it "<vendor> <edition>"; names differ, identities must merge.
 package saas
 
 import (
@@ -196,8 +191,55 @@ func tenantID(provider string) string {
 
 func dateOnly(t time.Time) string { return t.Format(time.DateOnly) }
 
-// Tenants builds the five tenants (deterministic).
-func Tenants() []*Tenant {
+// Tenants builds the five tenants (deterministic). When the estate carries a vendor's tenant (synthetic estates
+// generated with the SaaS layer), the tenant is served from the estate: its id, counts, products, seats and terms, so
+// the collector's tenant must reconcile to the estate's.
+func Tenants(e *estate.Estate) []*Tenant {
+	out := mirrorTenants()
+	if e == nil {
+		return out
+	}
+	for _, t := range out {
+		overlayEstate(t, e)
+	}
+	return out
+}
+
+func overlayEstate(t *Tenant, e *estate.Estate) {
+	var et *estate.CI
+	for _, c := range e.OfType("saas_tenant", func(c *estate.CI) bool { return c.ID("vendor") == t.Vendor }) {
+		et = c
+		break
+	}
+	if et == nil {
+		return
+	}
+	t.TenantID, t.CI = et.ID("tenantId"), et
+	t.Users, t.Active = int(et.Num("users", float64(t.Users))), int(et.Num("activeUsers", float64(t.Active)))
+	t.Groups, t.SSO = int(et.Num("groups", float64(t.Groups))), int(et.Num("ssoApplications", float64(t.SSO)))
+	apps := map[string]*estate.CI{}
+	for _, a := range e.OfType("saas_application", func(c *estate.CI) bool { return c.ID("tenantRef") == t.TenantID }) {
+		apps[a.Str("sku")] = a
+	}
+	for i := range t.Products {
+		p := &t.Products[i]
+		a, ok := apps[p.SKU]
+		if !ok {
+			continue
+		}
+		p.CI = a
+		p.Seats, p.Assigned = int(a.Num("seatsTotal", float64(p.Seats))), int(a.Num("seatsAssigned", float64(p.Assigned)))
+		if start, err := time.Parse(time.DateOnly, a.Str("subscriptionStart")); err == nil {
+			p.Start = start
+		}
+		if end, err := time.Parse(time.DateOnly, a.Str("subscriptionEnd")); err == nil {
+			p.End = end
+		}
+		p.Expired = a.Str("status") == "expired"
+	}
+}
+
+func mirrorTenants() []*Tenant {
 	var out []*Tenant
 	offset := 0
 	for _, d := range tenantDefs {
@@ -280,7 +322,7 @@ type googleAccount struct {
 	keyPEM       string
 }
 
-func (Vendor) Start(_ context.Context, _ *estate.Estate, env *sim.Env) (*sim.Endpoint, error) {
+func (Vendor) Start(_ context.Context, e *estate.Estate, env *sim.Env) (*sim.Endpoint, error) {
 	key, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
 		return nil, err
@@ -292,7 +334,7 @@ func (Vendor) Start(_ context.Context, _ *estate.Estate, env *sim.Env) (*sim.End
 	sa := &googleAccount{email: env.User + "@horizon-bank-sim.iam.gserviceaccount.com", admin: "admin@" + domain, key: key,
 		keyPEM: string(pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: der}))}
 	byProvider := map[string]*Tenant{}
-	for _, t := range Tenants() {
+	for _, t := range Tenants(e) {
 		byProvider[t.Provider] = t
 	}
 	ep, err := sim.ServeEach(env, providers(), true, func(p string) http.Handler {
@@ -326,10 +368,10 @@ var googleScopes = []string{
 	"https://www.googleapis.com/auth/admin.directory.group.readonly",
 }
 
-func (Vendor) Runs(_ *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
+func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 	sa, _ := ep.State["google"].(*googleAccount)
 	var runs []sim.Run
-	for _, t := range Tenants() {
+	for _, t := range Tenants(e) {
 		base := ep.Devices[t.Provider]
 		opts := map[string]any{"vendor": t.Provider, "apiUrl": base, "verifyTls": true, "caCertPem": env.CA.PEM}
 		oauth := &sim.Credential{Type: "oauth_client", Fields: map[string]string{"clientId": env.User, "clientSecret": env.Secret}}

@@ -51,7 +51,7 @@ export const EVAL_QUESTIONS: readonly EvalQuestion[] = [
     locale: 'en',
     question: 'How many VMs running per host in VMware',
     nameOf: null,
-    expect: { intent: 'count', skill: 'cmdb.attributes', figure: true, queryMentions: 'hosted_on' },
+    expect: { intent: 'count', skill: 'cmdb.attributes', figure: true, queryMentions: 'runs_on' },
   },
   {
     id: 'avg-memory-hosts',
@@ -206,7 +206,7 @@ export const EVAL_QUESTIONS: readonly EvalQuestion[] = [
     locale: 'ar',
     question: 'كم جهازاً افتراضياً لكل مضيف؟',
     nameOf: null,
-    expect: { intent: 'count', skill: 'cmdb.attributes', figure: true, queryMentions: 'hosted_on' },
+    expect: { intent: 'count', skill: 'cmdb.attributes', figure: true, queryMentions: 'runs_on' },
   },
   {
     // REQ-AI-008: a window turns a measurement into a series; the synthetic estate holds one sample per CI at its

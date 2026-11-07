@@ -184,7 +184,7 @@ function hopFix(left: string, leftArrow: string, rel: string, rightArrow: string
 
 /**
  * Rewrites single-type hops between two labels the catalogue links so they read as the graph stores them: a
- * reversed PART_OF_SERVICE is turned around, RUNS_ON between a Vm and a Hypervisor becomes HOSTED_ON. The model's
+ * reversed PART_OF_SERVICE is turned around, HOSTED_ON between a Vm and a Hypervisor becomes RUNS_ON. The model's
  * output is only ever corrected towards the schema, never towards a different question, and the user sees the
  * corrected query.
  */

@@ -19,6 +19,14 @@ export function hash32(text: string): number {
   return h >>> 0;
 }
 
+/**
+ * A UUID derived from a label alone, for ids a platform assigns to something the estate already names (a Nutanix or
+ * Hyper-V cluster). Drawing it from a generator's stream instead would shift every value drawn after it.
+ */
+export function stableUuid(label: string): string {
+  return new Rng(hash32(label)).uuid();
+}
+
 /** splitmix32: expands one 32-bit seed into the four xoshiro state words. */
 function splitmix32(seed: number): () => number {
   let state = seed >>> 0;

@@ -15,6 +15,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sort"
 	"strings"
 
 	"github.com/openmap/openmap/tools/simulator/internal/estate"
@@ -57,6 +58,8 @@ type fcSwitch struct {
 	domain  int
 	server  *sshd.Server
 	keyAuth bool
+	// peers are every simulated switch in the same fabric, in domain order (this switch included).
+	peers []*fcSwitch
 }
 
 func (s *fcSwitch) brocade() bool { return s.ci.Str("manufacturer") == vendorBrocade }
@@ -154,10 +157,21 @@ func (s *fcSwitch) chassisshow() string {
 		"\nManufacture:\t\tDay: 12  Month:  3  Year: 2023\nUpdate:\t\t\tDay:  2  Month: 10  Year: 2026\nTime Alive:\t\t1204 days\nTime Awake:\t\t96 days\n\nChassis Factory Serial Num:\t" + s.ci.ID("serialNumber") + "\n"
 }
 
+// fabricshow lists every switch of the fabric and marks the principal (">"): the switch whose WWN names the fabric.
 func (s *fcSwitch) fabricshow() string {
-	return "Switch ID   Worldwide Name           Enet IP Addr    FC IP Addr      Name\n" +
-		"-------------------------------------------------------------------------\n" +
-		fmt.Sprintf("  %d: fffc%02x %s %-15s 0.0.0.0        >\"%s\"\n\nThe Fabric has 1 switch\n", s.domain, s.domain, s.wwnn(), s.server.Host, s.ci.Name)
+	var b strings.Builder
+	b.WriteString("Switch ID   Worldwide Name           Enet IP Addr    FC IP Addr      Name\n")
+	b.WriteString("-------------------------------------------------------------------------\n")
+	principal := strings.ToLower(s.fabric.ID("fabricWwn"))
+	for _, p := range s.peers {
+		mark := " "
+		if p.wwnn() == principal {
+			mark = ">"
+		}
+		fmt.Fprintf(&b, "  %d: fffc%02x %s %-15s 0.0.0.0       %s\"%s\"\n", p.domain, p.domain, p.wwnn(), s.server.Host, mark, p.ci.Name)
+	}
+	fmt.Fprintf(&b, "\nThe Fabric has %d switches\n", len(s.peers))
+	return b.String()
 }
 
 func (s *fcSwitch) nsshow() string {
@@ -363,6 +377,16 @@ func switches(e *estate.Estate) []*fcSwitch {
 	}) {
 		if s := load(e, sw); s.fabric != nil {
 			out = append(out, s)
+		}
+	}
+	byFabric := map[*estate.CI][]*fcSwitch{}
+	for _, s := range out {
+		byFabric[s.fabric] = append(byFabric[s.fabric], s)
+	}
+	for _, peers := range byFabric {
+		sort.Slice(peers, func(i, j int) bool { return peers[i].domain < peers[j].domain })
+		for _, s := range peers {
+			s.peers = peers
 		}
 	}
 	return out

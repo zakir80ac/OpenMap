@@ -120,7 +120,13 @@ func build(e *estate.Estate) *prism {
 	p := &prism{}
 	subnets := subnetIndex(e)
 	for _, c := range e.OfType("vm_cluster", func(c *estate.CI) bool { return c.Str("platform") == platform }) {
-		cl := &cluster{ci: c, uuid: uuidOf("nutanix-cluster/" + c.Name)}
+		// Prism's cluster UUID is the estate's clusterId when the estate carries one (it does since the estate adopted
+		// the collectors' identities); older estates keyed clusters by name.
+		uuid := c.ID("clusterId")
+		if !sim.IsUUID(uuid) {
+			uuid = uuidOf("nutanix-cluster/" + c.Name)
+		}
+		cl := &cluster{ci: c, uuid: uuid}
 		p.clusters = append(p.clusters, cl)
 		byNet := map[string]*subnet{}
 		byDs := map[string]*container{}
@@ -130,7 +136,7 @@ func build(e *estate.Estate) *prism {
 				continue
 			}
 			h := &hostView{ci: hv, name: hv.Name, cluster: cl}
-			for _, phys := range e.From(hv, "runs_on") {
+			for _, phys := range e.From(hv, "hosted_on") {
 				if phys.Type == "host" {
 					h.phys = phys
 					if f := phys.ID("fqdn"); f != "" {
@@ -144,7 +150,7 @@ func build(e *estate.Estate) *prism {
 				}
 			}
 			cl.hosts = append(cl.hosts, h)
-			for _, v := range e.To(hv, "hosted_on") {
+			for _, v := range e.To(hv, "runs_on") {
 				if v.Type != "vm" {
 					continue
 				}

@@ -1,6 +1,6 @@
 // REQ-QA-001 — storage: all-flash arrays in dedicated racks, LUNs presented to hypervisor
 // clusters, NAS shares, dual FC fabrics with switches and per-host zones, and DR replication.
-import { FC_SWITCH_MODELS, STORAGE_MODELS } from '../catalog.js';
+import { FC_SWITCH_MODELS, STORAGE_MODELS, type StorageModelDef } from '../catalog.js';
 import type { Slot } from '../estate.js';
 import type { Rng } from '../rng.js';
 import { allocateIp, attachIp, fqdnOf, pad, siteOf, type SiteWorld, type World } from '../world.js';
@@ -49,6 +49,18 @@ function wwn(rng: Rng, prefix: string): string {
   return (full.match(/.{2}/g) ?? []).join(':');
 }
 
+const NETAPP_LUN_SERIAL_LENGTH = 12;
+const VOLUME_SERIAL_HEX_LENGTH = 24;
+
+/** A LUN WWN in the form its array reports it (NAA-6 with the vendor's OUI), so the array collector reconciles it. */
+function lunWwnOf(model: StorageModelDef, rng: Rng): string {
+  if (model.lunSerial === 'ascii') {
+    const serial = rng.alnum(NETAPP_LUN_SERIAL_LENGTH);
+    return model.naaPrefix + [...serial].map((ch) => ch.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+  }
+  return model.naaPrefix + rng.hex(VOLUME_SERIAL_HEX_LENGTH);
+}
+
 export function generateStorage(world: World, rng: Rng): void {
   const { b } = world;
   const arraysBySite = new Map<string, ArrayRec[]>();
@@ -85,7 +97,7 @@ export function generateStorage(world: World, rng: Rng): void {
       const clusters = [...new Set(site.hypervisors.map((h) => h.clusterName))];
       const lunCount = b.count(LUNS_PER_ARRAY_BASE);
       for (let l = 0; l < lunCount; l++) {
-        const lunWwn = '6' + rng.hex(31);
+        const lunWwn = lunWwnOf(model, rng);
         const clusterName = clusters[l % Math.max(1, clusters.length)];
         const sizeGb = rng.pick(LUN_SIZE_GB_OPTIONS);
         const lunIdx = b.ci(
@@ -118,6 +130,7 @@ export function generateStorage(world: World, rng: Rng): void {
 
     FABRICS.forEach((fabric, f) => {
       const fslot = fcSlot(world, site, fabric);
+      // A fabric is named by its principal switch's WWN, as Brocade fabricshow and MDS show fcdomain report it.
       const fabricWwn = wwn(rng, '10');
       const fabricName = site.short + '-fab-' + fabric.toLowerCase();
       const switchCount = b.count(FC_SWITCHES_PER_FABRIC_BASE);
@@ -125,7 +138,7 @@ export function generateStorage(world: World, rng: Rng): void {
       for (let s = 0; s < switchCount; s++) {
         const model = FC_SWITCH_MODELS[f % FC_SWITCH_MODELS.length];
         if (!model) throw new Error('no FC switch models in catalogue');
-        const wwnn = wwn(rng, '10');
+        const wwnn = s === 0 ? fabricWwn : wwn(rng, '10');
         const serial = model.serialPrefix + rng.alnum(8);
         const rack = site.storageRacks[s % site.storageRacks.length];
         const swName = 'fcsw-' + site.short + '-' + fabric.toLowerCase() + '-' + pad(s + 1, 2);

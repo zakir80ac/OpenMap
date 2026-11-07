@@ -30,7 +30,7 @@ export function workedExamples(): WorkedExample[] {
     },
     {
       question: 'How many hosts run each operating system?',
-      cypher: 'MATCH (o:OperatingSystem)-[:RUNS_ON]->(h:Host) WHERE ' + SCOPE('o') + ' AND ' + SCOPE('h') + ' RETURN o.name AS operatingSystem, count(h) AS hosts ORDER BY hosts DESC ' + LIMIT,
+      cypher: 'MATCH (o:OperatingSystem)-[:INSTALLED_ON]->(h:Host) WHERE ' + SCOPE('o') + ' AND ' + SCOPE('h') + ' RETURN o.name AS operatingSystem, count(h) AS hosts ORDER BY hosts DESC ' + LIMIT,
     },
     {
       question: 'Which business services depend on the host named ledger-db?',
@@ -52,12 +52,12 @@ export function workedExamples(): WorkedExample[] {
  * the validator rejects a query that traverses one of them backwards, which small models do often.
  */
 export const KNOWN_DIRECTIONS: ReadonlyArray<readonly [from: string, rel: string, to: string]> = [
-  ['OperatingSystem', 'RUNS_ON', 'Host'],
-  ['Hypervisor', 'RUNS_ON', 'Host'],
+  ['OperatingSystem', 'INSTALLED_ON', 'Host'],
+  ['Hypervisor', 'HOSTED_ON', 'Host'],
   ['ApplicationComponent', 'RUNS_ON', 'Vm'],
   ['ListeningService', 'RUNS_ON', 'Vm'],
   ['K8sWorkload', 'RUNS_ON', 'Vm'],
-  ['Vm', 'HOSTED_ON', 'Hypervisor'],
+  ['Vm', 'RUNS_ON', 'Hypervisor'],
   ['Database', 'HOSTED_ON', 'Vm'],
   ['DatabaseCluster', 'HOSTED_ON', 'Vm'],
   ['SoftwareInstance', 'INSTALLED_ON', 'Host'],

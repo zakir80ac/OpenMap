@@ -86,9 +86,11 @@ type datastore struct {
 }
 
 type vcenter struct {
-	site       string
-	legacy     bool
-	host       string
+	site   string
+	legacy bool
+	host   string
+	// manager is the estate's name for this vCenter: the anchor of its clusters' and hosts' moRefs.
+	manager    string
 	clusters   []*cluster
 	hosts      []*hostView
 	vms        []*vmView
@@ -112,16 +114,26 @@ func build(e *estate.Estate) []*vcenter {
 			bySite[site] = vc
 			out = append(out, vc)
 		}
-		cl := &cluster{ci: c, moRef: "domain-c" + strconv.Itoa(clusterN)}
+		// The estate carries vCenter's own ids anchored to the vCenter ("<vcenter>:domain-c7"); serve them as vCenter
+		// would and keep the anchor, so the collector's identities reconcile to the estate's.
+		manager, moRef := splitAnchored(c.ID("clusterId"))
+		if !strings.HasPrefix(moRef, "domain-c") {
+			manager, moRef = "", "domain-c"+strconv.Itoa(clusterN)
+		}
 		clusterN++
+		if vc.manager == "" {
+			vc.manager = manager
+		}
+		cl := &cluster{ci: c, moRef: moRef}
 		vc.clusters = append(vc.clusters, cl)
 		dsByName := map[string]*datastore{}
 		for _, hv := range e.To(c, "member_of") {
 			if hv.Type != "hypervisor" {
 				continue
 			}
-			h := &hostView{ci: hv, moRef: hv.ID("moRef"), cluster: cl, name: hv.Name}
-			for _, phys := range e.From(hv, "runs_on") {
+			_, hostMo := splitAnchored(hv.ID("moRef"))
+			h := &hostView{ci: hv, moRef: hostMo, cluster: cl, name: hv.Name}
+			for _, phys := range e.From(hv, "hosted_on") {
 				if phys.Type == "host" && phys.ID("fqdn") != "" {
 					h.fqdn = strings.ToLower(phys.ID("fqdn"))
 				}
@@ -132,7 +144,7 @@ func build(e *estate.Estate) []*vcenter {
 			}
 			cl.hosts = append(cl.hosts, h)
 			vc.hosts = append(vc.hosts, h)
-			for _, v := range e.To(hv, "hosted_on") {
+			for _, v := range e.To(hv, "runs_on") {
 				if v.Type != "vm" {
 					continue
 				}
@@ -172,6 +184,14 @@ func build(e *estate.Estate) []*vcenter {
 		}
 	}
 	return out
+}
+
+// splitAnchored splits "<vcenter>:<moRef>" into the vCenter and the moRef; an id without an anchor is all moRef.
+func splitAnchored(id string) (anchor, moRef string) {
+	if i := strings.LastIndex(id, ":"); i >= 0 {
+		return id[:i], id[i+1:]
+	}
+	return "", id
 }
 
 func hexOf(s string) string {
@@ -526,6 +546,10 @@ func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 			Options:        map[string]any{"port": portOf(ep.Devices[vc.site]), "verifyTls": true, "caCertPem": env.CA.PEM},
 			CredentialType: "password",
 			Credential:     &sim.Credential{Type: "password", Fields: map[string]string{"username": env.User, "password": env.Secret}},
+		}
+		if vc.manager != "" {
+			// The collector anchors moRefs to the vCenter it dialled; against the product that is the vCenter's name.
+			run.Aliases = map[string]string{vc.host: vc.manager}
 		}
 		x := &run.Expect
 		for _, c := range vc.clusters {

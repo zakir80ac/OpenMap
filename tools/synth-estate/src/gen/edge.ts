@@ -76,7 +76,9 @@ function generateDns(world: World): void {
     const first = web?.computeIdx[0];
     if (first === undefined) continue;
     const target = b.get(first);
-    const value = target.identity['fqdn'] ?? target.name + '.' + DOMAIN;
+    // A CNAME's target is an absolute name, written with its trailing dot, as a zone transfer returns it (the DNS
+    // collector keeps rdata in master-file form).
+    const value = (target.identity['fqdn'] ?? target.name + '.' + DOMAIN) + '.';
     const alias = app.slug + '.' + DOMAIN;
     const idx = b.ci(slot, 'dns_record', { zoneRef: DOMAIN, name: alias, recordType: 'CNAME', value }, alias + ' CNAME ' + value, { recordType: 'CNAME', ttl: DNS_TTL, value, zone: DOMAIN }, app.site.def.code, { tags: ['dns'] });
     b.rel(slot, 'contains', zoneIdx, idx);

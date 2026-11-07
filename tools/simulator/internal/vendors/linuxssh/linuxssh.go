@@ -181,7 +181,7 @@ func listenersByRef(e *estate.Estate) map[string][]*estate.CI {
 }
 
 func osOf(e *estate.Estate, host *estate.CI) *estate.CI {
-	for _, o := range e.To(host, "runs_on") {
+	for _, o := range e.To(host, "installed_on") {
 		if o.Type == "operating_system" {
 			return o
 		}
@@ -614,7 +614,7 @@ func (n *node) expect(x *sim.Expect) {
 		osIdentity = n.osCI.Identity
 	}
 	x.CIs = append(x.CIs, sim.ExpectCI{Type: "operating_system", Name: n.osPretty, Identity: osIdentity})
-	x.Rel("runs_on", "operating_system", n.osPretty, hostType, n.fqdn)
+	x.Rel("installed_on", "operating_system", n.osPretty, hostType, n.fqdn)
 	for _, c := range n.nics {
 		x.CI("interface", c.name)
 		x.Rel("contains", hostType, n.fqdn, "interface", c.name)
@@ -643,5 +643,6 @@ func (n *node) expect(x *sim.Expect) {
 		x.CI("software", p.name+" "+p.version)
 		x.CI("software_instance", p.name+" on "+n.fqdn)
 		x.Rel("installed_on", "software_instance", p.name+" on "+n.fqdn, hostType, n.fqdn)
+		x.Rel("member_of", "software_instance", p.name+" on "+n.fqdn, "software", p.name+" "+p.version)
 	}
 }

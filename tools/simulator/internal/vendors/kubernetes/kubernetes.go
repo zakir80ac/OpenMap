@@ -265,7 +265,7 @@ func fromEstate(e *estate.Estate) []*kcluster {
 		}
 		for _, s := range k.services {
 			for _, r := range e.Rels {
-				if r.Type == "backed_by" && r.From.Type == "k8s_service" && r.From.Identity["uid"] == s.uid {
+				if r.Type == "depends_on" && r.From.Type == "k8s_service" && r.From.Identity["uid"] == s.uid {
 					for _, w := range k.workloads {
 						if w.uid == r.To.Identity["uid"] {
 							s.backs = append(s.backs, w)
@@ -627,7 +627,7 @@ func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		for _, s := range k.services {
 			x.CIs = append(x.CIs, sim.ExpectCI{Type: "k8s_service", Name: s.name, Identity: s.identity})
 			x.Rel("contains", "k8s_namespace", s.ns, "k8s_service", s.name)
-			// The estate's service backed_by workload is the collector's depends_on (via the selector).
+			// The service depends on the workloads its selector matches (estate and collector alike).
 			for _, w := range s.backs {
 				x.Rel("depends_on", "k8s_service", s.name, "k8s_workload", w.name)
 			}

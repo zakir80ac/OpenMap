@@ -277,6 +277,14 @@ export function softwareKey(def: Pick<SoftwareDef, 'vendor' | 'name' | 'version'
   return def.vendor + '|' + def.name + '|' + def.version;
 }
 
+/**
+ * The softwareRef that software_instance and licence identities carry: name@version, as the SSH, WMI and agent
+ * collectors write it, so a discovered install updates the estate's instead of adding a second one.
+ */
+export function softwareRefOf(def: SoftwareDef): string {
+  return def.name + '@' + def.version;
+}
+
 export function ensureSoftware(world: World, def: SoftwareDef): number {
   const key = softwareKey(def);
   const existing = world.software.get(key);

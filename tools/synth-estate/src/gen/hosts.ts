@@ -6,7 +6,7 @@ import type { Slot } from '../estate.js';
 import { cidr, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
-import { allocateIp, attachIp, ensureSoftware, fqdnOf, installPath, pad, type HostRec, type SiteWorld, type World } from '../world.js';
+import { allocateIp, attachIp, ensureSoftware, fqdnOf, installPath, pad, softwareRefOf, type HostRec, type SiteWorld, type World } from '../world.js';
 import { hostComponents } from './components.js';
 import { allocateHostPort } from './network.js';
 
@@ -24,6 +24,15 @@ const BIOS_VERSIONS = ['2.14.2', '1.9.1', 'U46 v2.16', 'KAE130U'] as const;
 
 function ouiFor(manufacturer: string): readonly [number, number, number] {
   return VENDORS.find((v) => v.name === manufacturer)?.oui ?? [0x00, 0x1b, 0x54];
+}
+
+/**
+ * The version an operating system reports for itself, which is what collectors put in its identity: Windows reports
+ * its build (Win32_OperatingSystem.Version, 10.0.20348), not the marketing year the estate names it by. The year
+ * stays in the name and version attributes, where lifecycle matching reads it.
+ */
+function reportedOsVersion(os: OsDef): string {
+  return os.family === 'windows' ? os.kernel : os.version;
 }
 
 function osSubscription(os: OsDef): SoftwareDef | undefined {
@@ -65,7 +74,7 @@ export function installSoftware(world: World, rng: Rng, slot: Slot, computeIdx: 
   const idx = b.ci(
     slot,
     'software_instance',
-    { hostRef: computeRef, softwareRef: b.ref(softwareIdx), installPath: path },
+    { hostRef: computeRef, softwareRef: softwareRefOf(def), installPath: path },
     def.name + ' ' + def.version + ' on ' + b.get(computeIdx).name,
     { vendor: def.vendor, name: def.name, version: def.version, installPath: path, installedAt: isoAt(-rng.int(10, 900) * MS_PER_DAY), category: def.category, running: true },
     siteCode,
@@ -166,13 +175,14 @@ export function generateHosts(world: World, rng: Rng): void {
       const osIdx = b.ci(
         slot,
         'operating_system',
-        { hostRef: serial, family: plan.os.family, version: plan.os.version },
+        { hostRef: serial, family: plan.os.family, version: reportedOsVersion(plan.os) },
         plan.os.name + ' ' + plan.os.version + ' (' + hostname + ')',
         { name: plan.os.name, version: plan.os.version, family: plan.os.family, kernel: plan.os.kernel, architecture: 'x86_64', lastPatchedAt: dateAt(-rng.int(1, PATCH_AGE_DAYS_MAX)), timeZone: 'Asia/Riyadh', hostname },
         site.def.code,
         { tags: ['os'] },
       );
-      b.rel(slot, 'runs_on', osIdx, hostIdx);
+      // Installed on, not runs on: every collector links an operating system to its host this way.
+      b.rel(slot, 'installed_on', osIdx, hostIdx);
 
       const subscription = osSubscription(plan.os);
       if (subscription) installSoftware(world, rng, slot, hostIdx, serial, subscription, plan.os.family, site.def.code);

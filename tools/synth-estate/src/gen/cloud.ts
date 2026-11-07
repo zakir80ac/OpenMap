@@ -2,7 +2,7 @@
 // cost and ownership tags, plus S3 buckets as object_bucket CIs.
 import { CLOUD_RESOURCE_TYPES, ORGANIZATION_NAME } from '../catalog.js';
 import type { Slot } from '../estate.js';
-import type { Rng } from '../rng.js';
+import { stableUuid, type Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
 import { pad, type SiteWorld, type World } from '../world.js';
 
@@ -40,6 +40,32 @@ function shortType(type: string): string {
     .replace(/([a-z])([A-Z])/g, '$1-$2')
     .toLowerCase()
     .replace(/s$/, '');
+}
+
+/**
+ * ARN resource part per CloudFormation type, in the form each AWS service writes it (service, then the resource with
+ * its own separator): RDS uses "db:<name>", Lambda "function:<name>", SQS the bare queue name, the rest "<kind>/<id>".
+ */
+const AWS_ARN_FORMS: Readonly<Record<string, { service: string; resource: (name: string) => string }>> = {
+  'AWS::EC2::VPC': { service: 'ec2', resource: (n) => 'vpc/' + n },
+  'AWS::EC2::Instance': { service: 'ec2', resource: (n) => 'instance/' + n },
+  'AWS::EC2::SecurityGroup': { service: 'ec2', resource: (n) => 'security-group/' + n },
+  'AWS::EC2::Volume': { service: 'ec2', resource: (n) => 'volume/' + n },
+  'AWS::RDS::DBInstance': { service: 'rds', resource: (n) => 'db:' + n },
+  'AWS::ElasticLoadBalancingV2::LoadBalancer': { service: 'elasticloadbalancing', resource: (n) => 'loadbalancer/app/' + n + '/' + stableUuid('aws-elb/' + n).replace(/-/g, '').slice(0, ELB_ID_HEX_LENGTH) },
+  'AWS::Lambda::Function': { service: 'lambda', resource: (n) => 'function:' + n },
+  'AWS::KMS::Key': { service: 'kms', resource: (n) => 'key/' + stableUuid('aws-kms/' + n) },
+  'AWS::DynamoDB::Table': { service: 'dynamodb', resource: (n) => 'table/' + n },
+  'AWS::SQS::Queue': { service: 'sqs', resource: (n) => n },
+  'AWS::EKS::Cluster': { service: 'eks', resource: (n) => 'cluster/' + n },
+};
+const ELB_ID_HEX_LENGTH = 16;
+
+/** The ARN AWS gives a resource of a CloudFormation type, so the AWS collector reconciles it. */
+export function awsArn(type: string, region: string, accountId: string, name: string): string {
+  const form = AWS_ARN_FORMS[type];
+  if (!form) throw new Error('no ARN form for ' + type);
+  return 'arn:aws:' + form.service + ':' + region + ':' + accountId + ':' + form.resource(name);
 }
 
 export function generateCloud(world: World, rng: Rng): void {
@@ -99,16 +125,7 @@ export function generateCloud(world: World, rng: Rng): void {
             type +
             '/' +
             name
-          : 'arn:aws:' +
-            (type.split('::')[1] ?? 'ec2').toLowerCase() +
-            ':' +
-            cloud.region +
-            ':' +
-            accountId +
-            ':' +
-            shortType(type) +
-            '/' +
-            name;
+          : awsArn(type, cloud.region, accountId, name);
       const idx = b.ci(
         slot,
         'cloud_resource',
@@ -202,16 +219,7 @@ export function addCloudResource(
         type +
         '/' +
         name
-      : 'arn:aws:' +
-        (type.split('::')[1] ?? 'eks').toLowerCase() +
-        ':' +
-        cloud.region +
-        ':' +
-        accountId +
-        ':' +
-        shortType(type) +
-        '/' +
-        name;
+      : awsArn(type, cloud.region, accountId, name);
   const idx = world.b.ci(
     slot,
     'cloud_resource',

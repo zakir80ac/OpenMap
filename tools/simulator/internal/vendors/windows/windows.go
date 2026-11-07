@@ -118,7 +118,7 @@ func Hosts(e *estate.Estate) []*Host {
 	var out []*Host
 	for _, c := range e.OfType("host", nil) {
 		var os *estate.CI
-		for _, o := range e.To(c, "runs_on") {
+		for _, o := range e.To(c, "installed_on") {
 			if o.Type == "operating_system" && o.Str("family") == family {
 				os = o
 			}
@@ -546,8 +546,8 @@ func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 				}
 			}
 			x.CIs = append(x.CIs, swWant)
-			x.Rel("hosted_on", "software_instance", inst, "host", fqdn)
-			x.Rel("installed_on", "software", sw, "software_instance", inst)
+			x.Rel("installed_on", "software_instance", inst, "host", fqdn)
+			x.Rel("member_of", "software_instance", inst, "software", sw)
 		}
 	})
 }

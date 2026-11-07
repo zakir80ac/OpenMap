@@ -111,6 +111,15 @@ func accounts(e *estate.Estate) []*estate.CI {
 	return e.OfType("cloud_account", func(c *estate.CI) bool { return c.ID("provider") == provider })
 }
 
+// estateArn serves the estate's ARN for a resource when it is one of the service's (the estate owns the identity the
+// collector must reconcile to), else an ARN in the service's form.
+func estateArn(m *estate.CI, servicePrefix, fallback string) string {
+	if id := m.ID("resourceId"); strings.HasPrefix(id, servicePrefix) {
+		return id
+	}
+	return fallback
+}
+
 func lastSegment(arn string) string {
 	if i := strings.LastIndex(arn, "/"); i >= 0 {
 		return arn[i+1:]
@@ -187,12 +196,12 @@ func load(e *estate.Estate, a *estate.CI) *account {
 		case typeDB:
 			regions[region] = true
 			acct.dbs = append(acct.dbs, &database{ci: m, region: region, vpc: vpcFor(region, m.Str("vpc")),
-				arn:  "arn:aws:rds:" + region + ":" + acct.id + ":db:" + m.Name,
+				arn:  estateArn(m, "arn:aws:rds:", "arn:aws:rds:"+region+":"+acct.id+":db:"+m.Name),
 				host: m.Name + "." + cloudsim.Hex("aws-rds"+acct.id+region, 12) + "." + region + ".rds." + awsDomain})
 		case typeLB:
 			regions[region] = true
 			acct.lbs = append(acct.lbs, &balancer{ci: m, region: region, vpc: vpcFor(region, m.Str("vpc")),
-				arn: "arn:aws:elasticloadbalancing:" + region + ":" + acct.id + ":loadbalancer/app/" + m.Name + "/" + cloudsim.Hex("aws-elb"+m.Name, arnHexLen),
+				arn: estateArn(m, "arn:aws:elasticloadbalancing:", "arn:aws:elasticloadbalancing:"+region+":"+acct.id+":loadbalancer/app/"+m.Name+"/"+cloudsim.Hex("aws-elb"+m.Name, arnHexLen)),
 				dns: "internal-" + m.Name + "-" + cloudsim.Digits("aws-elb-dns"+m.Name, elbDigits) + "." + region + ".elb." + awsDomain})
 		}
 	}

@@ -13,7 +13,7 @@ import {
 import type { Slot } from '../estate.js';
 import type { Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
-import { ensureSoftware, fqdnOf, pad, samSlot, siteOf, type World } from '../world.js';
+import { ensureSoftware, fqdnOf, pad, samSlot, siteOf, softwareRefOf, type World } from '../world.js';
 
 const VULNERABILITIES_BASE = 320;
 const LICENCES_PER_SOFTWARE: readonly [number, number] = [1, 2];
@@ -246,7 +246,7 @@ export function generateCommercial(world: World, rng: Rng): void {
       const lIdx = b.ci(
         slot,
         'licence',
-        { licenceKeyDigest: digest, softwareRef: b.ref(softwareIdx) },
+        { licenceKeyDigest: digest, softwareRef: softwareRefOf(def) },
         def.name + ' ' + def.version + ' licence ' + pad(i + 1, 2),
         {
           vendor: def.vendor,

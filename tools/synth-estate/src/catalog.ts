@@ -170,12 +170,19 @@ export interface StorageModelDef {
   protocol: 'fc' | 'iscsi' | 'nvme-fc';
   serialPrefix: string;
   heightU: number;
+  /**
+   * NAA-6 prefix of the array's LUN WWNs: "6" and the vendor's IEEE OUI, as the array reports them (Pure 24a937,
+   * NetApp 00a098, Dell 8ccf09). The volume serial follows.
+   */
+  naaPrefix: string;
+  /** NetApp encodes its 12-character LUN serial as hex after the prefix; the others use a 24-hex volume serial. */
+  lunSerial: 'ascii' | 'hex';
 }
 
 export const STORAGE_MODELS: readonly StorageModelDef[] = [
-  { manufacturer: 'Pure Storage', model: 'FlashArray//X90 R4', rawTb: 1500, protocol: 'nvme-fc', serialPrefix: 'PCTFL', heightU: 3 },
-  { manufacturer: 'NetApp', model: 'AFF A900', rawTb: 2200, protocol: 'fc', serialPrefix: '7212', heightU: 8 },
-  { manufacturer: 'Dell Technologies', model: 'PowerStore 5200T', rawTb: 1100, protocol: 'fc', serialPrefix: 'PS', heightU: 2 },
+  { manufacturer: 'Pure Storage', model: 'FlashArray//X90 R4', rawTb: 1500, protocol: 'nvme-fc', serialPrefix: 'PCTFL', heightU: 3, naaPrefix: 'naa.624a9370', lunSerial: 'hex' },
+  { manufacturer: 'NetApp', model: 'AFF A900', rawTb: 2200, protocol: 'fc', serialPrefix: '7212', heightU: 8, naaPrefix: 'naa.600a0980', lunSerial: 'ascii' },
+  { manufacturer: 'Dell Technologies', model: 'PowerStore 5200T', rawTb: 1100, protocol: 'fc', serialPrefix: 'PS', heightU: 2, naaPrefix: 'naa.68ccf098', lunSerial: 'hex' },
 ];
 
 export const FC_SWITCH_MODELS = [

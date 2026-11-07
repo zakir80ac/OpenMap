@@ -38,6 +38,16 @@ const MTU_DEFAULT = 1500;
 const UPTIME_MAX_SECONDS = 400 * 24 * 3600;
 const WARRANTY_YEARS = 5;
 const DAYS_PER_YEAR = 365;
+/**
+ * Child CIs of a network device (interfaces, VLANs, VRFs, firewall rules) point at it with the key kind and value, the
+ * way the SNMP collector does (apps/collectors/internal/snmp/emit.go deviceRef): "serial:<serial>" when the device
+ * reports one. Bare serials would make every SNMP sweep add a second copy of each interface instead of updating it.
+ */
+const DEVICE_REF_SERIAL = 'serial:';
+
+export function networkDeviceRef(serial: string): string {
+  return DEVICE_REF_SERIAL + serial;
+}
 const PURCHASE_AGE_DAYS_MAX = 2400;
 
 function modelFor(role: NetworkModelDef['role'], rng: Rng): NetworkModelDef {
@@ -117,13 +127,13 @@ export function addDevice(world: World, rng: Rng, site: SiteWorld, model: Networ
   for (let port = 1; port <= options.interfaceCount; port++) addInterface(world, rng, device, port, null);
   for (const vlanId of options.vlanIds) {
     const label = options.vlanNames?.[vlanId] ?? vlanLabel(vlanId);
-    const vlanIdx = b.ci(slot, 'vlan', { deviceRef: serial, vlanId: String(vlanId) }, 'VLAN' + String(vlanId) + ' ' + label, { vlanId, name: label, status: 'active', device: sysName }, site.def.code, { tags: ['network'] });
+    const vlanIdx = b.ci(slot, 'vlan', { deviceRef: networkDeviceRef(serial), vlanId: String(vlanId) }, 'VLAN' + String(vlanId) + ' ' + label, { vlanId, name: label, status: 'active', device: sysName }, site.def.code, { tags: ['network'] });
     b.rel(slot, 'contains', idx, vlanIdx);
     device.vlans.set(vlanId, vlanIdx);
   }
   for (const vrf of options.vrfs) {
     const rd = String(65000) + ':' + String(rngRd(vrf));
-    const vrfIdx = b.ci(slot, 'vrf', { deviceRef: serial, name: vrf }, vrf + ' on ' + sysName, { routeDistinguisher: rd, routeTargets: ['65000:' + String(rngRd(vrf))], routeCount: rng.int(12, 2400), device: sysName }, site.def.code, { tags: ['network'] });
+    const vrfIdx = b.ci(slot, 'vrf', { deviceRef: networkDeviceRef(serial), name: vrf }, vrf + ' on ' + sysName, { routeDistinguisher: rd, routeTargets: ['65000:' + String(rngRd(vrf))], routeCount: rng.int(12, 2400), device: sysName }, site.def.code, { tags: ['network'] });
     b.rel(slot, 'contains', idx, vrfIdx);
   }
   if (model.role === 'firewall') addFirewallRules(world, rng, device);
@@ -157,7 +167,7 @@ export function addInterface(world: World, rng: Rng, device: DeviceRec, port: nu
   const idx = b.ci(
     device.slot,
     'interface',
-    { deviceRef: device.serial, ifIndex: String(port), name },
+    { deviceRef: networkDeviceRef(device.serial), ifIndex: String(port), name },
     device.sysName + ' ' + name,
     {
       ifIndex: port,
@@ -227,7 +237,7 @@ function addFirewallRules(world: World, rng: Rng, device: DeviceRec): void {
     const idx = b.ci(
       device.slot,
       'firewall_rule',
-      { deviceRef: device.serial, ruleId },
+      { deviceRef: networkDeviceRef(device.serial), ruleId },
       device.sysName + ' rule ' + ruleId + ' ' + from + '-to-' + to,
       { ruleId, name: from + '-to-' + to + '-' + ruleId, action: rng.chance(0.8) ? 'allow' : 'deny', fromZone: from, toZone: to, source: src, destination: dst, service: rng.pick(services), hitCount: rng.int(0, 5_000_000), enabled: true, logging: true },
       device.site.def.code,

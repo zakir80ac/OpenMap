@@ -447,6 +447,10 @@ func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		}
 		for _, b := range f.buckets {
 			if b.ci != nil {
+				// The collector keys a bucket by the endpoint it reached; against the product that is the estate's endpoint.
+				if ep := b.ci.ID("endpoint"); ep != "" {
+					run.Aliases = map[string]string{strings.ToLower(u.Host): ep}
+				}
 				run.Expect.EstateCI(b.ci)
 				continue
 			}

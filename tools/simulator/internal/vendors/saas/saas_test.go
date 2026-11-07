@@ -63,7 +63,7 @@ func TestSimulatedSaaSAttributes(t *testing.T) {
 	}
 	defer func() { _ = ep.Close() }()
 	tenants := map[string]*Tenant{}
-	for _, tn := range Tenants() {
+	for _, tn := range Tenants(e) {
 		tenants[tn.Provider] = tn
 	}
 	for _, run := range v.Runs(e, ep, env) {

@@ -154,8 +154,10 @@ function addTier(world: World, rng: Rng, app: ApplicationRec, def: AppArchetypeD
   const cluster = app.containerised && world.k8sServiceBudget > 0 ? k8sClusterFor(world, app.site, environment) : null;
   if (cluster) {
     const image = 'registry.' + app.site.def.code.toLowerCase() + '.bank.local/' + app.slug + '/' + tier + ':' + String(rng.int(1, 9)) + '.' + String(rng.int(0, 30)) + '.' + String(rng.int(0, 9));
-    const workloadIdx = addWorkload(world, rng, cluster, app.name, componentName, 'Deployment', count, image, app.name);
-    const serviceIdx = addService(world, rng, cluster, app.name, componentName, port, tier === 'web' ? 'LoadBalancer' : 'ClusterIP', workloadIdx, app.name);
+    // Each tier is labelled and selected by its component name: a Service selecting the application's name would
+    // match the web and API workloads alike, which the Kubernetes collector then reports as one Service backing both.
+    const workloadIdx = addWorkload(world, rng, cluster, app.name, componentName, 'Deployment', count, image, componentName);
+    const serviceIdx = addService(world, rng, cluster, app.name, componentName, port, tier === 'web' ? 'LoadBalancer' : 'ClusterIP', workloadIdx, componentName);
     world.k8sServiceBudget--;
     b.rel(app.slot, 'hosted_on', compIdx, workloadIdx);
     component.computeIdx.push(workloadIdx);

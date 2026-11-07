@@ -252,6 +252,13 @@ func (Vendor) Runs(_ *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		opts := d.server.Options()
 		opts["mode"], opts["configPath"], opts["leasesPath"] = d.mode, d.cfgPath, d.leasPath
 		run := sim.Run{Name: d.mode, Targets: []sim.Target{d.server.Target(d.name)}, Options: opts, CredentialType: cred.Type, Credential: cred}
+		// The collector names the DHCP server by the target it reached; against the product that is the server's name.
+		for _, s := range d.scopes {
+			if ref := s.ci.ID("serverRef"); ref != "" {
+				run.Aliases = map[string]string{sim.AdvertiseHost(): ref}
+				break
+			}
+		}
 		x := &run.Expect
 		for _, s := range d.scopes {
 			cidr := s.ci.Str("cidr")

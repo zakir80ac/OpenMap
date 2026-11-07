@@ -92,7 +92,8 @@ export function addService(world: World, rng: Rng, cluster: K8sClusterRec, names
   const clusterIp = ip4(RFC1918_TEN, cluster.site.def.octetBase + POOL.k8s, ((n * 16) + (svc >> 8)) & OCTET_MAX, (svc + 10) & OCTET_MAX);
   const idx = world.b.ci(cluster.slot, 'k8s_service', { uid }, namespace + '/' + name, { name, namespace, type, clusterIp, ports: [port], targetPort: port, protocol: 'TCP', selectorApp: app, cluster: cluster.name, sessionAffinity: 'None' }, cluster.site.def.code, { tags: ['kubernetes', 'service'] });
   world.b.rel(cluster.slot, 'contains', nsIdx, idx);
-  world.b.rel(cluster.slot, 'backed_by', idx, workloadIdx, { port });
+  // A Service depends on the workloads its selector matches, as the Kubernetes collector reports it.
+  world.b.rel(cluster.slot, 'depends_on', idx, workloadIdx, { port, via: 'selector' });
   cluster.services++;
   return idx;
 }

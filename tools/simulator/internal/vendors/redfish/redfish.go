@@ -582,6 +582,10 @@ func (Vendor) Runs(e *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		bmcName := p.fl.product(p.f) + " @ " + u.Hostname()
 		hostName := p.f.hostname
 		if p.f.bmc != nil {
+			// The collector keys a BMC by the address it dialled; against the product that is the BMC's own address.
+			if ip := p.f.bmc.ID("managementIp"); ip != "" {
+				run.Aliases = map[string]string{u.Hostname(): ip}
+			}
 			run.Expect.CIs = append(run.Expect.CIs, sim.ExpectCI{Type: "bmc", Name: bmcName, Identity: p.f.bmc.Identity})
 			run.Expect.EstateCI(p.f.host)
 			hostName = p.f.host.Name

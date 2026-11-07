@@ -73,7 +73,7 @@ func (n *Node) FQDN() string {
 	if n.Host != nil {
 		return strings.ToLower(firstNonEmpty(n.Host.ID("fqdn"), n.Host.Str("fqdn")))
 	}
-	return strings.ToLower(firstNonEmpty(n.HV.ID("moRef"), n.HV.Name))
+	return strings.ToLower(firstNonEmpty(n.HV.ID("hostRef"), n.HV.Name))
 }
 
 // Nodes lists every estate Hyper-V hypervisor with its host, cluster and VMs.
@@ -81,7 +81,7 @@ func Nodes(e *estate.Estate) []*Node {
 	var out []*Node
 	for _, hv := range e.OfType("hypervisor", func(c *estate.CI) bool { return c.ID("platform") == platform }) {
 		n := &Node{HV: hv, e: e}
-		for _, h := range e.From(hv, "runs_on") {
+		for _, h := range e.From(hv, "hosted_on") {
 			if h.Type == "host" {
 				n.Host = h
 			}
@@ -89,7 +89,7 @@ func Nodes(e *estate.Estate) []*Node {
 		if n.Host == nil {
 			continue
 		}
-		for _, o := range e.To(n.Host, "runs_on") {
+		for _, o := range e.To(n.Host, "installed_on") {
 			if o.Type == "operating_system" {
 				n.OS = o
 			}
@@ -100,7 +100,7 @@ func Nodes(e *estate.Estate) []*Node {
 				n.Peers = e.To(c, "member_of")
 			}
 		}
-		for _, vm := range e.To(hv, "hosted_on") {
+		for _, vm := range e.To(hv, "runs_on") {
 			if vm.Type == "vm" {
 				n.VMs = append(n.VMs, vm)
 			}
@@ -129,6 +129,10 @@ func (n *Node) Build() string { return firstNonEmpty(n.HV.Str("build"), "10.0.20
 func (n *Node) ClusterGUID() string {
 	if n.Cluster == nil {
 		return ""
+	}
+	// The estate carries Get-Cluster's Id as the cluster's clusterId; older estates keyed clusters by name.
+	if id := n.Cluster.ID("clusterId"); sim.IsUUID(id) {
+		return strings.ToLower(id)
 	}
 	return strings.ToLower(winrm.GUID("cluster", n.Cluster.ID("clusterId")))
 }

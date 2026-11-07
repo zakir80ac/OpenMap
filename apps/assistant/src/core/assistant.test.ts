@@ -55,8 +55,8 @@ describe('variable binding and tenant scoping', () => {
     expect(() => validateCypher(scoped('(s:Subnet)', 's') + ', s.usedPercentage')).toThrow(/property usedPercentage does not exist/);
     expect(() => validateCypher(scoped("(s:Subnet {cidr: 'x'})", 's'))).toThrow(/property cidr does not exist/);
     expect(() => validateCypher(scoped('(s:BusinessService)-[:PART_OF_SERVICE]->(a:Application)', 's'))).toThrow(/PART_OF_SERVICE goes from Application to BusinessService.*write \(Application\)-\[:PART_OF_SERVICE\]->\(BusinessService\)/);
-    expect(() => validateCypher(scoped('(h:Hypervisor)<-[:HOSTED_ON]-(v:Vm)', 'h'))).not.toThrow();
-    expect(() => validateCypher(scoped('(v:Vm)<-[:HOSTED_ON]-(h:Hypervisor)', 'v'))).toThrow(/HOSTED_ON goes from Vm to Hypervisor/);
+    expect(() => validateCypher(scoped('(h:Hypervisor)<-[:RUNS_ON]-(v:Vm)', 'h'))).not.toThrow();
+    expect(() => validateCypher(scoped('(v:Vm)<-[:RUNS_ON]-(h:Hypervisor)', 'v'))).toThrow(/RUNS_ON goes from Vm to Hypervisor/);
     // Unknown combinations pass: only a known pair traversed backwards is wrong by construction.
     expect(() => validateCypher(scoped('(d:Database)-[:HOSTED_ON]->(h:Host)', 'd'))).not.toThrow();
     expect(() => validateCypher(scoped('(a:Application)-[:DEPENDS_ON|RUNS_ON*1..3]->(b:Ci)', 'a'))).not.toThrow();
@@ -64,8 +64,8 @@ describe('variable binding and tenant scoping', () => {
   });
   it('turns known hops the right way round and fixes the type when the two labels have exactly one', () => {
     expect(normaliseHops('MATCH (s:BusinessService)-[:PART_OF_SERVICE]->(a:Application) RETURN a.name')).toBe('MATCH (s:BusinessService)<-[:PART_OF_SERVICE]-(a:Application) RETURN a.name');
-    expect(normaliseHops('MATCH (vm:Vm)-[:RUNS_ON]->(hv:Hypervisor) RETURN vm.name')).toBe('MATCH (vm:Vm)-[:HOSTED_ON]->(hv:Hypervisor) RETURN vm.name');
-    expect(normaliseHops('MATCH (hv:Hypervisor)-[:HOSTS]->(vm:Vm)-[:RUNS_ON]->(h:Host) RETURN vm.name')).toBe('MATCH (hv:Hypervisor)<-[:HOSTED_ON]-(vm:Vm)-[:RUNS_ON]->(h:Host) RETURN vm.name');
+    expect(normaliseHops('MATCH (vm:Vm)-[:HOSTED_ON]->(hv:Hypervisor) RETURN vm.name')).toBe('MATCH (vm:Vm)-[:RUNS_ON]->(hv:Hypervisor) RETURN vm.name');
+    expect(normaliseHops('MATCH (hv:Hypervisor)-[:HOSTS]->(vm:Vm)-[:RUNS_ON]->(h:Host) RETURN vm.name')).toBe('MATCH (hv:Hypervisor)<-[:RUNS_ON]-(vm:Vm)-[:RUNS_ON]->(h:Host) RETURN vm.name');
     // Correct hops, unrelated labels, multi-type and variable-length hops are left alone.
     for (const q of [
       'MATCH (a:Application)-[:PART_OF_SERVICE]->(s:BusinessService) RETURN s.name',
