@@ -150,19 +150,58 @@ export function refTokensOf(ci: RefTargetOf): RefToken[] {
   return [...out.entries()].map(([token, tier]) => ({ token, tier }));
 }
 
+const refScopeCache = new Map<string, readonly string[]>();
+
+/**
+ * The issuer scope a referring CI shares with a ref target (ADR-045): the scope keys (GLOBAL_IDENTITY_SCOPES) of the
+ * target type's globally unique keys that both types declare. A ServiceNow application names its tenant by the
+ * tenant id, which ServiceNow issued: it names the ServiceNow tenant, never a Workday tenant with the same id.
+ */
+export function refScopeKeys(referrerType: CiType, targetType: CiType): readonly string[] {
+  const cacheKey = referrerType + KEY_SEPARATOR + targetType;
+  let keys = refScopeCache.get(cacheKey);
+  if (keys === undefined) {
+    const targetKeys = CI_IDENTITY_KEYS[targetType];
+    const referrerKeys = CI_IDENTITY_KEYS[referrerType];
+    const scope = new Set<string>();
+    for (const k of targetKeys) {
+      if (!isGlobalKey(targetType, k)) continue;
+      for (const s of GLOBAL_IDENTITY_SCOPES[k] ?? []) if (targetKeys.includes(s) && referrerKeys.includes(s)) scope.add(s);
+    }
+    keys = [...scope];
+    refScopeCache.set(cacheKey, keys);
+  }
+  return keys;
+}
+
+/** Whether a target lies in the issuer scope of the CI that names it; a scope value the referrer lacks is not compared. */
+function inRefScope(referrer: IdentityOf, target: IdentityOf): boolean {
+  for (const s of refScopeKeys(referrer.type, target.type)) {
+    const want = referrer.identity[s];
+    if (present(want) && normIdentity(target.identity[s] ?? '') !== normIdentity(want)) return false;
+  }
+  return true;
+}
+
 export interface RefResolver {
-  /** The id of the one CI a ref value names, or undefined when none or several do. */
-  resolve(refKey: string, value: string): string | undefined;
+  /**
+   * The id of the one CI a ref value names, or undefined when none or several do. With the referring CI, only targets
+   * in the issuer scope it shares with them count.
+   */
+  resolve(refKey: string, value: string, referrer?: IdentityOf): string | undefined;
 }
 
 /**
- * In-memory ref resolution over a set of CIs. A value resolves when exactly one CI of the ref's target types carries it
- * at the best rank present: deterministic for a given set of CIs, whatever order they were added in.
+ * In-memory ref resolution over a set of CIs. A value resolves when exactly one CI of the ref's target types, in the
+ * referrer's issuer scope, carries it at the best rank present: deterministic for a given set of CIs, whatever order
+ * they were added in.
  */
 export class MapRefIndex implements RefResolver {
   private readonly byToken = new Map<string, Map<string, { type: CiType; tier: RefTier }>>();
+  private readonly identities = new Map<string, IdentityOf>();
 
   add(ci: RefTargetOf, ciId: string): void {
+    this.identities.set(ciId, { type: ci.type, identity: ci.identity });
     for (const { token, tier } of refTokensOf(ci)) {
       let entries = this.byToken.get(token);
       if (entries === undefined) {
@@ -174,7 +213,7 @@ export class MapRefIndex implements RefResolver {
     }
   }
 
-  resolve(refKey: string, value: string): string | undefined {
+  resolve(refKey: string, value: string, referrer?: IdentityOf): string | undefined {
     const targets = IDENTITY_REF_TARGETS[refKey];
     if (targets === undefined || targets.length === 0) return undefined;
     const entries = this.byToken.get(normIdentity(value));
@@ -183,6 +222,8 @@ export class MapRefIndex implements RefResolver {
     let ids: string[] = [];
     for (const [id, e] of entries) {
       if (!targets.includes(e.type)) continue;
+      const target = this.identities.get(id);
+      if (referrer !== undefined && target !== undefined && !inRefScope(referrer, target)) continue;
       if (e.tier < best) {
         best = e.tier;
         ids = [id];
@@ -205,7 +246,7 @@ export function refKeyOf(ci: IdentityOf, refs: RefResolver): string | null {
     const v = ci.identity[k];
     if (!present(v)) continue;
     if (refKeys.includes(k)) {
-      const id = refs.resolve(k, v);
+      const id = refs.resolve(k, v, ci);
       if (id === undefined) return null;
       parts.push(REF_ID_PREFIX + id);
       resolved = true;

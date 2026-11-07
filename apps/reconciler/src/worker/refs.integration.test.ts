@@ -3,7 +3,8 @@
 // - an agent and a load balancer that name one listener's host differently (UUID, IP) yield one listener;
 // - in the other order, with the host reported last, the two copies fold into one in the pending pass: the copy is
 //   retired with an `openmap.ci.retired` event and its relationships move to the survivor;
-// - the ServiceNow and Workday tenants that share the id horizonbank stay two CIs;
+// - the ServiceNow and Workday tenants that share the id horizonbank stay two CIs, and each vendor's application
+//   names its own tenant;
 // - a CI another writer inserts is pending with no tokens until the pass computes them.
 import { randomUUID } from 'node:crypto';
 import { CONTRACT_VERSIONS } from '@openmap/constants';
@@ -113,11 +114,21 @@ describe('identity refs (integration, ADR-045)', () => {
   it('keeps two SaaS tenants with one id at two vendors apart, and settles CIs other writers insert', async () => {
     const tenantId = tenants[2];
     const out = await processResult(prisma, result(tenantId, 'saas', [
+      ci('saas_application', { vendor: 'ServiceNow', product: 'ITSM Pro', tenantRef: 'horizonbank' }, 'ITSM Pro'),
+      ci('saas_application', { vendor: 'Workday', product: 'Workday HCM', tenantRef: 'horizonbank' }, 'Workday HCM'),
       ci('saas_tenant', { vendor: 'ServiceNow', tenantId: 'horizonbank' }, 'horizonbank (ServiceNow)'),
       ci('saas_tenant', { vendor: 'Workday', tenantId: 'horizonbank' }, 'horizonbank (Workday)'),
     ]));
-    expect(out.created).toBe(2);
+    expect(out.created).toBe(4);
     expect(out.updated).toBe(0);
+    // Each application's tenant ref resolves to the tenant its own vendor issued the id for.
+    const saasTenants = await prisma.ci.findMany({ where: { tenantId, type: 'saas_tenant', validTo: null } });
+    const tenantOf = new Map(saasTenants.map((t) => [(t.identity as Record<string, string>)['vendor'], t.id]));
+    for (const app of await prisma.ci.findMany({ where: { tenantId, type: 'saas_application', validTo: null } })) {
+      const vendor = (app.identity as Record<string, string>)['vendor'] ?? '';
+      expect(app.refsPending, vendor).toBe(false);
+      expect(app.refKey, vendor).toBe('saas_application|ref=' + vendor.toLowerCase() + '|' + app.name.toLowerCase() + '|@' + String(tenantOf.get(vendor)));
+    }
     // A site the onboarding wizard writes: no set_config, so the trigger leaves it pending without tokens.
     const site = await prisma.ci.create({
       data: { tenantId, type: 'site', identity: { code: 'ITS' }, identityKey: 'its', name: 'ITS', displayName: 'Integration site', layer: CI_TYPE_LAYER.site, lifecycle: 'managed', attributes: {}, tags: [],

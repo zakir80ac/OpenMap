@@ -219,8 +219,36 @@ func NewRefIndex(e *estate.Estate, rules *IdentityRules) *RefIndex {
 	return ix
 }
 
-// Resolve returns the estate CI a ref value names, or nil.
-func (ix *RefIndex) Resolve(refKey, value string) *estate.CI {
+// refScopeKeys is the issuer scope a referring type shares with a ref target (packages/contracts refScopeKeys): the
+// scope keys of the target type's globally unique keys that both types declare.
+func (r *IdentityRules) refScopeKeys(referrerType, targetType string) []string {
+	var out []string
+	for _, k := range r.Keys[targetType] {
+		if !r.isGlobal(targetType, k) {
+			continue
+		}
+		for _, s := range r.Scopes[k] {
+			if contains(r.Keys[targetType], s) && contains(r.Keys[referrerType], s) && !contains(out, s) {
+				out = append(out, s)
+			}
+		}
+	}
+	return out
+}
+
+// inRefScope reports whether a target lies in the issuer scope of the CI that names it; a scope value the referrer
+// lacks is not compared.
+func (r *IdentityRules) inRefScope(referrerType string, referrer map[string]string, target *estate.CI) bool {
+	for _, s := range r.refScopeKeys(referrerType, target.Type) {
+		if want := referrer[s]; want != "" && normIdentity(target.Identity[s]) != normIdentity(want) {
+			return false
+		}
+	}
+	return true
+}
+
+// Resolve returns the estate CI a ref value of the referring CI (type and identity) names, or nil.
+func (ix *RefIndex) Resolve(referrerType string, referrer map[string]string, refKey, value string) *estate.CI {
 	if ix == nil {
 		return nil
 	}
@@ -232,7 +260,7 @@ func (ix *RefIndex) Resolve(refKey, value string) *estate.CI {
 	var found *estate.CI
 	n := 0
 	for c, tier := range ix.byToken[normIdentity(value)] {
-		if !contains(targets, c.Type) {
+		if !contains(targets, c.Type) || !ix.rules.inRefScope(referrerType, referrer, c) {
 			continue
 		}
 		switch {
@@ -262,7 +290,7 @@ func (r *IdentityRules) refKey(ciType string, identity map[string]string, refs *
 			continue
 		}
 		if r.isRef(k) {
-			c := refs.Resolve(k, v)
+			c := refs.Resolve(ciType, identity, k, v)
 			if c == nil {
 				return ""
 			}

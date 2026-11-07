@@ -15,7 +15,9 @@ const refsEstate = `{"tenantId":"t","collectorId":"nutanix_ahv","cis":[` +
 	`{"type":"vm","identity":{"instanceUuid":"dc7a-1","hypervisorRef":"ahv-01.bank.local","fqdn":"api-01.bank.local"},"name":"api-01","attributes":{"ipAddress":"10.36.0.10"}},` +
 	`{"type":"host","identity":{"serialNumber":"S1"},"name":"web-01","attributes":{"primaryIp":"10.0.0.5"}},` +
 	`{"type":"host","identity":{"serialNumber":"S2"},"name":"web-02","attributes":{"primaryIp":"10.0.0.5"}},` +
-	`{"type":"listening_service","identity":{"hostRef":"dc7a-1","protocol":"tcp","port":"8443"},"name":"api-01 tcp/8443"}],"relationships":[]}` + "\n"
+	`{"type":"listening_service","identity":{"hostRef":"dc7a-1","protocol":"tcp","port":"8443"},"name":"api-01 tcp/8443"},` +
+	`{"type":"saas_tenant","identity":{"vendor":"ServiceNow","tenantId":"horizonbank"},"name":"horizonbank"},` +
+	`{"type":"saas_tenant","identity":{"vendor":"Workday","tenantId":"horizonbank"},"name":"horizonbank"}],"relationships":[]}` + "\n"
 
 func TestMergesResolvesRefsAndScopesGlobalKeys(t *testing.T) {
 	dir := t.TempDir()
@@ -59,6 +61,33 @@ func TestMergesResolvesRefsAndScopesGlobalKeys(t *testing.T) {
 	}
 	if rules.Merges("cloud_resource", map[string]string{"provider": "gcp", "resourceId": "42"}, map[string]string{"provider": "alibaba", "resourceId": "42"}, ix.Refs) {
 		t.Error("resource ids of two providers must not merge")
+	}
+}
+
+// A SaaS application names its tenant by the id its vendor issued, so the ref resolves within the application's vendor.
+func TestTenantRefResolvesWithinTheVendor(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "saas.ndjson"), []byte(refsEstate), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	e, err := estate.Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rules := testRules(t)
+	ix := NewEstateIndex(e, rules)
+	for vendor, want := range map[string]string{"ServiceNow": "ServiceNow", "workday": "Workday"} {
+		app := map[string]string{"vendor": vendor, "product": "p", "tenantRef": "horizonbank"}
+		got := ix.Refs.Resolve("saas_application", app, "tenantRef", "horizonbank")
+		if got == nil || got.Identity["vendor"] != want {
+			t.Errorf("%s application: tenant = %v", vendor, got)
+		}
+	}
+	if got := ix.Refs.Resolve("saas_application", map[string]string{"vendor": "Salesforce", "tenantRef": "horizonbank"}, "tenantRef", "horizonbank"); got != nil {
+		t.Errorf("a vendor with no such tenant resolved to %v", got)
+	}
+	if got := ix.Refs.Resolve("saas_application", map[string]string{"tenantRef": "horizonbank"}, "tenantRef", "horizonbank"); got != nil {
+		t.Errorf("without a vendor the id names two tenants, resolved to %v", got)
 	}
 }
 

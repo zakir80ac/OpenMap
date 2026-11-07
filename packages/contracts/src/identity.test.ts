@@ -1,7 +1,7 @@
 // T-451 REQ-CORE-013 REQ-CORE-001 — the identity rules of ADR-045: issuer-scoped global keys and `*Ref` resolution.
 import { describe, expect, it } from 'vitest';
 import { CI_IDENTITY_KEYS, CI_TYPES, GLOBAL_IDENTITY_KEYS, GLOBAL_IDENTITY_SCOPES, IDENTITY_REF_TARGETS } from './ci.js';
-import { globalMatches, identityKeysOf, MapRefIndex, refDepth, refKeyOf, refTokensOf } from './identity.js';
+import { globalMatches, identityKeysOf, MapRefIndex, refDepth, refKeyOf, refScopeKeys, refTokensOf } from './identity.js';
 
 describe('identity rules (ADR-045)', () => {
   it('lists every reference key with the types it names', () => {
@@ -80,6 +80,22 @@ describe('identity rules (ADR-045)', () => {
     reversed.add({ type: 'host', identity: { serialNumber: 'S1' }, name: 'web-01', attributes: { primaryIp: '10.0.0.5' } }, 'h1');
     expect(reversed.resolve('hostRef', 'web-01')).toBe('h2');
     expect(reversed.resolve('hostRef', '10.0.0.5')).toBeUndefined();
+  });
+
+  it('resolves a SaaS application tenant ref within the application vendor', () => {
+    const refs = new MapRefIndex();
+    refs.add({ type: 'saas_tenant', identity: { vendor: 'ServiceNow', tenantId: 'horizonbank' }, name: 'horizonbank', attributes: {} }, 't-now');
+    refs.add({ type: 'saas_tenant', identity: { vendor: 'Workday', tenantId: 'horizonbank' }, name: 'horizonbank', attributes: {} }, 't-wd');
+    const now = { type: 'saas_application' as const, identity: { vendor: 'servicenow', product: 'ITSM Pro', tenantRef: 'horizonbank' } };
+    const workday = { type: 'saas_application' as const, identity: { vendor: 'Workday', product: 'Workday HCM', tenantRef: 'horizonbank' } };
+    expect(refKeyOf(now, refs)).toBe('saas_application|ref=servicenow|itsm pro|@t-now');
+    expect(refKeyOf(workday, refs)).toBe('saas_application|ref=workday|workday hcm|@t-wd');
+    // Without the referrer the id names two tenants and resolves to neither; a vendor with no such tenant names none.
+    expect(refs.resolve('tenantRef', 'horizonbank')).toBeUndefined();
+    expect(refKeyOf({ type: 'saas_application', identity: { vendor: 'Salesforce', product: 'Sales Cloud', tenantRef: 'horizonbank' } }, refs)).toBeNull();
+    // Only the SaaS tenant ref shares an issuer scope with its target.
+    expect(refScopeKeys('saas_application', 'saas_tenant')).toEqual(['vendor']);
+    expect(refScopeKeys('listening_service', 'vm')).toEqual([]);
   });
 
   it('derives serial:<serial> and name@version tokens, and gives types no ref names none', () => {

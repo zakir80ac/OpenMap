@@ -47,6 +47,13 @@ Simulated mode (ADR-042, ADR-044) left three identity gaps in reconciliation (`a
    - **Resolution.** A ref value resolves when exactly one CI of the ref's target types carries it at the best rank
      present. It is deterministic for a given set of CIs, whatever order they arrived in. An ambiguous value resolves to
      nothing.
+   - **Issuer scope of a ref** (added 2026-11-07). A ref counts only targets in the issuer scope it shares with them
+     (`refScopeKeys`): the scope keys of the target type's scoped global keys that the referring type also declares.
+     Where the referrer carries such a value, a target must carry the same one. Today one ref has such a scope: a
+     `saas_application` names its tenant by the id its own vendor issued (`tenantRef` → `saas_tenant`, scoped by
+     `vendor`). The ServiceNow and Workday applications of `horizonbank` therefore name their own tenants instead of
+     resolving to neither. The rule is derived from `GLOBAL_IDENTITY_SCOPES` and `CI_IDENTITY_KEYS`, so
+     `ci-identity.json` and the contract version are unchanged.
    - **Ref key.** The ref key is the tuple with each ref replaced by `@<ci id>`. It identifies alongside the raw tuple
      and the scoped global keys. When an observation's refs resolve, its ref key stands in for its raw tuple.
 3. **Store (migration 0028).** `cis` gains four columns:
@@ -79,7 +86,8 @@ Simulated mode (ADR-042, ADR-044) left three identity gaps in reconciliation (`a
 - Simulated mode reports identity drift 0 (from 284). All `listening_service` pool members now resolve through the
   member's IP or FQDN to the VM or host the estate keys them by (`docs/evidence/simulated-mode.md`).
 - Two estate CIs never merge with each other under these rules. T-450 checks the generated estate and T-454 checks the
-  checked-in synth-small. The dev replay creates exactly the estate's CI count, with no updates.
+  checked-in synth-small. The dev replay creates every distinct estate CI: 28,221 of the summary's 28,222 rows,
+  because the agent-SAM and SaaS results both report the vendor Microsoft, which is one CI (one update).
 - Costs added to reconciliation:
   - **Lookup:** one indexed token probe per result that carries refs, plus a ref-key probe.
   - **Pending pass:** two bounded queries that are index-only when nothing is pending
