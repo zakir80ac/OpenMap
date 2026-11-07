@@ -1,4 +1,5 @@
-// T-134 REQ-BSM-008 — the synthetic health history is deterministic, closed and ordered.
+// T-134 T-464 REQ-BSM-008 — the synthetic health history is deterministic, closed and ordered, and its outages
+// spread over the whole of each month rather than its first half.
 import { describe, expect, it } from 'vitest';
 import type { BusinessServiceRecord } from './gen/applications.js';
 import { generateHealthHistory } from './health.js';
@@ -42,6 +43,18 @@ describe('generateHealthHistory', () => {
       const next = history.outages[i + 1];
       if (next) expect(Date.parse(next.startedAt)).toBeGreaterThanOrEqual(Date.parse(o.startedAt));
     }
+  });
+
+  it('T-464 spreads outages over the whole month, the days just before now included', () => {
+    const services = Array.from({ length: 60 }, (_, i) => service('Service ' + String(i), 3));
+    const history = generateHealthHistory(services, 42, now, 14);
+    const dayMs = 86_400_000;
+    const recent = history.outages.filter((o) => Date.parse(now) - Date.parse(o.startedAt) < 10 * dayMs);
+    expect(recent.length).toBeGreaterThan(0);
+    // Within each 30-day window, about half of the outages start in its second half.
+    const horizon = Date.parse(now) - 14 * 30 * dayMs;
+    const late = history.outages.filter((o) => ((Date.parse(o.startedAt) - horizon) % (30 * dayMs)) >= 15 * dayMs).length;
+    expect(late / history.outages.length).toBeGreaterThan(0.3);
   });
 
   it('gives a tier-1 service fewer incidents than a standard one', () => {

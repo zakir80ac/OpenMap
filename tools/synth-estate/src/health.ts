@@ -50,11 +50,13 @@ export function generateHealthHistory(
     for (let month = 0; month < months; month++) {
       const count = Math.round(rng.int(0, SLA.synthetic.outagesPerServiceMonthMax) * factor);
       const monthStart = horizonMs + month * DAYS_PER_MONTH * MS_PER_DAY;
-      let cursor = monthStart;
+      // Each outage falls anywhere in its own equal slot of the window, so outages spread over the whole month
+      // (and the days just before `now` see some) without two of one service overlapping.
+      const slotMinutes = Math.floor((DAYS_PER_MONTH * MS_PER_DAY) / MS_PER_MINUTE / Math.max(1, count));
       for (let i = 0; i < count; i++) {
-        const gapMs = rng.int(1, (DAYS_PER_MONTH * MS_PER_DAY) / MS_PER_MINUTE / (count + 1)) * MS_PER_MINUTE;
-        const start = cursor + gapMs;
         const minutes = rng.int(SLA.synthetic.outageMinutesMin, SLA.synthetic.outageMinutesMax);
+        const offsetMinutes = rng.int(0, Math.max(0, slotMinutes - minutes - 1));
+        const start = monthStart + (i * slotMinutes + offsetMinutes) * MS_PER_MINUTE;
         const end = start + minutes * MS_PER_MINUTE;
         if (end >= nowMs) break;
         outages.push({
@@ -63,7 +65,6 @@ export function generateHealthHistory(
           startedAt: new Date(start).toISOString(),
           endedAt: new Date(end).toISOString(),
         });
-        cursor = end;
       }
     }
   }
