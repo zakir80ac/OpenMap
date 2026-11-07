@@ -1,21 +1,21 @@
 # OpenMap tracker summary
 
-Generated 2026-11-07T22:51:40.425Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-07T23:08:32.320Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 40 |
+| Not started | 39 |
 | In progress | 0 |
 | Blocked | 28 |
 | In review | 2 |
-| Done | 138 |
+| Done | 139 |
 | **Total** | **208** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 20 | 18 | 0 | 0 | 90% |
+| CORE | 20 | 19 | 0 | 0 | 95% |
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
@@ -65,7 +65,6 @@ Generated 2026-11-07T22:51:40.425Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-CORE-019 [P0] REST and GraphQL API, SDKs, OpenAPI
 - REQ-PERF-002 [P0] Impact query under 1000 ms on 100000 nodes
 - REQ-PERF-004 [P0] 10000 devices discovered in under 15 minutes
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
@@ -75,6 +74,7 @@ Generated 2026-11-07T22:51:40.425Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-AI-003 [P1] Anomaly rules over discovery and health events
 - REQ-AI-005 [P1] Cloud recommendation engine (rightsizing, unused)
 - REQ-AI-006 [P1] AI assistant over the graph (NL to Cypher, explain impact, anomaly rules)
+- REQ-CORE-020 [P1] Outbox claim safe for concurrent dispatchers, and the concurrent-worker measurement
 
 ## Open risks
 

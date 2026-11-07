@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites)
+## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites, REQ-CORE-019 REST/SDK)
 
 Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
 
@@ -98,7 +98,22 @@ GraphQL 1.21.0).
     listeners).
   - The dev tenant was regenerated and replayed without a reset: 19 site and link CIs updated, ids kept.
 
+**6. REQ-CORE-019 REST API, OpenAPI and SDK** (ADR-049, REST contract 1.0.0).
+- **One route table** (`packages/contracts/src/rest.ts`, `REST_ROUTES`) drives three things:
+  - the API's REST v1 controllers (`apps/api/src/rest`, thin over the GraphQL services);
+  - the OpenAPI 3.1 document (`GET /api/v1/openapi.json`, public; also written to
+    `packages/contracts/openapi/openapi.json` at build);
+  - the TypeScript SDK `@openmap/sdk`: typed methods, `allCis()` page iteration and `graphql()`.
+- **Routes:** CIs (list, get, patch attributes, relationships, impact), relationships (create, retire), search,
+  incidents, connectivity.
+- **Auth:** the Keycloak bearer token, with the tenant from the token. Writes need the operator role.
+- **Observability:** `openmap_rest_requests_total` and `openmap_rest_request_duration_seconds`; a `rest.<route>` span.
+- **Console:** Settings has an API card with the addresses and every route from the live document, in en and ar.
+- **Other languages:** SDKs are generated from the OpenAPI document.
+
 **Tests:**
+- REQ-CORE-019: T-483 (SDK), T-484 (integration through the SDK: public document, analyst reads, operator writes,
+  403/400/404, counters), T-485 (console), T-486 (e2e, en and ar).
 - REQ-BSM-007: T-477 (Go probe), T-478 (planner), T-479 (rules), T-480 (integration), T-481 (console), T-482 (e2e,
   en and ar).
 - REQ-BSM-005: T-470 (estimates), T-471 (integration, in-test AWX receiver: gate refused, launch with bearer token and

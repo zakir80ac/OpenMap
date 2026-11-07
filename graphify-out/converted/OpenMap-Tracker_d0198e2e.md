@@ -173,7 +173,7 @@
 | REQ-INT-015 | INT | Integrations | Finance/procurement: SAP, Oracle, Coupa, QuickBooks | OpenMap: PO and cost import adapters (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P2 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-016 | INT | Integrations | Identity: Active Directory, Entra ID, Okta | OpenMap: Keycloak federation (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-017 | INT | Integrations | Backup/DR awareness: Veeam, Commvault, Rubrik | OpenMap: backed_by relationships via adapters (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-CORE-019 | CORE | Integrations | REST and GraphQL API, SDKs, OpenAPI | OpenMap: Mercurius GraphQL, REST, OpenAPI (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-CORE-019 | CORE | Integrations | REST and GraphQL API, SDKs, OpenAPI | OpenMap: Mercurius GraphQL, REST, OpenAPI (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §8. Integrations | T-483, T-484, T-485, T-486 | 3123f61; ADR-049; packages/contracts/openapi/openapi.json; e2e screenshots apps/console/e2e/screenshots/api-{en,ar}.png | 2026-10-22 | 2026-11-07 |  |
 | REQ-UI-024 | UI | Onboarding and digital twin | Initial setup wizard | OpenMap: Six-step onboarding: organization and business units, sites (data centre, colocation, office, branch, cloud region, edge), inter-site connectivity, Discovery Nodes and credentials, integrations and seed imports, generate twin (organizationSchema, siteSchema, onboardingSchema) (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin | T-116, T-117, T-118, T-087 | docs/evidence/setup.md; docs/evidence/console/setup-{organization,sites,nodes,generate}-{en,ar}.png; ADR-017; API integration 20 passed; e2e setup 3 passed (en, ar); commit 99bf90e | 2026-10-22 | 2026-11-04 |  |
 | REQ-DCIM-009 | DCIM | Onboarding and digital twin | Buildings and rooms | OpenMap: Sites with rooms and racks created at onboarding, kept live by discovery (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin | T-103, T-106 | buildings and rooms with power and occupancy heatmap on the DCIM screen; room identity scoped by site and room name in the generator; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-IPAM-007 | IPAM | Onboarding and digital twin | Network circuits | OpenMap: Inter-site links as CIs with kind, provider, bandwidth, diverse paths and role; outages modelled like any component (siteLinkSchema, site_link) (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §9. Onboarding and digital twin |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -214,7 +214,7 @@
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
-| CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 20 | 18 | 90 |
+| CORE | Core platform and contracts | Contracts, Configuration, Tooling, Data, Graph, API, Reconciliation, Observability, Time travel, Discovery, CMDB and asset management, Integrations |  | 20 | 19 | 95 |
 | DISC | Discovery and collectors | Discovery, Onboarding and digital twin |  | 31 | 5 | 16 |
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 5 | 100 |
 | CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 40 | 95 |
@@ -275,6 +275,7 @@
 | ADR-046 | Reconciliation at full scale: identity tokens, code counters and concurrent dispatch | Accepted | 2026-11-07 | docs/adr/ADR-046-reconciliation-at-full-scale.md |
 | ADR-047 | Impact prediction accuracy: incidents validate simulations, misses suggest relationships | Accepted | 2026-11-08 | docs/adr/ADR-047-impact-prediction-accuracy.md |
 | ADR-048 | Runbooks: a tenant catalogue attached to scenarios and incidents, steps that trigger automation | Accepted | 2026-11-08 | docs/adr/ADR-048-runbooks.md |
+| ADR-049 | REST API, OpenAPI document and SDK from one route table | Accepted | 2026-11-08 | docs/adr/ADR-049-rest-api-openapi-sdk.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -614,6 +615,10 @@
 | T-480 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
 | T-481 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
 | T-482 | unit | REQ-BSM-007 | 2026-11-07 | Pass | 0 |
+| T-483 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
+| T-484 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
+| T-485 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
+| T-486 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -646,13 +651,14 @@
 | 2026-11-07 | Checkpoint 29: assistant eval 38/38 at scale 1 (ClickHouse id batching, unmeasured uptime); health outages spread over the month; REQ-BSM-004 impact prediction accuracy (ADR-047, migration 0032, GraphQL 1.19.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-005 runbooks (ADR-048, migration 0033, GraphQL 1.20.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-007 sites and connectivity, link_probe collector, readiness rules (ADR-025, migration 0034, CI/collector 0.8.0, GraphQL 1.21.0) |  |  |  |
+| 2026-11-07 | Checkpoint 29 (cont.): REQ-CORE-019 REST v1, OpenAPI and SDK (ADR-049) |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-07T22:51:40.343Z |  |  |  |  |  |  |
+| Generated | 2026-11-07T23:08:32.254Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 40 | 0 | 28 | 2 | 138 |  |  |
+| All | 39 | 0 | 28 | 2 | 139 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
-| CORE | 2 | 0 | 0 | 0 | 18 | 20 | 90 |
+| CORE | 1 | 0 | 0 | 0 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
 | DEP | 0 | 0 | 0 | 0 | 5 | 5 | 100 |
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
@@ -666,7 +672,7 @@
 | PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 6 | 0 | 26 | 1 | 91 | 124 |  |
+| P0 | 5 | 0 | 26 | 1 | 92 | 124 |  |
 | P1 | 31 | 0 | 2 | 1 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
@@ -675,7 +681,7 @@
 | 2026-11-04 | 95 |  |  |  |  |  |  |
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
-| 2026-11-07 | 138 |  |  |  |  |  |  |
+| 2026-11-07 | 139 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |
