@@ -54,8 +54,8 @@ describe('metrics.series', () => {
     const captured: Captured[] = [];
     const s = skill(
       [
-        { bucket_ms: 1_000, avg: 40, min: 10, max: 60, samples: 2, cis: 1 },
-        { bucket_ms: 2_000, avg: 60, min: 50, max: 90, samples: 2, cis: 1 },
+        { bucket_ms: 1_000, sum: 80, min: 10, max: 60, samples: 2, cis: 1 },
+        { bucket_ms: 2_000, sum: 120, min: 50, max: 90, samples: 2, cis: 1 },
       ],
       captured,
     );
@@ -97,8 +97,9 @@ describe('metrics.series', () => {
       context,
     );
     expect(empty.results[0]?.summary).toMatchObject({ kind: 'series', ci: null, samples: 0, avg: null, trendPercent: null });
-    // Unnamed and unfiltered, the window still covers only CIs of the step's type (T-460); the stand-in holds none.
-    expect(captured[0]?.params['ids']).toEqual([]);
+    // Unnamed and unfiltered, the window still covers only CIs of the step's type (T-460); the stand-in holds none,
+    // so nothing is read from ClickHouse.
+    expect(captured).toHaveLength(0);
     const unknown = await s.series(
       { skill: 'metrics.series', metric: 'host.cpu.utilisation_percent', type: 'host', aggregate: 'avg', names: ['nope'], filters: [], hours: 24, offsetHours: 0 },
       context,

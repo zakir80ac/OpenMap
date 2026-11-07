@@ -105,16 +105,19 @@ function groupItems(
 }
 
 function availabilityLine(t: Translate, locale: Locale, line: AvailabilityLine): string {
-  const percent =
-    line.availabilityPercent === null
-      ? t('assistant.answer.notMeasured')
-      : formatNumber(locale, line.availabilityPercent) + '%';
+  // A period with no health history is not measured: no percentage, no downtime, and the target is neither met nor
+  // missed.
   const target =
     line.targetPercent === null
       ? t('assistant.answer.noTarget')
-      : line.met === true
-        ? t('assistant.answer.met', { target: formatNumber(locale, line.targetPercent) })
-        : t('assistant.answer.notMet', { target: formatNumber(locale, line.targetPercent) });
+      : line.met === null
+        ? t('assistant.answer.targetOnly', { target: formatNumber(locale, line.targetPercent) })
+        : line.met
+          ? t('assistant.answer.met', { target: formatNumber(locale, line.targetPercent) })
+          : t('assistant.answer.notMet', { target: formatNumber(locale, line.targetPercent) });
+  if (line.availabilityPercent === null)
+    return t('assistant.answer.availabilityItemUnmeasured', { service: line.name, target });
+  const percent = formatNumber(locale, line.availabilityPercent) + '%';
   return t('assistant.answer.availabilityItem', {
     service: line.name,
     percent,
@@ -312,10 +315,13 @@ export function composeSummary(
             period,
             line: availabilityLine(t, locale, line),
           }),
-          figures: [
-            { label: line.name, value: line.availabilityPercent ?? 0, unit: '%' },
-            { label: t('assistant.answer.downtimeLabel'), value: line.downtimeMinutes, unit: 'min' },
-          ],
+          figures:
+            line.availabilityPercent === null
+              ? []
+              : [
+                  { label: line.name, value: line.availabilityPercent, unit: '%' },
+                  { label: t('assistant.answer.downtimeLabel'), value: line.downtimeMinutes, unit: 'min' },
+                ],
         };
       }
       const worst = [...summary.lines]
@@ -339,11 +345,9 @@ export function composeSummary(
           ),
         }),
         figures: [
-          {
-            label: t('assistant.answer.estateAvailabilityLabel'),
-            value: summary.estatePercent ?? 0,
-            unit: '%',
-          },
+          ...(summary.estatePercent === null
+            ? []
+            : [{ label: t('assistant.answer.estateAvailabilityLabel'), value: summary.estatePercent, unit: '%' }]),
           { label: t('assistant.answer.belowTargetLabel'), value: summary.belowTarget, unit: '' },
           { label: t('assistant.answer.downtimeLabel'), value: summary.downtimeMinutes, unit: 'min' },
           { label: typeLabel(t, 'business_service'), value: summary.lines.length, unit: '' },

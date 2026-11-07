@@ -3,6 +3,8 @@
 // a rolling window ("CPU of host X over the last 7 days"), averaged into buckets with the trend from the first to
 // the last bucket. The metric name is the catalogue's, never the person's words; a named CI narrows to it, a scope
 // word narrows the CIs through Postgres first. Rankings come back with the CI names so the console can link them.
+// A scope of many CIs (every host of a 100k estate) is read in batches of ids, because ClickHouse caps the size of
+// one bound parameter; each batch returns partials that combine exactly (count, sum, min, max, top N).
 import { Inject, Injectable } from '@nestjs/common';
 import { ASSISTANT, BSM, TIME } from '@openmap/constants';
 import { MEASUREMENTS, type RankedCi, type SkillParams, type Summary } from '@openmap/assistant';
@@ -20,7 +22,6 @@ type SeriesParams = Extract<SkillParams, { skill: 'metrics.series' }>;
 
 interface AggregateRow {
   count: string | number;
-  avg: number | null;
   sum: number | null;
   min: number | null;
   max: number | null;
@@ -34,11 +35,20 @@ interface RankedRow {
 
 interface BucketRow {
   bucket_ms: string | number;
-  avg: number;
+  sum: number;
   min: number;
   max: number;
   samples: string | number;
   cis: string | number;
+}
+
+interface Bucket {
+  at: number;
+  sum: number;
+  min: number;
+  max: number;
+  samples: number;
+  cis: number;
 }
 
 /** The CIs a step is about: the named one, or every CI of the type carrying the resolved scope values, or all (null). */
@@ -102,36 +112,48 @@ export class MetricsSkill {
       const { ids, filterTerms, notes } = scoped.scope;
       const idClause = ids === null ? '' : ' AND ci_id IN ({ids:Array(UUID)})';
       const latest = 'SELECT ci_id, argMax(value, ts) AS v, max(ts) AS t FROM ' + db + '.metrics_latest WHERE tenant_id = {tenantId:UUID} AND metric = {metric:String}' + idClause + ' GROUP BY ci_id';
-      const params: QueryParams = { tenantId: context.tenantId, metric: step.metric, ...(ids === null ? {} : { ids }) };
+      const base: QueryParams = { tenantId: context.tenantId, metric: step.metric };
+      const params = evidenceParams(base, ids);
       const unit = MEASUREMENTS[step.metric].unit;
       const noteResults = notes.map((n) => result(step, 'catalogue', 'resolveFilters', { filters: step.filters }, [], 0, n));
 
       if (step.aggregate === 'max' || step.aggregate === 'min') {
-        const sql = 'SELECT ci_id, v FROM (' + latest + ') ORDER BY v ' + (step.aggregate === 'max' ? 'DESC' : 'ASC') + ' LIMIT {topN:UInt32}';
+        const descending = step.aggregate === 'max';
+        const sql = 'SELECT ci_id, v FROM (' + latest + ') ORDER BY v ' + (descending ? 'DESC' : 'ASC') + ' LIMIT {topN:UInt32}';
         const countSql = 'SELECT count() AS count, toUnixTimestamp64Milli(max(t)) AS ts_ms FROM (' + latest + ')';
-        const [rows, [totals]] = await Promise.all([
-          this.clickhouse.query<RankedRow>('assistant_ranked', sql, { ...params, topN: step.topN }),
-          this.clickhouse.query<{ count: string | number; ts_ms: string | number | null }>('assistant_ranked_count', countSql, params),
-        ]);
+        const parts = await inBatches(ids, (binding) =>
+          Promise.all([
+            this.clickhouse.query<RankedRow>('assistant_ranked', sql, { ...base, ...binding, topN: step.topN }),
+            this.clickhouse.query<{ count: string | number; ts_ms: string | number | null }>('assistant_ranked_count', countSql, { ...base, ...binding }),
+          ]),
+        );
+        // Each batch's top N holds that batch's share of the overall top N, so the merged ranking is exact.
+        const rows = parts
+          .flatMap(([batchRows]) => batchRows)
+          .sort((a, b) => (descending ? b.v - a.v : a.v - b.v))
+          .slice(0, step.topN);
+        const count = parts.reduce((n, [, [totals]]) => n + Number(totals?.count ?? 0), 0);
+        const asOf = latestTs(parts.map(([, [totals]]) => totals?.ts_ms));
         const names = new Map((await this.cis.findByIds(context.tenantId, rows.map((r) => r.ci_id))).map((c) => [c.id, c.displayName]));
         const ranked: RankedCi[] = rows.map((r) => ({ ciId: r.ci_id, name: names.get(r.ci_id) ?? r.ci_id, value: r.v }));
-        const summary: Summary = { kind: 'measurement', metric: step.metric, type: step.type, aggregate: step.aggregate, value: ranked[0]?.value ?? null, unit, count: Number(totals?.count ?? 0), asOf: tsOf(totals?.ts_ms), ranked, filters: filterTerms };
+        const summary: Summary = { kind: 'measurement', metric: step.metric, type: step.type, aggregate: step.aggregate, value: ranked[0]?.value ?? null, unit, count, asOf, ranked, filters: filterTerms };
         return {
           results: [result(step, 'clickhouse', sql, { ...params, topN: step.topN }, ranked.map((r) => ({ ci: r.name, value: r.value })), elapsed(), summary, ranked.map((r) => r.ciId)), ...noteResults],
           clarification: null,
         };
       }
 
-      const sql = 'SELECT count() AS count, avg(v) AS avg, sum(v) AS sum, min(v) AS min, max(v) AS max, toUnixTimestamp64Milli(max(t)) AS ts_ms FROM (' + latest + ')';
-      const [row] = await this.clickhouse.query<AggregateRow>('assistant_aggregate', sql, params);
-      const count = Number(row?.count ?? 0);
-      const value = row === undefined || count === 0 ? null : step.aggregate === 'sum' ? row.sum : row.avg;
+      const sql = 'SELECT count() AS count, sum(v) AS sum, min(v) AS min, max(v) AS max, toUnixTimestamp64Milli(max(t)) AS ts_ms FROM (' + latest + ')';
+      const parts = (await inBatches(ids, (binding) => this.clickhouse.query<AggregateRow>('assistant_aggregate', sql, { ...base, ...binding }))).flat();
+      const total = combine(parts);
+      const value = total.count === 0 ? null : step.aggregate === 'sum' ? total.sum : total.sum / total.count;
       // A named CI has one latest sample: the ranking form names it so the answer says which CI the figure is for.
       const named = scoped.scope.named;
       const ranked: RankedCi[] = named !== null && value !== null ? [{ ciId: named.id, name: named.displayName, value }] : [];
-      const summary: Summary = { kind: 'measurement', metric: step.metric, type: step.type, aggregate: step.aggregate === 'sum' ? 'sum' : 'avg', value, unit, count, asOf: tsOf(row?.ts_ms), ranked, filters: filterTerms };
+      const summary: Summary = { kind: 'measurement', metric: step.metric, type: step.type, aggregate: step.aggregate === 'sum' ? 'sum' : 'avg', value, unit, count: total.count, asOf: total.asOf, ranked, filters: filterTerms };
+      const evidence = total.count === 0 ? [] : [{ count: total.count, avg: total.sum / total.count, sum: total.sum, min: total.min, max: total.max }];
       return {
-        results: [result(step, 'clickhouse', sql, params, row === undefined ? [] : [{ count, avg: row.avg, sum: row.sum, min: row.min, max: row.max }], elapsed(), summary, named === null ? [] : [named.id]), ...noteResults],
+        results: [result(step, 'clickhouse', sql, params, evidence, elapsed(), summary, named === null ? [] : [named.id]), ...noteResults],
         clarification: null,
       };
     } catch (err) {
@@ -154,12 +176,12 @@ export class MetricsSkill {
       const idClause = ids === null ? '' : ' AND ci_id IN ({ids:Array(UUID)})';
       // Parameters bind as strings for DateTime64: cast in SQL (packages/db ClickHouse notes).
       const sql =
-        'SELECT toUnixTimestamp64Milli(toDateTime64(toStartOfInterval(ts, INTERVAL {bucket:UInt32} second), 3)) AS bucket_ms, avg(value) AS avg, min(value) AS min, max(value) AS max, count() AS samples, uniqExact(ci_id) AS cis FROM ' +
+        'SELECT toUnixTimestamp64Milli(toDateTime64(toStartOfInterval(ts, INTERVAL {bucket:UInt32} second), 3)) AS bucket_ms, sum(value) AS sum, min(value) AS min, max(value) AS max, count() AS samples, uniqExact(ci_id) AS cis FROM ' +
         db +
         '.metrics WHERE tenant_id = {tenantId:UUID} AND metric = {metric:String} AND ts >= toDateTime64({from:String}, 3) AND ts < toDateTime64({to:String}, 3)' +
         idClause +
         ' GROUP BY bucket_ms ORDER BY bucket_ms';
-      const params: QueryParams = {
+      const base: QueryParams = {
         tenantId: context.tenantId,
         metric: step.metric,
         from: from.toISOString().replace('T', ' ').replace('Z', ''),
@@ -167,13 +189,13 @@ export class MetricsSkill {
         bucket: bucketSeconds,
         hours: step.hours,
         offsetHours: step.offsetHours,
-        ...(ids === null ? {} : { ids }),
       };
-      const rows = await this.clickhouse.query<BucketRow>('assistant_series', sql, params);
-      const samples = rows.reduce((n, r) => n + Number(r.samples), 0);
-      const weighted = rows.reduce((n, r) => n + r.avg * Number(r.samples), 0);
-      const first = rows[0]?.avg ?? null;
-      const last = rows.at(-1)?.avg ?? null;
+      const params = evidenceParams(base, ids);
+      const rows = mergeBuckets((await inBatches(ids, (binding) => this.clickhouse.query<BucketRow>('assistant_series', sql, { ...base, ...binding }))).flat());
+      const samples = rows.reduce((n, r) => n + r.samples, 0);
+      const weighted = rows.reduce((n, r) => n + r.sum, 0);
+      const first = bucketAvg(rows[0]);
+      const last = bucketAvg(rows.at(-1));
       const trendPercent =
         first === null || last === null || first === 0 ? null : ((last - first) / Math.abs(first)) * BSM.percentScale;
       const summary: Summary = {
@@ -181,7 +203,7 @@ export class MetricsSkill {
         metric: step.metric,
         type: step.type,
         ci: named === null ? null : { ciId: named.id, name: named.displayName },
-        count: rows.length === 0 ? 0 : Math.max(...rows.map((r) => Number(r.cis))),
+        count: rows.length === 0 ? 0 : Math.max(...rows.map((r) => r.cis)),
         samples,
         from: from.toISOString(),
         to: to.toISOString(),
@@ -194,7 +216,7 @@ export class MetricsSkill {
         trendPercent,
         unit: MEASUREMENTS[step.metric].unit,
       };
-      const evidenceRows = rows.map((r) => ({ at: new Date(Number(r.bucket_ms)).toISOString(), avg: r.avg, min: r.min, max: r.max, samples: Number(r.samples) }));
+      const evidenceRows = rows.map((r) => ({ at: new Date(r.at).toISOString(), avg: bucketAvg(r), min: r.min, max: r.max, samples: r.samples }));
       return {
         results: [
           result(step, 'clickhouse', sql, params, evidenceRows, elapsed(), summary, named === null ? [] : [named.id]),
@@ -212,6 +234,71 @@ function tsOf(ms: string | number | null | undefined): string | null {
   if (ms === null || ms === undefined) return null;
   const n = Number(ms);
   return Number.isFinite(n) && n > 0 ? new Date(n).toISOString() : null;
+}
+
+function latestTs(values: Array<string | number | null | undefined>): string | null {
+  const ms = values.map((v) => Number(v ?? 0)).filter((n) => Number.isFinite(n) && n > 0);
+  return ms.length === 0 ? null : tsOf(Math.max(...ms));
+}
+
+/**
+ * Runs `read` once per batch of ids, or once with no id binding when the step is not scoped. A bounded number of
+ * batches run at a time and the results come back in batch order; an empty scope reads nothing.
+ */
+export async function inBatches<T>(ids: string[] | null, read: (binding: QueryParams) => Promise<T>): Promise<T[]> {
+  if (ids === null) return [await read({})];
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += ASSISTANT.clickhouseIdBatch) batches.push(ids.slice(i, i + ASSISTANT.clickhouseIdBatch));
+  const out: T[] = [];
+  for (let i = 0; i < batches.length; i += ASSISTANT.clickhouseBatchConcurrency) {
+    const wave = batches.slice(i, i + ASSISTANT.clickhouseBatchConcurrency);
+    out.push(...(await Promise.all(wave.map((batch) => read({ ids: batch })))));
+  }
+  return out;
+}
+
+/** The evidence says how many CIs the read covered, not every id: a scope can hold tens of thousands. */
+function evidenceParams(base: QueryParams, ids: string[] | null): Record<string, unknown> {
+  return ids === null ? { ...base } : { ...base, cis: ids.length };
+}
+
+function combine(parts: AggregateRow[]): { count: number; sum: number; min: number | null; max: number | null; asOf: string | null } {
+  let count = 0;
+  let sum = 0;
+  let min: number | null = null;
+  let max: number | null = null;
+  for (const p of parts) {
+    const n = Number(p.count);
+    if (n === 0) continue;
+    count += n;
+    sum += p.sum ?? 0;
+    if (p.min !== null) min = min === null ? p.min : Math.min(min, p.min);
+    if (p.max !== null) max = max === null ? p.max : Math.max(max, p.max);
+  }
+  return { count, sum, min, max, asOf: latestTs(parts.map((p) => p.ts_ms)) };
+}
+
+/** Buckets of disjoint id batches add up: sums, samples and CIs add, the extremes are the batches' extremes. */
+function mergeBuckets(rows: BucketRow[]): Bucket[] {
+  const byTime = new Map<number, Bucket>();
+  for (const r of rows) {
+    const at = Number(r.bucket_ms);
+    const seen = byTime.get(at);
+    if (seen === undefined) {
+      byTime.set(at, { at, sum: r.sum, min: r.min, max: r.max, samples: Number(r.samples), cis: Number(r.cis) });
+      continue;
+    }
+    seen.sum += r.sum;
+    seen.min = Math.min(seen.min, r.min);
+    seen.max = Math.max(seen.max, r.max);
+    seen.samples += Number(r.samples);
+    seen.cis += Number(r.cis);
+  }
+  return [...byTime.values()].sort((a, b) => a.at - b.at);
+}
+
+function bucketAvg(bucket: Bucket | undefined): number | null {
+  return bucket === undefined || bucket.samples === 0 ? null : bucket.sum / bucket.samples;
 }
 
 /** Keeps the ranking size within the catalogue's bound whatever the question asked for. */

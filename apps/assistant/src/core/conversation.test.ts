@@ -3,7 +3,7 @@
 // skill or clarification, the composer words every summary kind in both locales with its figures, the grounding
 // guard rejects invented numbers and names, and the model's verdict only fills gaps. T-145: a follow-up ("and last
 // month?", "and for VMs?") is resolved against the previous turn, a window turns a measurement into a series, and
-// the series summary is worded in both locales.
+// the series summary is worded in both locales. T-463: a period with no health history is "not measured", never 0%.
 import { describe, expect, it } from 'vitest';
 import { ASSISTANT, LOCALES } from '@openmap/constants';
 import { createTranslator } from '@openmap/i18n';
@@ -363,6 +363,30 @@ describe.each(LOCALES)('compose (%s)', (locale) => {
     const count = composeSummary(summaries[0] as Summary, t, locale);
     expect(count.text).toContain(formatNumber(locale, 2000));
     expect(count.figures[0]?.value).toBe(2000);
+  });
+  it('T-463 words a period with no health history as not measured, never 0%', () => {
+    const unmeasured: Summary = {
+      kind: 'availability',
+      granularity: 'month',
+      back: 1,
+      periodStart: '2026-10-01',
+      lines: [{ ciId: 's9', name: 'AML Monitoring', availabilityPercent: null, downtimeMinutes: 0, targetPercent: 99.99, met: null }],
+      estatePercent: null,
+      belowTarget: 0,
+      downtimeMinutes: 0,
+    };
+    const one = composeSummary(unmeasured, t, locale);
+    expect(one.text).toContain(t('assistant.answer.targetOnly', { target: formatNumber(locale, 99.99) }));
+    expect(one.text).not.toContain(t('assistant.answer.notMet', { target: formatNumber(locale, 99.99) }));
+    expect(one.text).not.toContain('0%');
+    expect(one.figures).toEqual([]);
+    const estate = composeSummary(
+      { ...unmeasured, lines: [...(unmeasured.kind === 'availability' ? unmeasured.lines : []), { ciId: 's8', name: 'Payments', availabilityPercent: null, downtimeMinutes: 0, targetPercent: null, met: null }] },
+      t,
+      locale,
+    );
+    expect(estate.text).toContain(t('assistant.answer.notMeasured'));
+    expect(estate.figures.map((f) => f.label)).not.toContain(t('assistant.answer.estateAvailabilityLabel'));
   });
   it('joins several summaries and words a failed step with its reason', () => {
     const all = composeAll(

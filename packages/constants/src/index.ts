@@ -747,6 +747,14 @@ export const ASSISTANT = {
   weekDays: 7,
   seriesFlatPercent: 5,
   seriesDefaultDays: 7,
+  /**
+   * CI ids bound into one ClickHouse read. Query parameters travel in the HTTP query string, which ClickHouse caps
+   * per field (http_max_field_value_size, 128 KiB by default): a UUID array costs about 40 bytes an id, so a scope of
+   * 40,000 hosts is read in batches of this size and the partial aggregates are combined. Batches run this many at
+   * a time.
+   */
+  clickhouseIdBatch: 2_000,
+  clickhouseBatchConcurrency: 4,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */

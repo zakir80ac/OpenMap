@@ -1,7 +1,7 @@
 {
- "capturedAt": "2026-11-05T12:15:10.331Z",
- "tenantId": "ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c",
- "model": "Qwen/Qwen2.5-7B-Instruct",
+ "capturedAt": "2026-11-07T21:15:21.972Z",
+ "tenantId": "570b1953-2893-4976-955e-7e6bb7e9e2cc",
+ "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
  "prose": true,
  "passed": 38,
  "total": 38,
@@ -12,7 +12,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 1,
-   "text": "There are 2,000 hosts in the IT estate.",
+   "text": "There are 40,000 hosts in the IT estate.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -26,7 +26,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "hosts by operating system, 2,000 in 5 groups: Windows Server: 636; Red Hat Enterprise Linux: 629; Ubuntu: 623; VMware ESXi: 71; Nutanix AHV: 41.",
+   "text": "hosts by operating system, 40,000 in 5 groups: Red Hat Enterprise Linux: 13,266; Ubuntu: 13,167; Windows Server: 11,710; VMware ESXi: 1,512; Nutanix AHV: 345.",
    "grounded": false,
    "evidence": [
     "cmdb.attributes:postgres:5"
@@ -40,7 +40,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 3,
-   "text": "There are an average of 12 virtual machines running per host in VMware, with a maximum of 12 virtual machines on the largest hypervisor.",
+   "text": "There are an average of 12 virtual machines running per host in VMware, with a total of 18,144 virtual machines across 1,512 hypervisors.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -54,7 +54,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "The average memory of the hosts is 865.79 GB.",
+   "text": "The average memory of the hosts is 867.83 GB.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -68,7 +68,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "There are 2,000 hosts in total, with 636 running Windows Server, 629 running Red Hat Enterprise Linux, 623 running Ubuntu, 71 running VMware ESXi, and 41 running Nutanix AHV.",
+   "text": "There are 40,000 hosts in total, with 13,266 running Red Hat Enterprise Linux, 13,167 running Ubuntu, 11,710 running Windows Server, 1,512 running VMware ESXi, and 345 running Nutanix AHV.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
@@ -82,7 +82,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 5,
-   "text": "hosts by site, 2,000 in 4 groups: RYD: 1,000; JED: 600; DMM-COLO: 240; HQ: 160.",
+   "text": "hosts by site, 40,000 in 4 groups: RYD: 20,000; JED: 12,000; DMM-COLO: 4,800; HQ: 3,200.",
    "grounded": false,
    "evidence": [
     "cmdb.attributes:postgres:4"
@@ -96,7 +96,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "The average number of vCPUs per VM is 7.07.",
+   "text": "The average number of vCPUs per VM is 6.99.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -110,7 +110,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "The average CPU utilisation of hosts across 4,000 hosts is 48.36%.",
+   "text": "The average CPU utilisation of hosts across 40,000 hosts is 48.64%.",
    "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:1"
@@ -124,7 +124,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 10,
-   "text": "host CPU utilisation across 4,000 hosts, highest first (as of Oct 1, 2026): srv-jed-build-0154 94%; srv-dmm-gpu-0189 94%; srv-ryd-sql-0167 94%; ahv-jed-c01-03 93.9%; bac-ryd-01 93.9%; srv-ryd-hsm-0664-bmc 93.9%; srv-ryd-sas-0786-bmc 93.9%; srv-ryd-oracle-0326 93.9%; hv-ryd-c02-12-bmc 93.9%; srv-jed-backup-0258 93.9%.",
+   "text": "host CPU utilisation across 40,000 hosts, highest first (as of Oct 1, 2026): srv-ryd-sql-5373 94%; srv-ryd-file-18189 94%; srv-ryd-gpu-6598 94%; srv-ryd-file-3482 94%; srv-ryd-hadoop-2654 94%; srv-jed-oracle-0635 94%; srv-jed-hadoop-1120 94%; srv-jed-file-6207 94%; srv-jed-file-5145 94%; srv-jed-backup-5218 94%.",
    "grounded": false,
    "evidence": [
     "metrics.latest:clickhouse:10"
@@ -138,7 +138,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 10,
-   "text": "The JED-DH01-A-14 PDU-A draws the most power with a power draw of 4,180 W.",
+   "text": "The RYD-DH01-H-10 PDU-B draws the most power with a total of 4,200 watts.",
    "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:10"
@@ -152,21 +152,21 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "The uptime of business services this month was 100%, with 0 minutes down in total and 0 below target.",
-   "grounded": true,
+   "text": "300 business services were 100% available this month, with 0 minutes down in total and 0 below target. Lowest: AML Monitoring 100%, 0 min down, target 99.99% met; AML Monitoring (Corporate) 100%, 0 min down, target 99.5% met; AML Monitoring (Islamic) 100%, 0 min down, target 99.5% met; AML Monitoring (Private) 100%, 0 min down, target 99.99% met; AML Monitoring (Retail) 100%, 0 min down, target 99.5% met; AML Monitoring (SME) 100%, 0 min down, target 99.99% met; API Gateway 100%, 0 min down, target 99.99% met; API Gateway (Corporate) 100%, 0 min down, target 99.5% met; API Gateway (Islamic) 100%, 0 min down, target 99.99% met; API Gateway (Private) 100%, 0 min down, target 99.9% met.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
   },
   {
    "id": "uptime-service",
-   "question": "What was the availability of \"ATM Network\" last month?",
+   "question": "What was the availability of \"AML Monitoring\" last month?",
    "intent": "availability",
    "skill": "services.availability",
    "figures": 2,
-   "text": "The availability of \"ATM Network\" last month was 100%, with no downtime and the target of 99.99% met.",
+   "text": "The availability of \"AML Monitoring\" last month was 100%, with no downtime and the target of 99.99% met.",
    "grounded": true,
    "evidence": [
     "services.availability:clickhouse:1"
@@ -190,11 +190,11 @@
   },
   {
    "id": "impact-host",
-   "question": "Which business services depend on the host named ahv-dmm-c01-01?",
+   "question": "Which business services depend on the host named ahv-dmm-c10-01?",
    "intent": "impact",
    "skill": "impact",
    "figures": 1,
-   "text": "ahv-dmm-c01-01 depends on no business service in the graph.",
+   "text": "ahv-dmm-c10-01 depends on no business service in the graph.",
    "grounded": true,
    "evidence": [
     "impact:memgraph:0"
@@ -216,11 +216,11 @@
   },
   {
    "id": "history-host",
-   "question": "What changed on the host ahv-dmm-c01-01 recently?",
+   "question": "What changed on the host ahv-dmm-c10-01 recently?",
    "intent": "history",
    "skill": "history",
    "figures": 1,
-   "text": "ahv-dmm-c01-01 has 1 recorded version(s); the latest change was on Oct 1, 2026 and touched no attribute.",
+   "text": "ahv-dmm-c10-01 has 1 recorded version(s); the latest change was on Oct 1, 2026 and touched no attribute.",
    "grounded": true,
    "evidence": [
     "history:postgres:1"
@@ -262,10 +262,10 @@
    "intent": "lookup",
    "skill": "graph.query",
    "figures": 1,
-   "text": "94 rows with columns id, rack, hosts.",
+   "text": "200 rows with columns id, rack, hosts.",
    "grounded": false,
    "evidence": [
-    "graph.query:memgraph:94"
+    "graph.query:memgraph:200"
    ],
    "ok": true,
    "why": []
@@ -288,7 +288,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 1,
-   "text": "يوجد 2,000 من المضيفين.",
+   "text": "عدد المضيفين هو 40,000.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -302,7 +302,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "الذاكرة المتوسطة للمضيفين هو 865.79 GB.",
+   "text": "الذاكرة المتوسطة للمضيفين هو 867.83 GB.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -316,7 +316,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 3,
-   "text": "في المتوسط، لكل مضيف، توجد 12 من الأجهزة الافتراضية.",
+   "text": "في المتوسط، لكل مضيف، يُفتراض 12 من الأجهزة الافتراضية.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -326,11 +326,11 @@
   },
   {
    "id": "cpu-series-host",
-   "question": "CPU utilisation of host ahv-dmm-c01-01 over the last 7 days",
+   "question": "CPU utilisation of host ahv-dmm-c10-01 over the last 7 days",
    "intent": "measurement",
    "skill": "metrics.series",
    "figures": 0,
-   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c01-01 over the last 7 days.",
+   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c10-01 over the last 7 days.",
    "grounded": true,
    "evidence": [
     "metrics.series:clickhouse:0"
@@ -344,10 +344,10 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "التوافر خدمات الأعمال هذا الشهر هو 15 خدمة أعمال متاحة بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
-   "grounded": true,
+   "text": "كانت 300 خدمة أعمال متاحة بنسبة 100% الشهر الحالي، بإجمالي 0 دقيقة تعطل و0 دون الهدف. الأدنى: AML Monitoring 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ AML Monitoring (Corporate) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (Islamic) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (Private) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ AML Monitoring (Retail) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (SME) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway (Corporate) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ API Gateway (Islamic) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway (Private) 100%، 0 دقيقة تعطل، تحقق هدف 99.9%.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
@@ -386,7 +386,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "متوسط استخدام معالج المضيف عبر 4,000 من المضيفين هو 48.36%، من أحدث العينات حتى 01‏/10‏/2026.",
+   "text": "متوسط استخدام معالج المضيف عبر 40,000 من المضيفين هو 48.64%، من أحدث العينات حتى 01‏/10‏/2026.",
    "grounded": false,
    "evidence": [
     "metrics.latest:clickhouse:1"
@@ -414,7 +414,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 6,
-   "text": "There are 2,000 servers in the IT estate, with 636 Windows Server, 629 Red Hat Enterprise Linux, 623 Ubuntu, 71 VMware ESXi, and 41 Nutanix AHV.",
+   "text": "There are 40,000 servers in the IT estate, with 13,266 running Red Hat Enterprise Linux, 13,167 running Ubuntu, 11,710 running Windows Server, 1,512 running VMware ESXi, and 345 running Nutanix AHV.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:5"
@@ -428,10 +428,10 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "The uptime of business services this month was 100%, with 0 minutes down in total and 0 below target.",
-   "grounded": true,
+   "text": "300 business services were 100% available this month, with 0 minutes down in total and 0 below target. Lowest: AML Monitoring 100%, 0 min down, target 99.99% met; AML Monitoring (Corporate) 100%, 0 min down, target 99.5% met; AML Monitoring (Islamic) 100%, 0 min down, target 99.5% met; AML Monitoring (Private) 100%, 0 min down, target 99.99% met; AML Monitoring (Retail) 100%, 0 min down, target 99.5% met; AML Monitoring (SME) 100%, 0 min down, target 99.99% met; API Gateway 100%, 0 min down, target 99.99% met; API Gateway (Corporate) 100%, 0 min down, target 99.5% met; API Gateway (Islamic) 100%, 0 min down, target 99.99% met; API Gateway (Private) 100%, 0 min down, target 99.9% met.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
@@ -442,10 +442,10 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "Last month, 15 business services were 100% available, with 0 minutes down in total and 0 below target.",
-   "grounded": true,
+   "text": "300 business services were 99.9% available last month, with 12,869 minutes down in total and 47 below target. Lowest: Integration Services (Private) 99.26%, 329 min down, target 99.9% missed; Bill Payments (SADAD) (Retail) 99.27%, 327 min down, target 99.9% missed; Securities Custody 99.38%, 279 min down, target 99.5% missed; AML Monitoring (Corporate) 99.4%, 267 min down, target 99.5% missed; Retail Internet Banking 99.44%, 249 min down, target 99.5% missed; API Gateway (Retail) 99.48%, 231 min down, target 99.9% missed; Open Banking APIs (Private) 99.49%, 229 min down, target 99.5% missed; Digital Identity (Corporate) 99.49%, 228 min down, target 99.9% missed; Personal Finance (SME) 99.55%, 202 min down, target 99.9% missed; Wealth Management (Islamic) 99.55%, 202 min down, target 99.5% met.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
@@ -456,7 +456,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "The average memory of the hosts is 865.79 GB.",
+   "text": "The average memory of the hosts is 867.83 GB.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -470,7 +470,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "The average memory (GB) of 1,500 virtual machines is 23.95 GB.",
+   "text": "The average memory of 30,000 virtual machines is 23.38 GB.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -484,10 +484,10 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "التوافر خدمات الأعمال هذا الشهر هو 15 خدمة، بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
-   "grounded": true,
+   "text": "كانت 300 خدمة أعمال متاحة بنسبة 100% الشهر الحالي، بإجمالي 0 دقيقة تعطل و0 دون الهدف. الأدنى: AML Monitoring 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ AML Monitoring (Corporate) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (Islamic) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (Private) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ AML Monitoring (Retail) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ AML Monitoring (SME) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway (Corporate) 100%، 0 دقيقة تعطل، تحقق هدف 99.5%؛ API Gateway (Islamic) 100%، 0 دقيقة تعطل، تحقق هدف 99.99%؛ API Gateway (Private) 100%، 0 دقيقة تعطل، تحقق هدف 99.9%.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
@@ -498,22 +498,22 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "الشهر الماضي، كانت 15 خدمة أعمال متاحة بنسبة 100%، بإجمالي 0 دقيقة تعطل و0 دون الهدف.",
-   "grounded": true,
+   "text": "كانت 300 خدمة أعمال متاحة بنسبة 99.9% الشهر الماضي، بإجمالي 12,869 دقيقة تعطل و47 دون الهدف. الأدنى: Integration Services (Private) 99.26%، 329 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Bill Payments (SADAD) (Retail) 99.27%، 327 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Securities Custody 99.38%، 279 دقيقة تعطل، لم يتحقق هدف 99.5%؛ AML Monitoring (Corporate) 99.4%، 267 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Retail Internet Banking 99.44%، 249 دقيقة تعطل، لم يتحقق هدف 99.5%؛ API Gateway (Retail) 99.48%، 231 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Open Banking APIs (Private) 99.49%، 229 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Digital Identity (Corporate) 99.49%، 228 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Personal Finance (SME) 99.55%، 202 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Wealth Management (Islamic) 99.55%، 202 دقيقة تعطل، تحقق هدف 99.5%.",
+   "grounded": false,
    "evidence": [
-    "services.availability:clickhouse:15"
+    "services.availability:clickhouse:300"
    ],
    "ok": true,
    "why": []
   },
   {
    "id": "cpu-of-host",
-   "question": "CPU utilisation of host ahv-dmm-c01-01",
+   "question": "CPU utilisation of host ahv-dmm-c10-01",
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "The average host CPU utilisation across 1 hosts is 31.8%, from the latest samples as of Oct 1, 2026.",
-   "grounded": false,
+   "text": "The average host CPU utilisation across 1 hosts is 87.3%.",
+   "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:1"
    ],
@@ -526,7 +526,7 @@
    "intent": "measurement",
    "skill": "metrics.series",
    "figures": 0,
-   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c01-01 over the last 7 days.",
+   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c10-01 over the last 7 days.",
    "grounded": true,
    "evidence": [
     "metrics.series:clickhouse:0"
