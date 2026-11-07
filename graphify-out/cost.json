@@ -30,8 +30,15 @@
       "input_tokens": 450833,
       "output_tokens": 0,
       "files": 43
+    },
+    {
+      "date": "2026-11-07T11:57:29.295220+00:00",
+      "input_tokens": 152431,
+      "output_tokens": 0,
+      "files": 694,
+      "note": "ADR-045 update: AST for changed code, one Haiku agent for 5 changed docs (subagent total tokens); 106 other stale docs/images left unstamped for a later run"
     }
   ],
-  "total_input_tokens": 2006394,
+  "total_input_tokens": 2158825,
   "total_output_tokens": 71200
 }
