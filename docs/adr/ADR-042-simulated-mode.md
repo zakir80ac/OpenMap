@@ -35,7 +35,11 @@ arrives. Two things stay true while the rows are parked:
    simulator as the evidence.
 5. Gaps the simulator exposes in a collector are fixed in the collector with a regression test. The first was token
    and login transports ignoring `caCertPem` (`restjson.TransportFor`, T-351).
-6. Simulator data never reaches `packages/testing/fixtures/vendor` and is never committed as a capture.
+6. The harness checks every result against the CI contract the way the scheduler does. The collector runtime
+   (`collector.ContractAttributes`) converts every attribute value to a scalar or an array of scalars before the
+   result leaves the binary: a flat map becomes `key=value` strings and an object becomes compact JSON text. A
+   collector reporting a map or an object list can no longer lose a whole sweep to a rejected result; twelve did.
+7. Simulator data never reaches `packages/testing/fixtures/vendor` and is never committed as a capture.
 
 ## Consequences
 

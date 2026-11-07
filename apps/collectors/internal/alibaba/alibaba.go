@@ -35,7 +35,7 @@ const (
 	provider       = "alibaba"
 	evidenceKind   = "api_response"
 	httpTimeout    = 60 * time.Second
-	credType       = "access_key"
+	credType       = "cloud_role" // contract credential type: accessKeyId and accessKeySecret
 	credKeyID      = "accessKeyId"
 	credSecret     = "accessKeySecret"
 	optionRegion   = "regionId"

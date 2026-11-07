@@ -96,9 +96,22 @@ type Report struct {
 
 // Binaries builds collector binaries on demand into dir and caches the paths.
 type Binaries struct {
-	Repo string
-	Dir  string
-	done map[string]string
+	Repo     string
+	Dir      string
+	done     map[string]string
+	contract *Contract
+}
+
+// Contract loads the result contract checks once per harness.
+func (b *Binaries) Contract() (*Contract, error) {
+	if b.contract == nil {
+		c, err := LoadContract(b.Repo)
+		if err != nil {
+			return nil, err
+		}
+		b.contract = c
+	}
+	return b.contract, nil
 }
 
 func NewBinaries(repo, dir string) *Binaries {
@@ -339,6 +352,10 @@ func RunVendor(ctx context.Context, e *estate.Estate, env *sim.Env, bins *Binari
 	if err != nil {
 		return nil, err
 	}
+	checks, err := bins.Contract()
+	if err != nil {
+		return nil, err
+	}
 	cv, err := contractVersion(ctx, bin)
 	if err != nil {
 		return nil, fmt.Errorf("%s --manifest: %w", v.Collector(), err)
@@ -350,12 +367,12 @@ func RunVendor(ctx context.Context, e *estate.Estate, env *sim.Env, bins *Binari
 	defer func() { _ = ep.Close() }()
 	var reports []Report
 	for _, run := range v.Runs(e, ep, env) {
-		reports = append(reports, runOne(ctx, e, env, bin, cv, v, ep, run))
+		reports = append(reports, runOne(ctx, e, env, bin, cv, checks, v, ep, run))
 	}
 	return reports, nil
 }
 
-func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string, v sim.Vendor, ep *sim.Endpoint, run sim.Run) Report {
+func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string, checks *Contract, v sim.Vendor, ep *sim.Endpoint, run sim.Run) Report {
 	rep := Report{Simulator: v.ID(), Run: run.Name, Collector: v.Collector(), Requirements: v.Requirements(), Provenance: sim.Provenance,
 		ExpectedCis: len(run.Expect.CIs), ExpectedRels: len(run.Expect.Rels)}
 	started := time.Now()
@@ -397,6 +414,9 @@ func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string,
 		rep.Errors = append(rep.Errors, ce.Code+": "+ce.Message)
 	}
 	rep.EmittedCis, rep.EmittedRels = len(res.Cis), len(res.Relationships)
+	for _, violation := range checks.Violations(res, sampleLimit) {
+		rep.Errors = append(rep.Errors, "contract: "+violation)
+	}
 	m := Compare(res, run.Expect)
 	missC, missR := m.MissingCis, m.MissingRels
 	rep.MatchedCis, rep.MatchedRels, rep.EmittedByType = m.MatchedCis, m.MatchedRels, m.ByType

@@ -35,7 +35,7 @@ const (
 	provider     = "oci"
 	evidenceKind = "api_response"
 	httpTimeout  = 60 * time.Second
-	credType     = "api_key"
+	credType     = "api_signing_key"
 	credTenancy  = "tenancyOcid"
 	credUser     = "userOcid"
 	credFinger   = "fingerprint"

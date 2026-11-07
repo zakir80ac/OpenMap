@@ -19,6 +19,9 @@ export const COLLECTOR_FAMILIES = [
   'cloud_aws',
   'cloud_azure',
   'cloud_gcp',
+  /** Oracle Cloud Infrastructure and Alibaba Cloud (collectors since REQ-DISC-010; families added in 0.6.0). */
+  'cloud_oci',
+  'cloud_alibaba',
   'netflow',
   'port_scan',
   /** Out-of-band hardware: HPE iLO, Dell iDRAC, Lenovo XClarity, Cisco CIMC and generic BMCs over Redfish, IPMI fallback. */
@@ -58,6 +61,10 @@ export const CREDENTIAL_TYPES = [
   'certificate',
   'kubeconfig',
   'cloud_role',
+  /** 0.6.0: a Google service-account key (Cloud and Workspace with domain-wide delegation). */
+  'service_account',
+  /** 0.6.0: an OCI API signing key. */
+  'api_signing_key',
 ] as const;
 export const credentialTypeSchema = z.enum(CREDENTIAL_TYPES);
 export type CredentialType = z.infer<typeof credentialTypeSchema>;
@@ -79,6 +86,8 @@ export const CREDENTIAL_FIELDS: Record<CredentialType, { required: readonly stri
   certificate: { required: ['certificatePem', 'privateKeyPem'], optional: ['passphrase'], secret: ['privateKeyPem', 'passphrase'] },
   kubeconfig: { required: ['kubeconfig'], optional: [], secret: ['kubeconfig'] },
   cloud_role: { required: ['accessKeyId', 'accessKeySecret'], optional: ['roleArn', 'clientEmail', 'privateKeyPem', 'adminEmail', 'subscriptionId'], secret: ['accessKeySecret', 'privateKeyPem'] },
+  service_account: { required: ['clientEmail', 'privateKeyPem'], optional: ['adminEmail'], secret: ['privateKeyPem'] },
+  api_signing_key: { required: ['tenancyOcid', 'userOcid', 'fingerprint', 'privateKeyPem'], optional: [], secret: ['privateKeyPem'] },
 };
 
 export const TARGET_KINDS = ['host', 'cidr', 'url', 'cluster', 'account', 'zone', 'flow_source'] as const;
@@ -92,7 +101,8 @@ export type Target = z.infer<typeof targetSchema>;
 
 /** Static description a collector binary prints with `--manifest`. */
 export const collectorManifestSchema = z.object({
-  id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+  /** Collector ids are the apps/collectors/cmd directory names, snake_case (0.6.0 allows the underscore they use). */
+  id: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
   family: collectorFamilySchema,
   version: z.string().min(1),
   language: z.enum(['go', 'python']),

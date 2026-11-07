@@ -153,6 +153,9 @@ func Execute(ctx context.Context, impl Implementation, inv contract.Invocation) 
 				return
 			}
 			reached++
+			for i := range obs.Cis {
+				obs.Cis[i].Attributes = ContractAttributes(obs.Cis[i].Attributes)
+			}
 			result.Cis = append(result.Cis, obs.Cis...)
 			result.Relationships = append(result.Relationships, obs.Relationships...)
 			result.Samples = append(result.Samples, obs.Samples...)

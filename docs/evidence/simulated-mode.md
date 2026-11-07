@@ -12,10 +12,14 @@ written to `.local/sim-report-full.json`.
 
 ## Result
 
-**495 of 495 runs pass**, across 39 simulators and 7 protocol servers:
+**495 of 495 runs pass with contract checks on**, across 39 simulators and 7 protocol servers:
 - CIs: 66,565 of 66,565 reproduced.
 - Relationships: 82,331 of 82,331 reproduced.
 - Expected attribute values (where a run checks them): no mismatches.
+- Every result is also checked against the CI contract as the scheduler checks it (`internal/verify/contract.go`):
+  - CI and relationship types are contract enum values;
+  - identities are non-empty strings;
+  - attribute values are scalars or arrays of scalars.
 - TLS is verified against a per-process CA (`verifyTls` + `caCertPem`) wherever the collector supports TLS.
 - Authentication is real: OAuth, JWT, SigV4, OCI and Alibaba signatures, SNMPv3 USM, SSH keys with pinned host keys,
   WinRM Basic over HTTPS, LDAP binds and TSIG.
@@ -72,6 +76,28 @@ Harness and plumbing tests:
 
 ## Collector bugs found and fixed (each with a regression test)
 
+- **Attribute values the contract forbids (found on the full stack):** the scheduler rejected Pure results whose
+  `controllers` were an array of objects. With contract checks on, the harness found twelve collectors reporting
+  maps or lists of objects:
+  - cloud: AWS and Azure tags and type counts, GCP labels, OCI backend sets and listeners;
+  - DNS record types; FC switches and zone members; Hyper-V virtual switches;
+  - Kubernetes labels, ports and selectors; NAS access; S3 storage classes;
+  - ONTAP nodes, aggregates and SVMs; WMI disks and running services.
+
+  The collector runtime now converts every attribute losslessly before the result leaves the binary: a flat map
+  becomes `key=value` strings, and an object becomes compact JSON text (`collector.ContractAttributes`, T-446).
+  Pure now reports a controller count plus states (T-445).
+- **Manifests the API silently dropped:**
+  - the contract's manifest id pattern refused the snake_case ids every collector uses;
+  - OCI and Alibaba declared families the contract lacked;
+  - OCI, Alibaba, GCP and Google Workspace declared credential types it lacked (`api_key`, `access_key`,
+    `service_account`).
+
+  Collector contract 0.6.0 accepts `_` in ids. It adds the `cloud_oci` and `cloud_alibaba` families and the
+  `service_account` and `api_signing_key` credential types, with their vault fields and en/ar labels; Alibaba uses
+  `cloud_role`. Migration 0027 adds the database enum values. T-359 checks every collector manifest against the
+  contract schema.
+
 - **Private CA ignored on token, login or API transports:** collectors behind a private CA could not connect.
   Fixed in restjson `TransportFor` (T-351) and in Pure (T-351), vmware (T-385), saas (T-442), vulnfeed (T-444),
   azure (T-426), gcp (T-427), oci (T-428), alibaba (T-429), aws (T-425), redfish (T-395), ucs (T-396),
@@ -99,6 +125,25 @@ Harness and plumbing tests:
   - Windows NAS and DHCP keyed servers on the target address instead of their DNS name, and Windows DHCP options were
     never parsed (T-376, T-377).
   - The port scanner left unlisted web ports `unknown` (T-416).
+
+## Full stack: Discovery Node, scheduler, reconciler, console
+
+On the compose stack (`docker-compose.simulated.yml`, profile `simulated`):
+1. The simulator container served the plan.
+2. `scheduler plan:submit` stored the simulated credentials in OpenBao under `simulated/` and scheduled the
+   warranty, SaaS and Pure jobs on `node-compose-01`.
+3. The real Node ran the real collectors in the synthetic tenant.
+
+Results:
+- **Warranty:** the asset register now carries vendor-verified warranty (`source: vendor_api`, `verifiedAt` set) for
+  all 769 Dell servers, 517 Lenovo servers and 135 Cisco devices. 124 of the Cisco devices also carry a vendor end of
+  life. The Lifecycle screen's hardware view shows the Cisco models dated, for example Nexus 9364C-GX: end of sale
+  2025-03-03, end of support 2031-03-03 (`console/simulated-lifecycle-hardware-en.png`, `-ar.png`).
+- **SaaS:** the five tenants were rediscovered (`console/simulated-saas-en.png`, `-ar.png`). Tenant ids differ between
+  the estate (UUIDs) and the simulator (vendor-shaped ids), so four tenants and nine subscriptions were added rather
+  than merged; the drift below, made visible.
+
+The dev tenant now holds these simulated results. Replaying the estate with `--reset` restores it.
 
 ## Identity drift: synthetic estate against real collectors (open finding)
 

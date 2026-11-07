@@ -7,7 +7,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]*$"
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
     },
     "family": {
       "type": "string",
@@ -26,6 +26,8 @@
         "cloud_aws",
         "cloud_azure",
         "cloud_gcp",
+        "cloud_oci",
+        "cloud_alibaba",
         "netflow",
         "port_scan",
         "ipmi_redfish",
@@ -79,7 +81,9 @@
           "oauth_client",
           "certificate",
           "kubeconfig",
-          "cloud_role"
+          "cloud_role",
+          "service_account",
+          "api_signing_key"
         ]
       }
     },

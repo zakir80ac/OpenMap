@@ -245,15 +245,16 @@ func Emit(inv *Inventory, target contract.Target, at time.Time) collector.Observ
 	serial := Serial(inv)
 	arrayIdentity := map[string]string{"serialNumber": serial}
 	arrayRef := contract.CiRef{Type: typeArray, Identity: arrayIdentity}
-	controllers := []map[string]any{}
+	// Attribute values are scalars or arrays of scalars (CI contract), so each controller is one "name mode status" entry.
+	controllers := make([]string, 0, len(inv.Controllers))
 	model := ""
 	for _, c := range inv.Controllers {
-		controllers = append(controllers, map[string]any{"name": c.Name, "model": c.Model, "status": c.Status, "mode": c.Mode, "version": c.Version})
+		controllers = append(controllers, strings.TrimSpace(c.Name+" "+c.Mode+" "+c.Status))
 		model = c.Model
 	}
 	a := inv.Array
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeArray, Identity: arrayIdentity, Name: a.Name,
-		Attributes: map[string]any{"vendor": vendor, "model": model, "os": a.OS, "version": a.Version, "arrayId": a.ID, "capacityBytes": a.Capacity, "usedBytes": a.Space.TotalPhysical, "dataReduction": a.Space.DataReduction, "snapshotBytes": a.Space.Snapshots, "controllers": controllers, "volumeCount": len(inv.Volumes), "hostCount": len(inv.Hosts), "managementIp": target.Value},
+		Attributes: map[string]any{"vendor": vendor, "model": model, "os": a.OS, "version": a.Version, "arrayId": a.ID, "capacityBytes": a.Capacity, "usedBytes": a.Space.TotalPhysical, "dataReduction": a.Space.DataReduction, "snapshotBytes": a.Space.Snapshots, "controllers": len(inv.Controllers), "controllerStates": controllers, "volumeCount": len(inv.Volumes), "hostCount": len(inv.Hosts), "managementIp": target.Value},
 		Tags:       []string{}, ExternalIDs: []contract.ExternalID{{Source: vendor, ID: a.ID}}, ObservedAt: at})
 	hostByName := map[string]hostDoc{}
 	for _, h := range inv.Hosts {

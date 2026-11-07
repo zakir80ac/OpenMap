@@ -78,7 +78,9 @@
         "oauth_client",
         "certificate",
         "kubeconfig",
-        "cloud_role"
+        "cloud_role",
+        "service_account",
+        "api_signing_key"
       ]
     },
     "timeoutMs": {

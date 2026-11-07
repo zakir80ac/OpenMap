@@ -373,8 +373,8 @@ func (Vendor) Runs(_ *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		Targets: []sim.Target{{Kind: "account", Value: tenancy, Label: "horizon tenancy"}},
 		Options: map[string]any{"identityUrl": ep.Devices[keyIdentity], "coreUrl": ep.Devices[keyCore], "databaseUrl": ep.Devices[keyDatabase],
 			"containerEngineUrl": ep.Devices[keyContainer], "loadBalancerUrl": ep.Devices[keyLB], "caCertPem": env.CA.PEM},
-		CredentialType: "api_key",
-		Credential:     &sim.Credential{Type: "api_key", Fields: map[string]string{"tenancyOcid": tenancy, "userOcid": user, "fingerprint": fp, "privateKeyPem": keyPem}},
+		CredentialType: "api_signing_key",
+		Credential:     &sim.Credential{Type: "api_signing_key", Fields: map[string]string{"tenancyOcid": tenancy, "userOcid": user, "fingerprint": fp, "privateKeyPem": keyPem}},
 	}
 	x := &run.Expect
 	x.CI("cloud_account", tenancy)

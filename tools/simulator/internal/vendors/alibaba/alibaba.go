@@ -399,8 +399,8 @@ func (Vendor) Runs(_ *estate.Estate, ep *sim.Endpoint, env *sim.Env) []sim.Run {
 		Targets: []sim.Target{{Kind: "account", Value: account, Label: "horizon alibaba"}},
 		Options: map[string]any{"regionId": region, "ecsUrl": ep.Devices[keyECS], "rdsUrl": ep.Devices[keyRDS], "slbUrl": ep.Devices[keySLB],
 			"csUrl": ep.Devices[keyCS], "caCertPem": env.CA.PEM},
-		CredentialType: "access_key",
-		Credential:     &sim.Credential{Type: "access_key", Fields: map[string]string{"accessKeyId": accessKeyID(env), "accessKeySecret": env.Secret}},
+		CredentialType: "cloud_role",
+		Credential:     &sim.Credential{Type: "cloud_role", Fields: map[string]string{"accessKeyId": accessKeyID(env), "accessKeySecret": env.Secret}},
 	}
 	x := &run.Expect
 	x.CI("cloud_account", account)

@@ -1,6 +1,6 @@
 {
   "provenance": "simulated",
-  "generatedBy": "tools/simulator verify",
+  "generatedBy": "tools/simulator verify (contract checks on)",
   "estate": "packages/testing/fixtures/synth-small (seed 42)",
   "date": "2026-11-07",
   "runs": 495,

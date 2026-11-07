@@ -15,10 +15,12 @@ test('the SaaS inventory lists tenants, seats, renewals and data flows (REQ-CMDB
   if (!isLocale(locale)) throw new Error('project name must be a locale: ' + locale);
   await page.goto('/' + locale + '/saas');
   await signIn(page, locale);
+  // An organisation may run several tenants of one vendor (and simulated discovery adds its own), so each vendor needs
+  // at least one tenant card.
   for (const vendor of ['Microsoft', 'Google', 'Salesforce', 'ServiceNow', 'Workday'])
-    await expect(page.locator('[data-tenant="' + vendor + '"]')).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
+    await expect(page.locator('[data-tenant="' + vendor + '"]').first()).toBeVisible({ timeout: PAINT_TIMEOUT_MS });
   await expect(page.locator('tr[data-state="lapsed"]').first()).toBeVisible();
-  await expect(page.locator('tr[data-subscription="Microsoft 365 E3"]')).toBeVisible();
+  await expect(page.locator('tr[data-subscription="Microsoft 365 E3"]').first()).toBeVisible();
   // At least one subscription carries a data flow from an internal application.
   await expect(page.locator('tr[data-subscription] td:last-child a').first()).toBeVisible();
   await page.screenshot({ path: screenshotsDir + 'saas-' + locale + '.png', fullPage: false });
