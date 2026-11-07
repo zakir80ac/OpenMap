@@ -176,8 +176,13 @@ function generateDhcp(world: World, rng: Rng, unknowns: UnknownRec[]): void {
   }
   const hq = siteOf(world, 'HQ');
   const hqScopes = b.count(HQ_USER_SCOPES_BASE);
+  // Each floor's scope serves its own subnet: allocate until the DMZ pool reaches a /24 no earlier floor took (at scale 1
+  // ten floors would otherwise share the first one and describe one scope ten times).
+  const floorSubnets = new Set<string>();
   for (let f = 0; f < hqScopes; f++) {
-    const alloc = allocateIp(world, hq, 'dmz');
+    let alloc = allocateIp(world, hq, 'dmz');
+    while (floorSubnets.has(alloc.subnetCidr)) alloc = allocateIp(world, hq, 'dmz');
+    floorSubnets.add(alloc.subnetCidr);
     const parts = alloc.subnetCidr.split('/')[0]?.split('.') ?? [];
     const base = parts.slice(0, 3).map(Number);
     const [a, bOct, c] = base;

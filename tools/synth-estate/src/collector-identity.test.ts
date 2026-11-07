@@ -13,6 +13,8 @@ import { awsArn } from './gen/cloud.js';
 
 const SCALE = 0.01;
 const SEED = 42;
+/** The scale of the full estate (550k CIs) the reconciler budget is measured on. */
+const FULL_SCALE = 1;
 
 type Ref = { type: string; identity: Record<string, string> } | { id: string };
 
@@ -137,5 +139,18 @@ describe('synth-estate identities follow the collectors', () => {
     expect(merges.slice(0, 10)).toEqual([]);
     // The two estate tenants named horizonbank, at ServiceNow and at Workday, stay two CIs.
     expect(ofType('saas_tenant').filter((t) => t.identity['tenantId'] === 'horizonbank').map((t) => t.identity['vendor']).sort()).toEqual(['ServiceNow', 'Workday']);
+  });
+
+  it('reports no CI twice in one collector result at full scale (the scale-1 replay)', () => {
+    const estate = buildEstate(SEED, FULL_SCALE);
+    const seen = new Map<string, string>();
+    const twice: string[] = [];
+    for (const c of estate.builder.cis) {
+      const k = String(c.slot) + '|' + key(c);
+      const first = seen.get(k);
+      if (first !== undefined) twice.push(c.type + ' ' + first + ' | ' + c.name);
+      else seen.set(k, c.name);
+    }
+    expect(twice.slice(0, 10)).toEqual([]);
   });
 });
