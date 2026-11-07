@@ -71,6 +71,8 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
   const result = sanitizeResult(input);
   const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [], samples: 0, samplesDropped: 0, components: [], refKeys: new Map() };
   const createdByKey = new Map<string, string>();
+  // Where each CI this result creates sits in out.created and out.events, so a second observation of it can merge in.
+  const createdSlot = new Map<string, { ci: number; event: number }>();
   const provenance = { collectorId: result.collectorId, nodeId: result.nodeId, runId: result.runId };
 
   // ADR-045: CIs that name nothing first, so a listener's hostRef can name the host the same result reports.
@@ -78,8 +80,25 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
   for (const observed of ordered) {
     const hasRefs = refPairs(observed).length > 0;
     const refKey = hasRefs ? refKeyOf(observed, lookup.refs) : null;
-    const resolution = resolve(observed, lookup.index, refKey);
     const source = { ...provenance, confidence: confidenceFor(observed, result.collectorId) };
+    // A CI the result reports twice (two scopes with one server and subnet) is one CI: the later observation merges
+    // into the one this result already created, as it would into a stored CI.
+    const observedKeys = identityKeysOf(observed, refKey);
+    const sameResult = observedKeys.map((k) => createdByKey.get(k)).find((id) => id !== undefined);
+    const slot = sameResult === undefined ? undefined : createdSlot.get(sameResult);
+    const first = slot === undefined ? undefined : out.created[slot.ci];
+    if (slot !== undefined && first !== undefined) {
+      const merged = merge({ attributes: first.attributes, source: first.source, observedAt: first.observedAt }, { attributes: observed.attributes, source, observedAt: observed.observedAt });
+      const identity = { ...observed.identity, ...first.identity };
+      const ci: Ci = { ...first, identity, attributes: merged.attributes, source: merged.source, observedAt: observed.observedAt, tags: [...new Set([...first.tags, ...observed.tags])], checksum: checksum(first.type, identity, merged.attributes) };
+      out.created[slot.ci] = ci;
+      out.events[slot.event] = envelope(result.tenantId, 'openmap.ci.created', ci.id, { ci });
+      for (const k of observedKeys) createdByKey.set(k, ci.id);
+      lookup.refs.add(ci, ci.id);
+      out.unchanged++;
+      continue;
+    }
+    const resolution = resolve(observed, lookup.index, refKey);
     if (resolution.kind === 'conflict') {
       out.conflicts.push({ observed, ciIds: resolution.ciIds });
       out.events.push(envelope(result.tenantId, 'openmap.reconciliation.conflict', observed.name, { type: observed.type, identity: observed.identity, ciIds: resolution.ciIds, matchedKeys: resolution.matchedKeys }));
@@ -104,8 +123,9 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
         validTo: null,
         checksum: checksum(observed.type, observed.identity, observed.attributes),
       };
+      createdSlot.set(id, { ci: out.created.length, event: out.events.length });
       out.created.push(ci);
-      for (const k of identityKeysOf(observed, refKey)) createdByKey.set(k, id);
+      for (const k of observedKeys) createdByKey.set(k, id);
       lookup.refs.add(ci, id);
       if (hasRefs) out.refKeys.set(id, refKey);
       out.events.push(envelope(result.tenantId, 'openmap.ci.created', id, { ci }));

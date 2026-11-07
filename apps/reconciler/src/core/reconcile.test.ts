@@ -81,6 +81,26 @@ describe('reconcile', () => {
     expect(out.created[0]?.code).toBe('NET-SW1');
     expect(out.events.map((e) => e.type)).toEqual(['openmap.ci.created']);
   });
+  it('merges a CI the result reports twice into the one it creates', () => {
+    const scope = (name: string, attributes: Record<string, string>) => ({ type: 'dhcp_scope' as const, identity: { serverRef: 'dhcp-01.bank.local', cidr: '10.58.0.0/24' }, name, attributes, tags: [name], externalIds: [], observedAt: t1 });
+    const out = reconcile(
+      result({
+        cis: [scope('HQ floor 1', { floor: '1' }), scope('HQ floor 2', { relayAgent: 'hq-core-01' })],
+        relationships: [{ type: 'in_subnet', from: { type: 'dhcp_scope', identity: { serverRef: 'dhcp-01.bank.local', cidr: '10.58.0.0/24' } }, to: { type: 'subnet', identity: { cidr: '10.58.0.0/24' } }, attributes: {}, observedAt: t1 }],
+      }),
+      lookupWith([]),
+    );
+    expect(out.created).toHaveLength(1);
+    expect(out.unchanged).toBe(1);
+    const ci = out.created[0];
+    expect(ci?.attributes).toMatchObject({ floor: '1', relayAgent: 'hq-core-01' });
+    expect(ci?.tags).toEqual(['HQ floor 1', 'HQ floor 2']);
+    expect(ci?.checksum).toBe(checksum('dhcp_scope', ci?.identity ?? {}, ci?.attributes ?? {}));
+    // One created event, carrying the merged CI.
+    expect(out.events.filter((e) => e.type === 'openmap.ci.created')).toHaveLength(1);
+    expect((out.events[0]?.data as { ci: Ci }).ci.attributes).toMatchObject({ relayAgent: 'hq-core-01' });
+  });
+
   it('updates an existing CI only when the checksum changes', () => {
     const same = reconcile(result({ cis: [{ type: 'host', identity: { serialNumber: '7kq2m93' }, name: 'db-ryd-pg-core-01', attributes: { os: 'Ubuntu 22.04' }, tags: [], externalIds: [], observedAt: t1 }] }), lookupWith([storedHost]));
     expect(same.unchanged).toBe(1);
