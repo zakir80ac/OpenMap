@@ -2,7 +2,72 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-07 (checkpoint 28: scale-1 replay inside the budget, REQ-CORE-013 Done; checkpoint 27 follow-ups)
+## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact prediction accuracy)
+
+Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
+
+**1. Assistant evaluation on the scale-1 estate** (`2a56a0a`, `353f569`). The evaluation picks the tenant with the most
+business services, which is now the scale-1 tenant `570b1953` (300 services, 40,000 hosts).
+- **Failure 1:** every measurement question failed. The host scope went to ClickHouse as one bound array, and ClickHouse
+  caps a query-string field at 128 KiB (about 3,000 UUIDs). `metrics.latest` and `metrics.series` now read in batches
+  of `ASSISTANT.clickhouseIdBatch` (2,000), 4 at a time. The partials combine exactly; the evidence carries the scope
+  size, not the ids (T-462).
+- **Failure 2:** a period with no health history read "0%, no downtime". It now reads "not measured", with no 0%
+  figure, and its target is neither met nor missed (T-463).
+- **Result:** 38/38 with Qwen2.5-Coder-1.5B (`docs/evidence/assistant-eval.json`). Host CPU averages 48.64% across
+  40,000 hosts; the PDU ranking and the Arabic answers are correct.
+- **Earlier fixes, recorded:** T-460 (an unfiltered measurement reads only CIs of its type) and T-461 (`back` counts
+  from the newest period) are on REQ-AI-007 and REQ-AI-008 (`67e0c9f`).
+- The API image was rebuilt; the console's assistant answers "44.51% across 2,000 hosts" on the dev tenant.
+
+**2. Synthetic outages spread over the whole month** (`215ed8d`, T-464).
+- **The bug:** each outage started up to window/(count+1) after the previous one, so outages fell in the first half of
+  each 30-day window. The ten days before `--now` never had one, and every service read 100% this month.
+- **The fix:** each outage now falls anywhere in its own slot.
+- Both tenants' health history was regenerated and reloaded.
+
+**3. REQ-BSM-004 impact prediction accuracy** (ADR-047, migration 0032, GraphQL 1.19.0, Impact contract 1.1.0).
+- **What is compared:** every resolved or closed incident that names a root cause.
+  - It is compared with the person's latest saved simulation of exactly that root cause, run before the incident
+    opened.
+  - Failing that, with a replay: a scenario of origin `incident`, `failed`, redundancy honoured, run over the current
+    graph. Replays are kept out of the saved list.
+  - Accuracy is the Jaccard similarity of predicted (down or degraded) and actual services (`compareImpact`).
+- **Misses:** each missed service becomes a suggestion, root cause `part_of_service` missed service. That is the edge
+  the impact traversal follows into services.
+  - Accepting creates the relationship as a person's edit.
+  - Dismissing keeps the row, so the miss is not suggested again.
+- **When:**
+  - The API sweeps every `IMPACT_VALIDATION_INTERVAL_MS` (60 s), up to 50 incidents per tenant, taking one incident of
+    each tenant in turn.
+  - `validateImpactPredictions` runs a sweep on demand, and `validateImpactPrediction(incidentId)` re-validates one
+    incident.
+  - There is one current validation per incident.
+- **Observability:** metrics `openmap_impact_validations_total{outcome}` and `openmap_impact_prediction_accuracy`;
+  span `impact.validate`.
+- **Console:** the Impact screen's Prediction accuracy panel shows the mean, counts, the latest validations (root cause,
+  services hit, missed, over-predicted, accuracy) and the suggestions with Accept and Dismiss, in en and ar.
+- **Dev data:** `replay-history` now names a root cause for every replayed incident, picked deterministically among
+  the components, database clusters, VMs, hosts and hypervisors the service's applications depend on. Reset also drops
+  the replay scenarios and open suggestions.
+- **Measured pace:** one validation takes 0.9 s on the dev tenant and about 7 s on the scale-1 tenant, so its 3,651
+  incidents drain over about 7 hours of sweeps.
+- **Accuracy on the dev stack measures over-prediction:** a shared component predicts every service its applications
+  serve (one dev incident predicted all 15, accuracy 0.07).
+
+**Tests:**
+- New: T-460…T-463 (assistant), T-464 (health generator), T-465 (contract `compareImpact`), T-466 (integration:
+  miss → suggestion → accept → edge in Memgraph → next incident predicted), T-467 (validation rules), T-468 (console
+  panel, en and ar), T-469 (e2e, en and ar).
+- Passing: api unit 43, console unit 321, contracts 58, bsm-engine 46, synth-estate 32, reconciler 38, db 86.
+- Guard, `contracts:check` and `i18n:check` are green.
+
+**Follow-ups:**
+- The per-validation cost on the 550k-CI tenant (about 7 s) is the simulation's graph and facts reads, the same path
+  as an interactive what-if run at that scale; measure it against the 1 s impact budget (REQ-PERF).
+- The reconciler image was not rebuilt: `replay-history` runs from the host.
+
+## Previous session · 2026-11-07 (checkpoint 28: scale-1 replay inside the budget, REQ-CORE-013 Done; checkpoint 27 follow-ups)
 
 Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reconciler session").
 
@@ -828,14 +893,17 @@ tracker is the truth.
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
+1. REQ-BSM-005: runbooks attached to scenarios and incidents with automation hooks per step (next by priority).
 2. REQ-BSM-007 (ADR-025), then the finance module. Parked rows close as vendor access arrives.
 3. REQ-CORE-020: `FOR UPDATE SKIP LOCKED` outbox claim and the concurrent-worker scale-1 measurement; find the
-   dispatch target that slows as the stores grow.
+   dispatch target that slows as the stores grow. Also: a cloud-hosted application in the synthetic estate (ADR-031).
+   Measure on a fresh seed (44): `replay --reset` on tenant `570b1953` deletes its incidents, validations and health
+   history and gives every CI a new id, and the assistant evaluation runs on that tenant. If it is reset anyway, rerun
+   `replay-history --dir .local/estate-s1b --reset` and the evaluation.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{scheduler,reconciler,node}:dev` were rebuilt this session (api, console and bsm-engine earlier); migrations through 0031
-and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
+profile); `openmap/api:dev` and `openmap/console:dev` were rebuilt in checkpoint 29, `openmap/{scheduler,reconciler,node}:dev` in
+checkpoint 28; migrations through 0032 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
