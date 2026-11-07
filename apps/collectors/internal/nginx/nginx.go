@@ -38,6 +38,10 @@ const (
 	defaultVrf    = "default"
 	// frontendSuffix keeps a server zone's identity apart from the upstream it is named after.
 	frontendSuffix = "#frontend"
+	// memberTransport is the protocol in an upstream member's identity: the member is a TCP listener on its host, keyed
+	// as the host's own collector and every other load balancer key it (ADR-045); HTTP stays an attribute.
+	memberTransport = "tcp"
+	memberScheme    = "http"
 
 	typeLB       = "load_balancer"
 	typeListener = "listening_service"
@@ -279,12 +283,12 @@ func Emit(inv *Inventory, target contract.Target, serverHeader string, at time.T
 			if addr == "" || port == 0 {
 				continue
 			}
-			mIdentity := map[string]string{"hostRef": strings.ToLower(addr), "protocol": "http", "port": strconv.Itoa(port)}
+			mIdentity := map[string]string{"hostRef": strings.ToLower(addr), "protocol": memberTransport, "port": strconv.Itoa(port)}
 			mRef := contract.CiRef{Type: typeListener, Identity: mIdentity}
 			key := mIdentity["hostRef"] + "|" + mIdentity["port"]
 			if !memberSeen[key] {
 				memberSeen[key] = true
-				obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: mIdentity, Name: firstNonEmpty(p.Name, p.Server), Attributes: map[string]any{"protocol": "http", "port": port, "address": addr, "poolMemberState": p.State, "backup": p.Backup, "weight": p.Weight, "activeConnections": p.Active, "requests": p.Requests, "downtimeMs": p.Downtime, "healthChecks": p.HealthChecks.Checks, "healthCheckFails": p.HealthChecks.Fails, "upstream": name, "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+				obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeListener, Identity: mIdentity, Name: firstNonEmpty(p.Name, p.Server), Attributes: map[string]any{"protocol": memberTransport, "applicationProtocol": memberScheme, "port": port, "address": addr, "poolMemberState": p.State, "backup": p.Backup, "weight": p.Weight, "activeConnections": p.Active, "requests": p.Requests, "downtimeMs": p.Downtime, "healthChecks": p.HealthChecks.Checks, "healthCheckFails": p.HealthChecks.Fails, "upstream": name, "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 				if net.ParseIP(addr) != nil {
 					ipIdentity := map[string]string{"address": addr, "vrfRef": defaultVrf}
 					obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeIP, Identity: ipIdentity, Name: addr, Attributes: map[string]any{"role": "pool-member", "source": collectorID}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
