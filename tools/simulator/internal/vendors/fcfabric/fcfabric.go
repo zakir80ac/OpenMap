@@ -14,8 +14,8 @@ package fcfabric
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/openmap/openmap/tools/simulator/internal/estate"
