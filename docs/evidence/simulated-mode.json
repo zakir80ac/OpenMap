@@ -5,7 +5,7 @@
   "date": "2026-11-07",
   "runs": 495,
   "passed": 495,
-  "driftRules": "reconciler (packages/contracts/schemas/ci-identity.json, ADR-044)",
+  "driftRules": "reconciler (packages/contracts/schemas/ci-identity.json, ADR-044, ADR-045)",
   "simulators": [
     {
       "simulator": "a10-thunder",
@@ -19,7 +19,7 @@
       "matchedCis": 22,
       "expectedRelationships": 26,
       "matchedRelationships": 26,
-      "identityDrift": 9,
+      "identityDrift": 0,
       "relationshipDrift": 0,
       "attributeMismatches": 0
     },
@@ -115,7 +115,7 @@
       "matchedCis": 246,
       "expectedRelationships": 270,
       "matchedRelationships": 270,
-      "identityDrift": 94,
+      "identityDrift": 0,
       "relationshipDrift": 0,
       "attributeMismatches": 0
     },
@@ -179,7 +179,7 @@
       "matchedCis": 302,
       "expectedRelationships": 358,
       "matchedRelationships": 358,
-      "identityDrift": 112,
+      "identityDrift": 0,
       "relationshipDrift": 0,
       "attributeMismatches": 0
     },
@@ -243,7 +243,7 @@
       "matchedCis": 84,
       "expectedRelationships": 100,
       "matchedRelationships": 100,
-      "identityDrift": 22,
+      "identityDrift": 0,
       "relationshipDrift": 0,
       "attributeMismatches": 0
     },
@@ -372,7 +372,7 @@
       "matchedCis": 156,
       "expectedRelationships": 133,
       "matchedRelationships": 133,
-      "identityDrift": 47,
+      "identityDrift": 0,
       "relationshipDrift": 0,
       "attributeMismatches": 0
     },

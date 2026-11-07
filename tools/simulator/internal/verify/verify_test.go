@@ -28,7 +28,7 @@ func TestCompare(t *testing.T) {
 	want.RelToRef("presented_to", "lun", "L1", "host", map[string]string{"fqdn": "H1.bank.local"})
 	want.RelToRef("presented_to", "lun", "L1", "host", map[string]string{"fqdn": "h2.bank.local"})
 
-	m := Compare(res, want, testRules(t))
+	m := Compare(res, want, testRules(t), nil)
 	if m.MatchedCis != 2 || len(m.MissingCis) != 1 || m.MissingCis[0].Name != "L2" {
 		t.Fatalf("CIs: matched %d missing %+v", m.MatchedCis, m.MissingCis)
 	}
@@ -74,7 +74,7 @@ func TestMergesLikeTheReconciler(t *testing.T) {
 		{"interface", map[string]string{"deviceRef": "serial:S1", "ifIndex": "1", "name": "Eth0"}, map[string]string{"deviceRef": "serial:s1", "ifIndex": "1", "name": "eth0"}, true},
 	}
 	for _, c := range cases {
-		if got := rules.Merges(c.ciType, c.a, c.b); got != c.want {
+		if got := rules.Merges(c.ciType, c.a, c.b, nil); got != c.want {
 			t.Errorf("Merges(%s, %v, %v) = %v", c.ciType, c.a, c.b, got)
 		}
 	}

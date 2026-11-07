@@ -302,7 +302,7 @@ func (e end) matches(t, name string, identity map[string]string, nameKnown bool)
 
 // Compare checks a result against the run's expectation. Identity drift is judged with the contract's identity rules:
 // a matched CI drifts when reconciliation would not merge its collector identity into the estate's.
-func Compare(res *Result, want sim.Expect, rules *IdentityRules) Match {
+func Compare(res *Result, want sim.Expect, rules *IdentityRules, refs *RefIndex) Match {
 	m := Match{ByType: map[string]int{}}
 	have := map[string][]observedCi{}
 	names := map[string]string{}
@@ -324,7 +324,7 @@ func Compare(res *Result, want sim.Expect, rules *IdentityRules) Match {
 		pick := 0
 		if w.Identity != nil {
 			for i, c := range list {
-				if rules.Merges(w.Type, w.Identity, c.Identity) {
+				if rules.Merges(w.Type, w.Identity, c.Identity, refs) {
 					pick = i
 					break
 				}
@@ -338,7 +338,7 @@ func Compare(res *Result, want sim.Expect, rules *IdentityRules) Match {
 				m.AttributeMismatches = append(m.AttributeMismatches, Mismatch{Type: w.Type, Name: w.Name, Attribute: k, Want: want, Got: got.Attributes[k]})
 			}
 		}
-		if w.Identity != nil && !rules.Merges(w.Type, w.Identity, got.Identity) {
+		if w.Identity != nil && !rules.Merges(w.Type, w.Identity, got.Identity, refs) {
 			m.IdentityDrift = append(m.IdentityDrift, Drift{Type: w.Type, Name: w.Name, Estate: w.Identity, Collector: got.Identity})
 		}
 	}
@@ -444,7 +444,7 @@ func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string,
 		rep.Errors = append(rep.Errors, "contract: "+violation)
 	}
 	ApplyAliases(res, run.Aliases)
-	m := Compare(res, run.Expect, checks.Identity)
+	m := Compare(res, run.Expect, checks.Identity, ix.Refs)
 	missC, missR := m.MissingCis, m.MissingRels
 	rep.MatchedCis, rep.MatchedRels, rep.EmittedByType = m.MatchedCis, m.MatchedRels, m.ByType
 	rep.IdentityDriftCount = len(m.IdentityDrift)

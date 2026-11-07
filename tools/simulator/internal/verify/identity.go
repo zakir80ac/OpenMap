@@ -1,13 +1,16 @@
-// REQ-QA-005 — identity drift judged the way reconciliation judges a merge (REQ-CORE-013,
-// apps/reconciler/src/core/identity.ts): an observation updates a stored CI when its full identity tuple is equal, or
-// when any globally unique key (serial number, FQDN, address, moRef…) carries the same value. The rules come from
-// packages/contracts/schemas/ci-identity.json, emitted from CI_IDENTITY_KEYS and GLOBAL_IDENTITY_KEYS, so the harness
-// and the reconciler cannot disagree on what "would merge" means.
+// REQ-QA-005 REQ-CORE-013 — identity drift judged the way reconciliation judges a merge (apps/reconciler/src/core/
+// identity.ts, packages/contracts/src/identity.ts): an observation updates a stored CI when its full identity tuple is
+// equal, when its tuple with every `*Ref` resolved to the CI the ref names is equal (ADR-045), or when any globally
+// unique key (serial number, FQDN, address…) carries the same value, together with its issuer's scope keys where the
+// contract scopes it (a SaaS tenant id per vendor, a cloud resource id per provider). The rules come from
+// packages/contracts/schemas/ci-identity.json, so the harness and the reconciler cannot disagree on what "would merge"
+// means. Refs resolve against the estate: the estate is the store a discovery run reconciles into.
 package verify
 
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -16,12 +19,32 @@ import (
 	"github.com/openmap/openmap/tools/simulator/internal/estate"
 )
 
-// IdentityRules are the contract's identity keys per CI type, in precedence order, and the globally unique keys.
-type IdentityRules struct {
-	Keys   map[string][]string `json:"keys"`
-	Global []string            `json:"global"`
-	global map[string]bool
+// RefDerived is a ref spelling derived from identity values: prefix + the values joined by separator.
+type RefDerived struct {
+	Keys      []string `json:"keys"`
+	Prefix    string   `json:"prefix"`
+	Separator string   `json:"separator"`
 }
+
+// IdentityRules are the contract's identity keys per CI type, in precedence order, the globally unique keys and their
+// issuer scopes, and how a `*Ref` value names a CI.
+type IdentityRules struct {
+	Keys               map[string][]string `json:"keys"`
+	Global             []string            `json:"global"`
+	Scopes             map[string][]string `json:"scopes"`
+	ParentKeys         map[string][]string `json:"parentKeys"`
+	RefTargets         map[string][]string `json:"refTargets"`
+	RefAliasAttributes []string            `json:"refAliasAttributes"`
+	RefDerived         []RefDerived        `json:"refDerived"`
+	global             map[string]bool
+	targetTypes        map[string]bool
+}
+
+// Ranks of a ref token, as REF_TIER in packages/contracts: an identity value outranks a name or attribute.
+const (
+	tierIdentity = 0
+	tierAlias    = 1
+)
 
 // LoadIdentityRules reads ci-identity.json under the repository.
 func LoadIdentityRules(repo string) (*IdentityRules, error) {
@@ -34,8 +57,8 @@ func LoadIdentityRules(repo string) (*IdentityRules, error) {
 	if err := json.Unmarshal(raw, &r); err != nil {
 		return nil, err
 	}
-	if len(r.Keys) == 0 || len(r.Global) == 0 {
-		return nil, fmt.Errorf("%s: no identity keys", path)
+	if len(r.Keys) == 0 || len(r.Global) == 0 || len(r.RefTargets) == 0 {
+		return nil, fmt.Errorf("%s: no identity keys or ref targets", path)
 	}
 	r.index()
 	return &r, nil
@@ -46,9 +69,24 @@ func (r *IdentityRules) index() {
 	for _, k := range r.Global {
 		r.global[k] = true
 	}
+	r.targetTypes = map[string]bool{}
+	for _, types := range r.RefTargets {
+		for _, t := range types {
+			r.targetTypes[t] = true
+		}
+	}
 }
 
 func normIdentity(v string) string { return strings.ToLower(strings.TrimSpace(v)) }
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
 
 // tuple is the reconciler's canonical tuple: every present identity value in precedence order.
 func (r *IdentityRules) tuple(ciType string, identity map[string]string) string {
@@ -61,17 +99,200 @@ func (r *IdentityRules) tuple(ciType string, identity map[string]string) string 
 	return strings.Join(parts, "|")
 }
 
-// Merges reports whether an observation with identity b would update the stored CI with identity a.
-func (r *IdentityRules) Merges(ciType string, a, b map[string]string) bool {
+// isGlobal reports whether a key is globally unique in a type: a global key that is not the type's parent key.
+func (r *IdentityRules) isGlobal(ciType, key string) bool {
+	return r.global[key] && !contains(r.ParentKeys[ciType], key)
+}
+
+// isRef reports whether an identity key names another CI.
+func (r *IdentityRules) isRef(key string) bool { return len(r.RefTargets[key]) > 0 }
+
+// globalKeys are the lookup keys of the globally unique values, each with the scope keys its type declares; a scoped
+// key whose scope value is missing is left out.
+func (r *IdentityRules) globalKeys(ciType string, identity map[string]string) []string {
+	declared := r.Keys[ciType]
+	var out []string
+	for _, k := range declared {
+		v := identity[k]
+		if v == "" || !r.isGlobal(ciType, k) {
+			continue
+		}
+		parts := []string{}
+		complete := true
+		for _, s := range r.Scopes[k] {
+			if !contains(declared, s) {
+				continue
+			}
+			if identity[s] == "" {
+				complete = false
+				break
+			}
+			parts = append(parts, s+"="+normIdentity(identity[s]))
+		}
+		if !complete {
+			continue
+		}
+		parts = append(parts, k+"="+normIdentity(v))
+		out = append(out, ciType+"|"+strings.Join(parts, "|"))
+	}
+	return out
+}
+
+// refTokens are the spellings under which a ref may name the CI, with their rank (packages/contracts refTokensOf).
+func (r *IdentityRules) refTokens(c *estate.CI) map[string]int {
+	out := map[string]int{}
+	if !r.targetTypes[c.Type] {
+		return out
+	}
+	put := func(v string, tier int) {
+		if strings.TrimSpace(v) == "" {
+			return
+		}
+		t := normIdentity(v)
+		if prev, ok := out[t]; !ok || tier < prev {
+			out[t] = tier
+		}
+	}
+	keys := r.Keys[c.Type]
+	for _, k := range keys {
+		if r.isGlobal(c.Type, k) {
+			put(c.Identity[k], tierIdentity)
+		}
+	}
+	put(r.tuple(c.Type, c.Identity), tierIdentity)
+	for _, d := range r.RefDerived {
+		values := make([]string, 0, len(d.Keys))
+		for _, k := range d.Keys {
+			if c.Identity[k] == "" {
+				values = nil
+				break
+			}
+			values = append(values, c.Identity[k])
+		}
+		if len(values) == len(d.Keys) {
+			put(d.Prefix+strings.Join(values, d.Separator), tierIdentity)
+		}
+	}
+	put(c.Name, tierAlias)
+	for _, a := range r.RefAliasAttributes {
+		switch v := c.Attributes[a].(type) {
+		case string:
+			put(v, tierAlias)
+		case []any:
+			for _, item := range v {
+				if s, ok := item.(string); ok {
+					put(s, tierAlias)
+				}
+			}
+		}
+	}
+	for _, k := range keys {
+		if _, ok := r.RefTargets[k]; ok {
+			put(c.Identity[k], tierAlias)
+		}
+	}
+	return out
+}
+
+// RefIndex resolves a `*Ref` value to the estate CI it names: the one CI of the ref's target types that carries the
+// value at the best rank present, or nil when none or several do.
+type RefIndex struct {
+	rules   *IdentityRules
+	byToken map[string]map[*estate.CI]int
+}
+
+// NewRefIndex indexes the ref tokens of every estate CI.
+func NewRefIndex(e *estate.Estate, rules *IdentityRules) *RefIndex {
+	ix := &RefIndex{rules: rules, byToken: map[string]map[*estate.CI]int{}}
+	for _, c := range e.CIs {
+		for t, tier := range rules.refTokens(c) {
+			m := ix.byToken[t]
+			if m == nil {
+				m = map[*estate.CI]int{}
+				ix.byToken[t] = m
+			}
+			if prev, ok := m[c]; !ok || tier < prev {
+				m[c] = tier
+			}
+		}
+	}
+	return ix
+}
+
+// Resolve returns the estate CI a ref value names, or nil.
+func (ix *RefIndex) Resolve(refKey, value string) *estate.CI {
+	if ix == nil {
+		return nil
+	}
+	targets := ix.rules.RefTargets[refKey]
+	if len(targets) == 0 {
+		return nil
+	}
+	best := math.MaxInt
+	var found *estate.CI
+	n := 0
+	for c, tier := range ix.byToken[normIdentity(value)] {
+		if !contains(targets, c.Type) {
+			continue
+		}
+		switch {
+		case tier < best:
+			best, found, n = tier, c, 1
+		case tier == best:
+			n++
+		}
+	}
+	if n != 1 {
+		return nil
+	}
+	return found
+}
+
+// refKey is the tuple with every ref resolved to the estate CI it names, or "" when the type carries no ref or one does
+// not resolve.
+func (r *IdentityRules) refKey(ciType string, identity map[string]string, refs *RefIndex) string {
+	if refs == nil {
+		return ""
+	}
+	resolved := false
+	var parts []string
+	for _, k := range r.Keys[ciType] {
+		v := identity[k]
+		if v == "" {
+			continue
+		}
+		if r.isRef(k) {
+			c := refs.Resolve(k, v)
+			if c == nil {
+				return ""
+			}
+			parts = append(parts, "@"+estate.Key(c.Type, c.Identity))
+			resolved = true
+			continue
+		}
+		parts = append(parts, normIdentity(v))
+	}
+	if !resolved {
+		return ""
+	}
+	return ciType + "|ref=" + strings.Join(parts, "|")
+}
+
+// Merges reports whether an observation with identity b would update the stored CI with identity a. refs resolves
+// `*Ref` values (nil compares them as written).
+func (r *IdentityRules) Merges(ciType string, a, b map[string]string, refs *RefIndex) bool {
 	if t := r.tuple(ciType, a); t != "" && t == r.tuple(ciType, b) {
 		return true
 	}
-	for _, k := range r.Keys[ciType] {
-		if !r.global[k] {
-			continue
-		}
-		av, bv := a[k], b[k]
-		if av != "" && bv != "" && normIdentity(av) == normIdentity(bv) {
+	if k := r.refKey(ciType, a, refs); k != "" && k == r.refKey(ciType, b, refs) {
+		return true
+	}
+	ga := map[string]bool{}
+	for _, k := range r.globalKeys(ciType, a) {
+		ga[k] = true
+	}
+	for _, k := range r.globalKeys(ciType, b) {
+		if ga[k] {
 			return true
 		}
 	}
@@ -131,30 +352,29 @@ func ApplyAliases(res *Result, aliases map[string]string) {
 }
 
 // EstateIndex finds the estate CI an observation would merge into, with the reconciler's lookup keys: the full tuple
-// first, then each globally unique key.
+// first, then the tuple with refs resolved, then each globally unique key.
 type EstateIndex struct {
 	rules *IdentityRules
+	Refs  *RefIndex
 	byKey map[string]*estate.CI
 }
 
-func (r *IdentityRules) lookupKeys(ciType string, identity map[string]string) []string {
+func (r *IdentityRules) lookupKeys(ciType string, identity map[string]string, refs *RefIndex) []string {
 	var out []string
 	if t := r.tuple(ciType, identity); t != "" {
 		out = append(out, ciType+"|tuple="+t)
 	}
-	for _, k := range r.Keys[ciType] {
-		if v := identity[k]; v != "" && r.global[k] {
-			out = append(out, ciType+"|"+k+"="+normIdentity(v))
-		}
+	if k := r.refKey(ciType, identity, refs); k != "" {
+		out = append(out, k)
 	}
-	return out
+	return append(out, r.globalKeys(ciType, identity)...)
 }
 
 // NewEstateIndex indexes every estate CI by its lookup keys. The first CI to claim a key keeps it.
 func NewEstateIndex(e *estate.Estate, rules *IdentityRules) *EstateIndex {
-	ix := &EstateIndex{rules: rules, byKey: map[string]*estate.CI{}}
+	ix := &EstateIndex{rules: rules, Refs: NewRefIndex(e, rules), byKey: map[string]*estate.CI{}}
 	for _, c := range e.CIs {
-		for _, k := range rules.lookupKeys(c.Type, c.Identity) {
+		for _, k := range rules.lookupKeys(c.Type, c.Identity, ix.Refs) {
 			if _, taken := ix.byKey[k]; !taken {
 				ix.byKey[k] = c
 			}
@@ -165,12 +385,29 @@ func NewEstateIndex(e *estate.Estate, rules *IdentityRules) *EstateIndex {
 
 // Lookup returns the estate CI an observed reference resolves to, or nil.
 func (ix *EstateIndex) Lookup(ciType string, identity map[string]string) *estate.CI {
-	for _, k := range ix.rules.lookupKeys(ciType, identity) {
+	for _, k := range ix.rules.lookupKeys(ciType, identity, ix.Refs) {
 		if c, ok := ix.byKey[k]; ok {
 			return c
 		}
 	}
 	return nil
+}
+
+// Collisions lists pairs of distinct estate CIs that share a lookup key: two CIs reconciliation would merge into one.
+// Each entry reads "<type> <name> | <name> (<key>)".
+func (ix *EstateIndex) Collisions(e *estate.Estate) []string {
+	owner := map[string]*estate.CI{}
+	var out []string
+	for _, c := range e.CIs {
+		for _, k := range ix.rules.lookupKeys(c.Type, c.Identity, ix.Refs) {
+			if o, taken := owner[k]; taken && o != c {
+				out = append(out, c.Type+" "+o.Name+" | "+c.Name+" ("+k+")")
+				break
+			}
+			owner[k] = c
+		}
+	}
+	return out
 }
 
 // RelationshipDrift counts emitted relationships whose two ends are estate CIs the estate links differently: another

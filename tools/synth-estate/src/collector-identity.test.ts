@@ -1,10 +1,11 @@
 // T-450 REQ-QA-001 REQ-QA-005 — the synthetic estate identifies and links CIs the way the real collectors do, so a
 // discovery run against the estate updates its CIs instead of adding second copies (measured in simulated mode,
-// docs/evidence/simulated-mode.md). Each expectation names the collector whose convention it follows.
+// docs/evidence/simulated-mode.md). Each expectation names the collector whose convention it follows. The estate also
+// holds every CI once: no two of its CIs merge under the reconciler's identity rules (REQ-CORE-013, ADR-045).
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectorResultSchema, type CollectorResult, type ObservedCi } from '@openmap/contracts';
+import { collectorResultSchema, identityKeysOf, MapRefIndex, refKeyOf, refPairs, type CollectorResult, type ObservedCi } from '@openmap/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildEstate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX } from './emit.js';
@@ -114,5 +115,27 @@ describe('synth-estate identities follow the collectors', () => {
     expect(tenants.get('Salesforce')).toMatch(/^00D[A-Za-z0-9]{15}$/);
     const products = new Set(ofType('saas_application').map((a) => a.identity['product']));
     for (const p of ['SPE_E3', 'Google Workspace', 'Workday HCM']) expect(products.has(p), p).toBe(true);
+  });
+
+  it('holds every CI once: no two estate CIs share a tuple, a resolved ref key or a scoped global key', () => {
+    const refs = new MapRefIndex();
+    cis.forEach((c, i) => refs.add(c, String(i)));
+    const owner = new Map<string, number>();
+    const merges: string[] = [];
+    cis.forEach((c, i) => {
+      const refKey = refPairs(c).length > 0 ? refKeyOf(c, refs) : null;
+      for (const k of identityKeysOf(c, refKey)) {
+        const o = owner.get(k);
+        const other = o === undefined ? undefined : cis[o];
+        if (other !== undefined && o !== i && key(other) !== key(c)) {
+          merges.push(c.type + ' ' + other.name + ' | ' + c.name + ' (' + k + ')');
+          break;
+        }
+        owner.set(k, i);
+      }
+    });
+    expect(merges.slice(0, 10)).toEqual([]);
+    // The two estate tenants named horizonbank, at ServiceNow and at Workday, stay two CIs.
+    expect(ofType('saas_tenant').filter((t) => t.identity['tenantId'] === 'horizonbank').map((t) => t.identity['vendor']).sort()).toEqual(['ServiceNow', 'Workday']);
   });
 });

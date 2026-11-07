@@ -50,11 +50,11 @@ written to `.local/sim-report-full.json`.
 | nas-linux-ssh (Samba, NFS) | nas | REQ-DISC-016 | T-363 | 2 | 12 | 12 | 0 |
 | windows-smb (WinRM) | nas | REQ-DISC-016 | T-372 | 1 | 169 | 169 | 0 |
 | s3-object-storage (MinIO, Ceph RGW, AWS; SigV4) | object_storage | REQ-DISC-017 | T-394 | 3 | 7 | 0 | 0 |
-| f5-bigip | load_balancer | REQ-DISC-018 | T-430 | 6 | 302 | 358 | 112 |
-| citrix-adc | citrix_adc | REQ-DISC-018 | T-431 | 2 | 246 | 270 | 94 |
-| a10-thunder | a10_thunder | REQ-DISC-018 | T-432 | 1 | 22 | 26 | 9 |
-| haproxy | haproxy | REQ-DISC-018 | T-433 | 2 | 84 | 100 | 22 |
-| nginx (open source and Plus) | nginx | REQ-DISC-018 | T-434 | 36 | 156 | 133 | 47 |
+| f5-bigip | load_balancer | REQ-DISC-018 | T-430 | 6 | 302 | 358 | 0 |
+| citrix-adc | citrix_adc | REQ-DISC-018 | T-431 | 2 | 246 | 270 | 0 |
+| a10-thunder | a10_thunder | REQ-DISC-018 | T-432 | 1 | 22 | 26 | 0 |
+| haproxy | haproxy | REQ-DISC-018 | T-433 | 2 | 84 | 100 | 0 |
+| nginx (open source and Plus) | nginx | REQ-DISC-018 | T-434, T-455 | 36 | 156 | 133 | 0 |
 | flow-exporter (NetFlow v5/v9, IPFIX, sFlow v5) | netflow | REQ-DISC-019 | T-410 | 4 | 14,004 | 29,664 | 0 |
 | service-fingerprint (TCP banners, TLS) | port_scan | REQ-DISC-020 | T-411 | 21 | 83 | 62 | 0 |
 | dns-authoritative (BIND, Windows DNS, Infoblox; AXFR, TSIG) | dns | REQ-DISC-021 | T-412, T-414 | 3 | 21,063 | 21,057 | 0 |
@@ -145,17 +145,23 @@ Results:
 
 The dev tenant now holds these simulated results. Replaying the estate with `--reset` restores it.
 
-## Identity drift: synthetic estate against real collectors (resolved by ADR-044)
+## Identity drift: synthetic estate against real collectors (resolved by ADR-044 and ADR-045)
 
 Drift counts matched CIs whose collector identity reconciliation would not merge into the estate's CI. It is judged
-with the reconciler's own rules: an observation merges when its full identity tuple is equal, or when any globally
-unique key carries the same value. The harness reads those rules from `packages/contracts/schemas/ci-identity.json`.
+with the reconciler's own rules. An observation merges when:
+- its full identity tuple is equal;
+- its tuple with each `*Ref` resolved to the CI the ref names is equal (ADR-045);
+- or a globally unique key carries the same value, together with its issuer's scope keys where the contract scopes it
+  (a SaaS tenant id per vendor, a cloud id per provider).
+
+The harness reads those rules from `packages/contracts/schemas/ci-identity.json` and resolves refs against the estate.
 Relationship drift counts emitted links between two estate CIs that the estate links with another type or direction.
 
 | Estate | Identity drift | Relationship drift |
 | --- | ---: | ---: |
 | Before ADR-044 | 7,894 | 524 |
 | After ADR-044 | 284 | 0 |
+| After ADR-045 (reconciliation resolves `*Ref` values) | 0 | 0 |
 
 The figure of 36,373 reported earlier came from a stricter check. It flagged an IP address filed under another VRF,
 which reconciliation still merges on the address.
@@ -181,10 +187,20 @@ Where the collectors disagreed among themselves, the majority form was adopted a
 - SSH and the agent now link an instance to its software (`member_of`).
 - The agent's `softwareRef` is now `name@version`.
 
+Closed by ADR-045 (2026-11-07):
+- **Load-balancer pool members (284 → 0).** The load balancer keys a member's listener by its IP or FQDN, and the
+  host's own collector keys it by the host's serial or UUID. Reconciliation now resolves `hostRef` through any spelling
+  of the host (identity values, name, FQDN, address attributes) to one CI id before comparing tuples. Copies made before
+  the host was known fold together in the pending pass.
+- **NGINX members** were keyed `protocol: http`; they are now keyed by their transport (`tcp`), as every other observer
+  keys a listener (T-455).
+- `pnpm --filter @openmap/simulator verify` on 2026-11-07: 495 of 495 runs pass, with 66,565 of 66,565 CIs and
+  82,379 of 82,379 relationships reproduced; identity drift 0, relationship drift 0.
+- T-454 checks that no two CIs of synth-small merge with each other under these rules; T-450 checks the same on a
+  freshly generated estate. The check found every Kubernetes namespace of a cluster merging on its cluster's UID, now a
+  parent key (`PARENT_IDENTITY_KEYS`).
+
 What is left:
-- **Load-balancer pool members (284):** the load balancer keys a member's listener by its IP or FQDN; the host's own
-  collector keys it by the host serial. One estate value cannot match both observers. Closing it needs reconciliation to
-  resolve `*Ref` values to the referenced CI.
 - **Active Directory computers:** the LDAP collector types a computer `host`, because a directory cannot tell a VM from
   a server. A VM is still found once by its hypervisor collector and once by the directory.
 
