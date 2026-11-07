@@ -212,6 +212,20 @@ export interface World {
   /** Unknown devices claimed per branch so DHCP leases line up with the scan. */
   unknownByBranch: Map<number, number[]>;
   k8sClusters: K8sClusterRec[];
+  /** MAC addresses already used as an identity value (host and unknown-device primaryMac, switch chassisId). */
+  identityMacs: Set<string>;
+}
+
+/**
+ * A MAC address no other CI of the estate is identified by. Three random octets under one OUI collide by chance once
+ * an estate holds tens of thousands of hosts (nine pairs at scale 1), and a shared primaryMac makes two hosts one CI;
+ * a collision is drawn again, so estates without one stay byte-identical.
+ */
+export function identityMac(world: World, rng: Rng, oui: readonly [number, number, number]): string {
+  let mac = rng.mac(oui);
+  while (world.identityMacs.has(mac)) mac = rng.mac(oui);
+  world.identityMacs.add(mac);
+  return mac;
 }
 
 export type PoolName = keyof typeof POOL;

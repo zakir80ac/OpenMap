@@ -5,7 +5,7 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectorResultSchema, identityKeysOf, MapRefIndex, refKeyOf, refPairs, type CollectorResult, type ObservedCi } from '@openmap/contracts';
+import { collectorResultSchema, globalMatches, identityKeysOf, MapRefIndex, refKeyOf, refPairs, type CollectorResult, type ObservedCi } from '@openmap/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildEstate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX } from './emit.js';
@@ -141,16 +141,25 @@ describe('synth-estate identities follow the collectors', () => {
     expect(ofType('saas_tenant').filter((t) => t.identity['tenantId'] === 'horizonbank').map((t) => t.identity['vendor']).sort()).toEqual(['ServiceNow', 'Workday']);
   });
 
-  it('reports no CI twice in one collector result at full scale (the scale-1 replay)', () => {
+  it('at full scale (the scale-1 replay), reports no CI twice in one result and gives no two CIs one global key', () => {
     const estate = buildEstate(SEED, FULL_SCALE);
     const seen = new Map<string, string>();
+    const owner = new Map<string, { name: string; key: string }>();
     const twice: string[] = [];
+    const shared: string[] = [];
     for (const c of estate.builder.cis) {
       const k = String(c.slot) + '|' + key(c);
       const first = seen.get(k);
       if (first !== undefined) twice.push(c.type + ' ' + first + ' | ' + c.name);
       else seen.set(k, c.name);
+      // One CI reported by two collectors (the vendor Microsoft) has one identity; two CIs never share a global key.
+      for (const g of globalMatches(c)) {
+        const o = owner.get(g.key);
+        if (o === undefined) owner.set(g.key, { name: c.name, key: key(c) });
+        else if (o.key !== key(c)) shared.push(g.key + ' ' + o.name + ' | ' + c.name);
+      }
     }
     expect(twice.slice(0, 10)).toEqual([]);
+    expect(shared.slice(0, 10)).toEqual([]);
   });
 });

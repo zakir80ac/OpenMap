@@ -7,7 +7,7 @@ import type { Slot } from '../estate.js';
 import { cidr, ip4, linkPair, OCTET_MAX, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt } from '../time.js';
-import { allocateIp, attachIp, ensureSubnet, pad, type DeviceRec, type InterfaceRec, type IpAlloc, type RackWorld, type RowWorld, type SiteWorld, type World } from '../world.js';
+import { allocateIp, attachIp, ensureSubnet, identityMac, pad, type DeviceRec, type InterfaceRec, type IpAlloc, type RackWorld, type RowWorld, type SiteWorld, type World } from '../world.js';
 import { MGMT_SWITCH_U, newRack, TOR_A_U, TOR_B_U, HOST_TOP_U } from './facilities.js';
 
 const CORE_BASE: Record<string, number> = { RYD: 4, JED: 4, 'DMM-COLO': 2, HQ: 2 };
@@ -87,7 +87,7 @@ export function addDevice(world: World, rng: Rng, site: SiteWorld, model: Networ
   const { b } = world;
   const slot = snmpSlot(world, site);
   const serial = model.serialPrefix + rng.alnum(8);
-  const chassisId = rng.mac(ouiFor(model.manufacturer));
+  const chassisId = identityMac(world, rng, ouiFor(model.manufacturer));
   const alloc = options.ipOverride ?? allocateIp(world, site, 'mgmt');
   const purchaseAge = rng.int(60, PURCHASE_AGE_DAYS_MAX);
   const attributes = {

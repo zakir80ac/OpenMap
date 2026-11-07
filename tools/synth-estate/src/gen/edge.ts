@@ -6,7 +6,7 @@ import type { Slot } from '../estate.js';
 import { cidr, ip4, OCTET_MAX, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { isoAt, MS_PER_DAY, MS_PER_HOUR } from '../time.js';
-import { allocateIp, attachIp, fqdnOf, pad, siteOf, type IpAlloc, type SiteWorld, type World } from '../world.js';
+import { allocateIp, attachIp, fqdnOf, identityMac, pad, siteOf, type IpAlloc, type SiteWorld, type World } from '../world.js';
 
 const UNKNOWN_BASE = 214;
 const HQ_USER_SCOPES_BASE = 10;
@@ -133,7 +133,7 @@ function generateUnknowns(world: World, rng: Rng): UnknownRec[] {
       location = 'RYD data hall';
     }
     const slot = scanSlot(world, site);
-    const mac = rng.mac(def.oui);
+    const mac = identityMac(world, rng, def.oui);
     const sysName = def.kind + '-' + rng.hex(4);
     const idx = b.ci(
       slot,

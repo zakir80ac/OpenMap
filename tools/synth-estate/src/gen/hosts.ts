@@ -6,7 +6,7 @@ import type { Slot } from '../estate.js';
 import { cidr, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
-import { allocateIp, attachIp, ensureSoftware, fqdnOf, installPath, pad, softwareRefOf, type HostRec, type SiteWorld, type World } from '../world.js';
+import { allocateIp, attachIp, ensureSoftware, fqdnOf, identityMac, installPath, pad, softwareRefOf, type HostRec, type SiteWorld, type World } from '../world.js';
 import { hostComponents } from './components.js';
 import { allocateHostPort } from './network.js';
 
@@ -110,7 +110,7 @@ export function generateHosts(world: World, rng: Rng): void {
       const slot = hostSlot(world, site, plan.os, ordinal);
       const serial = plan.model.serialPrefix + rng.alnum(7);
       const systemUuid = rng.uuid();
-      const primaryMac = rng.mac(ouiFor(plan.model.manufacturer));
+      const primaryMac = identityMac(world, rng, ouiFor(plan.model.manufacturer));
       const alloc = allocateIp(world, site, 'servers');
       const purchaseAge = rng.int(PURCHASE_AGE_DAYS_MIN, PURCHASE_AGE_DAYS_MAX);
       const warrantyYears = rng.pick(WARRANTY_YEARS_OPTIONS);

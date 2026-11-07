@@ -185,6 +185,7 @@ export function buildEstate(seed: number, scale: number): Estate {
   const b = new EstateBuilder(seed, scale, tenantId);
   const world: World = {
     b,
+    identityMacs: new Set(),
     rng: root,
     sites: [],
     hostPlans: [],
