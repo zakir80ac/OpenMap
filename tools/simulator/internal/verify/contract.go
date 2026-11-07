@@ -23,6 +23,8 @@ type enumSchema struct {
 type Contract struct {
 	CiTypes  map[string]bool
 	RelTypes map[string]bool
+	// Identity is how reconciliation decides a merge, for the identity drift check.
+	Identity *IdentityRules
 }
 
 func readEnum(path string) (map[string]bool, error) {

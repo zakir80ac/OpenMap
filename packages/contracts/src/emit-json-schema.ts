@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { CONTRACT_VERSIONS } from '@openmap/constants';
-import { ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
+import { CI_IDENTITY_KEYS, GLOBAL_IDENTITY_KEYS, ciSchema, metricSampleSchema, observedCiSchema, relationshipSchema, observedRelationshipSchema } from './ci.js';
 import { collectorJobSchema, collectorManifestSchema, collectorResultSchema } from './collector.js';
 import { eventEnvelopeSchema, outboxRecordSchema } from './event.js';
 import { assetRecordSchema, infraPlanSchema, supportContractSchema, vendorContactSchema } from './asset.js';
@@ -46,4 +46,13 @@ for (const [name, schema, version] of entries) {
   const withMeta = { $id: 'https://openmap.dev/contracts/' + name + '/' + version, title: name, version, ...json };
   writeFileSync(join(outDir, name + '.schema.json'), JSON.stringify(withMeta, null, 2) + '\n');
 }
-console.log('contracts: wrote ' + String(entries.length) + ' JSON schemas to ' + outDir);
+// The identity rules reconciliation applies (REQ-CORE-013), for Go tools that must judge merges the same way.
+const identity = {
+  $id: 'https://openmap.dev/contracts/ci-identity/' + CONTRACT_VERSIONS.ci,
+  title: 'ci-identity',
+  version: CONTRACT_VERSIONS.ci,
+  keys: CI_IDENTITY_KEYS,
+  global: [...GLOBAL_IDENTITY_KEYS],
+};
+writeFileSync(join(outDir, 'ci-identity.json'), JSON.stringify(identity, null, 2) + '\n');
+console.log('contracts: wrote ' + String(entries.length) + ' JSON schemas and ci-identity.json to ' + outDir);

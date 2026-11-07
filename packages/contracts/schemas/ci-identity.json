@@ -1,0 +1,308 @@
+{
+  "$id": "https://openmap.dev/contracts/ci-identity/0.6.0",
+  "title": "ci-identity",
+  "version": "0.6.0",
+  "keys": {
+    "host": [
+      "serialNumber",
+      "systemUuid",
+      "fqdn",
+      "primaryMac"
+    ],
+    "chassis": [
+      "serialNumber"
+    ],
+    "blade": [
+      "chassisRef",
+      "bay",
+      "serialNumber"
+    ],
+    "bmc": [
+      "managementIp",
+      "serialNumber"
+    ],
+    "hypervisor": [
+      "platform",
+      "hostRef",
+      "moRef"
+    ],
+    "vm_cluster": [
+      "platform",
+      "clusterId"
+    ],
+    "vm": [
+      "instanceUuid",
+      "hypervisorRef",
+      "fqdn"
+    ],
+    "operating_system": [
+      "hostRef",
+      "family",
+      "version"
+    ],
+    "saas_application": [
+      "vendor",
+      "product",
+      "tenantRef"
+    ],
+    "saas_tenant": [
+      "vendor",
+      "tenantId"
+    ],
+    "container_registry": [
+      "url"
+    ],
+    "fc_switch": [
+      "wwnn",
+      "serialNumber"
+    ],
+    "fc_fabric": [
+      "fabricWwn"
+    ],
+    "fc_zone": [
+      "fabricRef",
+      "name"
+    ],
+    "nas_share": [
+      "arrayRef",
+      "protocol",
+      "path"
+    ],
+    "object_bucket": [
+      "endpoint",
+      "name"
+    ],
+    "database_cluster": [
+      "engine",
+      "clusterId"
+    ],
+    "unknown": [
+      "address",
+      "primaryMac"
+    ],
+    "container": [
+      "containerId"
+    ],
+    "k8s_cluster": [
+      "clusterUid"
+    ],
+    "k8s_namespace": [
+      "clusterUid",
+      "name"
+    ],
+    "k8s_workload": [
+      "uid"
+    ],
+    "k8s_service": [
+      "uid"
+    ],
+    "network_device": [
+      "serialNumber",
+      "chassisId",
+      "sysName"
+    ],
+    "interface": [
+      "deviceRef",
+      "ifIndex",
+      "name"
+    ],
+    "port": [
+      "deviceRef",
+      "name"
+    ],
+    "vlan": [
+      "deviceRef",
+      "vlanId"
+    ],
+    "vrf": [
+      "deviceRef",
+      "name"
+    ],
+    "ip_address": [
+      "address",
+      "vrfRef"
+    ],
+    "subnet": [
+      "cidr",
+      "vrfRef"
+    ],
+    "dns_zone": [
+      "name"
+    ],
+    "dns_record": [
+      "zoneRef",
+      "name",
+      "recordType",
+      "value"
+    ],
+    "dhcp_scope": [
+      "serverRef",
+      "cidr"
+    ],
+    "dhcp_lease": [
+      "scopeRef",
+      "address"
+    ],
+    "load_balancer": [
+      "serialNumber",
+      "managementIp"
+    ],
+    "firewall_rule": [
+      "deviceRef",
+      "ruleId"
+    ],
+    "site_link": [
+      "circuitId",
+      "fromSiteRef",
+      "toSiteRef"
+    ],
+    "storage_array": [
+      "serialNumber"
+    ],
+    "lun": [
+      "arrayRef",
+      "wwn"
+    ],
+    "database": [
+      "hostRef",
+      "engine",
+      "name",
+      "port"
+    ],
+    "certificate": [
+      "fingerprintSha256"
+    ],
+    "application": [
+      "name"
+    ],
+    "application_component": [
+      "applicationRef",
+      "name"
+    ],
+    "listening_service": [
+      "hostRef",
+      "protocol",
+      "port"
+    ],
+    "business_service": [
+      "name"
+    ],
+    "software": [
+      "vendor",
+      "name",
+      "version"
+    ],
+    "software_instance": [
+      "hostRef",
+      "softwareRef",
+      "installPath"
+    ],
+    "licence": [
+      "licenceKeyDigest",
+      "softwareRef"
+    ],
+    "vulnerability": [
+      "cveId"
+    ],
+    "site": [
+      "code"
+    ],
+    "building": [
+      "siteRef",
+      "name"
+    ],
+    "room": [
+      "buildingRef",
+      "name"
+    ],
+    "row": [
+      "roomRef",
+      "name"
+    ],
+    "rack": [
+      "roomRef",
+      "name"
+    ],
+    "pdu": [
+      "serialNumber"
+    ],
+    "power_feed": [
+      "pduRef",
+      "name"
+    ],
+    "power_circuit": [
+      "siteRef",
+      "name"
+    ],
+    "ups": [
+      "serialNumber"
+    ],
+    "cooling_unit": [
+      "serialNumber"
+    ],
+    "cable": [
+      "label",
+      "endpointA",
+      "endpointB"
+    ],
+    "patch_panel": [
+      "rackRef",
+      "name"
+    ],
+    "cloud_account": [
+      "provider",
+      "accountId"
+    ],
+    "cloud_resource": [
+      "provider",
+      "resourceId"
+    ],
+    "user_account": [
+      "directoryRef",
+      "principalName"
+    ],
+    "service_account": [
+      "directoryRef",
+      "principalName"
+    ],
+    "vendor": [
+      "name"
+    ],
+    "contract": [
+      "vendorRef",
+      "contractNumber"
+    ],
+    "cost_centre": [
+      "code"
+    ]
+  },
+  "global": [
+    "serialNumber",
+    "systemUuid",
+    "fqdn",
+    "primaryMac",
+    "instanceUuid",
+    "chassisId",
+    "clusterUid",
+    "uid",
+    "containerId",
+    "managementIp",
+    "wwn",
+    "wwnn",
+    "fabricWwn",
+    "fingerprintSha256",
+    "cveId",
+    "licenceKeyDigest",
+    "resourceId",
+    "url",
+    "principalName",
+    "contractNumber",
+    "circuitId",
+    "address",
+    "cidr",
+    "moRef",
+    "clusterId",
+    "accountId",
+    "tenantId"
+  ]
+}

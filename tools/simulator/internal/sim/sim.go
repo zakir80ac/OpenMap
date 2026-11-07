@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"strings"
 
 	"github.com/openmap/openmap/tools/simulator/internal/estate"
 )
@@ -91,6 +92,10 @@ type Run struct {
 	Expect         Expect
 	// TimeoutMs bounds the collector run; 0 uses the harness default.
 	TimeoutMs int
+	// Aliases maps an address the collector dials here (loopback, with or without its port) to the estate's name for
+	// that target. The harness rewrites identity values the collector derived from the dialled address before the
+	// drift check, because against the real product the collector would have dialled the target's own name.
+	Aliases map[string]string
 }
 
 // Endpoint is a started simulator.
@@ -186,3 +191,26 @@ const (
 	secretBytes = 16
 	simUser     = "openmap-sim"
 )
+
+// IsUUID reports whether s is a canonical 8-4-4-4-12 hexadecimal UUID, for simulators that serve an estate id when the
+// estate carries the platform's own and derive one otherwise.
+func IsUUID(s string) bool {
+	if len(s) != uuidLen {
+		return false
+	}
+	for i, r := range s {
+		switch i {
+		case 8, 13, 18, 23:
+			if r != '-' {
+				return false
+			}
+		default:
+			if !strings.ContainsRune("0123456789abcdefABCDEF", r) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+const uuidLen = 36

@@ -184,6 +184,22 @@ func (e *Estate) To(c *CI, relType string) []*CI {
 	return out
 }
 
+// Between returns the relationships from a to b and from b to a.
+func (e *Estate) Between(a, b *CI) []*Rel {
+	var out []*Rel
+	for _, r := range e.from[a] {
+		if e.Resolve(r.To) == b {
+			out = append(out, r)
+		}
+	}
+	for _, r := range e.from[b] {
+		if e.Resolve(r.To) == a {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
 // Str returns a string attribute ("" when absent); numbers and booleans are formatted.
 func (c *CI) Str(key string) string {
 	switch v := c.Attributes[key].(type) {

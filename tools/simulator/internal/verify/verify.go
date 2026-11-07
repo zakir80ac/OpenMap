@@ -85,6 +85,12 @@ type Report struct {
 	// IdentityDrift lists matched CIs whose collector identity would not merge with the estate's CI.
 	IdentityDriftCount int     `json:"identityDriftCount"`
 	IdentityDrift      []Drift `json:"identityDrift,omitempty"`
+	// IdentityDriftByKey counts every drift by CI type and the identity keys that differ (the sample above is capped).
+	IdentityDriftByKey map[string]int `json:"identityDriftByKey,omitempty"`
+	// RelationshipDriftByKey counts emitted relationships between two estate CIs that the estate links with another
+	// type or direction (see RelationshipDrift).
+	RelationshipDriftCount int            `json:"relationshipDriftCount"`
+	RelationshipDriftByKey map[string]int `json:"relationshipDriftByKey,omitempty"`
 	// AttributeMismatches are expected attribute values the collector did not reproduce; any fails the run.
 	AttributeMismatchCount int        `json:"attributeMismatchCount"`
 	AttributeMismatches    []Mismatch `json:"attributeMismatches,omitempty"`
@@ -100,6 +106,24 @@ type Binaries struct {
 	Dir      string
 	done     map[string]string
 	contract *Contract
+	indexes  map[*estate.Estate]*EstateIndex
+}
+
+// Index returns the identity index of an estate, built once per estate.
+func (b *Binaries) Index(e *estate.Estate) (*EstateIndex, error) {
+	c, err := b.Contract()
+	if err != nil {
+		return nil, err
+	}
+	if b.indexes == nil {
+		b.indexes = map[*estate.Estate]*EstateIndex{}
+	}
+	ix, ok := b.indexes[e]
+	if !ok {
+		ix = NewEstateIndex(e, c.Identity)
+		b.indexes[e] = ix
+	}
+	return ix, nil
 }
 
 // Contract loads the result contract checks once per harness.
@@ -107,6 +131,9 @@ func (b *Binaries) Contract() (*Contract, error) {
 	if b.contract == nil {
 		c, err := LoadContract(b.Repo)
 		if err != nil {
+			return nil, err
+		}
+		if c.Identity, err = LoadIdentityRules(b.Repo); err != nil {
 			return nil, err
 		}
 		b.contract = c
@@ -245,23 +272,6 @@ type Drift struct {
 	Collector map[string]string `json:"collector"`
 }
 
-// aligned reports whether two identities would merge: they share at least one key and agree on every
-// shared key.
-func aligned(a, b map[string]string) bool {
-	common := 0
-	for k, v := range a {
-		bv, ok := b[k]
-		if !ok {
-			continue
-		}
-		if !strings.EqualFold(bv, v) {
-			return false
-		}
-		common++
-	}
-	return common > 0
-}
-
 func subset(want, have map[string]string) bool {
 	if len(want) == 0 {
 		return false
@@ -290,8 +300,9 @@ func (e end) matches(t, name string, identity map[string]string, nameKnown bool)
 	return nameKnown && strings.EqualFold(e.name, name)
 }
 
-// Compare checks a result against the run's expectation.
-func Compare(res *Result, want sim.Expect) Match {
+// Compare checks a result against the run's expectation. Identity drift is judged with the contract's identity rules:
+// a matched CI drifts when reconciliation would not merge its collector identity into the estate's.
+func Compare(res *Result, want sim.Expect, rules *IdentityRules) Match {
 	m := Match{ByType: map[string]int{}}
 	have := map[string][]observedCi{}
 	names := map[string]string{}
@@ -308,15 +319,26 @@ func Compare(res *Result, want sim.Expect) Match {
 			m.MissingCis = append(m.MissingCis, w)
 			continue
 		}
-		got := list[0]
-		have[k] = list[1:]
+		// Several emitted CIs can share a type and name (every Windows Server 2022 OS): pair the estate CI with one
+		// that would merge into it when there is one, so name collisions are not reported as drift.
+		pick := 0
+		if w.Identity != nil {
+			for i, c := range list {
+				if rules.Merges(w.Type, w.Identity, c.Identity) {
+					pick = i
+					break
+				}
+			}
+		}
+		got := list[pick]
+		have[k] = append(list[:pick:pick], list[pick+1:]...)
 		m.MatchedCis++
 		for k, want := range w.Attributes {
 			if !sameJSON(want, got.Attributes[k]) {
 				m.AttributeMismatches = append(m.AttributeMismatches, Mismatch{Type: w.Type, Name: w.Name, Attribute: k, Want: want, Got: got.Attributes[k]})
 			}
 		}
-		if w.Identity != nil && !aligned(w.Identity, got.Identity) {
+		if w.Identity != nil && !rules.Merges(w.Type, w.Identity, got.Identity) {
 			m.IdentityDrift = append(m.IdentityDrift, Drift{Type: w.Type, Name: w.Name, Estate: w.Identity, Collector: got.Identity})
 		}
 	}
@@ -356,6 +378,10 @@ func RunVendor(ctx context.Context, e *estate.Estate, env *sim.Env, bins *Binari
 	if err != nil {
 		return nil, err
 	}
+	ix, err := bins.Index(e)
+	if err != nil {
+		return nil, err
+	}
 	cv, err := contractVersion(ctx, bin)
 	if err != nil {
 		return nil, fmt.Errorf("%s --manifest: %w", v.Collector(), err)
@@ -367,12 +393,12 @@ func RunVendor(ctx context.Context, e *estate.Estate, env *sim.Env, bins *Binari
 	defer func() { _ = ep.Close() }()
 	var reports []Report
 	for _, run := range v.Runs(e, ep, env) {
-		reports = append(reports, runOne(ctx, e, env, bin, cv, checks, v, ep, run))
+		reports = append(reports, runOne(ctx, e, env, bin, cv, checks, ix, v, ep, run))
 	}
 	return reports, nil
 }
 
-func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string, checks *Contract, v sim.Vendor, ep *sim.Endpoint, run sim.Run) Report {
+func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string, checks *Contract, ix *EstateIndex, v sim.Vendor, ep *sim.Endpoint, run sim.Run) Report {
 	rep := Report{Simulator: v.ID(), Run: run.Name, Collector: v.Collector(), Requirements: v.Requirements(), Provenance: sim.Provenance,
 		ExpectedCis: len(run.Expect.CIs), ExpectedRels: len(run.Expect.Rels)}
 	started := time.Now()
@@ -417,10 +443,23 @@ func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string,
 	for _, violation := range checks.Violations(res, sampleLimit) {
 		rep.Errors = append(rep.Errors, "contract: "+violation)
 	}
-	m := Compare(res, run.Expect)
+	ApplyAliases(res, run.Aliases)
+	m := Compare(res, run.Expect, checks.Identity)
 	missC, missR := m.MissingCis, m.MissingRels
 	rep.MatchedCis, rep.MatchedRels, rep.EmittedByType = m.MatchedCis, m.MatchedRels, m.ByType
 	rep.IdentityDriftCount = len(m.IdentityDrift)
+	if byKey := RelationshipDrift(res, e, ix); len(byKey) > 0 {
+		rep.RelationshipDriftByKey = byKey
+		for _, n := range byKey {
+			rep.RelationshipDriftCount += n
+		}
+	}
+	for _, d := range m.IdentityDrift {
+		if rep.IdentityDriftByKey == nil {
+			rep.IdentityDriftByKey = map[string]int{}
+		}
+		rep.IdentityDriftByKey[DriftKey(d.Type, d.Estate, d.Collector)]++
+	}
 	if len(m.IdentityDrift) > sampleLimit {
 		m.IdentityDrift = m.IdentityDrift[:sampleLimit]
 	}
