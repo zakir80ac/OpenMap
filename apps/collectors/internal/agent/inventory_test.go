@@ -84,4 +84,16 @@ func TestWindowsAndEmit(t *testing.T) {
 	if rels[relInstalled] != 2 || rels[relUsesIP] != 1 || rels[relRunsOn] != 2 || len(obs.Evidence) != 1 || obs.Evidence[0].Kind != evidenceKind {
 		t.Fatalf("relationships or evidence wrong: %+v %d", rels, len(obs.Evidence))
 	}
+	// T-449: the software instance has the shape SSH and WMI give it (name@version, member_of its software).
+	for _, r := range obs.Relationships {
+		if r.Type == relMemberOf && r.From.Type == typeInstance {
+			if r.To.Type != typeSoftware || r.From.Identity["softwareRef"] != r.To.Identity["name"]+"@"+r.To.Identity["version"] {
+				t.Fatalf("software member_of wrong: %+v", r)
+			}
+			rels["member_of software"]++
+		}
+	}
+	if rels["member_of software"] != 1 {
+		t.Fatalf("software instance not linked to its software: %+v", rels)
+	}
 }

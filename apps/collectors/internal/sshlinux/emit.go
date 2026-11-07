@@ -27,6 +27,7 @@ const (
 	relUsesIP    = "uses_ip"
 	relRunsOn    = "runs_on"
 	relInstalled = "installed_on"
+	relMemberOf  = "member_of"
 
 	evidenceKind = "cli_output"
 	familyLinux  = "linux"
@@ -139,7 +140,9 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 	if f.OS.ID != "" || f.OS.Pretty != "" {
 		osIdentity := map[string]string{"hostRef": hostRef, "family": OSFamily(f.OS.ID), "version": firstNonEmpty(f.OS.VersionID, f.OS.Version, f.Kernel)}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeOS, Identity: osIdentity, Name: firstNonEmpty(f.OS.Pretty, f.OS.Name), Attributes: map[string]any{"id": f.OS.ID, "distribution": f.OS.ID, "version": f.OS.Version, "versionId": f.OS.VersionID, "kernel": f.Kernel, "arch": f.Arch}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
-		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relRunsOn, From: contract.CiRef{Type: typeOS, Identity: osIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
+		// The operating system is installed on the host, as every other collector reports it (WMI, vCenter, Prism,
+		// Hyper-V); runs_on is for software that executes on compute (listeners, workloads).
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalled, From: contract.CiRef{Type: typeOS, Identity: osIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
 	}
 
 	for idx, i := range f.Interfaces {
@@ -185,6 +188,7 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		instIdentity := map[string]string{"hostRef": hostRef, "softwareRef": p.Name + "@" + p.Version, "installPath": "os-package"}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeInstall, Identity: instIdentity, Name: p.Name + " on " + name, Attributes: map[string]any{"version": p.Version}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalled, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relMemberOf, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: contract.CiRef{Type: typeSoftware, Identity: swIdentity}, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	return obs
 }

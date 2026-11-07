@@ -107,7 +107,7 @@ func TestEmitHost(t *testing.T) {
 	for _, r := range obs.Relationships {
 		rels[r.Type]++
 	}
-	if rels[relRunsOn] != 4 || rels[relUsesIP] != 1 || rels[relInstalled] != 2 || rels[relContains] != 2 {
+	if rels[relRunsOn] != 3 || rels[relUsesIP] != 1 || rels[relInstalled] != 3 || rels[relContains] != 2 {
 		t.Fatalf("relationship counts wrong: %+v", rels)
 	}
 }

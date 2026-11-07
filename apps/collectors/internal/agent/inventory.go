@@ -33,6 +33,7 @@ const (
 	typeSoftware = "software"
 	typeInstance = "software_instance"
 	relInstalled = "installed_on"
+	relMemberOf  = "member_of"
 	relUsesIP    = "uses_ip"
 	relRunsOn    = "runs_on"
 	defaultVrf   = "default"

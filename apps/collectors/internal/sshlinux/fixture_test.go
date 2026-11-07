@@ -274,8 +274,11 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 				if r.Type == relInstalled && r.To.Type != want.hostType {
 					t.Errorf("installed_on %+v", r)
 				}
+				if r.From.Type == typeOS && r.Type != relInstalled {
+					t.Errorf("operating system linked by %s, want installed_on", r.Type)
+				}
 			}
-			wantRels := map[string]int{relRunsOn: 1 + len(want.services), relContains: 1, relUsesIP: 1, relInstalled: len(want.software)}
+			wantRels := map[string]int{relRunsOn: len(want.services), relContains: 1, relUsesIP: 1, relInstalled: 1 + len(want.software)}
 			for k, v := range wantRels {
 				if rels[k] != v {
 					t.Errorf("relationship %s: %d want %d", k, rels[k], v)

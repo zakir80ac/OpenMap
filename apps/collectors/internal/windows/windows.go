@@ -35,7 +35,7 @@ const (
 	relContains    = "contains"
 	relUsesIP      = "uses_ip"
 	relRunsOn      = "runs_on"
-	relHostedOn    = "hosted_on"
+	relMemberOf    = "member_of"
 )
 
 type Collector struct{}
@@ -382,8 +382,10 @@ func Emit(inv *Inventory, target contract.Target, raw []byte, at time.Time) coll
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeSoftware, Identity: swIdentity, Name: strings.TrimSpace(name + " " + ver), Attributes: map[string]any{"vendor": vendor, "packageManager": "windows-installer"}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		instIdentity := map[string]string{"hostRef": hostRef, "softwareRef": name + "@" + ver, "installPath": firstNonEmpty(s.InstallLocation, "windows-installer")}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeInstall, Identity: instIdentity, Name: name + " on " + fqdn, Attributes: map[string]any{"installDate": s.InstallDate, "installLocation": s.InstallLocation}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
-		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relHostedOn, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: hostRefCi, Attributes: map[string]any{}, ObservedAt: at})
-		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalledOn, From: contract.CiRef{Type: typeSoftware, Identity: swIdentity}, To: contract.CiRef{Type: typeInstall, Identity: instIdentity}, Attributes: map[string]any{}, ObservedAt: at})
+		// One shape for software on every collector (SSH, WMI, agent): the instance is installed_on the host and is a
+		// member_of the catalogue software, which is how vulnerability and licence queries reach the hosts.
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalledOn, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: hostRefCi, Attributes: map[string]any{}, ObservedAt: at})
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relMemberOf, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: contract.CiRef{Type: typeSoftware, Identity: swIdentity}, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	services := []map[string]any{}
 	for _, s := range inv.Services {

@@ -82,9 +82,12 @@ func Emit(inv *Inventory) collector.Observation {
 		seenPkg[key] = true
 		swIdentity := map[string]string{"vendor": vendor, "name": p.Name, "version": p.Version}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeSoftware, Identity: swIdentity, Name: p.Name + " " + p.Version, Attributes: map[string]any{"vendor": vendor, "name": p.Name, "version": p.Version, "source": source}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
-		instIdentity := map[string]string{"hostRef": hostRef, "softwareRef": vendor + ":" + p.Name + ":" + p.Version, "installPath": firstNonEmpty(p.InstallPath, "system")}
+		// softwareRef is name@version, as the SSH and WMI collectors write it, so one host's package seen by the agent
+		// and by an agentless sweep reconciles to one software_instance.
+		instIdentity := map[string]string{"hostRef": hostRef, "softwareRef": p.Name + "@" + p.Version, "installPath": firstNonEmpty(p.InstallPath, "system")}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeInstance, Identity: instIdentity, Name: p.Name + " on " + inv.Hostname, Attributes: map[string]any{"software": p.Name, "version": p.Version, "vendor": vendor, "installPath": p.InstallPath, "source": source}, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relInstalled, From: contract.CiRef{Type: typeInstance, Identity: instIdentity}, To: host, Attributes: map[string]any{}, ObservedAt: at})
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relMemberOf, From: contract.CiRef{Type: typeInstance, Identity: instIdentity}, To: contract.CiRef{Type: typeSoftware, Identity: swIdentity}, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	return obs
 }
