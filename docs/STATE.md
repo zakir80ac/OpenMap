@@ -2,7 +2,48 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-07 (checkpoint 24: CMDB complete bar credentials, discovery fixtures from a container lab)
+## Last session · 2026-11-07 (checkpoint 25: rows parked, simulated mode, warranty lookups)
+
+Syed's direction: no vendor access yet, so park the rows that need it and test the solution in simulated mode; return
+to them later.
+
+**Parked:** 28 rows set to Blocked with the reason in each row's notes: REQ-DISC-001…023/026/027/031 and
+REQ-CMDB-022/024. Simulated runs add test ids to them but never close them (ADR-042).
+
+**Simulated mode (REQ-QA-005 Done, ADR-042):**
+- `tools/simulator` (Go module in go.work) has 39 vendor simulators on 7 protocol servers (SSH, WinRM,
+  SNMP v1/v2c/v3, LDAP, DNS AXFR/TSIG, flow export, TCP banners), rendered from the synthetic estate, with real auth
+  and pinned TLS.
+- `pnpm --filter @openmap/simulator verify` builds and runs the real collector binaries and compares them with the
+  estate. With contract checks on, 495/495 runs pass: 66,565 CIs and 82,331 relationships
+  (docs/evidence/simulated-mode.md, T-350…T-446).
+- Compose profile `simulated` (`docker-compose.simulated.yml`) plus `scheduler plan:submit` run the same jobs on the
+  real Discovery Node. Warranty, SaaS and Pure went through node → scheduler → reconciler → console.
+  Commits: 8856e83, 2006332, 899522b, f78acbd.
+
+**Warranty and EoX (REQ-CMDB-024, ADR-043, contracts 0.6.0, 2714e27):**
+- `warranty` collector: Dell TechDirect, Lenovo v2.5, Cisco SN2INFO plus EoX.
+- `endOfLifeFromAttributes`; the reconciler and API carry the asset end of life (vendor-sourced only).
+- `scheduler warranty:plan` plans the lookups from the CMDB.
+- On the dev stack, 769 Dell, 517 Lenovo and 135 Cisco assets now carry vendor-verified warranty, and Cisco end of
+  life shows on the Lifecycle screen. HPE and IBM are not built (no documented API shape).
+
+**Collector bugs fixed (40+, each with a test), the most consequential:**
+- 16 collectors ignored `caCertPem` on token, login or API transports.
+- 12 collectors emitted attribute maps or object lists the scheduler rejects; the runtime now normalises them
+  (`ContractAttributes`).
+- The API silently dropped manifests the contract rejected: underscore ids, OCI/Alibaba families, Google/OCI/Alibaba
+  credential types. Contract 0.6.0 and migration 0027 fix this; T-359 guards it.
+- Paging stopped early in AWS, Alibaba, Google and NVD.
+- F5/Citrix VIP collisions; UCS `extIp`; OneView names; Liebert UPS classified as cooling; Windows NAS/DHCP server
+  identity.
+
+**Open finding:** the synthetic estate's identities drift from the real collectors in 36,373 matched CIs: VRFs,
+virtualisation ids and directions, the SNMP `deviceRef` form, load-balancer members. Real discovery would duplicate
+those estate CIs. Question 04 below. The dev tenant now holds the simulated warranty and SaaS results; four SaaS
+tenants were added rather than merged (tenant-id drift). Replay with `--reset` to restore.
+
+## Previous session · 2026-11-07 (checkpoint 24: CMDB complete bar credentials, discovery fixtures from a container lab)
 
 Syed's direction: finish all CMDB rows and the discovery rows in review; lifecycle source option (c) (bundled
 endoflife.date snapshot plus vendor EoX APIs).
@@ -28,7 +69,7 @@ Engine collector, an Oracle prober (go-ora, ADR-040), NVD API captures. REQ-DISC
 records its tests and exactly which vendors still need hardware, licences, accounts or the code-signing decision.
 SQL Server Developer was run under Microsoft's EULA (`ACCEPT_EULA=Y`) for the capture.
 
-## Previous session · 2026-11-06 (checkpoint 23: receiving, vendors and contracts, certificates)
+## Earlier session · 2026-11-06 (checkpoint 23: receiving, vendors and contracts, certificates)
 
 Syed's direction: keep going with the remaining CMDB rows. The dev stack is back after a Windows restart.
 
@@ -584,27 +625,34 @@ tracker is the truth.
 
 ## Blocked
 
-- REQ-CMDB-024: vendor warranty/EoX credentials (Dell TechDirect, HPE, Lenovo, Cisco, IBM). REQ-CMDB-022: real SaaS tenants.
-- Discovery rows needing hardware, licences or cloud accounts (see each row's notes).
+- Parked by Syed on 2026-11-07 (28 rows): REQ-DISC-001…023/026/027/031, REQ-CMDB-022/024. Each is exercised in simulated
+  mode (test ids on the row) and closes only on real captures or access (see each row's notes).
 - docs/SPEC.md still missing (risk R-001). Vendor lab fixtures (risk R-004). CI never ran (no remote).
 
 ## Next three
 
 Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB before BSM-007 and finance.
 
-1. When Syed provides captures or access: close the remaining discovery rows and REQ-CMDB-022/024 (adapters for the
-   warranty vendors only against recorded responses).
+1. Decide the identity conventions (question 04), then align tools/synth-estate with the real collectors so simulated
+   and real discovery update the estate's CIs instead of adding new ones.
 2. A cloud-hosted application in the synthetic estate so the application map's cloud row is exercised (ADR-031).
-3. Then REQ-BSM-007 (ADR-025) and the finance module. Discovery rows 001–027 close as vendor fixtures arrive.
+3. Then REQ-BSM-007 (ADR-025) and the finance module. Parked rows close as vendor access arrives.
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
-profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0026
+profile); images `openmap/{api,console,scheduler,reconciler,bsm-engine}:dev` were rebuilt this session; migrations through 0027
 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed
 
 00. Answered (c) on 2026-11-06; implemented as ADR-039.
+04. Identity conventions surfaced by simulated mode:
+    - Should discovered IP addresses carry the VRF the estate assigns (`PROD`, `MGMT`, `STORAGE`) or `default` until a
+      collector reads VRF membership?
+    - Should the SNMP interface `deviceRef` be the bare serial (estate) or `serial:<serial>` (collector)?
+    - Should the synthetic estate adopt the collectors' virtualisation ids and relationship directions?
+05. Parked rows stay parked. The simulated runs found and fixed 40+ collector bugs, but every vendor row still closes
+    only on real access or captures (questions 01–03).
 01. REQ-CMDB-024: API credentials for Dell TechDirect, HPE, Lenovo, Cisco (SN2INFO and EoX) and IBM, so the warranty and
 EoX adapters are written against recorded responses.
 02. REQ-CMDB-022: developer tenants or recordings for Microsoft 365, Salesforce, ServiceNow, Google Workspace, Workday.
