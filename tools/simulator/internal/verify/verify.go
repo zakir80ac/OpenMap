@@ -83,12 +83,15 @@ type Report struct {
 	MissingCis    []sim.ExpectCI  `json:"missingCis,omitempty"`
 	MissingRels   []sim.ExpectRel `json:"missingRelationships,omitempty"`
 	// IdentityDrift lists matched CIs whose collector identity would not merge with the estate's CI.
-	IdentityDriftCount int      `json:"identityDriftCount"`
-	IdentityDrift      []Drift  `json:"identityDrift,omitempty"`
-	Errors             []string `json:"errors,omitempty"`
-	Requests           int      `json:"requests"`
-	RequestSample      []string `json:"requestSample,omitempty"`
-	DurationMs         int64    `json:"durationMs"`
+	IdentityDriftCount int     `json:"identityDriftCount"`
+	IdentityDrift      []Drift `json:"identityDrift,omitempty"`
+	// AttributeMismatches are expected attribute values the collector did not reproduce; any fails the run.
+	AttributeMismatchCount int        `json:"attributeMismatchCount"`
+	AttributeMismatches    []Mismatch `json:"attributeMismatches,omitempty"`
+	Errors                 []string   `json:"errors,omitempty"`
+	Requests               int        `json:"requests"`
+	RequestSample          []string   `json:"requestSample,omitempty"`
+	DurationMs             int64      `json:"durationMs"`
 }
 
 // Binaries builds collector binaries on demand into dir and caches the paths.
@@ -202,6 +205,23 @@ type Match struct {
 	MissingRels   []sim.ExpectRel
 	ByType        map[string]int
 	IdentityDrift []Drift
+	// AttributeMismatches are expected attribute values the collector reported differently (or not at all).
+	AttributeMismatches []Mismatch
+}
+
+// Mismatch is one expected attribute the emitted CI does not carry with the expected value.
+type Mismatch struct {
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	Attribute string `json:"attribute"`
+	Want      any    `json:"want"`
+	Got       any    `json:"got"`
+}
+
+func sameJSON(a, b any) bool {
+	ja, errA := json.Marshal(a)
+	jb, errB := json.Marshal(b)
+	return errA == nil && errB == nil && string(ja) == string(jb)
 }
 
 // Drift is an emitted CI whose identity would not merge with the estate's identity for it.
@@ -278,6 +298,11 @@ func Compare(res *Result, want sim.Expect) Match {
 		got := list[0]
 		have[k] = list[1:]
 		m.MatchedCis++
+		for k, want := range w.Attributes {
+			if !sameJSON(want, got.Attributes[k]) {
+				m.AttributeMismatches = append(m.AttributeMismatches, Mismatch{Type: w.Type, Name: w.Name, Attribute: k, Want: want, Got: got.Attributes[k]})
+			}
+		}
 		if w.Identity != nil && !aligned(w.Identity, got.Identity) {
 			m.IdentityDrift = append(m.IdentityDrift, Drift{Type: w.Type, Name: w.Name, Estate: w.Identity, Collector: got.Identity})
 		}
@@ -380,7 +405,12 @@ func runOne(ctx context.Context, e *estate.Estate, env *sim.Env, bin, cv string,
 		m.IdentityDrift = m.IdentityDrift[:sampleLimit]
 	}
 	rep.IdentityDrift = m.IdentityDrift
-	rep.Pass = res.Status == "success" && len(missC) == 0 && len(missR) == 0 && len(rep.Errors) == 0 && rep.ExpectedCis > 0
+	rep.AttributeMismatchCount = len(m.AttributeMismatches)
+	if len(m.AttributeMismatches) > sampleLimit {
+		m.AttributeMismatches = m.AttributeMismatches[:sampleLimit]
+	}
+	rep.AttributeMismatches = m.AttributeMismatches
+	rep.Pass = res.Status == "success" && len(missC) == 0 && len(missR) == 0 && len(rep.Errors) == 0 && rep.ExpectedCis > 0 && rep.AttributeMismatchCount == 0
 	if len(missC) > sampleLimit {
 		missC = missC[:sampleLimit]
 	}

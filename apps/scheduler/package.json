@@ -25,6 +25,7 @@
     "pki:init": "tsx src/pki-init.ts",
     "node:register": "tsx src/node-register.ts",
     "job:submit": "tsx src/job-submit.ts",
+    "warranty:plan": "tsx src/warranty-plan.ts",
     "agent:register": "tsx src/agent-register.ts"
   },
   "dependencies": {

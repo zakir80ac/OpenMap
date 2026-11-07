@@ -41,6 +41,8 @@ export const COLLECTOR_FAMILIES = [
   'saas',
   /** OS patch state and end-of-life: WSUS/Intune, Red Hat Satellite, Landscape, endoflife.date. */
   'os_patch',
+  /** Vendor warranty and end-of-life lookups by serial (ADR-043): Dell TechDirect, Lenovo, Cisco SN2INFO and EoX. */
+  'warranty',
 ] as const;
 export const collectorFamilySchema = z.enum(COLLECTOR_FAMILIES);
 export type CollectorFamily = z.infer<typeof collectorFamilySchema>;

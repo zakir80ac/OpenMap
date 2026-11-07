@@ -441,6 +441,21 @@ export const UTILISATION = {
   cpuSampleSeconds: 1,
 } as const;
 
+/** REQ-CMDB-024 (ADR-043): warranty and EoX lookups by serial number. */
+export const WARRANTY = {
+  collectorId: 'warranty',
+  /** Hardware types a lookup is planned for (the asset register's owned hardware with a serial). */
+  ciTypes: ['host', 'network_device', 'storage_array', 'load_balancer', 'firewall'] as const,
+  /** Assets per job: one job stays well inside the job timeout at the vendors' batch sizes and rate limits. */
+  assetsPerJob: 500,
+  /** Lower-cased manufacturer prefixes per vendor adapter (estate and collectors spell them several ways). */
+  manufacturerPrefixes: { dell: ['dell'], lenovo: ['lenovo'], cisco: ['cisco'] },
+  /** Vendors whose adapter also reports EoX milestones. */
+  eoxVendors: ['cisco'],
+  /** Requests per second per job, under the vendors' published per-client limits. */
+  requestsPerSecond: 2,
+} as const;
+
 /**
  * REQ-CMDB-023 REQ-CMDB-025 (ADR-039) — the product lifecycle catalogue: the endoflife.date products bundled in the
  * snapshot (packages/db/lifecycle) and refreshed by the optional sync, with the kind and display title of each, and the
@@ -1302,12 +1317,15 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.3.0 (REQ-CMDB-014, ADR-037): `component.ts`, the `components` part list on an observed CI.
    * 0.4.0 (REQ-CMDB-034): `utilisation.ts`, the CPU, memory, disk and power metric names per CI type.
    * 0.5.0 (REQ-CMDB-023, REQ-CMDB-025, ADR-039): `lifecycle.ts`, catalogue entries, support states, OS and platform releases.
+   * 0.6.0 (REQ-CMDB-024, ADR-043): `endOfLifeFromAttributes`; asset fields carry the vendor-reported end of life, the
+   * warranty start and verification instant.
    */
-  ci: '0.5.0',
+  ci: '0.6.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
-   * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version). */
-  collector: '0.5.0',
+   * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
+   * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family. */
+  collector: '0.6.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.

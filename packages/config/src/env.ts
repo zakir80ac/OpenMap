@@ -81,6 +81,15 @@ export const envSchema = z.object({
   PUBLIC_CONSOLE_ALIAS_URL: url.optional(),
   /** REQ-CMDB-023 (ADR-039): the product lifecycle catalogue the snapshot and the optional tenant-enabled sync read. */
   LIFECYCLE_CATALOGUE_URL: url.default('https://endoflife.date/api'),
+  /**
+   * REQ-CMDB-024 (ADR-043): vendor support APIs the warranty collector asks, from the Discovery Node, only for the
+   * vendors a tenant has stored credentials for. Overridable for regional gateways and simulated mode.
+   */
+  WARRANTY_DELL_API_URL: url.default('https://apigtwb2c.us.dell.com'),
+  WARRANTY_DELL_TOKEN_URL: url.default('https://apigtwb2c.us.dell.com/auth/oauth/v2/token'),
+  WARRANTY_LENOVO_API_URL: url.default('https://supportapi.lenovo.com'),
+  WARRANTY_CISCO_API_URL: url.default('https://apix.cisco.com'),
+  WARRANTY_CISCO_TOKEN_URL: url.default('https://id.cisco.com/oauth2/default/v1/token'),
   PUBLIC_API_URL: url.default('http://localhost:4000'),
   /**
    * Keycloak as the browser reaches it. The console's OIDC flow (discovery, authorize, token, end_session) runs

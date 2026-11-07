@@ -359,6 +359,8 @@ export interface AssetFieldsFromCi {
   warranty: Warranty | null;
   subscription: Subscription | null;
   support: Support | null;
+  /** End of sale, software maintenance and support reported by a vendor lookup (ADR-043); null when none was seen. */
+  endOfLife: EndOfLife | null;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
@@ -381,6 +383,32 @@ function text(attributes: Record<string, unknown>, ...keys: readonly string[]): 
 function isoDate(attributes: Record<string, unknown>, key: string): string | null {
   const value = text(attributes, key);
   return value !== null && ISO_DATE.test(value) ? value : null;
+}
+
+/** An instant attribute (RFC 3339) as an ISO datetime, or null. */
+function instant(attributes: Record<string, unknown>, key: string): string | null {
+  const value = text(attributes, key);
+  if (value === null) return null;
+  const ms = Date.parse(value);
+  return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+}
+
+/**
+ * ADR-043 — the end-of-life record a vendor lookup reports on a hardware CI (`endOfSale`, `endOfSoftwareMaintenance`,
+ * `endOfSupport`, with `eolSource` and `eolVerifiedAt`), or null when the CI carries none of the dates.
+ */
+export function endOfLifeFromAttributes(attributes: Record<string, unknown>): EndOfLife | null {
+  const endOfSale = isoDate(attributes, 'endOfSale');
+  const endOfSoftwareMaintenance = isoDate(attributes, 'endOfSoftwareMaintenance');
+  const endOfSupport = isoDate(attributes, 'endOfSupport');
+  if (endOfSale === null && endOfSoftwareMaintenance === null && endOfSupport === null) return null;
+  return {
+    endOfSale,
+    endOfSoftwareMaintenance,
+    endOfSupport,
+    source: text(attributes, 'eolSource') ?? 'vendor_api',
+    verifiedAt: instant(attributes, 'eolVerifiedAt'),
+  };
 }
 
 /** A calendar date from a date or an instant attribute (collectors report RFC 3339 for SaaS and cloud terms). */
@@ -470,10 +498,10 @@ export function assetFieldsFromCi(
         ? {
             provider: warrantyProvider,
             level: text(attributes, 'warrantyLevel'),
-            startsAt: isoDate(attributes, 'purchaseDate'),
+            startsAt: isoDate(attributes, 'warrantyStart') ?? isoDate(attributes, 'purchaseDate'),
             endsAt: warrantyEnd,
             source: 'vendor_api',
-            verifiedAt: null,
+            verifiedAt: instant(attributes, 'warrantyVerifiedAt'),
           }
         : null,
     subscription: subscriptionFromAttributes(type, attributes, observedAt),
@@ -488,6 +516,7 @@ export function assetFieldsFromCi(
             verifiedAt: null,
           }
         : null,
+    endOfLife: endOfLifeFromAttributes(attributes),
   };
 }
 

@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/asset-record/0.5.0",
+  "$id": "https://openmap.dev/contracts/asset-record/0.6.0",
   "title": "asset-record",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

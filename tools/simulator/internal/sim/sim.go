@@ -33,6 +33,8 @@ type ExpectCI struct {
 	Type     string            `json:"type"`
 	Name     string            `json:"name"`
 	Identity map[string]string `json:"identity,omitempty"`
+	// Attributes, when set, must each appear on the emitted CI with an equal value (compared as JSON).
+	Attributes map[string]any `json:"attributes,omitempty"`
 }
 
 // ExpectRel is a relationship the collector must emit. Each end is an emitted CI matched by type and name,
@@ -57,6 +59,11 @@ func (x *Expect) CI(ciType, name string) { x.CIs = append(x.CIs, ExpectCI{Type: 
 // EstateCI expects an estate CI under its own type and name, carrying its identity for the drift check.
 func (x *Expect) EstateCI(c *estate.CI) {
 	x.CIs = append(x.CIs, ExpectCI{Type: c.Type, Name: c.Name, Identity: c.Identity})
+}
+
+// CIWith expects a CI by type and name whose attributes include attrs, with the estate identity for the drift check.
+func (x *Expect) CIWith(c *estate.CI, ciType string, attrs map[string]any) {
+	x.CIs = append(x.CIs, ExpectCI{Type: ciType, Name: c.Name, Identity: c.Identity, Attributes: attrs})
 }
 
 // RelToRef expects a relationship from an emitted CI to a reference-only CI identified by identity.

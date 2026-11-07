@@ -1165,6 +1165,7 @@ export async function ensureAssetForCi(
       warranty: fields.warranty ?? Prisma.DbNull,
       subscription: fields.subscription ?? Prisma.DbNull,
       support: fields.support ?? Prisma.DbNull,
+      endOfLife: fields.endOfLife ?? Prisma.DbNull,
       tags: [],
       customFields: {},
     },
