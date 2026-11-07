@@ -758,6 +758,11 @@ export const RECONCILER = {
   /** Candidate CIs fetched per identity lookup batch. */
   lookupBatchSize: 500,
   /**
+   * Lookup batch queries one result keeps in flight. With resultsConcurrency results at once this stays well inside
+   * Prisma's default pool; unbounded, a 20,000-relationship result sent 101 queries at once and failed to connect.
+   */
+  lookupConcurrency: 6,
+  /**
    * Budget for the single Postgres transaction that writes one collector result (CIs, relationships, conflicts and
    * outbox rows). Prisma's default of five seconds fits a small sweep chunk but not a 2000-device result on a busy
    * host; a 10k-device sweep must still land inside the fifteen-minute discovery budget, so two minutes per result.

@@ -59,6 +59,21 @@ function chunked<T>(list: readonly T[]): T[][] {
 }
 
 /**
+ * Runs one query per chunk with at most RECONCILER.lookupConcurrency in flight. A relationship-only result of a
+ * full-scale sweep names tens of thousands of endpoints; one statement per chunk all at once opened more connections
+ * than the pool and the host's port forwarding could take (P1001 on the scale-1 replay).
+ */
+async function perChunk<T, R>(chunks: readonly T[][], query: (chunk: T[]) => Promise<R[]>): Promise<R[]> {
+  const out: R[][] = new Array<R[]>(chunks.length);
+  let next = 0;
+  const lane = async (): Promise<void> => {
+    for (let i = next++; i < chunks.length; i = next++) out[i] = await query(chunks[i] ?? []);
+  };
+  await Promise.all(Array.from({ length: Math.min(RECONCILER.lookupConcurrency, chunks.length) }, lane));
+  return out.flat();
+}
+
+/**
  * ADR-045: the stored CIs any `*Ref` value of these identities may name. One GIN probe on refTokens per chunk of
  * distinct values, restricted to the refs' target types.
  */
@@ -73,14 +88,11 @@ export async function fetchRefTargets(prisma: PrismaClient, tenantId: string, re
   }
   if (values.size === 0 || types.size === 0) return [];
   const typeList = [...types];
-  const batches = await Promise.all(
-    chunked([...values]).map((chunk) =>
-      prisma.$queryRaw<CiRow[]>(Prisma.sql`
-        SELECT * FROM cis
-        WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND type::text = ANY(${typeList}::text[]) AND "refTokens" && ${chunk}::text[]`),
-    ),
+  return perChunk(chunked([...values]), (chunk) =>
+    prisma.$queryRaw<CiRow[]>(Prisma.sql`
+      SELECT * FROM cis
+      WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND type::text = ANY(${typeList}::text[]) AND "refTokens" && ${chunk}::text[]`),
   );
-  return batches.flat();
 }
 
 /**
@@ -120,16 +132,15 @@ async function fetchCandidates(prisma: PrismaClient, tenantId: string, refs: rea
   }
   // GIN cannot serve "@> ANY(array)", so containment terms become an OR chain the planner turns into
   // a BitmapOr of index probes; chunked so one statement never carries thousands of terms.
-  // Chunks are independent; the pool runs them concurrently.
-  const batches = await Promise.all(
-    chunked([...containments]).map((chunk) => {
+  // Chunks are independent; a bounded number run concurrently.
+  collect(
+    await perChunk(chunked([...containments]), (chunk) => {
       const terms = Prisma.join(chunk.map((j) => Prisma.sql`identity @> ${j}::jsonb`), ' OR ');
       return prisma.$queryRaw<CiRow[]>(Prisma.sql`
         SELECT * FROM cis
         WHERE "tenantId" = ${tenantId}::uuid AND "validTo" IS NULL AND (${terms})`);
     }),
   );
-  for (const batch of batches) collect(batch);
   return [...rows.values()];
 }
 
