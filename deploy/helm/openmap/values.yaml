@@ -74,6 +74,8 @@ postgres:
   database: openmap
   username: openmap
   password: openmap
+  # Memory-backed /dev/shm for parallel query workers; a pod's 64 MB default fails a full-scale reconciliation lookup.
+  shmSize: 1Gi
   resources:
     requests: { cpu: 500m, memory: 1Gi }
     limits: { cpu: "4", memory: 8Gi }

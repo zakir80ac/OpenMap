@@ -83,6 +83,8 @@ spec:
             - name: init
               mountPath: /docker-entrypoint-initdb.d
               readOnly: true
+            - name: shm
+              mountPath: /dev/shm
             {{- end }}
           {{- if eq $store.component "postgres" }}
           envFrom:
@@ -122,6 +124,8 @@ spec:
       volumes:
         - name: init
           configMap: { name: {{ include "openmap.fullname" $root }}-postgres-init }
+        - name: shm
+          emptyDir: { medium: Memory, sizeLimit: {{ $root.Values.postgres.shmSize }} }
       {{- end }}
   volumeClaimTemplates:
     - metadata:

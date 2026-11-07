@@ -9,6 +9,9 @@ services:
   postgres:
     <<: *restart
     image: postgres:17
+    # Parallel query workers share memory through /dev/shm; Docker's 64 MB default fails a full-scale reconciliation
+    # lookup ("could not resize shared memory segment", REQ-CORE-013 scale-1 replay).
+    shm_size: ${POSTGRES_SHM_SIZE:-1g}
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-openmap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
