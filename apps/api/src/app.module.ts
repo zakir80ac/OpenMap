@@ -10,6 +10,7 @@ import { CertificatesModule } from './certificates/certificates.module.js';
 import { ComponentsModule } from './components/components.module.js';
 import { AnomalyModule } from './anomaly/anomaly.module.js';
 import { CloudAdviceModule } from './cloud-advice/cloud-advice.module.js';
+import { DnsSyncModule } from './dns-sync/dns-sync.module.js';
 import { ClassificationModule } from './classification/classification.module.js';
 import { TelemetryModule } from './telemetry/telemetry.module.js';
 import { UtilisationModule } from './utilisation/utilisation.module.js';
@@ -85,6 +86,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     ClassificationModule,
     AnomalyModule,
     CloudAdviceModule,
+    DnsSyncModule,
     LifecycleModule,
     SaasModule,
     GraphQLModule.forRootAsync<MercuriusDriverConfig>({

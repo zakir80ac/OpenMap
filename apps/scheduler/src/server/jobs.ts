@@ -2,9 +2,10 @@
 // scheduled work atomically (FOR UPDATE SKIP LOCKED), record results and evidence, and emit the
 // discovery events through the outbox.
 import { randomUUID } from 'node:crypto';
-import { CONTRACT_VERSIONS } from '@openmap/constants';
+import { CONTRACT_VERSIONS, DNS_SYNC } from '@openmap/constants';
 import { collectorResultSchema, eventEnvelopeSchema, type CollectorJob, type CollectorResult, type EventEnvelope, type EventType } from '@openmap/contracts';
 import type { Prisma, PrismaClient } from '@openmap/db';
+import { settleDnsJob } from './dns-sync-loop.js';
 
 /** Contract objects are plain JSON; Prisma's input type is narrower only in its TypeScript shape. */
 function json(value: unknown): Prisma.InputJsonValue {
@@ -157,6 +158,8 @@ export function createJobStore(prisma: PrismaClient): JobStore {
             },
           },
         });
+        // REQ-IPAM-003: a dns sync job settles the record changes it carried from the transfer it returned.
+        if (job.collectorId === DNS_SYNC.collectorId) await settleDnsJob(tx, job, result);
         const status = result.status === 'failed' ? 'failed' : 'completed';
         await tx.discoveryJob.update({ where: { id: job.id }, data: { status, finishedAt: new Date(result.finishedAt) } });
         const type: EventType = status === 'failed' ? 'openmap.discovery.job.failed' : 'openmap.discovery.job.completed';

@@ -33,6 +33,9 @@ x-app-env: &app-env
   LINK_PROBE_INTERVAL_MS: ${LINK_PROBE_INTERVAL_MS:-60000}
   # REQ-AI-003: the anomaly sweep (milliseconds; 0 turns it off).
   ANOMALY_INTERVAL_MS: ${ANOMALY_INTERVAL_MS:-300000}
+  # REQ-IPAM-003: the DNS sync round and the pull interval of a zone with no pending change (milliseconds).
+  DNS_SYNC_INTERVAL_MS: ${DNS_SYNC_INTERVAL_MS:-30000}
+  DNS_PULL_INTERVAL_MS: ${DNS_PULL_INTERVAL_MS:-900000}
   # REQ-CORE-020: concurrent outbox dispatch loops per reconciler (claims are leased, so loops never share a row).
   RECONCILER_DISPATCHERS: ${RECONCILER_DISPATCHERS:-1}
   PUBLIC_SUPERSET_URL: ${PUBLIC_SUPERSET_URL:-http://localhost:8088}

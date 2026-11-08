@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.27.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.28.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -293,6 +293,64 @@ type ImpactAccuracy {
   "Resolved incidents the sweep cannot compare because they name no root cause."
   withoutRootCause: Int!
   recent: [ImpactValidation!]!
+}
+"A DNS zone kept in sync both ways (REQ-IPAM-003, ADR-055): transferred from its server and updated through it."
+type DnsZoneSync {
+  id: UUID!
+  zone: String!
+  "The authoritative server the zone is transferred from and changes are pushed to."
+  server: String!
+  port: Int!
+  tsigKeyName: String
+  tsigAlgorithm: String
+  "The credential holding the TSIG secret."
+  credentialRef: String
+  "The site whose Discovery Node reaches the server."
+  siteId: UUID!
+  enabled: Boolean!
+  lastPullAt: DateTime
+  lastPushAt: DateTime
+  lastError: String
+  "Changes not settled yet (pending or sent)."
+  pending: Int!
+}
+"A record change requested in OpenMap and its progress to the server (REQ-IPAM-003)."
+type DnsChange {
+  id: UUID!
+  zone: String!
+  "add or delete."
+  op: String!
+  "The record name, absolute within the zone."
+  name: String!
+  recordType: String!
+  value: String!
+  ttl: Int!
+  "pending, sent, applied or failed."
+  state: String!
+  error: String
+  requestedBy: String!
+  requestedAt: DateTime!
+  settledAt: DateTime
+}
+input DnsZoneSyncInput {
+  zone: String!
+  server: String!
+  port: Int
+  tsigKeyName: String
+  tsigAlgorithm: String
+  credentialRef: String
+  siteId: UUID!
+  enabled: Boolean
+}
+input DnsChangeInput {
+  zone: String!
+  "add or delete."
+  op: String!
+  name: String!
+  "A, AAAA, CNAME, TXT, PTR, MX, SRV or NS."
+  recordType: String!
+  value: String!
+  ttl: Int
 }
 "A recommendation for one cloud resource (REQ-AI-005, ADR-054), with the figures it rests on."
 type CloudRecommendation {
@@ -2187,6 +2245,10 @@ type Query {
   anomalies: AnomalyReport!
   "REQ-AI-005: rightsizing and unused-resource recommendations over cloud utilisation and cost."
   cloudAdvice: CloudAdvice!
+  "REQ-IPAM-003: the DNS zones kept in sync both ways."
+  dnsZoneSyncs: [DnsZoneSync!]!
+  "REQ-IPAM-003: requested record changes, newest first."
+  dnsChanges(zone: String, limit: Int): [DnsChange!]!
   "Sites and their connectivity for HA / DR readiness (REQ-BSM-007)."
   connectivity: Connectivity!
   "The tenant's runbook catalogue, by code (REQ-BSM-005)."
@@ -2604,6 +2666,10 @@ type Mutation {
   detectAnomalies: AnomalyReport!
   "REQ-AI-003: the local model's explanation of a finding, from its facts only."
   explainAnomaly(id: UUID!, locale: String!): AnomalyFinding!
+  "REQ-IPAM-003: keeps a zone in sync with its authoritative server."
+  upsertDnsZoneSync(input: DnsZoneSyncInput!): DnsZoneSync!
+  "REQ-IPAM-003: a record to add or delete on the zone's server; it is pushed with the zone's next sync job."
+  requestDnsChange(input: DnsChangeInput!): DnsChange!
   "Marks the suggestion dismissed; the same miss is not suggested again."
   dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   "Creates a runbook (id omitted) or replaces one (REQ-BSM-005, ADR-048)."

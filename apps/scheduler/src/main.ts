@@ -8,6 +8,7 @@ import { loadEnv } from '@openmap/config';
 import { createPrismaClient } from '@openmap/db';
 import { buildApp } from './server/app.js';
 import { createJobStore } from './server/jobs.js';
+import { startDnsSync } from './server/dns-sync-loop.js';
 import { startLinkProbes } from './server/link-probe-loop.js';
 import { loadCa } from './server/pki.js';
 import { createResultsQueue } from './server/results-queue.js';
@@ -37,6 +38,10 @@ async function main(): Promise<void> {
   const app = buildApp({ env, prisma, jobs: jobStore, results, secrets: createOpenBaoReader(env), ca, caPem });
   // REQ-BSM-007 (ADR-025): inter-site links are probed continuously.
   const stopLinkProbes = startLinkProbes(prisma, jobStore, env.LINK_PROBE_INTERVAL_MS, (line) => {
+    console.log(JSON.stringify(line));
+  });
+  // REQ-IPAM-003 (ADR-055): zones kept in sync are transferred on their interval and record changes pushed.
+  const stopDnsSync = startDnsSync(prisma, jobStore, env.DNS_SYNC_INTERVAL_MS, env.DNS_PULL_INTERVAL_MS, (line) => {
     console.log(JSON.stringify(line));
   });
   const metrics = createSchedulerMetrics();
@@ -73,6 +78,7 @@ async function main(): Promise<void> {
   await new Promise<void>((resolve) => listener.listen(env.SCHEDULER_PORT, resolve));
   const shutdown = async (): Promise<void> => {
     stopLinkProbes();
+    stopDnsSync();
     await metricsServer.close();
     listener.close();
     await app.close();

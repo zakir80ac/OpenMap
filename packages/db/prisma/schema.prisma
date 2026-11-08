@@ -532,6 +532,8 @@ model Tenant {
   runbooks                Runbook[]
   readinessFindings       ReadinessFinding[]
   anomalyFindings         AnomalyFinding[]
+  dnsZoneSyncs            DnsZoneSync[]
+  dnsChanges              DnsChange[]
   runbookStepRuns         RunbookStepRun[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
@@ -1421,6 +1423,60 @@ model ReadinessFinding {
 
 /// REQ-AI-003 (ADR-053): one finding per rule and subject (the address, the device, the service), open while the rule
 /// holds and cleared when it stops; the explanation is the model's, asked for on demand.
+/// REQ-IPAM-003 (ADR-055): a DNS zone kept in sync both ways: the authoritative server the zone is transferred from
+/// (AXFR) and changes are pushed to (RFC 2136), its TSIG key name and the credential holding the secret, and the site
+/// whose Discovery Node reaches the server.
+model DnsZoneSync {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @db.Uuid
+  zone          String
+  server        String
+  port          Int
+  tsigKeyName   String?
+  tsigAlgorithm String?
+  credentialRef String?
+  siteId        String    @db.Uuid
+  enabled       Boolean   @default(true)
+  lastPullAt    DateTime? @db.Timestamptz(3)
+  lastPushAt    DateTime? @db.Timestamptz(3)
+  lastJobId     String?   @db.Uuid
+  lastError     String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, zone])
+  @@map("dns_zone_syncs")
+}
+
+/// REQ-IPAM-003 (ADR-055): a record change requested in OpenMap: pending until the scheduler sends it with the zone's
+/// next job (sent), then applied when the zone transfer that follows the update shows it, failed otherwise.
+model DnsChange {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  zone        String
+  /// add or delete.
+  op          String
+  name        String
+  recordType  String
+  value       String
+  ttl         Int
+  /// pending, sent, applied or failed.
+  state       String
+  jobId       String?   @db.Uuid
+  error       String?
+  requestedBy String
+  requestedAt DateTime  @default(now()) @db.Timestamptz(3)
+  settledAt   DateTime? @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, zone, state])
+  @@index([jobId])
+  @@map("dns_changes")
+}
+
 model AnomalyFinding {
   id                String    @id @default(uuid()) @db.Uuid
   tenantId          String    @db.Uuid

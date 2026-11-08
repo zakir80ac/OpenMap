@@ -805,6 +805,23 @@ export const CLOUD_ADVICE = {
   moneyDecimals: 2,
 } as const;
 
+/**
+ * REQ-IPAM-003 (ADR-055) — two-way DNS sync. Every DNS_SYNC_INTERVAL_MS (env) the scheduler looks at the zones kept in
+ * sync: a zone with pending changes, or whose last pull is older than DNS_PULL_INTERVAL_MS (env), gets one `dns` job
+ * carrying the changes (RFC 2136) and the transfer that confirms them. A zone whose job has not finished waits, unless
+ * the job is older than staleJobMs (its Node went away).
+ */
+export const DNS_SYNC = {
+  collectorId: 'dns',
+  defaultPort: 53,
+  defaultTtl: 3600,
+  staleJobMs: 600_000,
+  changesListLimit: 200,
+  /** The job option naming the zone sync a job belongs to, so its result settles that zone's changes. */
+  syncOption: 'dnsSyncId',
+  credentialType: 'api_token',
+} as const;
+
 export const CLASSIFICATION = {
   /** Weights of each kind of evidence; their sum is the most a fingerprint can score. sysDescr is the device's own words. */
   weights: { sysDescr: 0.5, banner: 0.15, vendor: 0.15, ports: 0.2 },
@@ -1656,7 +1673,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.27.0',
+  graphql: '1.28.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

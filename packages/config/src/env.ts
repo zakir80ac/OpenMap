@@ -150,6 +150,10 @@ export const envSchema = z.object({
   LINK_PROBE_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
   /** REQ-AI-003 (ADR-053): how often the API evaluates the anomaly rules for every tenant; 0 turns the sweep off. */
   ANOMALY_INTERVAL_MS: z.coerce.number().int().min(0).default(300_000),
+  /** REQ-IPAM-003 (ADR-055): the scheduler's DNS sync round (pending changes are pushed on the next round); 0 turns it off. */
+  DNS_SYNC_INTERVAL_MS: z.coerce.number().int().min(0).default(30_000),
+  /** REQ-IPAM-003: how often a zone kept in sync is transferred when no change is waiting. */
+  DNS_PULL_INTERVAL_MS: z.coerce.number().int().positive().default(900_000),
 });
 
 export type Env = z.infer<typeof envSchema>;
