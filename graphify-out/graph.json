@@ -12048,6 +12048,46 @@
       "_origin": "ast"
     },
     {
+      "id": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "label": "ImpactNodeFieldsResolver",
+      "file_type": "code",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L75",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_graph_graph_resolver_ts_resolvefield",
+      "label": "ResolveField",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_graph_graph_resolver_ts_parent",
+      "label": "Parent",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_constructor",
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L76",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "label": ".ci()",
+      "file_type": "code",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L79",
+      "_origin": "ast"
+    },
+    {
       "id": "apps_api_src_graph_graph_resolver_ts_docref_adr_0030",
       "label": "ADR-0030",
       "file_type": "doc_ref",
@@ -12132,7 +12172,7 @@
       "label": ".path()",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L57",
+      "source_location": "L53",
       "_origin": "ast"
     },
     {
@@ -12140,7 +12180,7 @@
       "label": ".layers()",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L64",
+      "source_location": "L60",
       "_origin": "ast"
     },
     {
@@ -12148,7 +12188,7 @@
       "label": ".setLayerVisibility()",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L73",
+      "source_location": "L69",
       "_origin": "ast"
     },
     {
@@ -12156,7 +12196,7 @@
       "label": "fromGraph()",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L79",
+      "source_location": "L75",
       "_origin": "ast"
     },
     {
@@ -12188,7 +12228,7 @@
       "label": "AffectedServiceView",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L15",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -12196,7 +12236,7 @@
       "label": "ImpactResultView",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L26",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -12204,7 +12244,7 @@
       "label": "LayerSummaryView",
       "file_type": "code",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L33",
+      "source_location": "L37",
       "_origin": "ast"
     },
     {
@@ -12524,7 +12564,7 @@
       "label": "loadSchemaSdl()",
       "file_type": "code",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -12532,7 +12572,7 @@
       "label": "buildContext()",
       "file_type": "code",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -12540,7 +12580,7 @@
       "label": "ConnectionInit",
       "file_type": "code",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -12548,7 +12588,7 @@
       "label": "headerOf()",
       "file_type": "code",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -12556,7 +12596,7 @@
       "label": "graphqlOptions()",
       "file_type": "code",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -18108,7 +18148,7 @@
       "label": ".createRelationship()",
       "file_type": "code",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L130",
+      "source_location": "L131",
       "_origin": "ast"
     },
     {
@@ -18116,7 +18156,7 @@
       "label": ".retireRelationship()",
       "file_type": "code",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "_origin": "ast"
     },
     {
@@ -18124,7 +18164,7 @@
       "label": ".search()",
       "file_type": "code",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "_origin": "ast"
     },
     {
@@ -18132,7 +18172,7 @@
       "label": ".listIncidents()",
       "file_type": "code",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "_origin": "ast"
     },
     {
@@ -18140,7 +18180,7 @@
       "label": ".getConnectivity()",
       "file_type": "code",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L163",
+      "source_location": "L164",
       "_origin": "ast"
     },
     {
@@ -19908,7 +19948,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -19916,7 +19956,7 @@
       "label": ".healthMap()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L54",
+      "source_location": "L57",
       "_origin": "ast"
     },
     {
@@ -19924,7 +19964,15 @@
       "label": ".modelsFor()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L64",
+      "source_location": "L67",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_services_bsm_facts_service_bsmfactsservice_loadmodels",
+      "label": ".loadModels()",
+      "file_type": "code",
+      "source_file": "apps/api/src/services/bsm-facts.service.ts",
+      "source_location": "L83",
       "_origin": "ast"
     },
     {
@@ -19932,7 +19980,7 @@
       "label": ".slaFor()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L98",
+      "source_location": "L120",
       "_origin": "ast"
     },
     {
@@ -19940,7 +19988,7 @@
       "label": ".rootCausesOf()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L135",
+      "source_location": "L157",
       "_origin": "ast"
     },
     {
@@ -19948,7 +19996,7 @@
       "label": ".factsFor()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L150",
+      "source_location": "L172",
       "_origin": "ast"
     },
     {
@@ -19956,7 +20004,7 @@
       "label": ".predictServices()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L183",
+      "source_location": "L205",
       "_origin": "ast"
     },
     {
@@ -19964,7 +20012,7 @@
       "label": ".healthOf()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L231",
+      "source_location": "L253",
       "_origin": "ast"
     },
     {
@@ -19972,7 +20020,7 @@
       "label": "toPredicted()",
       "file_type": "code",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L252",
+      "source_location": "L274",
       "_origin": "ast"
     },
     {
@@ -70196,7 +70244,7 @@
       "label": "Env",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L145",
+      "source_location": "L151",
       "_origin": "ast"
     },
     {
@@ -70204,7 +70252,7 @@
       "label": "ConfigError",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L147",
+      "source_location": "L153",
       "_origin": "ast"
     },
     {
@@ -70212,7 +70260,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L148",
+      "source_location": "L154",
       "_origin": "ast"
     },
     {
@@ -70220,7 +70268,7 @@
       "label": "loadEnv()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L158",
+      "source_location": "L164",
       "_origin": "ast"
     },
     {
@@ -70228,7 +70276,7 @@
       "label": "describeEnv()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L165",
+      "source_location": "L171",
       "_origin": "ast"
     },
     {
@@ -70236,7 +70284,7 @@
       "label": "ADR-0039",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L82",
+      "source_location": "L88",
       "_origin": "ast"
     },
     {
@@ -70244,7 +70292,7 @@
       "label": "ADR-0043",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L85",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -70252,7 +70300,7 @@
       "label": "ADR-0028",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "_origin": "ast"
     },
     {
@@ -70260,7 +70308,7 @@
       "label": "ADR-0047",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L137",
+      "source_location": "L143",
       "_origin": "ast"
     },
     {
@@ -70268,7 +70316,7 @@
       "label": "ADR-0025",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L141",
+      "source_location": "L147",
       "_origin": "ast"
     },
     {
@@ -70732,7 +70780,7 @@
       "label": "DISCOVERY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L263",
+      "source_location": "L270",
       "_origin": "ast"
     },
     {
@@ -70740,7 +70788,7 @@
       "label": "IPV4",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L276",
+      "source_location": "L283",
       "_origin": "ast"
     },
     {
@@ -70748,7 +70796,7 @@
       "label": "TIME",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L285",
+      "source_location": "L292",
       "_origin": "ast"
     },
     {
@@ -70756,7 +70804,7 @@
       "label": "PKI",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L297",
+      "source_location": "L304",
       "_origin": "ast"
     },
     {
@@ -70764,7 +70812,7 @@
       "label": "DISCOVERY_NODE_ENV",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L315",
+      "source_location": "L322",
       "_origin": "ast"
     },
     {
@@ -70772,7 +70820,7 @@
       "label": "SETUP_PATTERNS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L327",
+      "source_location": "L334",
       "_origin": "ast"
     },
     {
@@ -70780,7 +70828,7 @@
       "label": "SETUP_LIMITS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L337",
+      "source_location": "L344",
       "_origin": "ast"
     },
     {
@@ -70788,7 +70836,7 @@
       "label": "HTTP",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L352",
+      "source_location": "L359",
       "_origin": "ast"
     },
     {
@@ -70796,7 +70844,7 @@
       "label": "ITSM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L373",
+      "source_location": "L380",
       "_origin": "ast"
     },
     {
@@ -70804,7 +70852,7 @@
       "label": "RUNBOOKS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L386",
+      "source_location": "L393",
       "_origin": "ast"
     },
     {
@@ -70812,7 +70860,7 @@
       "label": "POWER",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L398",
+      "source_location": "L405",
       "_origin": "ast"
     },
     {
@@ -70820,7 +70868,7 @@
       "label": "MONEY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L406",
+      "source_location": "L413",
       "_origin": "ast"
     },
     {
@@ -70828,7 +70876,7 @@
       "label": "CERTIFICATES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L412",
+      "source_location": "L419",
       "_origin": "ast"
     },
     {
@@ -70836,7 +70884,7 @@
       "label": "COMPONENTS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L428",
+      "source_location": "L435",
       "_origin": "ast"
     },
     {
@@ -70844,7 +70892,7 @@
       "label": "UTILISATION",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L440",
+      "source_location": "L447",
       "_origin": "ast"
     },
     {
@@ -70852,7 +70900,7 @@
       "label": "WARRANTY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L468",
+      "source_location": "L475",
       "_origin": "ast"
     },
     {
@@ -70860,7 +70908,7 @@
       "label": "LIFECYCLE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L487",
+      "source_location": "L494",
       "_origin": "ast"
     },
     {
@@ -70868,7 +70916,7 @@
       "label": "SAAS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L537",
+      "source_location": "L544",
       "_origin": "ast"
     },
     {
@@ -70876,7 +70924,7 @@
       "label": "COMMERCIAL",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L547",
+      "source_location": "L554",
       "_origin": "ast"
     },
     {
@@ -70884,7 +70932,7 @@
       "label": "ASSETS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L560",
+      "source_location": "L567",
       "_origin": "ast"
     },
     {
@@ -70892,7 +70940,7 @@
       "label": "IPAM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L599",
+      "source_location": "L606",
       "_origin": "ast"
     },
     {
@@ -70900,7 +70948,7 @@
       "label": "DCIM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L607",
+      "source_location": "L614",
       "_origin": "ast"
     },
     {
@@ -70908,7 +70956,7 @@
       "label": "VULNERABILITY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L629",
+      "source_location": "L636",
       "_origin": "ast"
     },
     {
@@ -70916,7 +70964,7 @@
       "label": "SOFTWARE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L641",
+      "source_location": "L648",
       "_origin": "ast"
     },
     {
@@ -70924,7 +70972,7 @@
       "label": "ANALYTICS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L647",
+      "source_location": "L654",
       "_origin": "ast"
     },
     {
@@ -70932,7 +70980,7 @@
       "label": "ASSISTANT",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L700",
+      "source_location": "L707",
       "_origin": "ast"
     },
     {
@@ -70940,7 +70988,7 @@
       "label": "IMPACT",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L790",
+      "source_location": "L797",
       "_origin": "ast"
     },
     {
@@ -70948,7 +70996,7 @@
       "label": "LINK_PROBE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L808",
+      "source_location": "L815",
       "_origin": "ast"
     },
     {
@@ -70956,7 +71004,15 @@
       "label": "READINESS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L827",
+      "source_location": "L834",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_constants_src_index_graphql_execution",
+      "label": "GRAPHQL_EXECUTION",
+      "file_type": "code",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L853",
       "_origin": "ast"
     },
     {
@@ -70964,7 +71020,7 @@
       "label": "RECONCILER",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L842",
+      "source_location": "L858",
       "_origin": "ast"
     },
     {
@@ -70972,7 +71028,7 @@
       "label": "ADM",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L906",
+      "source_location": "L922",
       "_origin": "ast"
     },
     {
@@ -70980,7 +71036,7 @@
       "label": "TOPOLOGY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L934",
+      "source_location": "L950",
       "_origin": "ast"
     },
     {
@@ -70988,7 +71044,7 @@
       "label": "APPLICATION_MAP",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L953",
+      "source_location": "L969",
       "_origin": "ast"
     },
     {
@@ -70996,7 +71052,7 @@
       "label": "CI_EDIT",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L969",
+      "source_location": "L985",
       "_origin": "ast"
     },
     {
@@ -71004,7 +71060,7 @@
       "label": "CUSTOM_FIELDS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L980",
+      "source_location": "L996",
       "_origin": "ast"
     },
     {
@@ -71012,7 +71068,7 @@
       "label": "IMPORTS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L995",
+      "source_location": "L1011",
       "_origin": "ast"
     },
     {
@@ -71020,7 +71076,7 @@
       "label": "BYTES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1015",
+      "source_location": "L1031",
       "_origin": "ast"
     },
     {
@@ -71028,7 +71084,7 @@
       "label": "GEOMETRY",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1022",
+      "source_location": "L1038",
       "_origin": "ast"
     },
     {
@@ -71036,7 +71092,7 @@
       "label": "TWIN",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1034",
+      "source_location": "L1050",
       "_origin": "ast"
     },
     {
@@ -71044,7 +71100,7 @@
       "label": "DEPENDENCY_MAP",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1119",
+      "source_location": "L1135",
       "_origin": "ast"
     },
     {
@@ -71052,7 +71108,7 @@
       "label": "CONSOLE_ALPHA",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1165",
+      "source_location": "L1181",
       "_origin": "ast"
     },
     {
@@ -71060,7 +71116,7 @@
       "label": "DASHBOARD",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1181",
+      "source_location": "L1197",
       "_origin": "ast"
     },
     {
@@ -71068,7 +71124,7 @@
       "label": "LAYER_STACK",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1216",
+      "source_location": "L1232",
       "_origin": "ast"
     },
     {
@@ -71076,7 +71132,7 @@
       "label": "CONSOLE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1294",
+      "source_location": "L1310",
       "_origin": "ast"
     },
     {
@@ -71084,7 +71140,7 @@
       "label": "AUTH",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1316",
+      "source_location": "L1332",
       "_origin": "ast"
     },
     {
@@ -71092,7 +71148,7 @@
       "label": "ROLES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1350",
+      "source_location": "L1366",
       "_origin": "ast"
     },
     {
@@ -71100,7 +71156,7 @@
       "label": "Role",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1358",
+      "source_location": "L1374",
       "_origin": "ast"
     },
     {
@@ -71108,7 +71164,7 @@
       "label": "ROLE_IMPLICATIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1361",
+      "source_location": "L1377",
       "_origin": "ast"
     },
     {
@@ -71116,7 +71172,7 @@
       "label": "SYNTH_ESTATE",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1370",
+      "source_location": "L1386",
       "_origin": "ast"
     },
     {
@@ -71124,7 +71180,7 @@
       "label": "LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1380",
+      "source_location": "L1396",
       "_origin": "ast"
     },
     {
@@ -71132,7 +71188,7 @@
       "label": "Locale",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1381",
+      "source_location": "L1397",
       "_origin": "ast"
     },
     {
@@ -71140,7 +71196,7 @@
       "label": "RTL_LOCALES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1382",
+      "source_location": "L1398",
       "_origin": "ast"
     },
     {
@@ -71148,7 +71204,7 @@
       "label": "GUARD_FORBIDDEN_TOKENS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1388",
+      "source_location": "L1404",
       "_origin": "ast"
     },
     {
@@ -71156,7 +71212,7 @@
       "label": "GUARD_ALLOWED_IPV4",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1407",
+      "source_location": "L1423",
       "_origin": "ast"
     },
     {
@@ -71164,7 +71220,7 @@
       "label": "GUARD_CONFIG_BOUNDARIES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1413",
+      "source_location": "L1429",
       "_origin": "ast"
     },
     {
@@ -71172,7 +71228,7 @@
       "label": "GUARD_ALLOWED_NUMERIC_LITERALS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1416",
+      "source_location": "L1432",
       "_origin": "ast"
     },
     {
@@ -71180,7 +71236,7 @@
       "label": "CONTRACT_NAMES",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1422",
+      "source_location": "L1438",
       "_origin": "ast"
     },
     {
@@ -71188,7 +71244,7 @@
       "label": "ContractName",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1423",
+      "source_location": "L1439",
       "_origin": "ast"
     },
     {
@@ -71196,7 +71252,7 @@
       "label": "CONTRACT_VERSIONS",
       "file_type": "code",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1426",
+      "source_location": "L1442",
       "_origin": "ast"
     },
     {
@@ -71244,7 +71300,7 @@
       "label": "RFC-5280",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L298",
+      "source_location": "L305",
       "_origin": "ast"
     },
     {
@@ -71252,7 +71308,7 @@
       "label": "ADR-0017",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L313",
+      "source_location": "L320",
       "_origin": "ast"
     },
     {
@@ -71260,7 +71316,7 @@
       "label": "ADR-0025",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L339",
+      "source_location": "L346",
       "_origin": "ast"
     },
     {
@@ -71268,7 +71324,7 @@
       "label": "ADR-0048",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L381",
+      "source_location": "L388",
       "_origin": "ast"
     },
     {
@@ -71276,7 +71332,7 @@
       "label": "ADR-0036",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L411",
+      "source_location": "L418",
       "_origin": "ast"
     },
     {
@@ -71284,7 +71340,7 @@
       "label": "ADR-0037",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L427",
+      "source_location": "L434",
       "_origin": "ast"
     },
     {
@@ -71292,7 +71348,7 @@
       "label": "ADR-0043",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L467",
+      "source_location": "L474",
       "_origin": "ast"
     },
     {
@@ -71300,7 +71356,7 @@
       "label": "ADR-0039",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L483",
+      "source_location": "L490",
       "_origin": "ast"
     },
     {
@@ -71308,7 +71364,7 @@
       "label": "ADR-0035",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L546",
+      "source_location": "L553",
       "_origin": "ast"
     },
     {
@@ -71316,7 +71372,7 @@
       "label": "ADR-0023",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L566",
+      "source_location": "L573",
       "_origin": "ast"
     },
     {
@@ -71324,7 +71380,7 @@
       "label": "ADR-0034",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L576",
+      "source_location": "L583",
       "_origin": "ast"
     },
     {
@@ -71332,7 +71388,7 @@
       "label": "ADR-0028",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L712",
+      "source_location": "L719",
       "_origin": "ast"
     },
     {
@@ -71340,7 +71396,7 @@
       "label": "ADR-0045",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L882",
+      "source_location": "L898",
       "_origin": "ast"
     },
     {
@@ -71348,7 +71404,7 @@
       "label": "ADR-0016",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L894",
+      "source_location": "L910",
       "_origin": "ast"
     },
     {
@@ -71356,7 +71412,7 @@
       "label": "ADR-0029",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L901",
+      "source_location": "L917",
       "_origin": "ast"
     },
     {
@@ -71364,7 +71420,7 @@
       "label": "ADR-0030",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L929",
+      "source_location": "L945",
       "_origin": "ast"
     },
     {
@@ -71372,7 +71428,7 @@
       "label": "ADR-0031",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L948",
+      "source_location": "L964",
       "_origin": "ast"
     },
     {
@@ -71380,7 +71436,7 @@
       "label": "ADR-0032",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L990",
+      "source_location": "L1006",
       "_origin": "ast"
     },
     {
@@ -71388,7 +71444,7 @@
       "label": "ADR-0018",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1030",
+      "source_location": "L1046",
       "_origin": "ast"
     },
     {
@@ -71396,7 +71452,7 @@
       "label": "ADR-0020",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1180",
+      "source_location": "L1196",
       "_origin": "ast"
     },
     {
@@ -71404,7 +71460,7 @@
       "label": "ADR-0021",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1212",
+      "source_location": "L1228",
       "_origin": "ast"
     },
     {
@@ -71412,7 +71468,7 @@
       "label": "RFC-7636",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1313",
+      "source_location": "L1329",
       "_origin": "ast"
     },
     {
@@ -71420,7 +71476,7 @@
       "label": "RFC-8414",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1335",
+      "source_location": "L1351",
       "_origin": "ast"
     },
     {
@@ -71428,7 +71484,7 @@
       "label": "ADR-0027",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1450",
+      "source_location": "L1466",
       "_origin": "ast"
     },
     {
@@ -71436,7 +71492,7 @@
       "label": "ADR-0033",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1467",
+      "source_location": "L1483",
       "_origin": "ast"
     },
     {
@@ -71444,7 +71500,7 @@
       "label": "ADR-0049",
       "file_type": "doc_ref",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1505",
+      "source_location": "L1521",
       "_origin": "ast"
     },
     {
@@ -98764,7 +98820,7 @@
       "label": "GraphEngine",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L26",
+      "source_location": "L36",
       "_origin": "ast"
     },
     {
@@ -98772,7 +98828,7 @@
       "label": "BoltRepositoryOptions",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L28",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -98780,7 +98836,7 @@
       "label": "CiRow",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L37",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -98788,7 +98844,7 @@
       "label": "toNumber()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L46",
+      "source_location": "L56",
       "_origin": "ast"
     },
     {
@@ -98796,7 +98852,7 @@
       "label": "RelRow",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L51",
+      "source_location": "L61",
       "_origin": "ast"
     },
     {
@@ -98804,7 +98860,7 @@
       "label": "toCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L67",
+      "source_location": "L83",
       "_origin": "ast"
     },
     {
@@ -98812,7 +98868,7 @@
       "label": "toRel()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L71",
+      "source_location": "L87",
       "_origin": "ast"
     },
     {
@@ -98820,7 +98876,7 @@
       "label": "BoltGraphRepository",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L75",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -98828,7 +98884,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L78",
+      "source_location": "L94",
       "_origin": "ast"
     },
     {
@@ -98836,7 +98892,7 @@
       "label": ".session()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L82",
+      "source_location": "L100",
       "_origin": "ast"
     },
     {
@@ -98844,7 +98900,7 @@
       "label": ".read()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L90",
+      "source_location": "L108",
       "_origin": "ast"
     },
     {
@@ -98852,7 +98908,7 @@
       "label": ".write()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L100",
+      "source_location": "L122",
       "_origin": "ast"
     },
     {
@@ -98860,7 +98916,7 @@
       "label": ".ensureSchema()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L110",
+      "source_location": "L132",
       "_origin": "ast"
     },
     {
@@ -98868,7 +98924,7 @@
       "label": ".upsertCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L127",
+      "source_location": "L150",
       "_origin": "ast"
     },
     {
@@ -98876,7 +98932,7 @@
       "label": ".upsertCis()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L131",
+      "source_location": "L154",
       "_origin": "ast"
     },
     {
@@ -98884,7 +98940,7 @@
       "label": ".retireCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L144",
+      "source_location": "L167",
       "_origin": "ast"
     },
     {
@@ -98892,7 +98948,7 @@
       "label": ".purgeTenant()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L148",
+      "source_location": "L171",
       "_origin": "ast"
     },
     {
@@ -98900,7 +98956,7 @@
       "label": ".upsertRelationship()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L158",
+      "source_location": "L184",
       "_origin": "ast"
     },
     {
@@ -98908,7 +98964,7 @@
       "label": ".upsertRelationships()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L162",
+      "source_location": "L188",
       "_origin": "ast"
     },
     {
@@ -98916,7 +98972,7 @@
       "label": ".retireRelationship()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L174",
+      "source_location": "L200",
       "_origin": "ast"
     },
     {
@@ -98924,7 +98980,7 @@
       "label": ".getCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L178",
+      "source_location": "L204",
       "_origin": "ast"
     },
     {
@@ -98932,7 +98988,7 @@
       "label": ".neighbours()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L183",
+      "source_location": "L209",
       "_origin": "ast"
     },
     {
@@ -98940,7 +98996,7 @@
       "label": ".impact()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L187",
+      "source_location": "L222",
       "_origin": "ast"
     },
     {
@@ -98948,7 +99004,7 @@
       "label": ".shortestPath()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L206",
+      "source_location": "L260",
       "_origin": "ast"
     },
     {
@@ -98956,7 +99012,7 @@
       "label": ".layerCounts()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L212",
+      "source_location": "L274",
       "_origin": "ast"
     },
     {
@@ -98964,7 +99020,7 @@
       "label": ".setHealth()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L222",
+      "source_location": "L284",
       "_origin": "ast"
     },
     {
@@ -98972,7 +99028,7 @@
       "label": ".readOnly()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L226",
+      "source_location": "L288",
       "_origin": "ast"
     },
     {
@@ -98980,7 +99036,7 @@
       "label": ".close()",
       "file_type": "code",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L231",
+      "source_location": "L296",
       "_origin": "ast"
     },
     {
@@ -99076,7 +99132,7 @@
       "label": "impactQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L73",
+      "source_location": "L81",
       "_origin": "ast"
     },
     {
@@ -99084,7 +99140,7 @@
       "label": "shortestPathQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L98",
+      "source_location": "L106",
       "_origin": "ast"
     },
     {
@@ -99092,7 +99148,7 @@
       "label": "shortestPathQueryNeo4j()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L107",
+      "source_location": "L115",
       "_origin": "ast"
     },
     {
@@ -99100,7 +99156,7 @@
       "label": "upsertCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L116",
+      "source_location": "L124",
       "_origin": "ast"
     },
     {
@@ -99108,7 +99164,7 @@
       "label": "addTypeLabelQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L126",
+      "source_location": "L134",
       "_origin": "ast"
     },
     {
@@ -99116,7 +99172,7 @@
       "label": "retireCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L130",
+      "source_location": "L138",
       "_origin": "ast"
     },
     {
@@ -99124,7 +99180,7 @@
       "label": "upsertRelationshipQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L134",
+      "source_location": "L142",
       "_origin": "ast"
     },
     {
@@ -99132,7 +99188,7 @@
       "label": "retireRelationshipQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L145",
+      "source_location": "L153",
       "_origin": "ast"
     },
     {
@@ -99140,7 +99196,7 @@
       "label": "getCiQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L149",
+      "source_location": "L157",
       "_origin": "ast"
     },
     {
@@ -99148,7 +99204,7 @@
       "label": "neighboursQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L156",
+      "source_location": "L164",
       "_origin": "ast"
     },
     {
@@ -99156,7 +99212,7 @@
       "label": "layerCountsQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L167",
+      "source_location": "L175",
       "_origin": "ast"
     },
     {
@@ -99164,7 +99220,7 @@
       "label": "setHealthQuery()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L178",
+      "source_location": "L186",
       "_origin": "ast"
     },
     {
@@ -99172,7 +99228,7 @@
       "label": "assertReadOnly()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L185",
+      "source_location": "L193",
       "_origin": "ast"
     },
     {
@@ -99180,7 +99236,7 @@
       "label": "schemaStatementsMemgraph()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L190",
+      "source_location": "L198",
       "_origin": "ast"
     },
     {
@@ -99188,7 +99244,7 @@
       "label": "schemaStatementsNeo4j()",
       "file_type": "code",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L196",
+      "source_location": "L204",
       "_origin": "ast"
     },
     {
@@ -99320,11 +99376,19 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_graph_src_types_impactci",
+      "label": "ImpactCi",
+      "file_type": "code",
+      "source_file": "packages/graph/src/types.ts",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_graph_src_types_impactnode",
       "label": "ImpactNode",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L33",
+      "source_location": "L40",
       "_origin": "ast"
     },
     {
@@ -99332,7 +99396,7 @@
       "label": "ImpactQueryOptions",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L40",
+      "source_location": "L47",
       "_origin": "ast"
     },
     {
@@ -99340,7 +99404,7 @@
       "label": "ImpactResult",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L50",
+      "source_location": "L57",
       "_origin": "ast"
     },
     {
@@ -99348,7 +99412,7 @@
       "label": "LayerCount",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L58",
+      "source_location": "L65",
       "_origin": "ast"
     },
     {
@@ -99356,7 +99420,7 @@
       "label": "GraphRepository",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L66",
+      "source_location": "L73",
       "_origin": "ast"
     },
     {
@@ -99364,7 +99428,7 @@
       "label": ".ensureSchema()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L68",
+      "source_location": "L75",
       "_origin": "ast"
     },
     {
@@ -99372,7 +99436,7 @@
       "label": ".upsertCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L69",
+      "source_location": "L76",
       "_origin": "ast"
     },
     {
@@ -99380,7 +99444,7 @@
       "label": ".upsertCis()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L70",
+      "source_location": "L77",
       "_origin": "ast"
     },
     {
@@ -99388,7 +99452,7 @@
       "label": ".retireCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L71",
+      "source_location": "L78",
       "_origin": "ast"
     },
     {
@@ -99396,7 +99460,7 @@
       "label": ".upsertRelationship()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L72",
+      "source_location": "L79",
       "_origin": "ast"
     },
     {
@@ -99404,7 +99468,7 @@
       "label": ".upsertRelationships()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L73",
+      "source_location": "L80",
       "_origin": "ast"
     },
     {
@@ -99412,7 +99476,7 @@
       "label": ".retireRelationship()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L74",
+      "source_location": "L81",
       "_origin": "ast"
     },
     {
@@ -99420,7 +99484,7 @@
       "label": ".getCi()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L75",
+      "source_location": "L82",
       "_origin": "ast"
     },
     {
@@ -99428,7 +99492,7 @@
       "label": ".neighbours()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L76",
+      "source_location": "L83",
       "_origin": "ast"
     },
     {
@@ -99436,7 +99500,7 @@
       "label": ".impact()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L77",
+      "source_location": "L84",
       "_origin": "ast"
     },
     {
@@ -99444,7 +99508,7 @@
       "label": ".shortestPath()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L78",
+      "source_location": "L85",
       "_origin": "ast"
     },
     {
@@ -99452,7 +99516,7 @@
       "label": ".layerCounts()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L79",
+      "source_location": "L86",
       "_origin": "ast"
     },
     {
@@ -99460,7 +99524,7 @@
       "label": ".setHealth()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L80",
+      "source_location": "L87",
       "_origin": "ast"
     },
     {
@@ -99468,7 +99532,7 @@
       "label": ".purgeTenant()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L82",
+      "source_location": "L89",
       "_origin": "ast"
     },
     {
@@ -99476,7 +99540,7 @@
       "label": ".readOnly()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L84",
+      "source_location": "L91",
       "_origin": "ast"
     },
     {
@@ -99484,7 +99548,7 @@
       "label": ".close()",
       "file_type": "code",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L85",
+      "source_location": "L92",
       "_origin": "ast"
     },
     {
@@ -113808,11 +113872,19 @@
       "_origin": "ast"
     },
     {
+      "id": "tools_perf_package_scripts_impact_budget",
+      "label": "impact-budget",
+      "file_type": "code",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
       "id": "tools_perf_package_dependencies",
       "label": "dependencies",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L10",
+      "source_location": "L11",
       "_origin": "ast"
     },
     {
@@ -113820,7 +113892,7 @@
       "label": "@openmap/config",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -113828,7 +113900,7 @@
       "label": "@openmap/config",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -113836,7 +113908,7 @@
       "label": "@openmap/constants",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast"
     },
     {
@@ -113844,7 +113916,39 @@
       "label": "@openmap/constants",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L12",
+      "source_location": "L13",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_package_dependencies_openmap_db",
+      "label": "@openmap/db",
+      "file_type": "code",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L14",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_package_json_openmap_db",
+      "label": "@openmap/db",
+      "file_type": "concept",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L14",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_package_dependencies_openmap_graph",
+      "label": "@openmap/graph",
+      "file_type": "code",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_package_json_openmap_graph",
+      "label": "@openmap/graph",
+      "file_type": "concept",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -113852,7 +113956,7 @@
       "label": "@openmap/i18n",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L13",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -113860,7 +113964,7 @@
       "label": "@openmap/i18n",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L13",
+      "source_location": "L16",
       "_origin": "ast"
     },
     {
@@ -113868,7 +113972,7 @@
       "label": "@playwright/test",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L14",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -113876,7 +113980,7 @@
       "label": "@playwright/test",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L14",
+      "source_location": "L17",
       "_origin": "ast"
     },
     {
@@ -113884,7 +113988,7 @@
       "label": "lighthouse",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L15",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -113892,7 +113996,7 @@
       "label": "lighthouse",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L15",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -113900,7 +114004,7 @@
       "label": "puppeteer-core",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L16",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -113908,7 +114012,7 @@
       "label": "puppeteer-core",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L16",
+      "source_location": "L19",
       "_origin": "ast"
     },
     {
@@ -113916,7 +114020,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L21",
       "_origin": "ast"
     },
     {
@@ -113924,7 +114028,7 @@
       "label": "tsx",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -113932,7 +114036,7 @@
       "label": "tsx",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L22",
       "_origin": "ast"
     },
     {
@@ -113940,7 +114044,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -113948,7 +114052,71 @@
       "label": "typescript",
       "file_type": "concept",
       "source_file": "tools/perf/package.json",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget",
+      "label": "impact-budget.ts",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_perf",
+      "label": "PERF",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
       "source_location": "L18",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_env",
+      "label": "env",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_args",
+      "label": "args",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_flag",
+      "label": "flag()",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L31",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_form",
+      "label": "form()",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_tokenfor",
+      "label": "tokenFor()",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L43",
+      "_origin": "ast"
+    },
+    {
+      "id": "tools_perf_src_impact_budget_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L66",
       "_origin": "ast"
     },
     {
@@ -134471,6 +134639,54 @@
       "file_type": "document",
       "source_file": "docs/adr/ADR-049-rest-api-openapi-sdk.md",
       "source_location": "L60",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query",
+      "label": "impact-query.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "label": "Impact query budget (REQ-PERF-002)",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query_before_2026_11_08_checkpoint_29",
+      "label": "Before (2026-11-08, checkpoint 29)",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query_what_was_found_and_changed",
+      "label": "What was found and changed",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query_after",
+      "label": "After",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L45",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_impact_query_running_it",
+      "label": "Running it",
+      "file_type": "document",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L62",
       "_origin": "ast"
     },
     {
@@ -193347,6 +193563,17 @@
     },
     {
       "source": "apps_api_src_graph_graph_module",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.module.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_module",
       "target": "apps_api_src_graph_graph_service",
       "relation": "imports_from",
       "context": "import",
@@ -193745,6 +193972,17 @@
     },
     {
       "source": "apps_api_src_graph_graph_resolver",
+      "target": "apps_api_src_ci_ci_types_cirecord",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver",
       "target": "apps_api_src_ci_ci_types_relationshiprecord",
       "relation": "imports",
       "context": "import",
@@ -193824,6 +194062,17 @@
       "source": "apps_api_src_graph_graph_resolver",
       "target": "apps_api_src_graph_graph_types",
       "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver",
+      "target": "apps_api_src_graph_graph_types_impactnodeview",
+      "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.resolver.ts",
@@ -194179,6 +194428,69 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.resolver.ts",
       "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L75",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "target": "apps_api_src_graph_graph_resolver_ts_resolver",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L74",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "target": "apps_api_src_graph_graph_resolver_ts_resolvefield",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L78",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "target": "apps_api_src_graph_graph_resolver_ts_parent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_constructor",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194588,7 +194900,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L57",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194598,7 +194910,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L64",
+      "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194608,7 +194920,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L73",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194618,7 +194930,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L79",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194629,7 +194941,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L48",
+      "source_location": "L45",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194640,7 +194952,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L61",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194651,7 +194963,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L75",
+      "source_location": "L71",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194747,7 +195059,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L15",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194757,7 +195069,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L26",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -194767,7 +195079,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L33",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195831,7 +196143,7 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "ref_node_fs",
+      "target": "e_openmap_packages_constants_dist_index_js",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -195842,7 +196154,18 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "ref_node_crypto",
+      "target": "e_openmap_packages_constants_dist_index_graphql_execution",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graphql/graphql-options.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graphql_graphql_options",
+      "target": "ref_node_fs",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -195853,7 +196176,7 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "ref_node_module",
+      "target": "ref_node_crypto",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -195864,7 +196187,7 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "ref_nestjs_mercurius",
+      "target": "ref_node_module",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -195875,7 +196198,7 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "ref_fastify",
+      "target": "ref_nestjs_mercurius",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -195886,12 +196209,23 @@
     },
     {
       "source": "apps_api_src_graphql_graphql_options",
-      "target": "apps_api_src_auth_auth_service",
+      "target": "ref_fastify",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
       "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graphql_graphql_options",
+      "target": "apps_api_src_auth_auth_service",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graphql/graphql-options.ts",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195902,7 +196236,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195913,7 +196247,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195924,7 +196258,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195935,7 +196269,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195946,7 +196280,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195957,7 +196291,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195967,7 +196301,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195977,7 +196311,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195987,7 +196321,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -195997,7 +196331,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -196007,7 +196341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -196018,7 +196352,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -196029,7 +196363,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L44",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -196040,7 +196374,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -214938,17 +215272,6 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L127",
-      "weight": 1.0,
-      "context": "decorator",
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
-      "target": "apps_api_src_auth_roles_decorator_roles",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/rest/rest.controller.ts",
       "source_location": "L128",
       "weight": 1.0,
       "context": "decorator",
@@ -214956,7 +215279,7 @@
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
-      "target": "httpcode",
+      "target": "apps_api_src_auth_roles_decorator_roles",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
@@ -214967,7 +215290,7 @@
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
-      "target": "apps_console_src_components_sites_sitesview_body",
+      "target": "httpcode",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
@@ -214978,11 +215301,22 @@
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
+      "target": "apps_console_src_components_sites_sitesview_body",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L131",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
       "target": "apps_api_src_rest_rest_controller_ts_req",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L130",
+      "source_location": "L131",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -214993,7 +215327,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215004,7 +215338,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L138",
+      "source_location": "L139",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215015,7 +215349,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215026,7 +215360,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215034,17 +215368,6 @@
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_search",
       "target": "apps_api_src_rest_rest_controller_ts_get",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L146",
-      "weight": 1.0,
-      "context": "decorator",
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_rest_rest_controller_restcontroller_search",
-      "target": "packages_graph_src_cypher_query",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
@@ -215055,11 +215378,22 @@
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_search",
+      "target": "packages_graph_src_cypher_query",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L148",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_search",
       "target": "apps_api_src_rest_rest_controller_ts_req",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215070,7 +215404,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L154",
+      "source_location": "L155",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215081,7 +215415,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215092,7 +215426,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215100,21 +215434,21 @@
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_getconnectivity",
       "target": "apps_api_src_rest_rest_controller_ts_get",
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L162",
-      "weight": 1.0,
-      "context": "decorator",
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_rest_rest_controller_restcontroller_getconnectivity",
-      "target": "apps_api_src_rest_rest_controller_ts_req",
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
       "source_location": "L163",
+      "weight": 1.0,
+      "context": "decorator",
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_getconnectivity",
+      "target": "apps_api_src_rest_rest_controller_ts_req",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L164",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -215215,7 +215549,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L130",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215225,7 +215559,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215235,7 +215569,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215245,7 +215579,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215255,7 +215589,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215409,7 +215743,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L131",
+      "source_location": "L132",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215420,7 +215754,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215431,24 +215765,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_retirerelationship",
       "target": "apps_api_src_rest_rest_controller_restcontroller_run",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L140",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_rest_rest_controller_restcontroller_retirerelationship",
-      "target": "apps_api_src_rest_rest_controller_parse",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -215459,7 +215782,7 @@
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_retirerelationship",
-      "target": "apps_api_src_rest_rest_controller_restcontroller_actor",
+      "target": "apps_api_src_rest_rest_controller_parse",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -215469,19 +215792,19 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_api_src_rest_rest_controller_restcontroller_search",
-      "target": "apps_api_src_rest_rest_controller_restcontroller_run",
+      "source": "apps_api_src_rest_rest_controller_restcontroller_retirerelationship",
+      "target": "apps_api_src_rest_rest_controller_restcontroller_actor",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L148",
+      "source_location": "L143",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_api_src_rest_rest_controller_restcontroller_search",
-      "target": "apps_api_src_rest_rest_controller_parse",
+      "target": "apps_api_src_rest_rest_controller_restcontroller_run",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -215491,13 +215814,24 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_search",
+      "target": "apps_api_src_rest_rest_controller_parse",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L150",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_rest_rest_controller_restcontroller_listincidents",
       "target": "apps_api_src_rest_rest_controller_restcontroller_run",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L156",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215508,7 +215842,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L157",
+      "source_location": "L158",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -215519,7 +215853,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L164",
+      "source_location": "L165",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221850,7 +222184,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L48",
+      "source_location": "L51",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -221861,7 +222195,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221871,7 +222205,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L54",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221881,7 +222215,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L64",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice",
+      "target": "apps_api_src_services_bsm_facts_service_bsmfactsservice_loadmodels",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/services/bsm-facts.service.ts",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221891,7 +222235,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L98",
+      "source_location": "L120",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221901,7 +222245,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L135",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221911,7 +222255,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L150",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221921,7 +222265,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L183",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221931,7 +222275,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L231",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221941,7 +222285,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L252",
+      "source_location": "L274",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice_modelsfor",
+      "target": "apps_api_src_services_bsm_facts_service_bsmfactsservice_loadmodels",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/services/bsm-facts.service.ts",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221952,7 +222307,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L140",
+      "source_location": "L162",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221963,7 +222318,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L146",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221974,7 +222329,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L155",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221985,7 +222340,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L192",
+      "source_location": "L214",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -221996,7 +222351,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L197",
+      "source_location": "L221",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -222007,7 +222362,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L200",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -222018,7 +222373,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L215",
+      "source_location": "L237",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -222029,7 +222384,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L235",
+      "source_location": "L257",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -222040,7 +222395,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L238",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -222051,7 +222406,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L242",
+      "source_location": "L264",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397742,7 +398097,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L145",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397752,7 +398107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L147",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397762,7 +398117,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L148",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397772,7 +398127,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L158",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397782,7 +398137,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L165",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397792,7 +398147,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L82",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397802,7 +398157,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L85",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397812,7 +398167,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L130",
+      "source_location": "L136",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397822,7 +398177,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L137",
+      "source_location": "L143",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -397832,7 +398187,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398532,7 +398887,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L263",
+      "source_location": "L270",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398542,7 +398897,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L276",
+      "source_location": "L283",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398552,7 +398907,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L285",
+      "source_location": "L292",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398562,7 +398917,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L297",
+      "source_location": "L304",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398572,7 +398927,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L315",
+      "source_location": "L322",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398582,7 +398937,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L327",
+      "source_location": "L334",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398592,7 +398947,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L337",
+      "source_location": "L344",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398602,7 +398957,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L352",
+      "source_location": "L359",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398612,7 +398967,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L373",
+      "source_location": "L380",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398622,7 +398977,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L386",
+      "source_location": "L393",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398632,7 +398987,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L398",
+      "source_location": "L405",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398642,7 +398997,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L406",
+      "source_location": "L413",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398652,7 +399007,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L412",
+      "source_location": "L419",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398662,7 +399017,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L428",
+      "source_location": "L435",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398672,7 +399027,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L440",
+      "source_location": "L447",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398682,7 +399037,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L468",
+      "source_location": "L475",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398692,7 +399047,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L487",
+      "source_location": "L494",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398702,7 +399057,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L537",
+      "source_location": "L544",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398712,7 +399067,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L547",
+      "source_location": "L554",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398722,7 +399077,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L560",
+      "source_location": "L567",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398732,7 +399087,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L599",
+      "source_location": "L606",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398742,7 +399097,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L607",
+      "source_location": "L614",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398752,7 +399107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L629",
+      "source_location": "L636",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398762,7 +399117,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L641",
+      "source_location": "L648",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398772,7 +399127,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L647",
+      "source_location": "L654",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398782,7 +399137,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L700",
+      "source_location": "L707",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398792,7 +399147,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L790",
+      "source_location": "L797",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398802,7 +399157,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L808",
+      "source_location": "L815",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398812,7 +399167,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L827",
+      "source_location": "L834",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_constants_src_index",
+      "target": "packages_constants_src_index_graphql_execution",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/constants/src/index.ts",
+      "source_location": "L853",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398822,7 +399187,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L842",
+      "source_location": "L858",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398832,7 +399197,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L906",
+      "source_location": "L922",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398842,7 +399207,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L934",
+      "source_location": "L950",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398852,7 +399217,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L953",
+      "source_location": "L969",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398862,7 +399227,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L969",
+      "source_location": "L985",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398872,7 +399237,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L980",
+      "source_location": "L996",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398882,7 +399247,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L995",
+      "source_location": "L1011",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398892,7 +399257,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1015",
+      "source_location": "L1031",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398902,7 +399267,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1022",
+      "source_location": "L1038",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398912,7 +399277,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1034",
+      "source_location": "L1050",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398922,7 +399287,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1119",
+      "source_location": "L1135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398932,7 +399297,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1165",
+      "source_location": "L1181",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398942,7 +399307,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1181",
+      "source_location": "L1197",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398952,7 +399317,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1216",
+      "source_location": "L1232",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398962,7 +399327,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1294",
+      "source_location": "L1310",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398972,7 +399337,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1316",
+      "source_location": "L1332",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398982,7 +399347,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1350",
+      "source_location": "L1366",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -398992,7 +399357,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1358",
+      "source_location": "L1374",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399002,7 +399367,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1361",
+      "source_location": "L1377",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399012,7 +399377,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1370",
+      "source_location": "L1386",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399022,7 +399387,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1380",
+      "source_location": "L1396",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399032,7 +399397,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1381",
+      "source_location": "L1397",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399042,7 +399407,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1382",
+      "source_location": "L1398",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399052,7 +399417,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1388",
+      "source_location": "L1404",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399062,7 +399427,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1407",
+      "source_location": "L1423",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399072,7 +399437,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1413",
+      "source_location": "L1429",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399082,7 +399447,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1416",
+      "source_location": "L1432",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399092,7 +399457,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1422",
+      "source_location": "L1438",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399102,7 +399467,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1423",
+      "source_location": "L1439",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399112,7 +399477,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1426",
+      "source_location": "L1442",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399172,7 +399537,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L298",
+      "source_location": "L305",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399182,7 +399547,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L313",
+      "source_location": "L320",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399192,7 +399557,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L339",
+      "source_location": "L346",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399202,7 +399567,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L381",
+      "source_location": "L388",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399212,7 +399577,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L411",
+      "source_location": "L418",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399222,7 +399587,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L427",
+      "source_location": "L434",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399232,7 +399597,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L467",
+      "source_location": "L474",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399242,7 +399607,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L483",
+      "source_location": "L490",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399252,7 +399617,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L546",
+      "source_location": "L553",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399262,7 +399627,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L566",
+      "source_location": "L573",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399272,7 +399637,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L576",
+      "source_location": "L583",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399282,7 +399647,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L712",
+      "source_location": "L719",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399292,7 +399657,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L882",
+      "source_location": "L898",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399302,7 +399667,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L894",
+      "source_location": "L910",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399312,7 +399677,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L901",
+      "source_location": "L917",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399322,7 +399687,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L929",
+      "source_location": "L945",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399332,7 +399697,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L948",
+      "source_location": "L964",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399342,7 +399707,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L990",
+      "source_location": "L1006",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399352,7 +399717,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1030",
+      "source_location": "L1046",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399362,7 +399727,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1180",
+      "source_location": "L1196",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399372,7 +399737,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1212",
+      "source_location": "L1228",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399382,7 +399747,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1313",
+      "source_location": "L1329",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399392,7 +399757,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1335",
+      "source_location": "L1351",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399402,7 +399767,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1450",
+      "source_location": "L1466",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399412,7 +399777,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1467",
+      "source_location": "L1483",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -399422,7 +399787,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/constants/src/index.ts",
-      "source_location": "L1505",
+      "source_location": "L1521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441138,6 +441503,17 @@
     },
     {
       "source": "packages_graph_src_bolt_repository",
+      "target": "packages_graph_src_types_impactci",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/bolt-repository.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_bolt_repository",
       "target": "packages_graph_src_types_impactdirection",
       "relation": "imports",
       "context": "import",
@@ -441198,7 +441574,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441209,7 +441585,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441220,7 +441596,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441231,7 +441607,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441242,7 +441618,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441253,7 +441629,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441264,7 +441640,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441275,7 +441651,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441286,7 +441662,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441297,7 +441673,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441308,7 +441684,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441319,7 +441695,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441330,7 +441706,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441341,7 +441717,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441352,7 +441728,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441363,7 +441739,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441374,7 +441750,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L7",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441384,7 +441760,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L26",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441394,7 +441770,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L28",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441404,7 +441780,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L37",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441414,7 +441790,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L46",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441424,7 +441800,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L51",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441434,7 +441810,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L67",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441444,7 +441820,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L71",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441454,7 +441830,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L75",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441464,7 +441840,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L78",
+      "source_location": "L94",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441474,7 +441850,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L82",
+      "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441484,7 +441860,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L90",
+      "source_location": "L108",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441494,7 +441870,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L100",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441504,7 +441880,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L110",
+      "source_location": "L132",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441514,7 +441890,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L127",
+      "source_location": "L150",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441524,7 +441900,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L131",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441534,7 +441910,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L144",
+      "source_location": "L167",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441544,7 +441920,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L148",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441554,7 +441930,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L158",
+      "source_location": "L184",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441564,7 +441940,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L162",
+      "source_location": "L188",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441574,7 +441950,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L174",
+      "source_location": "L200",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441584,7 +441960,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L178",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441594,7 +441970,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L183",
+      "source_location": "L209",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441604,7 +441980,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L187",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441614,7 +441990,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L206",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441624,7 +442000,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L212",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441634,7 +442010,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L222",
+      "source_location": "L284",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441644,7 +442020,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L226",
+      "source_location": "L288",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441654,7 +442030,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L231",
+      "source_location": "L296",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441665,7 +442041,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L68",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441676,7 +442052,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L91",
+      "source_location": "L113",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441687,7 +442063,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L96",
+      "source_location": "L118",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441698,7 +442074,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L101",
+      "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441709,7 +442085,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L104",
+      "source_location": "L126",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441720,7 +442096,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L106",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441731,7 +442107,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L112",
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441742,7 +442118,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L123",
+      "source_location": "L146",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441753,7 +442129,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L128",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441764,7 +442140,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L133",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441775,7 +442151,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L145",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441786,7 +442162,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L152",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441797,7 +442173,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L159",
+      "source_location": "L185",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441808,7 +442184,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L170",
+      "source_location": "L196",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441819,7 +442195,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L175",
+      "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441830,7 +442206,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L179",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441841,7 +442217,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L179",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441852,7 +442228,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L184",
+      "source_location": "L215",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441863,29 +442239,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L184",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_graph_src_bolt_repository_boltgraphrepository_impact",
-      "target": "packages_graph_src_bolt_repository_boltgraphrepository_read",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L190",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "packages_graph_src_bolt_repository_boltgraphrepository_impact",
-      "target": "packages_graph_src_bolt_repository_toci",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L191",
+      "source_location": "L218",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441896,7 +442250,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L192",
+      "source_location": "L233",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_bolt_repository_boltgraphrepository_impact",
+      "target": "packages_graph_src_bolt_repository_boltgraphrepository_read",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/bolt-repository.ts",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441907,7 +442272,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L208",
+      "source_location": "L270",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441918,7 +442283,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L208",
+      "source_location": "L270",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441929,7 +442294,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L213",
+      "source_location": "L275",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441940,7 +442305,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L215",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441951,7 +442316,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L223",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -441962,7 +442327,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L228",
+      "source_location": "L293",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442293,7 +442658,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L73",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442303,7 +442668,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L98",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442313,7 +442678,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L107",
+      "source_location": "L115",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442323,7 +442688,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L116",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442333,7 +442698,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L126",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442343,7 +442708,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L130",
+      "source_location": "L138",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442353,7 +442718,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L134",
+      "source_location": "L142",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442363,7 +442728,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L145",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442373,7 +442738,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L149",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442383,7 +442748,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L156",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442393,7 +442758,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L167",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442403,7 +442768,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L178",
+      "source_location": "L186",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442413,7 +442778,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L185",
+      "source_location": "L193",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442423,7 +442788,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L190",
+      "source_location": "L198",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442433,7 +442798,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L196",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442466,7 +442831,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L74",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442477,7 +442842,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L75",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442488,7 +442853,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L78",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442499,7 +442864,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L79",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442510,7 +442875,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L83",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442521,7 +442886,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L101",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442532,7 +442897,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L111",
+      "source_location": "L119",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442543,7 +442908,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L127",
+      "source_location": "L135",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442554,7 +442919,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L135",
+      "source_location": "L143",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442565,7 +442930,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L151",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442576,7 +442941,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L161",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442587,7 +442952,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L169",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442598,7 +442963,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L192",
+      "source_location": "L200",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -442609,7 +442974,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/cypher.ts",
-      "source_location": "L205",
+      "source_location": "L213",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443020,17 +443385,17 @@
     },
     {
       "source": "packages_graph_src_types",
-      "target": "packages_graph_src_types_impactnode",
+      "target": "packages_graph_src_types_impactci",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L33",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "packages_graph_src_types",
-      "target": "packages_graph_src_types_impactqueryoptions",
+      "target": "packages_graph_src_types_impactnode",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
@@ -443040,11 +443405,21 @@
     },
     {
       "source": "packages_graph_src_types",
+      "target": "packages_graph_src_types_impactqueryoptions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/graph/src/types.ts",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_graph_src_types",
       "target": "packages_graph_src_types_impactresult",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L50",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443054,7 +443429,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L58",
+      "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443064,7 +443439,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L66",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443074,7 +443449,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L68",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443084,7 +443459,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L69",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443094,7 +443469,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L70",
+      "source_location": "L77",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443104,7 +443479,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L71",
+      "source_location": "L78",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443114,7 +443489,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L72",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443124,7 +443499,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L73",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443134,7 +443509,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L74",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443144,7 +443519,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L75",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443154,7 +443529,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L76",
+      "source_location": "L83",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443164,7 +443539,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L77",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443174,7 +443549,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L78",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443184,7 +443559,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L79",
+      "source_location": "L86",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443194,7 +443569,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L80",
+      "source_location": "L87",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443204,7 +443579,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L82",
+      "source_location": "L89",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443214,7 +443589,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L84",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -443224,7 +443599,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/types.ts",
-      "source_location": "L85",
+      "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -465995,12 +466370,22 @@
       "_origin": "ast"
     },
     {
+      "source": "tools_perf_package_scripts",
+      "target": "tools_perf_package_scripts_impact_budget",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "tools_perf_package",
       "target": "tools_perf_package_dependencies",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L10",
+      "source_location": "L11",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466010,7 +466395,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466020,7 +466405,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466031,7 +466416,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466041,7 +466426,49 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L12",
+      "source_location": "L13",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_package_dependencies",
+      "target": "tools_perf_package_dependencies_openmap_db",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_package_dependencies_openmap_db",
+      "target": "tools_perf_package_json_openmap_db",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_package_dependencies",
+      "target": "tools_perf_package_dependencies_openmap_graph",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_package_dependencies_openmap_graph",
+      "target": "tools_perf_package_json_openmap_graph",
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/package.json",
+      "source_location": "L15",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466052,7 +466479,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L13",
+      "source_location": "L16",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466062,7 +466489,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L13",
+      "source_location": "L16",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466073,7 +466500,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L14",
+      "source_location": "L17",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466083,7 +466510,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L14",
+      "source_location": "L17",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466094,7 +466521,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L15",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466104,7 +466531,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L15",
+      "source_location": "L18",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466115,7 +466542,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466125,7 +466552,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466136,7 +466563,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L21",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466146,7 +466573,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466156,7 +466583,7 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0,
       "context": "import",
       "_origin": "ast"
@@ -466167,7 +466594,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466177,9 +466604,244 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "source_file": "tools/perf/package.json",
-      "source_location": "L18",
+      "source_location": "L23",
       "weight": 1.0,
       "context": "import",
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "ref_node_child_process",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "ref_node_crypto",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "ref_node_url",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_config_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_config_dist_index_loadenv",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_constants_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_constants_dist_index_perf_budgets",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_constants_dist_index_roles",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_db_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_db_dist_index_createprismaclient",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_graph_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "e_openmap_packages_graph_dist_index_creategraphrepository",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_perf",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_env",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_args",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_flag",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_form",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_tokenfor",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget",
+      "target": "tools_perf_src_impact_budget_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L66",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget_tokenfor",
+      "target": "tools_perf_src_impact_budget_form",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget_main",
+      "target": "tools_perf_src_impact_budget_flag",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "tools_perf_src_impact_budget_main",
+      "target": "tools_perf_src_impact_budget_tokenfor",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tools/perf/src/impact-budget.ts",
+      "source_location": "L94",
+      "weight": 1.0,
       "_origin": "ast"
     },
     {
@@ -535204,6 +535866,56 @@
       "_origin": "ast"
     },
     {
+      "source": "docs_evidence_impact_query",
+      "target": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "target": "docs_evidence_impact_query_before_2026_11_08_checkpoint_29",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "target": "docs_evidence_impact_query_what_was_found_and_changed",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "target": "docs_evidence_impact_query_after",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_impact_query_impact_query_budget_req_perf_002",
+      "target": "docs_evidence_impact_query_running_it",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/impact-query.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_assistant_src_index",
       "target": "apps_assistant_src_core_grounding",
       "relation": "re_exports",
@@ -536068,7 +536780,7 @@
       "context": "export",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L83",
+      "source_location": "L79",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -539313,7 +540025,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L72",
+      "source_location": "L88",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546600,6 +547312,39 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_constructor",
+      "target": "apps_api_src_tenant_tenant_context_tenantcontext",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "target": "apps_api_src_graph_graph_types_impactnodeview",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "target": "apps_api_src_ci_ci_types_cirecord",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/graph/graph.resolver.ts",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_graph_graph_service_graphqueryservice_constructor",
       "target": "apps_api_src_db_graph_service_graphservice",
       "relation": "references",
@@ -546672,7 +547417,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L57",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546683,7 +547428,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L64",
+      "source_location": "L60",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546694,18 +547439,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L73",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_graph_graph_types_impactnodeview",
-      "target": "apps_api_src_ci_ci_types_cirecord",
-      "relation": "references",
-      "context": "field",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L9",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546716,7 +547450,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L16",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546727,7 +547461,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L21",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -546738,7 +547472,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/graph/graph.types.ts",
-      "source_location": "L27",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550027,7 +550761,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L130",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550038,7 +550772,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L130",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550049,7 +550783,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550060,7 +550794,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L139",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550071,7 +550805,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550082,7 +550816,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550093,7 +550827,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550104,7 +550838,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L155",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550115,7 +550849,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L163",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550863,7 +551597,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550874,7 +551608,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550885,7 +551619,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550896,7 +551630,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L47",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550907,7 +551641,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L54",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550918,7 +551652,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L98",
+      "source_location": "L120",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550929,7 +551663,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L98",
+      "source_location": "L120",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550940,7 +551674,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L135",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550951,7 +551685,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L135",
+      "source_location": "L157",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550962,7 +551696,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L150",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550973,7 +551707,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L150",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550984,7 +551718,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L183",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -550995,7 +551729,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L183",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -551006,7 +551740,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L231",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -551017,7 +551751,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L231",
+      "source_location": "L253",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554592,7 +555326,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L40",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554603,7 +555337,7 @@
       "context": "type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L75",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554614,7 +555348,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L127",
+      "source_location": "L150",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554625,7 +555359,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L131",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554636,7 +555370,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L158",
+      "source_location": "L184",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554647,7 +555381,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L162",
+      "source_location": "L188",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554658,7 +555392,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L178",
+      "source_location": "L204",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554669,7 +555403,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L183",
+      "source_location": "L209",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554680,7 +555414,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L183",
+      "source_location": "L209",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554691,7 +555425,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L187",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554702,7 +555436,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L187",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554713,7 +555447,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L206",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554724,7 +555458,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L212",
+      "source_location": "L274",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -554735,7 +555469,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L222",
+      "source_location": "L284",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -559757,6 +560491,18 @@
     },
     {
       "source": "apps_api_src_graph_application_map_service_applicationmapservice_map",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/graph/application-map.service.ts",
+      "source_location": "L133",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_application_map_service_applicationmapservice_map",
       "target": "apps_api_src_graph_application_map_grouptiers",
       "relation": "calls",
       "context": "call",
@@ -559876,6 +560622,18 @@
       "_origin": "ast"
     },
     {
+      "source": "e_openmap_apps_api_src_graph_graph_module_ts",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/graph/graph.module.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_graph_graph_resolver_graphresolver_applicationmap",
       "target": "apps_api_src_common_validation_parseinput",
       "relation": "calls",
@@ -559944,6 +560702,18 @@
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graph/topology.service.ts",
       "source_location": "L132",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_graph_topology_service_topologyservice_topology",
+      "target": "apps_api_src_graph_graph_resolver_impactnodefieldsresolver_ci",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/graph/topology.service.ts",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -561520,6 +562290,18 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_getciimpact",
+      "target": "apps_api_src_ci_ci_service_ciservice_ci",
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "e_openmap_apps_api_src_rest_rest_module_ts",
       "target": "apps_api_src_ci_ci_module_cimodule",
       "relation": "indirect_call",
@@ -562048,26 +562830,26 @@
       "_origin": "ast"
     },
     {
-      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice_modelsfor",
+      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice_loadmodels",
       "target": "apps_api_src_common_validation_stringattribute",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L80",
+      "source_location": "L102",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
-      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice_modelsfor",
+      "source": "apps_api_src_services_bsm_facts_service_bsmfactsservice_loadmodels",
       "target": "apps_api_src_common_validation_numberattribute",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L85",
+      "source_location": "L107",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562079,7 +562861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L159",
+      "source_location": "L181",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -562091,7 +562873,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L160",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -565720,6 +566502,18 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_collectors_internal_database_fixture_test_inventoryfromfixture",
+      "target": "docs_evidence_impact_query_after",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/collectors/internal/database/fixture_test.go",
+      "source_location": "L190",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_collectors_internal_database_fixture_test_assertemit",
       "target": "apps_collectors_internal_database_database_emit",
       "relation": "calls",
@@ -568104,6 +568898,18 @@
       "confidence_score": 0.8,
       "source_file": "apps/collectors/internal/libvirt/parse.go",
       "source_location": "L215",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "linkprobe_collector_probe",
+      "target": "docs_evidence_impact_query_after",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/collectors/internal/linkprobe/linkprobe.go",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -584728,6 +585534,18 @@
       "_origin": "ast"
     },
     {
+      "source": "runtime_node_post",
+      "target": "docs_evidence_impact_query_after",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/node/internal/runtime/runtime.go",
+      "source_location": "L164",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_node_internal_runtime_runtime_test_testnodepullsrunsandpostswithincapacity",
       "target": "apps_node_internal_runtime_runtime_new",
       "relation": "calls",
@@ -585815,7 +586633,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L111",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585827,7 +586645,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L111",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585839,7 +586657,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L133",
+      "source_location": "L156",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585851,7 +586669,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L140",
+      "source_location": "L163",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585863,7 +586681,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L145",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585875,7 +586693,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L170",
+      "source_location": "L196",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585887,7 +586705,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L175",
+      "source_location": "L201",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585899,7 +586717,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L179",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585911,7 +586729,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L184",
+      "source_location": "L216",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585923,7 +586741,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L189",
+      "source_location": "L225",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585935,7 +586753,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L207",
+      "source_location": "L268",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585947,7 +586765,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L207",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585959,7 +586777,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L213",
+      "source_location": "L275",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585971,7 +586789,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L223",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -585983,7 +586801,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/graph/src/bolt-repository.ts",
-      "source_location": "L227",
+      "source_location": "L292",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594347,7 +595165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L109",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -594359,7 +595177,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L247",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596135,7 +596953,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L53",
+      "source_location": "L49",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596147,7 +596965,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L65",
+      "source_location": "L61",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596159,7 +596977,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graph/graph.service.ts",
-      "source_location": "L74",
+      "source_location": "L70",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596171,7 +596989,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -596183,7 +597001,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/graphql/graphql-options.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -597988,6 +598806,30 @@
       "_origin": "ast"
     },
     {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_getciimpact",
+      "target": "apps_api_src_ci_ci_service_ciservice_byids",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_rest_rest_controller_restcontroller_getciimpact",
+      "target": "apps_api_src_ci_ci_service_ciservice",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/api/src/rest/rest.controller.ts",
+      "source_location": "L124",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "apps_api_src_rest_rest_controller_restcontroller_createrelationship",
       "target": "apps_api_src_ci_ci_service_ciservice_createrelationship",
       "relation": "calls",
@@ -597995,7 +598837,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L133",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -598007,7 +598849,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L142",
+      "source_location": "L143",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -598019,7 +598861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L150",
+      "source_location": "L151",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -598031,7 +598873,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L158",
+      "source_location": "L159",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -598043,7 +598885,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/rest/rest.controller.ts",
-      "source_location": "L165",
+      "source_location": "L166",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -598427,7 +599269,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "apps/api/src/services/bsm-facts.service.ts",
-      "source_location": "L112",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast"
     },

@@ -39,7 +39,7 @@
 | REQ-UI-019 | UI | Screens | Screen · Settings: tenant, users and roles, audit | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-087, T-090, T-097, T-098, T-099 | Settings screen: session identity, tenant, roles and the audit log (settings-en/ar.png); Settings: identity card, tenant settings editor (GraphQL 0.3.0, ADR-011; admin-only save, read-only otherwise) and the audit log; e2e settings.spec en+ar changes a value, sees it persist and audited, restores it; screenshots docs/evidence/console/settings-en/ar.png; Lighthouse 1.0 on the settings route via walkthrough | 2026-10-22 | 2026-10-22 | User and role management stays in Keycloak (realm admin console, SSO brokering documented in deploy/README.md); the screen links identity, settings and audit |
 | REQ-UI-020 | UI | Screens | Screen · Onboarding wizard: organization, sites, connectivity, nodes and credentials, integrations, generate digital twin | Next.js App Router screen per the design canvas; server components by default; TanStack Query and Virtual. | Playwright e2e in en and ar; Lighthouse budget met; p95 interaction under 100 ms. | P0 | Done |  |  | Design canvas VcFmJuAaHCmrvgpPMmTzrf | T-116, T-117, T-087 | docs/evidence/setup.md; /setup screen in en and ar (docs/evidence/console/setup-*.png); Lighthouse run in .local/lighthouse-setup.log; commit 99bf90e | 2026-10-22 | 2026-11-04 |  |
 | REQ-PERF-001 | PERF | Budgets | p95 screen interaction under 100 ms | Lighthouse and Playwright timing on every screen. | CI fails when the budget is exceeded. | P0 | Done |  |  | CLAUDE.md §0 | T-089 | p95 32.4 ms over 48 sampled interactions on the production build (docs/evidence/perf/screen-interaction.json); guard fails on a result over budget; p95 interaction 32 ms on the production console build; Lighthouse performance 1.0 on every screen except embedded analytics (0.82 against the documented 0.7 floor); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | CI job that runs the perf spec against the compose stack still to add (REQ-QA-002). |
-| REQ-PERF-002 | PERF | Budgets | Impact query under 1000 ms on 100000 nodes | k6 against the synth estate. | k6 threshold enforced in CI. | P0 | Not started |  |  | CLAUDE.md §0 |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-PERF-002 | PERF | Budgets | Impact query under 1000 ms on 100000 nodes | k6 against the synth estate. | k6 threshold enforced in CI. | P0 | In review |  |  | CLAUDE.md §0 | T-487 | ec855f4; docs/evidence/impact-query.md (p95 874-975 ms with the 31,355-node worst cases, 8 VUs, scale-1 tenant) | 2026-10-22 | 2026-11-08 | Budget met and evidenced locally with tools/perf impact-budget; the CI perf job is written but no CI runner exists yet (GitHub remote, dependency on Syed). Done once it runs in CI. |
 | REQ-PERF-003 | PERF | Budgets | Graph rendering at 60 fps | Sigma.js in a Web Worker with WebGL. | Playwright frame timing on the 100k estate. | P0 | Done |  |  | CLAUDE.md §0 | T-089, T-060 | 60.1 fps sustained for 3 s of zoom and pan on the dependency map, synthetic estate (docs/evidence/perf/graph-render.json); dependency map renders at 60 fps on the production build (Sigma.js WebGL in a Web Worker); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | Measured on the scale-0.05 estate focus graph; the 100k-node estate run is pending the scale-1 replay. |
 | REQ-PERF-004 | PERF | Budgets | 10000 devices discovered in under 15 minutes | Scheduler planning and Node concurrency. | Synth estate sweep timed in CI nightly. | P0 | Not started |  |  | CLAUDE.md §0 |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-SEC-001 | SEC | Identity | Keycloak OIDC with roles and attribute-based access | SSO, MFA via Keycloak, API tokens. | Every GraphQL field authorised; e2e covers denied paths. | P0 | Done | Claude |  | CLAUDE.md §1.6 | T-080, T-081, T-082, T-083, T-084, T-085, T-086, T-087, T-088 | Keycloak JWKS RS256 verification, roles guard, tenant claim; realm has managed tenant attribute; Console OIDC Authorization Code + PKCE against Keycloak, bearer on every GraphQL call, rejection ends the session (commit a2c8fee); API issuer verified against PUBLIC_KEYCLOAK_URL; migration 0005 default tenant; e2e en+ar green, screenshots docs/evidence/console/sign-in-*.png dashboard-*.png; OIDC Authorization Code + PKCE sign-in, bearer on every GraphQL call, role-gated actions from the shared role table, API role guard; denied path e2e in en+ar (auditor: disabled action, API refusal) commits a2c8fee e806118; screenshots docs/evidence/console | 2026-10-22 | 2026-10-22 | Attribute-based scoping is the tenant claim resolved by TenantDirectory; further attribute rules arrive with onboarding (business units). |
@@ -261,6 +261,7 @@
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
+| rest | packages/contracts/src/rest.ts | 1.0.0 |  | ADR-049 |
 ## Sheet: Decisions
 | ADR number | Title | Status | Date | Link |
 | --- | --- | --- | --- | --- |
@@ -619,6 +620,7 @@
 | T-484 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
 | T-485 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
 | T-486 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
+| T-487 | unit | REQ-PERF-002 | 2026-11-08 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -652,11 +654,12 @@
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-005 runbooks (ADR-048, migration 0033, GraphQL 1.20.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-007 sites and connectivity, link_probe collector, readiness rules (ADR-025, migration 0034, CI/collector 0.8.0, GraphQL 1.21.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-CORE-019 REST v1, OpenAPI and SDK (ADR-049) |  |  |  |
+| 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-07T23:08:32.254Z |  |  |  |  |  |  |
+| Generated | 2026-11-08T00:04:43.056Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 39 | 0 | 28 | 2 | 139 |  |  |
+| All | 38 | 0 | 28 | 3 | 139 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 1 | 0 | 0 | 0 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -669,10 +672,10 @@
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
-| PERF | 3 | 0 | 0 | 0 | 2 | 5 | 40 |
+| PERF | 2 | 0 | 0 | 1 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 5 | 0 | 26 | 1 | 92 | 124 |  |
+| P0 | 4 | 0 | 26 | 2 | 92 | 124 |  |
 | P1 | 31 | 0 | 2 | 1 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
@@ -713,7 +716,7 @@
 | REQ-DISC-031 | Remote Collector install | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Bare-metal installers: systemd unit + install-node.sh, Windows service hosting + install-node.ps1, env file OPENMAP_NODE_ENV_FILE; node certs carry DNS SAN + serverAuth for the agent gateway |  |  |  |  |  |
 | Perf budget rows | Status |  |  |  |  |  |  |
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
-| REQ-PERF-002 Impact query under 1000 ms on 100000 nodes | Not started |  |  |  |  |  |  |
+| REQ-PERF-002 Impact query under 1000 ms on 100000 nodes | In review |  |  |  |  |  |  |
 | REQ-PERF-003 Graph rendering at 60 fps | Done |  |  |  |  |  |  |
 | REQ-PERF-004 10000 devices discovered in under 15 minutes | Not started |  |  |  |  |  |  |
 | REQ-PERF-005 Health and performance of the platform itself | Not started |  |  |  |  |  |  |

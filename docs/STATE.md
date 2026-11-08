@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites, REQ-CORE-019 REST/SDK)
+## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites, REQ-CORE-019 REST/SDK, REQ-PERF-002 impact under 1 s)
 
 Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
 
@@ -111,7 +111,27 @@ GraphQL 1.21.0).
 - **Console:** Settings has an API card with the addresses and every route from the live document, in en and ar.
 - **Other languages:** SDKs are generated from the OpenAPI document.
 
+**7. REQ-PERF-002 impact query under 1 s** (In review; `docs/evidence/impact-query.md`).
+- **Before:** a PDU's 31,355-node impact took 6.5 s on the scale-1 tenant; p95 under 8 VUs was 2.0 s.
+- **Causes and fixes:**
+  - Memgraph planned the closure ∪ service-hop `UNION ALL` badly, at 2.7–3.2 s against 16–560 ms for the halves: the
+    halves now run as two queries. A `*BFS` rewrite was rejected (7–12 s).
+  - Every closure node was hydrated from Postgres: now only the services are, and `ImpactNode.ci` resolves through the
+    batch loader when selected.
+  - The impact projection is lean, `{ id, tenantId, type, tier }`. `tenantId` must stay: without it the service hop
+    plans at 2.7 s.
+  - Service prediction is lighter (health of members only, members indexed, models cached 30 s).
+  - graphql-jit.
+- **After:** p95 874–975 ms with the worst cases in the mix; a single worst case takes 0.47–0.78 s.
+- **Tooling:** `tools/perf impact-budget` does the run (tenant, measured widest roots, a Keycloak load-test user, k6).
+  The CI `perf` job is written but has not run (no remote). The workflow's `concurrency` line was invalid YAML and is
+  fixed.
+
+**Follow-up found:** `api.integration.test.ts` "matches operating systems … lifecycle" is flaky. `instances(first: 1)`
+on two hosts has no stable order; it passed twice on rerun.
+
 **Tests:**
+- REQ-PERF-002: T-487 (k6 impact budget through `impact-budget`).
 - REQ-CORE-019: T-483 (SDK), T-484 (integration through the SDK: public document, analyst reads, operator writes,
   403/400/404, counters), T-485 (console), T-486 (e2e, en and ar).
 - REQ-BSM-007: T-477 (Go probe), T-478 (planner), T-479 (rules), T-480 (integration), T-481 (console), T-482 (e2e,
