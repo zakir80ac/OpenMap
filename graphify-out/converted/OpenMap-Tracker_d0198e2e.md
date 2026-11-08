@@ -41,7 +41,7 @@
 | REQ-PERF-001 | PERF | Budgets | p95 screen interaction under 100 ms | Lighthouse and Playwright timing on every screen. | CI fails when the budget is exceeded. | P0 | Done |  |  | CLAUDE.md §0 | T-089 | p95 32.4 ms over 48 sampled interactions on the production build (docs/evidence/perf/screen-interaction.json); guard fails on a result over budget; p95 interaction 32 ms on the production console build; Lighthouse performance 1.0 on every screen except embedded analytics (0.82 against the documented 0.7 floor); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | CI job that runs the perf spec against the compose stack still to add (REQ-QA-002). |
 | REQ-PERF-002 | PERF | Budgets | Impact query under 1000 ms on 100000 nodes | k6 against the synth estate. | k6 threshold enforced in CI. | P0 | In review |  |  | CLAUDE.md §0 | T-487 | ec855f4; docs/evidence/impact-query.md (p95 874-975 ms with the 31,355-node worst cases, 8 VUs, scale-1 tenant) | 2026-10-22 | 2026-11-08 | Budget met and evidenced locally with tools/perf impact-budget; the CI perf job is written but no CI runner exists yet (GitHub remote, dependency on Syed). Done once it runs in CI. |
 | REQ-PERF-003 | PERF | Budgets | Graph rendering at 60 fps | Sigma.js in a Web Worker with WebGL. | Playwright frame timing on the 100k estate. | P0 | Done |  |  | CLAUDE.md §0 | T-089, T-060 | 60.1 fps sustained for 3 s of zoom and pan on the dependency map, synthetic estate (docs/evidence/perf/graph-render.json); dependency map renders at 60 fps on the production build (Sigma.js WebGL in a Web Worker); docs/evidence/perf; commit 46aeaae | 2026-10-22 | 2026-11-01 | Measured on the scale-0.05 estate focus graph; the 100k-node estate run is pending the scale-1 replay. |
-| REQ-PERF-004 | PERF | Budgets | 10000 devices discovered in under 15 minutes | Scheduler planning and Node concurrency. | Synth estate sweep timed in CI nightly. | P0 | Not started |  |  | CLAUDE.md §0 |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-PERF-004 | PERF | Budgets | 10000 devices discovered in under 15 minutes | Scheduler planning and Node concurrency. | Synth estate sweep timed in CI nightly. | P0 | In review |  |  | CLAUDE.md §0 | T-488, T-489 | 51f9417; docs/evidence/discovery-sweep.json (17.77 min per 10k devices, over budget: dispatch 899 s of 20 min); docs/evidence/discovery-sweep.json (8.43 min per 10k devices, budget 15), ADR-050 | 2026-10-22 | 2026-11-08 | Budget met locally after REQ-CORE-020: 8.43 min per 10k devices (was 17.77), dispatch 178 s (was 899 s), all 508,341 events delivered and stores consistent. Pending the nightly CI run (no remote yet). |
 | REQ-SEC-001 | SEC | Identity | Keycloak OIDC with roles and attribute-based access | SSO, MFA via Keycloak, API tokens. | Every GraphQL field authorised; e2e covers denied paths. | P0 | Done | Claude |  | CLAUDE.md §1.6 | T-080, T-081, T-082, T-083, T-084, T-085, T-086, T-087, T-088 | Keycloak JWKS RS256 verification, roles guard, tenant claim; realm has managed tenant attribute; Console OIDC Authorization Code + PKCE against Keycloak, bearer on every GraphQL call, rejection ends the session (commit a2c8fee); API issuer verified against PUBLIC_KEYCLOAK_URL; migration 0005 default tenant; e2e en+ar green, screenshots docs/evidence/console/sign-in-*.png dashboard-*.png; OIDC Authorization Code + PKCE sign-in, bearer on every GraphQL call, role-gated actions from the shared role table, API role guard; denied path e2e in en+ar (auditor: disabled action, API refusal) commits a2c8fee e806118; screenshots docs/evidence/console | 2026-10-22 | 2026-10-22 | Attribute-based scoping is the tenant claim resolved by TenantDirectory; further attribute rules arrive with onboarding (business units). |
 | REQ-SEC-002 | SEC | Secrets | OpenBao for collector and integration credentials | Credential references only; the Node resolves them. | No secret in Postgres or logs; rotation test passes. | P0 | Done | Claude |  | CLAUDE.md §1 | T-022, T-024 | scheduler resolves collector credentials from OpenBao by reference at job dispatch; credentials never stored; compose and air-gap e2e run with OpenBao (docs/evidence/airgap); commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-SEC-003 | SEC | Sovereignty | No outbound call at runtime except collectors and tenant-enabled integrations | Egress policy test in the airgap profile. | Airgap compose passes the full e2e suite with egress blocked. | P0 | Done |  |  | CLAUDE.md §1.7 | T-087, T-088, T-089, T-096 | docs/evidence/airgap/load-airgap.md: registry and DNS unreachable inside the host (wget/docker pull fail), stack healthy, e2e suite green; airgap overlay disables Memgraph/Meilisearch telemetry and LLM download | 2026-10-22 | 2026-10-22 |  |
@@ -210,7 +210,7 @@
 | REQ-CMDB-042 | CMDB | Added | Subscription cover for software, SaaS and cloud assets: start, end, credits remaining |  | An asset whose CI is software, a software instance, a licence, a SaaS application or tenant, a cloud account or cloud resource carries subscription start, subscription end and credits remaining (with unit) instead of warranty; the values come from the collectors where the vendor exposes them (licence expiry, SaaS tenant subscription, cloud billing credits) with the source recorded, and can be entered by hand; the register's gap filters, summary and details panel follow; en and ar | P0 | Done |  |  | Syed 2026-11-05; ADR-023 | T-130, T-141, T-075, T-131 | commit 98911d7; ADR-027; docs/evidence/dashboard-uptime-register.md; API subscription case; AssetsView SaaS test; Go saas/azure stand-ins; assets.spec.ts e2e en+ar | 2026-11-05 | 2026-11-05 |  |
 | REQ-AI-008 | AI | Added | Conversational assistant: structured multi-level chat trained for OpenMap |  | Ask holds a multi-turn conversation over the estate: it classifies the intent (lookup, measurement, impact, change history, how-to, report), plans the retrieval across Postgres, Memgraph and ClickHouse, answers in prose with the figures and the CIs it used, offers follow-up questions, asks a clarifying question when the request is ambiguous, and never invents a figure (every number traces to a query shown on demand); conversations persist per user; a checked-in evaluation set of OpenMap questions runs in CI with an accuracy floor; en and ar | P0 | Done | Claude |  | Syed 2026-11-05; REQ-AI-007 | T-145, T-146, T-147, T-148, T-460, T-461, T-462 | commit f19125d; T-145 assistant unit 54/54; T-146 series skill 2/2 + evaluation 38/38 through GraphQL (docs/evidence/assistant-eval.json); T-147 AssistantView 14/14 en+ar; T-148 e2e assistant.spec.ts 3/3 en+ar; guard, i18n, contracts 1.5.0 ok; docs/evidence/assistant-conversations.md, docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png; commits f19125d aa8b415; ADR-028 increment two; docs/evidence/assistant-conversations.md; evaluation 38/38 (30 single, 4 multi-turn); docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png; 67e0c9f, 2a56a0a; eval 38/38 at scale 1 | 2026-11-05 | 2026-11-07 |  |
 | REQ-QA-005 | QA | Added | Simulated mode: vendor API simulators driven by the real collectors |  | tools/simulator serves each parked vendor's API (warranty, SaaS, hypervisors, cloud, out-of-band, storage, network, Windows, directory, feeds) from the synthetic estate over pinned TLS with real auth; 'simulator verify' builds and runs the real collector binaries against it and reports CIs, relationships and identity drift against the estate; 'simulator serve' keeps the simulators up and writes a job plan a Discovery Node can run; simulated evidence is labelled provenance=simulated and never closes a vendor row (ADR-042). | P1 | Done | Claude |  | §Quality engineering; CLAUDE.md §8 real data | T-350, T-351, T-352, T-358, T-359, T-446, T-448, T-454, T-455 | 8856e83, 2006332, 899522b, f78acbd; docs/evidence/simulated-mode.md (495/495 runs, contract checks on); full stack via profile simulated: warranty, SaaS, Pure through node-compose-01; ADR-042; 4812938, 554105a: drift judged with reconciler rules (schemas/ci-identity.json), relationship drift, aliases; identity drift 7,894 -> 284, relationship drift 524 -> 0, 495/495 (ADR-044); aab3f27: simulated mode identity drift 0 (from 284), 495/495 runs, docs/evidence/simulated-mode.md | 2026-11-07 | 2026-11-07 |  |
-| REQ-CORE-020 | CORE | Reconciliation | Outbox claim safe for concurrent dispatchers, and the concurrent-worker measurement | dispatchOnce claims with read-then-update, so two dispatchers on one database deliver the same rows. Claim with FOR UPDATE SKIP LOCKED, then measure the scale-1 replay with RECONCILER.resultsConcurrency workers and find the dispatch target that slows as the stores grow (ADR-046). | Two dispatchers on one database deliver every outbox row exactly once (integration test); the scale-1 replay with concurrent workers is measured against PERF_BUDGETS and recorded in docs/evidence/reconciler-scale.md. | P1 | Not started |  | REQ-CORE-013 | ADR-046 |  |  | 2026-11-07 | 2026-11-07 |  |
+| REQ-CORE-020 | CORE | Reconciliation | Outbox claim safe for concurrent dispatchers, and the concurrent-worker measurement | dispatchOnce claims with read-then-update, so two dispatchers on one database deliver the same rows. Claim with FOR UPDATE SKIP LOCKED, then measure the scale-1 replay with RECONCILER.resultsConcurrency workers and find the dispatch target that slows as the stores grow (ADR-046). | Two dispatchers on one database deliver every outbox row exactly once (integration test); the scale-1 replay with concurrent workers is measured against PERF_BUDGETS and recorded in docs/evidence/reconciler-scale.md. | P1 | In review |  | REQ-CORE-013 | ADR-046 | T-487, T-488, T-489 | docs/evidence/reconciler-scale.md, docs/evidence/discovery-sweep.json, ADR-050, migrations 0035/0036 | 2026-11-07 | 2026-11-08 | Leased SKIP LOCKED claims (0035) with partial undelivered indexes (0036: claim 1.6 s to 2 ms); one pipelined graph transaction per batch; sync ClickHouse inserts for large batches; deferred relationships stay pending. Seed-45 dispatch 67.8 s to 27.3 s; scale-0.25 sweep dispatch 899 s to 178 s. Two dispatchers deliver each row once (T-489) but are not faster (ADR-050); default 1. Remaining for Done: the scale-1 replay measurement (tenant 570b reset, then replay-history and the assistant evaluation). |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -277,6 +277,7 @@
 | ADR-047 | Impact prediction accuracy: incidents validate simulations, misses suggest relationships | Accepted | 2026-11-08 | docs/adr/ADR-047-impact-prediction-accuracy.md |
 | ADR-048 | Runbooks: a tenant catalogue attached to scenarios and incidents, steps that trigger automation | Accepted | 2026-11-08 | docs/adr/ADR-048-runbooks.md |
 | ADR-049 | REST API, OpenAPI document and SDK from one route table | Accepted | 2026-11-08 | docs/adr/ADR-049-rest-api-openapi-sdk.md |
+| ADR-050 | Outbox claims and dispatch throughput | Accepted | 2026-11-08 | docs/adr/ADR-050-outbox-claims-and-dispatch-throughput.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -620,7 +621,9 @@
 | T-484 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
 | T-485 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
 | T-486 | unit | REQ-CORE-019 | 2026-11-07 | Pass | 0 |
-| T-487 | unit | REQ-PERF-002 | 2026-11-08 | Pass | 0 |
+| T-487 | unit | REQ-PERF-002, REQ-CORE-020 | 2026-11-08 | Pass | 0 |
+| T-488 | unit | REQ-PERF-004, REQ-CORE-020 | 2026-11-08 | Pass | 0 |
+| T-489 | unit | REQ-CORE-020, REQ-PERF-004 | 2026-11-08 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -655,13 +658,14 @@
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-BSM-007 sites and connectivity, link_probe collector, readiness rules (ADR-025, migration 0034, CI/collector 0.8.0, GraphQL 1.21.0) |  |  |  |
 | 2026-11-07 | Checkpoint 29 (cont.): REQ-CORE-019 REST v1, OpenAPI and SDK (ADR-049) |  |  |  |
 | 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
+| 2026-11-08 | Checkpoint 30: REQ-CORE-020 leased outbox claims (0035/0036), pipelined graph batch, sync large ClickHouse inserts; seed-45 dispatch 67.8 s to 27.3 s; REQ-PERF-004 sweep 8.43 min per 10k devices (budget 15). ADR-050. Both In review. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-08T00:04:43.056Z |  |  |  |  |  |  |
+| Generated | 2026-11-08T01:25:34.254Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 38 | 0 | 28 | 3 | 139 |  |  |
+| All | 36 | 0 | 28 | 5 | 139 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
-| CORE | 1 | 0 | 0 | 0 | 19 | 20 | 95 |
+| CORE | 0 | 0 | 0 | 1 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
 | DEP | 0 | 0 | 0 | 0 | 5 | 5 | 100 |
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
@@ -672,11 +676,11 @@
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
-| PERF | 2 | 0 | 0 | 1 | 2 | 5 | 40 |
+| PERF | 1 | 0 | 0 | 2 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 4 | 0 | 26 | 2 | 92 | 124 |  |
-| P1 | 31 | 0 | 2 | 1 | 47 | 81 |  |
+| P0 | 3 | 0 | 26 | 3 | 92 | 124 |  |
+| P1 | 30 | 0 | 2 | 2 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 34 |  |  |  |  |  |  |
@@ -718,5 +722,5 @@
 | REQ-PERF-001 p95 screen interaction under 100 ms | Done |  |  |  |  |  |  |
 | REQ-PERF-002 Impact query under 1000 ms on 100000 nodes | In review |  |  |  |  |  |  |
 | REQ-PERF-003 Graph rendering at 60 fps | Done |  |  |  |  |  |  |
-| REQ-PERF-004 10000 devices discovered in under 15 minutes | Not started |  |  |  |  |  |  |
+| REQ-PERF-004 10000 devices discovered in under 15 minutes | In review |  |  |  |  |  |  |
 | REQ-PERF-005 Health and performance of the platform itself | Not started |  |  |  |  |  |  |

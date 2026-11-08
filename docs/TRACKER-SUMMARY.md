@@ -1,13 +1,13 @@
 # OpenMap tracker summary
 
-Generated 2026-11-08T00:04:43.110Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-08T01:25:32.500Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 38 |
+| Not started | 36 |
 | In progress | 0 |
 | Blocked | 28 |
-| In review | 3 |
+| In review | 5 |
 | Done | 139 |
 | **Total** | **208** |
 
@@ -65,7 +65,6 @@ Generated 2026-11-08T00:04:43.110Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-PERF-004 [P0] 10000 devices discovered in under 15 minutes
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
 - REQ-UI-026 [P0] Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards
 - REQ-UI-027 [P0] Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex
@@ -73,8 +72,9 @@ Generated 2026-11-08T00:04:43.110Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-AI-003 [P1] Anomaly rules over discovery and health events
 - REQ-AI-005 [P1] Cloud recommendation engine (rightsizing, unused)
 - REQ-AI-006 [P1] AI assistant over the graph (NL to Cypher, explain impact, anomaly rules)
-- REQ-CORE-020 [P1] Outbox claim safe for concurrent dispatchers, and the concurrent-worker measurement
 - REQ-DCIM-001 [P1] Cabling, patch panels, circuits, cross-connects
+- REQ-DCIM-003 [P1] Room layout / floor plans
+- REQ-DCIM-004 [P1] Power: PDUs, outlets, feeds, circuits, UPS, redundancy
 
 ## Open risks
 
