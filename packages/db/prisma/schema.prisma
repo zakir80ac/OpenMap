@@ -531,6 +531,7 @@ model Tenant {
   classificationSuggestions ClassificationSuggestion[]
   runbooks                Runbook[]
   readinessFindings       ReadinessFinding[]
+  anomalyFindings         AnomalyFinding[]
   runbookStepRuns         RunbookStepRun[]
   incidents               Incident[]
   incidentLinks           IncidentLink[]
@@ -1416,6 +1417,32 @@ model ReadinessFinding {
   @@index([tenantId, state])
   @@index([tenantId, rule, subjectCiId, state])
   @@map("readiness_findings")
+}
+
+/// REQ-AI-003 (ADR-053): one finding per rule and subject (the address, the device, the service), open while the rule
+/// holds and cleared when it stops; the explanation is the model's, asked for on demand.
+model AnomalyFinding {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @db.Uuid
+  /// ANOMALY_RULES.
+  rule              String
+  subjectCiId       String    @db.Uuid
+  /// [{ key, value }]: the facts the rule found, shown with the finding and given to the explanation.
+  facts             Json
+  /// open or cleared.
+  state             String
+  detectedAt        DateTime  @db.Timestamptz(3)
+  lastSeenAt        DateTime  @db.Timestamptz(3)
+  clearedAt         DateTime? @db.Timestamptz(3)
+  explanation       String?
+  explanationLocale String?
+  explainedAt       DateTime? @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, rule, subjectCiId])
+  @@index([tenantId, state])
+  @@map("anomaly_findings")
 }
 
 /// RUNBOOK_STEP_OUTCOMES (ADR-048).

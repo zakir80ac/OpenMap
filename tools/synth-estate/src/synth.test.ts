@@ -198,7 +198,8 @@ describe('synth-estate', () => {
     expect(summary.ciTypes['host']).toBe(Math.round(SYNTH_ESTATE.hosts * SCALE));
     expect(summary.ciTypes['vm']).toBe(Math.round(SYNTH_ESTATE.vms * SCALE));
     expect(summary.ciTypes['site']).toBe(7);
-    expect(summary.ciTypes['unknown']).toBe(Math.round(214 * SCALE));
+    // The scanned devices, plus the two REQ-AI-003 plants: one on a server's address, one in the data centre.
+    expect(summary.ciTypes['unknown']).toBe(Math.round(214 * SCALE) + 2);
     expect(summary.ciTypes['k8s_service']).toBe(Math.round(SYNTH_ESTATE.k8sServices * SCALE));
     expect(summary.ciTypes['bmc']).toBe(summary.ciTypes['host']);
   });
@@ -215,4 +216,18 @@ describe('synth-estate', () => {
   it('chunks sweeps at the discovery budget', () => {
     for (const slot of estate.builder.slots) expect(slot.primaryCount).toBeLessThanOrEqual(estate.builder.maxPrimaryPerSlot);
   });
+
+  // T-502 REQ-AI-003 — the planted discovery anomalies: an address two current CIs claim (a server and a scanned
+  // device), and every unknown device placed in a data centre, recorded in the summary as ground truth.
+  it('plants an IP conflict and records the data-centre unknowns as anomalies', () => {
+    const summary = summarise(estate);
+    const conflicts = summary.anomalies.filter((a) => a.rule === 'ip_conflict');
+    expect(conflicts).toHaveLength(1);
+    const ip = estate.builder.cis.findIndex((c) => c.type === 'ip_address' && c.identity['address'] === conflicts[0]?.subject);
+    const claimants = new Set(estate.builder.rels.filter((r) => r.type === 'uses_ip' && r.to === ip).map((r) => estate.builder.get(r.from).type));
+    expect([...claimants].sort()).toEqual(['host', 'unknown']);
+    const inDc = estate.builder.cis.filter((c) => c.type === 'unknown' && c.attributes['location'] === 'RYD data hall').map((c) => c.name);
+    expect(summary.anomalies.filter((a) => a.rule === 'unmanaged_device_in_datacenter').map((a) => a.subject).sort()).toEqual([...inDc].sort());
+  });
 });
+

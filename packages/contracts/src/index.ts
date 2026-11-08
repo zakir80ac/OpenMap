@@ -10,6 +10,7 @@ export * from './component.js';
 export * from './utilisation.js';
 export * from './connectivity.js';
 export * from './telemetry.js';
+export * from './anomaly.js';
 export * from './rest.js';
 export * from './lifecycle.js';
 export * from './impact.js';

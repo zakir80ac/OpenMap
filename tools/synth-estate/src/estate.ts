@@ -3,7 +3,7 @@
 // collector id, Discovery Node, target, sweep chunk) that will later emit it. Relationships point
 // at CI indices so the model stays compact at scale 1 (hundreds of thousands of CIs).
 import { PERF_BUDGETS } from '@openmap/constants';
-import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, siteSchema, type Attributes, type CiLayer, type CiType, type CollectorFamily, type Component, type Organization, type RelationshipType, type Site, type SiteLink, type Target } from '@openmap/contracts';
+import { CI_IDENTITY_KEYS, CI_TYPE_LAYER, siteSchema, type Attributes, type CiLayer, type CiType, type CollectorFamily, type Component, type Organization, type PlantedAnomaly, type RelationshipType, type Site, type SiteLink, type Target } from '@openmap/contracts';
 import { Rng } from './rng.js';
 import { isoAt, MS_PER_SECOND } from './time.js';
 import type { World } from './world.js';
@@ -17,7 +17,7 @@ import { generateStorage } from './gen/storage.js';
 import { generateCloud } from './gen/cloud.js';
 import { generateKubernetes } from './gen/kubernetes.js';
 import { generateApplications, type BusinessServiceRecord } from './gen/applications.js';
-import { generateEdge } from './gen/edge.js';
+import { plantDatacenterDevice, generateEdge } from './gen/edge.js';
 import { generateCommercial } from './gen/commercial.js';
 import { generateFlows } from './gen/flows.js';
 import { generateSaas } from './gen/saas.js';
@@ -165,6 +165,8 @@ export interface EstateSummary {
   sites: Record<string, number>;
   families: Record<string, { results: number; cis: number; relationships: number }>;
   businessServices: number;
+  /** REQ-AI-003: the anomalies this estate planted, by rule and subject name (ground truth for the anomaly rules). */
+  anomalies: PlantedAnomaly[];
 }
 
 export interface Estate {
@@ -176,6 +178,7 @@ export interface Estate {
   siteLinks: SiteLink[];
   builder: EstateBuilder;
   services: BusinessServiceRecord[];
+  anomalies: PlantedAnomaly[];
 }
 
 export function buildEstate(seed: number, scale: number): Estate {
@@ -197,6 +200,7 @@ export function buildEstate(seed: number, scale: number): Estate {
     branchSubnets: [],
     branchCidrs: [],
     unknownByBranch: new Map(),
+    anomalies: [],
     k8sClusters: [],
     k8sServiceBudget: 0,
   };
@@ -234,6 +238,8 @@ export function buildEstate(seed: number, scale: number): Estate {
   generateCommercial(world, streams.commercial);
   generateFlows(world, streams.flows);
   generateSaas(world, streams.saas);
+  // REQ-AI-003: last, so the address it takes shifts nothing else.
+  plantDatacenterDevice(world);
 
   const sites = org.sites.map((site) => {
     const w = world.sites.find((s) => s.def.code === site.code);
@@ -241,7 +247,7 @@ export function buildEstate(seed: number, scale: number): Estate {
     return siteSchema.parse({ ...site, facility: { ...site.facility, rackCount: w.racks.length } });
   });
 
-  return { seed, scale, tenantId, organization: org.organization, sites, siteLinks: org.siteLinks, builder: b, services };
+  return { seed, scale, tenantId, organization: org.organization, sites, siteLinks: org.siteLinks, builder: b, services, anomalies: world.anomalies };
 }
 
 export function summarise(estate: Estate): EstateSummary {
@@ -285,6 +291,7 @@ export function summarise(estate: Estate): EstateSummary {
     sites: sortRecord(sites),
     families: Object.fromEntries(Object.keys(families).sort().map((k) => [k, families[k] ?? { results: 0, cis: 0, relationships: 0 }])),
     businessServices: estate.services.length,
+    anomalies: estate.anomalies,
   };
 }
 

@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.24.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.25.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -293,6 +293,35 @@ type ImpactAccuracy {
   "Resolved incidents the sweep cannot compare because they name no root cause."
   withoutRootCause: Int!
   recent: [ImpactValidation!]!
+}
+"One fact behind an anomaly finding (REQ-AI-003): what the rule found, by key."
+type AnomalyFact {
+  key: String!
+  value: String!
+}
+"A finding of an anomaly rule over discovery and health events (REQ-AI-003, ADR-053)."
+type AnomalyFinding {
+  id: UUID!
+  "ip_conflict, unmanaged_device_in_datacenter or flapping_service."
+  rule: String!
+  "The address, the device or the service the finding is about."
+  subject: Ci
+  facts: [AnomalyFact!]!
+  "open or cleared."
+  state: String!
+  detectedAt: DateTime!
+  lastSeenAt: DateTime!
+  clearedAt: DateTime
+  "The model's explanation, once asked for (explainAnomaly), in explanationLocale."
+  explanation: String
+  explanationLocale: String
+}
+type AnomalyReport {
+  "Open findings, then those cleared in the last week, newest first."
+  findings: [AnomalyFinding!]!
+  open: Int!
+  "When this API instance last evaluated the rules for the tenant."
+  lastSweepAt: DateTime
 }
 "One piece of evidence behind a classification (REQ-AI-002): which signal matched, what it matched, its weight."
 type ClassificationEvidence {
@@ -2126,6 +2155,8 @@ type Query {
   relationshipSuggestions(state: String = "open", limit: Int = 50): [RelationshipSuggestion!]!
   "REQ-AI-002: classifies the unknown, unlabelled CIs and returns the open suggestions with the acceptance rate."
   classificationSuggestions: ClassificationSummary!
+  "REQ-AI-003: the anomaly findings over discovery and health events."
+  anomalies: AnomalyReport!
   "Sites and their connectivity for HA / DR readiness (REQ-BSM-007)."
   connectivity: Connectivity!
   "The tenant's runbook catalogue, by code (REQ-BSM-005)."
@@ -2539,6 +2570,10 @@ type Mutation {
   "REQ-AI-002: writes the suggestion as the CI's user label (layer, type, title, description)."
   acceptClassificationSuggestion(id: UUID!): ClassificationSuggestion!
   dismissClassificationSuggestion(id: UUID!): ClassificationSuggestion!
+  "REQ-AI-003: evaluates the anomaly rules now (they also run every ANOMALY_INTERVAL_MS)."
+  detectAnomalies: AnomalyReport!
+  "REQ-AI-003: the local model's explanation of a finding, from its facts only."
+  explainAnomaly(id: UUID!, locale: String!): AnomalyFinding!
   "Marks the suggestion dismissed; the same miss is not suggested again."
   dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   "Creates a runbook (id omitted) or replaces one (REQ-BSM-005, ADR-048)."

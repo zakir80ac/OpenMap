@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -74,7 +74,22 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
   dismissing is remembered until the evidence changes. The acceptance rate shows on a panel on the Layers screen.
 - **Images:** `openmap/api:dev` and `openmap/console:dev` were rebuilt.
 
-**7. Remaining for Done.**
+**7. REQ-AI-003 anomaly rules — Done** (ADR-053, GraphQL 1.25.0, migration 0038, T-502 to T-506).
+- **Rules:** `ip_conflict`, `unmanaged_device_in_datacenter` and `flapping_service`, pure functions in the assistant
+  package.
+- **Findings:** kept in `anomaly_findings`. A sweep runs every `ANOMALY_INTERVAL_MS`, and `detectAnomalies` runs one on
+  demand.
+- **Explanations:** `explainAnomaly` uses the local model in the prose locales and the catalogue template elsewhere,
+  which means Arabic on the CPU profile.
+- **Screen:** `/anomalies`.
+- **Ground truth:** the generator plants one IP conflict and one data-centre camera (estate summary), plus one flapping
+  service (health history).
+- **Dev tenant:** got these through a replay without `--reset` and a reload of the health history (`replay-history
+  --reset`). The earlier replay without stripped samples duplicated this tenant's metric rows in ClickHouse `metrics`;
+  `metrics_latest` is unaffected.
+- **Result:** precision and recall 1.0.
+
+**8. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

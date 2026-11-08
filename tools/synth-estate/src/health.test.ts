@@ -2,6 +2,7 @@
 // spread over the whole of each month rather than its first half.
 import { describe, expect, it } from 'vitest';
 import type { BusinessServiceRecord } from './gen/applications.js';
+import { ANOMALY } from '@openmap/constants';
 import { generateHealthHistory } from './health.js';
 
 const service = (name: string, tier: number): BusinessServiceRecord => ({
@@ -62,5 +63,21 @@ describe('generateHealthHistory', () => {
     const core = history.outages.filter((o) => o.service === 'Core').length;
     const standard = history.outages.filter((o) => o.service === 'Standard').length;
     expect(core).toBeLessThan(standard);
+  });
+});
+
+// T-502 REQ-AI-003 — the planted flapping service: ANOMALY.synthetic.flapOutages short outages within the flapping
+// rule's window before `now`, no overlap with the service's other outages, and recorded as ground truth.
+describe('planted flapping service', () => {
+  it('bursts one service inside the flapping window and records it', () => {
+    const now = '2026-11-01T00:00:00.000Z';
+    const h = generateHealthHistory([service('Online banking', 1), service('HR portal', 3), service('Cards', 2)], 42, now, 6);
+    expect(h.anomalies).toHaveLength(1);
+    const name = h.anomalies[0]?.subject ?? '';
+    const own = h.outages.filter((o) => o.service === name).sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt));
+    const windowMs = ANOMALY.flapWindowHours * 3_600_000;
+    const burst = own.filter((o) => Date.parse(now) - Date.parse(o.endedAt) < windowMs);
+    expect(burst.length * 2).toBeGreaterThanOrEqual(ANOMALY.flapChanges);
+    for (let i = 1; i < own.length; i++) expect(Date.parse(own[i]?.startedAt ?? '')).toBeGreaterThanOrEqual(Date.parse(own[i - 1]?.endedAt ?? ''));
   });
 });

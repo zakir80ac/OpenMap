@@ -5,6 +5,7 @@ import { DOMAIN, POOL, VRF, type DbEngine, type HostModelDef, type HypervisorPla
 import type { EstateBuilder, Slot } from './estate.js';
 import { cidr, poolAddress, RFC1918_TEN } from './ip.js';
 import type { Rng } from './rng.js';
+import type { PlantedAnomaly } from '@openmap/contracts';
 
 export interface RoomWorld {
   idx: number;
@@ -211,6 +212,8 @@ export interface World {
   branchCidrs: string[];
   /** Unknown devices claimed per branch so DHCP leases line up with the scan. */
   unknownByBranch: Map<number, number[]>;
+  /** REQ-AI-003: anomalies the generators plant, the ground truth the anomaly rules are measured against. */
+  anomalies: PlantedAnomaly[];
   k8sClusters: K8sClusterRec[];
   /** MAC addresses already used as an identity value (host and unknown-device primaryMac, switch chassisId). */
   identityMacs: Set<string>;

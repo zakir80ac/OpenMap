@@ -148,6 +148,8 @@ export const envSchema = z.object({
   IMPACT_VALIDATION_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
   /** REQ-BSM-007 (ADR-025): how often the scheduler plans a probe of every inter-site link. 0 turns probing off. */
   LINK_PROBE_INTERVAL_MS: z.coerce.number().int().min(0).default(60_000),
+  /** REQ-AI-003 (ADR-053): how often the API evaluates the anomaly rules for every tenant; 0 turns the sweep off. */
+  ANOMALY_INTERVAL_MS: z.coerce.number().int().min(0).default(300_000),
 });
 
 export type Env = z.infer<typeof envSchema>;

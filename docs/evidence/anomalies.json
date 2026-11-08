@@ -1,0 +1,54 @@
+{
+  "name": "anomaly-rules",
+  "requirement": "REQ-AI-003",
+  "adr": "ADR-053",
+  "tenant": "ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c (seed 42, scale 0.05)",
+  "groundTruth": [
+    {
+      "rule": "ip_conflict",
+      "subject": "10.50.0.10",
+      "source": "estate-summary.json"
+    },
+    {
+      "rule": "unmanaged_device_in_datacenter",
+      "subject": "camera-6e2c",
+      "source": "estate-summary.json"
+    },
+    {
+      "rule": "flapping_service",
+      "subject": "SARIE Instant Payments",
+      "source": "health-history.json"
+    }
+  ],
+  "openFindings": [
+    {
+      "rule": "flapping_service",
+      "subject": "SARIE Instant Payments",
+      "facts": {
+        "changes": 8,
+        "windowHours": 6
+      }
+    },
+    {
+      "rule": "ip_conflict",
+      "subject": "10.50.0.10",
+      "facts": {
+        "claimants": "ahv-hq-c01-01 (host), iot_sensor-b6ff (unknown)"
+      }
+    },
+    {
+      "rule": "unmanaged_device_in_datacenter",
+      "subject": "camera-6e2c",
+      "facts": {
+        "site": "Riyadh Primary Data Centre"
+      }
+    }
+  ],
+  "precision": 1.0,
+  "recall": 1.0,
+  "explanations": {
+    "en": "local model (CPU profile)",
+    "ar": "catalogue template (ASSISTANT_PROSE_LOCALES=en)"
+  },
+  "measuredAt": "2026-11-08"
+}

@@ -8,6 +8,7 @@ import { AssistantModule } from './assistant/assistant.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
 import { CertificatesModule } from './certificates/certificates.module.js';
 import { ComponentsModule } from './components/components.module.js';
+import { AnomalyModule } from './anomaly/anomaly.module.js';
 import { ClassificationModule } from './classification/classification.module.js';
 import { TelemetryModule } from './telemetry/telemetry.module.js';
 import { UtilisationModule } from './utilisation/utilisation.module.js';
@@ -81,6 +82,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     UtilisationModule,
     TelemetryModule,
     ClassificationModule,
+    AnomalyModule,
     LifecycleModule,
     SaasModule,
     GraphQLModule.forRootAsync<MercuriusDriverConfig>({

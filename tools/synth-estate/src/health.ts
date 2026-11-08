@@ -3,10 +3,13 @@
 // has months of data on a dev stack. The output is replayed by `pnpm --filter @openmap/reconciler replay-history`,
 // which turns each outage into back-dated openmap.bsm.health.changed events through the outbox and into a resolved
 // incident; nothing here touches a store.
-import { SLA } from '@openmap/constants';
+// REQ-AI-003: one service also gets a burst of short outages before `now` (a flapping service), recorded in
+// `anomalies` as ground truth for the anomaly rules.
+import { ANOMALY, SLA } from '@openmap/constants';
+import type { PlantedAnomaly } from '@openmap/contracts';
 import type { BusinessServiceRecord } from './gen/applications.js';
 import { Rng } from './rng.js';
-import { MS_PER_DAY, MS_PER_MINUTE } from './time.js';
+import { MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE } from './time.js';
 
 export const HEALTH_HISTORY_FILE = 'health-history.json';
 const TIER_ONE = 1;
@@ -27,6 +30,7 @@ export interface HealthHistory {
   generatedAt: string;
   months: number;
   outages: Outage[];
+  anomalies: PlantedAnomaly[];
 }
 
 /**
@@ -68,8 +72,33 @@ export function generateHealthHistory(
       }
     }
   }
+  const anomalies = plantFlapping(services, seed, nowMs, outages);
   outages.sort(
     (a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt) || a.service.localeCompare(b.service),
   );
-  return { seed, generatedAt: now, months, outages };
+  return { seed, generatedAt: now, months, outages, anomalies };
+}
+
+/**
+ * REQ-AI-003: one service, picked from its own stream, goes down ANOMALY.synthetic.flapOutages times in a row a few
+ * hours before `now`, with short gaps: twice as many health changes as the flapping rule's threshold, in one window.
+ * Its ordinary outages that would overlap the burst are dropped, so outages still never overlap within a service.
+ */
+function plantFlapping(services: readonly BusinessServiceRecord[], seed: number, nowMs: number, outages: Outage[]): PlantedAnomaly[] {
+  const sorted = [...services].sort((a, b) => a.name.localeCompare(b.name));
+  if (sorted.length === 0) return [];
+  const service = new Rng(seed).fork('health-anomaly').pick(sorted);
+  const f = ANOMALY.synthetic;
+  const end = nowMs - f.flapEndsHoursBeforeNow * MS_PER_HOUR;
+  const span = (f.flapOutages * f.flapOutageMinutes + (f.flapOutages - 1) * f.flapGapMinutes) * MS_PER_MINUTE;
+  const start = end - span;
+  for (let i = outages.length - 1; i >= 0; i--) {
+    const o = outages[i];
+    if (o !== undefined && o.service === service.name && Date.parse(o.endedAt) > start - MS_PER_MINUTE && Date.parse(o.startedAt) < end + MS_PER_MINUTE) outages.splice(i, 1);
+  }
+  for (let n = 0; n < f.flapOutages; n++) {
+    const from = start + n * (f.flapOutageMinutes + f.flapGapMinutes) * MS_PER_MINUTE;
+    outages.push({ service: service.name, state: 'down', startedAt: new Date(from).toISOString(), endedAt: new Date(from + f.flapOutageMinutes * MS_PER_MINUTE).toISOString() });
+  }
+  return [{ rule: 'flapping_service', subject: service.name }];
 }

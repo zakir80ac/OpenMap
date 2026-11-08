@@ -62,6 +62,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { key: 'nav.utilisation', href: '/utilisation', icon: 'analytics' },
       { key: 'nav.lifecycle', href: '/lifecycle', icon: 'clock' },
       { key: 'nav.analytics', href: '/analytics', icon: 'analytics' },
+      { key: 'nav.anomalies', href: '/anomalies', icon: 'shield' },
       { key: 'nav.assistant', href: '/assistant', icon: 'assistant' },
     ],
   },

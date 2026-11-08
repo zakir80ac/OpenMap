@@ -758,6 +758,31 @@ export const DEVICE_FINGERPRINTS = [
   { deviceClass: 'cash_handling', layer: 'hardware', type: null, sysDescr: 'glory|cash|banknote|note counter|coin|recycler', banner: 'glory|cash', vendor: 'glory|de la rue|cummins allison|laurel', ports: [5000] },
 ] as const;
 
+/**
+ * REQ-AI-003 (ADR-053) — anomaly rules over discovery and health events. A flapping service changed health
+ * flapChanges times within flapWindowHours: three down-and-back cycles in an afternoon, where the synthetic estates'
+ * ordinary history peaks at two changes in any six hours. The API evaluates every ANOMALY_INTERVAL_MS (env).
+ */
+export const ANOMALY = {
+  flapChanges: 6,
+  flapWindowHours: 6,
+  /** Days of health history the flapping rule reads. */
+  flapLookbackDays: 30,
+  /** Claimants that make an address a conflict: more than one device answering on it. */
+  conflictClaimants: 2,
+  /** Located-in hops from a device up to its site. */
+  locationHops: 5,
+  /** Site kinds where an unmanaged device is an anomaly. */
+  datacenterKinds: ['datacenter', 'colocation'],
+  findingsListLimit: 200,
+  /** Cleared findings stay listed this long after they cleared. */
+  clearedListedMs: 604_800_000,
+  /** How often the Anomalies screen re-reads the findings; the rules run on the API's interval. */
+  screenRefreshMs: 60_000,
+  /** The planted burst in the synthetic health history: outages, their length and the gap between them. */
+  synthetic: { flapOutages: 4, flapOutageMinutes: 6, flapGapMinutes: 25, flapEndsHoursBeforeNow: 3 },
+} as const;
+
 export const CLASSIFICATION = {
   /** Weights of each kind of evidence; their sum is the most a fingerprint can score. sysDescr is the device's own words. */
   weights: { sysDescr: 0.5, banner: 0.15, vendor: 0.15, ports: 0.2 },
@@ -1609,7 +1634,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.24.0',
+  graphql: '1.25.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
