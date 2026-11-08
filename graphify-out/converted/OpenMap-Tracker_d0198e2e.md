@@ -184,7 +184,7 @@
 | REQ-PERF-005 | PERF | Platform | Health and performance of the platform itself | OpenMap: OpenTelemetry, Prometheus, budgets in CI (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §10. Platform |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-025 | UI | Platform | English UI | OpenMap: English and Arabic with RTL (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §10. Platform | T-002, T-087 | Every screen renders in en (default locale) with full catalogue parity (i18n:check in pre-commit and CI); walkthrough screenshots *-en.png | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-026 | UI | Screens | Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards |  | Links show carrier, latency, throughput vs capacity, loss, redundancy state; sites show tier, power capacity, racks, PUE, alerts; Playwright en+ar | P0 | Done |  |  | docs/DESIGN-CUES.md | T-490, T-491, T-492, T-493 | docs/evidence/console/sites-facilities-en.png, docs/evidence/console/sites-facilities-ar.png (RTL), ADR-025 amendment, GraphQL 1.22.0, REST 1.1.0 | 2026-10-22 | 2026-11-08 | Site facility cards (kind, tier, power capacity, racks from the CMDB facility tree, measured/design PUE, open alerts = open findings + unresolved incidents located in the site) and link carrier, throughput vs committed bandwidth with usage bar, redundancy state (linkRedundancy). Synthetic estate now writes site facility attributes and derives link throughput from bandwidth x utilisation. Follow-up: readiness finding details are English text from the engine, also in Arabic. |
-| REQ-UI-027 | UI | Screens | Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex |  | Backed by ClickHouse metrics; health and category filters; virtualised rows; p95 under budget on 100k CIs | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-UI-027 | UI | Screens | Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex |  | Backed by ClickHouse metrics; health and category filters; virtualised rows; p95 under budget on 100k CIs | P0 | Done |  |  | docs/DESIGN-CUES.md | T-494, T-495, T-496, T-497 | docs/evidence/telemetry-fleet.json (k6 p95 62 ms on 138k CIs, 8 VUs), docs/evidence/console/telemetry-fleet-en.png, docs/evidence/console/telemetry-fleet-ar.png (RTL), ADR-051, GraphQL 1.23.0 | 2026-10-22 | 2026-11-08 | Fleet table /telemetry over telemetryFleet: per-tenant snapshot (ClickHouse metrics_latest + Postgres CIs + Memgraph health), sorted per key and per category at build, text via one joined string, counts precomputed, 50-row pages, TanStack Virtual. p95 62 ms at 126,627 fleet rows (138k CIs); at 504,474 rows (scale 1) 130 ms: follow-up row added. |
 | REQ-DEP-005 | DEP | Dependency map | Lane layout mode: layers as horizontal lanes with blast-radius isolation on click |  | Toggle between force and lane layouts; lanes follow CI_LAYERS grouped into six bands; clicking a node dims everything outside its impact closure | P0 | Done |  |  | docs/DESIGN-CUES.md | T-060, T-061 | lane/force layout toggle in the URL, deterministic force layout in the layout worker up to DEPENDENCY_MAP.forceMaxNodes, click isolates the impact closure (Sigma reducers dim the rest), double-click opens the CI; commit bb5e5b9 | 2026-10-22 | 2026-11-01 | Lane layout mode implemented (apps/console/src/lib/graph-layout.ts): lanes per CI_LAYERS order, hidden layers bridged, per-lane chips. Blast-radius isolation on click is the next increment. |
 | REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Done |  |  | docs/DESIGN-CUES.md | T-470, T-471, T-472, T-473, T-474, T-475, T-476 | a9e6f16; ADR-048; e2e screenshots apps/console/e2e/screenshots/runbooks-{en,ar}.png; commit is 1dbd6a1 (a9e6f16 above is a typo) | 2026-10-22 | 2026-11-07 |  |
 | REQ-SEC-012 | SEC | Compliance | Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate |  | Controls mapped to CIs; posture tab on the assets screen; audit pass rate and high-risk CI count computed from evidence | P1 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -211,6 +211,7 @@
 | REQ-AI-008 | AI | Added | Conversational assistant: structured multi-level chat trained for OpenMap |  | Ask holds a multi-turn conversation over the estate: it classifies the intent (lookup, measurement, impact, change history, how-to, report), plans the retrieval across Postgres, Memgraph and ClickHouse, answers in prose with the figures and the CIs it used, offers follow-up questions, asks a clarifying question when the request is ambiguous, and never invents a figure (every number traces to a query shown on demand); conversations persist per user; a checked-in evaluation set of OpenMap questions runs in CI with an accuracy floor; en and ar | P0 | Done | Claude |  | Syed 2026-11-05; REQ-AI-007 | T-145, T-146, T-147, T-148, T-460, T-461, T-462 | commit f19125d; T-145 assistant unit 54/54; T-146 series skill 2/2 + evaluation 38/38 through GraphQL (docs/evidence/assistant-eval.json); T-147 AssistantView 14/14 en+ar; T-148 e2e assistant.spec.ts 3/3 en+ar; guard, i18n, contracts 1.5.0 ok; docs/evidence/assistant-conversations.md, docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png; commits f19125d aa8b415; ADR-028 increment two; docs/evidence/assistant-conversations.md; evaluation 38/38 (30 single, 4 multi-turn); docs/evidence/console/assistant-{followup,reloaded}-{en,ar}.png; 67e0c9f, 2a56a0a; eval 38/38 at scale 1 | 2026-11-05 | 2026-11-07 |  |
 | REQ-QA-005 | QA | Added | Simulated mode: vendor API simulators driven by the real collectors |  | tools/simulator serves each parked vendor's API (warranty, SaaS, hypervisors, cloud, out-of-band, storage, network, Windows, directory, feeds) from the synthetic estate over pinned TLS with real auth; 'simulator verify' builds and runs the real collector binaries against it and reports CIs, relationships and identity drift against the estate; 'simulator serve' keeps the simulators up and writes a job plan a Discovery Node can run; simulated evidence is labelled provenance=simulated and never closes a vendor row (ADR-042). | P1 | Done | Claude |  | §Quality engineering; CLAUDE.md §8 real data | T-350, T-351, T-352, T-358, T-359, T-446, T-448, T-454, T-455 | 8856e83, 2006332, 899522b, f78acbd; docs/evidence/simulated-mode.md (495/495 runs, contract checks on); full stack via profile simulated: warranty, SaaS, Pure through node-compose-01; ADR-042; 4812938, 554105a: drift judged with reconciler rules (schemas/ci-identity.json), relationship drift, aliases; identity drift 7,894 -> 284, relationship drift 524 -> 0, 495/495 (ADR-044); aab3f27: simulated mode identity drift 0 (from 284), 495/495 runs, docs/evidence/simulated-mode.md | 2026-11-07 | 2026-11-07 |  |
 | REQ-CORE-020 | CORE | Reconciliation | Outbox claim safe for concurrent dispatchers, and the concurrent-worker measurement | dispatchOnce claims with read-then-update, so two dispatchers on one database deliver the same rows. Claim with FOR UPDATE SKIP LOCKED, then measure the scale-1 replay with RECONCILER.resultsConcurrency workers and find the dispatch target that slows as the stores grow (ADR-046). | Two dispatchers on one database deliver every outbox row exactly once (integration test); the scale-1 replay with concurrent workers is measured against PERF_BUDGETS and recorded in docs/evidence/reconciler-scale.md. | P1 | In review |  | REQ-CORE-013 | ADR-046 | T-487, T-488, T-489 | docs/evidence/reconciler-scale.md, docs/evidence/discovery-sweep.json, ADR-050, migrations 0035/0036 | 2026-11-07 | 2026-11-08 | Leased SKIP LOCKED claims (0035) with partial undelivered indexes (0036: claim 1.6 s to 2 ms); one pipelined graph transaction per batch; sync ClickHouse inserts for large batches; deferred relationships stay pending. Seed-45 dispatch 67.8 s to 27.3 s; scale-0.25 sweep dispatch 899 s to 178 s. Two dispatchers deliver each row once (T-489) but are not faster (ADR-050); default 1. Remaining for Done: the scale-1 replay measurement (tenant 570b reset, then replay-history and the assistant evaluation). |
+| REQ-PERF-006 | PERF | Added | Telemetry fleet p95 under budget at the scale-1 estate (500k CIs) |  | k6 telemetry-budget on the scale-1 tenant (504k fleet rows), 8 VUs: p95 under PERF_BUDGETS.screenInteractionP95Ms (was 130 ms on 2026-11-08). | P2 | Not started |  |  | §Performance architecture |  |  | 2026-11-08 | 2026-11-08 |  |
 ## Sheet: Workstreams
 | ID | Name | Scope | Lead | Requirement count | Done count | % complete |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -221,11 +222,11 @@
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 32 | 89 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 33 | 92 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 4 | 50 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E, Added |  | 5 | 3 | 60 |
-| PERF | Performance budgets | Budgets, Platform |  | 5 | 2 | 40 |
+| PERF | Performance budgets | Budgets, Platform, Added |  | 6 | 2 | 33 |
 | SEC | Security and sovereignty controls | Identity, Secrets, Sovereignty, Transport, Audit, CMDB and asset management, Security, vulnerabilities, compliance, Compliance, Contracts |  | 13 | 9 | 69 |
 ## Sheet: Components
 | Name | Layer | Version pinned | Licence | Runs as | Air-gap ready | Replaced-by option |
@@ -257,7 +258,7 @@
 | ci | packages/contracts/src/ci.ts | 0.8.0 |  | ADR-025 |
 | collector | packages/contracts/src/collector.ts | 0.8.0 |  | ADR-025 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.22.0 |  | ADR-025 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.23.0 |  | ADR-051 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
@@ -278,6 +279,7 @@
 | ADR-048 | Runbooks: a tenant catalogue attached to scenarios and incidents, steps that trigger automation | Accepted | 2026-11-08 | docs/adr/ADR-048-runbooks.md |
 | ADR-049 | REST API, OpenAPI document and SDK from one route table | Accepted | 2026-11-08 | docs/adr/ADR-049-rest-api-openapi-sdk.md |
 | ADR-050 | Outbox claims and dispatch throughput | Accepted | 2026-11-08 | docs/adr/ADR-050-outbox-claims-and-dispatch-throughput.md |
+| ADR-051 | The health and telemetry fleet: one snapshot per tenant | Accepted | 2026-11-08 | docs/adr/ADR-051-telemetry-fleet-snapshot.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -628,6 +630,10 @@
 | T-491 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
 | T-492 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
 | T-493 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
+| T-494 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
+| T-495 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
+| T-496 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
+| T-497 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -664,10 +670,10 @@
 | 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
 | 2026-11-08 | Checkpoint 30: REQ-CORE-020 leased outbox claims (0035/0036), pipelined graph batch, sync large ClickHouse inserts; seed-45 dispatch 67.8 s to 27.3 s; REQ-PERF-004 sweep 8.43 min per 10k devices (budget 15). ADR-050. Both In review. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-08T06:24:19.696Z |  |  |  |  |  |  |
+| Generated | 2026-11-08T06:55:14.721Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 35 | 0 | 28 | 5 | 140 |  |  |
+| All | 35 | 0 | 28 | 5 | 141 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 0 | 0 | 0 | 1 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -676,16 +682,16 @@
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
-| UI | 4 | 0 | 0 | 0 | 32 | 36 | 89 |
+| UI | 3 | 0 | 0 | 0 | 33 | 36 | 92 |
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
-| PERF | 1 | 0 | 0 | 2 | 2 | 5 | 40 |
+| PERF | 2 | 0 | 0 | 2 | 2 | 6 | 33 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 2 | 0 | 26 | 3 | 93 | 124 |  |
+| P0 | 1 | 0 | 26 | 3 | 94 | 124 |  |
 | P1 | 30 | 0 | 2 | 2 | 47 | 81 |  |
-| P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
+| P2 | 4 | 0 | 0 | 0 | 0 | 4 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 34 |  |  |  |  |  |  |
 | 2026-11-01 | 83 |  |  |  |  |  |  |
@@ -693,7 +699,7 @@
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
 | 2026-11-07 | 139 |  |  |  |  |  |  |
-| 2026-11-08 | 140 |  |  |  |  |  |  |
+| 2026-11-08 | 141 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |
@@ -729,3 +735,4 @@
 | REQ-PERF-003 Graph rendering at 60 fps | Done |  |  |  |  |  |  |
 | REQ-PERF-004 10000 devices discovered in under 15 minutes | In review |  |  |  |  |  |  |
 | REQ-PERF-005 Health and performance of the platform itself | Not started |  |  |  |  |  |  |
+| REQ-PERF-006 Telemetry fleet p95 under budget at the scale-1 estate (500k CIs) | Not started |  |  |  |  |  |  |

@@ -996,5 +996,17 @@
   "994": "github.com/openmap/openmap/apps/collectors",
   "995": "github.com/openmap/openmap/apps/node",
   "996": "github.com/openmap/openmap/tools/simulator",
-  "997": "synth-estate/vitest.config.ts"
+  "997": "synth-estate/vitest.config.ts",
+  "998": "scheduler/vitest.integration.config.ts",
+  "999": "superset_config.py",
+  "1000": "install-agent.ps1",
+  "1001": "install-node.ps1",
+  "1002": "prisma.config.ts",
+  "1003": "graph/vitest.config.ts",
+  "1004": "graph/vitest.integration.config.ts",
+  "1005": "ui/vitest.config.ts",
+  "1006": "github.com/openmap/openmap/apps/collectors",
+  "1007": "github.com/openmap/openmap/apps/node",
+  "1008": "github.com/openmap/openmap/tools/simulator",
+  "1009": "synth-estate/vitest.config.ts"
 }

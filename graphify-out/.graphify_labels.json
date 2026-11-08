@@ -1008,5 +1008,9 @@
   "1006": "github.com/openmap/openmap/apps/collectors",
   "1007": "github.com/openmap/openmap/apps/node",
   "1008": "github.com/openmap/openmap/tools/simulator",
-  "1009": "synth-estate/vitest.config.ts"
+  "1009": "synth-estate/vitest.config.ts",
+  "1010": "github.com/openmap/openmap/apps/collectors",
+  "1011": "github.com/openmap/openmap/apps/node",
+  "1012": "github.com/openmap/openmap/tools/simulator",
+  "1013": "synth-estate/vitest.config.ts"
 }
