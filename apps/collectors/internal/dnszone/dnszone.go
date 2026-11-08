@@ -1,6 +1,8 @@
 // REQ-DISC-021 REQ-IPAM-003 — DNS zone collector: AXFR zone transfers (optionally TSIG-signed)
 // from BIND, Windows DNS, Infoblox, PowerDNS, Knot and any RFC 5936 server; emits dns_zone and
 // dns_record CIs, ip_address CIs for A/AAAA data and resolves_to relationships for IPAM.
+// REQ-IPAM-003: with the `updates` option it first applies record changes OpenMap requested as one RFC 2136 UPDATE
+// per zone (atomic, TSIG-signed), then transfers the zone, so the result shows the server's state after the change.
 package dnszone
 
 import (
@@ -27,6 +29,11 @@ const (
 	optionZones   = "zones"
 	optionTsigKey = "tsigKeyName"
 	optionTsigAlg = "tsigAlgorithm" // hmac-sha256 (default), hmac-sha512, hmac-sha1
+	optionUpdates = "updates"       // [{zone, op: add|delete, name, type, value, ttl}]
+	opAdd         = "add"
+	opDelete      = "delete"
+	defaultTTL    = 3600
+	tsigFudge     = 300
 	credSecret    = "token"
 	defaultTsig   = dns.HmacSHA256
 	defaultVrf    = "default"
@@ -113,15 +120,108 @@ func Transfer(ctx context.Context, server, zone string, tsig *TSIG) (*Zone, erro
 	return z, nil
 }
 
+// Change is one record change to apply: added, or removed (that exact record).
+type Change struct {
+	Zone  string
+	Op    string
+	Name  string
+	Type  string
+	Value string
+	TTL   uint32
+}
+
+// Changes reads the `updates` option; an entry missing a field it needs is an error, not skipped.
+func Changes(options map[string]any) ([]Change, error) {
+	list, ok := options[optionUpdates].([]any)
+	if !ok {
+		return nil, nil
+	}
+	out := make([]Change, 0, len(list))
+	for i, item := range list {
+		m, ok := item.(map[string]any)
+		if !ok {
+			return nil, collector.Errorf(contract.ErrInternal, false, "update %d is not an object", i)
+		}
+		str := func(k string) string { v, _ := m[k].(string); return strings.TrimSpace(v) }
+		c := Change{Zone: str("zone"), Op: str("op"), Name: str("name"), Type: strings.ToUpper(str("type")), Value: str("value"), TTL: defaultTTL}
+		if ttl, ok := m["ttl"].(float64); ok && ttl > 0 {
+			c.TTL = uint32(ttl)
+		}
+		if c.Zone == "" || c.Name == "" || c.Type == "" || c.Value == "" || (c.Op != opAdd && c.Op != opDelete) {
+			return nil, collector.Errorf(contract.ErrInternal, false, "update %d needs zone, op (add or delete), name, type and value", i)
+		}
+		out = append(out, c)
+	}
+	return out, nil
+}
+
+// fqdnIn makes a record name absolute within its zone: "www" and "www.corp.example" are the same name.
+func fqdnIn(name, zone string) string {
+	n := strings.TrimSuffix(strings.ToLower(name), ".")
+	z := strings.TrimSuffix(strings.ToLower(zone), ".")
+	if n == "@" || n == z {
+		return z + "."
+	}
+	if strings.HasSuffix(n, "."+z) {
+		return n + "."
+	}
+	return n + "." + z + "."
+}
+
+// Update applies one zone's changes as a single RFC 2136 UPDATE: the server applies all of them or none.
+func Update(ctx context.Context, server, zone string, changes []Change, tsig *TSIG) error {
+	if len(changes) == 0 {
+		return nil
+	}
+	m := new(dns.Msg)
+	m.SetUpdate(dns.Fqdn(zone))
+	var add, remove []dns.RR
+	for _, c := range changes {
+		rr, err := dns.NewRR(fqdnIn(c.Name, zone) + " " + strconv.FormatUint(uint64(c.TTL), 10) + " IN " + c.Type + " " + c.Value)
+		if err != nil {
+			return collector.Errorf(contract.ErrInternal, false, "%s %s %s is not a valid record: %v", c.Name, c.Type, c.Value, err)
+		}
+		if c.Op == opAdd {
+			add = append(add, rr)
+		} else {
+			remove = append(remove, rr)
+		}
+	}
+	if len(remove) > 0 {
+		m.Remove(remove)
+	}
+	if len(add) > 0 {
+		m.Insert(add)
+	}
+	client := &dns.Client{Net: "tcp", DialTimeout: dialTimeout, ReadTimeout: dialTimeout, WriteTimeout: dialTimeout}
+	if tsig != nil {
+		keyName := dns.Fqdn(tsig.Name)
+		client.TsigSecret = map[string]string{keyName: tsig.Secret}
+		m.SetTsig(keyName, dns.Fqdn(strings.ToLower(firstNonEmpty(tsig.Algorithm, defaultTsig))), tsigFudge, time.Now().Unix())
+	}
+	reply, _, err := client.ExchangeContext(ctx, m, server)
+	if err != nil {
+		return classify(server, zone, err)
+	}
+	switch reply.Rcode {
+	case dns.RcodeSuccess:
+		return nil
+	case dns.RcodeRefused, dns.RcodeNotAuth, dns.RcodeBadSig:
+		return collector.Errorf(contract.ErrPermissionDenied, false, "%s refused the update of %s: %s", server, zone, dns.RcodeToString[reply.Rcode])
+	default:
+		return collector.Errorf(contract.ErrInternal, false, "%s rejected the update of %s: %s", server, zone, dns.RcodeToString[reply.Rcode])
+	}
+}
+
 func classify(server, zone string, err error) error {
 	msg := strings.ToLower(err.Error())
 	switch {
-	case strings.Contains(msg, "refused") || strings.Contains(msg, "notauth") || strings.Contains(msg, "bad") && strings.Contains(msg, "tsig"):
-		return collector.Errorf(contract.ErrPermissionDenied, false, "%s refused AXFR of %s: %v", server, zone, err)
+	case strings.Contains(msg, "refused") || strings.Contains(msg, "notauth") || strings.Contains(msg, "bad authentication") || strings.Contains(msg, "bad") && strings.Contains(msg, "tsig"):
+		return collector.Errorf(contract.ErrPermissionDenied, false, "%s refused %s (check the TSIG key): %v", server, zone, err)
 	case strings.Contains(msg, "timeout") || strings.Contains(msg, "i/o"):
 		return collector.Errorf(contract.ErrTimeout, true, "%s: %v", server, err)
 	default:
-		return collector.Errorf(contract.ErrUnreachable, true, "%s: %v", server, err)
+		return collector.Errorf(contract.ErrUnreachable, true, "%s (%s): %v", server, zone, err)
 	}
 }
 
@@ -220,6 +320,22 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 		keyName, _ := options[optionTsigKey].(string)
 		alg, _ := options[optionTsigAlg].(string)
 		tsig = &TSIG{Name: keyName, Algorithm: alg, Secret: cred.Fields[credSecret]}
+	}
+	changes, err := Changes(options)
+	if err != nil {
+		return collector.Observation{}, err
+	}
+	byZone := map[string][]Change{}
+	for _, c := range changes {
+		key := strings.TrimSuffix(strings.ToLower(c.Zone), ".")
+		byZone[key] = append(byZone[key], c)
+	}
+	// Changes go first, one atomic update per zone; a refused update fails the job, so no transfer can make a
+	// change look applied.
+	for _, z := range zones {
+		if err := Update(ctx, server, z, byZone[strings.TrimSuffix(strings.ToLower(z), ".")], tsig); err != nil {
+			return collector.Observation{}, err
+		}
 	}
 	var out []*Zone
 	var firstErr error
