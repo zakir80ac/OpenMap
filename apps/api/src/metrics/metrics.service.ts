@@ -29,6 +29,8 @@ export const IMPACT_ACCURACY_METRIC = 'openmap_impact_prediction_accuracy';
 export const RUNBOOK_STEPS_METRIC = 'openmap_runbook_steps_total';
 /** REQ-UI-027: telemetry fleet snapshot builds, by outcome, and how long a build took. */
 export const TELEMETRY_SNAPSHOT_METRIC = 'openmap_telemetry_snapshot_seconds';
+/** REQ-AI-002: classification suggestions made, accepted and dismissed. */
+export const CLASSIFICATION_METRIC = 'openmap_classification_suggestions_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
@@ -70,6 +72,7 @@ export class MetricsService {
   readonly impactAccuracy: Histogram;
   readonly runbookSteps: Counter<'outcome'>;
   readonly telemetrySnapshot: Histogram<'outcome'>;
+  readonly classifications: Counter<'outcome'>;
   readonly restRequests: Counter<'route' | 'status'>;
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
@@ -151,6 +154,7 @@ export class MetricsService {
     this.restDuration = new Histogram({ name: REST_DURATION_METRIC, help: 'REST v1 call duration in seconds, by route id', labelNames: ['route'], buckets: durationBuckets(), registers: [this.registry] });
     this.runbookSteps = new Counter({ name: RUNBOOK_STEPS_METRIC, help: 'Runbook steps run on incidents, by outcome (done, triggered, failed)', labelNames: ['outcome'], registers: [this.registry] });
     this.telemetrySnapshot = new Histogram({ name: TELEMETRY_SNAPSHOT_METRIC, help: 'Telemetry fleet snapshot build duration in seconds, by outcome', labelNames: ['outcome'], buckets: durationBuckets(), registers: [this.registry] });
+    this.classifications = new Counter({ name: CLASSIFICATION_METRIC, help: 'Classification suggestions for unknown CIs, by outcome (suggested, accepted, dismissed)', labelNames: ['outcome'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

@@ -13,4 +13,5 @@ export * from './core/followups.js';
 export * from './core/prose.js';
 export * from './core/llm-intent.js';
 export * from './core/conversation.js';
+export * from './core/classify.js';
 export * from './eval/questions.js';

@@ -528,6 +528,7 @@ model Tenant {
   impactSimulations       ImpactSimulation[]
   impactValidations       ImpactValidation[]
   relationshipSuggestions RelationshipSuggestion[]
+  classificationSuggestions ClassificationSuggestion[]
   runbooks                Runbook[]
   readinessFindings       ReadinessFinding[]
   runbookStepRuns         RunbookStepRun[]
@@ -738,6 +739,7 @@ model Ci {
   certificateAlerts CertificateAlert[]
   suggestionsFrom   RelationshipSuggestion[] @relation("SuggestionFrom")
   suggestionsTo     RelationshipSuggestion[] @relation("SuggestionTo")
+  classificationSuggestions ClassificationSuggestion[]
   components        CiComponent[]
 
   @@index([tenantId, type])
@@ -1318,6 +1320,37 @@ model ImpactValidation {
 }
 
 /// relationshipSuggestionSchema (ADR-047): a dependency an incident showed and the graph lacks, for review.
+/// REQ-AI-002 (ADR-052): a suggested class, layer and type for a CI discovery could only call unknown, from the
+/// evidence a port scan left on it. Accepting writes the CI's user label; dismissing keeps the row, so the same CI is
+/// not suggested again until its evidence changes (evidenceKey).
+model ClassificationSuggestion {
+  id          String          @id @default(uuid()) @db.Uuid
+  tenantId    String          @db.Uuid
+  ciId        String          @db.Uuid
+  deviceClass String
+  layer       CiLayer
+  type        CiType?
+  title       String
+  description String
+  confidence  Float
+  /// [{ signal, value, weight }], the classifier's evidence.
+  evidence    Json
+  /// The evidence the suggestion was made from; new evidence on the CI makes a new suggestion.
+  evidenceKey String
+  state       SuggestionState @default(open)
+  decidedBy   String?
+  decidedAt   DateTime?       @db.Timestamptz(3)
+  createdAt   DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ci     Ci     @relation(fields: [ciId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ciId])
+  @@index([tenantId, state])
+  @@map("classification_suggestions")
+}
+
 model RelationshipSuggestion {
   id             String           @id @default(uuid()) @db.Uuid
   tenantId       String           @db.Uuid

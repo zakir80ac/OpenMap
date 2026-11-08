@@ -2,6 +2,7 @@
 // REQ-UI-005 REQ-UI-033 — Layers: the twelve-layer model with counts from the `layers` query, per-device visibility
 // switches with the platforms each layer holds, and the stack beside them (ADR-021): planes in contract order as the
 // overview, click a plane or its row's focus control to zoom onto that layer's equipment, Escape or Back to return.
+// REQ-AI-002: below them, the suggested classifications for unknown CIs (ClassificationPanel).
 import { useQuery } from '@tanstack/react-query';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import { Card, Pill, SectionTitle, cx, layerColor } from '@openmap/ui';
@@ -17,6 +18,7 @@ import { LAYER_MARKS, buildStackModel, type Mark } from '@/lib/layer-stack-model
 import { localizedHref } from '@/lib/locale-path';
 import { layersQuery } from '@/lib/queries';
 import { useFormatters, useLocale, useT } from '@/providers';
+import { ClassificationPanel } from './ClassificationPanel';
 import { LayerStack3DLazy } from './LayerStack3DLazy';
 
 const PENDING_VALUE = '…';
@@ -252,6 +254,7 @@ export function LayersView(): ReactNode {
           </ul>
         </Card>
       </div>
+      <ClassificationPanel locale={locale} />
     </div>
   );
 }

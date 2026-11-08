@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.23.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.24.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -293,6 +293,44 @@ type ImpactAccuracy {
   "Resolved incidents the sweep cannot compare because they name no root cause."
   withoutRootCause: Int!
   recent: [ImpactValidation!]!
+}
+"One piece of evidence behind a classification (REQ-AI-002): which signal matched, what it matched, its weight."
+type ClassificationEvidence {
+  "sysDescr, banner, vendor or ports."
+  signal: String!
+  value: String!
+  weight: Float!
+}
+"A suggested class, layer and type for a CI discovery could only call unknown (REQ-AI-002, ADR-052)."
+type ClassificationSuggestion {
+  id: UUID!
+  ci: Ci!
+  "The device class the evidence points at, e.g. printer, network_camera, ups_management."
+  deviceClass: String!
+  layer: CiLayer!
+  "The CMDB type, where one fits; null keeps the CI's type and labels its layer."
+  type: String
+  "The label's title and description that accepting writes."
+  title: String!
+  description: String!
+  "0 to 1: the summed weight of the evidence."
+  confidence: Float!
+  evidence: [ClassificationEvidence!]!
+  "open, accepted or dismissed."
+  state: String!
+  decidedBy: String
+  decidedAt: DateTime
+  createdAt: DateTime!
+}
+type ClassificationSummary {
+  "Open suggestions, highest confidence first."
+  open: [ClassificationSuggestion!]!
+  "Unknown, unlabelled CIs no fingerprint recognised."
+  unrecognised: Int!
+  accepted: Int!
+  dismissed: Int!
+  "accepted / (accepted + dismissed); null before any decision."
+  acceptanceRate: Float
 }
 "A relationship the graph may be missing: an incident caused by `from` hit the service `to`, and no modelled path reached it."
 type RelationshipSuggestion {
@@ -2086,6 +2124,8 @@ type Query {
   impactAccuracy(limit: Int = 20): ImpactAccuracy!
   "Relationship suggestions learnt from missed predictions, open ones by default."
   relationshipSuggestions(state: String = "open", limit: Int = 50): [RelationshipSuggestion!]!
+  "REQ-AI-002: classifies the unknown, unlabelled CIs and returns the open suggestions with the acceptance rate."
+  classificationSuggestions: ClassificationSummary!
   "Sites and their connectivity for HA / DR readiness (REQ-BSM-007)."
   connectivity: Connectivity!
   "The tenant's runbook catalogue, by code (REQ-BSM-005)."
@@ -2496,6 +2536,9 @@ type Mutation {
   validateImpactPrediction(incidentId: UUID!): ImpactValidation!
   "Creates the suggested relationship and marks the suggestion accepted."
   acceptRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
+  "REQ-AI-002: writes the suggestion as the CI's user label (layer, type, title, description)."
+  acceptClassificationSuggestion(id: UUID!): ClassificationSuggestion!
+  dismissClassificationSuggestion(id: UUID!): ClassificationSuggestion!
   "Marks the suggestion dismissed; the same miss is not suggested again."
   dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   "Creates a runbook (id omitted) or replaces one (REQ-BSM-005, ADR-048)."

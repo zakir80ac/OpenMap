@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -66,7 +66,15 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
   - 130 ms on the 551k-CI tenant. REQ-PERF-006 (P2) tracks that gap.
 - **Perf tooling:** `tools/perf/src/keycloak.ts` now holds the load-test token helper that both budgets use.
 
-**6. Remaining for Done.**
+**6. REQ-AI-002 classification of unknown CIs — Done** (ADR-052, GraphQL 1.24.0, migration 0037, T-498 to T-501).
+- **Classifier:** fingerprints in constants (`DEVICE_FINGERPRINTS`); `classifyCi` in the assistant package scores
+  sysDescr, banner, vendor and ports. It got 290 of 290 of the estates' unknown CIs right, against the generator's
+  `deviceKind`, which it never reads.
+- **Suggestions:** stored in `classification_suggestions`. Accepting writes the CI's user label through `labelCi`;
+  dismissing is remembered until the evidence changes. The acceptance rate shows on a panel on the Layers screen.
+- **Images:** `openmap/api:dev` and `openmap/console:dev` were rebuilt.
+
+**7. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

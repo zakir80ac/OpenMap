@@ -733,6 +733,44 @@ export const ANALYTICS = {
   },
 } as const;
 
+/**
+ * REQ-AI-002 — fingerprints for classifying CIs discovery could only call `unknown` (a port scan finds an address,
+ * open ports, a MAC vendor and, when SNMP or HTTP answer, a description and a banner). Each fingerprint names a device
+ * class, the layer and, where the CMDB has one, the type such a device belongs to; and the evidence that points at
+ * it: patterns over the SNMP sysDescr, the HTTP banner and the OUI vendor (case-insensitive regular expressions), and
+ * the well-known ports the class listens on. The patterns name product families and protocols, not one model, so a
+ * fingerprint recognises devices it was not written from.
+ * - Ports, by protocol: 9100 raw printing (JetDirect), 515 LPD, 631 IPP; 554 RTSP video; 5060/5061 SIP; 7001 MagicINFO;
+ *   4050 HID VertX; 1911/4911 Niagara Fox, 47808 BACnet/IP; 4343 Aruba controller; 1883/8883 MQTT; 5000 cash-device
+ *   management.
+ */
+export const DEVICE_FINGERPRINTS = [
+  { deviceClass: 'printer', layer: 'hardware', type: null, sysDescr: 'printer|jetdirect|laserjet|link-os|officejet|imagerunner|bizhub|card printer|primacy', banner: 'printer|jetdirect', vendor: 'hp|zebra|lexmark|canon|ricoh|xerox|brother|kyocera|evolis|fargo', ports: [9100, 515, 631] },
+  { deviceClass: 'network_camera', layer: 'dc', type: null, sysDescr: 'camera|ipc|nvr|ds-2cd|ds-2de|ptz', banner: 'camera|axis|hikvision|dahua', vendor: 'axis|hikvision|dahua|hanwha|bosch|avigilon|vivotek', ports: [554] },
+  { deviceClass: 'ip_phone', layer: 'hardware', type: null, sysDescr: 'ip phone|sip phone|sip[0-9]{2}|voip', banner: 'phone', vendor: 'cisco|yealink|polycom|grandstream|avaya|snom', ports: [5060] },
+  { deviceClass: 'video_conference', layer: 'hardware', type: null, sysDescr: 'studio x|room kit|codec|webex|video conferenc|rally|g7500', banner: 'poly|webex', vendor: 'poly|cisco|logitech|neat|yealink', ports: [5060, 5061] },
+  { deviceClass: 'digital_signage', layer: 'hardware', type: null, sysDescr: 'magicinfo|signage|brightsign|webos signage|smart signage', banner: 'signage', vendor: 'samsung|lg|brightsign|philips', ports: [7001] },
+  { deviceClass: 'access_control', layer: 'dc', type: null, sysDescr: 'vertx|access control|door controller|lenel|genetec|mercury|gallagher', banner: 'access', vendor: 'hid|lenel|genetec|gallagher|suprema', ports: [4050] },
+  { deviceClass: 'building_management', layer: 'dc', type: null, sysDescr: 'niagara|bacnet|webs-n4|metasys|desigo|building', banner: 'niagara|bacnet', vendor: 'honeywell|johnson controls|siemens|schneider|tridium', ports: [1911, 4911, 47808] },
+  { deviceClass: 'ups_management', layer: 'dc', type: 'ups', sysDescr: '\\bups\\b|network management card|management card|smart-ups|powerware|galaxy', banner: 'ups|schneider|eaton', vendor: 'schneider|apc|eaton|vertiv|riello', ports: [161] },
+  { deviceClass: 'wireless_access_point', layer: 'network_security', type: 'network_device', sysDescr: 'access point|arubaos|\\bap-[0-9]|unifi|meraki mr|aironet|ruckus', banner: 'aruba|unifi', vendor: 'aruba|ubiquiti|ruckus|cisco|meraki|cambium', ports: [4343] },
+  { deviceClass: 'iot_gateway', layer: 'hardware', type: 'host', sysDescr: 'raspberry pi|esp32|arduino|jetson|beaglebone', banner: 'mqtt', vendor: 'raspberry pi|espressif|arduino|nvidia', ports: [1883, 8883] },
+  { deviceClass: 'cash_handling', layer: 'hardware', type: null, sysDescr: 'glory|cash|banknote|note counter|coin|recycler', banner: 'glory|cash', vendor: 'glory|de la rue|cummins allison|laurel', ports: [5000] },
+] as const;
+
+export const CLASSIFICATION = {
+  /** Weights of each kind of evidence; their sum is the most a fingerprint can score. sysDescr is the device's own words. */
+  weights: { sysDescr: 0.5, banner: 0.15, vendor: 0.15, ports: 0.2 },
+  /** Below this score no suggestion is made: a vendor or a port alone (a Cisco MAC, port 161) proves nothing. */
+  minConfidence: 0.4,
+  /** Unknown CIs classified per sweep, so a large tenant's first sweep stays a bounded request. */
+  sweepLimit: 5_000,
+  /** Characters of the sysDescr kept as the suggested label's title. */
+  titleChars: 80,
+  /** Decimals a confidence is rounded to. */
+  confidenceDecimals: 2,
+} as const;
+
 export const ASSISTANT = {
   maxRowsReturned: 200,
   /** Names listed in a summary before "and N more". */
@@ -1571,7 +1609,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.23.0',
+  graphql: '1.24.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
