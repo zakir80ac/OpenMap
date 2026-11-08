@@ -1,0 +1,8 @@
+; REQ-IPAM-003 (ADR-055) — the lab zone's starting content; BIND keeps later changes in its journal.
+$ORIGIN lab.openmap.test.
+$TTL 3600
+@        IN SOA ns1.lab.openmap.test. hostmaster.lab.openmap.test. 1 7200 3600 1209600 3600
+@        IN NS  ns1.lab.openmap.test.
+ns1      IN A   10.77.0.53
+www      IN A   10.77.0.80
+legacy   IN A   10.77.0.70

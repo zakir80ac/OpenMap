@@ -172,7 +172,21 @@ services:
     depends_on:
       scheduler: { condition: service_started }
 
+  # REQ-IPAM-003 (ADR-055): a lab authoritative DNS server (BIND 9, a separate process) the compose Node keeps in sync
+  # both ways; used by the DNS sync e2e. Start with --profile lab; DNS_LAB_TSIG_SECRET (base64) comes from .env.
+  dns-lab:
+    profiles: [lab]
+    image: internetsystemsconsortium/bind9:9.20
+    entrypoint: ["/bin/sh", "/etc/bind/lab/entrypoint.sh"]
+    environment:
+      DNS_LAB_TSIG_SECRET: ${DNS_LAB_TSIG_SECRET:-}
+    volumes:
+      - ./dns-lab:/etc/bind/lab:ro
+      - dns-lab-data:/var/lib/bind
+    restart: unless-stopped
+
 volumes:
+  dns-lab-data:
   scheduler-pki:
   evidence:
   node-pki:

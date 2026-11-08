@@ -2,7 +2,62 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice, REQ-AI-006 assistant anomalies)
+## Last session · 2026-11-08 (checkpoint 31: REQ-IPAM-003 two-way DNS sync; Docker down, E: full)
+
+**Blocked: Docker is down because E: is full.** `E:\DockerDesktopWSL\disk\docker_data.vhdx` has grown to 847.9 GB and
+filled E: (0 bytes free at 12:34 local). The engine's ext4 disk then hit I/O errors in the middle of a reconciler
+build.
+- Docker Desktop now stops at start-up on the socket error recorded on 2026-11-05
+  (`remove …\Docker\run\dockerInference: The file cannot be accessed by the system`). The fix then was a Windows
+  restart.
+- In the error dialog, choose **Quit**. Never choose "Reset to factory defaults": it wipes the stack's images and
+  volumes.
+- To free space, `.local/bundle` (the stale air-gap bundle from 2026-10-22, gitignored, regenerable) was deleted:
+  2.7 GB free.
+- **Needs Syed:**
+  1. Restart Windows.
+  2. Once the engine is up, prune the build cache (`docker builder prune -af`) and run `docker system df`.
+  3. Decide whether to compact the VHDX or move it to a disk with room. With Docker stopped, an elevated
+     `Optimize-VHD -Mode Full` or diskpart `compact vdisk` compacts it.
+
+  The likely growers are the build cache from dozens of image rebuilds, the scale-1 tenant's ClickHouse and Memgraph
+  data, and container logs (json-file, no rotation).
+
+**REQ-IPAM-003 (In progress; ADR-055, GraphQL 1.28.0, migration 0039).** Committed:
+- the reconciler retires the records a full transfer no longer holds (T-512);
+- the DNS collector pushes RFC 2136 updates signed with TSIG (T-513);
+- the change contracts (T-514);
+- the scheduler's sync planner and loop, settled from the transfer (T-515, T-516);
+- the API (T-517).
+
+This checkpoint adds:
+- the lab BIND 9 (`dns-lab`, profile `lab`, zone `lab.openmap.test`, key `openmap-sync`, secret `DNS_LAB_TSIG_SECRET`
+  in the gitignored `.env`);
+- the IPAM DNS tab's DNS sync panel (T-518);
+- the e2e (T-519);
+- ADR-055 and the CONTRACTS row.
+
+The e2e's add half passes in English against the real stack. The record is requested from the screen, pushed by the
+scheduler, applied by BIND, confirmed by the transfer and reconciled into the CMDB. The delete is Applied as well.
+
+The CMDB retirement then failed: the reconciler container still ran the image from before `zones.ts`. The rebuild was
+under way when the disk filled.
+
+e2e fixes this session:
+- the bearer token now comes from the Keycloak token exchange, not a console request;
+- form fields are found by role, because `getByLabel` exact also reads the option text inside a wrapping label;
+- `page.setDefaultTimeout(30 s)`, so a missing control fails fast.
+
+**Next, once Docker is back:**
+1. `docker compose … --profile cpu --profile node --profile lab build reconciler && up -d --no-deps reconciler`.
+2. Run the e2e in en and ar (`set -a && . ../../deploy/compose/.env && set +a && npx playwright test
+   e2e/dns-sync.spec.ts`).
+3. Copy `e2e/screenshots/dns-sync-{en,ar}.png` to `docs/evidence/console/`.
+4. Run `pnpm tracker contract graphql --version 1.28.0 --adr ADR-055` and `pnpm tracker decision ADR-055`.
+5. Set REQ-IPAM-003 to Done with T-512..T-519.
+6. Then REQ-IPAM-004 (switch ports, MAC/ARP), DCIM-001, IPAM-005.
+
+## Previous session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice, REQ-AI-006 assistant anomalies)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.

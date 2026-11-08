@@ -14,6 +14,7 @@ import { Icon } from '@/components/icons';
 import { cisByAttributeInfiniteQuery, nextFreeIpQuery, subnetsQuery, type AttributedCi, type SubnetNode } from '@/lib/estate-queries';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
+import { DnsSyncPanel } from './DnsSyncPanel';
 
 export interface IpamViewProps {
   locale: Locale;
@@ -315,6 +316,7 @@ function DnsTab({ locale }: IpamViewProps): ReactNode {
   const zoneRows = zones.data?.pages.flatMap((p) => p.edges.map((e) => e.node)) ?? [];
   const recordRows = records.data?.pages.flatMap((p) => p.edges.map((e) => e.node)) ?? [];
   return (
+    <div className="flex flex-col gap-om-16">
     <Card padding="24" className="flex flex-col gap-om-16">
       <SectionTitle
         as="h2"
@@ -377,6 +379,8 @@ function DnsTab({ locale }: IpamViewProps): ReactNode {
         </>
       )}
     </Card>
+    <DnsSyncPanel />
+    </div>
   );
 }
 

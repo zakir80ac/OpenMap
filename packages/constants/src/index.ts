@@ -820,6 +820,8 @@ export const DNS_SYNC = {
   /** The job option naming the zone sync a job belongs to, so its result settles that zone's changes. */
   syncOption: 'dnsSyncId',
   credentialType: 'api_token',
+  /** How often the DNS tab re-reads while a change is pending or sent. */
+  screenRefreshMs: 5_000,
 } as const;
 
 export const CLASSIFICATION = {
