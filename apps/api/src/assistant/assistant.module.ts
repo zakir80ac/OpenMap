@@ -16,6 +16,7 @@ import { EntityResolver } from './entity.resolver.js';
 import { AttributesSkill } from './skills/attributes.skill.js';
 import { GraphSkill } from './skills/graph.skill.js';
 import { MetricsSkill } from './skills/metrics.skill.js';
+import { AnomaliesSkill } from './skills/anomalies.skill.js';
 import { ServicesSkill } from './skills/services.skill.js';
 
 @Module({
@@ -26,6 +27,7 @@ import { ServicesSkill } from './skills/services.skill.js';
     AttributesSkill,
     MetricsSkill,
     ServicesSkill,
+    AnomaliesSkill,
     GraphSkill,
     { provide: CONVERSATIONS_REPOSITORY, useClass: PrismaConversationsRepository },
     ConversationsService,

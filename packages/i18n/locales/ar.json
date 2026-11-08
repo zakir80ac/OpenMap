@@ -2589,5 +2589,12 @@
   "cloudAdvice.percent": "{value}%",
   "cloudAdvice.load": "المتوسط {average}، الذروة {peak}",
   "cloudAdvice.samples": "{count} عينة",
-  "cloudAdvice.none": "—"
+  "cloudAdvice.none": "—",
+  "assistant.answer.anomaliesNone": "لا توجد حالة شاذة مفتوحة: لا عنوان يطالب به جهازان، ولا جهاز غير مُدار في مركز بيانات، ولا خدمة متذبذبة.",
+  "assistant.answer.anomalies": "توجد {count} حالات شاذة مفتوحة: {items}.",
+  "assistant.answer.anomaliesLabel": "الحالات الشاذة المفتوحة",
+  "assistant.answer.anomalyItem.ip_conflict": "يطالب بالعنوان {address} كلٌّ من {claimants}",
+  "assistant.answer.anomalyItem.unmanaged_device_in_datacenter": "الجهاز المجهول {device} في {site}",
+  "assistant.answer.anomalyItem.flapping_service": "تغيّرت حالة {service} {changes} مرات خلال {windowHours} ساعات",
+  "assistant.followup.anomalies": "ما الحالات الشاذة المفتوحة؟"
 }

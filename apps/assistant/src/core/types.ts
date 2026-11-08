@@ -1,7 +1,7 @@
 // REQ-AI-007 REQ-AI-008 (ADR-028) — the shapes the levels of a conversation hand each other: a plan of skill steps with
 // validated parameters, the structured result each step returns (query, rows, duration, a typed summary), and the
 // clarification the plan asks for instead of guessing. The API executes steps; this package decides and composes.
-import type {
+import type { AnomalyRule,
   AssistantAggregate,
   AssistantOption,
   AssistantSkill,
@@ -67,6 +67,8 @@ export type SkillParams =
     }
   | { skill: 'services.availability'; granularity: PeriodSpec['granularity']; back: number; names: string[] }
   | { skill: 'incidents'; open: boolean; names: string[] }
+  /** REQ-AI-006: the open anomaly findings, of one rule or all. */
+  | { skill: 'anomalies'; rule: AnomalyRule | null }
   | { skill: 'impact'; names: string[]; direction: ImpactDirection }
   | { skill: 'history'; names: string[]; period: PeriodSpec | null }
   | { skill: 'howto'; topic: HowtoTopic };
@@ -116,6 +118,15 @@ export interface IncidentLine {
   severity: string;
   state: string;
   serviceName: string | null;
+}
+
+/** REQ-AI-006: one open anomaly finding as the assistant reports it. */
+export interface AnomalyLine {
+  id: string;
+  rule: AnomalyRule;
+  subject: string;
+  /** The finding's facts, by key (ADR-053). */
+  facts: Record<string, string>;
 }
 
 export interface ImpactLine {
@@ -203,6 +214,7 @@ export type Summary =
       downtimeMinutes: number;
     }
   | { kind: 'incidents'; open: boolean; lines: IncidentLine[]; scopeName: string | null }
+  | { kind: 'anomalies'; rule: AnomalyRule | null; lines: AnomalyLine[] }
   | {
       kind: 'impact';
       root: { ciId: string; name: string };

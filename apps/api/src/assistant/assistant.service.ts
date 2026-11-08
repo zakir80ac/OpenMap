@@ -48,6 +48,7 @@ import { ConversationsService } from './conversations.service.js';
 import { AttributesSkill } from './skills/attributes.skill.js';
 import { ciIdsIn, GraphSkill } from './skills/graph.skill.js';
 import { MetricsSkill } from './skills/metrics.skill.js';
+import { AnomaliesSkill } from './skills/anomalies.skill.js';
 import { ServicesSkill } from './skills/services.skill.js';
 import type { SkillContext, SkillOutcome } from './skills/skill.js';
 
@@ -90,6 +91,7 @@ export class AssistantService {
     private readonly services: ServicesSkill,
     private readonly graph: GraphSkill,
     private readonly conversations: ConversationsService,
+    private readonly anomalies: AnomaliesSkill,
   ) {
     this.llm = createLlmClient(env);
   }
@@ -226,6 +228,8 @@ export class AssistantService {
           return this.services.availability(step, context);
         case 'incidents':
           return this.services.incidents(step, context);
+        case 'anomalies':
+          return this.anomalies.run(step, context);
         case 'impact':
           return this.graph.impact(step, context);
         case 'history':

@@ -257,6 +257,7 @@ export function intentMarker(text: string): { intent: AssistantIntent; term: str
   const order: Array<keyof typeof INTENT_TERMS> = [
     'howto',
     'report',
+    'anomalies',
     'impact',
     'incidents',
     'availability',

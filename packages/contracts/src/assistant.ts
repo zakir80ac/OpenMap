@@ -15,6 +15,8 @@ export const ASSISTANT_INTENTS = [
   'history',
   'howto',
   'report',
+  /** REQ-AI-006: the open anomaly findings (ADR-053). */
+  'anomalies',
   'unknown',
 ] as const;
 export type AssistantIntent = (typeof ASSISTANT_INTENTS)[number];
@@ -31,6 +33,7 @@ export const ASSISTANT_SKILLS = [
   'impact',
   'history',
   'howto',
+  'anomalies',
 ] as const;
 export type AssistantSkill = (typeof ASSISTANT_SKILLS)[number];
 export const assistantSkillSchema = z.enum(ASSISTANT_SKILLS);

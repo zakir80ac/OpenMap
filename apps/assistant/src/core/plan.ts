@@ -3,7 +3,7 @@
 // CI named, an intent nothing in the catalogue explains). Every rule here is deterministic and unit-tested; the
 // skills themselves run in the API against the stores.
 import { ASSISTANT, TIME } from '@openmap/constants';
-import type { CiType } from '@openmap/contracts';
+import { ANOMALY_RULES, type AnomalyRule, type CiType } from '@openmap/contracts';
 import type { Classification } from './intent.js';
 import {
   HOWTO_TOPICS,
@@ -142,6 +142,18 @@ const CLOSED_TERMS: Terms = {
   en: ['closed', 'resolved', 'past', 'historical', 'last month', 'last week'],
   ar: ['مغلقة', 'المغلقة', 'محلولة', 'المحلولة', 'السابقة', 'الماضية'],
 };
+/** REQ-AI-006: words that narrow an anomaly question to one rule (ADR-053). */
+const ANOMALY_RULE_TERMS: Record<AnomalyRule, Terms> = {
+  ip_conflict: { en: ['ip conflict', 'ip conflicts', 'address conflict', 'address conflicts', 'duplicate ip', 'duplicate ips', 'same ip', 'same address'], ar: ['تعارض عنوان', 'تعارض العناوين', 'عنوان مكرر', 'عناوين مكررة', 'نفس العنوان'] },
+  unmanaged_device_in_datacenter: { en: ['unmanaged', 'rogue', 'unknown device', 'unknown devices', 'unidentified'], ar: ['غير مدار', 'غير مدارة', 'مجهول', 'مجهولة', 'غير معروف'] },
+  flapping_service: { en: ['flapping', 'flap', 'unstable service', 'unstable services', 'keeps failing'], ar: ['متذبذبة', 'متذبذب', 'تذبذب', 'غير مستقرة'] },
+};
+
+function anomalyRuleOf(text: string): AnomalyRule | null {
+  for (const rule of ANOMALY_RULES) if (matchTerms(text, ANOMALY_RULE_TERMS[rule]) !== null) return rule;
+  return null;
+}
+
 /** "What does X depend on" walks downstream; "what depends on X" walks upstream. */
 const DOWNSTREAM_TERMS: Terms = {
   en: ['what does', 'which does', 'rely on', 'relies on', 'built on', 'underneath', 'depend on?'],
@@ -219,6 +231,8 @@ export function plan(c: Classification, question: string): Plan {
         open: matchTerms(c.normalised, CLOSED_TERMS) === null,
         names: e.names,
       });
+    case 'anomalies':
+      return steps({ skill: 'anomalies', rule: anomalyRuleOf(c.normalised) });
     case 'impact': {
       if (e.names.length === 0) return clarify(needName());
       const direction: ImpactDirection =

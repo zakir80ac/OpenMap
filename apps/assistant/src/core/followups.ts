@@ -69,6 +69,12 @@ export function suggestFollowUps(
         { key: 'assistant.followup.incidents', params: {} },
       );
       break;
+    case 'anomalies':
+      out.push(
+        { key: 'assistant.followup.incidents', params: {} },
+        { key: 'assistant.followup.downServices', params: {} },
+      );
+      break;
     case 'incidents':
       out.push(
         { key: 'assistant.followup.belowTarget', params: {} },

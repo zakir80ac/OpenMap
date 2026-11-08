@@ -132,6 +132,21 @@ export const EVAL_QUESTIONS: readonly EvalQuestion[] = [
     expect: { intent: 'availability', skill: 'services.availability', figure: true, queryMentions: null },
   },
   {
+    id: 'anomalies-open',
+    locale: 'en',
+    question: 'Which anomalies are open?',
+    nameOf: null,
+    expect: { intent: 'anomalies', skill: 'anomalies', figure: true, queryMentions: null },
+  },
+  {
+    id: 'ip-conflicts',
+    locale: 'en',
+    question: 'Are there any IP conflicts?',
+    nameOf: null,
+    // A tenant may well have none: the answer must be grounded in the findings, whatever their count.
+    expect: { intent: 'anomalies', skill: 'anomalies', figure: false, queryMentions: null },
+  },
+  {
     id: 'open-incidents',
     locale: 'en',
     question: 'Which incidents are open?',
@@ -229,6 +244,13 @@ export const EVAL_QUESTIONS: readonly EvalQuestion[] = [
     question: 'ما هو توافر خدمات الأعمال هذا الشهر؟',
     nameOf: null,
     expect: { intent: 'availability', skill: 'services.availability', figure: true, queryMentions: null },
+  },
+  {
+    id: 'ar-anomalies',
+    locale: 'ar',
+    question: 'ما الحالات الشاذة المفتوحة؟',
+    nameOf: null,
+    expect: { intent: 'anomalies', skill: 'anomalies', figure: true, queryMentions: null },
   },
   {
     id: 'ar-incidents',

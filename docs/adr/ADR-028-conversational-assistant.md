@@ -71,3 +71,19 @@ in Postgres are out of reach, and the model (Qwen2.5-Coder 1.5B on the CPU profi
 - Increment one (REQ-AI-007): skills `cmdb.attributes`, `metrics.latest`, `services.availability`, the classifier
   with clarifications, the grounding guard, the evaluation set in CI. Increment two (REQ-AI-008): persisted
   conversations, follow-ups, `howto`, `history`, the console thread and conversation list.
+
+## Amendment — the anomalies intent (REQ-AI-006, 2026-11-08)
+
+The assistant answers questions about the anomaly findings (ADR-053), such as "which anomalies are open?", "are there
+any IP conflicts?" or "ما الحالات الشاذة المفتوحة؟".
+
+- **Intent and skill.** `anomalies` is both an intent and a skill (assistant contract 0.3.0, GraphQL 1.27.0
+  `AssistantIntent.anomalies`). Its marker words are in English and Arabic.
+- **Narrowing.** A question that names a rule (IP conflicts, unmanaged devices, flapping services) narrows the skill
+  to that rule.
+- **Answer.** The skill reads the open `anomaly_findings`. The answer lists each finding through its rule's template
+  (`assistant.answer.anomalyItem.*`), filled with the finding's facts, and gives the count as its figure. Prose follows
+  `ASSISTANT_PROSE_LOCALES` as for every other intent.
+- **Evaluation.** Three evaluation questions cover it, two in English and one in Arabic. The set now holds 41
+  questions, and all 41 pass on the scale-1 tenant with the CPU profile.
+

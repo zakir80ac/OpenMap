@@ -526,6 +526,10 @@ export const INTENT_TERMS: Record<
       'ميزانية الخطأ',
     ],
   },
+  anomalies: {
+    en: ['anomaly', 'anomalies', 'anomalous', 'ip conflict', 'ip conflicts', 'address conflict', 'duplicate ip', 'unmanaged device', 'unmanaged devices', 'rogue device', 'rogue devices', 'flapping', 'unusual'],
+    ar: ['شاذ', 'شاذة', 'الشاذة', 'حالة شاذة', 'حالات شاذة', 'الحالات الشاذة', 'تعارض', 'تعارض عنوان', 'عنوان مكرر', 'جهاز غير مدار', 'أجهزة غير مدارة', 'متذبذبة', 'تذبذب'],
+  },
   incidents: {
     en: ['incident', 'incidents', 'outage', 'outages', 'open issues', 'tickets'],
     ar: ['حادث', 'حادثة', 'حوادث', 'الحوادث', 'انقطاع', 'انقطاعات', 'الانقطاعات', 'عطل', 'أعطال'],

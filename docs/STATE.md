@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice, REQ-AI-006 assistant anomalies)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -97,7 +97,14 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Query and screen:** `cloudAdvice`, shown in a panel on the Utilisation screen.
 - **Scale-1 result:** 39 recommendations, an estimated 83,663 USD a month.
 
-**9. Remaining for Done.**
+**9. REQ-AI-006 assistant over the graph — Done** (ADR-028 amendment, GraphQL 1.27.0, assistant contract 0.3.0,
+T-511).
+- **Coverage:** natural language to Cypher (REQ-AI-001) and impact explanation (the `impact` intent) were in place; the
+  assistant now also answers about the anomaly findings through the `anomalies` intent and skill, in English and
+  Arabic.
+- **Evaluation:** 41 of 41 on the scale-1 tenant (`docs/evidence/assistant-eval.json`).
+
+**10. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

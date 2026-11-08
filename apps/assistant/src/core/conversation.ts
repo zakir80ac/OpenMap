@@ -89,6 +89,7 @@ const MARKER_INTENTS: ReadonlySet<AssistantIntent> = new Set([
   'report',
   'impact',
   'incidents',
+  'anomalies',
   'availability',
   'history',
 ]);

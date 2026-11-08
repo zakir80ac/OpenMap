@@ -2589,5 +2589,12 @@
   "cloudAdvice.percent": "{value}%",
   "cloudAdvice.load": "average {average}, peak {peak}",
   "cloudAdvice.samples": "{count} samples",
-  "cloudAdvice.none": "—"
+  "cloudAdvice.none": "—",
+  "assistant.answer.anomaliesNone": "No anomaly is open: no address is claimed twice, no unmanaged device sits in a data centre and no service is flapping.",
+  "assistant.answer.anomalies": "{count} anomalies are open: {items}.",
+  "assistant.answer.anomaliesLabel": "Open anomalies",
+  "assistant.answer.anomalyItem.ip_conflict": "{address} is claimed by {claimants}",
+  "assistant.answer.anomalyItem.unmanaged_device_in_datacenter": "the unidentified device {device} in {site}",
+  "assistant.answer.anomalyItem.flapping_service": "{service} changed health {changes} times within {windowHours} hours",
+  "assistant.followup.anomalies": "Which anomalies are open?"
 }

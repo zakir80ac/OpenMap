@@ -42,7 +42,7 @@ export function intentMessages(question: string): ChatMessage[] {
           ' or null), aggregate (one of ' +
           ASSISTANT_AGGREGATES.join(', ') +
           ' or null), name (a CI name quoted in the question or null).',
-        'count: how many of a type. attribute_stats: a figure or breakdown over an attribute such as memory, cores, OS, model. measurement: utilisation, throughput, power, IOPS from monitoring. availability: uptime, SLA, downtime. incidents: incidents or outages. impact: what depends on something or is affected by its failure. history: what changed and when. howto: how to use OpenMap. lookup: list or find items. unknown: none of these.',
+        'count: how many of a type. attribute_stats: a figure or breakdown over an attribute such as memory, cores, OS, model. measurement: utilisation, throughput, power, IOPS from monitoring. availability: uptime, SLA, downtime. incidents: incidents or outages. anomalies: anomalies the rules found, such as IP conflicts, unmanaged devices in a data centre, flapping services. impact: what depends on something or is affected by its failure. history: what changed and when. howto: how to use OpenMap. lookup: list or find items. unknown: none of these.',
       ].join('\n'),
     },
     { role: 'user', content: question },

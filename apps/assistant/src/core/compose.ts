@@ -2,7 +2,7 @@
 // locales through the message catalogue, with the figures the sentence rests on listed beside it. The model's prose,
 // when enabled, is checked against these figures by the grounding guard and falls back to this text.
 import { ASSISTANT, TIME, type Locale } from '@openmap/constants';
-import type { AssistantAggregate, AssistantFigure, AssistantIntent, CiType } from '@openmap/contracts';
+import type { AnomalyRule, AssistantAggregate, AssistantFigure, AssistantIntent, CiType } from '@openmap/contracts';
 import { isMessageKey, type MessageKey, type Params } from '@openmap/i18n';
 import type { AvailabilityLine, GroupCount, HowtoTopic, Summary } from './types.js';
 import { MEASUREMENTS, type AttributeFamilyId, type MeasurementName } from './vocabulary.js';
@@ -125,6 +125,13 @@ function availabilityLine(t: Translate, locale: Locale, line: AvailabilityLine):
     target,
   });
 }
+
+/** REQ-AI-006: how one anomaly finding reads in an answer, by rule; the facts fill the template. */
+const ANOMALY_ITEM = {
+  ip_conflict: 'assistant.answer.anomalyItem.ip_conflict',
+  unmanaged_device_in_datacenter: 'assistant.answer.anomalyItem.unmanaged_device_in_datacenter',
+  flapping_service: 'assistant.answer.anomalyItem.flapping_service',
+} as const satisfies Record<AnomalyRule, MessageKey>;
 
 /** Words one skill summary, with its figures. */
 export function composeSummary(
@@ -380,6 +387,22 @@ export function composeSummary(
         figures: [{ label: t('assistant.answer.incidentsLabel'), value: summary.lines.length, unit: '' }],
       };
     }
+    case 'anomalies': {
+      if (summary.lines.length === 0)
+        return {
+          text: t('assistant.answer.anomaliesNone'),
+          figures: [{ label: t('assistant.answer.anomaliesLabel'), value: 0, unit: '' }],
+        };
+      const items = listItems(
+        t,
+        summary.lines.map((l) => t(ANOMALY_ITEM[l.rule], { subject: l.subject, ...l.facts })),
+        topN,
+      );
+      return {
+        text: t('assistant.answer.anomalies', { count: formatNumber(locale, summary.lines.length), items }),
+        figures: [{ label: t('assistant.answer.anomaliesLabel'), value: summary.lines.length, unit: '' }],
+      };
+    }
     case 'impact': {
       if (summary.services.length === 0)
         return {
@@ -483,6 +506,8 @@ export function hasContent(summary: Summary): boolean {
     case 'availability':
       return summary.lines.length > 0;
     case 'incidents':
+      return summary.lines.length > 0;
+    case 'anomalies':
       return summary.lines.length > 0;
     case 'impact':
       return summary.services.length > 0;
