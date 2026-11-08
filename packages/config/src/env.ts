@@ -2,7 +2,7 @@
 // repository that reads process.env. Every default below is documented and is the value
 // that `docker compose up` in deploy/compose produces.
 import { z } from 'zod';
-import { LOCALES } from '@openmap/constants';
+import { LOCALES, RECONCILER } from '@openmap/constants';
 
 const url = z.url();
 const port = z.coerce.number().int().min(1).max(65535);
@@ -72,6 +72,8 @@ export const envSchema = z.object({
   API_PORT: port.default(4000),
   CONSOLE_PORT: port.default(3000),
   RECONCILER_PORT: port.default(4100),
+  /** REQ-CORE-020 — concurrent outbox dispatch loops per reconciler; claims are leased, so loops and replicas never share a row. */
+  RECONCILER_DISPATCHERS: z.coerce.number().int().positive().default(RECONCILER.outboxDispatchers),
   SCHEDULER_PORT: port.default(4200),
   /** Plain-HTTP listener for the scheduler's /metrics, /healthz and /readyz; the Node API itself is mTLS on SCHEDULER_PORT. */
   SCHEDULER_METRICS_PORT: port.default(4201),

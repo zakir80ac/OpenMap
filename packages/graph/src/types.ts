@@ -62,6 +62,42 @@ export interface ImpactResult {
   durationMs: number;
 }
 
+/** A retirement of a CI: its validTo set where it is still open. */
+export interface GraphCiRetirement {
+  tenantId: string;
+  id: string;
+  at: string;
+}
+
+/** A retirement of a relationship; the source CI locates the edge through the node index instead of an edge scan. */
+export interface GraphRelationshipRetirement {
+  tenantId: string;
+  id: string;
+  fromCiId: string;
+  at: string;
+}
+
+/**
+ * REQ-CORE-020 — one outbox batch's graph writes, applied in one transaction in this order: CI upserts, then their type
+ * labels, then relationships, then retirements.
+ */
+export interface GraphWriteBatch {
+  cis: readonly GraphCi[];
+  relationships: readonly GraphRelationship[];
+  retiredCis: readonly GraphCiRetirement[];
+  retiredRelationships: readonly GraphRelationshipRetirement[];
+}
+
+export interface GraphBatchResult {
+  cis: number;
+  relationships: number;
+  /**
+   * Relationships not written because an endpoint is not in the graph yet. With concurrent dispatchers a CI can still
+   * be in another dispatcher's transaction; the caller keeps these pending and retries them.
+   */
+  unmatchedRelationshipIds: string[];
+}
+
 export interface LayerCount {
   layer: CiLayer;
   count: number;
@@ -79,6 +115,11 @@ export interface GraphRepository {
   upsertRelationship(rel: GraphRelationship): Promise<void>;
   upsertRelationships(rels: readonly GraphRelationship[]): Promise<number>;
   retireRelationship(tenantId: string, id: string, at: string): Promise<void>;
+  /**
+   * REQ-CORE-020 — writes a batch in one transaction, its statements pipelined. Each statement costs a round trip, and
+   * a batch of mixed CI and relationship types had about 25 of them.
+   */
+  applyBatch(batch: GraphWriteBatch): Promise<GraphBatchResult>;
   getCi(tenantId: string, id: string, asOf: string | null): Promise<GraphCi | null>;
   neighbours(tenantId: string, id: string, direction: ImpactDirection, asOf: string | null): Promise<GraphRelationship[]>;
   impact(tenantId: string, rootId: string, options: ImpactQueryOptions): Promise<ImpactResult>;

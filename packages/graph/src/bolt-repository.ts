@@ -4,8 +4,10 @@ import neo4j, { type Driver, type Record as BoltRecord, type Session } from 'neo
 import { GRAPH } from '@openmap/constants';
 import { CI_TYPES } from '@openmap/contracts';
 import type {
+  GraphBatchResult,
   GraphCi,
   GraphRelationship,
+  GraphWriteBatch,
   GraphRepository,
   ImpactCi,
   ImpactDirection,
@@ -23,7 +25,9 @@ import {
   neighboursQuery,
   relTypeFromLabel,
   retireCiQuery,
+  retireCisQuery,
   retireRelationshipQuery,
+  retireRelationshipsQuery,
   schemaStatementsMemgraph,
   schemaStatementsNeo4j,
   setHealthQuery,
@@ -135,11 +139,17 @@ export class BoltGraphRepository implements GraphRepository {
     const s = this.session('WRITE');
     try {
       for (const st of statements) {
-        try {
-          await s.run(st);
-        } catch (err) {
-          // Memgraph has no IF NOT EXISTS for constraints; an existing one raises and is fine.
-          if (!(err instanceof Error) || !/already exists|Constraint already/i.test(err.message)) throw err;
+        for (let attempt = 1; ; attempt++) {
+          try {
+            await s.run(st);
+            break;
+          } catch (err) {
+            // Memgraph has no IF NOT EXISTS for constraints; an existing one raises and is fine.
+            if (err instanceof Error && /already exists|Constraint already/i.test(err.message)) break;
+            // A transient error (another query holds the storage) is retried after a pause, a bounded number of times.
+            if (!neo4j.isRetriableError(err) || attempt >= GRAPH.schemaRetryAttempts) throw err;
+            await new Promise((r) => setTimeout(r, GRAPH.schemaRetryDelayMs));
+          }
         }
       }
     } finally {
@@ -199,6 +209,41 @@ export class BoltGraphRepository implements GraphRepository {
 
   async retireRelationship(tenantId: string, id: string, at: string): Promise<void> {
     await this.write(retireRelationshipQuery(), { tenantId, id, at });
+  }
+
+  async applyBatch(batch: GraphWriteBatch): Promise<GraphBatchResult> {
+    const statements: Array<{ text: string; params: Record<string, unknown>; relationships?: readonly GraphRelationship[] }> = [];
+    if (batch.cis.length > 0) {
+      statements.push({ text: upsertCiQuery(), params: { rows: batch.cis } });
+      const byType = new Map<string, string[]>();
+      for (const ci of batch.cis) byType.set(ci.type, [...(byType.get(ci.type) ?? []), ci.id]);
+      for (const [type, ids] of byType) statements.push({ text: addTypeLabelQuery(type), params: { ids } });
+    }
+    const relsByType = new Map<GraphRelationship['type'], GraphRelationship[]>();
+    for (const r of batch.relationships) relsByType.set(r.type, [...(relsByType.get(r.type) ?? []), r]);
+    for (const [type, rows] of relsByType) statements.push({ text: upsertRelationshipQuery(type), params: { rows }, relationships: rows });
+    if (batch.retiredCis.length > 0) statements.push({ text: retireCisQuery(), params: { rows: batch.retiredCis } });
+    if (batch.retiredRelationships.length > 0) statements.push({ text: retireRelationshipsQuery(), params: { rows: batch.retiredRelationships } });
+    if (statements.length === 0) return { cis: 0, relationships: 0, unmatchedRelationshipIds: [] };
+    const s = this.session('WRITE');
+    try {
+      // Every statement is sent before the first answer is awaited: the engine runs them in order inside the one
+      // transaction, so relationships still see the CIs upserted ahead of them, and the batch pays one round trip.
+      const results = await s.executeWrite((tx) => Promise.all(statements.map((st) => tx.run(st.text, st.params))));
+      let relationships = 0;
+      const unmatched: string[] = [];
+      results.forEach((result, i) => {
+        const rows = statements[i]?.relationships;
+        if (rows === undefined) return;
+        const written = new Set((result.records[0]?.get('ids') as string[] | undefined) ?? []);
+        relationships += written.size;
+        for (const r of rows) if (!written.has(r.id)) unmatched.push(r.id);
+      });
+      const cis = batch.cis.length > 0 ? toNumber(results[0]?.records[0]?.get('n')) : 0;
+      return { cis, relationships, unmatchedRelationshipIds: unmatched };
+    } finally {
+      await s.close();
+    }
   }
 
   async getCi(tenantId: string, id: string, asOf: string | null): Promise<GraphCi | null> {

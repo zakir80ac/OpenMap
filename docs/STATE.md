@@ -2,7 +2,49 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites, REQ-CORE-019 REST/SDK, REQ-PERF-002 impact under 1 s)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget)
+
+Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
+0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
+
+**1. Which target was slow.** The dispatch report now times each target per batch (`targetMs`, `bookkeepingMs`).
+- **Memgraph.** Every statement over about 1.5 KB stalled for about 45 ms, whatever its row count. This happens from
+  the host and, less often, inside the compose network. Client `TCP_NODELAY` does not fix it. A batch sent about 25
+  statements.
+- **ClickHouse.** Each of six async inserts waited for a flush, one after another.
+- **Postgres.** The claim walked the primary key past every delivered row: 1.6 s per claim with 2.6 million rows.
+
+**2. Fixes.**
+- **Graph batch.** `GraphRepository.applyBatch` writes one batch in one pipelined transaction (T-488). Relationship
+  retirements find their edge from the source CI.
+- **ClickHouse.** Inserts of `RECONCILER.clickhouseSyncInsertRows` (500) rows or more are synchronous, and a batch's
+  inserts run side by side.
+- **Leased claims (migration 0035).** `UPDATE … FOR UPDATE SKIP LOCKED` sets `claimedBy` and `claimedUntil`, with a
+  5-minute lease. Partial indexes over the undelivered rows serve it (migration 0036). Rows close grouped by what is
+  left to deliver.
+- **Deferred relationships.** A relationship whose endpoint is not in the graph stays pending (`deferred`,
+  `openmap_outbox_deferred_total`).
+- **Dispatch loops.** `RECONCILER_DISPATCHERS` sets the loop count, default 1. Two loops deliver each row exactly once
+  (T-489) but were slower on seed 45 (35 s against 27 s), because relationships overtook their CIs.
+- **Replay.**
+  - It takes `--dispatchers N` and claims only its own tenant.
+  - It retries ticks that deliver nothing (`RECONCILER.replayStallTicks`) instead of stopping at the first transient
+    failure.
+  - It exits non-zero on undelivered rows.
+- **Schema retry.** `ensureSchema` retries Memgraph's transient "unique access to the storage" error.
+
+**3. Results.**
+- **Seed 45, scale 0.05:** dispatch went from 67.8 s to 27.3 s.
+- **Sweep, seed 44, scale 0.25:** **8.43 min per 10,000 devices**, against a 15-minute budget (was 17.77). Dispatch went
+  from 899 s to 178 s. All 508,341 events were delivered, and two transient ClickHouse failures were retried. Postgres
+  and Memgraph both hold 138,242 CIs and 369,761 relationships. ClickHouse holds 508,341 events, all distinct.
+
+**4. Remaining for Done.**
+- **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
+  `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
+- **REQ-PERF-004:** the nightly CI run, which needs a remote.
+
+## Previous session · 2026-11-08 (checkpoint 29: assistant at 100k scale, REQ-BSM-004 impact accuracy, REQ-BSM-005 runbooks, REQ-BSM-007 sites, REQ-CORE-019 REST/SDK, REQ-PERF-002 impact under 1 s)
 
 Syed: "run the assistant evaluation on the new estate", then "keep coding and dont wait for my promoting".
 
@@ -955,10 +997,9 @@ tracker is the truth.
   in GraphQL 0.7.0 per ADR-015, the Discovery screen's scopes card with inline editing, T-010/T-067/T-112 and the e2e
   scope test); it moves to Done with the queued tracker closures. The scope builder now reads the CIDR from the subnet
   identity first: on the dev estate 106 of 107 subnets were invisible to a sweep before.
-- REQ-CORE-020 (new, from REQ-CORE-013's closure): the outbox claim in `dispatchOnce` is read-then-update, so two
-  dispatchers on one database both deliver the same rows (seen with the compose reconciler and a local replay). A
-  `FOR UPDATE SKIP LOCKED` claim, then the scale-1 replay with concurrent workers, and the dispatch target whose rate
-  falls as the stores grow (ADR-046).
+- REQ-CORE-020 (In review, ADR-050): leased claims, the pipelined graph batch, synchronous large ClickHouse inserts.
+  Only the scale-1 measurement is left (checkpoint 30). REQ-PERF-004 (In review): the sweep meets its budget locally
+  (8.43 min per 10k devices); it waits for the nightly CI run.
 - REQ-AI-001 is complete in code (golden set 12/12, T-011/T-113/T-104/T-106); it moves to Done with the queued
   tracker closures. Test files of apps/assistant and apps/api are excluded from their tsconfig, so the root ESLint
   project service cannot parse them (`pnpm exec eslint apps/assistant/src` reports only that); part of the lint item.
@@ -978,15 +1019,19 @@ Syed's order (2026-11-05): discovery and collectors, dependency mapping and CMDB
 
 1. Next by `pnpm tracker next`.
 2. The finance module. Parked rows close as vendor access arrives.
-3. REQ-CORE-020: `FOR UPDATE SKIP LOCKED` outbox claim and the concurrent-worker scale-1 measurement; find the
-   dispatch target that slows as the stores grow. Also: a cloud-hosted application in the synthetic estate (ADR-031).
-   Measure on a fresh seed (44): `replay --reset` on tenant `570b1953` deletes its incidents, validations and health
-   history and gives every CI a new id, and the assistant evaluation runs on that tenant. If it is reset anyway, rerun
-   `replay-history --dir .local/estate-s1b --reset` and the evaluation.
+3. REQ-CORE-020 closure: the scale-1 replay with the new dispatch.
+   - Measure on tenant `570b1953` with `replay --reset`, then rerun `replay-history --dir .local/estate-s1b --reset`
+     and the assistant evaluation.
+   - Or measure on a fresh seed. A second 550k tenant ties on business services and CIs, and the evaluation and
+     `impact-budget` pick tenants by those counts.
+   - Follow-ups:
+     - the ClickHouse target under load (two transient insert failures at scale 0.25);
+     - the 45 ms Memgraph stall per large statement;
+     - a cloud-hosted application in the synthetic estate (ADR-031).
 
 **Dev-stack notes (also in project memory):** the compose stack is running (apps overlay, `cpu` LLM profile, `node`
 profile); `openmap/api:dev` and `openmap/console:dev` were rebuilt in checkpoint 29, `openmap/{scheduler,reconciler,node}:dev` in
-checkpoint 28; migrations through 0032 and ClickHouse DDL through 0004 are applied to the dev database. Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
+checkpoint 28; migrations through 0036 and ClickHouse DDL through 0004 are applied to the dev database; `openmap/reconciler:dev` was rebuilt in checkpoint 30 (leased claims, `RECONCILER_DISPATCHERS` 1). Lighthouse must run alone on the CPU. Smoke tokens for the synthetic tenant need a
 Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`.
 
 ## Questions for Syed

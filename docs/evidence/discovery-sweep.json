@@ -1,12 +1,39 @@
 {
   "name": "discovery-sweep",
-  "minutes": 17.77,
+  "minutes": 8.43,
   "budgetMinutes": 15,
   "devices": 11254,
   "cis": 138243,
-  "totalMinutes": 20,
+  "totalMinutes": 9.49,
   "seed": 44,
   "scale": 0.25,
   "tenantId": "4ca6233c-ba82-489e-9d80-0a048bdf2613",
-  "generatedAt": "2026-11-08T00:26:47.358Z"
+  "generatedAt": "2026-11-08T01:22:28.494Z",
+  "reconcileSeconds": 341.4,
+  "dispatchSeconds": 178.1,
+  "dispatchTargetSeconds": {
+    "memgraph": 52.6,
+    "clickhouse": 91.3,
+    "bsm": 26.7,
+    "meilisearch": 8.9
+  },
+  "postgresBookkeepingSeconds": 61.3,
+  "events": 508341,
+  "dispatchers": 1,
+  "transientFailuresRetried": 2,
+  "stores": {
+    "postgresCis": 138242,
+    "memgraphCis": 138242,
+    "postgresRelationships": 369761,
+    "memgraphRelationships": 369761,
+    "clickhouseEvents": 508341,
+    "clickhouseDistinctEvents": 508341
+  },
+  "previous": {
+    "minutes": 17.77,
+    "totalMinutes": 20,
+    "dispatchSeconds": 899,
+    "generatedAt": "2026-11-08T00:26:47.358Z"
+  },
+  "adr": "ADR-050"
 }

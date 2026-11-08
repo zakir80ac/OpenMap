@@ -1,17 +1,18 @@
-// REQ-CORE-013 REQ-CORE-005 REQ-CORE-014 — reconciler service: BullMQ worker over collector results plus the
-// outbox dispatcher loop, each unit of work traced and counted; /metrics, /healthz and /readyz on RECONCILER_PORT.
+// REQ-CORE-013 REQ-CORE-005 REQ-CORE-014 REQ-CORE-020 — reconciler service: BullMQ worker over collector results plus
+// RECONCILER_DISPATCHERS outbox dispatcher loops (leased claims, so they never share a row), each unit of work traced and
+// counted; /metrics, /healthz and /readyz on RECONCILER_PORT.
 // Both loops stop cleanly on SIGINT/SIGTERM.
 import './instrumentation.js';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { RECONCILER } from '@openmap/constants';
+import { RECONCILER, TIME } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { collectorResultSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } from '@openmap/telemetry';
 import { AdmScheduler, runAdmPass, triggersAdm } from './worker/adm.js';
-import { createClickHouse, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
+import { createClickHouse, createDispatcherId, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
 import { processResult, retryPendingRelationships } from './worker/pipeline.js';
 
 const RESULTS_QUEUE = RECONCILER.resultsQueue;
@@ -27,6 +28,9 @@ export function createReconcilerMetrics() {
     outboxBatches: new Counter({ name: 'openmap_outbox_batches_total', help: 'Outbox dispatcher ticks that claimed rows', registers: [registry] }),
     outboxDelivered: new Counter({ name: 'openmap_outbox_delivered_total', help: 'Outbox rows fully delivered', registers: [registry] }),
     outboxFailures: new Counter({ name: 'openmap_outbox_failures_total', help: 'Outbox target failures, by target', labelNames: ['target'], registers: [registry] }),
+    /** REQ-CORE-020 — rows whose relationship waited for an endpoint another dispatcher was still writing. */
+    outboxDeferred: new Counter({ name: 'openmap_outbox_deferred_total', help: 'Outbox rows kept pending for a relationship endpoint not yet in the graph', registers: [registry] }),
+    outboxTargetDuration: new Histogram({ name: 'openmap_outbox_target_duration_seconds', help: 'Time one outbox batch took per target', labelNames: ['target'], registers: [registry] }),
     /** REQ-CMDB-038 — metric samples per result: bound to a CI and queued for ClickHouse, or dropped for want of one. */
     samples: new Counter({ name: 'openmap_reconciler_metric_samples_total', help: 'Metric samples reconciled, by outcome (stored or dropped)', labelNames: ['outcome'], registers: [registry] }),
     // REQ-DEP-002 (ADR-029): dependency-mapping passes and the edges they created, refreshed or retired.
@@ -92,16 +96,20 @@ async function main(): Promise<void> {
     { connection, concurrency: RECONCILER.resultsConcurrency },
   );
   let running = true;
-  const loop = (async () => {
+  const dispatchLoop = async (dispatcherId: string): Promise<void> => {
     while (running) {
-      const report = await withSpan(TRACER, 'outbox.dispatch', {}, () => dispatchOnce(prisma, sinks, env.CLICKHOUSE_DB));
+      const report = await withSpan(TRACER, 'outbox.dispatch', { dispatcherId }, () => dispatchOnce(prisma, sinks, env.CLICKHOUSE_DB, { dispatcherId }));
       if (report.claimed > 0) metrics.outboxBatches.inc();
       metrics.outboxDelivered.inc(report.delivered);
+      metrics.outboxDeferred.inc(report.deferred);
+      for (const [target, ms] of Object.entries(report.targetMs)) metrics.outboxTargetDuration.observe({ target }, ms / TIME.msPerSecond);
       for (const failure of report.failures) metrics.outboxFailures.inc({ target: failure.target });
-      if (report.failures.length) console.error(JSON.stringify({ msg: 'outbox failures', ...report }));
-      if (report.claimed === 0) await new Promise((r) => setTimeout(r, RECONCILER.outboxIdleMs));
+      if (report.failures.length) console.error(JSON.stringify({ msg: 'outbox failures', dispatcherId, ...report }));
+      // An empty outbox, or a batch where nothing could be delivered: wait before claiming again.
+      if (report.claimed === 0 || report.delivered === 0) await new Promise((r) => setTimeout(r, RECONCILER.outboxIdleMs));
     }
-  })();
+  };
+  const loop = Promise.all(Array.from({ length: env.RECONCILER_DISPATCHERS }, () => dispatchLoop(createDispatcherId())));
   const metricsServer = await createMetricsServer({
     registry: metrics.registry,
     port: env.RECONCILER_PORT,

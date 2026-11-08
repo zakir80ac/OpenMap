@@ -1,6 +1,9 @@
 // REQ-QA-001 REQ-CORE-013 — replays a synthetic estate (or any directory of collector-result NDJSON)
 // through the real pipeline and the outbox dispatcher, then reports counts, duplicates and timing.
 // Usage: pnpm --filter @openmap/reconciler replay --dir ../../packages/testing/fixtures/synth-small [--no-dispatch]
+//   [--reset] [--dispatchers N]
+// REQ-CORE-020: the dispatch drains this tenant's outbox with N concurrent dispatchers (RECONCILER_DISPATCHERS by
+// default); claims are leased, so the compose reconciler may keep running, though it then takes a share of the rows.
 import { createReadStream, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -9,7 +12,7 @@ import { RECONCILER, TIME } from '@openmap/constants';
 import { collectorResultSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
-import { createClickHouse, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
+import { createClickHouse, createDispatcherId, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
 import { runAdmPass } from './worker/adm.js';
 import { pendingProgressed, processResult, retryPendingRelationships } from './worker/pipeline.js';
 
@@ -17,19 +20,24 @@ interface Args {
   dir: string;
   dispatch: boolean;
   reset: boolean;
+  /** Concurrent dispatch loops; undefined means RECONCILER_DISPATCHERS. */
+  dispatchers: number | undefined;
 }
 
 function parseArgs(argv: string[]): Args {
   let dir = '';
   let dispatch = true;
   let reset = false;
+  let dispatchers: number | undefined;
   for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--dispatchers') dispatchers = Number(argv[++i]);
     if (argv[i] === '--dir') dir = argv[++i] ?? '';
     if (argv[i] === '--no-dispatch') dispatch = false;
     if (argv[i] === '--reset') reset = true;
   }
-  if (!dir) throw new Error('usage: replay --dir <path> [--no-dispatch] [--reset]');
-  return { dir: resolve(dir), dispatch, reset };
+  if (!dir) throw new Error('usage: replay --dir <path> [--no-dispatch] [--reset] [--dispatchers N]');
+  if (dispatchers !== undefined && !(Number.isInteger(dispatchers) && dispatchers > 0)) throw new Error('--dispatchers takes a positive integer');
+  return { dir: resolve(dir), dispatch, reset, dispatchers };
 }
 
 type Sinks = Parameters<typeof dispatchOnce>[1];
@@ -149,15 +157,40 @@ async function main(): Promise<void> {
 
   if (args.dispatch) {
     const dispatchStart = Date.now();
+    const targetTotals: Record<string, number> = {};
+    let bookkeepingMs = 0;
     let delivered = 0;
-    for (;;) {
-      const r = await dispatchOnce(prisma, sinks, env.CLICKHOUSE_DB);
-      if (r.failures.length) console.error(JSON.stringify({ msg: 'outbox failures', failures: r.failures }));
-      delivered += r.delivered;
-      if (r.claimed === 0 || (r.failures.length > 0 && r.delivered === 0)) break;
-    }
+    let deferred = 0;
+    const dispatchers = args.dispatchers ?? env.RECONCILER_DISPATCHERS;
+    // Each loop stops when the tenant's outbox is empty, or after RECONCILER.replayStallTicks ticks in a row that
+    // deliver nothing: a failed target or a deferred relationship keeps its rows pending, and a later tick retries them.
+    const drain = async (dispatcherId: string): Promise<void> => {
+      let stalled = 0;
+      for (;;) {
+        const r = await dispatchOnce(prisma, sinks, env.CLICKHOUSE_DB, { dispatcherId, tenantId });
+        for (const [t, ms] of Object.entries(r.targetMs)) targetTotals[t] = (targetTotals[t] ?? 0) + ms;
+        bookkeepingMs += r.bookkeepingMs;
+        if (r.failures.length) console.error(JSON.stringify({ msg: 'outbox failures', failures: r.failures }));
+        delivered += r.delivered;
+        deferred += r.deferred;
+        if (r.claimed === 0) return;
+        if (r.delivered > 0) {
+          stalled = 0;
+          continue;
+        }
+        if (++stalled >= RECONCILER.replayStallTicks) return;
+        await new Promise((resolveTick) => setTimeout(resolveTick, RECONCILER.outboxIdleMs));
+      }
+    };
+    await Promise.all(Array.from({ length: dispatchers }, () => drain(createDispatcherId())));
+    const undelivered = await prisma.outboxEvent.count({ where: { tenantId, deliveredAt: null } });
     const layers = await graph.layerCounts(tenantId, null);
-    console.log(JSON.stringify({ msg: 'dispatched', delivered, dispatchMs: Date.now() - dispatchStart, graphLayers: layers }));
+    console.log(JSON.stringify({ msg: 'dispatched', delivered, undelivered, deferred, dispatchers, dispatchMs: Date.now() - dispatchStart, targetMs: targetTotals, bookkeepingMs, graphLayers: layers }));
+    // An incomplete dispatch is a failed replay: a timed sweep must not report the time of one.
+    if (undelivered > 0) {
+      console.error(JSON.stringify({ msg: 'replay left rows undelivered', undelivered }));
+      process.exitCode = 1;
+    }
   }
   await sinks.stream.close();
   await sinks.clickhouse.close();

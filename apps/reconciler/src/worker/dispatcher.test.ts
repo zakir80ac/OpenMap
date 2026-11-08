@@ -1,6 +1,8 @@
 // T-091 REQ-CORE-005 — one dispatcher tick fans a claimed outbox batch out to every target (Memgraph, ClickHouse,
 // Meilisearch, the event stream that feeds the BSM engine and the API's WebSocket fan-out) and closes the rows; a
 // failing target stays pending on its rows while the others are acknowledged.
+// T-487 REQ-CORE-020 — the batch's graph writes go to applyBatch in one call; a relationship whose endpoint is not in
+// the graph yet keeps memgraph pending on its row only, and rows close in one statement per remaining-target group.
 import { describe, expect, it, vi } from 'vitest';
 import type { ClickHouseClient } from '@clickhouse/client';
 import type { Ci, EventEnvelope, Relationship } from '@openmap/contracts';
@@ -146,18 +148,15 @@ function rows() {
   ];
 }
 
-function harness(insert: ClickHouseClient['insert']) {
+function harness(insert: ClickHouseClient['insert'], unmatchedRelationshipIds: string[] = []) {
   const updateMany = vi.fn(async () => ({ count: 3 }));
   const update = vi.fn(async () => ({}));
   const prisma = {
-    outboxEvent: { findMany: vi.fn(async () => rows()), updateMany, update },
+    $queryRaw: vi.fn(async () => rows()),
+    outboxEvent: { updateMany, update },
   } as unknown as PrismaClient;
-  const graph = {
-    upsertCis: vi.fn(async () => undefined),
-    upsertRelationships: vi.fn(async () => undefined),
-    retireCi: vi.fn(async () => undefined),
-    retireRelationship: vi.fn(async () => undefined),
-  } as unknown as GraphRepository;
+  const applyBatch = vi.fn(async () => ({ cis: 1, relationships: 1 - unmatchedRelationshipIds.length, unmatchedRelationshipIds }));
+  const graph = { applyBatch } as unknown as GraphRepository;
   const search = { indexCis: vi.fn(async () => undefined), dropTenant: vi.fn(async () => undefined) };
   const stream = {
     publish: vi.fn(async () => undefined),
@@ -165,7 +164,7 @@ function harness(insert: ClickHouseClient['insert']) {
     close: vi.fn(async () => undefined),
   };
   const sinks: Sinks = { graph, clickhouse: { insert } as unknown as ClickHouseClient, search, stream };
-  return { prisma, sinks, graph, search, stream, updateMany, update };
+  return { prisma, sinks, graph, applyBatch, search, stream, updateMany, update };
 }
 
 describe('outbox dispatcher', () => {
@@ -174,11 +173,15 @@ describe('outbox dispatcher', () => {
     const h = harness(insert);
     const report = await dispatchOnce(h.prisma, h.sinks, 'openmap');
 
-    expect(report).toEqual({ claimed: 5, delivered: 5, failures: [] });
-    expect(h.graph.upsertCis).toHaveBeenCalledWith([toGraphCi(ci)]);
-    expect(h.graph.upsertRelationships).toHaveBeenCalledWith([
-      expect.objectContaining({ id: relationship.id, type: 'RUNS_ON' }),
-    ]);
+    expect(report).toMatchObject({ claimed: 5, delivered: 5, failures: [], deferred: 0 });
+    expect(Object.keys(report.targetMs).sort()).toEqual(['bsm', 'clickhouse', 'meilisearch', 'memgraph']);
+    expect(h.applyBatch).toHaveBeenCalledTimes(1);
+    expect(h.applyBatch).toHaveBeenCalledWith({
+      cis: [toGraphCi(ci)],
+      relationships: [expect.objectContaining({ id: relationship.id, type: 'RUNS_ON' })],
+      retiredCis: [],
+      retiredRelationships: [],
+    });
     const tables = (insert as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
       (c) => c[0] as { table: string; values: unknown[] },
     );
@@ -225,6 +228,25 @@ describe('outbox dispatcher', () => {
     expect(h.update).not.toHaveBeenCalled();
   });
 
+  it('keeps memgraph pending only on a relationship whose endpoint is not in the graph yet', async () => {
+    const insert = vi.fn(async () => ({})) as unknown as ClickHouseClient['insert'];
+    const h = harness(insert, [relationship.id]);
+    const report = await dispatchOnce(h.prisma, h.sinks, 'openmap', { dispatcherId: 'itest' });
+
+    expect(report).toMatchObject({ claimed: 5, delivered: 4, failures: [], deferred: 1 });
+    const calls = h.updateMany.mock.calls as unknown as Array<
+      [{ where: { sequence: { in: bigint[] }; claimedBy: string }; data: { pending: OutboxTarget[]; lastError: string | null; claimedBy: null } }]
+    >;
+    expect(calls).toHaveLength(2);
+    const waiting = calls.find((c) => c[0].data.pending.length > 0)!;
+    expect(waiting[0].where).toEqual({ sequence: { in: [2n] }, claimedBy: 'itest' });
+    expect(waiting[0].data.pending).toEqual(['memgraph']);
+    expect(waiting[0].data.lastError).toContain('memgraph');
+    expect(waiting[0].data.claimedBy).toBeNull();
+    const closed = calls.find((c) => c[0].data.pending.length === 0)!;
+    expect(closed[0].where.sequence.in).toEqual([1n, 3n, 4n, 5n]);
+  });
+
   it('keeps only the failed target pending and acknowledges the rest', async () => {
     const insert = vi.fn(async () => {
       throw new Error('clickhouse down');
@@ -235,16 +257,18 @@ describe('outbox dispatcher', () => {
     expect(report.claimed).toBe(5);
     expect(report.delivered).toBe(0);
     expect(report.failures).toEqual([{ target: 'clickhouse', error: 'clickhouse down' }]);
-    expect(h.updateMany).not.toHaveBeenCalled();
-    expect(h.update).toHaveBeenCalledTimes(5);
-    for (const call of h.update.mock.calls as unknown as Array<
-      [{ data: { pending: OutboxTarget[]; deliveredAt: Date | null; lastError: string | null } }]
+    expect(h.update).not.toHaveBeenCalled();
+    // Every row has clickhouse left, so they close as one group.
+    expect(h.updateMany).toHaveBeenCalledTimes(1);
+    for (const call of h.updateMany.mock.calls as unknown as Array<
+      [{ where: { sequence: { in: bigint[] } }; data: { pending: OutboxTarget[]; deliveredAt: Date | null; lastError: string | null } }]
     >) {
+      expect(call[0].where.sequence.in).toHaveLength(5);
       expect(call[0].data.pending).toEqual(['clickhouse']);
       expect(call[0].data.deliveredAt).toBeNull();
       expect(call[0].data.lastError).toContain('clickhouse down');
     }
-    expect(h.graph.upsertCis).toHaveBeenCalledTimes(1);
+    expect(h.applyBatch).toHaveBeenCalledTimes(1);
     expect(h.stream.publishMany).toHaveBeenCalledTimes(1);
   });
 

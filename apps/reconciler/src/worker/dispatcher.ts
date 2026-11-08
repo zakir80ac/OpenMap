@@ -1,6 +1,10 @@
 // REQ-CORE-005 — outbox dispatcher: delivers every pending event to Memgraph, ClickHouse and
 // Meilisearch, and republishes it on the event stream for the BSM engine and the API's WebSocket
 // fan-out. Each target is removed from `pending` on success, so a failing store never blocks the others.
+// REQ-CORE-020: rows are claimed with a lease (FOR UPDATE SKIP LOCKED), so concurrent dispatchers never share a row,
+// and a batch's graph writes go in one pipelined transaction.
+import { randomUUID } from 'node:crypto';
+import { hostname } from 'node:os';
 import { createClient, type ClickHouseClient } from '@clickhouse/client';
 import { Queue } from 'bullmq';
 import { Redis } from 'ioredis';
@@ -15,8 +19,14 @@ import {
   HEALTH_STATES,
 } from '@openmap/contracts';
 import { z } from 'zod';
-import type { PrismaClient } from '@openmap/db';
-import type { GraphCi, GraphRelationship, GraphRepository } from '@openmap/graph';
+import { Prisma, type PrismaClient } from '@openmap/db';
+import type {
+  GraphCi,
+  GraphCiRetirement,
+  GraphRelationship,
+  GraphRelationshipRetirement,
+  GraphRepository,
+} from '@openmap/graph';
 
 export type OutboxTarget = 'memgraph' | 'clickhouse' | 'meilisearch' | 'websocket' | 'bsm';
 
@@ -78,11 +88,21 @@ export function toGraphRelationship(r: Relationship): GraphRelationship {
   };
 }
 
-async function deliverMemgraph(graph: GraphRepository, events: readonly EventEnvelope[]): Promise<void> {
+/**
+ * The batch's graph writes in one transaction. Returns the sequences whose relationship could not be written yet
+ * because an endpoint is not in the graph: with concurrent dispatchers the CI can still be in another batch's
+ * transaction, so those rows keep `memgraph` pending and a later claim retries them.
+ */
+async function deliverMemgraph(
+  graph: GraphRepository,
+  events: readonly EventEnvelope[],
+  sequences: ReadonlyMap<string, bigint>,
+): Promise<ReadonlySet<bigint>> {
   const cis: GraphCi[] = [];
-  const rels: GraphRelationship[] = [];
-  const retiredCis: Ci[] = [];
-  const retiredRels: Relationship[] = [];
+  const relationships: GraphRelationship[] = [];
+  const retiredCis: GraphCiRetirement[] = [];
+  const retiredRelationships: GraphRelationshipRetirement[] = [];
+  const relationshipSequence = new Map<string, bigint>();
   for (const e of events) {
     if (
       e.type === 'openmap.ci.created' ||
@@ -93,21 +113,32 @@ async function deliverMemgraph(graph: GraphRepository, events: readonly EventEnv
       if (ci) cis.push(toGraphCi(ci));
     } else if (e.type === 'openmap.ci.retired') {
       const ci = ciFromEvent(e);
-      if (ci) retiredCis.push(ci);
+      if (ci) retiredCis.push({ tenantId: ci.tenantId, id: ci.id, at: ci.validTo ?? new Date().toISOString() });
     } else if (e.type === 'openmap.relationship.created') {
       const r = relationshipFromEvent(e);
-      if (r) rels.push(toGraphRelationship(r));
+      if (r) {
+        relationships.push(toGraphRelationship(r));
+        const sequence = sequences.get(e.id);
+        if (sequence !== undefined) relationshipSequence.set(r.id, sequence);
+      }
     } else if (e.type === 'openmap.relationship.retired') {
       const r = relationshipFromEvent(e);
-      if (r) retiredRels.push(r);
+      if (r)
+        retiredRelationships.push({
+          tenantId: r.tenantId,
+          id: r.id,
+          fromCiId: r.fromCiId,
+          at: r.validTo ?? new Date().toISOString(),
+        });
     }
   }
-  if (cis.length) await graph.upsertCis(cis);
-  if (rels.length) await graph.upsertRelationships(rels);
-  for (const ci of retiredCis)
-    await graph.retireCi(ci.tenantId, ci.id, ci.validTo ?? new Date().toISOString());
-  for (const r of retiredRels)
-    await graph.retireRelationship(r.tenantId, r.id, r.validTo ?? new Date().toISOString());
+  const result = await graph.applyBatch({ cis, relationships, retiredCis, retiredRelationships });
+  const deferred = new Set<bigint>();
+  for (const id of result.unmatchedRelationshipIds) {
+    const sequence = relationshipSequence.get(id);
+    if (sequence !== undefined) deferred.add(sequence);
+  }
+  return deferred;
 }
 
 function chDate(iso: string): string {
@@ -120,6 +151,13 @@ async function deliverClickHouse(
   events: readonly EventEnvelope[],
   sequences: ReadonlyMap<string, bigint>,
 ): Promise<void> {
+  const insert = (table: string, values: readonly object[]): Promise<unknown> =>
+    ch.insert({
+      table,
+      values: [...values],
+      format: 'JSONEachRow',
+      ...(values.length >= RECONCILER.clickhouseSyncInsertRows ? { clickhouse_settings: { async_insert: 0 } } : {}),
+    });
   const eventRows = events.map((e) => ({
     sequence: Number(sequences.get(e.id) ?? 0n),
     event_id: e.id,
@@ -132,7 +170,9 @@ async function deliverClickHouse(
     data: JSON.stringify(e.data),
     envelope: JSON.stringify(e),
   }));
-  await ch.insert({ table: database + '.events', values: eventRows, format: 'JSONEachRow' });
+  const inserts: Array<Promise<unknown>> = [
+    insert(database + '.events', eventRows),
+  ];
   const ciRows = events
     .map(ciFromEvent)
     .filter((c): c is Ci => c !== null)
@@ -158,7 +198,7 @@ async function deliverClickHouse(
       valid_to: c.validTo ? chDate(c.validTo) : null,
     }));
   if (ciRows.length)
-    await ch.insert({ table: database + '.ci_history', values: ciRows, format: 'JSONEachRow' });
+    inserts.push(insert(database + '.ci_history', ciRows));
   const relRows = events
     .map(relationshipFromEvent)
     .filter((r): r is Relationship => r !== null)
@@ -178,20 +218,21 @@ async function deliverClickHouse(
       valid_to: r.validTo ? chDate(r.validTo) : null,
     }));
   if (relRows.length)
-    await ch.insert({ table: database + '.relationship_history', values: relRows, format: 'JSONEachRow' });
+    inserts.push(insert(database + '.relationship_history', relRows));
   const auditRows = events.map(auditRowFromEvent).filter((r): r is AuditRow => r !== null);
   if (auditRows.length)
-    await ch.insert({ table: database + '.audit_log', values: auditRows, format: 'JSONEachRow' });
+    inserts.push(insert(database + '.audit_log', auditRows));
   const metricRows = events.flatMap(metricRowsFromEvent);
   if (metricRows.length)
-    await ch.insert({ table: database + '.metrics', values: metricRows, format: 'JSONEachRow' });
+    inserts.push(insert(database + '.metrics', metricRows));
   const healthRows = events.map(healthRowFromEvent).filter((r): r is HealthRow => r !== null);
   if (healthRows.length)
-    await ch.insert({
-      table: database + '.service_health_history',
-      values: healthRows,
-      format: 'JSONEachRow',
-    });
+    inserts.push(
+      insert(database + '.service_health_history', healthRows),
+    );
+  // REQ-CORE-020: the tables are written side by side; a large batch goes in synchronously instead of waiting for an
+  // async-insert flush (ClickHouse was the slowest target once the graph writes were pipelined).
+  await Promise.all(inserts);
 }
 
 interface HealthRow {
@@ -379,30 +420,96 @@ export interface DispatchReport {
   claimed: number;
   delivered: number;
   failures: Array<{ target: OutboxTarget; error: string }>;
+  /** REQ-CORE-020: rows whose relationship waits for an endpoint another batch is still writing; a later claim retries them. */
+  deferred: number;
+  /** REQ-CORE-020: milliseconds each target took on this batch (they run concurrently; the slowest sets the pace). */
+  targetMs: Partial<Record<OutboxTarget, number>>;
+  /** Milliseconds spent claiming and closing the batch in Postgres. */
+  bookkeepingMs: number;
 }
+
+export interface DispatchOptions {
+  /** Names this dispatcher's claims; unique per loop. */
+  dispatcherId: string;
+  /** How long a claim stays reserved; RECONCILER.outboxClaimLeaseMs when absent. */
+  leaseMs?: number;
+  /** Claim only this tenant's rows (replays and tests); every tenant when absent. */
+  tenantId?: string;
+}
+
+/** A dispatcher id: host, process and a random suffix, so loops in one process and replicas on one host differ. */
+export function createDispatcherId(): string {
+  return hostname() + ':' + String(process.pid) + ':' + randomUUID();
+}
+
+const ALL_TARGETS: readonly OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
+const DEFERRED_ERROR = 'memgraph: a relationship endpoint is not in the graph yet';
+
+interface ClaimedRow {
+  sequence: bigint;
+  eventId: string;
+  pending: string[];
+  envelope: unknown;
+}
+
+/**
+ * Leases up to a batch of undelivered rows, oldest first. SKIP LOCKED passes over rows another dispatcher is claiming
+ * at this moment, and the lease keeps them out of every other claim until they are closed or the lease runs out.
+ */
+async function claim(prisma: PrismaClient, options: DispatchOptions): Promise<ClaimedRow[]> {
+  const leaseMs = options.leaseMs ?? RECONCILER.outboxClaimLeaseMs;
+  const tenant =
+    options.tenantId === undefined ? Prisma.empty : Prisma.sql`AND "tenantId" = ${options.tenantId}::uuid`;
+  const rows = await prisma.$queryRaw<ClaimedRow[]>`
+    UPDATE outbox_events o
+    SET "claimedBy" = ${options.dispatcherId}, "claimedUntil" = now() + ${leaseMs}::int * interval '1 millisecond'
+    FROM (
+      SELECT sequence FROM outbox_events
+      WHERE "deliveredAt" IS NULL AND ("claimedUntil" IS NULL OR "claimedUntil" < now()) ${tenant}
+      ORDER BY sequence
+      LIMIT ${RECONCILER.outboxBatchSize}
+      FOR UPDATE SKIP LOCKED
+    ) c
+    WHERE o.sequence = c.sequence
+    RETURNING o.sequence, o."eventId", o.pending::text[] AS pending, o.envelope`;
+  return rows.sort((a, b) => (a.sequence < b.sequence ? -1 : a.sequence > b.sequence ? 1 : 0));
+}
+
+const processDispatcherId = createDispatcherId();
 
 /** One dispatcher tick: claim a batch of undelivered events and push each pending target. */
 export async function dispatchOnce(
   prisma: PrismaClient,
   sinks: Sinks,
   database: string,
+  options: DispatchOptions = { dispatcherId: processDispatcherId },
 ): Promise<DispatchReport> {
-  const rows = await prisma.outboxEvent.findMany({
-    where: { deliveredAt: null },
-    orderBy: { sequence: 'asc' },
-    take: RECONCILER.outboxBatchSize,
-  });
-  if (rows.length === 0) return { claimed: 0, delivered: 0, failures: [] };
-  const events = rows.map((r) => eventEnvelopeSchema.parse(r.envelope));
-  const sequences = new Map(rows.map((r) => [r.eventId, r.sequence] as const));
+  const claimStarted = Date.now();
+  const claimed = await claim(prisma, options);
+  const claimMs = Date.now() - claimStarted;
+  if (claimed.length === 0)
+    return { claimed: 0, delivered: 0, failures: [], deferred: 0, targetMs: {}, bookkeepingMs: claimMs };
+  const rows = claimed.map((r) => ({
+    sequence: r.sequence,
+    pending: r.pending.filter((t): t is OutboxTarget => (ALL_TARGETS as readonly string[]).includes(t)),
+  }));
+  const events = claimed.map((r) => eventEnvelopeSchema.parse(r.envelope));
+  const sequences = new Map(claimed.map((r) => [r.eventId, r.sequence] as const));
   const failures: DispatchReport['failures'] = [];
   const succeeded = new Set<OutboxTarget>();
-  const attempt = async (target: OutboxTarget, fn: () => Promise<void>): Promise<void> => {
+  /** Per target, the rows it took the batch for but must see again. */
+  const stillPending = new Map<OutboxTarget, ReadonlySet<bigint>>();
+  const targetMs: DispatchReport['targetMs'] = {};
+  const attempt = async (target: OutboxTarget, fn: () => Promise<ReadonlySet<bigint> | void>): Promise<void> => {
+    const started = Date.now();
     try {
-      await fn();
+      const left = await fn();
       succeeded.add(target);
+      if (left && left.size > 0) stillPending.set(target, left);
     } catch (err) {
       failures.push({ target, error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      targetMs[target] = Date.now() - started;
     }
   };
   const byTenant = new Map<string, Ci[]>();
@@ -410,23 +517,13 @@ export async function dispatchOnce(
     const ci = ciFromEvent(e);
     if (ci) byTenant.set(e.tenantid, [...(byTenant.get(e.tenantid) ?? []), ci]);
   }
+  const pendingFor = (target: OutboxTarget): EventEnvelope[] =>
+    events.filter((_, i) => rows[i]!.pending.includes(target));
   // The targets are independent stores, so a batch reaches them concurrently; each keeps its own order and its own
   // success or failure (REQ-CORE-013 scale-1 replay: one after another, dispatch was half of the run).
   await Promise.all([
-    attempt('memgraph', () =>
-      deliverMemgraph(
-        sinks.graph,
-        events.filter((_, i) => rows[i]!.pending.includes('memgraph')),
-      ),
-    ),
-    attempt('clickhouse', () =>
-      deliverClickHouse(
-        sinks.clickhouse,
-        database,
-        events.filter((_, i) => rows[i]!.pending.includes('clickhouse')),
-        sequences,
-      ),
-    ),
+    attempt('memgraph', () => deliverMemgraph(sinks.graph, pendingFor('memgraph'), sequences)),
+    attempt('clickhouse', () => deliverClickHouse(sinks.clickhouse, database, pendingFor('clickhouse'), sequences)),
     attempt('meilisearch', async () => {
       for (const [tenantId, cis] of byTenant) await sinks.search.indexCis(tenantId, cis);
     }),
@@ -437,30 +534,54 @@ export async function dispatchOnce(
     ),
   ]);
   if (succeeded.has('bsm')) succeeded.add('websocket');
-  const allTargets: OutboxTarget[] = ['memgraph', 'clickhouse', 'meilisearch', 'websocket', 'bsm'];
-  if (failures.length === 0 && allTargets.every((t) => succeeded.has(t))) {
+  const deferred = stillPending.get('memgraph')?.size ?? 0;
+  const closing = Date.now();
+  const mine = { claimedBy: options.dispatcherId };
+  const released = { claimedBy: null, claimedUntil: null };
+  if (failures.length === 0 && stillPending.size === 0 && ALL_TARGETS.every((t) => succeeded.has(t))) {
     // Common case: everything landed, one statement closes the whole batch.
     await prisma.outboxEvent.updateMany({
-      where: { sequence: { in: rows.map((r) => r.sequence) } },
-      data: { pending: [], attempts: { increment: 1 }, deliveredAt: new Date(), lastError: null },
+      where: { sequence: { in: rows.map((r) => r.sequence) }, ...mine },
+      data: { pending: [], attempts: { increment: 1 }, deliveredAt: new Date(), lastError: null, ...released },
     });
-    return { claimed: rows.length, delivered: rows.length, failures };
+    return {
+      claimed: rows.length,
+      delivered: rows.length,
+      failures,
+      deferred,
+      targetMs,
+      bookkeepingMs: claimMs + Date.now() - closing,
+    };
+  }
+  // Otherwise rows that share what is left to deliver close in one statement per group.
+  const errorOf = new Map(failures.map((f) => [f.target, f.target + ': ' + f.error] as const));
+  const groups = new Map<string, { remaining: OutboxTarget[]; sequences: bigint[] }>();
+  for (const row of rows) {
+    const remaining = row.pending.filter(
+      (t) => !succeeded.has(t) || stillPending.get(t)?.has(row.sequence) === true,
+    );
+    const key = remaining.join(',');
+    const group = groups.get(key) ?? { remaining, sequences: [] };
+    group.sequences.push(row.sequence);
+    groups.set(key, group);
   }
   let delivered = 0;
-  const lastError = failures.map((f) => f.target + ': ' + f.error).join('; ');
-  for (const row of rows) {
-    const remaining = row.pending.filter((t) => !succeeded.has(t));
+  for (const { remaining, sequences: inGroup } of groups.values()) {
     const done = remaining.length === 0;
-    if (done) delivered++;
-    await prisma.outboxEvent.update({
-      where: { sequence: row.sequence },
+    if (done) delivered += inGroup.length;
+    const errors = remaining
+      .map((t) => errorOf.get(t) ?? (t === 'memgraph' ? DEFERRED_ERROR : null))
+      .filter((e): e is string => e !== null);
+    await prisma.outboxEvent.updateMany({
+      where: { sequence: { in: inGroup }, ...mine },
       data: {
         pending: remaining,
         attempts: { increment: 1 },
         deliveredAt: done ? new Date() : null,
-        lastError: lastError.length ? lastError : null,
+        lastError: errors.length ? errors.join('; ') : null,
+        ...released,
       },
     });
   }
-  return { claimed: rows.length, delivered, failures };
+  return { claimed: rows.length, delivered, failures, deferred, targetMs, bookkeepingMs: claimMs + Date.now() - closing };
 }

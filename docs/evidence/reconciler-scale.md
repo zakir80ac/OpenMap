@@ -85,9 +85,75 @@ From the Windows host, a cold burst of new connections through Docker Desktop's 
 Prisma's 5-second connect timeout. The replay therefore ran with `connect_timeout=30` in `POSTGRES_URL`. Services
 inside the compose network do not go through that forwarding.
 
+## Dispatch throughput and concurrent claims (REQ-CORE-020, ADR-050, 2026-11-08)
+
+### Finding the slow target
+
+The dispatch report now times each target per batch. A seed-45 replay at scale 0.05 (102,957 events) showed:
+
+| Target | Time |
+| --- | ---: |
+| Memgraph | 53.6 s |
+| ClickHouse | 21.0 s |
+| Postgres claim and close | 12.4 s |
+| Dispatch in total (the targets run side by side) | 67.8 s |
+
+- **Memgraph.** Every statement over about 1.5 KB stalled for about 45 ms, whatever its row count, and a batch sent
+  about 25 statements.
+- **ClickHouse.** Each of a batch's six async inserts waited for a buffer flush, one after another.
+- **Postgres.** The claim walked the primary key past every delivered row: 1.6 s per claim with 2.6 million delivered
+  rows.
+
+### Changes
+
+- One pipelined graph transaction per batch.
+- Large ClickHouse inserts are synchronous, and a batch's inserts run side by side.
+- Leased `FOR UPDATE SKIP LOCKED` claims (migration 0035), served by partial indexes over the undelivered rows
+  (migration 0036).
+- A relationship that overtakes its CI stays pending.
+
+### Seed 45, scale 0.05
+
+| Run | Dispatch | Memgraph | ClickHouse | Postgres |
+| --- | ---: | ---: | ---: | ---: |
+| Before | 67.8 s | 53.6 s | 21.0 s | 12.4 s |
+| Pipelined graph batch, leased claim | 38.0 s | 10.9 s | 20.5 s | 16.6 s |
+| Plus synchronous large ClickHouse inserts | 27.3 s | 12.4 s | 6.9 s | 14.4 s |
+| The same, two dispatchers | 35.3 s | 20.5 s | 8.1 s | 29.0 s (both loops) |
+
+Two dispatchers were slower than one: their relationship batches overtook the CIs and waited for retries. The default
+stays at one loop (`RECONCILER_DISPATCHERS`). More loops, or reconciler replicas, deliver each row exactly once
+(T-489).
+
+### The REQ-PERF-004 sweep: seed 44, scale 0.25 (`docs/evidence/discovery-sweep.json`)
+
+The estate has 138,243 CIs and 11,254 devices. The sweep generated it and ran `replay --reset` with the compose
+reconciler stopped.
+
+| Run | Reconcile | Dispatch | Total | Per 10,000 devices | Budget (15 min) |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Before (`51f9417`) | about 300 s | 899 s | 20.0 min | 17.77 min | missed |
+| After | 341 s | **178 s** | **9.49 min** | **8.43 min** | **met** |
+
+In the "after" run:
+- **Delivered:** all 508,341 events.
+- **Retried:** two transient ClickHouse failures, a timeout and a connection reset. Their rows stayed pending, and a
+  later tick delivered them.
+- **Stores:** Postgres and Memgraph both hold 138,242 CIs and 369,761 open relationships. ClickHouse holds 508,341
+  events with 508,341 distinct ids.
+- **Dispatch by target:**
+  - ClickHouse 91.3 s;
+  - Memgraph 52.6 s;
+  - stream 26.7 s;
+  - Meilisearch 8.9 s;
+  - Postgres claim and close 61.3 s.
+
 ## Still open
 
-- **Dispatch is now two thirds of the run.** Its rate falls from about 1,400 to about 800 events/s as the stores grow,
-  so one target dominates; it is not yet known which.
-- **Concurrent-worker measurement:** the outbox claim is read-then-update, so a second dispatcher on one database
-  delivers the same rows. `FOR UPDATE SKIP LOCKED` is needed before workers run in parallel (STATE, REQ-CORE-013 notes).
+- **ClickHouse under load.** It is now the slowest target at this size, and two of its inserts failed transiently
+  (both retried). Watch `openmap_outbox_target_duration_seconds{target="clickhouse"}` and
+  `openmap_outbox_failures_total`.
+- **The 45 ms Memgraph stall** per large statement happens from the Windows host and, less often, inside the compose
+  network. Pipelining hides it within a batch, but each batch still pays it once.
+- **Strict cross-dispatcher ordering** is not provided. With more than one loop, a relationship can reach the graph a
+  batch or more after its CI (ADR-050).

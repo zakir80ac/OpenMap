@@ -134,6 +134,14 @@ export const GRAPH = {
   /** Nodes detached and deleted per transaction when a tenant is purged from the graph. */
   purgeBatchSize: 5_000,
   /**
+   * REQ-CORE-020 — attempts and the pause between them for a schema statement that meets a transient error. Memgraph
+   * creates an index only with the storage to itself ("Cannot get unique access to the storage"), so a replay that
+   * starts while the API or BSM engine is reading fails at its first statement; auto-commit statements get no driver
+   * retry.
+   */
+  schemaRetryAttempts: 20,
+  schemaRetryDelayMs: 500,
+  /**
    * Relationship types that carry failure from a dependency to its dependants (traversed upstream). `contains` is
    * traversed only from the containers in `impactContainerTypes`: an application is down when its component is, a
    * switch is not down when one of its interfaces is (ADR-019).
@@ -860,6 +868,30 @@ export const RECONCILER = {
   outboxBatchSize: 1_000,
   /** Idle wait between dispatcher ticks when the outbox is empty. */
   outboxIdleMs: 1_000,
+  /**
+   * REQ-CORE-020 — how long a claimed batch stays reserved for its dispatcher. A dispatcher that dies mid-batch releases
+   * its rows when the lease runs out. A batch normally lands in about a second, but a busy graph retries conflicting
+   * transactions for up to 30 seconds (the Bolt driver's default), so the lease is well above that.
+   */
+  outboxClaimLeaseMs: 300_000,
+  /**
+   * REQ-CORE-020 — concurrent dispatch loops per reconciler process (env RECONCILER_DISPATCHERS). Claims are leased, so
+   * more loops (or replicas) are safe; but a relationship that overtakes its CI in another loop waits for a retry, and on
+   * the seed-45 replay two loops were no faster than one (ADR-050).
+   */
+  outboxDispatchers: 1,
+  /**
+   * REQ-CORE-020 — rows from which a ClickHouse insert is written synchronously. Async inserts coalesce the dispatcher's
+   * small steady-state batches server-side, but each one waits for the buffer flush (up to 200 ms); a batch this large
+   * is already the part size ClickHouse recommends, and on the seed-45 replay that wait was most of ClickHouse's time.
+   */
+  clickhouseSyncInsertRows: 500,
+  /**
+   * REQ-CORE-020 — consecutive dispatch ticks that deliver nothing before the replay stops draining, each after
+   * outboxIdleMs. A transient target failure (a ClickHouse timeout under load) keeps its rows pending; a scale-0.25
+   * replay that stopped at the first one left 188,000 rows undelivered.
+   */
+  replayStallTicks: 30,
   /** Candidate CIs fetched per identity lookup batch. */
   lookupBatchSize: 500,
   /**

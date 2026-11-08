@@ -31,6 +31,8 @@ x-app-env: &app-env
   # REQ-BSM-004 / REQ-BSM-007: the impact-validation sweep and the link-probe round (milliseconds; 0 turns either off).
   IMPACT_VALIDATION_INTERVAL_MS: ${IMPACT_VALIDATION_INTERVAL_MS:-60000}
   LINK_PROBE_INTERVAL_MS: ${LINK_PROBE_INTERVAL_MS:-60000}
+  # REQ-CORE-020: concurrent outbox dispatch loops per reconciler (claims are leased, so loops never share a row).
+  RECONCILER_DISPATCHERS: ${RECONCILER_DISPATCHERS:-1}
   PUBLIC_SUPERSET_URL: ${PUBLIC_SUPERSET_URL:-http://localhost:8088}
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}

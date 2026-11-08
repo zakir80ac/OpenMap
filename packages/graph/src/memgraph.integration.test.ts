@@ -78,3 +78,43 @@ describe('Memgraph repository', () => {
     await expect(repo.readOnly('MATCH (n) DETACH DELETE n', {})).rejects.toThrow();
   });
 });
+
+// T-488 REQ-CORE-020 — one batch in one pipelined transaction: CIs, their labels and relationships land together, a
+// relationship to a CI not in the graph is reported back rather than dropped, and retirements find their rows.
+describe('Memgraph batch writes', () => {
+  const batchTenant = randomUUID();
+  const bci = (type: GraphCi['type'], layer: GraphCi['layer'], name: string): GraphCi => ({ ...ci(type, layer, name), tenantId: batchTenant });
+  const brel = (type: GraphRelationship['type'], from: GraphCi, to: GraphCi): GraphRelationship => ({ ...rel(type, from, to), tenantId: batchTenant });
+  const repo2 = new BoltGraphRepository({ url: env.MEMGRAPH_URL, user: env.MEMGRAPH_USER, password: env.MEMGRAPH_PASSWORD, engine: 'memgraph' });
+  afterAll(async () => {
+    await repo2.purgeTenant(batchTenant);
+    await repo2.close();
+  });
+
+  it('writes a mixed batch at once and reports the relationship whose endpoint is missing', async () => {
+    const host = bci('host', 'hardware', 'batch-host-01');
+    const vm = bci('vm', 'virtualization', 'batch-vm-01');
+    const app = bci('application', 'applications', 'batch-app');
+    const absent = bci('database_cluster', 'databases', 'not-yet-written');
+    const runsOn = brel('runs_on', vm, host);
+    const dependsOn = brel('depends_on', app, vm);
+    const early = brel('depends_on', app, absent);
+    const result = await repo2.applyBatch({ cis: [host, vm, app], relationships: [runsOn, dependsOn, early], retiredCis: [], retiredRelationships: [] });
+    expect(result).toEqual({ cis: 3, relationships: 2, unmatchedRelationshipIds: [early.id] });
+    const fromVm = await repo2.impact(batchTenant, host.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
+    expect(fromVm.nodes.map((n) => n.ci.id).sort()).toEqual([app.id, vm.id].sort());
+    const labelled = await repo2.readOnly<{ n: number }>('MATCH (c:Host {tenantId: $t}) RETURN count(c) AS n', { t: batchTenant });
+    expect(Number(labelled[0]?.n)).toBe(1);
+
+    // The endpoint arrives in a later batch; the retried relationship then lands.
+    const retried = await repo2.applyBatch({ cis: [absent], relationships: [early], retiredCis: [], retiredRelationships: [] });
+    expect(retried.unmatchedRelationshipIds).toEqual([]);
+
+    const at = new Date().toISOString();
+    await repo2.applyBatch({ cis: [], relationships: [], retiredCis: [{ tenantId: batchTenant, id: absent.id, at }], retiredRelationships: [{ tenantId: batchTenant, id: dependsOn.id, fromCiId: app.id, at }] });
+    expect(await repo2.getCi(batchTenant, absent.id, null)).toBeNull();
+    const down = await repo2.neighbours(batchTenant, app.id, 'downstream', null);
+    expect(down.map((r) => r.id)).toEqual([]);
+    expect(await repo2.applyBatch({ cis: [], relationships: [], retiredCis: [], retiredRelationships: [] })).toEqual({ cis: 0, relationships: 0, unmatchedRelationshipIds: [] });
+  });
+});

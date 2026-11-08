@@ -146,7 +146,25 @@ export function upsertRelationshipQuery(type: RelationshipType): string {
     'MATCH (a:Ci {id: row.fromCiId, tenantId: row.tenantId}), (b:Ci {id: row.toCiId, tenantId: row.tenantId})\n' +
     'MERGE (a)-[r:' + label + ' {id: row.id}]->(b)\n' +
     'SET r.tenantId = row.tenantId, r.validFrom = row.validFrom, r.validTo = row.validTo\n' +
-    'RETURN count(r) AS n'
+    'RETURN count(r) AS n, collect(row.id) AS ids'
+  );
+}
+
+/** REQ-CORE-020 — a batch of CI retirements in one statement. */
+export function retireCisQuery(): string {
+  return (
+    'UNWIND $rows AS row\n' +
+    'MATCH (c:Ci {id: row.id, tenantId: row.tenantId}) WHERE c.validTo IS NULL\n' +
+    'SET c.validTo = row.at RETURN count(c) AS n'
+  );
+}
+
+/** REQ-CORE-020 — a batch of relationship retirements, each found from its source CI rather than by scanning edges. */
+export function retireRelationshipsQuery(): string {
+  return (
+    'UNWIND $rows AS row\n' +
+    'MATCH (a:Ci {id: row.fromCiId, tenantId: row.tenantId})-[r]->() WHERE r.id = row.id AND r.validTo IS NULL\n' +
+    'SET r.validTo = row.at RETURN count(r) AS n'
   );
 }
 
