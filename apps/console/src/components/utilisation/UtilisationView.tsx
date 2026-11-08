@@ -3,6 +3,7 @@
 // latest values hottest first by the chosen measure; hot CIs (capacity at risk) and idle ones (rightsizing or reclaim
 // candidates) under UTILISATION's thresholds; headline counts, averages and total power; type, state and name filters
 // and server-side pages.
+// REQ-AI-005: below them, the cloud recommendations (CloudAdvicePanel).
 import { useQuery } from '@tanstack/react-query';
 import { UTILISATION } from '@openmap/constants';
 import { UTILISATION_CI_TYPES, UTILISATION_MEASURES, type UtilisationState } from '@openmap/contracts';
@@ -10,6 +11,7 @@ import type { Locale } from '@openmap/i18n';
 import { Card, Kpi, SectionTitle } from '@openmap/ui';
 import Link from 'next/link';
 import { useId, useState, type ReactNode } from 'react';
+import { CloudAdvicePanel } from './CloudAdvicePanel';
 import {
   Button,
   Field,
@@ -280,6 +282,7 @@ export function UtilisationView({ locale }: { locale: Locale }): ReactNode {
           </>
         )}
       </Card>
+      <CloudAdvicePanel locale={locale} />
     </div>
   );
 }

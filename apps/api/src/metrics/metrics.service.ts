@@ -33,6 +33,8 @@ export const TELEMETRY_SNAPSHOT_METRIC = 'openmap_telemetry_snapshot_seconds';
 export const CLASSIFICATION_METRIC = 'openmap_classification_suggestions_total';
 /** REQ-AI-003: anomaly findings opened, cleared and explained, by rule. */
 export const ANOMALY_METRIC = 'openmap_anomaly_findings_total';
+/** REQ-AI-005: cloud recommendations computed, by kind. */
+export const CLOUD_RECOMMENDATION_METRIC = 'openmap_cloud_recommendations_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
@@ -76,6 +78,7 @@ export class MetricsService {
   readonly telemetrySnapshot: Histogram<'outcome'>;
   readonly classifications: Counter<'outcome'>;
   readonly anomalies: Counter<'rule' | 'outcome'>;
+  readonly cloudRecommendations: Counter<'kind'>;
   readonly restRequests: Counter<'route' | 'status'>;
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
@@ -159,6 +162,7 @@ export class MetricsService {
     this.telemetrySnapshot = new Histogram({ name: TELEMETRY_SNAPSHOT_METRIC, help: 'Telemetry fleet snapshot build duration in seconds, by outcome', labelNames: ['outcome'], buckets: durationBuckets(), registers: [this.registry] });
     this.classifications = new Counter({ name: CLASSIFICATION_METRIC, help: 'Classification suggestions for unknown CIs, by outcome (suggested, accepted, dismissed)', labelNames: ['outcome'], registers: [this.registry] });
     this.anomalies = new Counter({ name: ANOMALY_METRIC, help: 'Anomaly findings by rule and outcome (opened, cleared, explained, explain_failed)', labelNames: ['rule', 'outcome'], registers: [this.registry] });
+    this.cloudRecommendations = new Counter({ name: CLOUD_RECOMMENDATION_METRIC, help: 'Cloud recommendations computed, by kind (release_stopped, decommission_idle, downsize, upsize)', labelNames: ['kind'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

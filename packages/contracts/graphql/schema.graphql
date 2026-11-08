@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.25.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.26.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -293,6 +293,33 @@ type ImpactAccuracy {
   "Resolved incidents the sweep cannot compare because they name no root cause."
   withoutRootCause: Int!
   recent: [ImpactValidation!]!
+}
+"A recommendation for one cloud resource (REQ-AI-005, ADR-054), with the figures it rests on."
+type CloudRecommendation {
+  ci: Ci!
+  "release_stopped, decommission_idle, downsize or upsize."
+  kind: String!
+  "Estimated monthly saving in USD; 0 for an upsize."
+  savingUsd: Float!
+  "Average and peak load in percent over the samples read; null without any."
+  averageLoad: Float
+  peakLoad: Float
+  samples: Int!
+  "When the newest load sample was taken."
+  loadAt: DateTime
+  sku: String
+  state: String
+  monthlyCostUsd: Float
+  owner: String
+  environment: String
+}
+type CloudAdvice {
+  "Recommendations, the largest saving first."
+  items: [CloudRecommendation!]!
+  "Cloud resources the model looked at."
+  resources: Int!
+  monthlySavingUsd: Float!
+  asOf: DateTime!
 }
 "One fact behind an anomaly finding (REQ-AI-003): what the rule found, by key."
 type AnomalyFact {
@@ -2157,6 +2184,8 @@ type Query {
   classificationSuggestions: ClassificationSummary!
   "REQ-AI-003: the anomaly findings over discovery and health events."
   anomalies: AnomalyReport!
+  "REQ-AI-005: rightsizing and unused-resource recommendations over cloud utilisation and cost."
+  cloudAdvice: CloudAdvice!
   "Sites and their connectivity for HA / DR readiness (REQ-BSM-007)."
   connectivity: Connectivity!
   "The tenant's runbook catalogue, by code (REQ-BSM-005)."

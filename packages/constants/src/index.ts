@@ -783,6 +783,28 @@ export const ANOMALY = {
   synthetic: { flapOutages: 4, flapOutageMinutes: 6, flapGapMinutes: 25, flapEndsHoursBeforeNow: 3 },
 } as const;
 
+/**
+ * REQ-AI-005 (ADR-054) — the cloud recommendation model over each cloud resource's state, monthly cost and load
+ * (cloud.resource.load_percent): release what is stopped but still billed, decommission compute that is idle, downsize
+ * compute that never comes near its size, upsize compute that runs hot. One size step down within an instance family
+ * halves the price on the major clouds, so downsizing saves rightsizeSavingShare of the monthly cost.
+ */
+export const CLOUD_ADVICE = {
+  /** Resource types that have a size to change and run continuously (functions and managed queues do not). */
+  computeTypes: ['AWS::EC2::Instance', 'AWS::RDS::DBInstance', 'Microsoft.Compute/virtualMachines', 'Microsoft.Sql/servers/databases', 'Microsoft.Web/sites'],
+  idlePeakPercent: 5,
+  rightsizePeakPercent: 40,
+  rightsizeAveragePercent: 30,
+  /** UTILISATION.hotPercent: the same line the utilisation register calls hot. */
+  upsizeAveragePercent: 85,
+  rightsizeSavingShare: 0.5,
+  /** Days of load history read; with none in the window the latest sample stands, with its age shown. */
+  lookbackDays: 14,
+  attributes: { type: 'resourceType', state: 'state', cost: 'monthlyCostUsd', sku: 'sku', region: 'region', owner: 'tagOwner', environment: 'tagEnvironment' },
+  stoppedStates: ['stopped', 'deallocated', 'available'],
+  moneyDecimals: 2,
+} as const;
+
 export const CLASSIFICATION = {
   /** Weights of each kind of evidence; their sum is the most a fingerprint can score. sysDescr is the device's own words. */
   weights: { sysDescr: 0.5, banner: 0.15, vendor: 0.15, ports: 0.2 },
@@ -1634,7 +1656,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.25.0',
+  graphql: '1.26.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -89,7 +89,15 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
   `metrics_latest` is unaffected.
 - **Result:** precision and recall 1.0.
 
-**8. Remaining for Done.**
+**8. REQ-AI-005 cloud recommendations — Done** (ADR-054, GraphQL 1.26.0, T-507 to T-510).
+- **Model:** `recommendCloud` in the assistant package, with thresholds in `CLOUD_ADVICE`: release stopped resources
+  that are still billed, decommission idle compute, downsize under-used compute (saves half its cost), upsize hot
+  compute.
+- **Load:** a 14-day window, else the latest sample.
+- **Query and screen:** `cloudAdvice`, shown in a panel on the Utilisation screen.
+- **Scale-1 result:** 39 recommendations, an estimated 83,663 USD a month.
+
+**9. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

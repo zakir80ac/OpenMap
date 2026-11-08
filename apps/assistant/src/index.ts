@@ -15,4 +15,5 @@ export * from './core/llm-intent.js';
 export * from './core/conversation.js';
 export * from './core/classify.js';
 export * from './core/anomaly.js';
+export * from './core/cloud-advice.js';
 export * from './eval/questions.js';
