@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -39,7 +39,22 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
   from 899 s to 178 s. All 508,341 events were delivered, and two transient ClickHouse failures were retried. Postgres
   and Memgraph both hold 138,242 CIs and 369,761 relationships. ClickHouse holds 508,341 events, all distinct.
 
-**4. Remaining for Done.**
+**4. REQ-UI-026 Sites and connectivity — Done** (ADR-025 amendment, GraphQL 1.22.0, REST 1.1.0, T-490 to T-493).
+- **Site facility cards:**
+  - kind, tier, power capacity and design PUE from the site CI;
+  - measured PUE from `dcim.site.pue`;
+  - racks counted in the CMDB facility tree;
+  - open alerts: open findings plus unresolved incidents located in the site.
+- **Links:** carrier, throughput against committed bandwidth with a usage bar, and the redundancy state
+  (`linkRedundancy` in the BSM engine).
+- **Synthetic estate:** site CIs carry `powerCapacityKw` and `designPue`, and a link's throughput is bandwidth ×
+  utilisation. The draw is kept, so the RNG stream is unchanged.
+- **Dev tenant:** updated in place by replaying only the site results (`.local/estate-042-sites`) and fresh link samples
+  (`.local/estate-042-links`). No reset, so the ids and health history are kept.
+- **Images:** `openmap/api:dev` and `openmap/console:dev` were rebuilt.
+- **Follow-up:** readiness finding details are English text from the BSM engine, shown as-is in Arabic.
+
+**5. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

@@ -10,7 +10,7 @@ import {
   type Locale,
   type SlaWindow,
 } from '@openmap/constants';
-import type { CiLayer } from '@openmap/contracts';
+import type { CiLayer, LinkRedundancy } from '@openmap/contracts';
 import { gql } from './graphql';
 
 export type HealthState = (typeof BSM.healthOrder)[number];
@@ -830,6 +830,15 @@ export interface ConnectivitySite {
   drRole: 'primary' | 'dr' | 'none';
   criticality: number | null;
   healthyPaths: number;
+  /** REQ-UI-026: the facility card. */
+  kind: string | null;
+  tier: number | null;
+  powerCapacityKw: number | null;
+  designPue: number | null;
+  pue: number | null;
+  pueAt: string | null;
+  racks: number;
+  openAlerts: number;
 }
 
 export interface ConnectivityLink {
@@ -847,6 +856,11 @@ export interface ConnectivityLink {
   lossPercent: number | null;
   probedAt: string | null;
   slaLatencyMs: number | null;
+  /** REQ-UI-026: traffic against the committed bandwidth, and redundancy between the two sites. */
+  capacityMbps: number | null;
+  throughputMbps: number | null;
+  utilisationPercent: number | null;
+  redundancy: LinkRedundancy;
 }
 
 export interface ReadinessFinding {
@@ -869,8 +883,8 @@ export interface Connectivity {
 
 const CONNECTIVITY_QUERY = [
   'query Connectivity { connectivity {',
-  '  sites { ci { ' + CI_SUMMARY_FIELDS + ' } code drRole criticality healthyPaths }',
-  '  links { ci { ' + CI_SUMMARY_FIELDS + ' } fromSite toSite kind provider role replication diversePaths probeTarget reachable latencyMs lossPercent probedAt slaLatencyMs }',
+  '  sites { ci { ' + CI_SUMMARY_FIELDS + ' } code drRole criticality healthyPaths kind tier powerCapacityKw designPue pue pueAt racks openAlerts }',
+  '  links { ci { ' + CI_SUMMARY_FIELDS + ' } fromSite toSite kind provider role replication diversePaths probeTarget reachable latencyMs lossPercent probedAt slaLatencyMs capacityMbps throughputMbps utilisationPercent redundancy }',
   '  findings { id rule detail state openedAt clearedAt subject { ' + CI_SUMMARY_FIELDS + ' } incident { id title state severity } }',
   '  probeIntervalSeconds',
   '} }',

@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { ciLayerSchema, ciSchema, ciTypeSchema, healthStateSchema, lifecycleSchema, relationshipSchema, relationshipTypeSchema } from './ci.js';
 import { PREDICTED_STATES } from './impact.js';
-import { READINESS_RULES, SITE_DR_ROLES } from './connectivity.js';
+import { LINK_REDUNDANCY_STATES, READINESS_RULES, SITE_DR_ROLES } from './connectivity.js';
 
 export const REST_BASE_PATH = '/api/v1';
 /** Largest page a list route returns; the API clamps `first` to it, as GraphQL does. */
@@ -70,7 +70,25 @@ export const restIncidentSchema = z.object({
 });
 
 export const restConnectivitySchema = z.object({
-  sites: z.array(z.object({ ciId: z.uuid(), name: z.string(), code: z.string(), drRole: z.enum(SITE_DR_ROLES), criticality: z.number().int().nullable(), healthyPaths: z.number().int() })),
+  sites: z.array(
+    z.object({
+      ciId: z.uuid(),
+      name: z.string(),
+      code: z.string(),
+      drRole: z.enum(SITE_DR_ROLES),
+      criticality: z.number().int().nullable(),
+      healthyPaths: z.number().int(),
+      // REST 1.1.0 (REQ-UI-026): the facility card.
+      kind: z.string().nullable(),
+      tier: z.number().int().nullable(),
+      powerCapacityKw: z.number().nullable(),
+      designPue: z.number().nullable(),
+      pue: z.number().nullable(),
+      pueAt: z.iso.datetime().nullable(),
+      racks: z.number().int(),
+      openAlerts: z.number().int(),
+    }),
+  ),
   links: z.array(
     z.object({
       ciId: z.uuid(),
@@ -83,6 +101,12 @@ export const restConnectivitySchema = z.object({
       latencyMs: z.number().nullable(),
       lossPercent: z.number().nullable(),
       probedAt: z.iso.datetime().nullable(),
+      // REST 1.1.0 (REQ-UI-026): traffic against the committed bandwidth, and redundancy between the two sites.
+      provider: z.string().nullable(),
+      capacityMbps: z.number().int().nullable(),
+      throughputMbps: z.number().nullable(),
+      utilisationPercent: z.number().nullable(),
+      redundancy: z.enum(LINK_REDUNDANCY_STATES),
     }),
   ),
   findings: z.array(z.object({ id: z.uuid(), rule: z.enum(READINESS_RULES), subjectCiId: z.uuid(), detail: z.string(), state: z.enum(['open', 'cleared']), openedAt: z.iso.datetime(), clearedAt: z.iso.datetime().nullable(), incidentId: z.uuid().nullable() })),

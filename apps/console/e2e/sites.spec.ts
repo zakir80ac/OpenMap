@@ -4,6 +4,9 @@
 //   reconciler → ClickHouse → API), so the probing loop runs end to end;
 // - the dev stack cannot reach the far gateways, so the links read down and the rules report breaches with incidents;
 // - no error card appears.
+// T-492 REQ-UI-026 — the facility cards on the real estate: the Riyadh data centre's tier, power capacity (from its CI's
+// facility attributes), racks (its facility tree in the CMDB) and measured PUE (ClickHouse); every link with its
+// carrier, traffic against the committed bandwidth with a usage bar, and a redundancy state.
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { isLocale, translate } from '@openmap/i18n';
@@ -12,6 +15,16 @@ import { signIn } from './auth';
 const screenshotsDir = fileURLToPath(new URL('./screenshots/', import.meta.url));
 const PROBE_WAIT_MS = 240_000;
 const POLL_MS = 15_000;
+/** The synthetic estate's primary data centre (tools/synth-estate, seed 42): tier 3, 4,800 kW, carrier stc. */
+const RIYADH = 'Riyadh Primary Data Centre';
+const RIYADH_TIER = 3;
+const RIYADH_KW = 4800;
+const CARRIER = 'stc';
+const ARABIC_ZERO = 0x0660;
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
 
 test('sites, links and readiness rules show live probe results', async ({ page }, testInfo) => {
   const locale = testInfo.project.name;
@@ -25,10 +38,27 @@ test('sites, links and readiness rules show live probe results', async ({ page }
   for (const key of ['sites.rule.diverse_paths', 'sites.rule.dr_reachable', 'sites.rule.replication_healthy'] as const) {
     await expect(readiness.getByText(translate(locale, key), { exact: true }).first()).toBeVisible();
   }
-  const sites = page.getByRole('table', { name: translate(locale, 'sites.sites') });
+  const sites = page.getByRole('list', { name: translate(locale, 'sites.sites') });
   await expect(sites.getByText(translate(locale, 'sites.drRole.dr'), { exact: true })).toBeVisible();
+  const n = (v: number) => new Intl.NumberFormat(locale).format(v);
+  const riyadh = sites.getByRole('listitem', { name: RIYADH });
+  await expect(riyadh.getByText(translate(locale, 'sites.card.tier', { tier: n(RIYADH_TIER) }), { exact: true })).toBeVisible();
+  await expect(riyadh.getByText(translate(locale, 'sites.card.kw', { value: n(RIYADH_KW) }), { exact: true })).toBeVisible();
+  // Racks and PUE come from the stores, not the setup record: a positive rack count and a measured PUE.
+  const racks = await riyadh.getByText(translate(locale, 'sites.card.racks'), { exact: true }).locator('xpath=following-sibling::dd').textContent();
+  expect(Number((racks ?? '').replace(/[^0-9٠-٩]/gu, '').replace(/[٠-٩]/gu, (d) => String(d.charCodeAt(0) - ARABIC_ZERO)))).toBeGreaterThan(0);
+  await expect(riyadh.getByText(new RegExp(escapeRegExp(translate(locale, 'sites.card.pueMeasured', { when: '' }).trim())))).toBeVisible();
   const links = page.getByRole('table', { name: translate(locale, 'sites.links') });
   await expect(links.getByRole('row').nth(1)).toBeVisible();
+  await expect(links.getByText(CARRIER, { exact: true }).first()).toBeVisible();
+  await expect(links.getByRole('progressbar').first()).toBeVisible();
+  const states = ['active_active', 'active_standby', 'degraded', 'down', 'single_path'] as const;
+  const redundancy = translate(locale, 'sites.table.redundancy');
+  const headers = await links.getByRole('columnheader').allTextContents();
+  const redundancyCells = await links.locator('tbody tr').evaluateAll((rows, i) => rows.map((r) => (r.children[i]?.textContent ?? '').trim()), headers.indexOf(redundancy));
+  const known = new Set(states.map((st) => translate(locale, ('sites.redundancy.' + st) as `sites.redundancy.${typeof st}`)));
+  expect(redundancyCells.length).toBeGreaterThan(0);
+  expect(redundancyCells.every((c) => known.has(c))).toBe(true);
 
   // Every link has been probed: no "—" left in the last-probe column (the screen refreshes on the probe interval).
   const lastProbe = translate(locale, 'sites.table.probed');

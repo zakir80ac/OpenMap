@@ -165,8 +165,8 @@ export class RestController {
     return this.run('getConnectivity', request, async (p) => {
       const c = await this.connectivity.connectivity(p.tenantId);
       return {
-        sites: c.sites.map((s) => ({ ciId: s.ci.id, name: s.ci.displayName, code: s.code, drRole: s.drRole, criticality: s.criticality, healthyPaths: s.healthyPaths })),
-        links: c.links.map((l) => ({ ciId: l.ci.id, name: l.ci.displayName, fromSite: l.fromSite, toSite: l.toSite, replication: l.replication, probeTarget: l.probeTarget, reachable: l.reachable, latencyMs: l.latencyMs, lossPercent: l.lossPercent, probedAt: l.probedAt })),
+        sites: c.sites.map(({ ci, ...s }) => ({ ciId: ci.id, name: ci.displayName, ...s })),
+        links: c.links.map((l) => ({ ciId: l.ci.id, name: l.ci.displayName, fromSite: l.fromSite, toSite: l.toSite, replication: l.replication, probeTarget: l.probeTarget, reachable: l.reachable, latencyMs: l.latencyMs, lossPercent: l.lossPercent, probedAt: l.probedAt, provider: l.provider, capacityMbps: l.capacityMbps, throughputMbps: l.throughputMbps, utilisationPercent: l.utilisationPercent, redundancy: l.redundancy })),
         findings: c.findings,
       };
     });

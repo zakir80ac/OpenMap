@@ -3,11 +3,14 @@
 // their open and recently cleared findings (each with its incident), every site with its DR role, criticality and
 // healthy paths, and every inter-site link with its live probe figures (reachable, latency against the commitment,
 // loss, when last probed) and health. Refreshes on the probe interval.
+// REQ-UI-026: each site as a facility card (kind, tier, power capacity, racks, PUE measured and design, open alerts),
+// and each link with its carrier, traffic against the committed bandwidth and the redundancy state between its sites.
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { READINESS } from '@openmap/constants';
+import { IPAM, READINESS } from '@openmap/constants';
+import type { LinkRedundancy } from '@openmap/contracts';
 import type { Locale } from '@openmap/i18n';
-import { Card, Dot, SectionTitle, Tag } from '@openmap/ui';
+import { Bar, Card, Dot, SectionTitle, Tag, accents, type HexColor } from '@openmap/ui';
 import type { ReactNode } from 'react';
 import { tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
 import { QueryState } from '@/components/common/QueryState';
@@ -32,6 +35,35 @@ const ruleHint = {
   replication_healthy: 'sites.rule.replication_healthy.hint',
 } as const satisfies Record<ReadinessFinding['rule'], string>;
 const LINK_ROLE_KEY = { primary: 'setup.links.role.primary', backup: 'setup.links.role.backup', overlay: 'setup.links.role.overlay' } as const;
+const SITE_KIND_KEY = {
+  datacenter: 'setup.sites.kind.datacenter',
+  colocation: 'setup.sites.kind.colocation',
+  office: 'setup.sites.kind.office',
+  branch: 'setup.sites.kind.branch',
+  cloud_region: 'setup.sites.kind.cloud_region',
+  edge: 'setup.sites.kind.edge',
+} as const;
+const redundancyKey = {
+  active_active: 'sites.redundancy.active_active',
+  active_standby: 'sites.redundancy.active_standby',
+  degraded: 'sites.redundancy.degraded',
+  down: 'sites.redundancy.down',
+  single_path: 'sites.redundancy.single_path',
+} as const satisfies Record<LinkRedundancy, string>;
+const redundancyState = {
+  active_active: 'healthy',
+  active_standby: 'healthy',
+  degraded: 'degraded',
+  down: 'down',
+  single_path: 'unknown',
+} as const satisfies Record<LinkRedundancy, 'healthy' | 'degraded' | 'down' | 'unknown'>;
+
+/** The same thresholds as subnet utilisation: amber from the warning share, rose from the critical one. */
+function trafficAccent(percent: number): HexColor {
+  if (percent >= IPAM.criticalUtilisationPercent) return accents.rose;
+  if (percent >= IPAM.warnUtilisationPercent) return accents.amber;
+  return accents.cyan;
+}
 const drRoleKey = {
   primary: 'sites.drRole.primary',
   dr: 'sites.drRole.dr',
@@ -94,6 +126,11 @@ function Body({
   const open = data.findings.filter((f) => f.state === 'open');
   const healthyLinks = data.links.filter((l) => uiHealth(l.ci) === 'healthy').length;
   const ms = (value: number): string => t('sites.ms', { value: format.number(value) });
+  // Gigabits once a rate reaches one: 10,000 Mb/s reads 10 Gb/s.
+  const rate = (mbps: number): string =>
+    mbps >= READINESS.megabitsPerGigabit
+      ? t('sites.gbps', { value: format.number(mbps / READINESS.megabitsPerGigabit) })
+      : t('sites.mbps', { value: format.number(mbps) });
 
   return (
     <>
@@ -179,54 +216,93 @@ function Body({
       <section aria-label={t('sites.sites')}>
         <Card className="flex flex-col gap-om-10">
           <SectionTitle as="h2" size="sm">
-            {t('sites.sites')}
+            {t('sites.facility')}
           </SectionTitle>
           {data.sites.length === 0 ? (
             <p className="text-om-sm text-om-secondary">{t('sites.noSites')}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className={tableClass} aria-label={t('sites.sites')}>
-                <thead className={theadClass}>
-                  <tr>
-                    <th scope="col" className={thClass}>
-                      {t('sites.table.site')}
-                    </th>
-                    <th scope="col" className={thClass}>
-                      {t('sites.table.drRole')}
-                    </th>
-                    <th scope="col" className={thClass}>
-                      {t('sites.table.criticality')}
-                    </th>
-                    <th scope="col" className={thClass}>
-                      {t('sites.table.paths')}
-                    </th>
-                    <th scope="col" className={thClass}>
-                      {t('sites.table.health')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.sites.map((s) => (
-                    <tr key={s.ci.id}>
-                      <td className={tdClass}>
+            <ul className="grid grid-cols-1 gap-om-8 md:grid-cols-2 xl:grid-cols-3" aria-label={t('sites.sites')}>
+              {data.sites.map((s) => (
+                <li
+                  key={s.ci.id}
+                  aria-label={s.ci.displayName}
+                  className="flex flex-col gap-om-8 rounded-om-panel border border-om-border-glass bg-om-surface2/60 px-om-10 py-om-8"
+                >
+                  <div className="flex flex-wrap items-start gap-om-6">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-om-sm font-medium text-om-primary">
                         <CiLink locale={locale} ci={s.ci} />
-                        <span className="block font-om-mono text-om-2xs text-om-muted">{s.code}</span>
-                      </td>
-                      <td className={tdClass}>{t(drRoleKey[s.drRole])}</td>
-                      <td className={tdClass}>
-                        {s.criticality === null ? t('sites.none') : format.integer(s.criticality)}
-                      </td>
-                      <td className={tdClass}>{format.integer(s.healthyPaths)}</td>
-                      <td className={tdClass}>
-                        <Tag variant="state" state={uiHealth(s.ci)}>
-                          {t(healthKey[uiHealth(s.ci)])}
+                      </h3>
+                      <span className="font-om-mono text-om-2xs text-om-muted">{s.code}</span>
+                    </div>
+                    <Tag variant="state" state={uiHealth(s.ci)}>
+                      {t(healthKey[uiHealth(s.ci)])}
+                    </Tag>
+                  </div>
+                  <div className="flex flex-wrap gap-om-4">
+                    {s.kind !== null ? (
+                      <Tag>{s.kind in SITE_KIND_KEY ? t(SITE_KIND_KEY[s.kind as keyof typeof SITE_KIND_KEY]) : s.kind}</Tag>
+                    ) : null}
+                    <Tag>
+                      {s.tier === null ? t('sites.card.noTier') : t('sites.card.tier', { tier: format.integer(s.tier) })}
+                    </Tag>
+                    <Tag>{t(drRoleKey[s.drRole])}</Tag>
+                  </div>
+                  <dl className="grid grid-cols-2 gap-x-om-8 gap-y-om-4 text-om-xs">
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.power')}</dt>
+                      <dd className="text-om-primary">
+                        {s.powerCapacityKw === null
+                          ? t('sites.none')
+                          : t('sites.card.kw', { value: format.number(s.powerCapacityKw) })}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.racks')}</dt>
+                      <dd className="text-om-primary">{format.integer(s.racks)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.pue')}</dt>
+                      <dd className="text-om-primary">
+                        {s.pue !== null
+                          ? format.number(s.pue)
+                          : s.designPue !== null
+                            ? t('sites.card.pueDesign', { value: format.number(s.designPue) })
+                            : t('sites.none')}
+                        {s.pue !== null && s.pueAt !== null ? (
+                          <span className="block text-om-2xs text-om-muted">
+                            {t('sites.card.pueMeasured', { when: format.dateTime(s.pueAt) })}
+                          </span>
+                        ) : null}
+                        {s.pue !== null && s.designPue !== null ? (
+                          <span className="block text-om-2xs text-om-muted">
+                            {t('sites.card.pueDesign', { value: format.number(s.designPue) })}
+                          </span>
+                        ) : null}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.alerts')}</dt>
+                      <dd>
+                        <Tag variant="state" state={s.openAlerts > 0 ? 'down' : 'healthy'}>
+                          {format.integer(s.openAlerts)}
                         </Tag>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.criticality')}</dt>
+                      <dd className="text-om-primary">
+                        {s.criticality === null ? t('sites.none') : format.integer(s.criticality)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-om-2xs text-om-muted">{t('sites.card.paths')}</dt>
+                      <dd className="text-om-primary">{format.integer(s.healthyPaths)}</dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
           )}
         </Card>
       </section>
@@ -248,6 +324,15 @@ function Body({
                     </th>
                     <th scope="col" className={thClass}>
                       {t('sites.table.ends')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('sites.table.carrier')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('sites.table.throughput')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('sites.table.redundancy')}
                     </th>
                     <th scope="col" className={thClass}>
                       {t('sites.table.reachable')}
@@ -283,6 +368,41 @@ function Body({
                         <span className="block text-om-2xs text-om-muted">
                           {l.probeTarget ?? t('sites.notProbed')}
                         </span>
+                      </td>
+                      <td className={tdClass}>{l.provider ?? t('sites.none')}</td>
+                      <td className={tdClass}>
+                        {l.throughputMbps === null ? (
+                          l.capacityMbps === null ? (
+                            t('sites.none')
+                          ) : (
+                            <span className="text-om-muted">{rate(l.capacityMbps)}</span>
+                          )
+                        ) : (
+                          <span className="flex flex-col gap-om-2">
+                            <span>
+                              {l.capacityMbps === null
+                                ? rate(l.throughputMbps)
+                                : t('sites.throughput', { value: rate(l.throughputMbps), capacity: rate(l.capacityMbps) })}
+                            </span>
+                            {l.utilisationPercent !== null ? (
+                              <>
+                                <Bar
+                                  value={l.utilisationPercent}
+                                  accent={trafficAccent(l.utilisationPercent)}
+                                  label={t('sites.table.throughput') + ' ' + l.ci.displayName}
+                                />
+                                <span className="text-om-2xs text-om-muted">
+                                  {t('sites.utilisation', { value: format.number(l.utilisationPercent) })}
+                                </span>
+                              </>
+                            ) : null}
+                          </span>
+                        )}
+                      </td>
+                      <td className={tdClass}>
+                        <Tag variant="state" state={redundancyState[l.redundancy]}>
+                          {t(redundancyKey[l.redundancy])}
+                        </Tag>
                       </td>
                       <td className={tdClass}>
                         {l.reachable === null

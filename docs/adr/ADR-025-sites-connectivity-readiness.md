@@ -94,3 +94,33 @@ What existed:
 - **Incidents without affected services.** A readiness incident names its site or link as root cause and no
   business service. The Services screen's incident list keeps to service incidents; the Sites screen lists each finding
   with its incident.
+
+## Amendment — facility cards, link traffic and redundancy (REQ-UI-026, 2026-11-08)
+
+GraphQL 1.22.0 and REST 1.1.0 add the fields the Sites screen's acceptance names.
+
+- **Site facility cards.**
+  - Kind, Uptime tier, power capacity and design PUE come from the site CI's attributes. The setup wizard writes them
+    (ADR-017), and so does the synthetic estate (`SITE_FACILITY_ATTRIBUTES`).
+  - Measured PUE is the latest `dcim.site.pue` sample on the site CI. Without one, the card shows the design figure.
+  - Racks are counted in the site's facility tree in Postgres: building, room, row and rack, walked down `located_in`
+    edges. This is the CMDB's count, not the setup record's declared number.
+  - Open alerts add up two things:
+    - open readiness findings on the site or a link touching it;
+    - unresolved incidents (open, acknowledged or mitigated) whose root cause is the site, one of its links, or a CI
+      located in the site, walked up `located_in` for at most `READINESS.locationHops` hops.
+    An incident counts once per site.
+- **Link traffic.**
+  - Throughput is the latest `net.device.throughput_gbps` sample on the link CI, which the SNMP or flow collectors
+    polling the hand-off interfaces report.
+  - Capacity is the link's committed `bandwidthMbps`.
+  - Utilisation is their ratio. Its bar uses the subnet-utilisation thresholds.
+- **Redundancy** (`linkRedundancy`, `LINK_REDUNDANCY_STATES`). The state is judged over every link joining the same two
+  sites, in either direction, with each link counting its diverse paths. A link that is not down counts as up: no
+  probe, or a stale one, is no sign of failure.
+  - `down`: no path is up.
+  - `single_path`: the sites have one path between them.
+  - `degraded`: some paths are down.
+  - `active_standby`: every path is up and a backup link stands by.
+  - `active_active`: every path is up and there is no backup link.
+

@@ -4,8 +4,9 @@
 // - diverse_paths: a criticality-1 site needs READINESS.minDiversePaths healthy paths (a link counts its diversePaths);
 // - dr_reachable: every DR site must be reachable from a primary site over healthy links;
 // - replication_healthy: every replication link must be healthy.
+// REQ-UI-026: the redundancy state of the links joining two sites (linkRedundancy).
 import { READINESS } from '@openmap/constants';
-import type { ReadinessRule, SiteDrRole } from '@openmap/contracts';
+import type { LinkRedundancy, ReadinessRule, SiteDrRole } from '@openmap/contracts';
 import type { Health } from './propagate.js';
 
 export interface LatestSample {
@@ -94,4 +95,45 @@ export function evaluateReadiness(sites: readonly SiteSnapshot[], links: readonl
 /** Breaches keyed by rule and subject, the identity of an open finding. */
 export function breachKey(b: Pick<Breach, 'rule' | 'subjectCiId'>): string {
   return b.rule + '|' + b.subjectCiId;
+}
+
+/** REQ-UI-026 — what the redundancy rule needs of one link: its ends, its role, its diverse paths and its health. */
+export interface RedundancyLink {
+  ciId: string;
+  fromSite: string | null;
+  toSite: string | null;
+  role: string | null;
+  diversePaths: number;
+  health: Health;
+}
+
+/**
+ * REQ-UI-026 — the redundancy state between each link's two sites (LINK_REDUNDANCY_STATES), keyed by link CI id. The
+ * links joining the same two sites, in either direction, are judged together. Each one counts its diverse paths, and
+ * a link that is not down counts as up: an unprobed or stale link has given no sign of failure. A link with an
+ * unknown end stands alone.
+ */
+export function linkRedundancy(links: readonly RedundancyLink[]): Map<string, LinkRedundancy> {
+  const pairKey = (l: RedundancyLink): string =>
+    l.fromSite === null || l.toSite === null ? 'link:' + l.ciId : [l.fromSite, l.toSite].sort().join('|');
+  const groups = new Map<string, RedundancyLink[]>();
+  for (const l of links) groups.set(pairKey(l), [...(groups.get(pairKey(l)) ?? []), l]);
+  const out = new Map<string, LinkRedundancy>();
+  for (const group of groups.values()) {
+    const paths = (l: RedundancyLink): number => Math.max(1, l.diversePaths);
+    const total = group.reduce((n, l) => n + paths(l), 0);
+    const up = group.filter((l) => l.health !== 'down').reduce((n, l) => n + paths(l), 0);
+    const state: LinkRedundancy =
+      up === 0
+        ? 'down'
+        : total <= 1
+          ? 'single_path'
+          : up < total
+            ? 'degraded'
+            : group.some((l) => l.role === 'backup')
+              ? 'active_standby'
+              : 'active_active';
+    for (const l of group) out.set(l.ciId, state);
+  }
+  return out;
 }

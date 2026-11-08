@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.21.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.22.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -511,6 +511,27 @@ type ConnectivitySite {
   criticality: Int
   "Healthy paths: healthy links touching the site, counting each link's diverse paths."
   healthyPaths: Int!
+  "Site kind (datacenter, colocation, office, branch_bundle, cloud_region …); REQ-UI-026."
+  kind: String
+  "Uptime Institute tier, 1 to 4; null when the site has none."
+  tier: Int
+  powerCapacityKw: Float
+  designPue: Float
+  "Latest measured PUE and when it was taken; null when the site reports none."
+  pue: Float
+  pueAt: DateTime
+  "Racks in the site's facility tree (building, room, row, rack)."
+  racks: Int!
+  "Open readiness findings on the site or its links, plus unresolved incidents whose root cause is located in the site."
+  openAlerts: Int!
+}
+"Redundancy between a link's two sites, over every link joining them (REQ-UI-026)."
+enum LinkRedundancy {
+  active_active
+  active_standby
+  degraded
+  down
+  single_path
 }
 type ConnectivityLink {
   ci: Ci!
@@ -528,6 +549,13 @@ type ConnectivityLink {
   lossPercent: Float
   probedAt: DateTime
   slaLatencyMs: Int
+  "Committed bandwidth; null when the link records none (REQ-UI-026)."
+  capacityMbps: Int
+  "Latest measured traffic; null when the link reports none."
+  throughputMbps: Float
+  "Traffic as a share of the committed bandwidth; null without both."
+  utilisationPercent: Float
+  redundancy: LinkRedundancy!
 }
 type ReadinessFinding {
   id: UUID!

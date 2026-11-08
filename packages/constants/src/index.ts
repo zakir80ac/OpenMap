@@ -851,6 +851,14 @@ export const READINESS = {
   clearedListedMs: 604_800_000,
   findingsListLimit: 100,
   severity: { diverse_paths: 'medium', dr_reachable: 'high', replication_healthy: 'medium' },
+  /** REQ-UI-026 — incident states a site card counts as alerts: everything not yet resolved or closed. */
+  alertIncidentStates: ['open', 'acknowledged', 'mitigated'],
+  /**
+   * REQ-UI-026 — located_in hops from a CI up to its site: device, rack, row, room, building, site. An incident's
+   * root cause is walked up at most this far to find the site whose card counts it.
+   */
+  locationHops: 5,
+  megabitsPerGigabit: 1_000,
 } as const;
 
 /**
@@ -1542,7 +1550,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.21.0',
+  graphql: '1.22.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
@@ -1551,5 +1559,5 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    */
   event: '0.10.0',
   /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document. */
-  rest: '1.0.0',
+  rest: '1.1.0',
 };

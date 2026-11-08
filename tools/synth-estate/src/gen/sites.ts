@@ -101,6 +101,9 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
     };
     world.sites.push(site);
     const locationCount = def.kind === 'branch' ? branchCount : 1;
+    // REQ-UI-026: the facility facts the setup wizard writes on a site CI (ADR-017), so the Sites screen's card reads
+    // the same attributes for a set-up site and a synthetic one.
+    const facility = def.cloud ? null : { powerCapacityKw: FACILITY_KW[def.kind] ?? 0, rackCount: 0, designPue: def.kind === 'datacenter' || def.kind === 'colocation' ? DESIGN_PUE : null };
     const slot = dcimSlot(world, site);
     site.ciIdx = b.ci(
       slot,
@@ -122,6 +125,8 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
         cloudRegion: def.cloud?.region ?? null,
         timeZone: TIME_ZONE,
         discoveryNodes: def.nodeIds,
+        powerCapacityKw: facility?.powerCapacityKw ?? null,
+        designPue: facility?.designPue ?? null,
       },
       def.code,
       { tags: ['site', def.kind] },
@@ -140,7 +145,7 @@ export function generateSites(world: World, rng: Rng): OrganizationBundle {
         geo: { lat: def.lat, lon: def.lon },
         cloud: def.cloud,
         locationCount,
-        facility: def.cloud ? null : { powerCapacityKw: FACILITY_KW[def.kind] ?? 0, rackCount: 0, designPue: def.kind === 'datacenter' || def.kind === 'colocation' ? DESIGN_PUE : null },
+        facility,
         ciId: null,
       }),
     );

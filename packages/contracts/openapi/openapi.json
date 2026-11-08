@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OpenMap REST API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "The REST face of OpenMap (ADR-049). GraphQL at /graphql covers everything else."
   },
   "paths": {
@@ -5039,6 +5039,64 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "tier": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "powerCapacityKw": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "designPue": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "pue": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "pueAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "racks": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "openAlerts": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -5047,7 +5105,15 @@
                           "code",
                           "drRole",
                           "criticality",
-                          "healthyPaths"
+                          "healthyPaths",
+                          "kind",
+                          "tier",
+                          "powerCapacityKw",
+                          "designPue",
+                          "pue",
+                          "pueAt",
+                          "racks",
+                          "openAlerts"
                         ],
                         "additionalProperties": false
                       }
@@ -5115,6 +5181,46 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "provider": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "capacityMbps": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "throughputMbps": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "utilisationPercent": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "redundancy": {
+                            "type": "string",
+                            "enum": [
+                              "active_active",
+                              "active_standby",
+                              "degraded",
+                              "down",
+                              "single_path"
+                            ]
                           }
                         },
                         "required": [
@@ -5127,7 +5233,12 @@
                           "reachable",
                           "latencyMs",
                           "lossPercent",
-                          "probedAt"
+                          "probedAt",
+                          "provider",
+                          "capacityMbps",
+                          "throughputMbps",
+                          "utilisationPercent",
+                          "redundancy"
                         ],
                         "additionalProperties": false
                       }

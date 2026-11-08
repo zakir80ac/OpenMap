@@ -94,6 +94,8 @@ const POWER_METRIC = 'dcim.power.watts';
 const SUBNET_UTILISATION_RANGE: readonly [number, number] = [4, 88];
 const PDU_WATTS_RANGE: readonly [number, number] = [600, 4200];
 const WATTS_PER_KILOWATT = 1000;
+const PERCENT = 100;
+const MEGABITS_PER_GIGABIT = 1000;
 
 function numberAttribute(ci: EstateCi, names: readonly string[]): number | undefined {
   for (const name of names) {
@@ -107,12 +109,26 @@ function rounded(value: number, decimals: number): number {
   return Number(value.toFixed(decimals));
 }
 
+/**
+ * REQ-UI-026 — a site link's traffic follows its committed bandwidth and the utilisation the generator gave it, so the
+ * Sites screen's throughput-against-capacity reads like a real circuit rather than a figure drawn for any network CI.
+ */
+function linkThroughputGbps(ci: EstateCi, decimals: number): number | undefined {
+  if (ci.type !== 'site_link') return undefined;
+  const bandwidthMbps = numberAttribute(ci, ['bandwidthMbps']);
+  const utilisationPercent = numberAttribute(ci, ['utilisationPercent']);
+  if (bandwidthMbps === undefined || utilisationPercent === undefined) return undefined;
+  return rounded((bandwidthMbps * utilisationPercent) / PERCENT / MEGABITS_PER_GIGABIT, decimals);
+}
+
 export function samplesFor(ci: EstateCi, ts: string, rng: Rng): MetricSample[] {
   const layer = CI_TYPE_LAYER[ci.type];
   if (layer === 'unknown') return [];
   const spec = LAYER_HEADLINE_METRIC[layer];
   const [min, max, decimals] = HEADLINE_RANGES[spec.key];
-  const value = numberAttribute(ci, HEADLINE_ATTRIBUTES[spec.key] ?? []) ?? rounded(rng.float(min, max), decimals);
+  // The draw always happens, so the RNG stream (and every later value and run id) is the same whichever source wins.
+  const drawn = rounded(rng.float(min, max), decimals);
+  const value = numberAttribute(ci, HEADLINE_ATTRIBUTES[spec.key] ?? []) ?? linkThroughputGbps(ci, decimals) ?? drawn;
   const ref = { type: ci.type, identity: ci.identity };
   const samples: MetricSample[] = [{ ci: ref, metric: spec.metric, ts, value, unit: HEADLINE_UNITS[spec.key], labels: {} }];
   if (ci.type === 'subnet') {
