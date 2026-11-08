@@ -235,6 +235,13 @@ export type SlaWindow = (typeof SLA.windows)[number];
 export type AvailabilityGranularity = (typeof SLA.granularities)[number];
 
 export const BSM = {
+  /**
+   * REQ-PERF-002: a set of services' redundancy models (their members and groups) is reused for this long. Impact and
+   * what-if queries over the same services in a burst then skip re-reading thousands of member rows; a group edit
+   * shows within this window.
+   */
+  modelCacheMs: 30_000,
+  modelCacheEntries: 64,
   slaPeriodDays: 30,
   degradedRevenueFactor: 0.3,
   minutesPerDay: 1440,
@@ -836,6 +843,15 @@ export const READINESS = {
   clearedListedMs: 604_800_000,
   findingsListLimit: 100,
   severity: { diverse_paths: 'medium', dr_reachable: 'high', replication_healthy: 'medium' },
+} as const;
+
+/**
+ * REQ-PERF-002 — GraphQL execution. Mercurius compiles a query with graphql-jit once it has run this many times: large
+ * results (an impact closure of 31,000 nodes) spend most of their time in per-field execution, which the compiled
+ * query cuts. A one-off query still runs on the interpreter.
+ */
+export const GRAPHQL_EXECUTION = {
+  jitAfterRuns: 1,
 } as const;
 
 /** Reconciler and outbox dispatcher pacing. */

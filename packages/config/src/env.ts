@@ -41,6 +41,12 @@ export const envSchema = z.object({
   KEYCLOAK_REALM: z.string().default('openmap'),
   KEYCLOAK_CLIENT_ID: z.string().default('openmap-console'),
   /**
+   * Keycloak's bootstrap administrator (the compose .env names them KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD). Only
+   * dev and CI tooling uses them (tools/perf creates its load-test user); the services never do. Empty disables it.
+   */
+  KEYCLOAK_ADMIN: z.string().default(''),
+  KEYCLOAK_ADMIN_PASSWORD: z.string().default(''),
+  /**
    * The API's own (bearer-only) client in the realm. Tokens minted for automation through the client-credentials
    * grant (REQ-SEC-009) carry it in `aud`, so the API accepts them without being issued for the console client.
    */

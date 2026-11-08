@@ -3,7 +3,17 @@
 import neo4j, { type Driver, type Record as BoltRecord, type Session } from 'neo4j-driver';
 import { GRAPH } from '@openmap/constants';
 import { CI_TYPES } from '@openmap/contracts';
-import type { GraphCi, GraphRelationship, GraphRepository, ImpactDirection, ImpactNode, ImpactQueryOptions, ImpactResult, LayerCount } from './types.js';
+import type {
+  GraphCi,
+  GraphRelationship,
+  GraphRepository,
+  ImpactCi,
+  ImpactDirection,
+  ImpactNode,
+  ImpactQueryOptions,
+  ImpactResult,
+  LayerCount,
+} from './types.js';
 import {
   addTypeLabelQuery,
   assertReadOnly,
@@ -60,7 +70,13 @@ interface RelRow {
 
 function toNumber(v: unknown): number {
   if (typeof v === 'number') return v;
-  if (v && typeof v === 'object' && 'toNumber' in v && typeof (v as { toNumber: unknown }).toNumber === 'function') return (v as { toNumber(): number }).toNumber();
+  if (
+    v &&
+    typeof v === 'object' &&
+    'toNumber' in v &&
+    typeof (v as { toNumber: unknown }).toNumber === 'function'
+  )
+    return (v as { toNumber(): number }).toNumber();
   return Number(v);
 }
 
@@ -76,7 +92,9 @@ export class BoltGraphRepository implements GraphRepository {
   private readonly driver: Driver;
 
   constructor(private readonly options: BoltRepositoryOptions) {
-    this.driver = neo4j.driver(options.url, neo4j.auth.basic(options.user, options.password), { disableLosslessIntegers: true });
+    this.driver = neo4j.driver(options.url, neo4j.auth.basic(options.user, options.password), {
+      disableLosslessIntegers: true,
+    });
   }
 
   private session(mode: 'READ' | 'WRITE'): Session {
@@ -87,7 +105,11 @@ export class BoltGraphRepository implements GraphRepository {
 
   // Managed transactions: the driver retries transient errors (Memgraph's "conflicting transactions",
   // leader changes, connection resets) with backoff, so a busy graph never fails a dispatcher batch.
-  private async read<T>(text: string, params: Record<string, unknown>, map: (r: BoltRecord) => T): Promise<T[]> {
+  private async read<T>(
+    text: string,
+    params: Record<string, unknown>,
+    map: (r: BoltRecord) => T,
+  ): Promise<T[]> {
     const s = this.session('READ');
     try {
       const records = await s.executeRead(async (tx) => (await tx.run(text, params)).records);
@@ -108,7 +130,8 @@ export class BoltGraphRepository implements GraphRepository {
   }
 
   async ensureSchema(): Promise<void> {
-    const statements = this.options.engine === 'neo4j' ? schemaStatementsNeo4j(CI_TYPES) : schemaStatementsMemgraph(CI_TYPES);
+    const statements =
+      this.options.engine === 'neo4j' ? schemaStatementsNeo4j(CI_TYPES) : schemaStatementsMemgraph(CI_TYPES);
     const s = this.session('WRITE');
     try {
       for (const st of statements) {
@@ -149,7 +172,10 @@ export class BoltGraphRepository implements GraphRepository {
     // Batched so a large tenant never holds one transaction over the whole graph.
     let total = 0;
     for (;;) {
-      const n = await this.write('MATCH (c:Ci {tenantId: $tenantId}) WITH c LIMIT $limit DETACH DELETE c RETURN count(*) AS n', { tenantId, limit: neo4j.int(GRAPH.purgeBatchSize) });
+      const n = await this.write(
+        'MATCH (c:Ci {tenantId: $tenantId}) WITH c LIMIT $limit DETACH DELETE c RETURN count(*) AS n',
+        { tenantId, limit: neo4j.int(GRAPH.purgeBatchSize) },
+      );
       total += n;
       if (n === 0) return total;
     }
@@ -180,31 +206,67 @@ export class BoltGraphRepository implements GraphRepository {
     return rows[0] ?? null;
   }
 
-  async neighbours(tenantId: string, id: string, direction: ImpactDirection, asOf: string | null): Promise<GraphRelationship[]> {
-    return this.read(neighboursQuery(direction), { tenantId, id, asOf, limit: neo4j.int(GRAPH.maxPageSize) }, (r) => toRel(r.get('rel') as RelRow));
+  async neighbours(
+    tenantId: string,
+    id: string,
+    direction: ImpactDirection,
+    asOf: string | null,
+  ): Promise<GraphRelationship[]> {
+    return this.read(
+      neighboursQuery(direction),
+      { tenantId, id, asOf, limit: neo4j.int(GRAPH.maxPageSize) },
+      (r) => toRel(r.get('rel') as RelRow),
+    );
   }
 
   async impact(tenantId: string, rootId: string, options: ImpactQueryOptions): Promise<ImpactResult> {
     const started = Date.now();
+    // The closure and the service hop run as two queries, side by side (REQ-PERF-002: a UNION ALL of them is planned badly).
     const q = impactQuery(tenantId, rootId, options);
-    const rows = await this.read(q.text, q.params, (r): ImpactNode => ({
-      ci: toCi(r.get('ci') as CiRow),
-      depth: toNumber(r.get('depth')),
-      path: r.get('path') as string[],
-    }));
-    // The union may return a service both as a closure node and via the service hop; keep the shortest.
+    const toNode = (r: BoltRecord): ImpactNode => {
+      const ci = r.get('ci') as { id: string; tenantId: string; type: ImpactCi['type']; tier: number | null | undefined };
+      return {
+        ci: {
+          id: ci.id,
+          tenantId: ci.tenantId,
+          type: ci.type,
+          tier: ci.tier === undefined || ci.tier === null ? null : toNumber(ci.tier),
+        },
+        depth: toNumber(r.get('depth')),
+        path: r.get('path') as string[],
+      };
+    };
+    const [closure, serviceHop] = q.parts;
+    const rows = (
+      await Promise.all([
+        this.read(closure.text, closure.params, toNode),
+        this.read(serviceHop.text, serviceHop.params, toNode),
+      ])
+    ).flat();
+    // A service may come back both as a closure node and via the service hop; keep the shortest.
     const byId = new Map<string, ImpactNode>();
     for (const n of rows) {
       const prev = byId.get(n.ci.id);
       if (!prev || n.depth < prev.depth) byId.set(n.ci.id, n);
     }
-    const nodes = [...byId.values()].sort((a, b) => a.depth - b.depth || (a.ci.tier ?? Number.MAX_SAFE_INTEGER) - (b.ci.tier ?? Number.MAX_SAFE_INTEGER));
+    const nodes = [...byId.values()].sort(
+      (a, b) =>
+        a.depth - b.depth || (a.ci.tier ?? Number.MAX_SAFE_INTEGER) - (b.ci.tier ?? Number.MAX_SAFE_INTEGER),
+    );
     const services = nodes.filter((n) => n.ci.type === 'business_service');
     return { rootId, nodes, services, durationMs: Date.now() - started };
   }
 
-  async shortestPath(tenantId: string, fromId: string, toId: string, asOf: string | null): Promise<GraphRelationship[]> {
-    const q = this.options.engine === 'neo4j' ? shortestPathQueryNeo4j(tenantId, fromId, toId, asOf) : shortestPathQuery(tenantId, fromId, toId, asOf);
+  async shortestPath(
+    tenantId: string,
+    fromId: string,
+    toId: string,
+    asOf: string | null,
+  ): Promise<GraphRelationship[]> {
+    const q =
+      this.options.engine === 'neo4j'
+        ? shortestPathQueryNeo4j(tenantId, fromId, toId, asOf)
+        : shortestPathQuery(tenantId, fromId, toId, asOf);
     const rows = await this.read(q.text, q.params, (r) => (r.get('rels') as RelRow[]).map(toRel));
     return rows[0] ?? [];
   }
@@ -223,7 +285,10 @@ export class BoltGraphRepository implements GraphRepository {
     await this.write(setHealthQuery(), { tenantId, id, health });
   }
 
-  async readOnly<T extends Record<string, unknown>>(cypher: string, params: Record<string, unknown>): Promise<T[]> {
+  async readOnly<T extends Record<string, unknown>>(
+    cypher: string,
+    params: Record<string, unknown>,
+  ): Promise<T[]> {
     assertReadOnly(cypher);
     return this.read(cypher, params, (r) => r.toObject() as T);
   }

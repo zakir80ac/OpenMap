@@ -30,8 +30,15 @@ export interface GraphRelationship {
   validTo: string | null;
 }
 
+/**
+ * REQ-PERF-002 — what an impact walk carries per node: enough to tell services and applications apart and to order by
+ * tier. A closure can hold tens of thousands of nodes, and the full projection cost twice as much under load; callers
+ * that need the whole CI load it by id.
+ */
+export type ImpactCi = Pick<GraphCi, 'id' | 'tenantId' | 'type' | 'tier'>;
+
 export interface ImpactNode {
-  ci: GraphCi;
+  ci: ImpactCi;
   depth: number;
   /** Ids from the root to this node, root first. */
   path: string[];

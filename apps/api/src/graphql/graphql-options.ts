@@ -1,5 +1,6 @@
 // REQ-CORE-012 — Mercurius driver options for the frozen schema: SDL loaded from the contracts package,
 // bearer verification into the request context, and token-authenticated WebSocket subscriptions.
+import { GRAPHQL_EXECUTION } from '@openmap/constants';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
@@ -41,6 +42,8 @@ export function graphqlOptions(auth: AuthService, loaders: CiLoaderFactory): Mer
     typeDefs: loadSchemaSdl(),
     path: GRAPHQL_PATH,
     graphiql: false,
+    // REQ-PERF-002: compile a query with graphql-jit after its first run (large lists execute several times faster).
+    jit: GRAPHQL_EXECUTION.jitAfterRuns,
     context: (request: FastifyRequest) => buildContext(auth, loaders, request.headers.authorization),
     subscription: {
       onConnect: async (init: ConnectionInit) => {

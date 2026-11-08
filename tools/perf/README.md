@@ -14,16 +14,25 @@ under `tools/perf/results/` (CI writes them; they are not committed).
 
 ## Impact query
 
-1. Generate and load the estate: `pnpm --filter @openmap/synth-estate exec tsx src/cli.ts generate --seed 42 --scale 1 --out ../../packages/testing/fixtures/synth` then `pnpm --filter @openmap/reconciler replay --dir ../../packages/testing/fixtures/synth --reset`.
-2. Start the API and obtain a Keycloak token for the synthetic tenant.
-3. Pick root ids (PDUs and database hosts are the worst cases): `SELECT id FROM cis WHERE type IN ('pdu','host') LIMIT 20`.
-4. Run from this directory:
+With an estate loaded (the scale-1 tenant, or `synth generate --seed 43 --scale 0.2` plus `reconciler replay --reset`
+for a 110k-CI one) and the compose stack up:
 
 ```bash
-API_URL=http://localhost:4000/graphql TOKEN=... ROOT_IDS=id1,id2 k6 run k6/impact-query.js
+set -a && . deploy/compose/.env && set +a
+pnpm --filter @openmap/perf impact-budget [--tenant <id>] [--roots id,id] [--vus 8] [--duration 60s]
 ```
 
-The summary writes `results/impact-query.json`; `pnpm guard` then fails if p95 is over budget.
+The tool does four things:
+
+- it takes the tenant with the most CIs, unless `--tenant` names one;
+- it measures the upstream closures of 100 sampled PDUs that feed network gear and keeps the two widest, then adds
+  random PDUs, database hosts, hypervisors and any `--roots`;
+- it creates or refreshes a load-test user for the tenant through Keycloak's bootstrap administrator (a fresh
+  random password each run, never stored);
+- it runs `k6/impact-query.js`, whose summary writes `results/impact-query.json`.
+
+`pnpm guard` then fails if p95 is over budget. Measurements and the changes behind them are in
+`docs/evidence/impact-query.md`.
 
 ## Availability report
 

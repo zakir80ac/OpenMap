@@ -6,7 +6,11 @@ import type { Money } from '../common/money.js';
 export type PredictedState = 'down' | 'degraded' | 'at_risk' | 'unaffected';
 
 export interface ImpactNodeView {
-  ci: CiRecord;
+  /**
+   * REQ-PERF-002: the node's CI id. The full CI is loaded only when a client selects it (GraphQL ImpactNode.ci through the
+   * request's batch loader): a closure can hold tens of thousands of nodes.
+   */
+  ciId: string;
   depth: number;
   predicted: PredictedState;
   path: string[];

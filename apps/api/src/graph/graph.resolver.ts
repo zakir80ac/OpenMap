@@ -1,17 +1,17 @@
 // REQ-DEP-001 REQ-DEP-004 — Query.impact / Query.path / Query.layers / Query.networkTopology (ADR-030) /
 // Query.applicationMap (ADR-031) and Mutation.setLayerVisibility.
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { z } from 'zod';
 import { TOPOLOGY } from '@openmap/constants';
 import { ciLayerSchema } from '@openmap/contracts';
 import { Roles } from '../auth/roles.decorator.js';
 import { ROLES } from '../auth/roles.js';
 import { directionSchema } from '../ci/ci.schemas.js';
-import type { RelationshipRecord } from '../ci/ci.types.js';
+import type { CiRecord, RelationshipRecord } from '../ci/ci.types.js';
 import { parseInput } from '../common/validation.js';
 import { TenantContext } from '../tenant/tenant.context.js';
 import { GraphQueryService } from './graph.service.js';
-import type { ImpactResultView, LayerSummaryView } from './graph.types.js';
+import type { ImpactNodeView, ImpactResultView, LayerSummaryView } from './graph.types.js';
 import { ApplicationMapService, type ApplicationMapView } from './application-map.service.js';
 import { TopologyService, type NetworkTopologyView } from './topology.service.js';
 
@@ -67,5 +67,16 @@ export class GraphResolver {
   setLayerVisibility(@Args('layer') layer: unknown, @Args('visible') visible: unknown): Promise<LayerSummaryView[]> {
     const a = parseInput(visibilityArgs, { layer, visible }, 'setLayerVisibility arguments');
     return this.service.setLayerVisibility(this.tenant.tenantId, this.tenant.userId, a.layer, a.visible);
+  }
+}
+
+/** REQ-PERF-002: an impact node's CI, loaded through the request's batch loader only when the client selects it. */
+@Resolver('ImpactNode')
+export class ImpactNodeFieldsResolver {
+  constructor(private readonly tenant: TenantContext) {}
+
+  @ResolveField('ci')
+  ci(@Parent() node: ImpactNodeView): Promise<CiRecord | null> {
+    return this.tenant.loaders.ci.load(node.ciId);
   }
 }

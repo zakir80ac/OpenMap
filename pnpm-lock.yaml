@@ -690,6 +690,12 @@ importers:
       '@openmap/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@openmap/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@openmap/graph':
+        specifier: workspace:*
+        version: link:../../packages/graph
       '@openmap/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

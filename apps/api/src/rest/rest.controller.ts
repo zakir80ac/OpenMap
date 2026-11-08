@@ -120,7 +120,8 @@ export class RestController {
       const { id } = parse(REST_ROUTES.getCiImpact.params, params, 'path');
       const q: QueryOf<'getCiImpact'> = parse(REST_ROUTES.getCiImpact.query, raw, 'query');
       const r = await this.graph.impact(p.tenantId, id, q.direction ?? 'upstream', q.maxDepth ?? 0, null);
-      return { root: r.root, nodes: r.nodes.map((n) => ({ ci: n.ci, depth: n.depth, predicted: n.predicted, path: n.path })), services: r.services.map((s) => ({ service: s.service, tier: s.tier, predicted: s.predicted, path: s.path })), durationMs: r.durationMs };
+      const cis = new Map((await this.cis.byIds(p.tenantId, r.nodes.map((n) => n.ciId))).map((c) => [c.id, c]));
+      return { root: r.root, nodes: r.nodes.flatMap((n) => { const ci = cis.get(n.ciId); return ci === undefined ? [] : [{ ci, depth: n.depth, predicted: n.predicted, path: n.path }]; }), services: r.services.map((s) => ({ service: s.service, tier: s.tier, predicted: s.predicted, path: s.path })), durationMs: r.durationMs };
     });
   }
 

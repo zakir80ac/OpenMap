@@ -62,15 +62,23 @@ function edgeAlternatives(types: readonly RelationshipType[]): string {
   return list.map((t) => relLabel(t)).join('|');
 }
 
-const CI_PROJECTION = '{ .id, .tenantId, .type, .layer, .name, .displayName, .lifecycle, .health, .tier, .validFrom, .validTo }';
+/**
+ * The impact walk's per-node projection (ImpactCi, REQ-PERF-002). `.tenantId` stays in it on purpose: without it
+ * Memgraph plans the service hop forty times slower (2.7 s against 66 ms on the scale estate, measured 2026-11-08).
+ */
+const IMPACT_PROJECTION = '{ .id, .tenantId, .type, .tier }';
 
 /**
  * Impact traversal. Upstream follows dependency edges against their direction (who depends on the
  * root); downstream follows with the direction (what the root depends on). Business services are
  * reached by one forward PART_OF_SERVICE hop from any node in the closure, including the root.
  * Each node and service is returned once with its shortest path.
+ *
+ * REQ-PERF-002: the repository runs the two halves (`parts`) as separate queries. Memgraph plans the UNION ALL of them
+ * badly: on the 550k-CI scale estate the union took 2.7-3.2 s where its halves took 16-560 ms together, whatever the
+ * closure size. `text` keeps the union for callers that want one statement.
  */
-export function impactQuery(tenantId: string, rootId: string, options: ImpactQueryOptions): Query {
+export function impactQuery(tenantId: string, rootId: string, options: ImpactQueryOptions): Query & { parts: [Query, Query] } {
   const depth = clampDepth(options.maxDepth);
   const rels = edgeAlternatives(options.edgeTypes);
   const arrow = (dir: ImpactDirection): [string, string] => (dir === 'upstream' ? ['<-', '-'] : dir === 'downstream' ? ['-', '->'] : ['-', '-']);
@@ -83,16 +91,16 @@ export function impactQuery(tenantId: string, rootId: string, options: ImpactQue
     'WHERE ' + temporal('x') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')' + containment + '\n' +
     'WITH x, p ORDER BY length(p) ASC\n' +
     'WITH x, head(collect(p)) AS sp\n' +
-    'RETURN x ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
+    'RETURN x ' + IMPACT_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
   const services =
     'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
     'MATCH p = (root)' + left + '[:' + rels + '*0..' + String(depth) + ']' + right + '(x:Ci {tenantId: $tenantId})-[ps:' + service + ']->(s:Ci {tenantId: $tenantId})\n' +
     'WHERE ' + temporal('s') + ' AND ' + temporal('ps') + ' AND ALL(r IN relationships(p) WHERE ' + temporal('r') + ')' + containment + '\n' +
     'WITH s, p ORDER BY length(p) ASC\n' +
     'WITH s, head(collect(p)) AS sp\n' +
-    'RETURN s ' + CI_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
-  const text = closure + '\nUNION ALL\n' + services;
-  return { text, params: { tenantId, rootId, asOf: options.asOf, containerTypes: [...GRAPH.impactContainerTypes] } };
+    'RETURN s ' + IMPACT_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
+  const params = { tenantId, rootId, asOf: options.asOf, containerTypes: [...GRAPH.impactContainerTypes] };
+  return { text: closure + '\nUNION ALL\n' + services, params, parts: [{ text: closure, params }, { text: services, params }] };
 }
 
 export function shortestPathQuery(tenantId: string, fromId: string, toId: string, asOf: string | null): Query {

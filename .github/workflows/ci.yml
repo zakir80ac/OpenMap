@@ -5,7 +5,7 @@ on:
   push: { branches: [main] }
   pull_request:
 permissions: { contents: read }
-concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
+concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -75,6 +75,42 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: e2e-screenshots, path: "apps/console/e2e/screenshots" }
+      - run: docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml down -v
+        if: always()
+  # REQ-PERF-002: the impact query budget (p95 < PERF_BUDGETS.impactQuery100kP95Ms) on a 110k-CI estate, enforced by guard.
+  perf:
+    runs-on: ubuntu-latest
+    needs: verify
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: grafana/setup-k6-action@v1
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: cp deploy/compose/.env.example deploy/compose/.env
+      - name: Start the stack (the impact-validation sweep off, so the measurement is the query alone)
+        working-directory: deploy/compose
+        env: { IMPACT_VALIDATION_INTERVAL_MS: "0", LINK_PROBE_INTERVAL_MS: "0" }
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.apps.yml build api
+          docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d --wait postgres memgraph clickhouse valkey meilisearch openbao keycloak
+          docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d api
+      - name: Load a 110k-CI estate
+        run: |
+          pnpm --filter @openmap/synth-estate synth generate --seed 43 --scale 0.2 --out ${{ runner.temp }}/estate
+          pnpm --filter @openmap/reconciler replay --dir ${{ runner.temp }}/estate --reset
+      - name: Wait for the API
+        run: for i in $(seq 1 60); do curl -sf http://localhost:4000/readyz >/dev/null && exit 0; sleep 5; done; exit 1
+      - name: Impact budget
+        run: set -a && . deploy/compose/.env && set +a && pnpm --filter @openmap/perf impact-budget
+      - run: pnpm guard
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: perf-results, path: "tools/perf/results" }
       - run: docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml down -v
         if: always()
   kind:

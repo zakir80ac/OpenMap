@@ -40,13 +40,9 @@ export class GraphQueryService {
     const root = await this.cis.ci(tenantId, ciId, asOf);
     if (!root) throw new NotFoundException('CI ' + ciId + ' not found');
     const result = await this.graph.repo.impact(tenantId, ciId, { direction, maxDepth, asOf, edgeTypes: [] });
-    const ids = [...new Set([...result.nodes.map((n) => n.ci.id), ...result.services.map((s) => s.ci.id)])];
-    const byId = new Map((await this.cis.byIds(tenantId, ids)).map((c) => [c.id, c]));
-    const nodes: ImpactNodeView[] = [];
-    for (const n of result.nodes) {
-      const ci = byId.get(n.ci.id);
-      if (ci) nodes.push({ ci, depth: n.depth, predicted: predictNode(direction, n, ciId), path: n.path });
-    }
+    // REQ-PERF-002: only the services are hydrated here (the service facts need them); a node's CI is loaded on demand.
+    const byId = new Map((await this.cis.byIds(tenantId, [...new Set(result.services.map((s) => s.ci.id))])).map((c) => [c.id, c]));
+    const nodes: ImpactNodeView[] = result.nodes.map((n) => ({ ciId: n.ci.id, depth: n.depth, predicted: predictNode(direction, n, ciId), path: n.path }));
     // Every component in the upstream closure depends on the root, so it fails with it; redundant
     // members outside the closure stay healthy and the service models decide the service state.
     const failed = direction === 'downstream' ? [ciId] : [ciId, ...result.nodes.filter((n) => n.ci.type !== 'business_service').map((n) => n.ci.id)];

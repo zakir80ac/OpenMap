@@ -44,6 +44,9 @@ export type ConditionSeverity = 'down' | 'degraded' | 'at_risk';
 
 @Injectable()
 export class BsmFactsService {
+  /** Redundancy models of a tenant's service set, by tenant and sorted ids, for BSM.modelCacheMs (REQ-PERF-002). */
+  private readonly modelCache = new Map<string, { at: number; models: Promise<Map<string, ServiceModel>> }>();
+
   constructor(
     @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
     @Inject(SLA_REPOSITORY) private readonly slas: SlaRepository,
@@ -61,7 +64,23 @@ export class BsmFactsService {
   }
 
   /** Redundancy groups per service: members grouped by their `redundancyGroup` attribute, one group per lone member. */
-  async modelsFor(tenantId: string, serviceIds: readonly string[]): Promise<Map<string, ServiceModel>> {
+  modelsFor(tenantId: string, serviceIds: readonly string[]): Promise<Map<string, ServiceModel>> {
+    const key = tenantId + '|' + [...serviceIds].sort().join(',');
+    const now = Date.now();
+    const hit = this.modelCache.get(key);
+    if (hit !== undefined && now - hit.at < BSM.modelCacheMs) return hit.models;
+    const models = this.loadModels(tenantId, serviceIds);
+    // A failed read is not kept: the next call reads again.
+    models.catch(() => this.modelCache.delete(key));
+    this.modelCache.set(key, { at: now, models });
+    if (this.modelCache.size > BSM.modelCacheEntries) {
+      const oldest = this.modelCache.keys().next().value;
+      if (oldest !== undefined) this.modelCache.delete(oldest);
+    }
+    return models;
+  }
+
+  private async loadModels(tenantId: string, serviceIds: readonly string[]): Promise<Map<string, ServiceModel>> {
     const rels = await this.cis.relationshipsOfMany(tenantId, serviceIds, [PART_OF_SERVICE], 'upstream');
     const members = new Map(
       (
@@ -71,10 +90,13 @@ export class BsmFactsService {
         )
       ).map((c) => [c.id, c]),
     );
+    // Members by service, once: filtering the whole list per service is quadratic (300 services on the scale estate).
+    const byService = new Map<string, typeof rels>();
+    for (const r of rels) byService.set(r.toCiId, [...(byService.get(r.toCiId) ?? []), r]);
     const models = new Map<string, ServiceModel>();
     for (const serviceId of serviceIds) {
       const groups = new Map<string, { memberCiIds: string[]; minHealthy: number }>();
-      for (const r of rels.filter((x) => x.toCiId === serviceId)) {
+      for (const r of byService.get(serviceId) ?? []) {
         const member = members.get(r.fromCiId);
         if (!member) continue;
         const name = stringAttribute(member.attributes, SERVICE_ATTRIBUTES.redundancyGroup) ?? member.id;
@@ -194,9 +216,9 @@ export class BsmFactsService {
       services.map((s) => s.id),
     );
     const memberIds = [...models.values()].flatMap((m) => m.groups.flatMap((g) => g.memberCiIds));
-    const health = await this.healthMap(tenantId, [
-      ...new Set([...memberIds, ...failedIds, ...services.map((s) => s.id)]),
-    ]);
+    // Live health of the group members and the services only: every failed id takes the condition below, so reading
+    // its live state (tens of thousands on a large closure, REQ-PERF-002) would be thrown away.
+    const health = await this.healthMap(tenantId, [...new Set([...memberIds, ...services.map((s) => s.id)])]);
     const facts = await this.factsFor(tenantId, services, health);
     const hypothetical = new Map(health);
     if (severity !== 'at_risk') for (const id of failedIds) hypothetical.set(id, severity);

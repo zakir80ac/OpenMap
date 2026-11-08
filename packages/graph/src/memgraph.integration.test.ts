@@ -48,16 +48,16 @@ describe('Memgraph repository', () => {
 
   it('finds the business service upstream of a failed PDU within the depth budget', async () => {
     const result = await repo.impact(tenantId, pdu.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
-    expect(result.services.map((s) => s.ci.name)).toEqual(['Online banking']);
+    expect(result.services.map((s) => s.ci.id)).toEqual([svc.id]);
     expect(result.services[0]?.depth).toBe(4);
     expect(result.services[0]?.path[0]).toBe(pdu.id);
   });
   it('reaches the service from a component through its application, but not a switch from its port', async () => {
     const fromComponent = await repo.impact(tenantId, component.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
-    expect(fromComponent.nodes.map((n) => n.ci.name)).toContain('app-ledger');
-    expect(fromComponent.services.map((s) => s.ci.name)).toEqual(['Online banking']);
+    expect(fromComponent.nodes.map((n) => n.ci.id)).toContain(app.id);
+    expect(fromComponent.services.map((s) => s.ci.id)).toEqual([svc.id]);
     const fromPort = await repo.impact(tenantId, port.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
-    expect(fromPort.nodes.map((n) => n.ci.name)).not.toContain('tor-r12-a');
+    expect(fromPort.nodes.map((n) => n.ci.id)).not.toContain(toR.id);
     expect(fromPort.services).toEqual([]);
   });
   it('time-travels: a retired relationship is invisible now but visible before retirement', async () => {
@@ -69,7 +69,7 @@ describe('Memgraph repository', () => {
     const afterNow = await repo.impact(tenantId, db.id, { direction: 'upstream', maxDepth: 0, asOf: null, edgeTypes: [] });
     expect(afterNow.services).toHaveLength(0);
     const asOfBefore = await repo.impact(tenantId, db.id, { direction: 'upstream', maxDepth: 0, asOf: before, edgeTypes: [] });
-    expect(asOfBefore.services.map((s) => s.ci.name)).toEqual(['Online banking']);
+    expect(asOfBefore.services.map((s) => s.ci.id)).toEqual([svc.id]);
   });
   it('counts by layer and refuses write Cypher through readOnly', async () => {
     const counts = await repo.layerCounts(tenantId, null);
