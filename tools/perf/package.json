@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lighthouse": "tsx src/lighthouse.ts",
-    "impact-budget": "tsx src/impact-budget.ts"
+    "impact-budget": "tsx src/impact-budget.ts",
+    "discovery-sweep": "tsx src/discovery-sweep.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",

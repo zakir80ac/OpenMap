@@ -10,7 +10,7 @@ under `tools/perf/results/` (CI writes them; they are not committed).
 | Screen interaction p95 | Playwright `apps/console/e2e/perf.spec.ts` (T-089) | p95 < 100 ms | `results/screen-interaction.json` |
 | Graph rendering | Playwright frame timing on the dependency map, same spec | 60 fps | `results/graph-render.json` |
 | Lighthouse | `pnpm --filter @openmap/perf lighthouse` user flow over the signed-in console | performance ≥ 0.90, accessibility ≥ 0.95, best practices ≥ 0.95 | `results/lighthouse.json` (+ `lighthouse-flow.html`) |
-| Discovery sweep | synth-estate replay through the scheduler and reconciler | 10k devices < 15 min | `results/discovery-sweep.json` |
+| Discovery sweep | `pnpm --filter @openmap/perf discovery-sweep` (synth-estate replay through the reconciler, CI nightly) | 10k devices < 15 min | `results/discovery-sweep.json` |
 
 ## Impact query
 
@@ -55,3 +55,24 @@ pnpm --filter @openmap/perf lighthouse
 ```
 
 The perf spec signs in as the realm's seeded administrator, samples click-to-paint latency on layer toggles, CMDB layer filters, the account menu and the dependency-map direction select, then zooms and pans the map for three seconds while counting frames. The Lighthouse runner drives the Chromium that Playwright installed (Puppeteer attaches over the DevTools socket, because Puppeteer cannot spawn that binary on every host), audits the sign-in screen cold and every primary screen as a navigation with the desktop preset, and lists the failing accessibility and best-practice audits per page so a budget miss names its cause. `pnpm guard` fails when any result file is over budget.
+
+## Discovery sweep
+
+With the datastores up and **no other outbox dispatcher running** (stop the compose reconciler: two dispatchers deliver
+the same rows twice):
+
+```bash
+pnpm --filter @openmap/perf discovery-sweep [--seed 44] [--scale 0.25] [--out <dir>]
+```
+
+The command does three things:
+
+- it generates the synthetic estate with a seed of its own, so the measured tenant is new;
+- it replays the estate through `reconciler replay --reset`: reconciliation, the pending and dependency-mapping passes,
+  and dispatch to Memgraph, ClickHouse and Meilisearch, as ADR-046 measured it;
+- it times the replay and scales it to minutes per `PERF_BUDGETS.discoverySweepDevices` devices (hosts plus network
+  devices).
+
+The result goes to `results/discovery-sweep.json`. The CI `sweep` job runs it nightly, and `pnpm guard` fails over
+`PERF_BUDGETS.discoverySweepMinutes`. From a Windows host, add `connect_timeout=30` to `POSTGRES_URL` (Docker Desktop's
+port forwarding can be slow to open a burst of connections).
