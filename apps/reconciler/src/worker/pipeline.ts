@@ -9,6 +9,7 @@ import { reconcile } from '../core/reconcile.js';
 import { loadLookup } from './lookup.js';
 import { persist, type PersistSummary } from './persist.js';
 import { foldRefDuplicates, runRefPass, type RefPassSummary } from './refs.js';
+import { retireMissingZoneRecords } from './zones.js';
 
 export interface PipelineSummary extends PersistSummary {
   unchanged: number;
@@ -25,6 +26,8 @@ export interface PipelineSummary extends PersistSummary {
   reconcileCpuMs: number;
   /** ADR-045: CIs folded into another CI with the same ref key after this result landed. */
   folded: number;
+  /** REQ-IPAM-003: dns_record CIs retired because a full transfer of their zone no longer holds them. */
+  zoneRecordsRetired: number;
 }
 
 function cpuMs(since: NodeJS.CpuUsage): number {
@@ -89,7 +92,8 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
   // parent's identity was known here) is folded into the older one.
   const refKeys = [...out.refKeys.values()].filter((k): k is string => k !== null);
   const folded = await timed(() => foldRefDuplicates(prisma, result.tenantId, refKeys), (ms) => (persistMs += ms));
-  return { ...summary, folded, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
+  const zoneRecordsRetired = await timed(() => retireMissingZoneRecords(prisma, result), (ms) => (persistMs += ms));
+  return { ...summary, folded, zoneRecordsRetired, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
 }
 
 /**
