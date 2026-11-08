@@ -183,7 +183,7 @@
 | REQ-INT-019 | INT | Platform | Backup and restore | OpenMap: scripted logical backups of all stores (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §10. Platform |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-PERF-005 | PERF | Platform | Health and performance of the platform itself | OpenMap: OpenTelemetry, Prometheus, budgets in CI (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §10. Platform |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-025 | UI | Platform | English UI | OpenMap: English and Arabic with RTL (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §10. Platform | T-002, T-087 | Every screen renders in en (default locale) with full catalogue parity (i18n:check in pre-commit and CI); walkthrough screenshots *-en.png | 2026-10-22 | 2026-10-22 |  |
-| REQ-UI-026 | UI | Screens | Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards |  | Links show carrier, latency, throughput vs capacity, loss, redundancy state; sites show tier, power capacity, racks, PUE, alerts; Playwright en+ar | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-UI-026 | UI | Screens | Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards |  | Links show carrier, latency, throughput vs capacity, loss, redundancy state; sites show tier, power capacity, racks, PUE, alerts; Playwright en+ar | P0 | Done |  |  | docs/DESIGN-CUES.md | T-490, T-491, T-492, T-493 | docs/evidence/console/sites-facilities-en.png, docs/evidence/console/sites-facilities-ar.png (RTL), ADR-025 amendment, GraphQL 1.22.0, REST 1.1.0 | 2026-10-22 | 2026-11-08 | Site facility cards (kind, tier, power capacity, racks from the CMDB facility tree, measured/design PUE, open alerts = open findings + unresolved incidents located in the site) and link carrier, throughput vs committed bandwidth with usage bar, redundancy state (linkRedundancy). Synthetic estate now writes site facility attributes and derives link throughput from bandwidth x utilisation. Follow-up: readiness finding details are English text from the engine, also in Arabic. |
 | REQ-UI-027 | UI | Screens | Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex |  | Backed by ClickHouse metrics; health and category filters; virtualised rows; p95 under budget on 100k CIs | P0 | Not started |  |  | docs/DESIGN-CUES.md |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DEP-005 | DEP | Dependency map | Lane layout mode: layers as horizontal lanes with blast-radius isolation on click |  | Toggle between force and lane layouts; lanes follow CI_LAYERS grouped into six bands; clicking a node dims everything outside its impact closure | P0 | Done |  |  | docs/DESIGN-CUES.md | T-060, T-061 | lane/force layout toggle in the URL, deterministic force layout in the layout worker up to DEPENDENCY_MAP.forceMaxNodes, click isolates the impact closure (Sigma reducers dim the rest), double-click opens the CI; commit bb5e5b9 | 2026-10-22 | 2026-11-01 | Lane layout mode implemented (apps/console/src/lib/graph-layout.ts): lanes per CI_LAYERS order, hidden layers bridged, per-lane chips. Blast-radius isolation on click is the next increment. |
 | REQ-BSM-005 | BSM | Runbooks | Runbooks attached to scenarios and incidents with automation hooks per step |  | runbookSchema stored and shown on impact and incident screens; steps can trigger SOAR or Ansible via integrations; recovery estimate sums step minutes | P0 | Done |  |  | docs/DESIGN-CUES.md | T-470, T-471, T-472, T-473, T-474, T-475, T-476 | a9e6f16; ADR-048; e2e screenshots apps/console/e2e/screenshots/runbooks-{en,ar}.png; commit is 1dbd6a1 (a9e6f16 above is a typo) | 2026-10-22 | 2026-11-07 |  |
@@ -221,7 +221,7 @@
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 3 | 43 |
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
-| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 31 | 86 |
+| UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 32 | 89 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 4 | 50 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E, Added |  | 5 | 3 | 60 |
@@ -257,11 +257,11 @@
 | ci | packages/contracts/src/ci.ts | 0.8.0 |  | ADR-025 |
 | collector | packages/contracts/src/collector.ts | 0.8.0 |  | ADR-025 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.21.0 |  | ADR-025 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.22.0 |  | ADR-025 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
-| rest | packages/contracts/src/rest.ts | 1.0.0 |  | ADR-049 |
+| rest | packages/contracts/src/rest.ts | 1.1.0 |  | ADR-025 |
 ## Sheet: Decisions
 | ADR number | Title | Status | Date | Link |
 | --- | --- | --- | --- | --- |
@@ -624,6 +624,10 @@
 | T-487 | unit | REQ-PERF-002, REQ-CORE-020 | 2026-11-08 | Pass | 0 |
 | T-488 | unit | REQ-PERF-004, REQ-CORE-020 | 2026-11-08 | Pass | 0 |
 | T-489 | unit | REQ-CORE-020, REQ-PERF-004 | 2026-11-08 | Pass | 0 |
+| T-490 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
+| T-491 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
+| T-492 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
+| T-493 | unit | REQ-UI-026 | 2026-11-08 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -660,10 +664,10 @@
 | 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
 | 2026-11-08 | Checkpoint 30: REQ-CORE-020 leased outbox claims (0035/0036), pipelined graph batch, sync large ClickHouse inserts; seed-45 dispatch 67.8 s to 27.3 s; REQ-PERF-004 sweep 8.43 min per 10k devices (budget 15). ADR-050. Both In review. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-08T01:25:34.254Z |  |  |  |  |  |  |
+| Generated | 2026-11-08T06:24:19.696Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 36 | 0 | 28 | 5 | 139 |  |  |
+| All | 35 | 0 | 28 | 5 | 140 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 0 | 0 | 0 | 1 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -672,14 +676,14 @@
 | IPAM | 4 | 0 | 0 | 0 | 3 | 7 | 43 |
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
-| UI | 5 | 0 | 0 | 0 | 31 | 36 | 86 |
+| UI | 4 | 0 | 0 | 0 | 32 | 36 | 89 |
 | AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
 | PERF | 1 | 0 | 0 | 2 | 2 | 5 | 40 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 3 | 0 | 26 | 3 | 92 | 124 |  |
+| P0 | 2 | 0 | 26 | 3 | 93 | 124 |  |
 | P1 | 30 | 0 | 2 | 2 | 47 | 81 |  |
 | P2 | 3 | 0 | 0 | 0 | 0 | 3 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
@@ -689,6 +693,7 @@
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
 | 2026-11-07 | 139 |  |  |  |  |  |  |
+| 2026-11-08 | 140 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |

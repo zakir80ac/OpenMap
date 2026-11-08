@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-08T01:25:32.500Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-08T06:24:19.756Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 36 |
+| Not started | 35 |
 | In progress | 0 |
 | Blocked | 28 |
 | In review | 5 |
-| Done | 139 |
+| Done | 140 |
 | **Total** | **208** |
 
 ## By workstream
@@ -22,7 +22,7 @@ Generated 2026-11-08T01:25:32.500Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | IPAM | 7 | 3 | 0 | 0 | 43% |
 | DCIM | 9 | 2 | 0 | 0 | 22% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
-| UI | 36 | 31 | 0 | 0 | 86% |
+| UI | 36 | 32 | 0 | 0 | 89% |
 | AI | 8 | 4 | 0 | 0 | 50% |
 | INT | 19 | 8 | 0 | 0 | 42% |
 | QA | 5 | 3 | 0 | 0 | 60% |
@@ -66,7 +66,6 @@ Generated 2026-11-08T01:25:32.500Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## Next up
 
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
-- REQ-UI-026 [P0] Screen · Sites and connectivity: WAN links with carrier telemetry, telco transit health, site facility cards
 - REQ-UI-027 [P0] Screen · Health and telemetry fleet table: CI, category and site, IP/FQDN, health, CPU, memory, IOPS, throughput, Apdex
 - REQ-AI-002 [P1] Classification of unknown CIs and layer suggestions
 - REQ-AI-003 [P1] Anomaly rules over discovery and health events
@@ -75,6 +74,7 @@ Generated 2026-11-08T01:25:32.500Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DCIM-001 [P1] Cabling, patch panels, circuits, cross-connects
 - REQ-DCIM-003 [P1] Room layout / floor plans
 - REQ-DCIM-004 [P1] Power: PDUs, outlets, feeds, circuits, UPS, redundancy
+- REQ-DCIM-005 [P1] Power monitoring, thresholds, billing by outlet
 
 ## Open risks
 
