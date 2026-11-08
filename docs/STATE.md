@@ -2,7 +2,7 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen)
+## Last session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet)
 
 Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-004 are In review (ADR-050, migrations
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
@@ -54,7 +54,19 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Images:** `openmap/api:dev` and `openmap/console:dev` were rebuilt.
 - **Follow-up:** readiness finding details are English text from the BSM engine, shown as-is in Arabic.
 
-**5. Remaining for Done.**
+**5. REQ-UI-027 Health and telemetry fleet — Done** (ADR-051, GraphQL 1.23.0, T-494 to T-497).
+- **Route:** `/telemetry`, served by `telemetryFleet`.
+- **Snapshot:** one per tenant, joining ClickHouse latest samples, Postgres CIs and Memgraph health. It refreshes in the
+  background every 30 s. At build time it sorts rows for every key and every category, joins the search text into one
+  string, and counts rows by category and health.
+- **Console:** 50-row pages in a TanStack Virtual table, with health and category pills, a text filter and sortable
+  headers.
+- **k6** (`pnpm --filter @openmap/perf telemetry-budget [--tenant]`, guard reads `results/telemetry-fleet.json`):
+  - p95 62 ms on the 138k-CI tenant `4ca6233c`;
+  - 130 ms on the 551k-CI tenant. REQ-PERF-006 (P2) tracks that gap.
+- **Perf tooling:** `tools/perf/src/keycloak.ts` now holds the load-test token helper that both budgets use.
+
+**6. Remaining for Done.**
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.

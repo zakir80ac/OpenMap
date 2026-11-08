@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.22.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.23.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -958,6 +958,48 @@ type UtilisationRow {
   "Watts drawn."
   power: Float
   observedAt: DateTime
+}
+# REQ-UI-027: the health and telemetry fleet table.
+enum FleetSort {
+  cpu
+  memory
+  iops
+  throughput
+  apdex
+  "Down first, then degraded, unknown and healthy."
+  health
+  name
+}
+"One CI of the fleet with its latest measurements (REQ-UI-027)."
+type FleetRow {
+  ci: Ci!
+  "The site code the CI records."
+  site: String
+  "FQDN, else IP address."
+  address: String
+  health: HealthState!
+  "Percent of capacity."
+  cpu: Float
+  memory: Float
+  iops: Float
+  "Gigabits per second."
+  throughput: Float
+  "0 to 1."
+  apdex: Float
+  "The newest sample among the measurements."
+  observedAt: DateTime
+}
+type FleetPage {
+  items: [FleetRow!]!
+  "Rows matching the filter."
+  total: Int!
+  "Rows matching the filter's category and text, by health, before the health filter applies."
+  healthy: Int!
+  degraded: Int!
+  down: Int!
+  unknown: Int!
+  "When the snapshot behind this page was built."
+  asOf: DateTime!
 }
 type UtilisationPage {
   items: [UtilisationRow!]!
@@ -2083,6 +2125,8 @@ type Query {
   certificates(filter: CertificateFilter): [Certificate!]!
   "REQ-CMDB-034: the latest utilisation of every CI that reports it, hottest first by the chosen measure."
   utilisation(filter: UtilisationFilter, sort: UtilisationSort = cpu, first: Int = 100, offset: Int = 0): UtilisationPage!
+  "REQ-UI-027: the health and telemetry fleet, every CI with a latest CPU, memory, IOPS, throughput or Apdex sample."
+  telemetryFleet(filter: FleetFilter, sort: FleetSort = health, first: Int = 200, offset: Int = 0): FleetPage!
   "REQ-CMDB-023 (ADR-039): the releases the estate's operating systems, hypervisors and network operating systems run."
   lifecycleReleases(filter: LifecycleReleaseFilter): LifecycleReleasePage!
   "REQ-CMDB-025 (ADR-039): hardware end of sale and support by model."
@@ -2147,6 +2191,13 @@ input PlanInput {
   targetRackIds: [UUID!]
   bom: [BomLineInput!]!
   plannedLiveAt: DateTime
+}
+input FleetFilter {
+  "Categories; every layer with telemetry when absent."
+  layers: [CiLayer!]
+  health: [HealthState!]
+  "Matches the name, the address or the site."
+  text: String
 }
 input UtilisationFilter {
   "CI types, e.g. host, vm, pdu; all types with utilisation when absent."

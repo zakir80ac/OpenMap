@@ -88,6 +88,14 @@ function perfBudgets(): Finding[] {
           ' ms over ' +
           String(PERF_BUDGETS.availabilityReportP95Ms),
       });
+    // REQ-UI-027: the telemetry fleet table's GraphQL page under the screen interaction budget.
+    if (r.name === 'telemetry-fleet' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.screenInteractionP95Ms)
+      out.push({
+        rule: 'perf-budget',
+        file: path,
+        line: 1,
+        message: 'telemetry fleet p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.screenInteractionP95Ms),
+      });
     if (r.name === 'graph-render' && r.fps !== undefined && r.fps < PERF_BUDGETS.graphRenderFps)
       out.push({
         rule: 'perf-budget',

@@ -7,6 +7,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lighthouse": "tsx src/lighthouse.ts",
     "impact-budget": "tsx src/impact-budget.ts",
+    "telemetry-budget": "tsx src/telemetry-budget.ts",
     "discovery-sweep": "tsx src/discovery-sweep.ts"
   },
   "dependencies": {

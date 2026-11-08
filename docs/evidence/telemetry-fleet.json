@@ -1,0 +1,55 @@
+{
+  "name": "telemetry-fleet",
+  "requirement": "REQ-UI-027",
+  "adr": "ADR-051",
+  "budgetMs": 100,
+  "method": "tools/perf telemetry-budget: k6/telemetry-fleet.js, 8 VUs for 60 s without think time, random sort key, category/health/text filter and offset, pages of TELEMETRY.defaultPageSize (50), over GraphQL with a Keycloak token; the snapshot warmed by one request first",
+  "runs": [
+    {
+      "tenant": "4ca6233c (seed 44, scale 0.25)",
+      "cis": 138243,
+      "fleetRows": 126627,
+      "p95Ms": 62,
+      "medianMs": 37,
+      "meetsBudget": true,
+      "generatedAt": "2026-11-08T06:53:26.739Z"
+    },
+    {
+      "tenant": "570b1953 (seed 43, scale 1)",
+      "cis": 550747,
+      "fleetRows": 504474,
+      "p95Ms": 130,
+      "medianMs": 77,
+      "meetsBudget": false,
+      "generatedAt": "2026-11-08T06:51:55.633Z"
+    }
+  ],
+  "inProcess": {
+    "tenant": "570b1953",
+    "fleetRows": 504474,
+    "snapshotBuildMs": 4517,
+    "pages": 70,
+    "p50Ms": 5.6,
+    "p95Ms": 29
+  },
+  "history": [
+    {
+      "change": "first version (scan for counts per request, CI health per row, 200-row pages)",
+      "tenant": "570b1953",
+      "vus": 8,
+      "p95Ms": 366
+    },
+    {
+      "change": "counts precomputed, early exit, no per-row CI health",
+      "tenant": "570b1953",
+      "vus": 8,
+      "p95Ms": 193
+    },
+    {
+      "change": "50-row pages, per-category orderings",
+      "tenant": "570b1953",
+      "vus": 8,
+      "p95Ms": 130
+    }
+  ]
+}

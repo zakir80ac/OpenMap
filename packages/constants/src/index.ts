@@ -452,6 +452,27 @@ export const COMPONENTS = {
 } as const;
 
 /** REQ-CMDB-034 — resource utilisation: when a CI runs hot or sits idle, and the windows the console offers. */
+/**
+ * REQ-UI-027 — the health and telemetry fleet table. The API keeps one snapshot per tenant (CIs from Postgres, health
+ * from the graph, the latest samples from ClickHouse) and answers every page, filter and sort from it, so a request
+ * on a 100k-CI tenant stays inside PERF_BUDGETS.screenInteractionP95Ms. A snapshot older than snapshotMs is
+ * rebuilt in the background while the old one keeps answering; the console refreshes on the same period.
+ */
+export const TELEMETRY = {
+  snapshotMs: 30_000,
+  /** Tenants whose snapshot is kept; the least recently used goes first. */
+  snapshotTenants: 8,
+  /**
+   * Rows per page. The table shows about fourteen at once and asks for the next page as the user scrolls; fifty keeps
+   * a page's GraphQL resolution (each row's CI) small enough that eight users scrolling at once stay inside the budget.
+   */
+  defaultPageSize: 50,
+  maxPageSize: 500,
+  /** Apdex at or above this is satisfied, below the frustrated mark is poor (the Apdex convention). */
+  apdexGood: 0.94,
+  apdexPoor: 0.7,
+} as const;
+
 export const UTILISATION = {
   /** CPU, memory or the fullest filesystem at or above this share is running hot (capacity at risk). */
   hotPercent: 85,
@@ -1550,7 +1571,7 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
    */
-  graphql: '1.22.0',
+  graphql: '1.23.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
