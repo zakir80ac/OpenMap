@@ -56,8 +56,8 @@
 | REQ-INT-003 | INT | Deployment | Helm chart | Kubernetes deployment of every service with the same configuration surface. | helm install on kind passes smoke tests. | P1 | Done |  |  | CLAUDE.md §5 | T-060 | helm install on kind (deploy/kind/cluster.yaml, values-local.yaml): all 13 pods Running, migrations job Completed, API /readyz ready, console 200 (docs/evidence/helm/kind-install.md; commits 687706c aedf2e3); helm install green on kind (13 pods, migrations job, API ready, console 200; docs/evidence/helm/kind-install.md); CI kind job; commit 46aeaae | 2026-10-22 | 2026-11-01 | ci.yml kind job: kind cluster, images loaded, helm install --wait, smoke on /readyz, /healthz and the console; local run recorded in docs/evidence/helm/kind-install.md |
 | REQ-INT-004 | INT | Deployment | CPU LLM fallback (llama.cpp server) documented and tested | Assistant works without a GPU. | NL to Cypher e2e passes on the CPU profile within LLM_TIMEOUT_MS. | P1 | Done |  |  | CLAUDE.md §1.2 | T-104, T-106 | llama.cpp cpu compose profile serving the documented GGUF; assistant e2e answers or explains a refusal against it; air-gap bundle ships the model (docs/evidence/airgap); commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-AI-001 | AI | Assistant | NL to Cypher with schema grounding and read-only execution | Local LLM; generated Cypher shown and validated before running. | Golden question set passes; no write Cypher executes. | P0 | Done | Claude |  | CLAUDE.md §5 | T-011, T-113, T-104, T-106 | NL->Cypher: schema-grounded prompt with validated worked examples; deterministic tenant scoping, hop normalisation and schema checks before the engine; golden set 12/12 on Qwen2.5-Coder-1.5B (docs/evidence/assistant.md); e2e Assistant answered on the shipped image; commit 3bdd482 | 2026-10-22 | 2026-11-01 |  |
-| REQ-AI-002 | AI | Assistant | Classification of unknown CIs and layer suggestions | Suggest type and layer from sysDescr, banners and ports; user confirms. | Suggestions shown on the Layers screen; acceptance rate tracked. | P1 | Not started |  |  | Layers design |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-AI-003 | AI | Assistant | Anomaly rules over discovery and health events | Rule engine plus LLM explanation. | Known anomalies in the synth estate are flagged. | P1 | Not started |  |  | CLAUDE.md §5 |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-AI-002 | AI | Assistant | Classification of unknown CIs and layer suggestions | Suggest type and layer from sysDescr, banners and ports; user confirms. | Suggestions shown on the Layers screen; acceptance rate tracked. | P1 | Done |  |  | Layers design | T-498, T-499, T-500, T-501 | ADR-052, GraphQL 1.24.0, migration 0037; T-499 accuracy 290/290 on the estates' unknown CIs; docs/evidence/console/classification-en.png, classification-ar.png (RTL) | 2026-10-22 | 2026-11-08 | Fingerprints (DEVICE_FINGERPRINTS, constants) scored by classifyCi (assistant) over sysDescr, banner, OUI vendor and ports; suggestions in classification_suggestions; accept writes the CI user label via labelCi (layer, type where one fits); dismiss remembered until the evidence changes; acceptance rate on the Layers screen panel; openmap_classification_suggestions_total. |
+| REQ-AI-003 | AI | Assistant | Anomaly rules over discovery and health events | Rule engine plus LLM explanation. | Known anomalies in the synth estate are flagged. | P1 | Done |  |  | CLAUDE.md §5 | T-502, T-503, T-504, T-505, T-506 | docs/evidence/anomalies.json (precision 1.0, recall 1.0 on the planted anomalies), ADR-053, GraphQL 1.25.0, migration 0038, docs/evidence/console/anomalies-en.png, anomalies-ar.png (RTL) | 2026-10-22 | 2026-11-08 | Rules ip_conflict, unmanaged_device_in_datacenter, flapping_service over Postgres and ClickHouse; findings with open/cleared lifecycle; LLM explanation in prose locales, catalogue template elsewhere; ground truth planted by tools/synth-estate. |
 | REQ-AI-004 | AI | Assistant | Recommended actions in impact modeling and incidents | Graph-grounded recommendations with rationale. | Recommendations reference real CIs and relationships only. | P1 | Done |  |  | Impact design | T-065 | impact screen asks the assistant a scenario-built question after each run; recommendations grounded in the CIs and Cypher of the run; commit 46aeaae | 2026-10-22 | 2026-11-01 | Impact screen asks the assistant a scenario-built question after each run and shows the answer, grounding CIs and Cypher beside the engine's recommendations. |
 | REQ-CMDB-001 | CMDB | Layers | Layer · dc populated and filterable | All CI types mapped to the dc layer are discovered, stored with the layer, and toggleable on every screen. | Layer counts match the synth estate; visibility toggle filters the dependency map and lists. | P0 | Done |  |  | Layers design · CI_LAYERS | T-029, T-032 | layer populated by the synthetic estate replay (counts match the generator exactly, docs/evidence/cmdb/layer-counts.md); CiFilter layers plus per-user visibility filter every list; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-CMDB-002 | CMDB | Layers | Layer · network_security populated and filterable | All CI types mapped to the network_security layer are discovered, stored with the layer, and toggleable on every screen. | Layer counts match the synth estate; visibility toggle filters the dependency map and lists. | P0 | Done |  |  | Layers design · CI_LAYERS | T-029, T-032 | layer populated by the synthetic estate replay (counts match the generator exactly, docs/evidence/cmdb/layer-counts.md); CiFilter layers plus per-user visibility filter every list; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
@@ -128,7 +128,7 @@
 | REQ-CORE-017 | CORE | CMDB and asset management | Object merge, duplicates, reconciliation rules | OpenMap: reconciler identity keys, precedence by confidence, conflict events (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-008, T-049, T-091 | identity resolution, duplicate merge and pending-relationship sweeps in apps/reconciler; outbox dispatcher test; replay counts exact (docs/evidence/cmdb/layer-counts.md); commit 6e6a055 | 2026-10-22 | 2026-11-01 |  |
 | REQ-CORE-018 | CORE | CMDB and asset management | Time-travel / history of any object | OpenMap: validFrom/validTo bitemporal rows, ClickHouse snapshots (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-032, T-061, T-063 | time travel on CI detail and the dependency map via asOf; api.integration.test.ts before/after reads; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-CMDB-034 | CMDB | CMDB and asset management | Resource utilisation (CPU, memory, disk, power) | OpenMap: ClickHouse metrics from collectors, rightsizing in analytics (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-202, T-203, T-204, T-205, T-206, T-207 | 6b73f02, docs/evidence/utilisation.md, docs/evidence/console/utilisation-en.png, docs/evidence/console/utilisation-ar.png, docs/evidence/console/utilisation-ci-en.png, docs/evidence/console/utilisation-ci-ar.png | 2026-10-22 | 2026-11-06 |  |
-| REQ-AI-005 | AI | CMDB and asset management | Cloud recommendation engine (rightsizing, unused) | OpenMap: analytics models over utilisation and cost (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §2. CMDB and asset management |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-AI-005 | AI | CMDB and asset management | Cloud recommendation engine (rightsizing, unused) | OpenMap: analytics models over utilisation and cost (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §2. CMDB and asset management | T-507, T-508, T-509, T-510 | ADR-054, GraphQL 1.26.0; scale-1 estate 258 resources -> 39 recommendations, est. 83,663 USD/month (T-508); docs/evidence/console/cloud-advice-en.png, cloud-advice-ar.png (RTL) | 2026-10-22 | 2026-11-08 | Model recommendCloud (assistant, CLOUD_ADVICE thresholds): release stopped-but-billed, decommission idle compute, downsize under-used compute (half cost), upsize hot compute; load from 14-day window else latest sample; cloudAdvice query, span cloud.advise, openmap_cloud_recommendations_total; panel on the Utilisation screen. |
 | REQ-IPAM-001 | IPAM | IPAM, DNS, DHCP, network | Subnets, supernets, VRFs, VLANs, utilisation | OpenMap: subnet, vrf, vlan CIs, rollups (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done | Claude |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-030, T-032, T-102, T-106 | subnet tree with VRFs, supernets and utilisation from the graph (IpamView, ipam.service.ts); e2e on the live stack; docs/evidence/console/ipam-en.png, ipam-ar.png; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-IPAM-002 | IPAM | IPAM, DNS, DHCP, network | IP addresses, reservations, DHCP ranges, conflicts | OpenMap: ip_address, dhcp_scope, dhcp_lease, conflict events (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done | Claude |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-102, T-106 | addresses, DHCP scopes and leases, conflicts per subnet on the IPAM screen; e2e selects a subnet and lists its addresses; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-IPAM-003 | IPAM | IPAM, DNS, DHCP, network | DNS zones and records, bidirectional sync | OpenMap: dns_zone, dns_record, sync adapters (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -164,7 +164,7 @@
 | REQ-UI-022 | UI | Analytics, reporting, AI | DOQL (SQL over the data) | OpenMap: Superset SQL Lab over ClickHouse views; GraphQL (parity ~ vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-023 | UI | Analytics, reporting, AI | Insights+ BI | OpenMap: embedded Superset, row-level filters per tenant (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-009 | INT | Analytics, reporting, AI | Webhooks and notifications (email, Slack, Teams, PagerDuty) | OpenMap: event schema, outbox subscribers, tenant-enabled sinks (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
-| REQ-AI-006 | AI | Analytics, reporting, AI | AI assistant over the graph (NL to Cypher, explain impact, anomaly rules) | OpenMap: apps/assistant with local LLM (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-AI-006 | AI | Analytics, reporting, AI | AI assistant over the graph (NL to Cypher, explain impact, anomaly rules) | OpenMap: apps/assistant with local LLM (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI | T-511, T-143, T-011 | docs/evidence/assistant-eval.json (41/41 on the scale-1 tenant, incl. anomalies en/ar and impact), ADR-028 amendment, GraphQL 1.27.0, assistant contract 0.3.0 | 2026-10-22 | 2026-11-08 | NL to Cypher (REQ-AI-001), impact explanation (impact intent) and anomaly rules (REQ-AI-003) through the conversational assistant; new anomalies intent and skill reading anomaly_findings, narrowed by rule, en and ar. |
 | REQ-INT-010 | INT | Integrations | ITSM: ServiceNow, Jira Service Management, Freshservice, Zendesk, BMC Remedy, Cherwell | OpenMap: CMDB sync adapters and incident links (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P2 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-011 | INT | Integrations | Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory | OpenMap: inventory endpoints and plugins (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-012 | INT | Integrations | Monitoring: Zabbix, Nagios, Prometheus, Datadog, SolarWinds, Splunk | OpenMap: event ingest and CI enrichment (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §8. Integrations |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -223,7 +223,7 @@
 | DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 33 | 92 |
-| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 4 | 50 |
+| AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 8 | 100 |
 | INT | Integrations and deployment profiles | Deployment, Application dependency mapping and business services, Security, vulnerabilities, compliance, Analytics, reporting, AI, Integrations, Platform |  | 19 | 8 | 42 |
 | QA | Quality: test harness, fixtures, synthetic estate | Synthetic estate, Harness, Fixtures, E2E, Added |  | 5 | 3 | 60 |
 | PERF | Performance budgets | Budgets, Platform, Added |  | 6 | 2 | 33 |
@@ -258,7 +258,7 @@
 | ci | packages/contracts/src/ci.ts | 0.8.0 |  | ADR-025 |
 | collector | packages/contracts/src/collector.ts | 0.8.0 |  | ADR-025 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.23.0 |  | ADR-051 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.27.0 |  | ADR-028 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
@@ -280,6 +280,9 @@
 | ADR-049 | REST API, OpenAPI document and SDK from one route table | Accepted | 2026-11-08 | docs/adr/ADR-049-rest-api-openapi-sdk.md |
 | ADR-050 | Outbox claims and dispatch throughput | Accepted | 2026-11-08 | docs/adr/ADR-050-outbox-claims-and-dispatch-throughput.md |
 | ADR-051 | The health and telemetry fleet: one snapshot per tenant | Accepted | 2026-11-08 | docs/adr/ADR-051-telemetry-fleet-snapshot.md |
+| ADR-052 | Classification of unknown CIs: fingerprints, suggestions and the user label | Accepted | 2026-11-08 | docs/adr/ADR-052-classification-of-unknown-cis.md |
+| ADR-053 | Anomaly rules over discovery and health events | Accepted | 2026-11-08 | docs/adr/ADR-053-anomaly-rules.md |
+| ADR-054 | Cloud recommendations: rightsizing and unused resources | Accepted | 2026-11-08 | docs/adr/ADR-054-cloud-recommendations.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -375,7 +378,7 @@
 | T-111 | unit | REQ-CMDB-037 | 2026-11-01 | Pass | 0 |
 | T-010 | unit | REQ-DISC-029 | 2026-11-01 | Pass | 0 |
 | T-112 | unit | REQ-DISC-029 | 2026-11-01 | Pass | 0 |
-| T-011 | unit | REQ-AI-001 | 2026-11-01 | Pass | 0 |
+| T-011 | unit | REQ-AI-001, REQ-AI-006 | 2026-11-01 | Pass | 0 |
 | T-113 | unit | REQ-AI-001 | 2026-11-01 | Pass | 0 |
 | T-008 | unit | REQ-CORE-016, REQ-CORE-017, REQ-CMDB-038, REQ-CORE-013 | 2026-11-01 | Pass | 0 |
 | T-049 | unit | REQ-CORE-016, REQ-CORE-017 | 2026-11-01 | Pass | 0 |
@@ -408,7 +411,7 @@
 | T-140 | unit | REQ-CMDB-041 | 2026-11-05 | Pass | 0 |
 | T-141 | unit | REQ-CMDB-042 | 2026-11-05 | Pass | 0 |
 | T-142 | unit | REQ-AI-007 | 2026-11-05 | Pass | 0 |
-| T-143 | unit | REQ-AI-007 | 2026-11-05 | Pass | 0 |
+| T-143 | unit | REQ-AI-007, REQ-AI-006 | 2026-11-05 | Pass | 0 |
 | T-144 | unit | REQ-AI-007 | 2026-11-05 | Pass | 0 |
 | T-145 | unit | REQ-AI-008 | 2026-11-05 | Pass | 0 |
 | T-146 | unit | REQ-AI-008 | 2026-11-05 | Pass | 0 |
@@ -634,6 +637,20 @@
 | T-495 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
 | T-496 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
 | T-497 | unit | REQ-UI-027 | 2026-11-08 | Pass | 0 |
+| T-498 | unit | REQ-AI-002 | 2026-11-08 | Pass | 0 |
+| T-499 | unit | REQ-AI-002 | 2026-11-08 | Pass | 0 |
+| T-500 | unit | REQ-AI-002 | 2026-11-08 | Pass | 0 |
+| T-501 | unit | REQ-AI-002 | 2026-11-08 | Pass | 0 |
+| T-502 | unit | REQ-AI-003 | 2026-11-08 | Pass | 0 |
+| T-503 | unit | REQ-AI-003 | 2026-11-08 | Pass | 0 |
+| T-504 | unit | REQ-AI-003 | 2026-11-08 | Pass | 0 |
+| T-505 | unit | REQ-AI-003 | 2026-11-08 | Pass | 0 |
+| T-506 | unit | REQ-AI-003 | 2026-11-08 | Pass | 0 |
+| T-507 | unit | REQ-AI-005 | 2026-11-08 | Pass | 0 |
+| T-508 | unit | REQ-AI-005 | 2026-11-08 | Pass | 0 |
+| T-509 | unit | REQ-AI-005 | 2026-11-08 | Pass | 0 |
+| T-510 | unit | REQ-AI-005 | 2026-11-08 | Pass | 0 |
+| T-511 | unit | REQ-AI-006 | 2026-11-08 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -670,10 +687,10 @@
 | 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
 | 2026-11-08 | Checkpoint 30: REQ-CORE-020 leased outbox claims (0035/0036), pipelined graph batch, sync large ClickHouse inserts; seed-45 dispatch 67.8 s to 27.3 s; REQ-PERF-004 sweep 8.43 min per 10k devices (budget 15). ADR-050. Both In review. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-08T06:55:14.721Z |  |  |  |  |  |  |
+| Generated | 2026-11-08T08:47:52.578Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 35 | 0 | 28 | 5 | 141 |  |  |
+| All | 31 | 0 | 28 | 5 | 145 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 0 | 0 | 0 | 1 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
@@ -683,14 +700,14 @@
 | DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
 | BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | UI | 3 | 0 | 0 | 0 | 33 | 36 | 92 |
-| AI | 4 | 0 | 0 | 0 | 4 | 8 | 50 |
+| AI | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
 | QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
 | PERF | 2 | 0 | 0 | 2 | 2 | 6 | 33 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
 | P0 | 1 | 0 | 26 | 3 | 94 | 124 |  |
-| P1 | 30 | 0 | 2 | 2 | 47 | 81 |  |
+| P1 | 26 | 0 | 2 | 2 | 51 | 81 |  |
 | P2 | 4 | 0 | 0 | 0 | 0 | 4 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 34 |  |  |  |  |  |  |
@@ -699,7 +716,7 @@
 | 2026-11-05 | 109 |  |  |  |  |  |  |
 | 2026-11-06 | 126 |  |  |  |  |  |  |
 | 2026-11-07 | 139 |  |  |  |  |  |  |
-| 2026-11-08 | 141 |  |  |  |  |  |  |
+| 2026-11-08 | 145 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |

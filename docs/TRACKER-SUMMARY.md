@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-08T06:55:14.779Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-08T08:47:52.633Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 35 |
+| Not started | 31 |
 | In progress | 0 |
 | Blocked | 28 |
 | In review | 5 |
-| Done | 141 |
+| Done | 145 |
 | **Total** | **209** |
 
 ## By workstream
@@ -23,7 +23,7 @@ Generated 2026-11-08T06:55:14.779Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DCIM | 9 | 2 | 0 | 0 | 22% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
-| AI | 8 | 4 | 0 | 0 | 50% |
+| AI | 8 | 8 | 0 | 0 | 100% |
 | INT | 19 | 8 | 0 | 0 | 42% |
 | QA | 5 | 3 | 0 | 0 | 60% |
 | PERF | 6 | 2 | 0 | 0 | 33% |
@@ -66,15 +66,15 @@ Generated 2026-11-08T06:55:14.779Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 ## Next up
 
 - REQ-QA-003 [P0] Vendor lab fixtures for every collector family
-- REQ-AI-002 [P1] Classification of unknown CIs and layer suggestions
-- REQ-AI-003 [P1] Anomaly rules over discovery and health events
-- REQ-AI-005 [P1] Cloud recommendation engine (rightsizing, unused)
-- REQ-AI-006 [P1] AI assistant over the graph (NL to Cypher, explain impact, anomaly rules)
 - REQ-DCIM-001 [P1] Cabling, patch panels, circuits, cross-connects
 - REQ-DCIM-003 [P1] Room layout / floor plans
 - REQ-DCIM-004 [P1] Power: PDUs, outlets, feeds, circuits, UPS, redundancy
 - REQ-DCIM-005 [P1] Power monitoring, thresholds, billing by outlet
 - REQ-DCIM-006 [P1] Environmental: temperature, humidity, airflow
+- REQ-DCIM-007 [P1] Capacity planning: space, power, cooling, ports
+- REQ-DCIM-008 [P1] Cable management with labels and verification
+- REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)
+- REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
 
 ## Open risks
 
