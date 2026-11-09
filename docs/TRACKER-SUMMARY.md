@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T18:50:59.513Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T19:10:13.782Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 28 |
+| Not started | 27 |
 | In progress | 0 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 147 |
+| Done | 148 |
 | **Total** | **209** |
 
 ## By workstream
@@ -20,7 +20,7 @@ Generated 2026-11-09T18:50:59.513Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 3 | 0 | 0 | 33% |
+| DCIM | 9 | 4 | 0 | 0 | 44% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
@@ -66,7 +66,6 @@ Generated 2026-11-09T18:50:59.513Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-DCIM-003 [P1] Room layout / floor plans
 - REQ-DCIM-004 [P1] Power: PDUs, outlets, feeds, circuits, UPS, redundancy
 - REQ-DCIM-005 [P1] Power monitoring, thresholds, billing by outlet
 - REQ-DCIM-006 [P1] Environmental: temperature, humidity, airflow
@@ -76,6 +75,7 @@ Generated 2026-11-09T18:50:59.513Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
 - REQ-INT-012 [P1] Monitoring: Zabbix, Nagios, Prometheus, Datadog, SolarWinds, Splunk
 - REQ-INT-014 [P1] Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM
+- REQ-INT-016 [P1] Identity: Active Directory, Entra ID, Okta
 
 ## Open risks
 

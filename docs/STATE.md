@@ -2,7 +2,32 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 32: REQ-DCIM-001 structured cabling Done; REQ-QA-003 Blocked)
+## Last session · 2026-11-09 (checkpoint 33: REQ-DCIM-003 room floor plan Done)
+
+**REQ-DCIM-003 Done** (ADR-057, GraphQL 1.30.0, T-524..T-527, commit 760060d).
+- **Floor plan view.** The DCIM screen switch is now Racks / Floor plan / Cabling.
+  - The plan is a pure function of the `racks` query (`apps/console/src/lib/floor-plan.ts`). It shows each room's rows
+    in row-position order, with their aisle and rack slots up to `rackCapacity`.
+  - Heat is measured power against the feeds' rating, against `designKw`, or units in use. A rack with no reading says
+    "no reading".
+- **Moving a rack.** `placeRack(rackId, rowId, position)` (operators) moves a rack to a free slot of a row in its own
+  room. The rack's `row` and `position` attributes and its `located_in` change through the outbox; the twin reads the
+  same attributes.
+- The racks query now reads row attributes, and its fields are shared with the mutation (`RACK_FIELDS`).
+- The cabling e2e waits `ACTION_MS` for a searched endpoint option. Search was slower than `expect`'s 5-second default
+  under the Memgraph memory pressure below.
+
+**Environment finding.** Memgraph holds 745,678 vertices and 1,991,235 edges (all tenants, including the scale-1
+one): 15.8 GiB resident, 19 GiB tracked, against the VM's 23.47 GiB. The twin e2e's focus step (an impact graph for
+one host) fails with "Memory limit exceeded" (an 896 MiB allocation). It is not caused by the cabling or floor plan
+work; those code paths do not touch Memgraph queries. Options:
+- drop the scale-1 tenant from Memgraph when it is not being measured;
+- give the WSL VM more memory;
+- set Memgraph's `--memory-limit` below the VM's, so a query fails fast instead of starving the rest of the stack.
+
+**Next:** REQ-DCIM-004 (power: PDUs, outlets, feeds, circuits, UPS, redundancy), then DCIM-005..008.
+
+## Previous session · 2026-11-09 (checkpoint 32: REQ-DCIM-001 structured cabling Done; REQ-QA-003 Blocked)
 
 **REQ-DCIM-001 Done** (ADR-056; CI and collector 0.9.0, GraphQL 1.29.0; T-520..T-523; commit d3e9357).
 - **Records:** patch panels, cables (patch leads, trunks, cross-connects) and carrier circuits (a new `circuit` CI type)

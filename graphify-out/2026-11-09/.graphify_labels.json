@@ -1044,14 +1044,5 @@
   "1042": "scheduler/vitest.config.ts",
   "1043": "scheduler/vitest.integration.config.ts",
   "1044": "superset_config.py",
-  "1045": "install-agent.ps1",
-  "1046": "install-node.ps1",
-  "1047": "prisma.config.ts",
-  "1048": "graph/vitest.config.ts",
-  "1049": "graph/vitest.integration.config.ts",
-  "1050": "ui/vitest.config.ts",
-  "1051": "github.com/openmap/openmap/apps/collectors",
-  "1052": "github.com/openmap/openmap/apps/node",
-  "1053": "github.com/openmap/openmap/tools/simulator",
-  "1054": "synth-estate/vitest.config.ts"
+  "1045": "install-agent.ps1"
 }
