@@ -1,0 +1,51 @@
+{
+  "runs": [
+    {
+      "date": "2026-11-05T05:58:06.959065+00:00",
+      "input_tokens": 805844,
+      "output_tokens": 0,
+      "files": 499
+    },
+    {
+      "date": "2026-11-05T08:57:04.392542+00:00",
+      "input_tokens": 249717,
+      "output_tokens": 0,
+      "files": 78,
+      "note": "two Haiku extraction agents (7 docs, 6 screenshots); totals from their usage reports"
+    },
+    {
+      "date": "2026-11-05T10:08:03.880095+00:00",
+      "input_tokens": 240000,
+      "output_tokens": 32000,
+      "files": 51
+    },
+    {
+      "date": "2026-11-05T11:41:21.648372+00:00",
+      "input_tokens": 260000,
+      "output_tokens": 36000,
+      "files": 62
+    },
+    {
+      "date": "2026-11-05T12:45:34.340863+00:00",
+      "input_tokens": 450833,
+      "output_tokens": 0,
+      "files": 43
+    },
+    {
+      "date": "2026-11-07T11:57:29.295220+00:00",
+      "input_tokens": 152431,
+      "output_tokens": 0,
+      "files": 694,
+      "note": "ADR-045 update: AST for changed code, one Haiku agent for 5 changed docs (subagent total tokens); 106 other stale docs/images left unstamped for a later run"
+    },
+    {
+      "date": "2026-11-07T21:04:05.655611+00:00",
+      "input_tokens": 1230556,
+      "output_tokens": 0,
+      "files": 143,
+      "note": "full refresh of 105 stale docs and screenshots plus checkpoint-28 docs (nine Haiku agents), AST for 32 changed code files"
+    }
+  ],
+  "total_input_tokens": 3389381,
+  "total_output_tokens": 71200
+}

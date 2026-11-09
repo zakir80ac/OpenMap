@@ -2,60 +2,48 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08 (checkpoint 31: REQ-IPAM-003 two-way DNS sync; Docker down, E: full)
+## Last session · 2026-11-08/09 (checkpoint 31: REQ-IPAM-003 two-way DNS sync Done; Docker recovered after E: filled)
 
-**Blocked: Docker is down because E: is full.** `E:\DockerDesktopWSL\disk\docker_data.vhdx` has grown to 847.9 GB and
-filled E: (0 bytes free at 12:34 local). The engine's ext4 disk then hit I/O errors in the middle of a reconciler
-build.
-- Docker Desktop now stops at start-up on the socket error recorded on 2026-11-05
-  (`remove …\Docker\run\dockerInference: The file cannot be accessed by the system`). The fix then was a Windows
-  restart.
-- In the error dialog, choose **Quit**. Never choose "Reset to factory defaults": it wipes the stack's images and
-  volumes.
-- To free space, `.local/bundle` (the stale air-gap bundle from 2026-10-22, gitignored, regenerable) was deleted:
-  2.7 GB free.
-- **Needs Syed:**
-  1. Restart Windows.
-  2. Once the engine is up, prune the build cache (`docker builder prune -af`) and run `docker system df`.
-  3. Decide whether to compact the VHDX or move it to a disk with room. With Docker stopped, an elevated
-     `Optimize-VHD -Mode Full` or diskpart `compact vdisk` compacts it.
+**REQ-IPAM-003 Done** (ADR-055, GraphQL 1.28.0, migration 0039; T-512..T-519).
+- **Reconciler:** a full zone transfer retires the records it no longer holds (T-512).
+- **Collector:** the DNS collector pushes RFC 2136 updates signed with TSIG (T-513).
+- **Contracts:** the change contracts (T-514).
+- **Scheduler:** a sync planner and loop, settled from the transfer (T-515, T-516).
+- **API** (T-517).
+- **Screen:** the IPAM DNS tab's DNS sync panel (T-518).
+- **e2e (T-519)**, en and ar, against the lab BIND 9 (`dns-lab`, profile `lab`, zone `lab.openmap.test`, key
+  `openmap-sync`, secret `DNS_LAB_TSIG_SECRET` in the gitignored `.env`). A record is added from the screen, applied
+  by BIND, confirmed by the transfer and reconciled into the CMDB; it is then deleted, applied, and retired.
 
-  The likely growers are the build cache from dozens of image rebuilds, the scale-1 tenant's ClickHouse and Memgraph
-  data, and container logs (json-file, no rotation).
+  Evidence: `docs/evidence/console/dns-sync-{en,ar}.png`.
 
-**REQ-IPAM-003 (In progress; ADR-055, GraphQL 1.28.0, migration 0039).** Committed:
-- the reconciler retires the records a full transfer no longer holds (T-512);
-- the DNS collector pushes RFC 2136 updates signed with TSIG (T-513);
-- the change contracts (T-514);
-- the scheduler's sync planner and loop, settled from the transfer (T-515, T-516);
-- the API (T-517).
+  e2e fixes:
+  - the bearer token comes from the Keycloak token exchange;
+  - form fields are found by role, because Playwright's `getByLabel` exact reads the option text inside a wrapping
+    label;
+  - `page.setDefaultTimeout(30 s)`.
 
-This checkpoint adds:
-- the lab BIND 9 (`dns-lab`, profile `lab`, zone `lab.openmap.test`, key `openmap-sync`, secret `DNS_LAB_TSIG_SECRET`
-  in the gitignored `.env`);
-- the IPAM DNS tab's DNS sync panel (T-518);
-- the e2e (T-519);
-- ADR-055 and the CONTRACTS row.
+**Docker incident.** `E:\DockerDesktopWSL\disk\docker_data.vhdx` grew to about 850 GB and filled E:. The engine's disk
+hit I/O errors mid-build, and Docker Desktop then stopped at start-up on the dockerInference socket. Syed restarted
+Windows, which cleared it.
+- `.local/bundle`, the stale air-gap bundle, was deleted; it is regenerable.
+- The build cache was pruned: its metadata pointed at missing snapshots.
+- `docker system df` now shows about 185 GB in use (images 101.7 GB, volumes 75.8 GB, containers 8.1 GB). The VHDX
+  stays at about 874 GB and E: has about 43 GB free, and the VHDX grows with every build.
+- After the restart, the first `up -d` left the old reconciler container Dead; `docker rm -f`, then `up -d` again,
+  fixed it.
 
-The e2e's add half passes in English against the real stack. The record is requested from the screen, pushed by the
-scheduler, applied by BIND, confirmed by the transfer and reconciled into the CMDB. The delete is Applied as well.
+**Questions for Syed:**
+1. Compact the Docker VHDX, or move it to a disk with room. This needs Docker Desktop quit and an elevated
+   `Optimize-VHD -Path E:\DockerDesktopWSL\disk\docker_data.vhdx -Mode Full`, or diskpart `compact vdisk`.
+   `docker image prune` and `docker container prune` would free about 42 GB more inside the disk; volumes are not
+   touched without your say.
+2. OpenBao in compose runs `server -dev`, which keeps secrets in memory, so a restart wipes every credential set
+   (the lab TSIG secret came back only because the e2e saves it). Should the single-node profile use a file storage
+   backend instead (a new requirement)?
 
-The CMDB retirement then failed: the reconciler container still ran the image from before `zones.ts`. The rebuild was
-under way when the disk filled.
-
-e2e fixes this session:
-- the bearer token now comes from the Keycloak token exchange, not a console request;
-- form fields are found by role, because `getByLabel` exact also reads the option text inside a wrapping label;
-- `page.setDefaultTimeout(30 s)`, so a missing control fails fast.
-
-**Next, once Docker is back:**
-1. `docker compose … --profile cpu --profile node --profile lab build reconciler && up -d --no-deps reconciler`.
-2. Run the e2e in en and ar (`set -a && . ../../deploy/compose/.env && set +a && npx playwright test
-   e2e/dns-sync.spec.ts`).
-3. Copy `e2e/screenshots/dns-sync-{en,ar}.png` to `docs/evidence/console/`.
-4. Run `pnpm tracker contract graphql --version 1.28.0 --adr ADR-055` and `pnpm tracker decision ADR-055`.
-5. Set REQ-IPAM-003 to Done with T-512..T-519.
-6. Then REQ-IPAM-004 (switch ports, MAC/ARP), DCIM-001, IPAM-005.
+**Next:** REQ-QA-003 (P0, vendor lab fixtures; parked on real devices per R-004), then REQ-DCIM-001 (cabling, patch
+panels, circuits, cross-connects) and REQ-DCIM-003 (room layout and floor plans).
 
 ## Previous session · 2026-11-08 (checkpoint 30: REQ-CORE-020 outbox claims and dispatch throughput, REQ-PERF-004 sweep within budget, REQ-UI-026 Sites screen, REQ-UI-027 telemetry fleet, REQ-AI-002 classification, REQ-AI-003 anomalies, REQ-AI-005 cloud advice, REQ-AI-006 assistant anomalies)
 
