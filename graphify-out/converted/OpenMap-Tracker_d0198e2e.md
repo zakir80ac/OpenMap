@@ -142,7 +142,7 @@
 | REQ-DCIM-004 | DCIM | DCIM | Power: PDUs, outlets, feeds, circuits, UPS, redundancy | OpenMap: pdu, power_feed, power_circuit, ups (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §4. DCIM | T-528, T-529, T-530, T-531 | commit a1453a4; docs/adr/ADR-058-power-chain-redundancy.md; docs/evidence/console/power-en.png, power-ar.png; T-529 integration and T-531 e2e (en+ar) passed 2026-11-09 | 2026-10-22 | 2026-11-09 |  |
 | REQ-DCIM-005 | DCIM | DCIM | Power monitoring, thresholds, billing by outlet | OpenMap: collectors/pdu metrics, thresholds, cost allocation (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §4. DCIM | T-532, T-533, T-534, T-535, T-536, T-537 | commit 1b30cc6; docs/adr/ADR-059-power-monitoring-billing.md; docs/evidence/console/power-monitor-en.png, power-monitor-ar.png; integration T-533/T-534 and e2e T-536 (en+ar) passed 2026-11-09; dev tenant replayed with 4,433 outlets and 14 days of readings | 2026-10-22 | 2026-11-09 |  |
 | REQ-DCIM-006 | DCIM | DCIM | Environmental: temperature, humidity, airflow | OpenMap: cooling_unit plus sensors as attributes (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §4. DCIM | T-538, T-539, T-540, T-541, T-542, T-543 | commit 0dc055b; docs/adr/ADR-060-environmental-monitoring.md; docs/evidence/console/environment-en.png, environment-ar.png; integration T-539/T-540 and e2e T-542 (en+ar) passed 2026-11-09; the running BSM engine opened incidents for two dev racks over 32 C | 2026-10-22 | 2026-11-09 |  |
-| REQ-DCIM-007 | DCIM | DCIM | Capacity planning: space, power, cooling, ports | OpenMap: capacity views per room/rack (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §4. DCIM |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-DCIM-007 | DCIM | DCIM | Capacity planning: space, power, cooling, ports | OpenMap: capacity views per room/rack (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done | Claude |  | CAPABILITY-MAP.md §4. DCIM | T-546, T-547, T-548, T-549 | commit cabfabd; ADR-061; GraphQL 1.34.0; docs/evidence/dcim-capacity.md; capacity.test.ts 4; capacity.integration.test.ts 2; CapacityView.test.tsx 3; screens.spec.ts DCIM e2e en+ar; Lighthouse dcim 0.97/1/1; docs/evidence/console/dcim-capacity-{en,ar}.png | 2026-10-22 | 2026-11-09 |  |
 | REQ-DCIM-008 | DCIM | DCIM | Cable management with labels and verification | OpenMap: cable with LLDP verification status (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §4. DCIM |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DEP-002 | DEP | Application dependency mapping and business services | Application Dependency Mapping from flows, processes, listeners | OpenMap: communicates_with, depends_on from netflow, ss/netstat, agent (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §5. Application dependency mapping and business services | T-149, T-150, T-151, T-152 | commit 2fb5968; ADR-029; T-149 derivation 6/6, T-150 pass vs Postgres 2/2 (idempotent, retire/restore), T-151 traffic panel en+ar, T-152 e2e dependencies.spec en+ar; dev estate 7,587 edges from 7,495 flows; docs/evidence/dependency-mapping.md, docs/evidence/console/dependencies-traffic-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
 | REQ-DEP-003 | DEP | Application dependency mapping and business services | Service dependency and impact charts | OpenMap: impact query, blast radius panel, 100k nodes under 1 s (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §5. Application dependency mapping and business services | T-060, T-061, T-106 | service dependency and impact chart on the dependency map: service paths highlighted, affected services with predicted state, revenue and SLA budget in the side panel; commit bb5e5b9 | 2026-10-22 | 2026-11-01 | Impact chart in the console dependency map: service paths highlighted, affected services with predicted state, revenue and SLA budget. |
@@ -221,7 +221,7 @@
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 5 | 100 |
 | CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 40 | 95 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 4 | 57 |
-| DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 7 | 78 |
+| DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 8 | 89 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 33 | 92 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 8 | 100 |
@@ -692,6 +692,10 @@
 | T-543 | unit | REQ-DCIM-006 | 2026-11-09 | Pass | 0 |
 | T-544 | unit | REQ-CORE-021 | 2026-11-09 | Pass | 0 |
 | T-545 | unit | REQ-CORE-021 | 2026-11-09 | Pass | 0 |
+| T-546 | unit | REQ-DCIM-007 | 2026-11-09 | Pass | 0 |
+| T-547 | unit | REQ-DCIM-007 | 2026-11-09 | Pass | 0 |
+| T-548 | unit | REQ-DCIM-007 | 2026-11-09 | Pass | 0 |
+| T-549 | unit | REQ-DCIM-007 | 2026-11-09 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -734,18 +738,19 @@
 | 2026-11-09 | REQ-DCIM-005 Done: power monitoring, thresholds, billing by outlet (ADR-059, GraphQL 1.32.0), SNMP power samples, BSM power alerts, synth power-history replayed; reconciler relationship-attribute updates found missing |  |  |  |
 | 2026-11-09 | REQ-DCIM-006 Done: environmental monitoring (ADR-060, GraphQL 1.33.0), SNMP env samples, BSM environment alerts (two real incidents on the dev tenant), synth environment-history replayed |  |  |  |
 | 2026-11-09 | REQ-CORE-021: relationship attributes updated on re-observation with openmap.relationship.updated (event 0.11.0); Syed's decisions recorded (BSM-007 criticality confirmed, vendor access deferred). Commit eb2f89d. |  |  |  |
+| 2026-11-09 | REQ-DCIM-007 capacity planning (ADR-061): roomCapacity query, Capacity tab with what-fits, trend; GraphQL 1.34.0. Commit cabfabd. |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-09T20:16:30.852Z |  |  |  |  |  |  |
+| Generated | 2026-11-09T20:40:41.179Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 24 | 0 | 29 | 5 | 152 |  |  |
+| All | 23 | 0 | 29 | 5 | 153 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 0 | 0 | 0 | 1 | 20 | 21 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
 | DEP | 0 | 0 | 0 | 0 | 5 | 5 | 100 |
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
 | IPAM | 3 | 0 | 0 | 0 | 4 | 7 | 57 |
-| DCIM | 2 | 0 | 0 | 0 | 7 | 9 | 78 |
+| DCIM | 1 | 0 | 0 | 0 | 8 | 9 | 89 |
 | BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | UI | 3 | 0 | 0 | 0 | 33 | 36 | 92 |
 | AI | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
@@ -755,7 +760,7 @@
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
 | P0 | 0 | 0 | 27 | 3 | 94 | 124 |  |
-| P1 | 20 | 0 | 2 | 2 | 58 | 82 |  |
+| P1 | 19 | 0 | 2 | 2 | 59 | 82 |  |
 | P2 | 4 | 0 | 0 | 0 | 0 | 4 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 34 |  |  |  |  |  |  |
@@ -765,7 +770,7 @@
 | 2026-11-06 | 126 |  |  |  |  |  |  |
 | 2026-11-07 | 139 |  |  |  |  |  |  |
 | 2026-11-08 | 145 |  |  |  |  |  |  |
-| 2026-11-09 | 152 |  |  |  |  |  |  |
+| 2026-11-09 | 153 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
 | REQ-QA-003 | Vendor lab fixtures for every collector family | Needs real vendor equipment or recordings from it (Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert). R-004 forbids fabricated fixtures. Open-source families already have container-lab recordings in packages/testing/fixtures/vendor (checkpoint 24). Waiting on Syed for lab access or recorded transcripts. |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |

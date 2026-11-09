@@ -2,7 +2,29 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 37: REQ-CORE-021 relationship attributes on re-observation Done)
+## Last session · 2026-11-09 (checkpoint 38: REQ-DCIM-007 capacity planning Done)
+
+**REQ-DCIM-007 Done** (ADR-061, GraphQL 1.34.0, T-546..T-549, commit cabfabd).
+
+- **Query `roomCapacity(roomId)`** (`apps/api/src/dcim/capacity.service.ts`): per rack the free units and contiguous
+  free blocks, design power (`designKw`, else PDU ratings) against the latest `dcim.power.watts` per PDU from
+  `metrics_latest`, live against total ports of its network devices (`portCount` or interface count; `ifOperStatus`
+  up); per room the totals, rated cooling of the room's units against the drawn load, and a least-squares trend of the
+  daily PDU draw over 30 days with days to the 70 % and 90 % lines (`CAPACITY`). Nothing is estimated: no sample →
+  unknown. Metric `openmap_dcim_capacity_reads_total`, span `dcim.capacity.room`.
+- **Arithmetic in the contract** (`packages/contracts/src/capacity.ts`): `freeBlocks`, `largestFreeBlock`,
+  `capacityState`, `worstCapacityState`, `linearTrend`, `daysUntil`, `fitsInRack`, shared by API and console.
+- **Console**: Capacity tab on the DCIM screen (`CapacityView.tsx`): four figures with states, totals, trend card,
+  "what fits" form (height, draw, ports) packing into each rack's free blocks within power and port headroom, racks
+  worst first with the fit count. 42 i18n keys per locale.
+- **Tests**: contracts 82 (4 new), API integration (seeded room on the compose stack, trend 22/38 days), console 3,
+  e2e DCIM step: 3 of 3 (setup, en, ar); Lighthouse: dcim 0.97 / 1 / 1. Evidence `docs/evidence/dcim-capacity.md`,
+  `docs/evidence/console/dcim-capacity-{en,ar}.png`.
+
+**Lessons.** (1) `Card` in `@openmap/ui` does not forward `data-*` attributes: put test ids on an inner element.
+(2) A whole number of days from floating-point kW ((5.6 − 3.4) / 0.1) needs an epsilon before `Math.ceil`.
+
+## Previous session · 2026-11-09 (checkpoint 37: REQ-CORE-021 relationship attributes on re-observation Done)
 
 **REQ-CORE-021 Done** (event 0.11.0, T-544 unit in `reconcile.test.ts`, T-545 `relationships.integration.test.ts`, commit eb2f89d).
 

@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T20:16:30.911Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T20:40:41.265Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 24 |
+| Not started | 23 |
 | In progress | 0 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 152 |
+| Done | 153 |
 | **Total** | **210** |
 
 ## By workstream
@@ -20,7 +20,7 @@ Generated 2026-11-09T20:16:30.911Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 7 | 0 | 0 | 78% |
+| DCIM | 9 | 8 | 0 | 0 | 89% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
@@ -66,7 +66,6 @@ Generated 2026-11-09T20:16:30.911Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-DCIM-007 [P1] Capacity planning: space, power, cooling, ports
 - REQ-DCIM-008 [P1] Cable management with labels and verification
 - REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)
 - REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
@@ -76,6 +75,7 @@ Generated 2026-11-09T20:16:30.911Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-INT-017 [P1] Backup/DR awareness: Veeam, Commvault, Rubrik
 - REQ-INT-018 [P1] Appliance deployment (VM)
 - REQ-INT-019 [P1] Backup and restore
+- REQ-IPAM-004 [P1] Switch port management, MAC/ARP tables, port history
 
 ## Open risks
 
