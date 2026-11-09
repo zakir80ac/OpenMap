@@ -1,6 +1,6 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T19:47:36.733Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T20:02:22.896Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
@@ -8,19 +8,19 @@ Generated 2026-11-09T19:47:36.733Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | In progress | 0 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 150 |
-| **Total** | **209** |
+| Done | 151 |
+| **Total** | **210** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 20 | 19 | 0 | 0 | 95% |
+| CORE | 21 | 19 | 0 | 0 | 90% |
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 6 | 0 | 0 | 67% |
+| DCIM | 9 | 7 | 0 | 0 | 78% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
@@ -66,7 +66,7 @@ Generated 2026-11-09T19:47:36.733Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-DCIM-006 [P1] Environmental: temperature, humidity, airflow
+- REQ-CORE-021 [P1] Reconciler updates relationship attributes on re-observation
 - REQ-DCIM-007 [P1] Capacity planning: space, power, cooling, ports
 - REQ-DCIM-008 [P1] Cable management with labels and verification
 - REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)

@@ -2,7 +2,28 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 35: REQ-DCIM-005 power monitoring, thresholds and billing Done)
+## Last session · 2026-11-09 (checkpoint 36: REQ-DCIM-006 environmental monitoring Done)
+
+**REQ-DCIM-006 Done** (ADR-060, GraphQL 1.33.0, T-538..T-543, commit 0dc055b).
+- **Readings.** Temperature, humidity and cooling capacity are samples on the CI they describe, with a `position` label:
+  rack inlet and outlet (or a probe on the rack's PDU), cooling unit supply and return, room humidity. The SNMP
+  collector emits them from Liebert units and ENTITY-SENSOR probes, reading a probe's position from its name.
+- **States.** ASHRAE A1 (`ENVIRONMENT`): 18–27 °C recommended, 15–32 °C allowable; 8–80 % RH allowable, 60 % RH the
+  recommended upper limit. A rise of more than 20 °C across a rack is starved airflow. Readings older than 3 h are
+  shown but not judged.
+- **API.** `roomEnvironment(roomId, hours)`.
+- **BSM engine.** It opens and resolves incidents (source `environment`) for racks outside the allowable range. On the
+  dev tenant it opened two real ones: RYD-DH01-B-08 at 33.7 °C and DMM-COLO-DH01-A-09 at 33.0 °C.
+- **Dev tenant data.** `synth environment-history` replayed into it (`.local/estate-005-env`, 13,566 samples). The
+  power and environment histories end at their generation time, so the screens judge them only for 3 h afterwards.
+  Regenerate with a later `--now` and replay to refresh.
+- **Screen.** The DCIM switch is now Racks / Floor plan / Power / Environment / Cabling; its pills wrap at the default
+  width, which is cosmetic.
+
+**Next:** REQ-DCIM-007 (capacity planning: space, power, cooling, ports), then DCIM-008 (cable labels and
+verification), REQ-CORE-021 (reconciler relationship attributes).
+
+## Previous session · 2026-11-09 (checkpoint 35: REQ-DCIM-005 power monitoring, thresholds and billing Done)
 
 **REQ-DCIM-005 Done** (ADR-059, GraphQL 1.32.0, migration 0042, T-532..T-537, commit 1b30cc6).
 - **Collector.** The SNMP collector emits `dcim.power.watts` (PDU total) and `dcim.outlet.watts` (each metered outlet,
