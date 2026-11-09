@@ -2,7 +2,34 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 33: REQ-DCIM-003 room floor plan Done)
+## Last session · 2026-11-09 (checkpoint 34: REQ-DCIM-004 power chain and redundancy Done)
+
+**REQ-DCIM-004 Done** (ADR-058, GraphQL 1.31.0, T-528..T-531, commit a1453a4). The DCIM switch is now Racks / Floor plan
+/ Power / Cabling.
+- **Assessment.** `packages/contracts/src/power.ts` holds `circuitRatedWatts` (√3·V·A for three phases) and
+  `assessPower`. Its findings are single-corded devices, devices on one feed, PDU/circuit/UPS pairs whose survivor
+  would overload, UPS runtime under `POWER.minUpsRuntimeMinutes`, and PDUs over their outlets. A pair with an
+  unmeasured member is not judged.
+- **API.** `PowerService` provides:
+  - `powerChain(roomId)`: the room's UPS, circuits and PDUs, the findings and a summary;
+  - `pduConnections(pduId)`;
+  - `connectPower` and `disconnectPower` (operators): the outlet must be free and within the PDU's count, and the cord
+    takes the PDU's feed.
+
+  Writes are audited and counted (`openmap_power_connections_total`).
+- **Real findings in the dev estate.** For example, DMM-COLO-DH01-A-03 PDU-A has 25 cords on 24 outlets. The generator
+  plugs more devices into some PDUs than they have outlets; that is genuine estate data, left as found.
+- The first console build of this round failed in `next/font/google` (the fonts are fetched at build time); the retry
+  built. That is a sovereignty and air-gap gap worth a requirement: self-host the fonts. See Questions.
+
+**Questions for Syed** (in addition to checkpoints 31 to 33):
+1. The console fetches its Google fonts at build time (`apps/console/src/lib/fonts.ts`, `next/font/google`), so an
+   air-gapped image build needs network. Should the fonts be vendored with `next/font/local` (a new SEC/CORE
+   requirement)?
+
+**Next:** REQ-DCIM-005 (power monitoring, thresholds, billing by outlet), then DCIM-006..008.
+
+## Previous session · 2026-11-09 (checkpoint 33: REQ-DCIM-003 room floor plan Done)
 
 **REQ-DCIM-003 Done** (ADR-057, GraphQL 1.30.0, T-524..T-527, commit 760060d).
 - **Floor plan view.** The DCIM screen switch is now Racks / Floor plan / Cabling.

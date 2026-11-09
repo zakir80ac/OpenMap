@@ -60,8 +60,8 @@
     "semantic_hash": "48edb1a904105edd8f7377430f94d8ff"
   },
   "packages/constants/src/index.ts": {
-    "mtime": 1794249023.817569,
-    "ast_hash": "2406a355e3b2b4105cca0c6e72e32a99",
+    "mtime": 1794250663.2968686,
+    "ast_hash": "806166ac729060fa7930ea77765a2e14",
     "semantic_hash": ""
   },
   "packages/constants/tsconfig.json": {
@@ -220,13 +220,13 @@
     "semantic_hash": "29a4084872687b5fa209b236589b65c6"
   },
   "packages/i18n/locales/ar.json": {
-    "mtime": 1794249099.977172,
-    "ast_hash": "693abfecffca2b2a83edbdb26240e159",
+    "mtime": 1794250703.9839456,
+    "ast_hash": "29f693a605856f59b6563804d70d7591",
     "semantic_hash": ""
   },
   "packages/i18n/locales/en.json": {
-    "mtime": 1794249099.9756591,
-    "ast_hash": "b7dd9e22d110888a7d49017ccfc75eca",
+    "mtime": 1794250703.9839456,
+    "ast_hash": "6e6ac1b7b76faaa2edab5f8a77ddea42",
     "semantic_hash": ""
   },
   "packages/i18n/package.json": {
@@ -360,13 +360,13 @@
     "semantic_hash": "ec497ebb9f0d641a5f68c7ee75975acf"
   },
   "docs/CONTRACTS.md": {
-    "mtime": 1794249224.1874938,
-    "ast_hash": "da18a50160b7c16c3dea7ec6cde21a25",
+    "mtime": 1794250840.7349026,
+    "ast_hash": "ee511cf06160586c9f9d446790409f67",
     "semantic_hash": ""
   },
   "docs/STATE.md": {
-    "mtime": 1794250257.7934952,
-    "ast_hash": "c852e7b2969e3e746484caf380298d94",
+    "mtime": 1794251412.0272968,
+    "ast_hash": "a185261f3d159ac701a791f831611b9a",
     "semantic_hash": ""
   },
   "docs/adr/ADR-001-monorepo-tooling.md": {
@@ -395,8 +395,8 @@
     "semantic_hash": "03302e16c34b747e0c05ce2fe7322a02"
   },
   "graphify-out/converted/OpenMap-Tracker_d0198e2e.md": {
-    "mtime": 1794250267.9379175,
-    "ast_hash": "8556c7783165a158975449e0816336f2",
+    "mtime": 1794251419.0102632,
+    "ast_hash": "70bb0c2847b0be092b50c18e74e8fdbb",
     "semantic_hash": ""
   },
   "lefthook.yml": {
@@ -640,19 +640,19 @@
     "semantic_hash": "93231ecfe82d9688ce7148166c7a0db0"
   },
   "apps/api/src/dcim/dcim.module.ts": {
-    "mtime": 1793820618.7949243,
-    "ast_hash": "e17d5f12025e603564062cf0025f027a",
-    "semantic_hash": "e17d5f12025e603564062cf0025f027a"
+    "mtime": 1794250490.169701,
+    "ast_hash": "7d457520e5a8898cd3b04201841a86d0",
+    "semantic_hash": ""
   },
   "apps/api/src/dcim/dcim.resolver.ts": {
-    "mtime": 1792651066.2944071,
-    "ast_hash": "be75c0f75c20cc15ecb3605972e17ead",
-    "semantic_hash": "be75c0f75c20cc15ecb3605972e17ead"
+    "mtime": 1794250490.169701,
+    "ast_hash": "7f6c5116383465fe33500f00ec006bad",
+    "semantic_hash": ""
   },
   "apps/api/src/dcim/dcim.service.ts": {
-    "mtime": 1792694135.8820834,
-    "ast_hash": "6d4489845153b4f2f9ff10033d5c7c1f",
-    "semantic_hash": "6d4489845153b4f2f9ff10033d5c7c1f"
+    "mtime": 1794250490.169701,
+    "ast_hash": "af6464969812af5e8880de63e3dc621e",
+    "semantic_hash": ""
   },
   "apps/api/src/discovery/discovery.module.ts": {
     "mtime": 1793542959.26232,
@@ -845,8 +845,8 @@
     "semantic_hash": "8efddeb02fe7ad8432b5f931b8b114ea"
   },
   "apps/api/src/metrics/metrics.service.ts": {
-    "mtime": 1794248430.687335,
-    "ast_hash": "25d00030256cbdfe764c1a5498dd523e",
+    "mtime": 1794250490.169701,
+    "ast_hash": "6e399ac18a776e5bd0c11427b7e0a23a",
     "semantic_hash": ""
   },
   "apps/api/src/outbox/event-bus.ts": {
@@ -2045,8 +2045,8 @@
     "semantic_hash": "6e9a52b478a6597295424e0f137808e2"
   },
   "docs/TRACKER-SUMMARY.md": {
-    "mtime": 1794250259.5146792,
-    "ast_hash": "b3368ac76879e7a299494517d25068e1",
+    "mtime": 1794251413.778448,
+    "ast_hash": "c7b46cb9245f30bca0accea6a2d63d15",
     "semantic_hash": ""
   },
   "packages/db/clickhouse/README.md": {
@@ -3640,8 +3640,8 @@
     "semantic_hash": "88798f10cdac16d000346c8acac4ead3"
   },
   "apps/console/src/components/dcim/DcimView.tsx": {
-    "mtime": 1794248829.8112197,
-    "ast_hash": "ddc94533dac6d42b4ea5c4fb3ccce70b",
+    "mtime": 1794250675.3787265,
+    "ast_hash": "d4031f8bf735d83711473142f075badc",
     "semantic_hash": ""
   },
   "apps/console/src/components/integrations/IntegrationsView.test.tsx": {
@@ -3665,9 +3665,9 @@
     "semantic_hash": ""
   },
   "apps/console/src/lib/estate-queries.ts": {
-    "mtime": 1793990256.7506738,
-    "ast_hash": "252332068b2fe0a8d6dac962051f87f8",
-    "semantic_hash": "252332068b2fe0a8d6dac962051f87f8"
+    "mtime": 1794250709.0812912,
+    "ast_hash": "a8f2f4056ed48f828406dcb023ba5c97",
+    "semantic_hash": ""
   },
   "docs/adr/ADR-012-remaining-console-screens.md": {
     "mtime": 1792694109.7391918,
@@ -4115,9 +4115,9 @@
     "semantic_hash": "df80e34cafd03673873b386fa7ac52d3"
   },
   "apps/console/src/lib/twin-model.test.ts": {
-    "mtime": 1793794792.646952,
-    "ast_hash": "543efb6174e3066e62c68c7f73372cdb",
-    "semantic_hash": "543efb6174e3066e62c68c7f73372cdb"
+    "mtime": 1794250587.6592073,
+    "ast_hash": "e1504116eea024a06f9133e0dd3b4ff8",
+    "semantic_hash": ""
   },
   "apps/console/src/lib/twin-model.ts": {
     "mtime": 1793794792.646952,
@@ -8785,8 +8785,8 @@
     "semantic_hash": ""
   },
   "apps/console/e2e/cabling.spec.ts": {
-    "mtime": 1794249883.327962,
-    "ast_hash": "3717cf3c3bf088e4f14d03a9a2cccdb5",
+    "mtime": 1794251347.6184485,
+    "ast_hash": "085fc44a5436335516b10b6231dc6cfd",
     "semantic_hash": ""
   },
   "apps/console/src/components/dcim/CablingView.test.tsx": {
@@ -8842,6 +8842,51 @@
   "docs/evidence/console/cabling-en.png": {
     "mtime": 1794250027.9537096,
     "ast_hash": "e1862f7dde1735c3950805c9ac3da9bd",
+    "semantic_hash": ""
+  },
+  "apps/api/src/dcim/place-rack.integration.test.ts": {
+    "mtime": 1794250524.3890405,
+    "ast_hash": "760e2a05aef05496c79c9ff085a84bc5",
+    "semantic_hash": ""
+  },
+  "apps/console/e2e/floor-plan.spec.ts": {
+    "mtime": 1794250814.180346,
+    "ast_hash": "a31a9cb856e747f149622252f1037dc1",
+    "semantic_hash": ""
+  },
+  "apps/console/src/components/dcim/FloorPlanView.test.tsx": {
+    "mtime": 1794250771.3864546,
+    "ast_hash": "6b383394af888f9999955761a27c4268",
+    "semantic_hash": ""
+  },
+  "apps/console/src/components/dcim/FloorPlanView.tsx": {
+    "mtime": 1794250708.9736845,
+    "ast_hash": "fc9b3b76faa1a7520f8f41ff8a36658b",
+    "semantic_hash": ""
+  },
+  "apps/console/src/lib/floor-plan.test.ts": {
+    "mtime": 1794250709.1096628,
+    "ast_hash": "e44cebf7cf6a4c3b603206d286afceef",
+    "semantic_hash": ""
+  },
+  "apps/console/src/lib/floor-plan.ts": {
+    "mtime": 1794250738.984237,
+    "ast_hash": "e3e2e8b13977ecb2faf28f1b0ee45e62",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-057-room-floor-plan.md": {
+    "mtime": 1794250835.4069579,
+    "ast_hash": "57c9328be1dbba9d92513efb77471a6c",
+    "semantic_hash": ""
+  },
+  "docs/evidence/console/floor-plan-ar.png": {
+    "mtime": 1794250948.0308945,
+    "ast_hash": "04d85fb1567496bd8af43948491d483f",
+    "semantic_hash": ""
+  },
+  "docs/evidence/console/floor-plan-en.png": {
+    "mtime": 1794250948.0161505,
+    "ast_hash": "a580ac225857b1af9f657fd434b8d13f",
     "semantic_hash": ""
   }
 }
