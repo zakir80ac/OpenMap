@@ -49,7 +49,7 @@
 | REQ-SEC-005 | SEC | Audit | Immutable audit log of every change | Audit events in ClickHouse with retention. | Every mutation produces an audit event visible in Settings. | P0 | Done |  |  | CLAUDE.md §6 | T-038, T-090, T-095, T-032, T-091 | Global mutation interceptor writes audit_logs + openmap.audit.action through the outbox; ClickHouse audit_log copy; append-only trigger (migrations 0007/0008); auditLog GraphQL 0.2.0 (ADR-010); Settings screen with identity and paged audit log (T-090); integration test proves trail, trigger and auditor-only read (commit 18ba96a); ADR-010; migrations 0007/0008 (append-only trigger), 0009 + ClickHouse 0002 (retention); auditLog GraphQL 0.2.0; openmap_audit_entries_total metric; live: 3 automation mutations → 3 rows with trace ids, Settings screenshot docs/evidence/console/settings-en.png and settings-ar.png (RTL); commit 0f7d46c | 2026-10-22 | 2026-10-22 | Remaining for Done: retention policy on ClickHouse audit_log (TTL) surfaced in tenant settings; e2e screenshot of Settings against the rebuilt API image. |
 | REQ-QA-001 | QA | Synthetic estate | tools/synth-estate deterministic 100k-CI generator | Sites, racks, 5k network devices, 40k hosts, 30k VMs, 200 k8s services, 300 business services, IPAM, PDUs replayed through the collector contract. | Same seed produces identical output; replay reconciles within budget. | P0 | Done | Claude |  | CLAUDE.md §8 | T-025, T-026, T-450 | tools/synth-estate 17 tests; scale 1 = 550k CIs in 17.5s, byte-identical per seed; commit bd17001; 554105a: estate follows collector identities and relationship labels (ADR-044, T-450); aab3f27: T-450 checks no two estate CIs merge under the reconciler rules (ADR-045); full-scale estate: each HQ floor scope its own subnet (96721ec), identity MACs unique (4a4173d); seed-43 scale-1 estate 550,747 CIs, 550,746 distinct identities, no shared global key | 2026-10-22 | 2026-11-07 |  |
 | REQ-QA-002 | QA | Harness | Compose test harness (packages/testing) | Starts the real stack for integration tests; fixtures recorded from real devices. | pnpm test runs integration tests against compose in CI. | P0 | Done |  |  | CLAUDE.md §8 | T-015, T-032 | ci.yml integration job: compose datastores up, pnpm test:integration across packages and apps (api 14, db 80, reconciler); runs on GitHub Actions on the next push; packages/testing compose harness; API integration suite runs against the compose datastores locally and in the CI integration job (.github/workflows/ci.yml); commit bb5e5b9 | 2026-10-22 | 2026-11-01 |  |
-| REQ-QA-003 | QA | Fixtures | Vendor lab fixtures for every collector family | Recorded SNMP walks, CLI outputs, API responses in packages/testing/fixtures. | Each collector family has at least one real recorded fixture; none fabricated. | P0 | Not started |  |  | CLAUDE.md §8 |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-QA-003 | QA | Fixtures | Vendor lab fixtures for every collector family | Recorded SNMP walks, CLI outputs, API responses in packages/testing/fixtures. | Each collector family has at least one real recorded fixture; none fabricated. | P0 | Blocked |  |  | CLAUDE.md §8 |  |  | 2026-10-22 | 2026-11-09 | Needs real vendor equipment or recordings from it (Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert). R-004 forbids fabricated fixtures. Open-source families already have container-lab recordings in packages/testing/fixtures/vendor (checkpoint 24). Waiting on Syed for lab access or recorded transcripts. |
 | REQ-QA-004 | QA | E2E | Playwright suite in en and ar for every screen | RTL screenshots as evidence. | Suite green in CI on the compose stack. | P0 | In review |  |  | CLAUDE.md §6 | T-087, T-088, T-089 | ci.yml e2e job: full compose stack built in CI, Playwright en+ar suite (shell, walkthrough of every primary screen incl. settings, roles, perf); green locally against the compose images (9 passed, 1 skipped by design); runs on GitHub Actions on the next push | 2026-10-22 | 2026-10-22 |  |
 | REQ-INT-001 | INT | Deployment | Single-node docker compose profile | Postgres, Memgraph, ClickHouse, Valkey, Meilisearch, Keycloak, OpenBao, Superset, vLLM or llama.cpp fallback. | docker compose up brings everything healthy; e2e passes. | P0 | Done | Claude |  | CLAUDE.md §1.2 | T-021, T-022, T-023, T-024, T-042, T-040 | 2026-10-22 compose run: docker-compose.yml + docker-compose.apps.yml up from images openmap/*:dev; migrate job applied/skipped all migrations; api healthz/readyz ok; containerised scheduler issued its CA; Node container node-compose-01 enrolled (bootstrap CA via shared volume), ran port_scan against the postgres service (tcp/5432 found) and certificate against scheduler:4200; collector_runs success 3/3 CIs; reconciled into Postgres | 2026-10-22 | 2026-10-22 | Single-node profile: infra compose + apps overlay (api, scheduler, reconciler, bsm-engine, migrate, node profile). Images from deploy/docker; nonroot volumes; scheduler cert SANs cover service name and public host. |
 | REQ-INT-002 | INT | Deployment | Air-gapped compose profile and offline bundle | All images and models bundled; pull_policy never. | Full e2e passes with no network. | P0 | Done | Claude |  | CLAUDE.md §1.7 | T-087, T-088, T-089, T-096 | docs/evidence/airgap/bundle-build.md: 17 images, 2.7 GB bundle, SHA256SUMS verified, exit 0; docs/evidence/airgap/load-airgap.md + e2e-airgap.log: 17 images loaded on a dind host with iptables dropping all new egress; migrations applied; full Playwright suite 10 passed / 1 skipped by design; bundle-build.md | 2026-10-22 | 2026-10-22 | Outstanding for Done: load-bundle.sh on a clean host with egress blocked, e2e suite there (REQ-SEC-003) |
@@ -134,7 +134,7 @@
 | REQ-IPAM-003 | IPAM | IPAM, DNS, DHCP, network | DNS zones and records, bidirectional sync | OpenMap: dns_zone, dns_record, sync adapters (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-512, T-513, T-514, T-515, T-516, T-517, T-518, T-519 | commits 9481228 81e8f17 3abe59e 3699f61; docs/adr/ADR-055-two-way-dns-sync.md; docs/evidence/console/dns-sync-en.png, dns-sync-ar.png; e2e T-519 en+ar passed 2026-11-09 against the lab BIND 9 (add and delete applied, CMDB retired by transfer) | 2026-10-22 | 2026-11-09 |  |
 | REQ-IPAM-004 | IPAM | IPAM, DNS, DHCP, network | Switch port management, MAC/ARP tables, port history | OpenMap: interface, port CIs, MAC to port mapping, history (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-DEP-001 | DEP | IPAM, DNS, DHCP, network | Network topology maps (L2/L3, LLDP/CDP) | OpenMap: dependency map with topology layer filter (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P0 | Done |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-153, T-154, T-155, T-156 | commit 2fb5968; ADR-030; GraphQL 1.6.0 networkTopology; T-153 folding 3/3, T-154 GraphQL vs estate 2/2, T-155 topology view en+ar and circle seed, T-156 e2e topology.spec en+ar; L2 252 nodes 459 links 58 ms; docs/evidence/network-topology.md, docs/evidence/console/topology-{l2,l3}-{en,ar}.png | 2026-10-22 | 2026-11-05 |  |
-| REQ-DCIM-001 | DCIM | IPAM, DNS, DHCP, network | Cabling, patch panels, circuits, cross-connects | OpenMap: cable, patch_panel, power_circuit (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network |  |  | 2026-10-22 | 2026-10-22 |  |
+| REQ-DCIM-001 | DCIM | IPAM, DNS, DHCP, network | Cabling, patch panels, circuits, cross-connects | OpenMap: cable, patch_panel, power_circuit (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-520, T-521, T-522, T-523 | commit d3e9357; docs/adr/ADR-056-structured-cabling.md; docs/evidence/console/cabling-en.png, cabling-ar.png; T-521 integration and T-523 e2e (en+ar) passed 2026-11-09 against the compose stack | 2026-10-22 | 2026-11-09 |  |
 | REQ-IPAM-005 | IPAM | IPAM, DNS, DHCP, network | Firewall rules and policy objects | OpenMap: firewall_rule CI (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-IPAM-006 | IPAM | IPAM, DNS, DHCP, network | IPAM API, next-free-IP, subnet allocation | OpenMap: GraphQL mutations, REST (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §3. IPAM, DNS, DHCP, network | T-032, T-102, T-106 | GraphQL subnets/subnet/addresses with nextFree computed from the allocation set; e2e asserts the next free address; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
 | REQ-DCIM-002 | DCIM | DCIM | Buildings, rooms, rows, racks, rack layouts (front/rear) | OpenMap: site, building, room, row, rack; 3D elevation (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done | Claude |  | CAPABILITY-MAP.md §4. DCIM | T-103, T-106 | rooms, rows and racks with rack elevations (front/rear faces) from DCIM_ATTRIBUTES; e2e opens a rack elevation; docs/evidence/console/dcim-en.png, dcim-ar.png; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
@@ -220,7 +220,7 @@
 | DEP | Application dependency mapping | IPAM, DNS, DHCP, network, Application dependency mapping and business services, Dependency map |  | 5 | 5 | 100 |
 | CMDB | CMDB, software, licence, vulnerability correlation | Layers, CMDB and asset management, Security, vulnerabilities, compliance, Onboarding and digital twin, Identity, CMDB, Added |  | 42 | 40 | 95 |
 | IPAM | IPAM, DNS and DHCP | IPAM, DNS, DHCP, network, Onboarding and digital twin |  | 7 | 4 | 57 |
-| DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 2 | 22 |
+| DCIM | DCIM: racks, power, cooling, cabling | IPAM, DNS, DHCP, network, DCIM, Onboarding and digital twin |  | 9 | 3 | 33 |
 | BSM | Business service management | Application dependency mapping and business services, Runbooks, BSM, Added |  | 8 | 8 | 100 |
 | UI | Console UI, design system, i18n | Design system, i18n, Screens, Analytics, reporting, AI, Onboarding and digital twin, Platform, Added, Screen |  | 36 | 33 | 92 |
 | AI | AI assistant over the graph | Assistant, CMDB and asset management, Analytics, reporting, AI, Added |  | 8 | 8 | 100 |
@@ -255,10 +255,10 @@
 ## Sheet: Contracts
 | Name | File | Version | Frozen on | Last ADR |
 | --- | --- | --- | --- | --- |
-| ci | packages/contracts/src/ci.ts | 0.8.0 |  | ADR-025 |
-| collector | packages/contracts/src/collector.ts | 0.8.0 |  | ADR-025 |
+| ci | packages/contracts/src/ci.ts | 0.9.0 |  | ADR-056 |
+| collector | packages/contracts/src/collector.ts | 0.9.0 |  | ADR-056 |
 | event | packages/contracts/src/event.ts | 0.1.0 |  | ADR-002 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.28.0 |  | ADR-055 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.29.0 |  | ADR-056 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
@@ -284,6 +284,7 @@
 | ADR-053 | Anomaly rules over discovery and health events | Accepted | 2026-11-08 | docs/adr/ADR-053-anomaly-rules.md |
 | ADR-054 | Cloud recommendations: rightsizing and unused resources | Accepted | 2026-11-08 | docs/adr/ADR-054-cloud-recommendations.md |
 | ADR-055 | Two-way DNS sync: zones kept in sync with their authoritative server | Accepted | 2026-11-08 | docs/adr/ADR-055-two-way-dns-sync.md |
+| ADR-056 | Structured cabling: patch panels, cables, cross-connects and circuits as CIs | Accepted | 2026-11-09 | docs/adr/ADR-056-structured-cabling.md |
 ## Sheet: Risks
 | ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -660,6 +661,10 @@
 | T-517 | unit | REQ-IPAM-003 | 2026-11-09 | Pass | 0 |
 | T-518 | unit | REQ-IPAM-003 | 2026-11-09 | Pass | 0 |
 | T-519 | unit | REQ-IPAM-003 | 2026-11-09 | Pass | 0 |
+| T-520 | unit | REQ-DCIM-001 | 2026-11-09 | Pass | 0 |
+| T-521 | unit | REQ-DCIM-001 | 2026-11-09 | Pass | 0 |
+| T-522 | unit | REQ-DCIM-001 | 2026-11-09 | Pass | 0 |
+| T-523 | unit | REQ-DCIM-001 | 2026-11-09 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -696,28 +701,29 @@
 | 2026-11-08 | Checkpoint 29 (cont.): REQ-PERF-002 impact query p95 under 1 s on the 550k-CI estate (In review pending CI) |  |  |  |
 | 2026-11-08 | Checkpoint 30: REQ-CORE-020 leased outbox claims (0035/0036), pipelined graph batch, sync large ClickHouse inserts; seed-45 dispatch 67.8 s to 27.3 s; REQ-PERF-004 sweep 8.43 min per 10k devices (budget 15). ADR-050. Both In review. |  |  |  |
 | 2026-11-09 | REQ-IPAM-003 Done: two-way DNS sync (ADR-055, GraphQL 1.28.0), e2e en+ar against the lab BIND 9; Docker recovered after its VHDX filled E: (Windows restart, build cache pruned) |  |  |  |
+| 2026-11-09 | REQ-DCIM-001 Done: structured cabling (ADR-056, CI/collector 0.9.0, GraphQL 1.29.0), e2e en+ar; REQ-QA-003 Blocked on vendor equipment; link_probe CollectorFamily enum fixed (migration 0041) |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-09T18:08:06.282Z |  |  |  |  |  |  |
+| Generated | 2026-11-09T18:51:01.063Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
-| All | 30 | 0 | 28 | 5 | 146 |  |  |
+| All | 28 | 0 | 29 | 5 | 147 |  |  |
 | Workstream | Not started | In progress | Blocked | In review | Done | Total | % done |
 | CORE | 0 | 0 | 0 | 1 | 19 | 20 | 95 |
 | DISC | 0 | 0 | 26 | 0 | 5 | 31 | 16 |
 | DEP | 0 | 0 | 0 | 0 | 5 | 5 | 100 |
 | CMDB | 0 | 0 | 2 | 0 | 40 | 42 | 95 |
 | IPAM | 3 | 0 | 0 | 0 | 4 | 7 | 57 |
-| DCIM | 7 | 0 | 0 | 0 | 2 | 9 | 22 |
+| DCIM | 6 | 0 | 0 | 0 | 3 | 9 | 33 |
 | BSM | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | UI | 3 | 0 | 0 | 0 | 33 | 36 | 92 |
 | AI | 0 | 0 | 0 | 0 | 8 | 8 | 100 |
 | INT | 11 | 0 | 0 | 0 | 8 | 19 | 42 |
-| QA | 1 | 0 | 0 | 1 | 3 | 5 | 60 |
+| QA | 0 | 0 | 1 | 1 | 3 | 5 | 60 |
 | PERF | 2 | 0 | 0 | 2 | 2 | 6 | 33 |
 | SEC | 3 | 0 | 0 | 1 | 9 | 13 | 69 |
 | Priority | Not started | In progress | Blocked | In review | Done | Total |  |
-| P0 | 1 | 0 | 26 | 3 | 94 | 124 |  |
-| P1 | 25 | 0 | 2 | 2 | 52 | 81 |  |
+| P0 | 0 | 0 | 27 | 3 | 94 | 124 |  |
+| P1 | 24 | 0 | 2 | 2 | 53 | 81 |  |
 | P2 | 4 | 0 | 0 | 0 | 0 | 4 |  |
 | Burn-down by date | Done cumulative |  |  |  |  |  |  |
 | 2026-10-22 | 34 |  |  |  |  |  |  |
@@ -727,8 +733,9 @@
 | 2026-11-06 | 126 |  |  |  |  |  |  |
 | 2026-11-07 | 139 |  |  |  |  |  |  |
 | 2026-11-08 | 145 |  |  |  |  |  |  |
-| 2026-11-09 | 146 |  |  |  |  |  |  |
+| 2026-11-09 | 147 |  |  |  |  |  |  |
 | Open blockers |  |  |  |  |  |  |  |
+| REQ-QA-003 | Vendor lab fixtures for every collector family | Needs real vendor equipment or recordings from it (Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert). R-004 forbids fabricated fixtures. Open-source families already have container-lab recordings in packages/testing/fixtures/vendor (checkpoint 24). Waiting on Syed for lab access or recorded transcripts. |  |  |  |  |  |
 | REQ-DISC-001 | Agentless discovery: SNMP v1/v2c/v3 | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell). |  |  |  |  |  |
 | REQ-DISC-002 | WMI / WinRM Windows discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo). |  |  |  |  |  |
 | REQ-DISC-003 | SSH Linux/Unix discovery | PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Recorded fixtures from Ubuntu 24.04, Debian 12, AlmaLinux 9.8, Alpine 3.20 and Amazon Linux 2023 parse (T-300, recaptured with the parts and utilisation sections). Missing: AIX, Solaris, HP-UX (proprietary OS/hardware; the script is Linux-only). Done once Syed confirms the Linux scope or provides Unix hosts. |  |  |  |  |  |

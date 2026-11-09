@@ -2,7 +2,47 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-08/09 (checkpoint 31: REQ-IPAM-003 two-way DNS sync Done; Docker recovered after E: filled)
+## Last session · 2026-11-09 (checkpoint 32: REQ-DCIM-001 structured cabling Done; REQ-QA-003 Blocked)
+
+**REQ-DCIM-001 Done** (ADR-056; CI and collector 0.9.0, GraphQL 1.29.0; T-520..T-523; commit d3e9357).
+- **Records:** patch panels, cables (patch leads, trunks, cross-connects) and carrier circuits (a new `circuit` CI type)
+  are CIs written through the outbox.
+  - A panel is `located_in` its rack, with its rack unit.
+  - A cable or circuit is `connected_to` each end, with the end, the port and the panel side on the relationship.
+  - Panel positions are numbers on the panel, not CIs, so no new `*Ref` target is needed.
+- **Rules:** a port takes one cable or circuit. `traceCable` (contracts) walks cable → panel → cable to the far end and
+  reports incomplete paths and loops.
+- **API:** `cabling`, `cableTrace`, plus the operator mutations to mount and remove panels, connect and disconnect
+  cables, and record and remove circuits. Writes are audited, counted (`openmap_cabling_changes_total`) and traced.
+- **Screen:** the DCIM screen has a Racks / Cabling switch. The e2e mounts two panels, patches a switch through both
+  to a server, traces the path, records a circuit, then takes it all down. It also sweeps leftovers of an
+  interrupted run (`E2E-` prefix). Evidence: `docs/evidence/console/cabling-{en,ar}.png`.
+- **Migrations:**
+  - 0040: `circuit` added to `CiType`.
+  - Memgraph `0002_circuit`: the label index. The schema test now reads every Memgraph file.
+  - 0041: `link_probe` added to `CollectorFamily`. REQ-BSM-007 had left it out of the enum, so the db schema test was
+    red.
+- `useDebounced` moved to `apps/console/src/lib/use-debounced.ts`, shared by Impact and Cabling.
+- Power circuits stay with REQ-DCIM-004; cable labels and their LLDP verification with REQ-DCIM-008.
+
+**REQ-QA-003 Blocked.** It needs real vendor equipment or recordings from it, and R-004 forbids fabricated fixtures.
+See Questions.
+
+**Environment.**
+- After the Windows restart the kind cluster `openmap-control-plane` came back and ran at about 200% CPU. Sign-ins
+  timed out and connections to the published ports were reset, so it was stopped again (`docker start
+  openmap-control-plane` brings it back).
+- Free space on E: held at 42.6 GB through two image builds. The VHDX reuses the space freed inside it.
+
+**Questions for Syed:**
+1. Compact the Docker VHDX (about 874 GB on E:) or move it. See checkpoint 31.
+2. OpenBao runs in compose dev mode, which keeps secrets in memory, so a restart wipes the credential sets. Should the
+   single-node profile get a file storage backend (a new requirement)?
+3. REQ-QA-003: lab access to, or recorded SNMP/CLI/API transcripts from, the vendor devices listed in R-004.
+
+**Next:** REQ-DCIM-003 (room layout and floor plans), then REQ-DCIM-004..008, SEC-011, UI-021..023 and INT-009.
+
+## Previous session · 2026-11-08/09 (checkpoint 31: REQ-IPAM-003 two-way DNS sync Done; Docker recovered after E: filled)
 
 **REQ-IPAM-003 Done** (ADR-055, GraphQL 1.28.0, migration 0039; T-512..T-519).
 - **Reconciler:** a full zone transfer retires the records it no longer holds (T-512).

@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T18:06:24.158Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T18:50:59.513Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 30 |
+| Not started | 28 |
 | In progress | 0 |
-| Blocked | 28 |
+| Blocked | 29 |
 | In review | 5 |
-| Done | 146 |
+| Done | 147 |
 | **Total** | **209** |
 
 ## By workstream
@@ -20,12 +20,12 @@ Generated 2026-11-09T18:06:24.158Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 2 | 0 | 0 | 22% |
+| DCIM | 9 | 3 | 0 | 0 | 33% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
 | INT | 19 | 8 | 0 | 0 | 42% |
-| QA | 5 | 3 | 0 | 0 | 60% |
+| QA | 5 | 3 | 0 | 1 | 60% |
 | PERF | 6 | 2 | 0 | 0 | 33% |
 | SEC | 13 | 9 | 0 | 0 | 69% |
 
@@ -34,6 +34,7 @@ Generated 2026-11-09T18:06:24.158Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Blocked
 
+- REQ-QA-003 · Vendor lab fixtures for every collector family — Needs real vendor equipment or recordings from it (Cisco, Arista, Juniper, Dell iDRAC, HPE iLO, Lenovo, VMware, Hyper-V, Nutanix, Pure, NetApp, Dell EMC, Brocade/MDS, F5, Citrix, A10, APC, Liebert). R-004 forbids fabricated fixtures. Open-source families already have container-lab recordings in packages/testing/fixtures/vendor (checkpoint 24). Waiting on Syed for lab access or recorded transcripts.
 - REQ-DISC-001 · Agentless discovery: SNMP v1/v2c/v3 — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Net-SNMP over v1, v2c and v3 captured (v1 path added). Missing: vendor hardware walks (Cisco, Juniper, Arista, HPE/H3C, Fortinet, Palo Alto, Brocade, Dell).
 - REQ-DISC-002 · WMI / WinRM Windows discovery — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Code complete (protocol-shaped tests). Needs a recorded WinRM capture from a Windows Server host (licence/evaluation VM) to close; capturing Syed's own Windows 11 PC was not done (it would put personal inventory in the repo).
 - REQ-DISC-003 · SSH Linux/Unix discovery — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Recorded fixtures from Ubuntu 24.04, Debian 12, AlmaLinux 9.8, Alpine 3.20 and Amazon Linux 2023 parse (T-300, recaptured with the parts and utilisation sections). Missing: AIX, Solaris, HP-UX (proprietary OS/hardware; the script is Linux-only). Done once Syed confirms the Linux scope or provides Unix hosts.
@@ -65,8 +66,6 @@ Generated 2026-11-09T18:06:24.158Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-QA-003 [P0] Vendor lab fixtures for every collector family
-- REQ-DCIM-001 [P1] Cabling, patch panels, circuits, cross-connects
 - REQ-DCIM-003 [P1] Room layout / floor plans
 - REQ-DCIM-004 [P1] Power: PDUs, outlets, feeds, circuits, UPS, redundancy
 - REQ-DCIM-005 [P1] Power monitoring, thresholds, billing by outlet
@@ -75,6 +74,8 @@ Generated 2026-11-09T18:06:24.158Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DCIM-008 [P1] Cable management with labels and verification
 - REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)
 - REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
+- REQ-INT-012 [P1] Monitoring: Zabbix, Nagios, Prometheus, Datadog, SolarWinds, Splunk
+- REQ-INT-014 [P1] Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM
 
 ## Open risks
 
