@@ -68,6 +68,7 @@ enum CiType {
   load_balancer
   firewall_rule
   site_link
+  circuit
   storage_array
   lun
   fc_switch
@@ -251,6 +252,7 @@ enum CollectorFamily {
   saas
   os_patch
   warranty
+  link_probe
 }
 
 /// collectorManifestSchema.language (collector.ts)

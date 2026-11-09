@@ -105,9 +105,11 @@ describe('memgraph/0001_schema.cypher', () => {
     expect(statements).toContain('CREATE INDEX ON :Ci(layer)');
     expect(statements).toContain('CREATE INDEX ON :Ci(lifecycle)');
   });
-  it('has a label index for every CI type and an edge index for every relationship type', () => {
-    for (const t of CI_TYPES) expect(statements).toContain('CREATE INDEX ON :' + pascal(t));
-    for (const r of RELATIONSHIP_TYPES) expect(statements).toContain('CREATE EDGE INDEX ON :' + r.toUpperCase());
+  it('has, across the Memgraph files, a label index for every CI type and an edge index for every relationship type', () => {
+    // A CI type added later (circuit, ADR-056) gets its index from a later file, so existing graphs receive it too.
+    const all = files.flatMap((f) => loadStatements(f, '//', memgraphParameters()));
+    for (const t of CI_TYPES) expect(all).toContain('CREATE INDEX ON :' + pascal(t));
+    for (const r of RELATIONSHIP_TYPES) expect(all).toContain('CREATE EDGE INDEX ON :' + r.toUpperCase());
   });
   it('defines the impactedBy triggers with Memgraph trigger syntax and the closure depth substituted', () => {
     const triggers = statements.filter((s) => s.startsWith('CREATE TRIGGER '));

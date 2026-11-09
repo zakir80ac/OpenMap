@@ -13,7 +13,7 @@ import { ASSISTANT, CONSOLE, GRAPH } from '@openmap/constants';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import type { Locale } from '@openmap/i18n';
 import { Card, Dot, LayerBadge, Pill, SectionTitle, StateBadge, Tag, cx, layerColor } from '@openmap/ui';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { QueryState } from '@/components/common/QueryState';
 import { ImpactAccuracyPanel } from '@/components/impact/ImpactAccuracyPanel';
 import { RunbooksPanel, ScenarioRunbookPicker } from '@/components/impact/RunbooksPanel';
@@ -27,6 +27,7 @@ import {
 } from '@/lib/impact-conditions';
 import { healthKey, layerKey, predictedKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
+import { useDebounced } from '@/lib/use-debounced';
 import {
   askAssistant,
   cisPageQuery,
@@ -49,19 +50,6 @@ export interface ImpactViewProps {
 
 const fieldClass =
   'h-10 w-full rounded-om-control-lg border border-om-border-glass bg-om-surface1/80 px-om-10 text-om-sm text-om-primary outline-none transition-[border-color,box-shadow] duration-om-base ease-om-standard focus:border-om-cyan/40 focus:shadow-om-glow-bar-cyan';
-
-function useDebounced(value: string, delayMs: number): string {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      setDebounced(value);
-    }, delayMs);
-    return () => {
-      window.clearTimeout(handle);
-    };
-  }, [value, delayMs]);
-  return debounced;
-}
 
 function conditionLabel(t: Translate, condition: ImpactCondition): string {
   return t(`impact.condition.${condition}.label`);

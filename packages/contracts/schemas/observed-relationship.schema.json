@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/observed-relationship/0.8.0",
+  "$id": "https://openmap.dev/contracts/observed-relationship/0.9.0",
   "title": "observed-relationship",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -92,6 +92,7 @@
                 "load_balancer",
                 "firewall_rule",
                 "site_link",
+                "circuit",
                 "storage_array",
                 "lun",
                 "fc_switch",
@@ -202,6 +203,7 @@
                 "load_balancer",
                 "firewall_rule",
                 "site_link",
+                "circuit",
                 "storage_array",
                 "lun",
                 "fc_switch",

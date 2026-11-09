@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.28.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.29.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,177 @@ type PowerFeed {
   ci: Ci!
   ratedWatts: Int!
   currentWatts: Int!
+}
+
+# REQ-DCIM-001 (ADR-056) — structured cabling: patch panels in racks, cables (patch leads, trunks, cross-connects) and
+# carrier circuits, each a CI joined `connected_to` its ends; a panel position joins its front to its rear.
+enum CableKind {
+  patch
+  trunk
+  cross_connect
+}
+
+enum CableMedia {
+  cat5e
+  cat6
+  cat6a
+  cat8
+  om3
+  om4
+  om5
+  os2
+  dac
+  aoc
+  coax
+}
+
+enum PanelConnector {
+  rj45
+  lc
+  sc
+  mpo
+  st
+  fc
+}
+
+enum PanelSide {
+  front
+  rear
+}
+
+enum CircuitKind {
+  internet
+  mpls
+  point_to_point
+  wavelength
+  dark_fibre
+  voice
+}
+
+enum CircuitStatus {
+  planned
+  provisioning
+  active
+  decommissioned
+}
+
+"One end of a cable or circuit: the CI, the port on it (a panel position or a device port name) and a panel side."
+type CableEndpoint {
+  ci: Ci!
+  port: String
+  side: PanelSide
+}
+
+type Cable {
+  ci: Ci!
+  label: String!
+  kind: CableKind
+  media: CableMedia
+  lengthM: Float
+  colour: String
+  a: CableEndpoint!
+  b: CableEndpoint!
+}
+
+"A patch panel position: the cable patched on its front and on its rear, and a circuit terminated on it, if any."
+type PatchPanelPort {
+  position: Int!
+  front: Cable
+  rear: Cable
+  circuit: Circuit
+}
+
+type PatchPanel {
+  ci: Ci!
+  rack: Ci
+  name: String!
+  ports: Int!
+  media: CableMedia
+  connector: PanelConnector
+  uPosition: Int
+  "Positions with a cable on either side."
+  used: Int!
+  positions: [PatchPanelPort!]!
+}
+
+type Circuit {
+  ci: Ci!
+  provider: String!
+  circuitId: String!
+  kind: CircuitKind
+  status: CircuitStatus
+  bandwidthMbps: Int
+  aEnd: CableEndpoint
+  zEnd: CableEndpoint
+  zEndDescription: String
+}
+
+type CablingSummary {
+  patchPanels: Int!
+  positions: Int!
+  positionsUsed: Int!
+  cables: Int!
+  crossConnects: Int!
+  circuits: Int!
+}
+
+type Cabling {
+  summary: CablingSummary!
+  patchPanels: [PatchPanel!]!
+  cables: [Cable!]!
+  circuits: [Circuit!]!
+}
+
+"A step of a traced path: from one end, along a cable or circuit (via), to its other end."
+type CableHop {
+  from: CableEndpoint!
+  via: Ci!
+  viaKind: String!
+  to: CableEndpoint!
+}
+
+type CableTrace {
+  hops: [CableHop!]!
+  "The path ends at a port that is not a patch panel position."
+  complete: Boolean!
+  "The path came back on itself (a mis-patch)."
+  looped: Boolean!
+}
+
+input CableEndpointInput {
+  ciId: UUID!
+  port: String
+  side: PanelSide
+}
+
+input PatchPanelInput {
+  rackId: UUID!
+  name: String!
+  ports: Int!
+  media: CableMedia!
+  connector: PanelConnector!
+  uPosition: Int
+}
+
+input CableInput {
+  label: String!
+  kind: CableKind!
+  media: CableMedia!
+  lengthM: Float
+  colour: String
+  a: CableEndpointInput!
+  b: CableEndpointInput!
+}
+
+input CircuitInput {
+  provider: String!
+  circuitId: String!
+  kind: CircuitKind!
+  status: CircuitStatus!
+  bandwidthMbps: Int
+  aEnd: CableEndpointInput
+  zEnd: CableEndpointInput
+  zEndDescription: String
 }
 
 # REQ-CMDB-039 REQ-CMDB-040 (ADR-023) — the register: one row per owned CI (discovery), per BOM unit (plan) or per
@@ -2270,6 +2441,10 @@ type Query {
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
+  "REQ-DCIM-001: patch panels, cables, cross-connects and circuits."
+  cabling: Cabling!
+  "REQ-DCIM-001: the path from a port through patch panels to its far end."
+  cableTrace(endpoint: CableEndpointInput!): CableTrace!
   assets(
     filter: AssetFilter
     stage: [AssetStage!]
@@ -2670,6 +2845,18 @@ type Mutation {
   upsertDnsZoneSync(input: DnsZoneSyncInput!): DnsZoneSync!
   "REQ-IPAM-003: a record to add or delete on the zone's server; it is pushed with the zone's next sync job."
   requestDnsChange(input: DnsChangeInput!): DnsChange!
+  "REQ-DCIM-001: mounts a patch panel in a rack, or updates one (id)."
+  upsertPatchPanel(id: UUID, input: PatchPanelInput!): PatchPanel!
+  "REQ-DCIM-001: connects a cable between two ports; a port takes one cable."
+  connectCable(input: CableInput!): Cable!
+  "REQ-DCIM-001: removes a cable (the CI is retired with its two ends)."
+  disconnectCable(id: UUID!): Boolean!
+  "REQ-DCIM-001: records a carrier circuit with its terminations, or updates one (id)."
+  upsertCircuit(id: UUID, input: CircuitInput!): Circuit!
+  "REQ-DCIM-001: removes a patch panel with no cable or circuit on it (its CI is retired)."
+  removePatchPanel(id: UUID!): Boolean!
+  "REQ-DCIM-001: removes a circuit (its CI is retired with its terminations)."
+  removeCircuit(id: UUID!): Boolean!
   "Marks the suggestion dismissed; the same miss is not suggested again."
   dismissRelationshipSuggestion(id: UUID!): RelationshipSuggestion!
   "Creates a runbook (id omitted) or replaces one (REQ-BSM-005, ADR-048)."

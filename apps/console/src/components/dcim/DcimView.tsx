@@ -24,8 +24,13 @@ import { rowClass, tableClass, tdClass, thClass, theadClass } from '@/components
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { racksQuery, type Rack } from '@/lib/estate-queries';
+import { CablingView } from './CablingView';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
+
+/** The DCIM screen's views: racks and rooms (elevations, heat map, power) and structured cabling (REQ-DCIM-001). */
+const DCIM_TABS = ['racks', 'cabling'] as const;
+type DcimTab = (typeof DCIM_TABS)[number];
 
 export interface DcimViewProps {
   locale: Locale;
@@ -99,6 +104,7 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
   const racks = useQuery(racksQuery());
   const [roomId, setRoomId] = useState<string | null>(null);
   const [rackId, setRackId] = useState<string | null>(null);
+  const [view, setView] = useState<DcimTab>('racks');
   const rooms = useMemo(() => groupRooms(racks.data ?? [], t('dcim.unplaced')), [racks.data, t]);
   const room = rooms.find((r) => r.id === roomId) ?? rooms[0] ?? null;
   const rack = room?.racks.find((r) => r.ci.id === rackId) ?? room?.racks[0] ?? null;
@@ -119,132 +125,155 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
 
   return (
     <div className="flex flex-col gap-om-24">
-      <SectionTitle as="h1" size="lg" eyebrow={t('app.name')} description={t('dcim.subtitle')}>
+      <SectionTitle
+        as="h1"
+        size="lg"
+        eyebrow={t('app.name')}
+        description={t('dcim.subtitle')}
+        action={
+          <div className="flex gap-om-6" role="group" aria-label={t('dcim.views')}>
+            {DCIM_TABS.map((x) => (
+              <Pill
+                key={x}
+                variant={view === x ? 'primary' : 'default'}
+                onClick={() => {
+                  setView(x);
+                }}
+              >
+                {t(('dcim.view.' + x) as MessageKey)}
+              </Pill>
+            ))}
+          </div>
+        }
+      >
         {t('dcim.title')}
       </SectionTitle>
-      <div className="grid grid-cols-2 gap-om-12 md:grid-cols-4">
-        <Kpi label={t('dcim.kpi.rooms')} value={format.integer(rooms.length)} />
-        <Kpi label={t('dcim.kpi.racks')} value={format.integer(totals.racks)} />
-        <Kpi
-          label={t('dcim.kpi.power')}
-          value={format.number(totals.current / POWER.wattsPerKilowatt)}
-          unit={t('dcim.unit.kw')}
-        />
-        <Kpi
-          label={t('dcim.kpi.occupancy')}
-          value={format.number(percentOf(totals.occupied, totals.units))}
-          unit="%"
-        />
-      </div>
-      {racks.isPending ? (
-        <QueryState status="pending" />
-      ) : racks.isError ? (
-        <QueryState
-          status="error"
-          onRetry={() => {
-            void racks.refetch();
-          }}
-        />
-      ) : rooms.length === 0 ? (
-        <Card padding="24">
-          <p className="text-om-sm text-om-secondary">{t('dcim.empty')}</p>
-        </Card>
-      ) : (
-        <>
-          <Card padding="24" className="flex flex-col gap-om-12">
-            <SectionTitle
-              as="h2"
-              size="sm"
-              description={t('dcim.heatmap.subtitle')}
-              action={
-                <div className="flex flex-wrap gap-om-6" role="group" aria-label={t('dcim.kpi.rooms')}>
-                  {rooms.map((r) => (
-                    <Pill
-                      key={r.id}
-                      variant={room?.id === r.id ? 'primary' : 'default'}
-                      onClick={() => {
-                        setRoomId(r.id);
-                        setRackId(null);
-                      }}
-                    >
-                      {r.name}
-                    </Pill>
-                  ))}
-                </div>
-              }
-            >
-              {t('dcim.heatmap.title')}
-            </SectionTitle>
-            {room !== null ? (
-              <>
-                <div className="flex flex-wrap gap-om-12 text-om-xs text-om-secondary">
-                  <span>{t('dcim.room.racks', { count: format.integer(room.racks.length) })}</span>
-                  <span>
-                    {t('dcim.room.power', {
-                      current: format.number(room.currentWatts / POWER.wattsPerKilowatt),
-                      rated: format.number(room.ratedWatts / POWER.wattsPerKilowatt),
-                    })}
-                  </span>
-                  {room.designKw !== null ? (
-                    <span>{t('dcim.room.design', { kw: format.number(room.designKw) })}</span>
-                  ) : null}
-                  <span>
-                    {t('dcim.room.occupancy', {
-                      percent: format.number(percentOf(room.occupiedUnits, room.units)),
-                    })}
-                  </span>
-                </div>
-                <div
-                  className="grid grid-cols-4 gap-om-6 sm:grid-cols-6 md:grid-cols-10 xl:grid-cols-12"
-                  role="listbox"
-                  aria-label={t('dcim.heatmap.title')}
-                >
-                  {room.racks.map((r) => {
-                    const power = rackPower(r);
-                    const powerPercent = percentOf(power.currentWatts, power.ratedWatts);
-                    const occupancy = percentOf(r.occupiedUnits, r.units);
-                    const selected = rack?.ci.id === r.ci.id;
-                    const short = r.ci.name.split('-').slice(-DCIM.tileNameSegments).join('-');
-                    const percentLabel = format.integer(powerPercent) + '%';
-                    return (
-                      <button
-                        key={r.ci.id}
-                        type="button"
-                        role="option"
-                        aria-selected={selected}
-                        title={
-                          r.ci.displayName +
-                          ' · ' +
-                          format.number(powerPercent) +
-                          '% · ' +
-                          format.number(occupancy) +
-                          '%'
-                        }
+      {view === 'cabling' ? <CablingView racks={racks.data ?? []} /> : null}
+      <div className={view === 'cabling' ? 'hidden' : 'flex flex-col gap-om-24'}>
+        <div className="grid grid-cols-2 gap-om-12 md:grid-cols-4">
+          <Kpi label={t('dcim.kpi.rooms')} value={format.integer(rooms.length)} />
+          <Kpi label={t('dcim.kpi.racks')} value={format.integer(totals.racks)} />
+          <Kpi
+            label={t('dcim.kpi.power')}
+            value={format.number(totals.current / POWER.wattsPerKilowatt)}
+            unit={t('dcim.unit.kw')}
+          />
+          <Kpi
+            label={t('dcim.kpi.occupancy')}
+            value={format.number(percentOf(totals.occupied, totals.units))}
+            unit="%"
+          />
+        </div>
+        {racks.isPending ? (
+          <QueryState status="pending" />
+        ) : racks.isError ? (
+          <QueryState
+            status="error"
+            onRetry={() => {
+              void racks.refetch();
+            }}
+          />
+        ) : rooms.length === 0 ? (
+          <Card padding="24">
+            <p className="text-om-sm text-om-secondary">{t('dcim.empty')}</p>
+          </Card>
+        ) : (
+          <>
+            <Card padding="24" className="flex flex-col gap-om-12">
+              <SectionTitle
+                as="h2"
+                size="sm"
+                description={t('dcim.heatmap.subtitle')}
+                action={
+                  <div className="flex flex-wrap gap-om-6" role="group" aria-label={t('dcim.kpi.rooms')}>
+                    {rooms.map((r) => (
+                      <Pill
+                        key={r.id}
+                        variant={room?.id === r.id ? 'primary' : 'default'}
                         onClick={() => {
-                          setRackId(r.ci.id);
-                        }}
-                        className={cx(
-                          'flex aspect-square flex-col items-center justify-center rounded-om-control border text-om-2xs font-om-mono transition-transform duration-om-base ease-om-standard hover:scale-105',
-                          selected ? 'border-om-cyan' : 'border-om-border-glass',
-                        )}
-                        style={{
-                          background: heatAccent(powerPercent, occupancy) + '33',
-                          color: heatAccent(powerPercent, occupancy),
+                          setRoomId(r.id);
+                          setRackId(null);
                         }}
                       >
-                        <span className="truncate px-om-4">{short}</span>
-                        <span>{percentLabel}</span>
-                        <span className="sr-only">{r.ci.displayName}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            ) : null}
-          </Card>
-          {rack !== null ? <RackPanel locale={locale} rack={rack} /> : null}
-        </>
-      )}
+                        {r.name}
+                      </Pill>
+                    ))}
+                  </div>
+                }
+              >
+                {t('dcim.heatmap.title')}
+              </SectionTitle>
+              {room !== null ? (
+                <>
+                  <div className="flex flex-wrap gap-om-12 text-om-xs text-om-secondary">
+                    <span>{t('dcim.room.racks', { count: format.integer(room.racks.length) })}</span>
+                    <span>
+                      {t('dcim.room.power', {
+                        current: format.number(room.currentWatts / POWER.wattsPerKilowatt),
+                        rated: format.number(room.ratedWatts / POWER.wattsPerKilowatt),
+                      })}
+                    </span>
+                    {room.designKw !== null ? (
+                      <span>{t('dcim.room.design', { kw: format.number(room.designKw) })}</span>
+                    ) : null}
+                    <span>
+                      {t('dcim.room.occupancy', {
+                        percent: format.number(percentOf(room.occupiedUnits, room.units)),
+                      })}
+                    </span>
+                  </div>
+                  <div
+                    className="grid grid-cols-4 gap-om-6 sm:grid-cols-6 md:grid-cols-10 xl:grid-cols-12"
+                    role="listbox"
+                    aria-label={t('dcim.heatmap.title')}
+                  >
+                    {room.racks.map((r) => {
+                      const power = rackPower(r);
+                      const powerPercent = percentOf(power.currentWatts, power.ratedWatts);
+                      const occupancy = percentOf(r.occupiedUnits, r.units);
+                      const selected = rack?.ci.id === r.ci.id;
+                      const short = r.ci.name.split('-').slice(-DCIM.tileNameSegments).join('-');
+                      const percentLabel = format.integer(powerPercent) + '%';
+                      return (
+                        <button
+                          key={r.ci.id}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          title={
+                            r.ci.displayName +
+                            ' · ' +
+                            format.number(powerPercent) +
+                            '% · ' +
+                            format.number(occupancy) +
+                            '%'
+                          }
+                          onClick={() => {
+                            setRackId(r.ci.id);
+                          }}
+                          className={cx(
+                            'flex aspect-square flex-col items-center justify-center rounded-om-control border text-om-2xs font-om-mono transition-transform duration-om-base ease-om-standard hover:scale-105',
+                            selected ? 'border-om-cyan' : 'border-om-border-glass',
+                          )}
+                          style={{
+                            background: heatAccent(powerPercent, occupancy) + '33',
+                            color: heatAccent(powerPercent, occupancy),
+                          }}
+                        >
+                          <span className="truncate px-om-4">{short}</span>
+                          <span>{percentLabel}</span>
+                          <span className="sr-only">{r.ci.displayName}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
+            </Card>
+            {rack !== null ? <RackPanel locale={locale} rack={rack} /> : null}
+          </>
+        )}
+      </div>
     </div>
   );
 }

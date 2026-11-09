@@ -824,6 +824,21 @@ export const DNS_SYNC = {
   screenRefreshMs: 5_000,
 } as const;
 
+/**
+ * REQ-DCIM-001 (ADR-056) — cabling: patch panels, cables, cross-connects and carrier circuits. A patch panel position
+ * joins its front and rear, so a trace walks through it; maxTraceHops stops a trace on a mis-patched loop long before
+ * any real path (a structured cabling run rarely crosses more than four panels) is cut short.
+ */
+export const CABLING = {
+  /** The largest patch panel accepted: 96 positions is the densest panel sold in 1U (MPO/LC high density). */
+  maxPanelPorts: 96,
+  maxTraceHops: 32,
+  /** Search hits offered when choosing a cable end on the Cabling tab. */
+  endpointSearchLimit: 8,
+  /** The layers whose CIs can be a cable end: patch panels and PDUs (dc), switches and their ports, servers. */
+  endpointLayers: ['dc', 'network_security', 'hardware'],
+} as const;
+
 export const CLASSIFICATION = {
   /** Weights of each kind of evidence; their sum is the most a fingerprint can score. sysDescr is the device's own words. */
   weights: { sysDescr: 0.5, banner: 0.15, vendor: 0.15, ports: 0.2 },
@@ -1615,15 +1630,18 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.7.0 (REQ-CORE-013, ADR-045): `GLOBAL_IDENTITY_SCOPES`, `IDENTITY_REF_TARGETS`, `IDENTITY_REF_ALIAS_ATTRIBUTES`,
    * `IDENTITY_REF_DERIVED` and `identity.ts`: issuer-scoped global keys and `*Ref` resolution. No payload shape changed.
    * 0.8.0 (REQ-BSM-007, ADR-025): `connectivity.ts`, the link probe metric names, site DR roles and readiness rules.
+   * 0.9.0 (REQ-DCIM-001, ADR-056): the `circuit` CI type (identity circuitId + provider) and `cabling.ts`: cable kinds,
+   * media, panel connectors and sides, circuit kinds and statuses, endpoint validation and the cable trace.
    */
-  ci: '0.8.0',
+  ci: '0.9.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
    * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family.
    * 0.7.0 (REQ-CORE-013, ADR-045): moves with the CI contract's identity rules; no result field changed.
-   * 0.8.0 (REQ-BSM-007, ADR-025): the `link_probe` family. */
-  collector: '0.8.0',
+   * 0.8.0 (REQ-BSM-007, ADR-025): the `link_probe` family.
+   * 0.9.0 (REQ-DCIM-001, ADR-056): moves with the CI contract (the `circuit` CI type); no result field changed. */
+  collector: '0.9.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1674,8 +1692,12 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `deleteRunbook`, `setScenarioRunbook`, `setIncidentRunbook`, `runRunbookStep`.
    * 1.21.0 (REQ-BSM-007, ADR-025): `Connectivity`, `ConnectivitySite`, `ConnectivityLink`, `ReadinessFinding`, query
    * `connectivity`; `Site.drRole`/`criticality`, `SiteLink.replication`/`probeTarget` and the same on their inputs.
+   * 1.29.0 (REQ-DCIM-001, ADR-056): `CableKind`, `CableMedia`, `PanelConnector`, `PanelSide`, `CircuitKind`,
+   * `CircuitStatus`, `CableEndpoint`, `Cable`, `PatchPanelPort`, `PatchPanel`, `Circuit`, `CablingSummary`, `Cabling`,
+   * `CableHop`, `CableTrace` and their inputs, queries `cabling`, `cableTrace`, mutations `upsertPatchPanel`,
+   * `removePatchPanel`, `connectCable`, `disconnectCable`, `upsertCircuit`, `removeCircuit`.
    */
-  graphql: '1.28.0',
+  graphql: '1.29.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

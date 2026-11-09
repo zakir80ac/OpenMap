@@ -6,7 +6,7 @@ package contract
 import "time"
 
 // Version is the collector contract version this binary speaks.
-const Version = "0.8.0"
+const Version = "0.9.0"
 
 type Target struct {
 	Kind  string `json:"kind"`

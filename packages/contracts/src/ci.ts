@@ -56,6 +56,8 @@ export const CI_TYPES = [
   'load_balancer',
   'firewall_rule',
   'site_link',
+  // REQ-DCIM-001 (ADR-056): a carrier circuit (internet, MPLS, wavelength…) with its A and Z terminations
+  'circuit',
   // storage and data
   'storage_array',
   'lun',
@@ -136,6 +138,7 @@ export const CI_TYPE_LAYER: Record<CiType, CiLayer> = {
   load_balancer: 'network_security',
   firewall_rule: 'network_security',
   site_link: 'network_security',
+  circuit: 'network_security',
   storage_array: 'storage',
   lun: 'storage',
   fc_switch: 'storage',
@@ -496,6 +499,7 @@ export const CI_IDENTITY_KEYS: Record<CiType, readonly string[]> = {
   load_balancer: ['serialNumber', 'managementIp'],
   firewall_rule: ['deviceRef', 'ruleId'],
   site_link: ['circuitId', 'fromSiteRef', 'toSiteRef'],
+  circuit: ['circuitId', 'provider'],
   storage_array: ['serialNumber'],
   lun: ['arrayRef', 'wwn'],
   database: ['hostRef', 'engine', 'name', 'port'],
