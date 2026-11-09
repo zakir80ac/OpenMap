@@ -708,6 +708,30 @@ export const DCIM = {
   criticalPowerPercent: 90,
 } as const;
 
+/**
+ * REQ-DCIM-007 (ADR-061) — capacity planning. Space, power, cooling and ports share the DCIM warning and critical
+ * lines (70 / 90 % used); the power trend is a least-squares line over the room's daily average draw across the
+ * last `trendDays`, and at least `trendMinPoints` days of samples are needed before a forecast is shown, so a quiet
+ * weekend cannot read as a falling trend. The "what fits" form starts from a common 2U, 500 W, 2-port server.
+ */
+export const CAPACITY = {
+  warnPercent: 70,
+  criticalPercent: 90,
+  trendDays: 30,
+  trendMinPoints: 7,
+  /** PDU ids bound into one ClickHouse read of daily averages (same cap reasoning as POWER.monitorIdBatch). */
+  trendIdBatch: 2_000,
+  defaultSpec: { heightU: 2, watts: 500, ports: 2 },
+  /** Largest values the what-fits form accepts. */
+  maxSpecHeightU: 48,
+  maxSpecWatts: 50_000,
+  maxSpecPorts: 96,
+  /** Racks listed on the Capacity view before "show all". */
+  rackRows: 24,
+  /** Decimal places of the trend slope (kW per day) on the view. */
+  trendDecimals: 2,
+} as const;
+
 /** Vulnerabilities screen (REQ-UI-016, REQ-SEC-008): the blast-radius walk from affected hosts to business services. */
 export const VULNERABILITY = {
   /** Hosts walked per CVE; a CVE on more hosts reports a truncated blast radius rather than blowing the query budget. */
@@ -792,17 +816,105 @@ export const ANALYTICS = {
  *   management.
  */
 export const DEVICE_FINGERPRINTS = [
-  { deviceClass: 'printer', layer: 'hardware', type: null, sysDescr: 'printer|jetdirect|laserjet|link-os|officejet|imagerunner|bizhub|card printer|primacy', banner: 'printer|jetdirect', vendor: 'hp|zebra|lexmark|canon|ricoh|xerox|brother|kyocera|evolis|fargo', ports: [9100, 515, 631] },
-  { deviceClass: 'network_camera', layer: 'dc', type: null, sysDescr: 'camera|ipc|nvr|ds-2cd|ds-2de|ptz', banner: 'camera|axis|hikvision|dahua', vendor: 'axis|hikvision|dahua|hanwha|bosch|avigilon|vivotek', ports: [554] },
-  { deviceClass: 'ip_phone', layer: 'hardware', type: null, sysDescr: 'ip phone|sip phone|sip[0-9]{2}|voip', banner: 'phone', vendor: 'cisco|yealink|polycom|grandstream|avaya|snom', ports: [5060] },
-  { deviceClass: 'video_conference', layer: 'hardware', type: null, sysDescr: 'studio x|room kit|codec|webex|video conferenc|rally|g7500', banner: 'poly|webex', vendor: 'poly|cisco|logitech|neat|yealink', ports: [5060, 5061] },
-  { deviceClass: 'digital_signage', layer: 'hardware', type: null, sysDescr: 'magicinfo|signage|brightsign|webos signage|smart signage', banner: 'signage', vendor: 'samsung|lg|brightsign|philips', ports: [7001] },
-  { deviceClass: 'access_control', layer: 'dc', type: null, sysDescr: 'vertx|access control|door controller|lenel|genetec|mercury|gallagher', banner: 'access', vendor: 'hid|lenel|genetec|gallagher|suprema', ports: [4050] },
-  { deviceClass: 'building_management', layer: 'dc', type: null, sysDescr: 'niagara|bacnet|webs-n4|metasys|desigo|building', banner: 'niagara|bacnet', vendor: 'honeywell|johnson controls|siemens|schneider|tridium', ports: [1911, 4911, 47808] },
-  { deviceClass: 'ups_management', layer: 'dc', type: 'ups', sysDescr: '\\bups\\b|network management card|management card|smart-ups|powerware|galaxy', banner: 'ups|schneider|eaton', vendor: 'schneider|apc|eaton|vertiv|riello', ports: [161] },
-  { deviceClass: 'wireless_access_point', layer: 'network_security', type: 'network_device', sysDescr: 'access point|arubaos|\\bap-[0-9]|unifi|meraki mr|aironet|ruckus', banner: 'aruba|unifi', vendor: 'aruba|ubiquiti|ruckus|cisco|meraki|cambium', ports: [4343] },
-  { deviceClass: 'iot_gateway', layer: 'hardware', type: 'host', sysDescr: 'raspberry pi|esp32|arduino|jetson|beaglebone', banner: 'mqtt', vendor: 'raspberry pi|espressif|arduino|nvidia', ports: [1883, 8883] },
-  { deviceClass: 'cash_handling', layer: 'hardware', type: null, sysDescr: 'glory|cash|banknote|note counter|coin|recycler', banner: 'glory|cash', vendor: 'glory|de la rue|cummins allison|laurel', ports: [5000] },
+  {
+    deviceClass: 'printer',
+    layer: 'hardware',
+    type: null,
+    sysDescr: 'printer|jetdirect|laserjet|link-os|officejet|imagerunner|bizhub|card printer|primacy',
+    banner: 'printer|jetdirect',
+    vendor: 'hp|zebra|lexmark|canon|ricoh|xerox|brother|kyocera|evolis|fargo',
+    ports: [9100, 515, 631],
+  },
+  {
+    deviceClass: 'network_camera',
+    layer: 'dc',
+    type: null,
+    sysDescr: 'camera|ipc|nvr|ds-2cd|ds-2de|ptz',
+    banner: 'camera|axis|hikvision|dahua',
+    vendor: 'axis|hikvision|dahua|hanwha|bosch|avigilon|vivotek',
+    ports: [554],
+  },
+  {
+    deviceClass: 'ip_phone',
+    layer: 'hardware',
+    type: null,
+    sysDescr: 'ip phone|sip phone|sip[0-9]{2}|voip',
+    banner: 'phone',
+    vendor: 'cisco|yealink|polycom|grandstream|avaya|snom',
+    ports: [5060],
+  },
+  {
+    deviceClass: 'video_conference',
+    layer: 'hardware',
+    type: null,
+    sysDescr: 'studio x|room kit|codec|webex|video conferenc|rally|g7500',
+    banner: 'poly|webex',
+    vendor: 'poly|cisco|logitech|neat|yealink',
+    ports: [5060, 5061],
+  },
+  {
+    deviceClass: 'digital_signage',
+    layer: 'hardware',
+    type: null,
+    sysDescr: 'magicinfo|signage|brightsign|webos signage|smart signage',
+    banner: 'signage',
+    vendor: 'samsung|lg|brightsign|philips',
+    ports: [7001],
+  },
+  {
+    deviceClass: 'access_control',
+    layer: 'dc',
+    type: null,
+    sysDescr: 'vertx|access control|door controller|lenel|genetec|mercury|gallagher',
+    banner: 'access',
+    vendor: 'hid|lenel|genetec|gallagher|suprema',
+    ports: [4050],
+  },
+  {
+    deviceClass: 'building_management',
+    layer: 'dc',
+    type: null,
+    sysDescr: 'niagara|bacnet|webs-n4|metasys|desigo|building',
+    banner: 'niagara|bacnet',
+    vendor: 'honeywell|johnson controls|siemens|schneider|tridium',
+    ports: [1911, 4911, 47808],
+  },
+  {
+    deviceClass: 'ups_management',
+    layer: 'dc',
+    type: 'ups',
+    sysDescr: '\\bups\\b|network management card|management card|smart-ups|powerware|galaxy',
+    banner: 'ups|schneider|eaton',
+    vendor: 'schneider|apc|eaton|vertiv|riello',
+    ports: [161],
+  },
+  {
+    deviceClass: 'wireless_access_point',
+    layer: 'network_security',
+    type: 'network_device',
+    sysDescr: 'access point|arubaos|\\bap-[0-9]|unifi|meraki mr|aironet|ruckus',
+    banner: 'aruba|unifi',
+    vendor: 'aruba|ubiquiti|ruckus|cisco|meraki|cambium',
+    ports: [4343],
+  },
+  {
+    deviceClass: 'iot_gateway',
+    layer: 'hardware',
+    type: 'host',
+    sysDescr: 'raspberry pi|esp32|arduino|jetson|beaglebone',
+    banner: 'mqtt',
+    vendor: 'raspberry pi|espressif|arduino|nvidia',
+    ports: [1883, 8883],
+  },
+  {
+    deviceClass: 'cash_handling',
+    layer: 'hardware',
+    type: null,
+    sysDescr: 'glory|cash|banknote|note counter|coin|recycler',
+    banner: 'glory|cash',
+    vendor: 'glory|de la rue|cummins allison|laurel',
+    ports: [5000],
+  },
 ] as const;
 
 /**
@@ -838,7 +950,13 @@ export const ANOMALY = {
  */
 export const CLOUD_ADVICE = {
   /** Resource types that have a size to change and run continuously (functions and managed queues do not). */
-  computeTypes: ['AWS::EC2::Instance', 'AWS::RDS::DBInstance', 'Microsoft.Compute/virtualMachines', 'Microsoft.Sql/servers/databases', 'Microsoft.Web/sites'],
+  computeTypes: [
+    'AWS::EC2::Instance',
+    'AWS::RDS::DBInstance',
+    'Microsoft.Compute/virtualMachines',
+    'Microsoft.Sql/servers/databases',
+    'Microsoft.Web/sites',
+  ],
   idlePeakPercent: 5,
   rightsizePeakPercent: 40,
   rightsizeAveragePercent: 30,
@@ -847,7 +965,15 @@ export const CLOUD_ADVICE = {
   rightsizeSavingShare: 0.5,
   /** Days of load history read; with none in the window the latest sample stands, with its age shown. */
   lookbackDays: 14,
-  attributes: { type: 'resourceType', state: 'state', cost: 'monthlyCostUsd', sku: 'sku', region: 'region', owner: 'tagOwner', environment: 'tagEnvironment' },
+  attributes: {
+    type: 'resourceType',
+    state: 'state',
+    cost: 'monthlyCostUsd',
+    sku: 'sku',
+    region: 'region',
+    owner: 'tagOwner',
+    environment: 'tagEnvironment',
+  },
   stoppedStates: ['stopped', 'deallocated', 'available'],
   moneyDecimals: 2,
 } as const;
@@ -1753,8 +1879,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `OutletBill`, `DeviceBill`, `PowerMonitor`, queries `powerSettings`, `powerMonitor`, mutation `updatePowerSettings`.
    * 1.33.0 (REQ-DCIM-006, ADR-060): `EnvState`, `EnvReading`, `RackEnvironment`, `CoolingEnvironment`, `EnvSummary`,
    * `RoomEnvironment`, query `roomEnvironment`.
+   * 1.34.0 (REQ-DCIM-007, ADR-061): `CapacityState`, `SpaceCapacity`, `PowerCapacity`, `PortCapacity`,
+   * `CoolingCapacity`, `CapacityTrend`, `RackCapacity`, `RoomCapacity`, query `roomCapacity`.
    */
-  graphql: '1.33.0',
+  graphql: '1.34.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

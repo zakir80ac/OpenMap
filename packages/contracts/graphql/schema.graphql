@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.33.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.34.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -939,6 +939,19 @@ type PowerMonitor {
   totalKwh: Float!
   totalCost: Float
 }
+
+# REQ-DCIM-007 (ADR-061) — capacity planning for a room: space (rack units and the largest contiguous free block),
+# power (design against the latest measured draw), cooling (rated cooling against the room's IT load), ports (live
+# against total on the rack's network devices), the power trend over the last days and the days left to each line.
+enum CapacityState { normal warning critical unknown }
+"freeBlocks lists the heights of the contiguous free unit blocks, lowest first, so a client can pack a device size into them."
+type SpaceCapacity { units: Int! occupied: Int! free: Int! largestFreeBlock: Int! freeBlocks: [Int!]! percent: Float }
+type PowerCapacity { designWatts: Int! loadWatts: Int! percent: Float state: CapacityState! measuredAt: DateTime }
+type PortCapacity { total: Int! used: Int! free: Int! percent: Float }
+type CoolingCapacity { capacityKw: Float! loadKw: Float! percent: Float state: CapacityState! units: Int! }
+type CapacityTrend { days: Int! points: Int! slopeKwPerDay: Float daysToWarning: Int daysToCritical: Int }
+type RackCapacity { rack: Ci! space: SpaceCapacity! power: PowerCapacity! ports: PortCapacity! state: CapacityState! }
+type RoomCapacity { room: Ci! racks: [RackCapacity!]! space: SpaceCapacity! power: PowerCapacity! cooling: CoolingCapacity! ports: PortCapacity! trend: CapacityTrend! state: CapacityState! }
 
 # REQ-DCIM-004 (ADR-058) — a room's power chain (UPS → circuit → PDU → device cords) and its redundancy.
 enum PowerSourceKind {
@@ -2650,6 +2663,8 @@ type Query {
   powerMonitor(roomId: UUID!, hours: Int!): PowerMonitor!
   "REQ-DCIM-004: a room's power chain with its redundancy findings."
   powerChain(roomId: UUID!): PowerChain!
+  "REQ-DCIM-007: a room's space, power, cooling and port capacity per rack, with the power trend."
+  roomCapacity(roomId: UUID!): RoomCapacity!
   "REQ-DCIM-004: the device cords on a PDU, by outlet."
   pduConnections(pduId: UUID!): [PowerConnection!]!
   "REQ-DCIM-001: patch panels, cables, cross-connects and circuits."

@@ -25,6 +25,7 @@ import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { racksQuery, type Rack } from '@/lib/estate-queries';
 import { CablingView } from './CablingView';
+import { CapacityView } from './CapacityView';
 import { FloorPlanView } from './FloorPlanView';
 import { PowerView } from './PowerView';
 import { EnvironmentView } from './EnvironmentView';
@@ -33,7 +34,7 @@ import { useFormatters, useT } from '@/providers';
 
 /** The DCIM screen's views: racks and rooms (elevations, heat map, power), the floor plan (REQ-DCIM-003), the power
  * chain and its redundancy (REQ-DCIM-004), the environment (REQ-DCIM-006) and structured cabling (REQ-DCIM-001). */
-const DCIM_TABS = ['racks', 'floor', 'power', 'environment', 'cabling'] as const;
+const DCIM_TABS = ['racks', 'floor', 'power', 'environment', 'cabling', 'capacity'] as const;
 type DcimTab = (typeof DCIM_TABS)[number];
 
 export interface DcimViewProps {
@@ -153,6 +154,7 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
         {t('dcim.title')}
       </SectionTitle>
       {view === 'cabling' ? <CablingView racks={racks.data ?? []} /> : null}
+      {view === 'capacity' ? <CapacityView locale={locale} racks={racks.data ?? []} /> : null}
       {view === 'floor' ? <FloorPlanView locale={locale} racks={racks.data ?? []} /> : null}
       {view === 'power' ? <PowerView racks={racks.data ?? []} /> : null}
       {view === 'environment' ? <EnvironmentView racks={racks.data ?? []} /> : null}

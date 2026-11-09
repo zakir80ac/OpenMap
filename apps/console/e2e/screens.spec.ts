@@ -43,6 +43,19 @@ test('DCIM: a rack tile opens its elevation, devices and power feeds', async ({ 
   const elevation = page.getByRole('region', { name: translate(locale, 'dcim.elevation.title') });
   await expect(elevation.getByRole('img')).toBeVisible();
   await expect(page.getByText(translate(locale, 'dcim.power.title'))).toBeVisible();
+  // REQ-DCIM-007: the Capacity tab shows the room's four figures, the trend, the what-fits form and the rack table.
+  await page
+    .getByRole('group', { name: translate(locale, 'dcim.views') })
+    .getByRole('button', { name: translate(locale, 'dcim.view.capacity') })
+    .click();
+  await expect(page.getByRole('group', { name: translate(locale, 'dcim.capacity.figures') })).toBeVisible({
+    timeout: ASSISTANT_TIMEOUT_MS,
+  });
+  await expect(page.getByTestId('dcim-capacity-table').getByRole('row').nth(1)).toBeVisible();
+  const fit = page.getByTestId('dcim-capacity-fit');
+  await fit.getByLabel(translate(locale, 'dcim.capacity.fit.heightU')).fill('4');
+  await expect(fit.getByRole('status')).toBeVisible();
+  await page.screenshot({ path: screenshotsDir + 'dcim-capacity-' + locale + '.png', fullPage: true });
 });
 
 test('Assets: a new plan creates planned assets in the register', async ({ page }, testInfo) => {
@@ -117,7 +130,10 @@ test('Assistant: an example question is answered or explicitly refused', async (
   await signIn(page, locale);
   await page.getByRole('button', { name: translate(locale, 'assistant.example.hosts') }).click();
   // REQ-AI-008: exact, because "Conversation" is also a substring of the "Past conversations" list beside the thread.
-  const conversation = page.getByRole('list', { name: translate(locale, 'assistant.conversation'), exact: true });
+  const conversation = page.getByRole('list', {
+    name: translate(locale, 'assistant.conversation'),
+    exact: true,
+  });
   await expect(conversation.getByText(translate(locale, 'assistant.example.hosts'))).toBeVisible();
   // REQ-AI-007 (ADR-028): an answer carries its evidence and follow-ups; a count question also shows figures.
   const answered = conversation.getByTestId('assistant-evidence');

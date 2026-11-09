@@ -15,6 +15,8 @@ export const CLICKHOUSE_QUERIES_METRIC = 'openmap_clickhouse_queries_total';
 /** REQ-AI-007 */
 export const ASSISTANT_QUESTIONS_METRIC = 'openmap_assistant_questions_total';
 export const ASSISTANT_DURATION_METRIC = 'openmap_assistant_duration_seconds';
+/** REQ-DCIM-007 */
+export const CAPACITY_METRIC = 'openmap_dcim_capacity_reads_total';
 /** REQ-DEP-001 (ADR-030): network topology map duration, by layer. */
 export const TOPOLOGY_DURATION_METRIC = 'openmap_topology_duration_seconds';
 /** REQ-CMDB-033 (ADR-032): rows imported (queued or rejected) and exported, by outcome and format. */
@@ -97,6 +99,8 @@ export class MetricsService {
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
+  /** REQ-DCIM-007 — room capacity reads (space, power, cooling, ports, trend). */
+  readonly capacityReads: Counter;
   readonly powerSettingsChanges: Counter;
   readonly environmentReads: Counter;
   readonly restRequests: Counter<'route' | 'status'>;
@@ -156,8 +160,18 @@ export class MetricsService {
       buckets: durationBuckets(),
       registers: [this.registry],
     });
-    this.importRows = new Counter({ name: IMPORT_ROWS_METRIC, help: 'Import rows, by outcome (queued or rejected)', labelNames: ['outcome'], registers: [this.registry] });
-    this.exportRows = new Counter({ name: EXPORT_ROWS_METRIC, help: 'CIs exported, by format', labelNames: ['format'], registers: [this.registry] });
+    this.importRows = new Counter({
+      name: IMPORT_ROWS_METRIC,
+      help: 'Import rows, by outcome (queued or rejected)',
+      labelNames: ['outcome'],
+      registers: [this.registry],
+    });
+    this.exportRows = new Counter({
+      name: EXPORT_ROWS_METRIC,
+      help: 'CIs exported, by format',
+      labelNames: ['format'],
+      registers: [this.registry],
+    });
     this.applicationMapDuration = new Histogram({
       name: APPLICATION_MAP_DURATION_METRIC,
       help: 'Layered application map duration in seconds',
@@ -176,20 +190,93 @@ export class MetricsService {
       buckets: [...IMPACT.accuracyBuckets],
       registers: [this.registry],
     });
-    this.restRequests = new Counter({ name: REST_REQUESTS_METRIC, help: 'REST v1 calls, by route id and HTTP status', labelNames: ['route', 'status'], registers: [this.registry] });
-    this.restDuration = new Histogram({ name: REST_DURATION_METRIC, help: 'REST v1 call duration in seconds, by route id', labelNames: ['route'], buckets: durationBuckets(), registers: [this.registry] });
-    this.runbookSteps = new Counter({ name: RUNBOOK_STEPS_METRIC, help: 'Runbook steps run on incidents, by outcome (done, triggered, failed)', labelNames: ['outcome'], registers: [this.registry] });
-    this.telemetrySnapshot = new Histogram({ name: TELEMETRY_SNAPSHOT_METRIC, help: 'Telemetry fleet snapshot build duration in seconds, by outcome', labelNames: ['outcome'], buckets: durationBuckets(), registers: [this.registry] });
-    this.classifications = new Counter({ name: CLASSIFICATION_METRIC, help: 'Classification suggestions for unknown CIs, by outcome (suggested, accepted, dismissed)', labelNames: ['outcome'], registers: [this.registry] });
-    this.anomalies = new Counter({ name: ANOMALY_METRIC, help: 'Anomaly findings by rule and outcome (opened, cleared, explained, explain_failed)', labelNames: ['rule', 'outcome'], registers: [this.registry] });
-    this.cloudRecommendations = new Counter({ name: CLOUD_RECOMMENDATION_METRIC, help: 'Cloud recommendations computed, by kind (release_stopped, decommission_idle, downsize, upsize)', labelNames: ['kind'], registers: [this.registry] });
-    this.dnsChanges = new Counter({ name: DNS_CHANGE_METRIC, help: 'DNS record changes requested in OpenMap, by op (add, delete)', labelNames: ['op'], registers: [this.registry] });
-    this.cablingChanges = new Counter({ name: CABLING_CHANGE_METRIC, help: 'Cabling changes by kind (patch_panel, cable, circuit) and op (saved, connected, disconnected)', labelNames: ['kind', 'op'], registers: [this.registry] });
-    this.rackMoves = new Counter({ name: RACK_MOVE_METRIC, help: 'Racks moved to a row slot on the floor plan', registers: [this.registry] });
-    this.powerConnections = new Counter({ name: POWER_CONNECTION_METRIC, help: 'Device cords on PDU outlets by op (connected, disconnected)', labelNames: ['op'], registers: [this.registry] });
-    this.powerMonitorReads = new Counter({ name: POWER_MONITOR_METRIC, help: 'Room power monitoring reads (series, energy and billing)', registers: [this.registry] });
-    this.powerSettingsChanges = new Counter({ name: POWER_SETTINGS_METRIC, help: 'Power threshold and tariff changes', registers: [this.registry] });
-    this.environmentReads = new Counter({ name: ENVIRONMENT_METRIC, help: 'Room environment reads (temperature, humidity, airflow)', registers: [this.registry] });
+    this.restRequests = new Counter({
+      name: REST_REQUESTS_METRIC,
+      help: 'REST v1 calls, by route id and HTTP status',
+      labelNames: ['route', 'status'],
+      registers: [this.registry],
+    });
+    this.restDuration = new Histogram({
+      name: REST_DURATION_METRIC,
+      help: 'REST v1 call duration in seconds, by route id',
+      labelNames: ['route'],
+      buckets: durationBuckets(),
+      registers: [this.registry],
+    });
+    this.runbookSteps = new Counter({
+      name: RUNBOOK_STEPS_METRIC,
+      help: 'Runbook steps run on incidents, by outcome (done, triggered, failed)',
+      labelNames: ['outcome'],
+      registers: [this.registry],
+    });
+    this.telemetrySnapshot = new Histogram({
+      name: TELEMETRY_SNAPSHOT_METRIC,
+      help: 'Telemetry fleet snapshot build duration in seconds, by outcome',
+      labelNames: ['outcome'],
+      buckets: durationBuckets(),
+      registers: [this.registry],
+    });
+    this.classifications = new Counter({
+      name: CLASSIFICATION_METRIC,
+      help: 'Classification suggestions for unknown CIs, by outcome (suggested, accepted, dismissed)',
+      labelNames: ['outcome'],
+      registers: [this.registry],
+    });
+    this.anomalies = new Counter({
+      name: ANOMALY_METRIC,
+      help: 'Anomaly findings by rule and outcome (opened, cleared, explained, explain_failed)',
+      labelNames: ['rule', 'outcome'],
+      registers: [this.registry],
+    });
+    this.cloudRecommendations = new Counter({
+      name: CLOUD_RECOMMENDATION_METRIC,
+      help: 'Cloud recommendations computed, by kind (release_stopped, decommission_idle, downsize, upsize)',
+      labelNames: ['kind'],
+      registers: [this.registry],
+    });
+    this.dnsChanges = new Counter({
+      name: DNS_CHANGE_METRIC,
+      help: 'DNS record changes requested in OpenMap, by op (add, delete)',
+      labelNames: ['op'],
+      registers: [this.registry],
+    });
+    this.cablingChanges = new Counter({
+      name: CABLING_CHANGE_METRIC,
+      help: 'Cabling changes by kind (patch_panel, cable, circuit) and op (saved, connected, disconnected)',
+      labelNames: ['kind', 'op'],
+      registers: [this.registry],
+    });
+    this.rackMoves = new Counter({
+      name: RACK_MOVE_METRIC,
+      help: 'Racks moved to a row slot on the floor plan',
+      registers: [this.registry],
+    });
+    this.powerConnections = new Counter({
+      name: POWER_CONNECTION_METRIC,
+      help: 'Device cords on PDU outlets by op (connected, disconnected)',
+      labelNames: ['op'],
+      registers: [this.registry],
+    });
+    this.powerMonitorReads = new Counter({
+      name: POWER_MONITOR_METRIC,
+      help: 'Room power monitoring reads (series, energy and billing)',
+      registers: [this.registry],
+    });
+    this.capacityReads = new Counter({
+      name: CAPACITY_METRIC,
+      help: 'Room capacity reads (space, power, cooling, ports and the power trend)',
+      registers: [this.registry],
+    });
+    this.powerSettingsChanges = new Counter({
+      name: POWER_SETTINGS_METRIC,
+      help: 'Power threshold and tariff changes',
+      registers: [this.registry],
+    });
+    this.environmentReads = new Counter({
+      name: ENVIRONMENT_METRIC,
+      help: 'Room environment reads (temperature, humidity, airflow)',
+      registers: [this.registry],
+    });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {
