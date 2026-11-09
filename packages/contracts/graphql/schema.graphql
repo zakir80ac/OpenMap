@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.32.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.33.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,59 @@ type PowerFeed {
   ci: Ci!
   ratedWatts: Int!
   currentWatts: Int!
+}
+
+# REQ-DCIM-006 (ADR-060) — a room's environment: rack inlet and outlet temperature, the rise across each rack, room
+# humidity and cooling units, judged against the ASHRAE A1 envelope.
+enum EnvState {
+  normal
+  warning
+  critical
+  unknown
+}
+
+type EnvReading {
+  at: DateTime!
+  value: Float!
+}
+
+type RackEnvironment {
+  rack: Ci!
+  inletC: Float
+  outletC: Float
+  "Outlet minus inlet: the temperature rise across the rack."
+  riseC: Float
+  latestAt: DateTime
+  temperatureState: EnvState!
+  airflowState: EnvState!
+  state: EnvState!
+  inletSeries: [EnvReading!]!
+}
+
+type CoolingEnvironment {
+  unit: Ci!
+  supplyC: Float
+  returnC: Float
+  humidityRh: Float
+  capacityPercent: Float
+  state: EnvState!
+}
+
+type EnvSummary {
+  racks: Int!
+  normal: Int!
+  warning: Int!
+  critical: Int!
+  unknown: Int!
+  hottestInletC: Float
+}
+
+type RoomEnvironment {
+  humidityRh: Float
+  humidityState: EnvState!
+  racks: [RackEnvironment!]!
+  coolingUnits: [CoolingEnvironment!]!
+  summary: EnvSummary!
 }
 
 # REQ-DCIM-005 (ADR-059) — power monitoring (a PDU's measured draw against the tenant's lines), the energy each metered
@@ -2589,6 +2642,8 @@ type Query {
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
+  "REQ-DCIM-006: a room's rack temperatures, airflow, humidity and cooling units over the window (hours)."
+  roomEnvironment(roomId: UUID!, hours: Int!): RoomEnvironment!
   "REQ-DCIM-005: the tenant's power lines and tariff."
   powerSettings: PowerSettings!
   "REQ-DCIM-005: a room's PDU draw over the window (hours), outlet energy and billing by device."

@@ -439,6 +439,30 @@ export const POWER = {
   incidentSeverity: 'high',
 } as const;
 
+/**
+ * REQ-DCIM-006 (ADR-060) — the environmental envelope, from ASHRAE TC 9.9 class A1 (enterprise servers and storage):
+ * the recommended inlet range 18–27 °C, the allowable 15–32 °C; relative humidity allowable 8–80 % with 60 % the
+ * recommended upper limit (the recommended lower limit is a −9 °C dew point, which a single RH reading cannot judge,
+ * so only the allowable floor is checked below). Inside the recommended range is normal, inside the allowable range a
+ * warning, outside it critical.
+ */
+export const ENVIRONMENT = {
+  recommendedC: { min: 18, max: 27 },
+  allowableC: { min: 15, max: 32 },
+  allowableRh: { min: 8, max: 80 },
+  recommendedMaxRh: 60,
+  /**
+   * Temperature rise across a rack (outlet − inlet) above which its airflow is flagged: servers are designed for a rise
+   * of roughly 10–20 °C at full load, so more than 20 °C means starved airflow or hot air recirculating to the inlet.
+   */
+  maxRackRiseC: 20,
+  /** A rack sensor reading older than this is not judged (three hourly sweeps). */
+  freshMs: 10_800_000,
+  evaluateMs: 60_000,
+  incidentSource: 'environment',
+  incidentSeverity: 'high',
+} as const;
+
 /** Assets screen (REQ-UI-009): warranty and support horizons offered in the attention table, in days. */
 /** Money as the contracts carry it: ISO 4217 codes; "XXX" is the standard's code for "no currency". */
 export const MONEY = {
@@ -1727,8 +1751,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * mutations `connectPower`, `disconnectPower`.
    * 1.32.0 (REQ-DCIM-005, ADR-059): `PowerState`, `PowerSettings`, `PowerSettingsInput`, `PowerReading`, `PduMonitor`,
    * `OutletBill`, `DeviceBill`, `PowerMonitor`, queries `powerSettings`, `powerMonitor`, mutation `updatePowerSettings`.
+   * 1.33.0 (REQ-DCIM-006, ADR-060): `EnvState`, `EnvReading`, `RackEnvironment`, `CoolingEnvironment`, `EnvSummary`,
+   * `RoomEnvironment`, query `roomEnvironment`.
    */
-  graphql: '1.32.0',
+  graphql: '1.33.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

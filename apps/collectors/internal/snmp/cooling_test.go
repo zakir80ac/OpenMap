@@ -1,4 +1,4 @@
-// T-068 REQ-DISC-026 — a Liebert CRAC walk (agent identity, environmental states, temperature and humidity
+// T-068 REQ-DISC-026 REQ-DCIM-006 — a Liebert CRAC walk (agent identity, environmental states, temperature and humidity
 // tables, standard ENTITY-SENSOR rows) becomes a cooling_unit CI with readings and health; a switch publishing
 // ENTITY-SENSOR temperatures alone stays a network device.
 package snmp
@@ -45,6 +45,22 @@ func TestLiebertCrac(t *testing.T) {
 	unit := obs.Cis[0]
 	if unit.Type != typeCoolingUnit || unit.Identity["serialNumber"] != "N19K70012345" || unit.Attributes["health"] != "healthy" || unit.Attributes["model"] != "PEX S 20kW" || unit.Attributes["coolingCapacityPercent"] != int64(63) {
 		t.Fatalf("cooling unit CI wrong: %+v", unit)
+	}
+	// REQ-DCIM-006: two Liebert temperatures, one humidity, the two named probes with their position, the capacity.
+	if len(obs.Samples) != 6 {
+		t.Fatalf("expected 6 environmental samples, got %+v", obs.Samples)
+	}
+	positions := map[string]string{}
+	for _, s := range obs.Samples {
+		if s.Labels["position"] != "" {
+			positions[s.Labels["sensor"]] = s.Labels["position"]
+		}
+		if s.Metric == contract.MetricCoolingCapacity && s.Value != 63 {
+			t.Fatalf("capacity sample wrong: %+v", s)
+		}
+	}
+	if positions["Supply air"] != "supply" || positions["Return humidity"] != "return" {
+		t.Fatalf("probe positions wrong: %+v", positions)
 	}
 }
 

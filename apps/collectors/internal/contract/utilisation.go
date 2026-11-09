@@ -13,7 +13,12 @@ const (
 	// REQ-DCIM-005 (ADR-059): a PDU's total draw and one outlet's draw (the outlet is a power_feed CI).
 	MetricPduPower    = "dcim.power.watts"
 	MetricOutletPower = "dcim.outlet.watts"
-	UnitWatts         = "W"
-	LabelMount        = "mount"
-	PercentOfWhole    = 100.0
+	// REQ-DCIM-006 (ADR-060): temperature (label position: inlet, outlet, supply, return, room), humidity, cooling capacity.
+	MetricEnvTemperature  = "dcim.env.temperature_c"
+	MetricEnvHumidity     = "dcim.env.humidity_rh"
+	MetricCoolingCapacity = "dcim.cooling.capacity_percent"
+	UnitCelsius           = "C"
+	UnitWatts             = "W"
+	LabelMount            = "mount"
+	PercentOfWhole        = 100.0
 )

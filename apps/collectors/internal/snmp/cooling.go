@@ -8,6 +8,11 @@ package snmp
 
 import (
 	"math"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/openmap/openmap/apps/collectors/internal/contract"
 )
 
 const (
@@ -80,6 +85,8 @@ type CoolingFacts struct {
 	Humidifying     *bool
 	Dehumidifying   *bool
 	CapacityPercent int64
+	// CapacityMetered is true when the unit reported its cooling capacity in use.
+	CapacityMetered bool
 	TemperatureC    []float64
 	TemperatureSetC []float64
 	HumidityRH      []float64
@@ -197,7 +204,7 @@ func parseCooling(w *Walk, sysObjectID string) *CoolingFacts {
 		c.Heating = lgpState(w.Scalars[oidLgpEnvStateHeating])
 		c.Humidifying = lgpState(w.Scalars[oidLgpEnvStateHumidifying])
 		c.Dehumidifying = lgpState(w.Scalars[oidLgpEnvStateDehumidifying])
-		c.CapacityPercent, _ = asInt(w.Scalars[oidLgpEnvStateCoolingCapacity])
+		c.CapacityPercent, c.CapacityMetered = asInt(w.Scalars[oidLgpEnvStateCoolingCapacity])
 		c.TemperatureC = columnFloats(w, oidLgpEnvTemperatureDegC)
 		c.TemperatureSetC = columnFloats(w, oidLgpEnvTemperatureSetDegC)
 		c.HumidityRH = columnFloats(w, oidLgpEnvHumidityRel)
@@ -258,4 +265,67 @@ func coolingAttributes(c *CoolingFacts, attrs map[string]any) {
 		attrs["health"] = "healthy"
 	}
 	attrs["sensorCount"] = len(c.Sensors)
+}
+
+// sensorPosition is where a probe's name says it sits, the way vendors name them ("Rack Inlet 1", "Supply Air",
+// "Return Air Temp", "Exhaust"); empty when the name says nothing. It mirrors sensorPosition in
+// packages/contracts/src/environment.ts (REQ-DCIM-006).
+func sensorPosition(name string) string {
+	n := strings.ToLower(name)
+	switch {
+	case containsAny(n, "inlet", "intake", "front"):
+		return "inlet"
+	case containsAny(n, "outlet", "exhaust", "rear", "back"):
+		return "outlet"
+	case containsAny(n, "supply", "discharge"):
+		return "supply"
+	case containsAny(n, "return"):
+		return "return"
+	case containsAny(n, "room", "ambient"):
+		return "room"
+	}
+	return ""
+}
+
+func containsAny(s string, words ...string) bool {
+	for _, w := range words {
+		if strings.Contains(s, w) {
+			return true
+		}
+	}
+	return false
+}
+
+// coolingSamples are the unit's readings as samples (REQ-DCIM-006): every temperature and humidity it measured,
+// with the sensor and, when its name says, its position, and the cooling capacity in use.
+func coolingSamples(c *CoolingFacts, ref contract.CiRef, at time.Time) []contract.MetricSample {
+	out := []contract.MetricSample{}
+	add := func(metric, unit string, value float64, labels map[string]string) {
+		out = append(out, contract.MetricSample{Ci: ref, Metric: metric, Ts: at, Value: value, Unit: unit, Labels: labels})
+	}
+	for i, v := range c.TemperatureC {
+		add(contract.MetricEnvTemperature, contract.UnitCelsius, v, map[string]string{"sensor": strconv.Itoa(i + 1)})
+	}
+	for i, v := range c.HumidityRH {
+		add(contract.MetricEnvHumidity, contract.UnitPercent, v, map[string]string{"sensor": strconv.Itoa(i + 1)})
+	}
+	for _, s := range c.Sensors {
+		if !s.Ok {
+			continue
+		}
+		labels := map[string]string{"sensor": firstNonEmpty(s.Name, s.Index)}
+		if pos := sensorPosition(s.Name); pos != "" {
+			labels["position"] = pos
+		}
+		switch s.Kind {
+		case "temperature_c":
+			add(contract.MetricEnvTemperature, contract.UnitCelsius, s.Value, labels)
+		case "humidity_rh":
+			add(contract.MetricEnvHumidity, contract.UnitPercent, s.Value, labels)
+		}
+	}
+	if c.CapacityMetered {
+		add(contract.MetricCoolingCapacity, contract.UnitPercent, float64(c.CapacityPercent), map[string]string{})
+	}
+	return out
 }

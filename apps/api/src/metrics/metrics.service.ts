@@ -46,6 +46,8 @@ export const POWER_CONNECTION_METRIC = 'openmap_power_connections_total';
 /** REQ-DCIM-005: power monitoring reads and threshold/tariff changes. */
 export const POWER_MONITOR_METRIC = 'openmap_power_monitor_reads_total';
 export const POWER_SETTINGS_METRIC = 'openmap_power_settings_changes_total';
+/** REQ-DCIM-006: room environment reads. */
+export const ENVIRONMENT_METRIC = 'openmap_environment_reads_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
@@ -96,6 +98,7 @@ export class MetricsService {
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
   readonly powerSettingsChanges: Counter;
+  readonly environmentReads: Counter;
   readonly restRequests: Counter<'route' | 'status'>;
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
@@ -186,6 +189,7 @@ export class MetricsService {
     this.powerConnections = new Counter({ name: POWER_CONNECTION_METRIC, help: 'Device cords on PDU outlets by op (connected, disconnected)', labelNames: ['op'], registers: [this.registry] });
     this.powerMonitorReads = new Counter({ name: POWER_MONITOR_METRIC, help: 'Room power monitoring reads (series, energy and billing)', registers: [this.registry] });
     this.powerSettingsChanges = new Counter({ name: POWER_SETTINGS_METRIC, help: 'Power threshold and tariff changes', registers: [this.registry] });
+    this.environmentReads = new Counter({ name: ENVIRONMENT_METRIC, help: 'Room environment reads (temperature, humidity, airflow)', registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

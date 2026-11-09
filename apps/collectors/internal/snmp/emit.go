@@ -108,6 +108,9 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 		attrs["firmware"] = firstNonEmpty(d.Firmware, d.Cooling.Firmware)
 	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: ciType, Identity: identity, Name: firstNonEmpty(d.SysName, target.Value), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+	if d.Cooling != nil {
+		obs.Samples = append(obs.Samples, coolingSamples(d.Cooling, devRef, at)...)
+	}
 	if d.Power != nil && ciType == typePdu {
 		// REQ-DCIM-005: the PDU's total draw and each metered outlet's draw as samples, so power is a series.
 		if d.Power.OutputMetered {

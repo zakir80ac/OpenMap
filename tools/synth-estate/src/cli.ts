@@ -10,6 +10,7 @@ import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.j
 import { generateHealthHistory, HEALTH_HISTORY_FILE } from './health.js';
 import { UTILISATION_HISTORY_FILE, utilisationHistory } from './utilisation.js';
 import { POWER_HISTORY_FILE, powerHistory } from './power.js';
+import { ENVIRONMENT_HISTORY_FILE, environmentHistory } from './environment.js';
 import type { CollectorResult } from '@openmap/contracts';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import type { BusinessServiceRecord } from './gen/applications.js';
@@ -19,6 +20,7 @@ const DEFAULT_SCALE = 1;
 const DEFAULT_OUT = join('..', '..', 'packages', 'testing', 'fixtures', 'synth');
 const MS_PER_SECOND = 1000;
 const BYTES_PER_MIB = 1024 * 1024;
+const NEWLINE = '\n';
 
 type Flags = Record<string, string | boolean>;
 
@@ -251,6 +253,32 @@ function power(flags: Flags): void {
   );
 }
 
+/** REQ-DCIM-006: rack inlet and outlet temperature, room humidity and cooling units over recent days. */
+function environment(flags: Flags): void {
+  const dir = resolve(process.cwd(), stringFlag(flags, 'dir', DEFAULT_OUT));
+  const out = resolve(process.cwd(), stringFlag(flags, 'out', join(dir, 'environment')));
+  const seed = numberFlag(flags, 'seed', DEFAULT_SEED);
+  const days = numberFlag(flags, 'days', DEFAULT_HISTORY_DAYS);
+  const every = numberFlag(flags, 'every', DEFAULT_HISTORY_EVERY_HOURS);
+  const now = stringFlag(flags, 'now', new Date().toISOString());
+  const results: CollectorResult[] = [];
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(NDJSON_SUFFIX)).sort())
+    for (const line of readFileSync(join(dir, file), 'utf8').split(NEWLINE)) if (line.trim() !== '') results.push(JSON.parse(line) as CollectorResult);
+  const history = environmentHistory(results, seed, now, days, every);
+  mkdirSync(out, { recursive: true });
+  for (const f of COPIED_FILES) if (existsSync(join(dir, f))) copyFileSync(join(dir, f), join(out, f));
+  writeFileSync(join(out, ENVIRONMENT_HISTORY_FILE), history.map((r) => JSON.stringify(r)).join(NEWLINE) + NEWLINE);
+  console.log(
+    table([
+      ['results', history.length],
+      ['samples', history.reduce((n, r) => n + r.samples.length, 0)],
+      ['days', days],
+      ['every (hours)', every],
+      ['dir', out],
+    ]),
+  );
+}
+
 function usage(): string {
   return [
     'usage:',
@@ -259,6 +287,7 @@ function usage(): string {
     '  synth health-history [--dir DIR] [--seed N] [--months M] [--now ISO]',
     '  synth utilisation-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO]',
     '  synth power-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO] [--structure-only]',
+    '  synth environment-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO]',
   ].join('\n');
 }
 
@@ -274,6 +303,9 @@ async function main(): Promise<void> {
       return;
     case 'utilisation-history':
       utilisation(flags);
+      break;
+    case 'environment-history':
+      environment(flags);
       break;
     case 'power-history':
       power(flags);

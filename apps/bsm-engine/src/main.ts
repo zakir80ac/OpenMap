@@ -6,7 +6,7 @@ import './instrumentation.js';
 import { createClient } from '@clickhouse/client';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { BSM, CERTIFICATES, POWER, READINESS, RECONCILER } from '@openmap/constants';
+import { BSM, CERTIFICATES, ENVIRONMENT, POWER, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
@@ -18,6 +18,7 @@ import { checkCertificates } from './service/certificates.js';
 import { createEngine } from './service/engine.js';
 import { createReadiness } from './service/readiness.js';
 import { createPowerAlerts } from './service/power.js';
+import { createEnvironmentAlerts } from './service/environment.js';
 
 const TRACER = 'openmap-bsm-engine';
 
@@ -56,6 +57,7 @@ export function createBsmMetrics() {
     readiness: new Counter({ name: 'openmap_bsm_readiness_evaluations_total', help: 'HA / DR readiness evaluations of a tenant, by outcome', labelNames: ['outcome'], registers: [registry] }),
     readinessBreaches: new Counter({ name: 'openmap_bsm_readiness_findings_total', help: 'Readiness findings opened and cleared', labelNames: ['change'], registers: [registry] }),
     powerAlerts: new Counter({ name: 'openmap_bsm_power_alerts_total', help: 'Power threshold incidents opened and resolved (REQ-DCIM-005)', labelNames: ['change'], registers: [registry] }),
+    environmentAlerts: new Counter({ name: 'openmap_bsm_environment_alerts_total', help: 'Rack inlet temperature incidents opened and resolved (REQ-DCIM-006)', labelNames: ['change'], registers: [registry] }),
     certificateAlerts: new Counter({
       name: 'openmap_bsm_certificate_alerts_total',
       help: 'Certificate expiry alerts raised (REQ-CMDB-032), and failed checks',
@@ -233,6 +235,33 @@ async function main(): Promise<void> {
   const powerTick = setInterval(() => {
     void powerCheck();
   }, POWER.alertEvaluateMs);
+  // REQ-DCIM-006 (ADR-060): every rack's fresh inlet temperature against the ASHRAE A1 allowable range.
+  const environmentAlerts = createEnvironmentAlerts({
+    prisma,
+    query: async (name, sql, params) => {
+      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
+        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      );
+      return result.json();
+    },
+    database: env.CLICKHOUSE_DB,
+    now: () => new Date().toISOString(),
+  });
+  const environmentCheck = async (): Promise<void> => {
+    for (const tenantId of known) {
+      try {
+        const report = await withSpan(TRACER, 'bsm.environment_alerts', { 'openmap.tenant_id': tenantId }, () => environmentAlerts.evaluateTenant(tenantId));
+        metrics.environmentAlerts.inc({ change: 'opened' }, report.opened);
+        metrics.environmentAlerts.inc({ change: 'resolved' }, report.resolved);
+        if (report.opened + report.resolved > 0) log({ msg: 'environment alerts evaluated', tenantId, ...report });
+      } catch (err) {
+        log({ msg: 'environment alert evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  };
+  const environmentTick = setInterval(() => {
+    void environmentCheck();
+  }, ENVIRONMENT.evaluateMs);
   // REQ-CMDB-032 (ADR-036): certificates crossing an expiry threshold raise one alert each.
   const certificateCheck = async (): Promise<void> => {
     try {
@@ -264,6 +293,7 @@ async function main(): Promise<void> {
     clearInterval(certificateTick);
     clearInterval(readinessTick);
     clearInterval(powerTick);
+    clearInterval(environmentTick);
     for (const t of pending.values()) clearTimeout(t);
     await worker.close();
     await clickhouse.close();
