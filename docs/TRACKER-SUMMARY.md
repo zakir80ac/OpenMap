@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T19:23:17.864Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T19:47:36.733Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 26 |
+| Not started | 25 |
 | In progress | 0 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 149 |
+| Done | 150 |
 | **Total** | **209** |
 
 ## By workstream
@@ -20,7 +20,7 @@ Generated 2026-11-09T19:23:17.864Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
 | IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 5 | 0 | 0 | 56% |
+| DCIM | 9 | 6 | 0 | 0 | 67% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
@@ -66,7 +66,6 @@ Generated 2026-11-09T19:23:17.864Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-DCIM-005 [P1] Power monitoring, thresholds, billing by outlet
 - REQ-DCIM-006 [P1] Environmental: temperature, humidity, airflow
 - REQ-DCIM-007 [P1] Capacity planning: space, power, cooling, ports
 - REQ-DCIM-008 [P1] Cable management with labels and verification
@@ -76,6 +75,7 @@ Generated 2026-11-09T19:23:17.864Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-INT-014 [P1] Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM
 - REQ-INT-016 [P1] Identity: Active Directory, Entra ID, Okta
 - REQ-INT-017 [P1] Backup/DR awareness: Veeam, Commvault, Rubrik
+- REQ-INT-018 [P1] Appliance deployment (VM)
 
 ## Open risks
 

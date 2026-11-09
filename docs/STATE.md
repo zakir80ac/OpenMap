@@ -2,7 +2,32 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 34: REQ-DCIM-004 power chain and redundancy Done)
+## Last session · 2026-11-09 (checkpoint 35: REQ-DCIM-005 power monitoring, thresholds and billing Done)
+
+**REQ-DCIM-005 Done** (ADR-059, GraphQL 1.32.0, migration 0042, T-532..T-537, commit 1b30cc6).
+- **Collector.** The SNMP collector emits `dcim.power.watts` (PDU total) and `dcim.outlet.watts` (each metered outlet,
+  on its `power_feed` CI) as samples. No contract version moved.
+- **Contracts.** `energyOf` (trapezoid between samples only, with the hours covered), `powerState`,
+  `powerSettingsSchema`, `pduRatedWatts`.
+- **API.** `powerSettings` and `updatePowerSettings` (administrators); `powerMonitor(roomId, hours)` returns PDU series,
+  state, peak, energy and cost, the outlets with their devices, and billing by device with its cost centre.
+- **BSM engine.** It opens and resolves incidents (source `power`) for PDUs over the critical line. Readings older than
+  3 h are not judged. On the dev tenant nothing is over the line: the estate's PDUs draw at most 4.2 kW against 32 A
+  ratings.
+- **Screen.** The Power view has a monitoring panel: window, totals, PDU draw sparklines, billing by device, and the
+  lines and tariff.
+- **Dev tenant data.** `synth power-history` replayed into it (`.local/estate-005-power`, then
+  `.local/estate-005-power-cords` with `--structure-only`): 4,433 outlets, 4,417 devices powered by their outlet, and
+  252,681 outlet plus 11,514 PDU readings over 14 days. Replay with an absolute `--dir`, because a relative one
+  resolves under apps/reconciler.
+- **Found: the reconciler never updates a relationship's attributes on re-observation.** Re-emitting a cord with an
+  outlet number changed nothing. Device-to-outlet is therefore its own relationship. Updating relationship attributes
+  is a reconciler follow-up worth a tracker row.
+
+**Next:** REQ-DCIM-006 (environmental: temperature, humidity, airflow), DCIM-007 (capacity planning), DCIM-008 (cable
+labels and verification).
+
+## Previous session · 2026-11-09 (checkpoint 34: REQ-DCIM-004 power chain and redundancy Done)
 
 **REQ-DCIM-004 Done** (ADR-058, GraphQL 1.31.0, T-528..T-531, commit a1453a4). The DCIM switch is now Racks / Floor plan
 / Power / Cabling.
