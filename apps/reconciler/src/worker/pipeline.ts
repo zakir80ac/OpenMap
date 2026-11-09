@@ -39,7 +39,11 @@ function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
-async function park(prisma: PrismaClient, result: CollectorResult, rels: readonly ObservedRelationship[]): Promise<void> {
+async function park(
+  prisma: PrismaClient,
+  result: CollectorResult,
+  rels: readonly ObservedRelationship[],
+): Promise<void> {
   if (rels.length === 0) return;
   await prisma.pendingRelationship.createMany({
     data: rels.map((r) => ({
@@ -67,42 +71,83 @@ export async function processResult(prisma: PrismaClient, result: CollectorResul
     add(Date.now() - t0);
     return v;
   };
-  const lookup = await timed(() => loadLookup(prisma, result), (ms) => (lookupMs += ms));
+  const lookup = await timed(
+    () => loadLookup(prisma, result),
+    (ms) => (lookupMs += ms),
+  );
   const t1 = Date.now();
   const cpu1 = process.cpuUsage();
   const out = reconcile(result, lookup);
   const reconcileCpuMs = cpuMs(cpu1);
   reconcileMs += Date.now() - t1;
-  const summary = await timed(() => persist(prisma, result.tenantId, out), (ms) => (persistMs += ms));
+  const summary = await timed(
+    () => persist(prisma, result.tenantId, out),
+    (ms) => (persistMs += ms),
+  );
   let unresolved = out.unresolvedRelationships;
   if (unresolved.length > 0) {
     // Endpoints created by this very result are visible now; retry once before parking the rest.
     const retry: CollectorResult = { ...result, cis: [], relationships: unresolved, samples: [] };
-    const lookup2 = await timed(() => loadLookup(prisma, retry), (ms) => (lookupMs += ms));
+    const lookup2 = await timed(
+      () => loadLookup(prisma, retry),
+      (ms) => (lookupMs += ms),
+    );
     const t2 = Date.now();
     const out2 = reconcile(retry, lookup2);
     reconcileMs += Date.now() - t2;
-    const s2 = await timed(() => persist(prisma, result.tenantId, out2), (ms) => (persistMs += ms));
+    const s2 = await timed(
+      () => persist(prisma, result.tenantId, out2),
+      (ms) => (persistMs += ms),
+    );
     summary.relationships += s2.relationships;
     summary.events += s2.events;
     unresolved = out2.unresolvedRelationships;
-    await timed(() => park(prisma, result, unresolved), (ms) => (persistMs += ms));
+    await timed(
+      () => park(prisma, result, unresolved),
+      (ms) => (persistMs += ms),
+    );
   }
   // ADR-045: a CI this result created under a ref key another CI already holds (written concurrently, or before its
   // parent's identity was known here) is folded into the older one.
   const refKeys = [...out.refKeys.values()].filter((k): k is string => k !== null);
-  const folded = await timed(() => foldRefDuplicates(prisma, result.tenantId, refKeys), (ms) => (persistMs += ms));
-  const zoneRecordsRetired = await timed(() => retireMissingZoneRecords(prisma, result), (ms) => (persistMs += ms));
-  return { ...summary, folded, zoneRecordsRetired, unchanged: out.unchanged, unresolvedRelationships: unresolved.length, samples: out.samples, samplesDropped: out.samplesDropped, durationMs: Date.now() - started, lookupMs, reconcileMs, persistMs, reconcileCpuMs };
+  const folded = await timed(
+    () => foldRefDuplicates(prisma, result.tenantId, refKeys),
+    (ms) => (persistMs += ms),
+  );
+  const zoneRecordsRetired = await timed(
+    () => retireMissingZoneRecords(prisma, result),
+    (ms) => (persistMs += ms),
+  );
+  return {
+    ...summary,
+    folded,
+    zoneRecordsRetired,
+    unchanged: out.unchanged,
+    unresolvedRelationships: unresolved.length,
+    samples: out.samples,
+    samplesDropped: out.samplesDropped,
+    durationMs: Date.now() - started,
+    lookupMs,
+    reconcileMs,
+    persistMs,
+    reconcileCpuMs,
+  };
 }
 
 /**
  * Retries pending refs (ADR-045) and parked relationships for a tenant; resolved ones are persisted, exhausted
  * relationships dropped. Refs go first: a relationship may name a CI by a ref that only now resolves.
  */
-export async function retryPendingRelationships(prisma: PrismaClient, tenantId: string): Promise<{ tried: number; resolved: number; dropped: number; refs: RefPassSummary }> {
+export async function retryPendingRelationships(
+  prisma: PrismaClient,
+  tenantId: string,
+): Promise<{ tried: number; resolved: number; dropped: number; refs: RefPassSummary }> {
   const refs = await runRefPass(prisma, tenantId);
-  const rows = await prisma.pendingRelationship.findMany({ where: { tenantId }, orderBy: { createdAt: 'asc' }, take: RECONCILER.pendingRelationshipBatch });
+  const rows = await prisma.pendingRelationship.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: 'asc' },
+    take: RECONCILER.pendingRelationshipBatch,
+  });
   if (rows.length === 0) return { tried: 0, resolved: 0, dropped: 0, refs };
   const bySource = new Map<string, { rows: typeof rows; result: CollectorResult }>();
   for (const row of rows) {
@@ -110,13 +155,37 @@ export async function retryPendingRelationships(prisma: PrismaClient, tenantId: 
     const entry = bySource.get(key) ?? {
       rows: [],
       result: {
-        jobId: row.sourceRunId, runId: row.sourceRunId, tenantId, collectorId: row.sourceCollectorId, nodeId: row.sourceNodeId, status: 'success',
-        startedAt: row.observedAt.toISOString(), finishedAt: row.observedAt.toISOString(), cis: [], relationships: [], samples: [], evidence: [], errors: [],
-        metrics: { targetsAttempted: 0, targetsReached: 0, cisEmitted: 0, relationshipsEmitted: 0, durationMs: 0 }, contractVersion: CONTRACT_VERSIONS.collector,
+        jobId: row.sourceRunId,
+        runId: row.sourceRunId,
+        tenantId,
+        collectorId: row.sourceCollectorId,
+        nodeId: row.sourceNodeId,
+        status: 'success',
+        startedAt: row.observedAt.toISOString(),
+        finishedAt: row.observedAt.toISOString(),
+        cis: [],
+        relationships: [],
+        samples: [],
+        evidence: [],
+        errors: [],
+        metrics: {
+          targetsAttempted: 0,
+          targetsReached: 0,
+          cisEmitted: 0,
+          relationshipsEmitted: 0,
+          durationMs: 0,
+        },
+        contractVersion: CONTRACT_VERSIONS.collector,
       },
     };
     entry.rows.push(row);
-    entry.result.relationships.push({ type: row.type, from: row.fromRef as ObservedRelationship['from'], to: row.toRef as ObservedRelationship['to'], attributes: row.attributes as ObservedRelationship['attributes'], observedAt: row.observedAt.toISOString() });
+    entry.result.relationships.push({
+      type: row.type,
+      from: row.fromRef as ObservedRelationship['from'],
+      to: row.toRef as ObservedRelationship['to'],
+      attributes: row.attributes as ObservedRelationship['attributes'],
+      observedAt: row.observedAt.toISOString(),
+    });
     bySource.set(key, entry);
   }
   let resolved = 0;
@@ -124,18 +193,29 @@ export async function retryPendingRelationships(prisma: PrismaClient, tenantId: 
   for (const { rows: group, result } of bySource.values()) {
     const out = reconcile(result, await loadLookup(prisma, result));
     await persist(prisma, tenantId, out);
-    resolved += out.relationshipsCreated.length + out.relationshipsSeen.length;
-    const stillPending = new Set(out.unresolvedRelationships.map((r) => JSON.stringify([r.type, r.from, r.to])));
-    const doneIds = group.filter((row) => !stillPending.has(JSON.stringify([row.type, row.fromRef, row.toRef]))).map((row) => row.id);
+    resolved +=
+      out.relationshipsCreated.length + out.relationshipsUpdated.length + out.relationshipsSeen.length;
+    const stillPending = new Set(
+      out.unresolvedRelationships.map((r) => JSON.stringify([r.type, r.from, r.to])),
+    );
+    const doneIds = group
+      .filter((row) => !stillPending.has(JSON.stringify([row.type, row.fromRef, row.toRef])))
+      .map((row) => row.id);
     if (doneIds.length) await prisma.pendingRelationship.deleteMany({ where: { id: { in: doneIds } } });
     const remaining = group.filter((row) => !doneIds.includes(row.id));
-    const exhausted = remaining.filter((row) => row.attempts + 1 >= RECONCILER.pendingRelationshipMaxAttempts).map((row) => row.id);
+    const exhausted = remaining
+      .filter((row) => row.attempts + 1 >= RECONCILER.pendingRelationshipMaxAttempts)
+      .map((row) => row.id);
     if (exhausted.length) {
       await prisma.pendingRelationship.deleteMany({ where: { id: { in: exhausted } } });
       dropped += exhausted.length;
     }
     const bump = remaining.filter((row) => !exhausted.includes(row.id)).map((row) => row.id);
-    if (bump.length) await prisma.pendingRelationship.updateMany({ where: { id: { in: bump } }, data: { attempts: { increment: 1 } } });
+    if (bump.length)
+      await prisma.pendingRelationship.updateMany({
+        where: { id: { in: bump } },
+        data: { attempts: { increment: 1 } },
+      });
   }
   return { tried: rows.length, resolved, dropped, refs };
 }

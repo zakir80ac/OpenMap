@@ -1760,8 +1760,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
    * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`. 0.9.0 (REQ-CMDB-032, ADR-036): `openmap.certificate.expiring`.
    * 0.10.0 (REQ-CMDB-014, ADR-037): `openmap.component.changed`.
+   * 0.11.0 (REQ-CORE-021, ADR-059 consequences): `openmap.relationship.updated`.
    */
-  event: '0.10.0',
+  event: '0.11.0',
   /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document. */
   rest: '1.1.0',
 };

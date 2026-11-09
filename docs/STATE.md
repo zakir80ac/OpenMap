@@ -5,6 +5,7 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 ## Last session · 2026-11-09 (checkpoint 36: REQ-DCIM-006 environmental monitoring Done)
 
 **REQ-DCIM-006 Done** (ADR-060, GraphQL 1.33.0, T-538..T-543, commit 0dc055b).
+
 - **Readings.** Temperature, humidity and cooling capacity are samples on the CI they describe, with a `position` label:
   rack inlet and outlet (or a probe on the rack's PDU), cooling unit supply and return, room humidity. The SNMP
   collector emits them from Liebert units and ENTITY-SENSOR probes, reading a probe's position from its name.
@@ -26,6 +27,7 @@ verification), REQ-CORE-021 (reconciler relationship attributes).
 ## Previous session · 2026-11-09 (checkpoint 35: REQ-DCIM-005 power monitoring, thresholds and billing Done)
 
 **REQ-DCIM-005 Done** (ADR-059, GraphQL 1.32.0, migration 0042, T-532..T-537, commit 1b30cc6).
+
 - **Collector.** The SNMP collector emits `dcim.power.watts` (PDU total) and `dcim.outlet.watts` (each metered outlet,
   on its `power_feed` CI) as samples. No contract version moved.
 - **Contracts.** `energyOf` (trapezoid between samples only, with the hours covered), `powerState`,
@@ -52,6 +54,7 @@ labels and verification).
 
 **REQ-DCIM-004 Done** (ADR-058, GraphQL 1.31.0, T-528..T-531, commit a1453a4). The DCIM switch is now Racks / Floor plan
 / Power / Cabling.
+
 - **Assessment.** `packages/contracts/src/power.ts` holds `circuitRatedWatts` (√3·V·A for three phases) and
   `assessPower`. Its findings are single-corded devices, devices on one feed, PDU/circuit/UPS pairs whose survivor
   would overload, UPS runtime under `POWER.minUpsRuntimeMinutes`, and PDUs over their outlets. A pair with an
@@ -63,12 +66,14 @@ labels and verification).
     takes the PDU's feed.
 
   Writes are audited and counted (`openmap_power_connections_total`).
+
 - **Real findings in the dev estate.** For example, DMM-COLO-DH01-A-03 PDU-A has 25 cords on 24 outlets. The generator
   plugs more devices into some PDUs than they have outlets; that is genuine estate data, left as found.
 - The first console build of this round failed in `next/font/google` (the fonts are fetched at build time); the retry
   built. That is a sovereignty and air-gap gap worth a requirement: self-host the fonts. See Questions.
 
 **Questions for Syed** (in addition to checkpoints 31 to 33):
+
 1. The console fetches its Google fonts at build time (`apps/console/src/lib/fonts.ts`, `next/font/google`), so an
    air-gapped image build needs network. Should the fonts be vendored with `next/font/local` (a new SEC/CORE
    requirement)?
@@ -78,6 +83,7 @@ labels and verification).
 ## Previous session · 2026-11-09 (checkpoint 33: REQ-DCIM-003 room floor plan Done)
 
 **REQ-DCIM-003 Done** (ADR-057, GraphQL 1.30.0, T-524..T-527, commit 760060d).
+
 - **Floor plan view.** The DCIM screen switch is now Racks / Floor plan / Cabling.
   - The plan is a pure function of the `racks` query (`apps/console/src/lib/floor-plan.ts`). It shows each room's rows
     in row-position order, with their aisle and rack slots up to `rackCapacity`.
@@ -94,6 +100,7 @@ labels and verification).
 one): 15.8 GiB resident, 19 GiB tracked, against the VM's 23.47 GiB. The twin e2e's focus step (an impact graph for
 one host) fails with "Memory limit exceeded" (an 896 MiB allocation). It is not caused by the cabling or floor plan
 work; those code paths do not touch Memgraph queries. Options:
+
 - drop the scale-1 tenant from Memgraph when it is not being measured;
 - give the WSL VM more memory;
 - set Memgraph's `--memory-limit` below the VM's, so a query fails fast instead of starving the rest of the stack.
@@ -103,6 +110,7 @@ work; those code paths do not touch Memgraph queries. Options:
 ## Previous session · 2026-11-09 (checkpoint 32: REQ-DCIM-001 structured cabling Done; REQ-QA-003 Blocked)
 
 **REQ-DCIM-001 Done** (ADR-056; CI and collector 0.9.0, GraphQL 1.29.0; T-520..T-523; commit d3e9357).
+
 - **Records:** patch panels, cables (patch leads, trunks, cross-connects) and carrier circuits (a new `circuit` CI type)
   are CIs written through the outbox.
   - A panel is `located_in` its rack, with its rack unit.
@@ -127,12 +135,14 @@ work; those code paths do not touch Memgraph queries. Options:
 See Questions.
 
 **Environment.**
+
 - After the Windows restart the kind cluster `openmap-control-plane` came back and ran at about 200% CPU. Sign-ins
   timed out and connections to the published ports were reset, so it was stopped again (`docker start
-  openmap-control-plane` brings it back).
+openmap-control-plane` brings it back).
 - Free space on E: held at 42.6 GB through two image builds. The VHDX reuses the space freed inside it.
 
 **Questions for Syed:**
+
 1. Compact the Docker VHDX (about 874 GB on E:) or move it. See checkpoint 31.
 2. OpenBao runs in compose dev mode, which keeps secrets in memory, so a restart wipes the credential sets. Should the
    single-node profile get a file storage backend (a new requirement)?
@@ -143,6 +153,7 @@ See Questions.
 ## Previous session · 2026-11-08/09 (checkpoint 31: REQ-IPAM-003 two-way DNS sync Done; Docker recovered after E: filled)
 
 **REQ-IPAM-003 Done** (ADR-055, GraphQL 1.28.0, migration 0039; T-512..T-519).
+
 - **Reconciler:** a full zone transfer retires the records it no longer holds (T-512).
 - **Collector:** the DNS collector pushes RFC 2136 updates signed with TSIG (T-513).
 - **Contracts:** the change contracts (T-514).
@@ -164,6 +175,7 @@ See Questions.
 **Docker incident.** `E:\DockerDesktopWSL\disk\docker_data.vhdx` grew to about 850 GB and filled E:. The engine's disk
 hit I/O errors mid-build, and Docker Desktop then stopped at start-up on the dockerInference socket. Syed restarted
 Windows, which cleared it.
+
 - `.local/bundle`, the stale air-gap bundle, was deleted; it is regenerable.
 - The build cache was pruned: its metadata pointed at missing snapshots.
 - `docker system df` now shows about 185 GB in use (images 101.7 GB, volumes 75.8 GB, containers 8.1 GB). The VHDX
@@ -172,6 +184,7 @@ Windows, which cleared it.
   fixed it.
 
 **Questions for Syed:**
+
 1. Compact the Docker VHDX, or move it to a disk with room. This needs Docker Desktop quit and an elevated
    `Optimize-VHD -Path E:\DockerDesktopWSL\disk\docker_data.vhdx -Mode Full`, or diskpart `compact vdisk`.
    `docker image prune` and `docker container prune` would free about 42 GB more inside the disk; volumes are not
@@ -189,6 +202,7 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 0035 and 0036). Evidence is in `docs/evidence/reconciler-scale.md` and `docs/evidence/discovery-sweep.json`.
 
 **1. Which target was slow.** The dispatch report now times each target per batch (`targetMs`, `bookkeepingMs`).
+
 - **Memgraph.** Every statement over about 1.5 KB stalled for about 45 ms, whatever its row count. This happens from
   the host and, less often, inside the compose network. Client `TCP_NODELAY` does not fix it. A batch sent about 25
   statements.
@@ -196,6 +210,7 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Postgres.** The claim walked the primary key past every delivered row: 1.6 s per claim with 2.6 million rows.
 
 **2. Fixes.**
+
 - **Graph batch.** `GraphRepository.applyBatch` writes one batch in one pipelined transaction (T-488). Relationship
   retirements find their edge from the source CI.
 - **ClickHouse.** Inserts of `RECONCILER.clickhouseSyncInsertRows` (500) rows or more are synchronous, and a batch's
@@ -215,12 +230,14 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Schema retry.** `ensureSchema` retries Memgraph's transient "unique access to the storage" error.
 
 **3. Results.**
+
 - **Seed 45, scale 0.05:** dispatch went from 67.8 s to 27.3 s.
 - **Sweep, seed 44, scale 0.25:** **8.43 min per 10,000 devices**, against a 15-minute budget (was 17.77). Dispatch went
   from 899 s to 178 s. All 508,341 events were delivered, and two transient ClickHouse failures were retried. Postgres
   and Memgraph both hold 138,242 CIs and 369,761 relationships. ClickHouse holds 508,341 events, all distinct.
 
 **4. REQ-UI-026 Sites and connectivity — Done** (ADR-025 amendment, GraphQL 1.22.0, REST 1.1.0, T-490 to T-493).
+
 - **Site facility cards:**
   - kind, tier, power capacity and design PUE from the site CI;
   - measured PUE from `dcim.site.pue`;
@@ -236,6 +253,7 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Follow-up:** readiness finding details are English text from the BSM engine, shown as-is in Arabic.
 
 **5. REQ-UI-027 Health and telemetry fleet — Done** (ADR-051, GraphQL 1.23.0, T-494 to T-497).
+
 - **Route:** `/telemetry`, served by `telemetryFleet`.
 - **Snapshot:** one per tenant, joining ClickHouse latest samples, Postgres CIs and Memgraph health. It refreshes in the
   background every 30 s. At build time it sorts rows for every key and every category, joins the search text into one
@@ -248,6 +266,7 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Perf tooling:** `tools/perf/src/keycloak.ts` now holds the load-test token helper that both budgets use.
 
 **6. REQ-AI-002 classification of unknown CIs — Done** (ADR-052, GraphQL 1.24.0, migration 0037, T-498 to T-501).
+
 - **Classifier:** fingerprints in constants (`DEVICE_FINGERPRINTS`); `classifyCi` in the assistant package scores
   sysDescr, banner, vendor and ports. It got 290 of 290 of the estates' unknown CIs right, against the generator's
   `deviceKind`, which it never reads.
@@ -256,6 +275,7 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Images:** `openmap/api:dev` and `openmap/console:dev` were rebuilt.
 
 **7. REQ-AI-003 anomaly rules — Done** (ADR-053, GraphQL 1.25.0, migration 0038, T-502 to T-506).
+
 - **Rules:** `ip_conflict`, `unmanaged_device_in_datacenter` and `flapping_service`, pure functions in the assistant
   package.
 - **Findings:** kept in `anomaly_findings`. A sweep runs every `ANOMALY_INTERVAL_MS`, and `detectAnomalies` runs one on
@@ -266,11 +286,12 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 - **Ground truth:** the generator plants one IP conflict and one data-centre camera (estate summary), plus one flapping
   service (health history).
 - **Dev tenant:** got these through a replay without `--reset` and a reload of the health history (`replay-history
-  --reset`). The earlier replay without stripped samples duplicated this tenant's metric rows in ClickHouse `metrics`;
+--reset`). The earlier replay without stripped samples duplicated this tenant's metric rows in ClickHouse `metrics`;
   `metrics_latest` is unaffected.
 - **Result:** precision and recall 1.0.
 
 **8. REQ-AI-005 cloud recommendations — Done** (ADR-054, GraphQL 1.26.0, T-507 to T-510).
+
 - **Model:** `recommendCloud` in the assistant package, with thresholds in `CLOUD_ADVICE`: release stopped resources
   that are still billed, decommission idle compute, downsize under-used compute (saves half its cost), upsize hot
   compute.
@@ -280,12 +301,14 @@ Syed: "keep coding and dont wait for my promoting". REQ-CORE-020 and REQ-PERF-00
 
 **9. REQ-AI-006 assistant over the graph — Done** (ADR-028 amendment, GraphQL 1.27.0, assistant contract 0.3.0,
 T-511).
+
 - **Coverage:** natural language to Cypher (REQ-AI-001) and impact explanation (the `impact` intent) were in place; the
   assistant now also answers about the anomaly findings through the `anomalies` intent and skill, in English and
   Arabic.
 - **Evaluation:** 41 of 41 on the scale-1 tenant (`docs/evidence/assistant-eval.json`).
 
 **10. Remaining for Done.**
+
 - **REQ-CORE-020:** the scale-1 measurement its acceptance names. It needs tenant `570b1953` reset, then
   `replay-history` and the assistant evaluation rerun. Alternatively, Syed may accept the scale-0.25 sweep.
 - **REQ-PERF-004:** the nightly CI run, which needs a remote.
@@ -296,6 +319,7 @@ Syed: "run the assistant evaluation on the new estate", then "keep coding and do
 
 **1. Assistant evaluation on the scale-1 estate** (`2a56a0a`, `353f569`). The evaluation picks the tenant with the most
 business services, which is now the scale-1 tenant `570b1953` (300 services, 40,000 hosts).
+
 - **Failure 1:** every measurement question failed. The host scope went to ClickHouse as one bound array, and ClickHouse
   caps a query-string field at 128 KiB (about 3,000 UUIDs). `metrics.latest` and `metrics.series` now read in batches
   of `ASSISTANT.clickhouseIdBatch` (2,000), 4 at a time. The partials combine exactly; the evidence carries the scope
@@ -309,12 +333,14 @@ business services, which is now the scale-1 tenant `570b1953` (300 services, 40,
 - The API image was rebuilt; the console's assistant answers "44.51% across 2,000 hosts" on the dev tenant.
 
 **2. Synthetic outages spread over the whole month** (`215ed8d`, T-464).
+
 - **The bug:** each outage started up to window/(count+1) after the previous one, so outages fell in the first half of
   each 30-day window. The ten days before `--now` never had one, and every service read 100% this month.
 - **The fix:** each outage now falls anywhere in its own slot.
 - Both tenants' health history was regenerated and reloaded.
 
 **3. REQ-BSM-004 impact prediction accuracy** (ADR-047, migration 0032, GraphQL 1.19.0, Impact contract 1.1.0).
+
 - **What is compared:** every resolved or closed incident that names a root cause.
   - It is compared with the person's latest saved simulation of exactly that root cause, run before the incident
     opened.
@@ -344,6 +370,7 @@ business services, which is now the scale-1 tenant `570b1953` (300 services, 40,
   serve (one dev incident predicted all 15, accuracy 0.07).
 
 **4. REQ-BSM-005 runbooks** (ADR-048, migration 0033, GraphQL 1.20.0, Impact contract 1.2.0).
+
 - **Catalogue:** each tenant has a runbook catalogue (`runbooks`, code unique) storing `runbookSchema`. A step's
   automation must name a SOAR or automation integration.
 - **Attachment:** scenarios and incidents attach a runbook by reference (`runbookId`), replacing the never-filled JSON
@@ -363,6 +390,7 @@ business services, which is now the scale-1 tenant `570b1953` (300 services, 40,
 
 **5. REQ-BSM-007 sites and connectivity for HA / DR readiness** (ADR-025, migration 0034, CI and collector 0.8.0,
 GraphQL 1.21.0).
+
 - **New attributes:**
   - Site CIs carry `drRole` (primary, dr, none) and `criticality` (1 = most critical); `tier` stays the facility's
     Uptime tier.
@@ -387,6 +415,7 @@ GraphQL 1.21.0).
   - The dev tenant was regenerated and replayed without a reset: 19 site and link CIs updated, ids kept.
 
 **6. REQ-CORE-019 REST API, OpenAPI and SDK** (ADR-049, REST contract 1.0.0).
+
 - **One route table** (`packages/contracts/src/rest.ts`, `REST_ROUTES`) drives three things:
   - the API's REST v1 controllers (`apps/api/src/rest`, thin over the GraphQL services);
   - the OpenAPI 3.1 document (`GET /api/v1/openapi.json`, public; also written to
@@ -400,6 +429,7 @@ GraphQL 1.21.0).
 - **Other languages:** SDKs are generated from the OpenAPI document.
 
 **7. REQ-PERF-002 impact query under 1 s** (In review; `docs/evidence/impact-query.md`).
+
 - **Before:** a PDU's 31,355-node impact took 6.5 s on the scale-1 tenant; p95 under 8 VUs was 2.0 s.
 - **Causes and fixes:**
   - Memgraph planned the closure ∪ service-hop `UNION ALL` badly, at 2.7–3.2 s against 16–560 ms for the halves: the
@@ -419,6 +449,7 @@ GraphQL 1.21.0).
 on two hosts has no stable order; it passed twice on rerun.
 
 **Tests:**
+
 - REQ-PERF-002: T-487 (k6 impact budget through `impact-budget`).
 - REQ-CORE-019: T-483 (SDK), T-484 (integration through the SDK: public document, analyst reads, operator writes,
   403/400/404, counters), T-485 (console), T-486 (e2e, en and ar).
@@ -434,6 +465,7 @@ on two hosts has no stable order; it passed twice on rerun.
 - Guard, `contracts:check` and `i18n:check` are green.
 
 **Follow-ups:**
+
 - The per-validation cost on the 550k-CI tenant (about 7 s) is the simulation's graph and facts reads, the same path
   as an interactive what-if run at that scale; measure it against the 1 s impact budget (REQ-PERF).
 - The reconciler image was not rebuilt: `replay-history` runs from the host.
@@ -443,6 +475,7 @@ on two hosts has no stable order; it passed twice on rerun.
 Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reconciler session").
 
 **1. A SaaS application's `tenantRef` resolves within its vendor** (`83826ea`, ADR-045 amendment).
+
 - A ref counts only targets in the issuer scope it shares with them (`refScopeKeys` in
   `packages/contracts/src/identity.ts`): the scope keys of the target type's scoped global keys that the referring type
   also declares.
@@ -452,6 +485,7 @@ Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reco
 - Dev replay: refs pending 18 → 16; the ServiceNow and Workday applications of `horizonbank` name their own tenants.
 
 **2. Scale-1 replay — REQ-CORE-013 Done** (`docs/evidence/reconciler-scale.md`, `.json`, ADR-046).
+
 - **Estate:** `synth generate --seed 43 --scale 1` gives it its own tenant (`570b1953-…`); the dev tenant's 0.05 estate is
   untouched. It holds 550,747 CIs, 1,321,979 relationships and 45,030 devices.
 - **Result:** with one serial worker the replay takes 3,175 s end to end, 11.75 min per 10,000 devices, inside the
@@ -483,6 +517,7 @@ Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reco
   of the run).
 
 **3. Tracker CLI writes Decisions and Contracts** (`4b1e7b0`, REQ-CORE-007, T-456).
+
 - `pnpm tracker decision ADR-xxx` reads title, status and date from the ADR header; flags override.
 - `pnpm tracker contract <name> --version x.y.z [--adr]` records a contract version.
 - Recorded so far: ADR-044, ADR-045 and ADR-046, and CI and collector at 0.7.0. ADR-006 to ADR-043 and the other
@@ -491,6 +526,7 @@ Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reco
 **4. gofmt:** `tools/simulator/internal/vendors/fcfabric/fcfabric.go` (`a2258ff`).
 
 **5. Images:**
+
 - `openmap/node:dev` and `openmap/scheduler:dev` were rebuilt and recreated; both node binaries carry 0.7.0, none 0.6.0.
 - `openmap/reconciler:dev` was rebuilt on the final code and restarted.
 - Postgres was recreated once, for `shm_size`.
@@ -499,6 +535,7 @@ Syed approved the six follow-ups of checkpoint 27 ("yes take them up in the reco
 session's docs. The curated `GRAPH_REPORT.md` and `graph.html` are kept (project memory).
 
 **Tests:**
+
 - New: T-456 tracker, T-457 codes (integration), T-458 identity tokens (integration).
 - Extended: T-008 (one CI per identity in a result), T-450 (full-scale estate), T-451, T-453 and T-454 (tenantRef within
   its vendor).
@@ -514,6 +551,7 @@ session's docs. The curated `GRAPH_REPORT.md` and `graph.html` are kept (project
 Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
 
 **Three identity gaps closed:**
+
 - **`*Ref` resolution.** A load balancer names a pool member by IP or FQDN; the host's agent names the same listener
   by the host's UUID or serial. Reconciliation now resolves every `*Ref` value to the id of the one CI it names, then
   matches on the tuple with refs resolved (the ref key).
@@ -533,6 +571,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
   `PARENT_IDENTITY_KEYS` (`k8s_namespace.clusterUid`) now matches it only inside the tuple.
 
 **Store and order independence (migration 0028):**
+
 - New `cis` columns:
   - `refTokens` (GIN): every spelling a ref may name the CI by;
   - `refKey` (tenant btree): the tuple with refs resolved;
@@ -547,6 +586,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
   - parts, external ids and the asset record.
 
   The copy is retired with `openmap.ci.retired` (`mergedInto`), and dependents re-resolve.
+
 - Each result also folds its own new ref keys.
 - New span `reconcile.identity_refs` and counter `openmap_reconciler_identity_refs_total{action}`.
 - **NGINX:** upstream members were keyed `protocol: http`; they are now keyed `tcp`, like every other observer
@@ -555,6 +595,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
   and apps/node is checked against both). No payload field changed.
 
 **Results:**
+
 - `pnpm --filter @openmap/simulator verify`: 495/495 pass; 66,565 CIs and 82,379 relationships reproduced; identity
   drift **0** (from 284), relationship drift 0 (`docs/evidence/simulated-mode.md`, `.json`).
 - Tests:
@@ -568,6 +609,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
 
   Every other reconciler, contracts, db, collectors (contract, manifests, nginx) and node test passes. Guard,
   `contracts:check` and `i18n:check` are green.
+
 - **Dev tenant replay** (`.local/estate-044`, `--reset`):
   - 28,221 CIs created and 1 updated: the estate holds 28,221 distinct CIs, because the `Microsoft` vendor is in both
     the agent-sam and the saas results (the ADR-044 replay showed the same split);
@@ -581,6 +623,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
 
   Utilisation (`.local/estate-044-util`) and health history (`replay-history --reset`) were reloaded, and the compose
   reconciler was rebuilt and restarted on this code.
+
 - **Not changed (follow-ups):**
   - A `saas_application.tenantRef` names its tenant by id only, so two vendors' tenants with one id leave it ambiguous.
     Resolving the ref within the application's vendor would settle it.
@@ -594,6 +637,7 @@ Next-three item 1 of checkpoint 26, done as ADR-045 (REQ-CORE-013, REQ-QA-005).
 Syed's direction: fix the two older failures, then align the synthetic estate with the collectors (question 04).
 
 **Older failures (dcbf78d):**
+
 - The db schema and migration tests still expected `support_contracts` and `SupportLevel`, which migration 0023
   dropped. They now count tables created minus dropped and replay type creates and drops in order.
 - The dev database held a CRLF checksum for 0015 (applied from a CRLF working copy; the committed file is LF and
@@ -601,6 +645,7 @@ Syed's direction: fix the two older failures, then align the synthetic estate wi
   edit (T-447). 0015 was repaired on the dev database.
 
 **Estate aligned with the collectors (ADR-044, T-448…T-450):**
+
 - The harness now judges drift with the reconciler's own rules, emitted as `packages/contracts/schemas/ci-identity.json`.
   It also reports relationship drift, and it reads addresses the collector dialled on loopback as the estate's target
   names (`Run.Aliases`). Under these rules the old estate drifted in 7,894 CIs and 524 relationships; the 36,373 of
@@ -626,8 +671,7 @@ Syed's direction: fix the two older failures, then align the synthetic estate wi
   is now verified against the estate's own tenants). The Brocade `fabricshow` lists the whole fabric.
 - The assistant's grounding follows the stored directions (`Vm RUNS_ON Hypervisor`, `Hypervisor HOSTED_ON Host`,
   `OperatingSystem INSTALLED_ON Host`).
-- Result: 495/495 runs pass; 66,565 CIs and 82,379 relationships reproduced; identity drift 284, relationship drift
-  0. What is left is load-balancer pool members (`listening_service` keyed by member IP or FQDN where the
+- Result: 495/495 runs pass; 66,565 CIs and 82,379 relationships reproduced; identity drift 284, relationship drift 0. What is left is load-balancer pool members (`listening_service` keyed by member IP or FQDN where the
   host's collector uses its serial). Fixing that needs reconciliation to resolve `*Ref` values to the referenced CI,
   which is a product change (see Next three).
 - The dev tenant still holds the old estate. Replay a regenerated estate with `--reset` before the assistant
@@ -642,6 +686,7 @@ to them later.
 REQ-CMDB-022/024. Simulated runs add test ids to them but never close them (ADR-042).
 
 **Simulated mode (REQ-QA-005 Done, ADR-042):**
+
 - `tools/simulator` (Go module in go.work) has 39 vendor simulators on 7 protocol servers (SSH, WinRM,
   SNMP v1/v2c/v3, LDAP, DNS AXFR/TSIG, flow export, TCP banners), rendered from the synthetic estate, with real auth
   and pinned TLS.
@@ -653,6 +698,7 @@ REQ-CMDB-022/024. Simulated runs add test ids to them but never close them (ADR-
   Commits: 8856e83, 2006332, 899522b, f78acbd.
 
 **Warranty and EoX (REQ-CMDB-024, ADR-043, contracts 0.6.0, 2714e27):**
+
 - `warranty` collector: Dell TechDirect, Lenovo v2.5, Cisco SN2INFO plus EoX.
 - `endOfLifeFromAttributes`; the reconciler and API carry the asset end of life (vendor-sourced only).
 - `scheduler warranty:plan` plans the lookups from the CMDB.
@@ -660,6 +706,7 @@ REQ-CMDB-022/024. Simulated runs add test ids to them but never close them (ADR-
   life shows on the Lifecycle screen. HPE and IBM are not built (no documented API shape).
 
 **Collector bugs fixed (40+, each with a test), the most consequential:**
+
 - 16 collectors ignored `caCertPem` on token, login or API transports.
 - 12 collectors emitted attribute maps or object lists the scheduler rejects; the runtime now normalises them
   (`ContractAttributes`).
@@ -680,6 +727,7 @@ Syed's direction: finish all CMDB rows and the discovery rows in review; lifecyc
 endoflife.date snapshot plus vendor EoX APIs).
 
 **CMDB: 40 of 42 Done.**
+
 - REQ-CMDB-014 parts and components (ADR-037, a136cb9): `ObservedCi.components`, `ci_components` (migration 0025) with
   removal, replacement and move by serial, `openmap.component.changed`; SSH, WMI and Redfish collect parts; Parts tab
   and Parts register. CI/collector contract 0.3.0, GraphQL 1.15.0.
@@ -710,11 +758,13 @@ now exposes `content-disposition` (the export kept a fallback file name), and as
 
 **Committed, tracker closure queued** (Excel holds `tracker/OpenMap-Tracker.xlsx` open, so every `pnpm tracker set`
 fails with EBUSY; close Excel and run `bash .local/tracker-queue.sh`, then commit the workbook and summary):
+
 - REQ-CMDB-026, 027, 028, 029 — vendors and contracts, commit 2f2762e, tests T-181…T-185, evidence
   `docs/evidence/commercial.md`.
 - REQ-CMDB-032 — certificates, commit 7076134, tests T-186…T-191, evidence `docs/evidence/certificates.md`.
 
 What was built:
+
 - **Receiving (ADR-034, REQ-CMDB-020).** ADR-005 keeps purchase orders in the finance system; a plan's BOM is the
   line list. `receivePlanLine` takes a line's oldest planned units into stock with serials, tags, the receipt day,
   the ERP reference and a storage location; the line counts them; an approved plan moves to building
@@ -773,6 +823,7 @@ deleted). Docker Desktop shows an error dialog offering "Reset to factory defaul
 dev stack's images and volumes. A Windows restart is the expected fix.
 
 **To resume after the restart:**
+
 1. Start Docker Desktop and check `docker info`, then from `deploy/compose` run
    `docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile cpu --profile node build api console reconciler`
    and `up -d --force-recreate api console reconciler`.
@@ -809,7 +860,7 @@ evidence), REQ-CMDB-013, REQ-CMDB-016, REQ-CMDB-018, REQ-CMDB-015. The dependenc
   outbox fan-out), refreshes every edge's evidence and confidence in batched statements, retires edges the flows no
   longer support, and emits `openmap.dependency.derived` (event 0.6.0). It runs after results carrying flows,
   addresses, listeners or components (debounced per tenant), at the end of a replay, and on `pnpm --filter
-  @openmap/reconciler adm`. On the dev estate: 7,587 edges (7,434 listener, 148 component, 5 compute) from 7,495
+@openmap/reconciler adm`. On the dev estate: 7,587 edges (7,434 listener, 148 component, 5 compute) from 7,495
   flows in 2.7 s; a second pass creates none and refreshes all in 0.7 s. The Dependencies side panel lists the focus
   CI's observed traffic with its evidence.
 - **Network topology (REQ-DEP-001, ADR-030).** `networkTopology(layer, siteId, includeHosts)` (GraphQL 1.6.0): L2
@@ -1282,32 +1333,33 @@ Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`
 
 ## Questions for Syed
 
-06. REQ-BSM-007 (ADR-025): the acceptance's "tier-1 site" is read as business criticality 1, a new site attribute.
-    `tier` stays the facility's Uptime tier. Confirm, or name the field you meant.
+6.  Answered on 2026-11-09: confirmed. REQ-BSM-007 reads "tier-1 site" as business criticality 1, a new site
+    attribute; `tier` stays the facility's Uptime tier.
 
-00. Answered (c) on 2026-11-06; implemented as ADR-039.
-04. Answered on 2026-11-07: align the estate with the collectors; implemented as ADR-044.
-05. Parked rows stay parked. The simulated runs found and fixed 40+ collector bugs, but every vendor row still closes
-    only on real access or captures (questions 01–03).
-01. REQ-CMDB-024: API credentials for Dell TechDirect, HPE, Lenovo, Cisco (SN2INFO and EoX) and IBM, so the warranty and
-EoX adapters are written against recorded responses.
-02. REQ-CMDB-022: developer tenants or recordings for Microsoft 365, Salesforce, ServiceNow, Google Workspace, Workday.
-03. Discovery rows 002, 005, 006, 008–010, 012–015, 026 (and the commercial vendors listed on 001, 011, 016–023, 027):
-lab access or recorded captures. 004/031: the code-signing decision for release tarballs.
-0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
-and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
-the lab) so the next list shows the SLA, assistant and finance work you asked for?
-0b. Microsoft 365 and Azure: grant the read-only app registration `Organization.Read.All` (Graph) and a Billing
-Reader role on the billing account so the subscription term and credit balance flow in; Google Workspace terms
-need the Reseller API only if Workspace is bought through a reseller. 0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
-console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
-Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)
-with Superset kept for ad-hoc exploration only? That is the only way to the 0.90 budget on that screen.
+7.  Answered (c) on 2026-11-06; implemented as ADR-039.
+8.  Answered on 2026-11-07: align the estate with the collectors; implemented as ADR-044.
+9.  Parked rows stay parked. The simulated runs found and fixed 40+ collector bugs, but every vendor row still closes
+    only on real access or captures (questions 01–03). Syed on 2026-11-09: vendor access is deferred to a later
+    phase; the 29 Blocked rows are not chased until then.
+10. REQ-CMDB-024: API credentials for Dell TechDirect, HPE, Lenovo, Cisco (SN2INFO and EoX) and IBM, so the warranty and
+    EoX adapters are written against recorded responses.
+11. REQ-CMDB-022: developer tenants or recordings for Microsoft 365, Salesforce, ServiceNow, Google Workspace, Workday.
+12. Discovery rows 002, 005, 006, 008–010, 012–015, 026 (and the commercial vendors listed on 001, 011, 016–023, 027):
+    lab access or recorded captures. 004/031: the code-signing decision for release tarballs.
+    0a. Tracker priority: 26 discovery rows (REQ-DISC-003…031) have been "In progress" since the collector marathon
+    and still head `pnpm tracker next`. Should they move to "In review" (collectors exist, vendor fixtures pending on
+    the lab) so the next list shows the SLA, assistant and finance work you asked for?
+    0b. Microsoft 365 and Azure: grant the read-only app registration `Organization.Read.All` (Graph) and a Billing
+    Reader role on the billing account so the subscription term and credit balance flow in; Google Workspace terms
+    need the Reseller API only if Workspace is bought through a reseller. 0. Analytics: the embedded Superset frame, once fully loaded, scores 0.67 on Lighthouse performance whatever the
+    console does around it (its own 2.7 MB of script; ADR-026 lowered the embedded floor to 0.65 to state the cost).
+    Should the Analytics screen become native ClickHouse charts in the console (REQ-UI-021/022/023 reports and BI)
+    with Superset kept for ad-hoc exploration only? That is the only way to the 0.90 budget on that screen.
 
-1. Export the planning document to `docs/SPEC.md` so the tracker can be re-seeded and the contracts frozen against it.
-2. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE
-   iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.
-3. Confirm ADR-006 (`@peculiar/x509`) and ADR-007 (Sigma.js + graphology, MIT) as accepted dependencies; ADR-013 and
-   ADR-014 are additive contract bumps (0.5.0, 0.6.0) recorded for review.
-4. Confirm multi-tenancy is per business unit as drawn in onboarding.
-5. Close the tracker workbook in Excel while sessions run (or we switch the tracker to a copy-on-write flow).
+13. Export the planning document to `docs/SPEC.md` so the tracker can be re-seeded and the contracts frozen against it.
+14. Access to the vendor lab (or recorded `snmpwalk`, SSH, WinRM, REST transcripts) for Cisco, Arista, Dell iDRAC, HPE
+    iLO, VMware, Nutanix, Pure, NetApp, Brocade/MDS, F5, APC: nothing can be fabricated.
+15. Confirm ADR-006 (`@peculiar/x509`) and ADR-007 (Sigma.js + graphology, MIT) as accepted dependencies; ADR-013 and
+    ADR-014 are additive contract bumps (0.5.0, 0.6.0) recorded for review.
+16. Confirm multi-tenancy is per business unit as drawn in onboarding.
+17. Close the tracker workbook in Excel while sessions run (or we switch the tracker to a copy-on-write flow).

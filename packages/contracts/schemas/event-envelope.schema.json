@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/event-envelope/0.10.0",
+  "$id": "https://openmap.dev/contracts/event-envelope/0.11.0",
   "title": "event-envelope",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -25,6 +25,7 @@
         "openmap.ci.updated",
         "openmap.ci.retired",
         "openmap.relationship.created",
+        "openmap.relationship.updated",
         "openmap.relationship.retired",
         "openmap.discovery.job.scheduled",
         "openmap.discovery.job.started",

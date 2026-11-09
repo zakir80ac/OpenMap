@@ -113,8 +113,9 @@ async function deliverMemgraph(
       if (ci) cis.push(toGraphCi(ci));
     } else if (e.type === 'openmap.ci.retired') {
       const ci = ciFromEvent(e);
-      if (ci) retiredCis.push({ tenantId: ci.tenantId, id: ci.id, at: ci.validTo ?? new Date().toISOString() });
-    } else if (e.type === 'openmap.relationship.created') {
+      if (ci)
+        retiredCis.push({ tenantId: ci.tenantId, id: ci.id, at: ci.validTo ?? new Date().toISOString() });
+    } else if (e.type === 'openmap.relationship.created' || e.type === 'openmap.relationship.updated') {
       const r = relationshipFromEvent(e);
       if (r) {
         relationships.push(toGraphRelationship(r));
@@ -156,7 +157,9 @@ async function deliverClickHouse(
       table,
       values: [...values],
       format: 'JSONEachRow',
-      ...(values.length >= RECONCILER.clickhouseSyncInsertRows ? { clickhouse_settings: { async_insert: 0 } } : {}),
+      ...(values.length >= RECONCILER.clickhouseSyncInsertRows
+        ? { clickhouse_settings: { async_insert: 0 } }
+        : {}),
     });
   const eventRows = events.map((e) => ({
     sequence: Number(sequences.get(e.id) ?? 0n),
@@ -170,9 +173,7 @@ async function deliverClickHouse(
     data: JSON.stringify(e.data),
     envelope: JSON.stringify(e),
   }));
-  const inserts: Array<Promise<unknown>> = [
-    insert(database + '.events', eventRows),
-  ];
+  const inserts: Array<Promise<unknown>> = [insert(database + '.events', eventRows)];
   const ciRows = events
     .map(ciFromEvent)
     .filter((c): c is Ci => c !== null)
@@ -197,8 +198,7 @@ async function deliverClickHouse(
       valid_from: chDate(c.validFrom),
       valid_to: c.validTo ? chDate(c.validTo) : null,
     }));
-  if (ciRows.length)
-    inserts.push(insert(database + '.ci_history', ciRows));
+  if (ciRows.length) inserts.push(insert(database + '.ci_history', ciRows));
   const relRows = events
     .map(relationshipFromEvent)
     .filter((r): r is Relationship => r !== null)
@@ -217,19 +217,13 @@ async function deliverClickHouse(
       valid_from: chDate(r.validFrom),
       valid_to: r.validTo ? chDate(r.validTo) : null,
     }));
-  if (relRows.length)
-    inserts.push(insert(database + '.relationship_history', relRows));
+  if (relRows.length) inserts.push(insert(database + '.relationship_history', relRows));
   const auditRows = events.map(auditRowFromEvent).filter((r): r is AuditRow => r !== null);
-  if (auditRows.length)
-    inserts.push(insert(database + '.audit_log', auditRows));
+  if (auditRows.length) inserts.push(insert(database + '.audit_log', auditRows));
   const metricRows = events.flatMap(metricRowsFromEvent);
-  if (metricRows.length)
-    inserts.push(insert(database + '.metrics', metricRows));
+  if (metricRows.length) inserts.push(insert(database + '.metrics', metricRows));
   const healthRows = events.map(healthRowFromEvent).filter((r): r is HealthRow => r !== null);
-  if (healthRows.length)
-    inserts.push(
-      insert(database + '.service_health_history', healthRows),
-    );
+  if (healthRows.length) inserts.push(insert(database + '.service_health_history', healthRows));
   // REQ-CORE-020: the tables are written side by side; a large batch goes in synchronously instead of waiting for an
   // async-insert flush (ClickHouse was the slowest target once the graph writes were pipelined).
   await Promise.all(inserts);
@@ -500,7 +494,10 @@ export async function dispatchOnce(
   /** Per target, the rows it took the batch for but must see again. */
   const stillPending = new Map<OutboxTarget, ReadonlySet<bigint>>();
   const targetMs: DispatchReport['targetMs'] = {};
-  const attempt = async (target: OutboxTarget, fn: () => Promise<ReadonlySet<bigint> | void>): Promise<void> => {
+  const attempt = async (
+    target: OutboxTarget,
+    fn: () => Promise<ReadonlySet<bigint> | void>,
+  ): Promise<void> => {
     const started = Date.now();
     try {
       const left = await fn();
@@ -523,7 +520,9 @@ export async function dispatchOnce(
   // success or failure (REQ-CORE-013 scale-1 replay: one after another, dispatch was half of the run).
   await Promise.all([
     attempt('memgraph', () => deliverMemgraph(sinks.graph, pendingFor('memgraph'), sequences)),
-    attempt('clickhouse', () => deliverClickHouse(sinks.clickhouse, database, pendingFor('clickhouse'), sequences)),
+    attempt('clickhouse', () =>
+      deliverClickHouse(sinks.clickhouse, database, pendingFor('clickhouse'), sequences),
+    ),
     attempt('meilisearch', async () => {
       for (const [tenantId, cis] of byTenant) await sinks.search.indexCis(tenantId, cis);
     }),
@@ -542,7 +541,13 @@ export async function dispatchOnce(
     // Common case: everything landed, one statement closes the whole batch.
     await prisma.outboxEvent.updateMany({
       where: { sequence: { in: rows.map((r) => r.sequence) }, ...mine },
-      data: { pending: [], attempts: { increment: 1 }, deliveredAt: new Date(), lastError: null, ...released },
+      data: {
+        pending: [],
+        attempts: { increment: 1 },
+        deliveredAt: new Date(),
+        lastError: null,
+        ...released,
+      },
     });
     return {
       claimed: rows.length,
@@ -583,5 +588,12 @@ export async function dispatchOnce(
       },
     });
   }
-  return { claimed: rows.length, delivered, failures, deferred, targetMs, bookkeepingMs: claimMs + Date.now() - closing };
+  return {
+    claimed: rows.length,
+    delivered,
+    failures,
+    deferred,
+    targetMs,
+    bookkeepingMs: claimMs + Date.now() - closing,
+  };
 }

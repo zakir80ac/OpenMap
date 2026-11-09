@@ -6,6 +6,7 @@ Status: Accepted (REQ-DCIM-005, 2026-11-09) · Date: 2026-11-09 · Tracker: REQ-
 
 REQ-DCIM-005 asks for power monitoring, thresholds and billing by outlet (docs/CAPABILITY-MAP.md §4, `collectors/pdu`).
 Before this decision:
+
 - the SNMP collector read PDU totals and APC per-outlet watts, but only as CI attributes, so there was no time series;
 - outlets were `power_feed` CIs the PDU contains;
 - the DCIM thresholds were fixed constants used for colouring;
@@ -28,6 +29,7 @@ Before this decision:
 
    Its owning cost centre is the asset register's (`ownerCostCentreCiId`), which is what makes billing by outlet a
    chargeback.
+
 4. **Thresholds and tariff are tenant data** (`power_settings`, migration 0042): the warning and critical lines as a
    percent of a PDU's rating, and a price per kWh with its currency.
    - Without a row, the DCIM defaults apply.
@@ -58,7 +60,10 @@ Before this decision:
 - **Re-observed relationships keep their attributes.** The reconciler creates relationships but does not update the
   attributes of one it already holds, so a collector reporting a changed attribute on an existing relationship is not
   reflected. Device-to-outlet is therefore modelled as its own relationship. Updating relationship attributes on
-  re-observation is a reconciler follow-up.
+  re-observation is a reconciler follow-up. Done on 2026-11-09 under REQ-CORE-021: a re-observed edge with changed
+  attributes is updated in Postgres with the observing run's provenance and announced as `openmap.relationship.updated`
+  (event 0.11.0), which the dispatcher carries to Memgraph and the ClickHouse relationship history; unchanged
+  re-observations only refresh `observedAt`.
 - Real per-outlet readings come from APC PDUs today. Raritan outlet power and other vendors need recorded walks from
   real devices (R-004, REQ-QA-003).
 - Additions only: GraphQL 1.31.0 → 1.32.0; migration 0042.

@@ -59,11 +59,16 @@ async function readBackCodes(tx: Tx, cis: Ci[], events: readonly EventEnvelope[]
 
 /** ADR-045: marks the transaction as the reconciler's, so the cis trigger keeps the ref tokens it writes. */
 export async function asReconciler(tx: Tx): Promise<void> {
-  await tx.$queryRaw(Prisma.sql`SELECT set_config(${RECONCILER.refTokensSetting}, ${RECONCILER.refTokensWriter}, true)`);
+  await tx.$queryRaw(
+    Prisma.sql`SELECT set_config(${RECONCILER.refTokensSetting}, ${RECONCILER.refTokensWriter}, true)`,
+  );
 }
 
 /** ADR-045: the ref columns of a CI: its tokens (JSON text), its ref key, and whether a ref is still unresolved. */
-function refColumns(cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null>): { tokens: string[]; keys: Array<string | null>; pending: boolean[] } {
+function refColumns(
+  cis: readonly Ci[],
+  refKeys: ReadonlyMap<string, string | null>,
+): { tokens: string[]; keys: Array<string | null>; pending: boolean[] } {
   const keys = cis.map((c) => refKeys.get(c.id) ?? null);
   return {
     tokens: cis.map((c) => JSON.stringify(refTokensOf(c).map((t) => t.token))),
@@ -73,7 +78,11 @@ function refColumns(cis: readonly Ci[], refKeys: ReadonlyMap<string, string | nu
 }
 
 /** One round trip for every created CI. ON CONFLICT mirrors createMany's skipDuplicates. */
-export async function insertCisBatch(tx: Tx, cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null> = new Map()): Promise<void> {
+export async function insertCisBatch(
+  tx: Tx,
+  cis: readonly Ci[],
+  refKeys: ReadonlyMap<string, string | null> = new Map(),
+): Promise<void> {
   if (cis.length === 0) return;
   const refs = refColumns(cis, refKeys);
   await tx.$executeRaw(Prisma.sql`
@@ -97,7 +106,11 @@ export async function insertCisBatch(tx: Tx, cis: readonly Ci[], refKeys: Readon
 }
 
 /** One round trip for every updated CI: unnest parallel arrays and join on id. */
-export async function updateCisBatch(tx: Tx, cis: readonly Ci[], refKeys: ReadonlyMap<string, string | null> = new Map()): Promise<void> {
+export async function updateCisBatch(
+  tx: Tx,
+  cis: readonly Ci[],
+  refKeys: ReadonlyMap<string, string | null> = new Map(),
+): Promise<void> {
   if (cis.length === 0) return;
   const refs = refColumns(cis, refKeys);
   await tx.$executeRaw(Prisma.sql`
@@ -183,6 +196,8 @@ export interface PersistSummary {
   created: number;
   updated: number;
   relationships: number;
+  /** REQ-CORE-021: stored relationships whose attributes changed on re-observation. */
+  relationshipsUpdated: number;
   conflicts: number;
   events: number;
   /** Asset register rows created for owned CIs in this result (ADR-023). */
@@ -214,53 +229,66 @@ export async function persist(
   tenantId: string,
   out: ReconcileOutput,
 ): Promise<PersistSummary> {
-  return prisma.$transaction(async (tx) => {
-    await asReconciler(tx);
-    await insertCisBatch(tx, out.created, out.refKeys);
-    await readBackCodes(tx, out.created, out.events);
-    const externalIds = out.created.flatMap((ci) =>
-      ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })),
-    );
-    if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
-    await updateCisBatch(tx, out.updated, out.refKeys);
-    const written = new Set([...out.created, ...out.updated].map((c) => c.id));
-    await updateRefKeys(tx, [...out.refKeys].filter(([id]) => !written.has(id)).map(([ciId, refKey]) => ({ ciId, refKey, pending: refKey === null })));
-    const claimed = await claimReceivedAssets(tx, out.created);
-    const assets = await insertAssetsBatch(tx, out.created);
-    await refreshAssetsBatch(tx, out.updated);
-    // ADR-037: the part lists the observations carried, mirrored into ci_components.
-    const parts = await syncComponents(tx, out.components);
-    await insertRelationshipsBatch(tx, out.relationshipsCreated);
-    // ADR-035: a covered_by a sweep or an import created gives the covered CI's asset its support contract.
-    await refreshCoveringContracts(
-      tx,
-      out.relationshipsCreated.filter((r) => r.type === 'covered_by').map((r) => r.fromCiId),
-    );
-    // One array parameter, not an IN list: a full-scale result re-observes more links than Postgres allows bind variables.
-    if (out.relationshipsSeen.length)
-      await tx.$executeRaw`UPDATE relationships SET "observedAt" = ${new Date()}, "updatedAt" = ${new Date()} WHERE id = ANY(${out.relationshipsSeen}::uuid[])`;
-    if (out.conflicts.length) {
-      await tx.reconciliationConflict.createMany({
-        data: out.conflicts.map((c) => ({
-          tenantId,
-          type: c.observed.type,
-          identityKey: identityKeyOf(c.observed.type, c.observed.identity),
-          field: 'identity',
-          candidates: json({ ciIds: c.ciIds, observed: c.observed }),
-        })),
-      });
-    }
-    await insertOutboxBatch(tx, [...out.events, ...claimEvents(claimed), ...parts.events]);
-    return {
-      created: out.created.length,
-      updated: out.updated.length,
-      relationships: out.relationshipsCreated.length,
-      conflicts: out.conflicts.length,
-      events: out.events.length + claimed.length + parts.events.length,
-      assets,
-      claimed: claimed.length,
-      componentsUpserted: parts.upserted,
-      componentsRemoved: parts.removed,
-    };
-  }, { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs });
+  return prisma.$transaction(
+    async (tx) => {
+      await asReconciler(tx);
+      await insertCisBatch(tx, out.created, out.refKeys);
+      await readBackCodes(tx, out.created, out.events);
+      const externalIds = out.created.flatMap((ci) =>
+        ci.externalIds.map((x) => ({ tenantId, ciId: ci.id, source: x.source, externalId: x.id })),
+      );
+      if (externalIds.length) await tx.ciExternalId.createMany({ data: externalIds, skipDuplicates: true });
+      await updateCisBatch(tx, out.updated, out.refKeys);
+      const written = new Set([...out.created, ...out.updated].map((c) => c.id));
+      await updateRefKeys(
+        tx,
+        [...out.refKeys]
+          .filter(([id]) => !written.has(id))
+          .map(([ciId, refKey]) => ({ ciId, refKey, pending: refKey === null })),
+      );
+      const claimed = await claimReceivedAssets(tx, out.created);
+      const assets = await insertAssetsBatch(tx, out.created);
+      await refreshAssetsBatch(tx, out.updated);
+      // ADR-037: the part lists the observations carried, mirrored into ci_components.
+      const parts = await syncComponents(tx, out.components);
+      await insertRelationshipsBatch(tx, out.relationshipsCreated);
+      // ADR-035: a covered_by a sweep or an import created gives the covered CI's asset its support contract.
+      await refreshCoveringContracts(
+        tx,
+        out.relationshipsCreated.filter((r) => r.type === 'covered_by').map((r) => r.fromCiId),
+      );
+      // One array parameter, not an IN list: a full-scale result re-observes more links than Postgres allows bind variables.
+      if (out.relationshipsSeen.length)
+        await tx.$executeRaw`UPDATE relationships SET "observedAt" = ${new Date()}, "updatedAt" = ${new Date()} WHERE id = ANY(${out.relationshipsSeen}::uuid[])`;
+      // REQ-CORE-021: changed attributes land on the stored edge with the provenance of the run that observed them.
+      for (const r of out.relationshipsUpdated) {
+        await tx.$executeRaw`UPDATE relationships SET attributes = ${JSON.stringify(r.attributes)}::jsonb, "sourceCollectorId" = ${r.source.collectorId}, "sourceNodeId" = ${r.source.nodeId}, "sourceRunId" = ${r.source.runId}, "sourceConfidence" = ${r.source.confidence}, "observedAt" = ${new Date(r.observedAt)}, "updatedAt" = ${new Date()} WHERE id = ${r.id}::uuid`;
+      }
+      if (out.conflicts.length) {
+        await tx.reconciliationConflict.createMany({
+          data: out.conflicts.map((c) => ({
+            tenantId,
+            type: c.observed.type,
+            identityKey: identityKeyOf(c.observed.type, c.observed.identity),
+            field: 'identity',
+            candidates: json({ ciIds: c.ciIds, observed: c.observed }),
+          })),
+        });
+      }
+      await insertOutboxBatch(tx, [...out.events, ...claimEvents(claimed), ...parts.events]);
+      return {
+        created: out.created.length,
+        updated: out.updated.length,
+        relationships: out.relationshipsCreated.length,
+        relationshipsUpdated: out.relationshipsUpdated.length,
+        conflicts: out.conflicts.length,
+        events: out.events.length + claimed.length + parts.events.length,
+        assets,
+        claimed: claimed.length,
+        componentsUpserted: parts.upserted,
+        componentsRemoved: parts.removed,
+      };
+    },
+    { timeout: RECONCILER.persistTransactionTimeoutMs, maxWait: RECONCILER.persistTransactionMaxWaitMs },
+  );
 }

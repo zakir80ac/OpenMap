@@ -2,7 +2,20 @@
 // writes and outbox events the stores apply. Pure: the caller supplies lookups and persists outputs.
 import { randomUUID } from 'node:crypto';
 import { IMPORTS, RECONCILER, RECONCILIATION } from '@openmap/constants';
-import { CI_TYPE_LAYER, ciCode, refDepth, refPairs, type Ci, type CollectorResult, type Component, type EventEnvelope, type MetricSample, type ObservedCi, type ObservedRelationship, type Relationship } from '@openmap/contracts';
+import {
+  CI_TYPE_LAYER,
+  ciCode,
+  refDepth,
+  refPairs,
+  type Ci,
+  type CollectorResult,
+  type Component,
+  type EventEnvelope,
+  type MetricSample,
+  type ObservedCi,
+  type ObservedRelationship,
+  type Relationship,
+} from '@openmap/contracts';
 import { identityKeysOf, MapRefIndex, refKeyOf, resolve, type IdentityIndex } from './identity.js';
 import { checksum, merge } from './merge.js';
 import { envelope } from './events.js';
@@ -27,6 +40,9 @@ export interface ReconcileOutput {
   updated: Ci[];
   unchanged: number;
   relationshipsCreated: Relationship[];
+  /** REQ-CORE-021: stored relationships re-observed with different attributes; persisted and announced as updated. */
+  relationshipsUpdated: Relationship[];
+  /** Stored relationships re-observed unchanged: only their observedAt is refreshed, no event. */
   relationshipsSeen: string[];
   conflicts: Array<{ observed: ObservedCi; ciIds: string[] }>;
   unresolvedRelationships: ObservedRelationship[];
@@ -56,7 +72,11 @@ export interface ResolvedSample extends Omit<MetricSample, 'ci'> {
   ciId: string;
 }
 
-function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, created: Map<string, string>): string | undefined {
+function refToId(
+  ref: ObservedRelationship['from'],
+  lookup: StoredLookup,
+  created: Map<string, string>,
+): string | undefined {
   if ('id' in ref) return ref.id;
   for (const k of identityKeysOf(ref, refKeyOf(ref, lookup.refs))) {
     const fresh = created.get(k);
@@ -69,7 +89,21 @@ function refToId(ref: ObservedRelationship['from'], lookup: StoredLookup, create
 
 export function reconcile(input: CollectorResult, lookup: StoredLookup): ReconcileOutput {
   const result = sanitizeResult(input);
-  const out: ReconcileOutput = { created: [], updated: [], unchanged: 0, relationshipsCreated: [], relationshipsSeen: [], conflicts: [], unresolvedRelationships: [], events: [], samples: 0, samplesDropped: 0, components: [], refKeys: new Map() };
+  const out: ReconcileOutput = {
+    created: [],
+    updated: [],
+    unchanged: 0,
+    relationshipsCreated: [],
+    relationshipsUpdated: [],
+    relationshipsSeen: [],
+    conflicts: [],
+    unresolvedRelationships: [],
+    events: [],
+    samples: 0,
+    samplesDropped: 0,
+    components: [],
+    refKeys: new Map(),
+  };
   const createdByKey = new Map<string, string>();
   // Where each CI this result creates sits in out.created and out.events, so a second observation of it can merge in.
   const createdSlot = new Map<string, { ci: number; event: number }>();
@@ -88,9 +122,20 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     const slot = sameResult === undefined ? undefined : createdSlot.get(sameResult);
     const first = slot === undefined ? undefined : out.created[slot.ci];
     if (slot !== undefined && first !== undefined) {
-      const merged = merge({ attributes: first.attributes, source: first.source, observedAt: first.observedAt }, { attributes: observed.attributes, source, observedAt: observed.observedAt });
+      const merged = merge(
+        { attributes: first.attributes, source: first.source, observedAt: first.observedAt },
+        { attributes: observed.attributes, source, observedAt: observed.observedAt },
+      );
       const identity = { ...observed.identity, ...first.identity };
-      const ci: Ci = { ...first, identity, attributes: merged.attributes, source: merged.source, observedAt: observed.observedAt, tags: [...new Set([...first.tags, ...observed.tags])], checksum: checksum(first.type, identity, merged.attributes) };
+      const ci: Ci = {
+        ...first,
+        identity,
+        attributes: merged.attributes,
+        source: merged.source,
+        observedAt: observed.observedAt,
+        tags: [...new Set([...first.tags, ...observed.tags])],
+        checksum: checksum(first.type, identity, merged.attributes),
+      };
       out.created[slot.ci] = ci;
       out.events[slot.event] = envelope(result.tenantId, 'openmap.ci.created', ci.id, { ci });
       for (const k of observedKeys) createdByKey.set(k, ci.id);
@@ -101,14 +146,22 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     const resolution = resolve(observed, lookup.index, refKey);
     if (resolution.kind === 'conflict') {
       out.conflicts.push({ observed, ciIds: resolution.ciIds });
-      out.events.push(envelope(result.tenantId, 'openmap.reconciliation.conflict', observed.name, { type: observed.type, identity: observed.identity, ciIds: resolution.ciIds, matchedKeys: resolution.matchedKeys }));
+      out.events.push(
+        envelope(result.tenantId, 'openmap.reconciliation.conflict', observed.name, {
+          type: observed.type,
+          identity: observed.identity,
+          ciIds: resolution.ciIds,
+          matchedKeys: resolution.matchedKeys,
+        }),
+      );
       continue;
     }
     if (resolution.kind === 'new') {
       const id = randomUUID();
       const layer = CI_TYPE_LAYER[observed.type];
       const { components: parts, ...fields } = observed;
-      if (parts !== undefined) out.components.push({ ciId: id, tenantId: result.tenantId, existed: false, components: parts });
+      if (parts !== undefined)
+        out.components.push({ ciId: id, tenantId: result.tenantId, existed: false, components: parts });
       const ci: Ci = {
         ...fields,
         id,
@@ -133,12 +186,27 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     }
     const existing = lookup.getCi(resolution.ciId);
     if (!existing) continue;
-    if (observed.components !== undefined) out.components.push({ ciId: existing.id, tenantId: result.tenantId, existed: true, components: observed.components });
-    const merged = merge({ attributes: existing.attributes, source: existing.source, observedAt: existing.observedAt }, { attributes: observed.attributes, source, observedAt: observed.observedAt });
+    if (observed.components !== undefined)
+      out.components.push({
+        ciId: existing.id,
+        tenantId: result.tenantId,
+        existed: true,
+        components: observed.components,
+      });
+    const merged = merge(
+      { attributes: existing.attributes, source: existing.source, observedAt: existing.observedAt },
+      { attributes: observed.attributes, source, observedAt: observed.observedAt },
+    );
     // Identity values are stable once stored; new keys are added, existing ones keep their canonical spelling.
     const identity = { ...observed.identity, ...existing.identity };
-    const mergedRefKey = hasRefs || refPairs(existing).length > 0 ? refKeyOf({ type: existing.type, identity }, lookup.refs) : null;
-    lookup.refs.add({ type: existing.type, identity, name: existing.name, attributes: merged.attributes }, existing.id);
+    const mergedRefKey =
+      hasRefs || refPairs(existing).length > 0
+        ? refKeyOf({ type: existing.type, identity }, lookup.refs)
+        : null;
+    lookup.refs.add(
+      { type: existing.type, identity, name: existing.name, attributes: merged.attributes },
+      existing.id,
+    );
     const newChecksum = checksum(existing.type, identity, merged.attributes);
     if (newChecksum === existing.checksum) {
       out.unchanged++;
@@ -146,10 +214,24 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
       if (stored !== undefined && stored !== mergedRefKey) out.refKeys.set(existing.id, mergedRefKey);
       continue;
     }
-    if (mergedRefKey !== null || refPairs({ type: existing.type, identity }).length > 0) out.refKeys.set(existing.id, mergedRefKey);
-    const updated: Ci = { ...existing, identity, attributes: merged.attributes, source: merged.source, observedAt: observed.observedAt, checksum: newChecksum, tags: [...new Set([...existing.tags, ...observed.tags])] };
+    if (mergedRefKey !== null || refPairs({ type: existing.type, identity }).length > 0)
+      out.refKeys.set(existing.id, mergedRefKey);
+    const updated: Ci = {
+      ...existing,
+      identity,
+      attributes: merged.attributes,
+      source: merged.source,
+      observedAt: observed.observedAt,
+      checksum: newChecksum,
+      tags: [...new Set([...existing.tags, ...observed.tags])],
+    };
     out.updated.push(updated);
-    out.events.push(envelope(result.tenantId, 'openmap.ci.updated', updated.id, { ci: updated, changedKeys: merged.changedKeys }));
+    out.events.push(
+      envelope(result.tenantId, 'openmap.ci.updated', updated.id, {
+        ci: updated,
+        changedKeys: merged.changedKeys,
+      }),
+    );
   }
 
   for (const rel of result.relationships) {
@@ -161,7 +243,28 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
     }
     const current = lookup.findRelationship(rel.type, fromId, toId);
     if (current) {
-      out.relationshipsSeen.push(current.id);
+      // REQ-CORE-021: a re-observation with changed attributes (an LLDP link's speed, a cord's outlet) updates the
+      // stored edge and is announced; keys the collector no longer reports are kept, as CI attributes are.
+      const attributes = { ...current.attributes, ...rel.attributes };
+      if (checksum(current.type, {}, attributes) === checksum(current.type, {}, current.attributes)) {
+        out.relationshipsSeen.push(current.id);
+        continue;
+      }
+      const updated: Relationship = {
+        ...current,
+        attributes,
+        source: { ...provenance, confidence: RECONCILIATION.userLabelConfidence },
+        observedAt: rel.observedAt,
+      };
+      out.relationshipsUpdated.push(updated);
+      out.events.push(
+        envelope(result.tenantId, 'openmap.relationship.updated', updated.id, {
+          relationship: updated,
+          changedKeys: Object.keys(rel.attributes).filter(
+            (k) => JSON.stringify(current.attributes[k]) !== JSON.stringify(rel.attributes[k]),
+          ),
+        }),
+      );
       continue;
     }
     const created: Relationship = {
@@ -177,7 +280,9 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
       validTo: null,
     };
     out.relationshipsCreated.push(created);
-    out.events.push(envelope(result.tenantId, 'openmap.relationship.created', created.id, { relationship: created }));
+    out.events.push(
+      envelope(result.tenantId, 'openmap.relationship.created', created.id, { relationship: created }),
+    );
   }
 
   const resolved: ResolvedSample[] = [];
@@ -193,7 +298,13 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
   out.samples = resolved.length;
   for (let start = 0; start < resolved.length; start += RECONCILER.samplesPerEvent) {
     const samples = resolved.slice(start, start + RECONCILER.samplesPerEvent);
-    out.events.push(envelope(result.tenantId, 'openmap.metric.sampled', result.runId, { runId: result.runId, collectorId: result.collectorId, samples }));
+    out.events.push(
+      envelope(result.tenantId, 'openmap.metric.sampled', result.runId, {
+        runId: result.runId,
+        collectorId: result.collectorId,
+        samples,
+      }),
+    );
   }
   return out;
 }
@@ -204,5 +315,7 @@ export function reconcile(input: CollectorResult, lookup: StoredLookup): Reconci
  */
 function confidenceFor(observed: ObservedCi, collectorId: string): number {
   if (collectorId === IMPORTS.collectorId) return RECONCILIATION.importSeedConfidence;
-  return observed.type === 'unknown' ? RECONCILIATION.overwriteMinConfidence : RECONCILIATION.discoveryDefaultConfidence;
+  return observed.type === 'unknown'
+    ? RECONCILIATION.overwriteMinConfidence
+    : RECONCILIATION.discoveryDefaultConfidence;
 }

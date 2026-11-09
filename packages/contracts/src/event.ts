@@ -8,6 +8,8 @@ export const EVENT_TYPES = [
   'openmap.ci.updated',
   'openmap.ci.retired',
   'openmap.relationship.created',
+  /** REQ-CORE-021: a stored relationship re-observed with changed attributes (payload: relationship, changedKeys). */
+  'openmap.relationship.updated',
   'openmap.relationship.retired',
   'openmap.discovery.job.scheduled',
   'openmap.discovery.job.started',
