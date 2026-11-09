@@ -26,12 +26,13 @@ import { Icon } from '@/components/icons';
 import { racksQuery, type Rack } from '@/lib/estate-queries';
 import { CablingView } from './CablingView';
 import { FloorPlanView } from './FloorPlanView';
+import { PowerView } from './PowerView';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 
-/** The DCIM screen's views: racks and rooms (elevations, heat map, power), the floor plan (REQ-DCIM-003) and structured
- * cabling (REQ-DCIM-001). */
-const DCIM_TABS = ['racks', 'floor', 'cabling'] as const;
+/** The DCIM screen's views: racks and rooms (elevations, heat map, power), the floor plan (REQ-DCIM-003), the power
+ * chain and its redundancy (REQ-DCIM-004) and structured cabling (REQ-DCIM-001). */
+const DCIM_TABS = ['racks', 'floor', 'power', 'cabling'] as const;
 type DcimTab = (typeof DCIM_TABS)[number];
 
 export interface DcimViewProps {
@@ -152,6 +153,7 @@ export function DcimView({ locale }: DcimViewProps): ReactNode {
       </SectionTitle>
       {view === 'cabling' ? <CablingView racks={racks.data ?? []} /> : null}
       {view === 'floor' ? <FloorPlanView locale={locale} racks={racks.data ?? []} /> : null}
+      {view === 'power' ? <PowerView racks={racks.data ?? []} /> : null}
       <div className={view === 'racks' ? 'flex flex-col gap-om-24' : 'hidden'}>
         <div className="grid grid-cols-2 gap-om-12 md:grid-cols-4">
           <Kpi label={t('dcim.kpi.rooms')} value={format.integer(rooms.length)} />

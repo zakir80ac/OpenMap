@@ -41,6 +41,8 @@ export const DNS_CHANGE_METRIC = 'openmap_dns_changes_total';
 export const CABLING_CHANGE_METRIC = 'openmap_cabling_changes_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
+/** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
+export const POWER_CONNECTION_METRIC = 'openmap_power_connections_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
@@ -88,6 +90,7 @@ export class MetricsService {
   readonly dnsChanges: Counter<'op'>;
   readonly cablingChanges: Counter<'kind' | 'op'>;
   readonly rackMoves: Counter;
+  readonly powerConnections: Counter<'op'>;
   readonly restRequests: Counter<'route' | 'status'>;
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
@@ -175,6 +178,7 @@ export class MetricsService {
     this.dnsChanges = new Counter({ name: DNS_CHANGE_METRIC, help: 'DNS record changes requested in OpenMap, by op (add, delete)', labelNames: ['op'], registers: [this.registry] });
     this.cablingChanges = new Counter({ name: CABLING_CHANGE_METRIC, help: 'Cabling changes by kind (patch_panel, cable, circuit) and op (saved, connected, disconnected)', labelNames: ['kind', 'op'], registers: [this.registry] });
     this.rackMoves = new Counter({ name: RACK_MOVE_METRIC, help: 'Racks moved to a row slot on the floor plan', registers: [this.registry] });
+    this.powerConnections = new Counter({ name: POWER_CONNECTION_METRIC, help: 'Device cords on PDU outlets by op (connected, disconnected)', labelNames: ['op'], registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

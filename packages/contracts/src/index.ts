@@ -14,6 +14,7 @@ export * from './anomaly.js';
 export * from './cloud-advice.js';
 export * from './dns-sync.js';
 export * from './cabling.js';
+export * from './power.js';
 export * from './rest.js';
 export * from './lifecycle.js';
 export * from './impact.js';

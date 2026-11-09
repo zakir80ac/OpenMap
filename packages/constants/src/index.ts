@@ -414,6 +414,15 @@ export const POWER = {
   wattsPerKilowatt: 1_000,
   /** Default PDU input voltage when a collector reports amps without volts (single-phase data-centre feeds). */
   defaultInputVoltage: 230,
+  /** Line-to-line factor of a balanced three-phase supply: P = √3 × V × I. */
+  threePhaseFactor: Math.sqrt(3),
+  threePhase: 3,
+  /**
+   * REQ-DCIM-004: the battery runtime below which a UPS is flagged. A generator start and transfer takes seconds;
+   * five minutes covers several failed starts and still leaves time for an orderly shutdown if the generator never
+   * comes. A tenant with a different design reads the finding against its own runbook.
+   */
+  minUpsRuntimeMinutes: 5,
 } as const;
 
 /** Assets screen (REQ-UI-009): warranty and support horizons offered in the attention table, in days. */
@@ -1699,8 +1708,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `CableHop`, `CableTrace` and their inputs, queries `cabling`, `cableTrace`, mutations `upsertPatchPanel`,
    * `removePatchPanel`, `connectCable`, `disconnectCable`, `upsertCircuit`, `removeCircuit`.
    * 1.30.0 (REQ-DCIM-003, ADR-057): mutation `placeRack(rackId, rowId, position)`.
+   * 1.31.0 (REQ-DCIM-004, ADR-058): `PowerSourceKind`, `PowerFindingKind`, `PowerSource`, `PowerFinding`,
+   * `PowerChainSummary`, `PowerChain`, `PowerConnection`, `PowerConnectionInput`, queries `powerChain`, `pduConnections`,
+   * mutations `connectPower`, `disconnectPower`.
    */
-  graphql: '1.30.0',
+  graphql: '1.31.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

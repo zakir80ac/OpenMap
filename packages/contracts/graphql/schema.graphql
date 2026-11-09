@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.30.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.31.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,79 @@ type PowerFeed {
   ci: Ci!
   ratedWatts: Int!
   currentWatts: Int!
+}
+
+# REQ-DCIM-004 (ADR-058) — a room's power chain (UPS → circuit → PDU → device cords) and its redundancy.
+enum PowerSourceKind {
+  ups
+  power_circuit
+  pdu
+}
+
+enum PowerFindingKind {
+  single_corded
+  same_feed
+  pdu_failover_overload
+  circuit_failover_overload
+  ups_failover_overload
+  ups_low_runtime
+  outlets_exceeded
+}
+
+type PowerSource {
+  ci: Ci!
+  kind: PowerSourceKind!
+  "The side of the redundant pair (A or B)."
+  feed: String
+  ratedWatts: Int
+  loadWatts: Int
+  outlets: Int
+  outletsUsed: Int!
+  runtimeMinutes: Float
+  "What feeds this source: a PDU's circuit, a circuit's UPS."
+  fedBy: [Ci!]!
+  rack: Ci
+}
+
+"What fails if a power component is lost: the device or source, the partner that would carry the load, and the load against the limit (watts, or cords against outlets)."
+type PowerFinding {
+  kind: PowerFindingKind!
+  ci: Ci!
+  partner: Ci
+  load: Float
+  capacity: Float
+}
+
+type PowerChainSummary {
+  ups: Int!
+  circuits: Int!
+  pdus: Int!
+  devices: Int!
+  redundantDevices: Int!
+  findings: Int!
+}
+
+type PowerChain {
+  summary: PowerChainSummary!
+  sources: [PowerSource!]!
+  findings: [PowerFinding!]!
+}
+
+"A device cord on a PDU: the feed it takes, the PSU and the outlet."
+type PowerConnection {
+  id: UUID!
+  device: Ci!
+  pdu: Ci!
+  feed: String
+  psu: Int
+  outlet: Int
+}
+
+input PowerConnectionInput {
+  deviceId: UUID!
+  pduId: UUID!
+  outlet: Int
+  psu: Int
 }
 
 # REQ-DCIM-001 (ADR-056) — structured cabling: patch panels in racks, cables (patch leads, trunks, cross-connects) and
@@ -2441,6 +2514,10 @@ type Query {
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
+  "REQ-DCIM-004: a room's power chain with its redundancy findings."
+  powerChain(roomId: UUID!): PowerChain!
+  "REQ-DCIM-004: the device cords on a PDU, by outlet."
+  pduConnections(pduId: UUID!): [PowerConnection!]!
   "REQ-DCIM-001: patch panels, cables, cross-connects and circuits."
   cabling: Cabling!
   "REQ-DCIM-001: the path from a port through patch panels to its far end."
@@ -2845,6 +2922,10 @@ type Mutation {
   upsertDnsZoneSync(input: DnsZoneSyncInput!): DnsZoneSync!
   "REQ-IPAM-003: a record to add or delete on the zone's server; it is pushed with the zone's next sync job."
   requestDnsChange(input: DnsChangeInput!): DnsChange!
+  "REQ-DCIM-004: records a device cord on a PDU outlet (the outlet must be free)."
+  connectPower(input: PowerConnectionInput!): PowerConnection!
+  "REQ-DCIM-004: removes a device cord from its PDU."
+  disconnectPower(id: UUID!): Boolean!
   "REQ-DCIM-003: moves a rack to a slot (position) of a row in its own room."
   placeRack(rackId: UUID!, rowId: UUID!, position: Int!): Rack!
   "REQ-DCIM-001: mounts a patch panel in a rack, or updates one (id)."
