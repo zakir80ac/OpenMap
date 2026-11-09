@@ -17,7 +17,7 @@ function rack(id: string, room: { id: string; displayName: string } | null, row:
     occupiedUnits: devices.reduce((s, d) => s + d[2], 0),
     devices: devices.map(([name, startUnit, heightUnits]) => ({ ci: ci(name, name, 'hardware', 'host'), startUnit, heightUnits, face: 'front' })),
     powerFeeds: watts.map(([ratedWatts, currentWatts], i) => ({ ci: ci(id + '-pdu-' + String(i), id + ' PDU', 'dc', 'power_feed'), ratedWatts, currentWatts })),
-    row: { id: row, displayName: row },
+    row: { id: row, displayName: row, attributes: {} },
     room: room === null ? null : { ...room, attributes: {} },
   };
 }

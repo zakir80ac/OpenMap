@@ -1,13 +1,20 @@
-// REQ-DCIM-001 — DCIM use cases over rack, row, room, PDU and power-feed CIs: rack elevation from located_in /
+// REQ-DCIM-001 REQ-DCIM-003 — DCIM use cases over rack, row, room, PDU and power-feed CIs: rack elevation from located_in /
 // mounted_on relationships (position and height on the relationship, as the collectors and the synthetic estate
 // emit them), power from PDUs located in the rack or power feeds the rack is powered by, and the rack's row and room.
 // Attribute names come from the contract's DCIM_ATTRIBUTES so collectors, the estate and the API agree.
-import { Inject, Injectable } from '@nestjs/common';
-import { POWER } from '@openmap/constants';
+import { randomUUID } from 'node:crypto';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { POWER, RECONCILIATION } from '@openmap/constants';
 import { DCIM_ATTRIBUTES, type RelationshipType } from '@openmap/contracts';
+import { withSpan } from '@openmap/telemetry';
+import { checksumOf } from '../ci/checksum.js';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
 import type { CiRecord, RelationshipRecord } from '../ci/ci.types.js';
+import { nowIso } from '../common/time.js';
 import { numberAttribute, stringAttribute } from '../common/validation.js';
+import { TRACER_NAME } from '../metrics/graphql-metrics.hook.js';
+import { MetricsService } from '../metrics/metrics.service.js';
+import { OutboxService } from '../outbox/outbox.service.js';
 
 export const LOCATED_IN: RelationshipType = 'located_in';
 export const MOUNTED_ON: RelationshipType = 'mounted_on';
@@ -70,9 +77,73 @@ export function powerOf(ci: CiRecord): { ratedWatts: number; currentWatts: numbe
   };
 }
 
+/** Rack attributes the floor plan (REQ-DCIM-003) reads and a move writes: the row's name and the slot along it. */
+export const RACK_ROW_ATTRIBUTE = 'row';
+export const RACK_POSITION_ATTRIBUTE = 'position';
+/** Row attribute: how many rack slots the row has. */
+export const ROW_CAPACITY_ATTRIBUTE = 'rackCapacity';
+
 @Injectable()
 export class DcimService {
-  constructor(@Inject(CI_REPOSITORY) private readonly cis: CiRepository) {}
+  constructor(
+    @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
+    private readonly outbox: OutboxService,
+    private readonly metrics: MetricsService,
+  ) {}
+
+  /** The room a rack or row sits in: itself `located_in` the room, or in a row that is. */
+  private async roomOf(tenantId: string, ciId: string): Promise<CiRecord | null> {
+    const [up] = await this.cis.relationshipsOfMany(tenantId, [ciId], [LOCATED_IN], 'downstream');
+    if (up === undefined) return null;
+    const [container] = await this.cis.findByIds(tenantId, [up.toCiId]);
+    if (container === undefined) return null;
+    if (container.type === 'room') return container;
+    return container.type === 'row' ? this.roomOf(tenantId, container.id) : null;
+  }
+
+  /**
+   * REQ-DCIM-003 — moves a rack to a slot of a row in its own room (a rack's identity is its room and name, so it never
+   * leaves the room). The slot must be within the row's capacity, when the row states one, and free. The rack's row and
+   * position attributes change and its `located_in` moves to the row, through the outbox with an audit action.
+   */
+  async placeRack(tenantId: string, actor: string, rackId: string, rowId: string, position: number): Promise<RackView> {
+    const found = await this.cis.findByIds(tenantId, [rackId, rowId]);
+    const rack = found.find((c) => c.id === rackId);
+    const row = found.find((c) => c.id === rowId);
+    if (rack === undefined || rack.type !== 'rack' || rack.validTo !== null) throw new NotFoundException('rack ' + rackId + ' not found');
+    if (row === undefined || row.type !== 'row' || row.validTo !== null) throw new NotFoundException('row ' + rowId + ' not found');
+    return withSpan(TRACER_NAME, 'dcim.rack.place', { 'openmap.tenant': tenantId }, async () => {
+      const [rackRoom, rowRoom] = await Promise.all([this.roomOf(tenantId, rack.id), this.roomOf(tenantId, row.id)]);
+      if (rowRoom === null || rackRoom?.id !== rowRoom.id) throw new BadRequestException('a rack moves only within its room');
+      const capacity = numberAttribute(row.attributes, ROW_CAPACITY_ATTRIBUTE);
+      if (capacity !== null && position > capacity) throw new BadRequestException(row.name + ' has ' + String(capacity) + ' slots');
+      const inRow = await this.cis.relationshipsOfMany(tenantId, [row.id], [LOCATED_IN], 'upstream');
+      const neighbours = await this.cis.findByIds(tenantId, inRow.map((r) => r.fromCiId).filter((id) => id !== rack.id));
+      const taken = neighbours.find((n) => n.type === 'rack' && n.validTo === null && numberAttribute(n.attributes, RACK_POSITION_ATTRIBUTE) === position);
+      if (taken !== undefined) throw new ConflictException(row.name + ' slot ' + String(position) + ' holds ' + taken.name);
+      const rowName = stringAttribute(row.identity, 'name') ?? row.name;
+      await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+        const attributes = { ...rack.attributes, [RACK_ROW_ATTRIBUTE]: rowName, [RACK_POSITION_ATTRIBUTE]: position };
+        const ci = await this.cis.updateAttributes(tx, tenantId, rack.id, attributes, checksumOf(rack.type, rack.identity, attributes));
+        await emit({ type: 'openmap.ci.updated', subject: ci.id, data: { ci, ciId: ci.id, changed: [RACK_ROW_ATTRIBUTE, RACK_POSITION_ATTRIBUTE], attributes: ci.attributes, checksum: ci.checksum, by: actor } });
+        const placed = await this.cis.relationshipsOfMany(tenantId, [rack.id], [LOCATED_IN], 'downstream');
+        if (!placed.some((r) => r.toCiId === row.id)) {
+          const at = nowIso();
+          for (const rel of placed) {
+            const retired = await this.cis.retireRelationship(tx, tenantId, rel.id, at);
+            await emit({ type: 'openmap.relationship.retired', subject: retired.id, data: { relationshipId: retired.id, validTo: retired.validTo, by: actor } });
+          }
+          const rel = await this.cis.createRelationship(tx, tenantId, { type: LOCATED_IN, fromCiId: rack.id, toCiId: row.id, attributes: {}, runId: randomUUID(), confidence: RECONCILIATION.userLabelConfidence });
+          await emit({ type: 'openmap.relationship.created', subject: rel.id, data: { relationship: rel, by: actor } });
+        }
+        await emit({ type: 'openmap.audit.action', subject: rack.id, data: { action: 'dcim.rack.placed', rack: rack.name, row: rowName, position, by: actor } });
+      });
+      this.metrics.rackMoves.inc();
+      const view = (await this.racks(tenantId, null)).find((v) => v.ci.id === rack.id);
+      if (!view) throw new NotFoundException('rack ' + rackId + ' not found');
+      return view;
+    });
+  }
 
   async racks(tenantId: string, roomId: string | null): Promise<RackView[]> {
     const racks = await this.cis.byType(tenantId, 'rack');

@@ -73,7 +73,7 @@ async function sweepLeftovers(gql: (q: string) => Promise<Record<string, unknown
 /** Chooses the option of a select whose text contains `text` (option labels carry the CI type too). */
 async function chooseContaining(select: Locator, text: string): Promise<void> {
   const option = select.locator('option', { hasText: text }).first();
-  await expect(option).toBeAttached();
+  await expect(option).toBeAttached({ timeout: ACTION_MS });
   const value = await option.getAttribute('value');
   if (value === null) throw new Error('option without a value: ' + text);
   await select.selectOption(value);

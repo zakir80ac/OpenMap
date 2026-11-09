@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.29.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.30.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -2845,6 +2845,8 @@ type Mutation {
   upsertDnsZoneSync(input: DnsZoneSyncInput!): DnsZoneSync!
   "REQ-IPAM-003: a record to add or delete on the zone's server; it is pushed with the zone's next sync job."
   requestDnsChange(input: DnsChangeInput!): DnsChange!
+  "REQ-DCIM-003: moves a rack to a slot (position) of a row in its own room."
+  placeRack(rackId: UUID!, rowId: UUID!, position: Int!): Rack!
   "REQ-DCIM-001: mounts a patch panel in a rack, or updates one (id)."
   upsertPatchPanel(id: UUID, input: PatchPanelInput!): PatchPanel!
   "REQ-DCIM-001: connects a cable between two ports; a port takes one cable."

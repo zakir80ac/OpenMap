@@ -294,7 +294,9 @@ const RECEIPT_FIELDS =
   'id position description quantity receivedOn receivedBy reference location { id displayName } assets { id assetTag serialNumber }';
 const PLAN_FIELDS = [
   'id number name description owner kind status plannedLiveAt',
-  'bom { position description manufacturer model sku layer quantity received outstanding unitCost ' + MONEY_FIELDS + ' }',
+  'bom { position description manufacturer model sku layer quantity received outstanding unitCost ' +
+    MONEY_FIELDS +
+    ' }',
   'estimatedCost ' + MONEY_FIELDS,
   'targetSite { id displayName } targetRacks { id displayName }',
   'assets { id assetTag stage }',
@@ -327,7 +329,9 @@ const SET_PLAN_STATUS_MUTATION =
   PLAN_FIELDS +
   ' } }';
 const RECEIVE_PLAN_LINE_MUTATION =
-  'mutation ReceivePlanLine($input: ReceiptInput!) { receivePlanLine(input: $input) { ' + RECEIPT_FIELDS + ' } }';
+  'mutation ReceivePlanLine($input: ReceiptInput!) { receivePlanLine(input: $input) { ' +
+  RECEIPT_FIELDS +
+  ' } }';
 const SET_ASSET_STAGE_MUTATION =
   'mutation SetAssetStage($assetId: UUID!, $stage: AssetStage!, $note: String) { setAssetStage(assetId: $assetId, stage: $stage, note: $note) { ' +
   ASSET_FIELDS +
@@ -346,7 +350,13 @@ export interface AssetsFilter {
 }
 
 function filterVariables(filter: AssetsFilter): Record<string, unknown> {
-  const register = filter.layers || filter.types || filter.sources || filter.dataGaps || filter.text || filter.belowReorderPoint;
+  const register =
+    filter.layers ||
+    filter.types ||
+    filter.sources ||
+    filter.dataGaps ||
+    filter.text ||
+    filter.belowReorderPoint;
   return {
     filter: register
       ? {
@@ -492,7 +502,9 @@ export function setPlanStatus(planId: string, status: PlanStatus): Promise<Infra
 
 /** REQ-CMDB-020 — takes units of one BOM line into stock (ADR-034). */
 export function receivePlanLine(input: ReceiptInput): Promise<PlanReceipt> {
-  return gql<{ receivePlanLine: PlanReceipt }>(RECEIVE_PLAN_LINE_MUTATION, { input }).then((d) => d.receivePlanLine);
+  return gql<{ receivePlanLine: PlanReceipt }>(RECEIVE_PLAN_LINE_MUTATION, { input }).then(
+    (d) => d.receivePlanLine,
+  );
 }
 
 export function setAssetStage(assetId: string, stage: AssetStage, note?: string): Promise<AssetRecord> {
@@ -607,22 +619,21 @@ export interface Rack {
   occupiedUnits: number;
   devices: RackDevice[];
   powerFeeds: PowerFeed[];
-  row: CiRef | null;
+  /** REQ-DCIM-003: the row's attributes carry its place along the room, its aisle and its rack capacity. */
+  row: (CiRef & { attributes: Record<string, unknown> }) | null;
   room: (CiRef & { attributes: Record<string, unknown> }) | null;
 }
 
-const RACKS_QUERY = [
-  'query Racks($roomId: UUID) {',
-  '  racks(roomId: $roomId) {',
-  '    ci { ' + CI_SUMMARY_FIELDS + ' attributes }',
-  '    units occupiedUnits',
-  '    devices { startUnit heightUnits face ci { ' + CI_SUMMARY_FIELDS + ' } }',
-  '    powerFeeds { ratedWatts currentWatts ci { ' + CI_SUMMARY_FIELDS + ' } }',
-  '    row { id displayName }',
-  '    room { id displayName attributes }',
-  '  }',
-  '}',
-].join('\n');
+const RACK_FIELDS = [
+  'ci { ' + CI_SUMMARY_FIELDS + ' attributes }',
+  'units occupiedUnits',
+  'devices { startUnit heightUnits face ci { ' + CI_SUMMARY_FIELDS + ' } }',
+  'powerFeeds { ratedWatts currentWatts ci { ' + CI_SUMMARY_FIELDS + ' } }',
+  'row { id displayName attributes }',
+  'room { id displayName attributes }',
+].join(' ');
+
+const RACKS_QUERY = 'query Racks($roomId: UUID) { racks(roomId: $roomId) { ' + RACK_FIELDS + ' } }';
 
 export function racksQuery(roomId?: string | null) {
   return queryOptions({
@@ -630,6 +641,15 @@ export function racksQuery(roomId?: string | null) {
     queryFn: ({ signal }) =>
       gql<{ racks: Rack[] }>(RACKS_QUERY, { roomId: roomId ?? null }, signal).then((d) => d.racks),
   });
+}
+
+/** REQ-DCIM-003: moves a rack to a slot of a row in its room (operators); returns the rack as the racks query reads it. */
+export function placeRack(rackId: string, rowId: string, position: number): Promise<Rack> {
+  const mutation =
+    'mutation PlaceRack($rackId: UUID!, $rowId: UUID!, $position: Int!) { placeRack(rackId: $rackId, rowId: $rowId, position: $position) { ' +
+    RACK_FIELDS +
+    ' } }';
+  return gql<{ placeRack: Rack }>(mutation, { rackId, rowId, position }).then((d) => d.placeRack);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -841,12 +861,14 @@ const ASK_ASSISTANT_MUTATION =
   'mutation AskAssistant($question: String!, $locale: String, $conversationId: UUID) { askAssistant(question: $question, locale: $locale, conversationId: $conversationId) { ' +
   ASSISTANT_ANSWER_FIELDS +
   ' } }';
-const CONVERSATIONS_QUERY = 'query Conversations { conversations { id title createdAt updatedAt turnCount } }';
+const CONVERSATIONS_QUERY =
+  'query Conversations { conversations { id title createdAt updatedAt turnCount } }';
 const CONVERSATION_QUERY =
   'query Conversation($id: UUID!) { conversation(id: $id) { id title createdAt updatedAt turnCount turns { id at question locale answer { ' +
   ASSISTANT_ANSWER_FIELDS +
   ' } } } }';
-const DELETE_CONVERSATION_MUTATION = 'mutation DeleteConversation($id: UUID!) { deleteConversation(id: $id) }';
+const DELETE_CONVERSATION_MUTATION =
+  'mutation DeleteConversation($id: UUID!) { deleteConversation(id: $id) }';
 
 export const conversationsQueryKey = ['conversations'] as const;
 

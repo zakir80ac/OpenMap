@@ -1370,6 +1370,8 @@ export const CONSOLE_ALPHA = {
   panelBorder: 0.3,
   /** Nodes outside an isolated blast radius on the map. */
   dimmedNode: 0.12,
+  /** REQ-DCIM-003: a rack tile on the floor plan, tinted by its heat band; strong enough to read across a room. */
+  heatTile: 0.35,
 } as const;
 
 /** Console-wide interaction constants shared by several screens (REQ-UI-003). */
@@ -1696,8 +1698,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `CircuitStatus`, `CableEndpoint`, `Cable`, `PatchPanelPort`, `PatchPanel`, `Circuit`, `CablingSummary`, `Cabling`,
    * `CableHop`, `CableTrace` and their inputs, queries `cabling`, `cableTrace`, mutations `upsertPatchPanel`,
    * `removePatchPanel`, `connectCable`, `disconnectCable`, `upsertCircuit`, `removeCircuit`.
+   * 1.30.0 (REQ-DCIM-003, ADR-057): mutation `placeRack(rackId, rowId, position)`.
    */
-  graphql: '1.29.0',
+  graphql: '1.30.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
