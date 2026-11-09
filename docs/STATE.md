@@ -2,7 +2,24 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 36: REQ-DCIM-006 environmental monitoring Done)
+## Last session · 2026-11-09 (checkpoint 37: REQ-CORE-021 relationship attributes on re-observation Done)
+
+**REQ-CORE-021 Done** (event 0.11.0, T-544 unit in `reconcile.test.ts`, T-545 `relationships.integration.test.ts`, commit eb2f89d).
+
+- **Decisions from Syed (2026-11-09).** REQ-BSM-007: "tier-1 site" is business criticality 1, a new site attribute;
+  `tier` stays the facility's Uptime tier (question 06 closed). Vendor access (lab captures, warranty and EoX
+  credentials, SaaS developer tenants, code signing) is deferred to a later phase: the 29 Blocked rows stay parked.
+- **Reconciler.** `reconcile()` compares a re-observed relationship's merged attributes (new keys over stored, keys
+  the collector no longer reports kept, as for CIs) by checksum against the stored edge: changed → `relationshipsUpdated`
+  with the observing run as source and an `openmap.relationship.updated` event carrying `changedKeys`; unchanged →
+  `relationshipsSeen` (observedAt refresh only, no event). `persist()` writes the attributes and provenance; the
+  dispatcher treats the update as an upsert for Memgraph (edges there carry id, tenant and validity, not attributes)
+  and appends a `relationship_history` row in ClickHouse through the existing relationship payload path.
+- **Contract.** Event 0.11.0 adds `openmap.relationship.updated` (CONTRACTS.md row; ADR-059 consequence closed).
+- **Tests.** Reconciler unit 40 (new: changed outlet updates, unchanged stays a no-op), integration against the compose
+  Postgres (create → move outlet → re-observe unchanged), contracts 78, guard and `contracts:check` green.
+
+## Previous session · 2026-11-09 (checkpoint 36: REQ-DCIM-006 environmental monitoring Done)
 
 **REQ-DCIM-006 Done** (ADR-060, GraphQL 1.33.0, T-538..T-543, commit 0dc055b).
 

@@ -1,21 +1,21 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T20:02:22.896Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-09T20:16:30.911Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 25 |
+| Not started | 24 |
 | In progress | 0 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 151 |
+| Done | 152 |
 | **Total** | **210** |
 
 ## By workstream
 
 | Workstream | Total | Done | In progress | Blocked | % done |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| CORE | 21 | 19 | 0 | 0 | 90% |
+| CORE | 21 | 20 | 0 | 0 | 95% |
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
@@ -66,7 +66,6 @@ Generated 2026-11-09T20:02:22.896Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-CORE-021 [P1] Reconciler updates relationship attributes on re-observation
 - REQ-DCIM-007 [P1] Capacity planning: space, power, cooling, ports
 - REQ-DCIM-008 [P1] Cable management with labels and verification
 - REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)
@@ -76,6 +75,7 @@ Generated 2026-11-09T20:02:22.896Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-INT-016 [P1] Identity: Active Directory, Entra ID, Okta
 - REQ-INT-017 [P1] Backup/DR awareness: Veeam, Commvault, Rubrik
 - REQ-INT-018 [P1] Appliance deployment (VM)
+- REQ-INT-019 [P1] Backup and restore
 
 ## Open risks
 

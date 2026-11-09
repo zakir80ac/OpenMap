@@ -44,8 +44,14 @@
       "output_tokens": 0,
       "files": 143,
       "note": "full refresh of 105 stale docs and screenshots plus checkpoint-28 docs (nine Haiku agents), AST for 32 changed code files"
+    },
+    {
+      "date": "2026-11-09T20:21:34.149151+00:00",
+      "input_tokens": 560000,
+      "output_tokens": 70000,
+      "files": 372
     }
   ],
-  "total_input_tokens": 3389381,
-  "total_output_tokens": 71200
+  "total_input_tokens": 4009381,
+  "total_output_tokens": 155200
 }
