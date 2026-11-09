@@ -2,8 +2,11 @@
 // `powered_by` relationship, the device's carrying the feed (A/B), the PSU and the PDU outlet. Capacity comes from the
 // ratings the collectors and the estate report (a UPS's kW, a circuit's amps, volts and phases, a PDU's amps and
 // volts); load from what was measured. The assessment says what fails when one side of a redundant pair is lost.
-import { POWER } from '@openmap/constants';
+import { BSM, POWER, TIME } from '@openmap/constants';
 import { z } from 'zod';
+
+const PERCENT_SCALE = BSM.percentScale;
+const MS_PER_HOUR = TIME.msPerHour;
 
 /** Attribute names on power CIs and on the `powered_by` relationship from a device to a PDU. */
 export const POWER_ATTRIBUTES = {
@@ -119,3 +122,72 @@ export const powerConnectionInputSchema = z.object({
   psu: z.number().int().positive().nullable(),
 });
 export type PowerConnectionInput = z.infer<typeof powerConnectionInputSchema>;
+
+// REQ-DCIM-005 (ADR-059) — power monitoring, thresholds and billing by outlet.
+
+/** Metric names: a PDU's total draw and one outlet's draw (the outlet is a `power_feed` CI), in watts. */
+export const POWER_METRICS = { pdu: 'dcim.power.watts', outlet: 'dcim.outlet.watts' } as const;
+export const POWER_STATES = ['normal', 'warning', 'critical', 'unknown'] as const;
+export type PowerState = (typeof POWER_STATES)[number];
+
+/** A tenant's power thresholds (percent of a PDU's rating) and its energy tariff; no tariff means no price is shown. */
+export const powerSettingsSchema = z
+  .object({
+    warnPercent: z.number().positive().max(PERCENT_SCALE),
+    criticalPercent: z.number().positive().max(PERCENT_SCALE),
+    tariffPerKwh: z.number().nonnegative().nullable(),
+    currency: z.string().regex(/^[A-Z]{3}$/u).nullable(),
+  })
+  .refine((s) => s.warnPercent < s.criticalPercent, { path: ['criticalPercent'], message: 'the critical line is above the warning line' })
+  .refine((s) => (s.tariffPerKwh === null) === (s.currency === null), { path: ['currency'], message: 'a tariff needs its currency' });
+export type PowerSettings = z.infer<typeof powerSettingsSchema>;
+
+/** The band of a measured draw against a rating; unknown without either. */
+export function powerState(loadWatts: number | null, ratedWatts: number | null, settings: Pick<PowerSettings, 'warnPercent' | 'criticalPercent'>): PowerState {
+  if (loadWatts === null || ratedWatts === null || ratedWatts <= 0) return 'unknown';
+  const percent = (loadWatts / ratedWatts) * PERCENT_SCALE;
+  if (percent >= settings.criticalPercent) return 'critical';
+  return percent >= settings.warnPercent ? 'warning' : 'normal';
+}
+
+export interface WattSample {
+  /** Epoch milliseconds. */
+  at: number;
+  watts: number;
+}
+
+export interface Energy {
+  /** Energy between the first and last sample inside the window (trapezoid rule), kWh. */
+  kwh: number;
+  /** Hours of the window the samples span; energy outside it is not guessed. */
+  coveredHours: number;
+  samples: number;
+}
+
+/** Integrates measured draw over a window: only between samples, never extrapolated past the first or last one. */
+export function energyOf(samples: readonly WattSample[], fromMs: number, toMs: number): Energy {
+  const inside = samples.filter((s) => s.at >= fromMs && s.at <= toMs).sort((a, b) => a.at - b.at);
+  let wattHours = 0;
+  for (let i = 1; i < inside.length; i += 1) {
+    const a = inside[i - 1];
+    const b = inside[i];
+    if (a === undefined || b === undefined) continue;
+    wattHours += ((a.watts + b.watts) / 2) * ((b.at - a.at) / MS_PER_HOUR);
+  }
+  const first = inside[0];
+  const last = inside.at(-1);
+  return {
+    kwh: wattHours / POWER.wattsPerKilowatt,
+    coveredHours: first === undefined || last === undefined ? 0 : (last.at - first.at) / MS_PER_HOUR,
+    samples: inside.length,
+  };
+}
+
+/** A PDU's rating in watts from what the collector reported: watts, or amps × volts (230 V when only amps). */
+export function pduRatedWatts(attributes: Record<string, unknown>): number | null {
+  const num = (k: string): number | null => (typeof attributes[k] === 'number' && Number.isFinite(attributes[k]) ? attributes[k] : null);
+  const watts = num('ratedWatts');
+  if (watts !== null) return watts;
+  const amps = num(POWER_ATTRIBUTES.ratedAmps);
+  return amps === null ? null : Math.round(amps * (num('inputVoltage') ?? POWER.defaultInputVoltage));
+}

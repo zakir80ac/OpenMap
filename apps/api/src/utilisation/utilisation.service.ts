@@ -14,7 +14,7 @@ import {
   type UtilisationMeasure,
   type UtilisationState,
 } from '@openmap/contracts';
-import { ClickHouseService } from '../db/clickhouse.service.js';
+import { ClickHouseService, clickhouseTime } from '../db/clickhouse.service.js';
 import { PrismaService } from '../db/prisma.service.js';
 
 export type UtilisationSort = UtilisationMeasure | 'name';
@@ -85,11 +85,6 @@ interface PointRow {
 }
 
 const THRESHOLDS = { hotPercent: UTILISATION.hotPercent, idlePercent: UTILISATION.idlePercent };
-
-/** ClickHouse binds DateTime64 parameters as strings in its own `YYYY-MM-DD hh:mm:ss.sss` form (UTC server). */
-function clickhouseTime(d: Date): string {
-  return d.toISOString().replace('T', ' ').replace('Z', '');
-}
 
 function mean(values: readonly number[]): number | null {
   return values.length === 0 ? null : values.reduce((a, b) => a + b, 0) / values.length;

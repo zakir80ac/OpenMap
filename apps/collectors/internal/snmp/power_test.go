@@ -39,6 +39,10 @@ func TestApcPdu(t *testing.T) {
 		t.Fatalf("pdu facts wrong: %+v", d.Power)
 	}
 	obs := Emit(d, w.Target, nil, time.Now())
+	// REQ-DCIM-005: the PDU total and the one metered outlet are samples; the unmetered outlets are not.
+	if len(obs.Samples) != 2 || obs.Samples[0].Metric != contract.MetricPduPower || obs.Samples[0].Value != 4120 || obs.Samples[1].Metric != contract.MetricOutletPower || obs.Samples[1].Value != 410 || obs.Samples[1].Labels["outlet"] != "1" || obs.Samples[1].Ci.Type != typePowerFeed {
+		t.Fatalf("power samples wrong: %+v", obs.Samples)
+	}
 	if obs.Cis[0].Type != typePdu || obs.Cis[0].Attributes["outletCount"] != 3 || obs.Cis[0].Attributes["outputWatts"] != int64(4120) {
 		t.Fatalf("pdu ci wrong: %+v", obs.Cis[0])
 	}

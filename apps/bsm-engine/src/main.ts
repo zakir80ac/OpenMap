@@ -6,7 +6,7 @@ import './instrumentation.js';
 import { createClient } from '@clickhouse/client';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { BSM, CERTIFICATES, READINESS, RECONCILER } from '@openmap/constants';
+import { BSM, CERTIFICATES, POWER, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
@@ -17,6 +17,7 @@ import { createOpenBaoReader } from './service/openbao.js';
 import { checkCertificates } from './service/certificates.js';
 import { createEngine } from './service/engine.js';
 import { createReadiness } from './service/readiness.js';
+import { createPowerAlerts } from './service/power.js';
 
 const TRACER = 'openmap-bsm-engine';
 
@@ -54,6 +55,7 @@ export function createBsmMetrics() {
     }),
     readiness: new Counter({ name: 'openmap_bsm_readiness_evaluations_total', help: 'HA / DR readiness evaluations of a tenant, by outcome', labelNames: ['outcome'], registers: [registry] }),
     readinessBreaches: new Counter({ name: 'openmap_bsm_readiness_findings_total', help: 'Readiness findings opened and cleared', labelNames: ['change'], registers: [registry] }),
+    powerAlerts: new Counter({ name: 'openmap_bsm_power_alerts_total', help: 'Power threshold incidents opened and resolved (REQ-DCIM-005)', labelNames: ['change'], registers: [registry] }),
     certificateAlerts: new Counter({
       name: 'openmap_bsm_certificate_alerts_total',
       help: 'Certificate expiry alerts raised (REQ-CMDB-032), and failed checks',
@@ -204,6 +206,33 @@ async function main(): Promise<void> {
   const readinessTick = setInterval(() => {
     void readinessCheck();
   }, READINESS.evaluateMs);
+  // REQ-DCIM-005 (ADR-059): every PDU's latest draw against the tenant's critical line, continuously.
+  const powerAlerts = createPowerAlerts({
+    prisma,
+    query: async (name, sql, params) => {
+      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
+        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      );
+      return result.json();
+    },
+    database: env.CLICKHOUSE_DB,
+    now: () => new Date().toISOString(),
+  });
+  const powerCheck = async (): Promise<void> => {
+    for (const tenantId of known) {
+      try {
+        const report = await withSpan(TRACER, 'bsm.power_alerts', { 'openmap.tenant_id': tenantId }, () => powerAlerts.evaluateTenant(tenantId));
+        metrics.powerAlerts.inc({ change: 'opened' }, report.opened);
+        metrics.powerAlerts.inc({ change: 'resolved' }, report.resolved);
+        if (report.opened + report.resolved > 0) log({ msg: 'power alerts evaluated', tenantId, ...report });
+      } catch (err) {
+        log({ msg: 'power alert evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+  };
+  const powerTick = setInterval(() => {
+    void powerCheck();
+  }, POWER.alertEvaluateMs);
   // REQ-CMDB-032 (ADR-036): certificates crossing an expiry threshold raise one alert each.
   const certificateCheck = async (): Promise<void> => {
     try {
@@ -234,6 +263,7 @@ async function main(): Promise<void> {
     clearInterval(tick);
     clearInterval(certificateTick);
     clearInterval(readinessTick);
+    clearInterval(powerTick);
     for (const t of pending.values()) clearTimeout(t);
     await worker.close();
     await clickhouse.close();

@@ -69,6 +69,8 @@ type Outlet struct {
 	Name  string
 	On    *bool
 	Watts int64
+	// Metered is true when the PDU reported the outlet's draw (a 0 W reading is metered; an unreported one is not).
+	Metered bool
 }
 
 // PowerFacts is what the power MIBs reported.
@@ -86,8 +88,10 @@ type PowerFacts struct {
 	LoadAmps         float64
 	RatingAmps       int64
 	OutputWatts      int64
-	InputLineBads    int64
-	Outlets          []Outlet
+	// OutputMetered is true when the PDU or UPS reported its total draw.
+	OutputMetered bool
+	InputLineBads int64
+	Outlets       []Outlet
 }
 
 func batteryStatusName(v int64) string {
@@ -151,7 +155,7 @@ func parsePower(w *Walk) *PowerFacts {
 		p.Manufacturer = "APC"
 		p.Model = w.scalarString(oidApcPduModel)
 		p.RatingAmps, _ = asInt(w.Scalars[oidApcPduRatingAmps])
-		p.OutputWatts, _ = asInt(w.Scalars[oidApcPduPowerWatts])
+		p.OutputWatts, p.OutputMetered = asInt(w.Scalars[oidApcPduPowerWatts])
 		for _, v := range w.column(oidApcPduLoadTenthAmps) {
 			if n, ok := asInt(v); ok {
 				p.LoadAmps += float64(n) / tenths
@@ -167,7 +171,7 @@ func parsePower(w *Walk) *PowerFacts {
 		p.Serial = s
 		p.Manufacturer = "Raritan"
 		p.Model = w.scalarString(oidRaritanModel)
-		p.OutputWatts, _ = asInt(w.Scalars[oidRaritanInletPower])
+		p.OutputWatts, p.OutputMetered = asInt(w.Scalars[oidRaritanInletPower])
 		p.Outlets = outletsFrom(w.column(oidRaritanOutletName), nil, nil, 0)
 	}
 	if p.Kind == "" {
@@ -192,7 +196,7 @@ func outletsFrom(names, states, watts map[string]any, onValue int64) []Outlet {
 			}
 		}
 		if watts != nil {
-			o.Watts, _ = asInt(watts[idx])
+			o.Watts, o.Metered = asInt(watts[idx])
 		}
 		out = append(out, o)
 	}

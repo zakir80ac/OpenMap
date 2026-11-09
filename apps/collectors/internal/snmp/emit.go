@@ -109,6 +109,10 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 	}
 	obs.Cis = append(obs.Cis, contract.ObservedCi{Type: ciType, Identity: identity, Name: firstNonEmpty(d.SysName, target.Value), Attributes: attrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 	if d.Power != nil && ciType == typePdu {
+		// REQ-DCIM-005: the PDU's total draw and each metered outlet's draw as samples, so power is a series.
+		if d.Power.OutputMetered {
+			obs.Samples = append(obs.Samples, contract.MetricSample{Ci: devRef, Metric: contract.MetricPduPower, Ts: at, Value: float64(d.Power.OutputWatts), Unit: contract.UnitWatts, Labels: map[string]string{"pdu": d.Serial}})
+		}
 		for _, o := range d.Power.Outlets {
 			feedIdentity := map[string]string{"pduRef": d.Serial, "name": firstNonEmpty(o.Name, "outlet-"+o.Index)}
 			feedAttrs := map[string]any{"outletIndex": o.Index, "watts": o.Watts, "pdu": d.Serial}
@@ -117,6 +121,9 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 			}
 			obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typePowerFeed, Identity: feedIdentity, Name: feedIdentity["name"], Attributes: feedAttrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 			obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: devRef, To: contract.CiRef{Type: typePowerFeed, Identity: feedIdentity}, Attributes: map[string]any{}, ObservedAt: at})
+			if o.Metered {
+				obs.Samples = append(obs.Samples, contract.MetricSample{Ci: contract.CiRef{Type: typePowerFeed, Identity: feedIdentity}, Metric: contract.MetricOutletPower, Ts: at, Value: float64(o.Watts), Unit: contract.UnitWatts, Labels: map[string]string{"pdu": d.Serial, "outlet": o.Index}})
+			}
 		}
 	}
 

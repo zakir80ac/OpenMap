@@ -43,6 +43,9 @@ export const CABLING_CHANGE_METRIC = 'openmap_cabling_changes_total';
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
 /** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
 export const POWER_CONNECTION_METRIC = 'openmap_power_connections_total';
+/** REQ-DCIM-005: power monitoring reads and threshold/tariff changes. */
+export const POWER_MONITOR_METRIC = 'openmap_power_monitor_reads_total';
+export const POWER_SETTINGS_METRIC = 'openmap_power_settings_changes_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
@@ -91,6 +94,8 @@ export class MetricsService {
   readonly cablingChanges: Counter<'kind' | 'op'>;
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
+  readonly powerMonitorReads: Counter;
+  readonly powerSettingsChanges: Counter;
   readonly restRequests: Counter<'route' | 'status'>;
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
@@ -179,6 +184,8 @@ export class MetricsService {
     this.cablingChanges = new Counter({ name: CABLING_CHANGE_METRIC, help: 'Cabling changes by kind (patch_panel, cable, circuit) and op (saved, connected, disconnected)', labelNames: ['kind', 'op'], registers: [this.registry] });
     this.rackMoves = new Counter({ name: RACK_MOVE_METRIC, help: 'Racks moved to a row slot on the floor plan', registers: [this.registry] });
     this.powerConnections = new Counter({ name: POWER_CONNECTION_METRIC, help: 'Device cords on PDU outlets by op (connected, disconnected)', labelNames: ['op'], registers: [this.registry] });
+    this.powerMonitorReads = new Counter({ name: POWER_MONITOR_METRIC, help: 'Room power monitoring reads (series, energy and billing)', registers: [this.registry] });
+    this.powerSettingsChanges = new Counter({ name: POWER_SETTINGS_METRIC, help: 'Power threshold and tariff changes', registers: [this.registry] });
   }
 
   observe(operation: string, status: RequestStatus, seconds: number): void {

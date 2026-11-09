@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.31.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.32.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,81 @@ type PowerFeed {
   ci: Ci!
   ratedWatts: Int!
   currentWatts: Int!
+}
+
+# REQ-DCIM-005 (ADR-059) — power monitoring (a PDU's measured draw against the tenant's lines), the energy each metered
+# outlet delivered, and billing it back to the device on the outlet and the device's owning cost centre.
+enum PowerState {
+  normal
+  warning
+  critical
+  unknown
+}
+
+"The tenant's lines (percent of a PDU's rating) and energy tariff; without a tariff no price is shown."
+type PowerSettings {
+  warnPercent: Float!
+  criticalPercent: Float!
+  tariffPerKwh: Float
+  currency: String
+}
+
+input PowerSettingsInput {
+  warnPercent: Float!
+  criticalPercent: Float!
+  tariffPerKwh: Float
+  currency: String
+}
+
+type PowerReading {
+  at: DateTime!
+  watts: Float!
+}
+
+type PduMonitor {
+  pdu: Ci!
+  rack: Ci
+  feed: String
+  ratedWatts: Int
+  latestWatts: Float
+  latestAt: DateTime
+  state: PowerState!
+  peakWatts: Float
+  series: [PowerReading!]!
+  "Energy between the window's first and last samples (kWh); coveredHours says how much of the window they span."
+  energyKwh: Float!
+  coveredHours: Float!
+  cost: Float
+}
+
+type OutletBill {
+  outlet: Ci!
+  pdu: Ci!
+  outletIndex: String
+  "The device whose cord is on this outlet, when the cord's outlet is recorded."
+  device: Ci
+  energyKwh: Float!
+  coveredHours: Float!
+  cost: Float
+}
+
+type DeviceBill {
+  device: Ci!
+  "The cost centre that owns the device in the asset register."
+  costCentre: Ci
+  outlets: Int!
+  energyKwh: Float!
+  cost: Float
+}
+
+type PowerMonitor {
+  settings: PowerSettings!
+  hours: Int!
+  pdus: [PduMonitor!]!
+  outlets: [OutletBill!]!
+  devices: [DeviceBill!]!
+  totalKwh: Float!
+  totalCost: Float
 }
 
 # REQ-DCIM-004 (ADR-058) — a room's power chain (UPS → circuit → PDU → device cords) and its redundancy.
@@ -2514,6 +2589,10 @@ type Query {
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
   racks(roomId: UUID): [Rack!]!
+  "REQ-DCIM-005: the tenant's power lines and tariff."
+  powerSettings: PowerSettings!
+  "REQ-DCIM-005: a room's PDU draw over the window (hours), outlet energy and billing by device."
+  powerMonitor(roomId: UUID!, hours: Int!): PowerMonitor!
   "REQ-DCIM-004: a room's power chain with its redundancy findings."
   powerChain(roomId: UUID!): PowerChain!
   "REQ-DCIM-004: the device cords on a PDU, by outlet."
@@ -2922,6 +3001,8 @@ type Mutation {
   upsertDnsZoneSync(input: DnsZoneSyncInput!): DnsZoneSync!
   "REQ-IPAM-003: a record to add or delete on the zone's server; it is pushed with the zone's next sync job."
   requestDnsChange(input: DnsChangeInput!): DnsChange!
+  "REQ-DCIM-005: sets the power lines and tariff (administrators)."
+  updatePowerSettings(input: PowerSettingsInput!): PowerSettings!
   "REQ-DCIM-004: records a device cord on a PDU outlet (the outlet must be free)."
   connectPower(input: PowerConnectionInput!): PowerConnection!
   "REQ-DCIM-004: removes a device cord from its PDU."

@@ -423,6 +423,20 @@ export const POWER = {
    * comes. A tenant with a different design reads the finding against its own runbook.
    */
   minUpsRuntimeMinutes: 5,
+  /**
+   * REQ-DCIM-005: PDU and outlet ids bound into one ClickHouse read of power samples. Parameters travel in the HTTP
+   * query string, capped per field at 128 KiB by default; at about 40 bytes a UUID, 2,000 ids stay well inside it.
+   */
+  monitorIdBatch: 2_000,
+  /** REQ-DCIM-005: how often the BSM engine compares every PDU's latest draw with the tenant's critical line. */
+  alertEvaluateMs: 60_000,
+  /**
+   * A reading older than this is not judged: three hourly discovery sweeps without a sample means the PDU is not being
+   * read, which is a discovery problem, not a power one.
+   */
+  alertFreshMs: 10_800_000,
+  incidentSource: 'power',
+  incidentSeverity: 'high',
 } as const;
 
 /** Assets screen (REQ-UI-009): warranty and support horizons offered in the attention table, in days. */
@@ -1711,8 +1725,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.31.0 (REQ-DCIM-004, ADR-058): `PowerSourceKind`, `PowerFindingKind`, `PowerSource`, `PowerFinding`,
    * `PowerChainSummary`, `PowerChain`, `PowerConnection`, `PowerConnectionInput`, queries `powerChain`, `pduConnections`,
    * mutations `connectPower`, `disconnectPower`.
+   * 1.32.0 (REQ-DCIM-005, ADR-059): `PowerState`, `PowerSettings`, `PowerSettingsInput`, `PowerReading`, `PduMonitor`,
+   * `OutletBill`, `DeviceBill`, `PowerMonitor`, queries `powerSettings`, `powerMonitor`, mutation `updatePowerSettings`.
    */
-  graphql: '1.31.0',
+  graphql: '1.32.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

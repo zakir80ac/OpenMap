@@ -112,3 +112,80 @@ export function disconnectPower(id: string): Promise<boolean> {
     { id },
   ).then((d) => d.disconnectPower);
 }
+
+// REQ-DCIM-005 (ADR-059) — monitoring, thresholds and billing.
+
+export interface PowerSettings {
+  warnPercent: number;
+  criticalPercent: number;
+  tariffPerKwh: number | null;
+  currency: string | null;
+}
+
+export type PowerState = 'normal' | 'warning' | 'critical' | 'unknown';
+
+export interface PduMonitor {
+  pdu: PowerCi;
+  rack: PowerCi | null;
+  feed: string | null;
+  ratedWatts: number | null;
+  latestWatts: number | null;
+  latestAt: string | null;
+  state: PowerState;
+  peakWatts: number | null;
+  series: Array<{ at: string; watts: number }>;
+  energyKwh: number;
+  coveredHours: number;
+  cost: number | null;
+}
+
+export interface DeviceBill {
+  device: PowerCi;
+  costCentre: PowerCi | null;
+  outlets: number;
+  energyKwh: number;
+  cost: number | null;
+}
+
+export interface PowerMonitor {
+  settings: PowerSettings;
+  hours: number;
+  pdus: PduMonitor[];
+  devices: DeviceBill[];
+  totalKwh: number;
+  totalCost: number | null;
+}
+
+const SETTINGS = 'warnPercent criticalPercent tariffPerKwh currency';
+const MONITOR_QUERY =
+  'query PowerMonitor($roomId: UUID!, $hours: Int!) { powerMonitor(roomId: $roomId, hours: $hours) { settings { ' +
+  SETTINGS +
+  ' } hours totalKwh totalCost pdus { pdu { ' +
+  CI +
+  ' } rack { ' +
+  CI +
+  ' } feed ratedWatts latestWatts latestAt state peakWatts series { at watts } energyKwh coveredHours cost } devices { device { ' +
+  CI +
+  ' } costCentre { ' +
+  CI +
+  ' } outlets energyKwh cost } } }';
+
+export function powerMonitorQuery(roomId: string | null, hours: number) {
+  return queryOptions({
+    queryKey: [...powerKey, 'monitor', roomId, hours] as const,
+    queryFn: ({ signal }) =>
+      gql<{ powerMonitor: PowerMonitor }>(MONITOR_QUERY, { roomId, hours }, signal).then(
+        (d) => d.powerMonitor,
+      ),
+    enabled: roomId !== null,
+  });
+}
+
+export function updatePowerSettings(input: PowerSettings): Promise<PowerSettings> {
+  return gql<{ updatePowerSettings: PowerSettings }>(
+    'mutation UpdatePowerSettings($input: PowerSettingsInput!) { updatePowerSettings(input: $input) { ' +
+      SETTINGS +
+      ' } }',
+    { input },
+  ).then((d) => d.updatePowerSettings);
+}

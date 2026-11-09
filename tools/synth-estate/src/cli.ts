@@ -9,6 +9,7 @@ import { buildEstate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX, SERVICES_FILE, SUMMARY_FILE } from './emit.js';
 import { generateHealthHistory, HEALTH_HISTORY_FILE } from './health.js';
 import { UTILISATION_HISTORY_FILE, utilisationHistory } from './utilisation.js';
+import { POWER_HISTORY_FILE, powerHistory } from './power.js';
 import type { CollectorResult } from '@openmap/contracts';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import type { BusinessServiceRecord } from './gen/applications.js';
@@ -222,6 +223,34 @@ function utilisation(flags: Flags): void {
   );
 }
 
+/** REQ-DCIM-005: outlets as power_feed CIs, cords on their outlets, and PDU and outlet draw over recent days. */
+function power(flags: Flags): void {
+  const dir = resolve(process.cwd(), stringFlag(flags, 'dir', DEFAULT_OUT));
+  const out = resolve(process.cwd(), stringFlag(flags, 'out', join(dir, 'power')));
+  const seed = numberFlag(flags, 'seed', DEFAULT_SEED);
+  const days = numberFlag(flags, 'days', DEFAULT_HISTORY_DAYS);
+  const every = numberFlag(flags, 'every', DEFAULT_HISTORY_EVERY_HOURS);
+  const now = stringFlag(flags, 'now', new Date().toISOString());
+  const results: CollectorResult[] = [];
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(NDJSON_SUFFIX)).sort())
+    for (const line of readFileSync(join(dir, file), 'utf8').split('\n')) if (line.trim() !== '') results.push(JSON.parse(line) as CollectorResult);
+  // --structure-only: the outlets and the device-to-outlet cords without samples (for an estate that has its samples).
+  const history = powerHistory(results, seed, now, days, every, flags['structure-only'] !== true);
+  mkdirSync(out, { recursive: true });
+  for (const f of COPIED_FILES) if (existsSync(join(dir, f))) copyFileSync(join(dir, f), join(out, f));
+  writeFileSync(join(out, POWER_HISTORY_FILE), history.map((r) => JSON.stringify(r)).join('\n') + '\n');
+  console.log(
+    table([
+      ['results', history.length],
+      ['outlets', history.reduce((n, r) => n + r.cis.length, 0)],
+      ['samples', history.reduce((n, r) => n + r.samples.length, 0)],
+      ['days', days],
+      ['every (hours)', every],
+      ['dir', out],
+    ]),
+  );
+}
+
 function usage(): string {
   return [
     'usage:',
@@ -229,6 +258,7 @@ function usage(): string {
     '  synth stats [DIR|--dir DIR]',
     '  synth health-history [--dir DIR] [--seed N] [--months M] [--now ISO]',
     '  synth utilisation-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO]',
+    '  synth power-history [--dir DIR] [--out DIR] [--seed N] [--days D] [--every H] [--now ISO] [--structure-only]',
   ].join('\n');
 }
 
@@ -244,6 +274,9 @@ async function main(): Promise<void> {
       return;
     case 'utilisation-history':
       utilisation(flags);
+      break;
+    case 'power-history':
+      power(flags);
       break;
     case 'health-history':
       healthHistory(flags);

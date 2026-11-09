@@ -4,7 +4,8 @@
 // - findings: single-corded devices, devices with every cord on one feed, redundant pairs whose survivor would
 //   overload, UPS units with short runtime, PDUs with more cords than outlets;
 // - the chain: UPS units, the circuits they feed and the PDUs those feed, each with rating, load and feed;
-// - a PDU's outlets with the device on each; operators plug a device into an outlet and unplug one.
+// - a PDU's outlets with the device on each; operators plug a device into an outlet and unplug one;
+// - monitoring, thresholds and billing (REQ-DCIM-005, PowerMonitorPanel).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CABLING, CONSOLE, POWER, ROLES } from '@openmap/constants';
 import type { MessageKey } from '@openmap/i18n';
@@ -34,6 +35,7 @@ import {
 } from '@/lib/power-queries';
 import { searchQuery } from '@/lib/queries';
 import { useDebounced } from '@/lib/use-debounced';
+import { PowerMonitorPanel } from './PowerMonitorPanel';
 import { useFormatters, useT, type Translate } from '@/providers';
 
 const labelClass =
@@ -258,6 +260,8 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
               ),
             )}
           </Card>
+
+          <PowerMonitorPanel roomId={room.id} />
 
           {pdu !== null ? (
             <Card padding="24" className="flex flex-col gap-om-12">

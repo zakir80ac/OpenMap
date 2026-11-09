@@ -10,6 +10,11 @@ import { MetricsService, type RequestStatus } from '../metrics/metrics.service.j
 
 export type QueryParams = Record<string, string | number | boolean | readonly string[] | readonly number[]>;
 
+/** ClickHouse binds DateTime64 parameters as strings in its own `YYYY-MM-DD hh:mm:ss.sss` form (UTC server). */
+export function clickhouseTime(d: Date): string {
+  return d.toISOString().replace('T', ' ').replace('Z', '');
+}
+
 @Injectable()
 export class ClickHouseService implements OnModuleDestroy {
   private readonly client: ClickHouseClient;
