@@ -14,6 +14,9 @@ export default defineConfig({
   use: {
     baseURL: env.PUBLIC_CONSOLE_URL,
     trace: 'retain-on-failure',
+    ...(env.E2E_RESOLVE_LOCALHOST_TO === ''
+      ? {}
+      : { launchOptions: { args: ['--host-resolver-rules=MAP localhost ' + env.E2E_RESOLVE_LOCALHOST_TO] } }),
   },
   projects: [
     { name: 'setup', testMatch: /setup\.ts$/, use: { ...devices['Desktop Chrome'], locale: 'en-GB' } },

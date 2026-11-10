@@ -54,6 +54,12 @@ export const envSchema = z.object({
   KEYCLOAK_ADMIN: z.string().default(''),
   KEYCLOAK_ADMIN_PASSWORD: z.string().default(''),
   /**
+   * Dev tooling only (apps/console e2e): when set, the e2e browser resolves `localhost` to this address, keeping the
+   * `localhost` URLs (cookies, redirect URIs). For Docker Desktop hosts whose `::1` port forward accepts connections and
+   * never answers (set 127.0.0.1). Empty: the system resolver.
+   */
+  E2E_RESOLVE_LOCALHOST_TO: z.union([z.literal(''), z.ipv4(), z.ipv6()]).default(''),
+  /**
    * REQ-INT-016 (ADR-074): how the API signs in to Keycloak's admin REST API. With KEYCLOAK_ADMIN_CLIENT_SECRET set it
    * uses the client-credentials grant of KEYCLOAK_ADMIN_CLIENT_ID (a service-account client holding the
    * realm-management roles manage-realm, manage-users and view-realm: least privilege for production); otherwise the
