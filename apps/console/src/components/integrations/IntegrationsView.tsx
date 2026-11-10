@@ -4,6 +4,7 @@
 // mappings and recent deliveries, a probe (testIntegration), a test message for notification integrations
 // (sendTestNotification) and an editor (upsertIntegration) with notification settings (minimum severity, language,
 // email sender and recipients). Administrators change things; operators read details and send tests; analysts see the list.
+// REQ-INT-011: the configuration-management inventory endpoints (InventoryCard) close the screen.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { NOTIFICATION, ROLES } from '@openmap/constants';
 import {
@@ -32,6 +33,7 @@ import {
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { useCan } from '@/lib/auth';
+import { InventoryCard } from './InventoryCard';
 import {
   integrationDeliveriesQuery,
   integrationQuery,
@@ -255,6 +257,8 @@ export function IntegrationsView(): ReactNode {
           )}
         </div>
       </div>
+
+      <InventoryCard />
     </div>
   );
 }

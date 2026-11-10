@@ -17,6 +17,7 @@ export * from './cabling.js';
 export * from './power.js';
 export * from './environment.js';
 export * from './rest.js';
+export * from './inventory.js';
 export * from './lifecycle.js';
 export * from './impact.js';
 export * from './integration.js';

@@ -1,0 +1,11 @@
+# REQ-INT-011 (ADR-072) — example source for the OpenMap inventory plugin (plugins/inventory/openmap.py):
+#   ANSIBLE_INVENTORY_PLUGINS=tools/inventory/ansible/plugins/inventory ANSIBLE_INVENTORY_ENABLED=openmap \
+#     OPENMAP_URL=... OPENMAP_TOKEN=... ansible-inventory -i tools/inventory/ansible/openmap.yml --graph
+# url and token come from OPENMAP_URL and OPENMAP_TOKEN (or the client-credentials variables) when left out here.
+plugin: openmap
+filters:
+  lifecycle: [managed, discovered]
+group_by: [site, type, tag, service]
+keyed_groups:
+  - key: openmap_attributes.osName | default('unknown')
+    prefix: os

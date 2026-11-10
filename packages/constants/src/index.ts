@@ -1521,6 +1521,74 @@ export const IMPORTS = {
   createdLifecycle: 'managed',
 } as const;
 
+/**
+ * REQ-INT-011 (ADR-072) — dynamic inventory for configuration-management tools (Ansible, SaltStack, Puppet, Chef).
+ * Every list is a default a request can override with its own query parameters.
+ */
+export const INVENTORY = {
+  /** CI types a configuration-management tool connects to when no `types` filter is given. */
+  defaultTypes: ['host', 'vm', 'hypervisor', 'network_device', 'load_balancer', 'storage_array', 'fc_switch', 'cloud_resource'],
+  /** Lifecycles exported by default: planned CIs do not exist yet and retired ones are gone. */
+  defaultLifecycle: ['discovered', 'managed'],
+  /**
+   * Where the address a tool connects to comes from, first match wins, each key read from identity then attributes.
+   * The management address beats the FQDN (a device's out-of-band interface is the one automation uses); the
+   * primary and guest IPs are the fallback for CIs that report neither.
+   */
+  addressKeys: ['managementIp', 'fqdn', 'primaryIp', 'ipAddress'],
+  /** Keys whose value names the node in the tool (Ansible host, Salt minion id, Puppet certname, Chef node), first match wins, then the CI name. */
+  nodeNameKeys: ['fqdn'],
+  /** Attributes copied into hostvars, parameters, grains and node attributes when the request names none. */
+  defaultAttributes: ['osName', 'osVersion', 'guestOs', 'guestOsFamily', 'platform', 'role', 'manufacturer', 'model', 'serialNumber', 'environment', 'owner'],
+  /** Attribute carrying the site code a collector observed, used when no `located_in` chain reaches a site CI. */
+  siteAttribute: 'site',
+  /** Identity or attribute key holding a site CI's code. */
+  siteCodeKey: 'code',
+  /**
+   * Edges walked from a CI towards the site that houses it: a VM runs on a hypervisor, hosted on a host, in a rack,
+   * row and room of the site — six hops, plus one for a cluster in between.
+   */
+  siteEdges: ['located_in', 'runs_on', 'hosted_on'],
+  siteHops: 7,
+  /**
+   * A CI belongs to a business service when the service's members (`part_of_service`) reach it through these compute
+   * edges (application → component → VM → hypervisor → host). Power, cabling and network edges are left out: a
+   * service depends on its PDUs, but an Ansible group of a service is the machines that run it.
+   */
+  serviceEdges: ['contains', 'depends_on', 'runs_on', 'hosted_on', 'backed_by'],
+  /** `contains` is a compute edge only from these logical containers, as in the impact walk (ADR-019). */
+  serviceContainerTypes: ['application', 'k8s_namespace', 'k8s_cluster'],
+  serviceHops: 8,
+  /**
+   * Service membership of a tenant is reused for this long: the walk over every service takes about two seconds on the
+   * 100k-CI estate, and a playbook run asks for the inventory once per run, sometimes several runs a minute.
+   */
+  membershipCacheMs: 60_000,
+  membershipCacheEntries: 64,
+  /** Puppet: the attribute naming a node's classes (an array or a comma-separated string) and its environment. */
+  puppetClassesAttribute: 'puppetClasses',
+  puppetEnvironmentAttribute: 'puppetEnvironment',
+  /** Puppet's own default environment, used when neither the request nor the CI names one. */
+  puppetDefaultEnvironment: 'production',
+  /** Chef's default environment, used when neither the request nor the CI names one. */
+  chefDefaultEnvironment: '_default',
+  chefEnvironmentAttribute: 'chefEnvironment',
+  /** Prefix of every variable, parameter, grain, role and group OpenMap writes, so they never clash with the tool's own. */
+  prefix: 'openmap',
+  /** Indentation of the YAML documents (Salt roster, Puppet ENC). */
+  yamlIndent: 2,
+  /** A YAML \uXXXX escape: four hexadecimal digits. */
+  yamlEscape: { radix: 16, digits: 4 },
+  /** The client scripts shipped in tools/inventory, as the console shows them. */
+  clients: {
+    ansibleScript: 'tools/inventory/ansible/openmap_inventory.py',
+    ansiblePlugin: 'tools/inventory/ansible/plugins/inventory/openmap.py',
+    saltRoster: 'tools/inventory/salt/openmap_roster.py',
+    puppetEnc: 'tools/inventory/puppet/openmap_enc.py',
+    chefExport: 'tools/inventory/chef/openmap_chef_export.py',
+  },
+} as const;
+
 /** Byte volumes in the console (observed traffic, evidence sizes): binary units to one decimal. */
 export const BYTES = {
   perUnit: 1024,
@@ -2054,6 +2122,8 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.12.0 (REQ-INT-009, ADR-065): `openmap.integration.notification.test`.
    */
   event: '0.12.0',
-  /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document. */
-  rest: '1.1.0',
+  /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document.
+   * 1.2.0 (REQ-INT-011, ADR-072): `/inventory/ansible`, `/inventory/salt`, `/inventory/puppet`,
+   * `/inventory/puppet/nodes/{certname}`, `/inventory/chef`; a route may produce YAML (`produces`). */
+  rest: '1.2.0',
 };

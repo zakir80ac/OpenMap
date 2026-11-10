@@ -4,6 +4,7 @@
 // - allCis follows the cursor pages;
 // - an API error becomes an OpenMapError with its status and message;
 // - graphql() posts the operation and returns its data.
+// T-623 REQ-INT-011 (ADR-072): the inventory methods call their routes, asking the YAML-first routes for JSON.
 import { describe, expect, it } from 'vitest';
 import { OpenMapClient, OpenMapError } from './index.js';
 
@@ -57,5 +58,21 @@ describe('OpenMapClient', () => {
     await expect(sdk.relationships.retire(ID)).rejects.toMatchObject({ name: 'OpenMapError', status: 403, route: 'retireRelationship' });
     await expect(sdk.graphql<{ ci: { id: string } }>('query($id: UUID!) { ci(id: $id) { id } }', { id: ID })).resolves.toEqual({ ci: { id: ID } });
     expect(new OpenMapError(500, 'x', 'getCi')).toBeInstanceOf(Error);
+  });
+
+  it('calls the inventory routes, asking the YAML-first ones for JSON', async () => {
+    const { sdk, calls } = client([{ body: {} }, { body: {} }, { body: {} }, { body: {} }, { body: {} }]);
+    await sdk.inventory.ansible({ sites: 'HQ', groupBy: 'site,service' });
+    await sdk.inventory.salt({ user: 'ops', port: 2222 });
+    await sdk.inventory.puppet({ environment: 'staging' });
+    await sdk.inventory.puppetNode('web-01.bank.local');
+    await sdk.inventory.chef({ tags: 'pci' });
+    expect(calls.map((c) => [c.method, c.url])).toEqual([
+      ['GET', 'https://openmap.test/api/v1/inventory/ansible?sites=HQ&groupBy=site%2Cservice'],
+      ['GET', 'https://openmap.test/api/v1/inventory/salt?user=ops&port=2222&format=json'],
+      ['GET', 'https://openmap.test/api/v1/inventory/puppet?environment=staging&format=json'],
+      ['GET', 'https://openmap.test/api/v1/inventory/puppet/nodes/web-01.bank.local?format=json'],
+      ['GET', 'https://openmap.test/api/v1/inventory/chef?tags=pci'],
+    ]);
   });
 });
