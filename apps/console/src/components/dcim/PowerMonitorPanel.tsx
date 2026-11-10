@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BSM, POWER, ROLES, UTILISATION } from '@openmap/constants';
 import type { MessageKey } from '@openmap/i18n';
 import { Card, Kpi, SectionTitle, Sparkline, Tag, accents, cx } from '@openmap/ui';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type SyntheticEvent, type ReactNode } from 'react';
 import {
   Button,
   Select,
@@ -61,7 +61,7 @@ function SettingsForm({ settings }: { settings: PowerSettings }): ReactNode {
       void queryClient.invalidateQueries({ queryKey: powerKey });
     },
   });
-  const submit = (event: FormEvent): void => {
+  const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     save.mutate();
   };
@@ -79,7 +79,7 @@ function SettingsForm({ settings }: { settings: PowerSettings }): ReactNode {
           min={1}
           max={BSM.percentScale}
           value={form.warnPercent}
-          onChange={(e) => setForm({ ...form, warnPercent: e.target.value })}
+          onChange={(e) => { setForm({ ...form, warnPercent: e.target.value }); }}
           className="w-24"
         />
       </label>
@@ -91,7 +91,7 @@ function SettingsForm({ settings }: { settings: PowerSettings }): ReactNode {
           min={1}
           max={BSM.percentScale}
           value={form.criticalPercent}
-          onChange={(e) => setForm({ ...form, criticalPercent: e.target.value })}
+          onChange={(e) => { setForm({ ...form, criticalPercent: e.target.value }); }}
           className="w-24"
         />
       </label>
@@ -102,7 +102,7 @@ function SettingsForm({ settings }: { settings: PowerSettings }): ReactNode {
           min={0}
           step="any"
           value={form.tariffPerKwh}
-          onChange={(e) => setForm({ ...form, tariffPerKwh: e.target.value })}
+          onChange={(e) => { setForm({ ...form, tariffPerKwh: e.target.value }); }}
           className="w-28"
         />
       </label>
@@ -110,7 +110,7 @@ function SettingsForm({ settings }: { settings: PowerSettings }): ReactNode {
         {t('dcim.monitor.currency')}
         <TextInput
           value={form.currency}
-          onChange={(e) => setForm({ ...form, currency: e.target.value })}
+          onChange={(e) => { setForm({ ...form, currency: e.target.value }); }}
           className="w-20"
         />
       </label>
@@ -147,7 +147,7 @@ export function PowerMonitorPanel({ roomId }: { roomId: string }): ReactNode {
         action={
           <label className={labelClass}>
             {t('dcim.monitor.window')}
-            <Select value={String(hours)} onChange={(e) => setHours(Number(e.target.value))}>
+            <Select value={String(hours)} onChange={(e) => { setHours(Number(e.target.value)); }}>
               {UTILISATION.windowsHours.map((h) => (
                 <option key={h} value={h}>
                   {t(('dcim.monitor.windows.' + String(h)) as MessageKey)}

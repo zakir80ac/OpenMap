@@ -5,7 +5,8 @@
 // unknown CIs no fingerprint recognised are counted alongside.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { BSM, DEVICE_FINGERPRINTS, ROLES } from '@openmap/constants';
+import type { DEVICE_FINGERPRINTS} from '@openmap/constants';
+import { BSM, ROLES } from '@openmap/constants';
 import type { Locale, MessageKey } from '@openmap/i18n';
 import { Card, LayerBadge, SectionTitle, Tag } from '@openmap/ui';
 import type { ReactNode } from 'react';

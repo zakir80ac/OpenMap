@@ -1,0 +1,18 @@
+# REQ-SEC-011 (ADR-067, ADR-068) — host-side access to the compose stack for CI jobs: the stores take TLS only and
+# OpenBao runs in production mode, so after the stack is up this exports the internal services CA to the runner,
+# points deploy/compose/.env at it, publishes the .env values to the job's environment, and gives the host-side
+# integration tests the initial root token (masked in the log; the stack is thrown away with the job).
+name: stack-env
+description: Export the services CA and the OpenBao operator token for host-side tools and tests
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -eu
+        docker run --rm -v openmap_service-ca:/ca:ro alpine cat /ca/services-ca.crt > "$RUNNER_TEMP/services-ca.crt"
+        sed -i "s#<path>#$RUNNER_TEMP#g" deploy/compose/.env
+        grep -E '^[A-Z_]+=' deploy/compose/.env | sed -E 's/^([A-Z_]+)="(.*)"$/\1=\2/' >> "$GITHUB_ENV"
+        token=$(docker run --rm -v openmap_openbao-init:/i:ro alpine sh -c 'sed -n "s/.*\"root_token\": *\"\([^\"]*\)\".*/\1/p" /i/init.json')
+        echo "::add-mask::$token"
+        echo "OPENBAO_TOKEN=$token" >> "$GITHUB_ENV"

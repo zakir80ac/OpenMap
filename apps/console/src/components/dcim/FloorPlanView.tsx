@@ -8,7 +8,7 @@ import { CONSOLE_ALPHA, ROLES } from '@openmap/constants';
 import type { Locale, MessageKey } from '@openmap/i18n';
 import { Card, Pill, SectionTitle, Segmented, Tag, cx, stateColor, withAlpha } from '@openmap/ui';
 import Link from 'next/link';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type SyntheticEvent, type ReactNode } from 'react';
 import { Button, Select, TextInput } from '@/components/common/controls';
 import { useCan } from '@/lib/auth';
 import { placeRack, type Rack } from '@/lib/estate-queries';
@@ -26,6 +26,11 @@ import { useFormatters, useT } from '@/providers';
 const labelClass =
   'flex flex-col gap-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted';
 const BANDS = ['healthy', 'at_risk', 'down', 'unknown'] as const;
+
+/** A rack's slot position as text; an attribute that is neither a number nor text shows nothing. */
+function positionText(value: unknown): string {
+  return typeof value === 'number' || typeof value === 'string' ? String(value) : '';
+}
 
 export function FloorPlanView({ locale, racks }: { locale: Locale; racks: readonly Rack[] }): ReactNode {
   const t = useT();
@@ -50,7 +55,7 @@ export function FloorPlanView({ locale, racks }: { locale: Locale; racks: readon
     v === null ? t('dcim.floor.noReading') : t('dcim.floor.percent', { value: format.number(v) });
 
   if (room === null) return null;
-  const submit = (event: FormEvent): void => {
+  const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     move.mutate();
   };
@@ -176,7 +181,7 @@ export function FloorPlanView({ locale, racks }: { locale: Locale; racks: readon
             size="sm"
             description={t('dcim.floor.rackPlace', {
               row: rack.row?.displayName ?? t('dcim.unplaced'),
-              slot: String(rack.ci.attributes['position'] ?? ''),
+              slot: positionText(rack.ci.attributes['position']),
             })}
             action={
               <Link href={localizedHref(locale, '/twin')} className="text-om-xs text-om-cyan hover:underline">
@@ -205,7 +210,7 @@ export function FloorPlanView({ locale, racks }: { locale: Locale; racks: readon
                 <Select
                   required
                   value={target.rowId}
-                  onChange={(e) => setTarget({ ...target, rowId: e.target.value })}
+                  onChange={(e) => { setTarget({ ...target, rowId: e.target.value }); }}
                 >
                   <option value="">{t('dcim.floor.chooseRow')}</option>
                   {room.rows
@@ -224,7 +229,7 @@ export function FloorPlanView({ locale, racks }: { locale: Locale; racks: readon
                   type="number"
                   min={1}
                   value={target.position}
-                  onChange={(e) => setTarget({ ...target, position: e.target.value })}
+                  onChange={(e) => { setTarget({ ...target, position: e.target.value }); }}
                   className="w-24"
                 />
               </label>

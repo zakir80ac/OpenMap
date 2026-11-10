@@ -66,7 +66,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn((_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { query: string; variables?: Record<string, unknown> };
+      const body = JSON.parse(typeof init.body === 'string' ? init.body : '{}') as { query: string; variables?: Record<string, unknown> };
       sent.push({ query: body.query, variables: body.variables });
       return Promise.resolve(
         new Response(JSON.stringify({ data: { placeRack: racks[0] } }), {
@@ -132,7 +132,7 @@ describe.each(LOCALES)('FloorPlanView in %s', (locale) => {
       within(plan).getByRole('button', { name: t('dcim.floor.freeSlot', { row: 'A', slot: '3' }) }),
     );
     expect(
-      (within(form).getByRole('combobox', { name: t('dcim.floor.toRow') }) as HTMLSelectElement).value,
+      within(form).getByRole<HTMLSelectElement>('combobox', { name: t('dcim.floor.toRow') }).value,
     ).toBe('row-a');
     fireEvent.click(within(form).getByRole('button', { name: t('dcim.floor.move') }));
     await waitFor(() => {

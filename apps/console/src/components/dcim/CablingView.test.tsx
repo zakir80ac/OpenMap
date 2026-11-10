@@ -114,7 +114,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn((_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { query: string; variables?: Record<string, unknown> };
+      const body = JSON.parse(typeof init.body === 'string' ? init.body : '{}') as { query: string; variables?: Record<string, unknown> };
       sent.push({ query: body.query, variables: body.variables });
       const data = body.query.includes('cablingVerification')
         ? { cablingVerification: verification }
@@ -213,16 +213,14 @@ describe.each(LOCALES)('CablingView in %s', (locale) => {
     );
     const form = screen.getByRole('form', { name: t('dcim.cabling.cableForm') });
     expect(
-      (within(form).getByRole('textbox', { name: t('dcim.cabling.label') }) as HTMLInputElement).value,
+      within(form).getByRole<HTMLInputElement>('textbox', { name: t('dcim.cabling.label') }).value,
     ).toBe(observed.suggestedLabel);
     const endA = within(form).getByRole('group', { name: t('dcim.cabling.endA') });
     expect(
-      (within(endA).getByRole('combobox', { name: t('dcim.cabling.endpoint.ci') }) as HTMLSelectElement)
-        .value,
+      within(endA).getByRole<HTMLSelectElement>('combobox', { name: t('dcim.cabling.endpoint.ci') }).value,
     ).toBe('sw-1');
     expect(
-      (within(endA).getByRole('textbox', { name: t('dcim.cabling.endpoint.port') }) as HTMLInputElement)
-        .value,
+      within(endA).getByRole<HTMLInputElement>('textbox', { name: t('dcim.cabling.endpoint.port') }).value,
     ).toBe('Gi1/0/9');
     fireEvent.click(within(form).getByRole('button', { name: t('dcim.cabling.cableForm') }));
     await waitFor(() => {

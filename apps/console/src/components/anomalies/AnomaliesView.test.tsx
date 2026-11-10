@@ -36,7 +36,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn((_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { query: string; variables?: Record<string, unknown> };
+      const body = JSON.parse(typeof init.body === 'string' ? init.body : '{}') as { query: string; variables?: Record<string, unknown> };
       sent.push({ query: body.query, variables: body.variables });
       const data = body.query.includes('explainAnomaly')
         ? { explainAnomaly: { id: 'f1', explanation: 'Two devices answer on 10.50.0.10.' } }

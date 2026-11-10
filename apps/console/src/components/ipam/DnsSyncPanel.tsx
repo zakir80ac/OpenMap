@@ -11,7 +11,7 @@ import { DNS_SYNC, ROLES } from '@openmap/constants';
 import { DNS_CHANGE_OPS, DNS_RECORD_TYPES, type DnsChangeOp, type DnsChangeState, type DnsRecordType } from '@openmap/contracts';
 import type { MessageKey } from '@openmap/i18n';
 import { Card, SectionTitle, Tag } from '@openmap/ui';
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type SyntheticEvent, type ReactNode } from 'react';
 import { Button, Select, TextInput, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
 import { QueryState } from '@/components/common/QueryState';
 import { useCan } from '@/lib/auth';
@@ -65,11 +65,11 @@ export function DnsSyncPanel(): ReactNode {
   const credentials = setup.data?.credentials ?? [];
   const siteName = (id: string): string => sites.find((s) => s.id === id)?.code ?? id;
 
-  const submitZone = (event: FormEvent): void => {
+  const submitZone = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     saveZone.mutate();
   };
-  const submitChange = (event: FormEvent): void => {
+  const submitChange = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     request.mutate();
   };
@@ -132,23 +132,23 @@ export function DnsSyncPanel(): ReactNode {
               <form aria-label={t('ipam.dnsSync.addZone')} onSubmit={submitZone} className="flex flex-wrap items-end gap-om-10">
                 <label className={labelClass}>
                   {t('ipam.dnsSync.zone')}
-                  <TextInput required value={zoneForm.zone} onChange={(e) => setZoneForm({ ...zoneForm, zone: e.target.value })} />
+                  <TextInput required value={zoneForm.zone} onChange={(e) => { setZoneForm({ ...zoneForm, zone: e.target.value }); }} />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.server')}
-                  <TextInput required value={zoneForm.server} onChange={(e) => setZoneForm({ ...zoneForm, server: e.target.value })} />
+                  <TextInput required value={zoneForm.server} onChange={(e) => { setZoneForm({ ...zoneForm, server: e.target.value }); }} />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.port')}
-                  <TextInput type="number" min={1} value={zoneForm.port} onChange={(e) => setZoneForm({ ...zoneForm, port: e.target.value })} className="w-24" />
+                  <TextInput type="number" min={1} value={zoneForm.port} onChange={(e) => { setZoneForm({ ...zoneForm, port: e.target.value }); }} className="w-24" />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.tsigKey')}
-                  <TextInput value={zoneForm.tsigKeyName} onChange={(e) => setZoneForm({ ...zoneForm, tsigKeyName: e.target.value })} />
+                  <TextInput value={zoneForm.tsigKeyName} onChange={(e) => { setZoneForm({ ...zoneForm, tsigKeyName: e.target.value }); }} />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.credential')}
-                  <Select value={zoneForm.credentialRef} onChange={(e) => setZoneForm({ ...zoneForm, credentialRef: e.target.value })}>
+                  <Select value={zoneForm.credentialRef} onChange={(e) => { setZoneForm({ ...zoneForm, credentialRef: e.target.value }); }}>
                     <option value="">{t('ipam.dnsSync.noCredential')}</option>
                     {credentials.map((c) => (
                       <option key={c.ref} value={c.ref}>
@@ -159,7 +159,7 @@ export function DnsSyncPanel(): ReactNode {
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.site')}
-                  <Select required value={zoneForm.siteId} onChange={(e) => setZoneForm({ ...zoneForm, siteId: e.target.value })}>
+                  <Select required value={zoneForm.siteId} onChange={(e) => { setZoneForm({ ...zoneForm, siteId: e.target.value }); }}>
                     <option value="">{t('ipam.dnsSync.chooseSite')}</option>
                     {sites.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -178,7 +178,7 @@ export function DnsSyncPanel(): ReactNode {
               <form aria-label={t('ipam.dnsSync.request')} onSubmit={submitChange} className="flex flex-wrap items-end gap-om-10">
                 <label className={labelClass}>
                   {t('ipam.dnsSync.zone')}
-                  <Select required value={change.zone} onChange={(e) => setChange({ ...change, zone: e.target.value })}>
+                  <Select required value={change.zone} onChange={(e) => { setChange({ ...change, zone: e.target.value }); }}>
                     <option value="">{t('ipam.dnsSync.chooseZone')}</option>
                     {sync.data.dnsZoneSyncs.map((z) => (
                       <option key={z.id} value={z.zone}>
@@ -189,7 +189,7 @@ export function DnsSyncPanel(): ReactNode {
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.opLabel')}
-                  <Select value={change.op} onChange={(e) => setChange({ ...change, op: e.target.value as DnsChangeOp })}>
+                  <Select value={change.op} onChange={(e) => { setChange({ ...change, op: e.target.value as DnsChangeOp }); }}>
                     {DNS_CHANGE_OPS.map((op) => (
                       <option key={op} value={op}>
                         {t(OP_KEY[op])}
@@ -199,11 +199,11 @@ export function DnsSyncPanel(): ReactNode {
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.name')}
-                  <TextInput required value={change.name} onChange={(e) => setChange({ ...change, name: e.target.value })} />
+                  <TextInput required value={change.name} onChange={(e) => { setChange({ ...change, name: e.target.value }); }} />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.type')}
-                  <Select value={change.recordType} onChange={(e) => setChange({ ...change, recordType: e.target.value as DnsRecordType })}>
+                  <Select value={change.recordType} onChange={(e) => { setChange({ ...change, recordType: e.target.value as DnsRecordType }); }}>
                     {DNS_RECORD_TYPES.map((type) => (
                       <option key={type} value={type}>
                         {type}
@@ -213,11 +213,11 @@ export function DnsSyncPanel(): ReactNode {
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.value')}
-                  <TextInput required value={change.value} onChange={(e) => setChange({ ...change, value: e.target.value })} />
+                  <TextInput required value={change.value} onChange={(e) => { setChange({ ...change, value: e.target.value }); }} />
                 </label>
                 <label className={labelClass}>
                   {t('ipam.dnsSync.ttl')}
-                  <TextInput type="number" min={1} value={change.ttl} onChange={(e) => setChange({ ...change, ttl: e.target.value })} className="w-24" />
+                  <TextInput type="number" min={1} value={change.ttl} onChange={(e) => { setChange({ ...change, ttl: e.target.value }); }} className="w-24" />
                 </label>
                 <Button type="submit" disabled={request.isPending}>
                   {t('ipam.dnsSync.request')}

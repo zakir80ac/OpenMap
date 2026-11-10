@@ -68,7 +68,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn((_url: string, init: RequestInit) => {
-      sent.push((JSON.parse(String(init.body)) as { variables?: Record<string, unknown> }).variables);
+      sent.push((JSON.parse(typeof init.body === 'string' ? init.body : '{}') as { variables?: Record<string, unknown> }).variables);
       return Promise.resolve(
         new Response(JSON.stringify({ data: { roomEnvironment: environment } }), {
           status: 200,

@@ -73,19 +73,14 @@ export function buildFloorPlan(
   measure: HeatMeasure,
   unplacedLabel: string,
 ): FloorRoom[] {
-  const rooms = new Map<
-    string,
-    {
-      name: string;
-      rows: Map<string, { row: Omit<FloorRow, 'slots'>; racks: Array<{ rack: Rack; position: number }> }>;
-    }
-  >();
+  type RowEntry = { row: Omit<FloorRow, 'slots'>; racks: Array<{ rack: Rack; position: number }> };
+  const rooms = new Map<string, { name: string; rows: Map<string, RowEntry> }>();
   for (const rack of racks) {
     const roomId = rack.room?.id ?? '';
-    const room = rooms.get(roomId) ?? { name: rack.room?.displayName ?? unplacedLabel, rows: new Map() };
+    const room = rooms.get(roomId) ?? { name: rack.room?.displayName ?? unplacedLabel, rows: new Map<string, RowEntry>() };
     rooms.set(roomId, room);
     const rowKey = rack.row?.id ?? '';
-    const entry = room.rows.get(rowKey) ?? {
+    const entry: RowEntry = room.rows.get(rowKey) ?? {
       row: {
         id: rack.row?.id ?? null,
         name: rack.row?.displayName ?? unplacedLabel,

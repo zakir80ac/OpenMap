@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CABLING, CONSOLE, POWER, ROLES } from '@openmap/constants';
 import type { MessageKey } from '@openmap/i18n';
 import { Bar, Card, Kpi, Pill, SectionTitle, Tag, accents, cx } from '@openmap/ui';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useState, type SyntheticEvent, type ReactNode } from 'react';
 import {
   Button,
   Select,
@@ -102,7 +102,7 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
   if (room === null) return <p className="text-om-sm text-om-secondary">{t('dcim.empty')}</p>;
   const failed = [plug, unplug].find((m) => m.isError);
   const pdu = chain.data?.sources.find((s) => s.ci.id === pduId) ?? null;
-  const submit = (event: FormEvent): void => {
+  const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     plug.mutate();
   };
@@ -302,7 +302,7 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
                                 tone="danger"
                                 disabled={unplug.isPending}
                                 aria-label={t('dcim.power.unplugDevice', { device: c.device.name })}
-                                onClick={() => unplug.mutate(c.id)}
+                                onClick={() => { unplug.mutate(c.id); }}
                               >
                                 {t('dcim.power.unplug')}
                               </Button>
@@ -322,14 +322,14 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 >
                   <label className={labelClass}>
                     {t('dcim.power.findDevice')}
-                    <TextInput type="search" value={text} onChange={(e) => setText(e.target.value)} />
+                    <TextInput type="search" value={text} onChange={(e) => { setText(e.target.value); }} />
                   </label>
                   <label className={labelClass}>
                     {t('dcim.power.device')}
                     <Select
                       required
                       value={cord.deviceId}
-                      onChange={(e) => setCord({ ...cord, deviceId: e.target.value })}
+                      onChange={(e) => { setCord({ ...cord, deviceId: e.target.value }); }}
                     >
                       <option value="">{t('dcim.cabling.endpoint.choose')}</option>
                       {(hits.data ?? []).map((h) => (
@@ -345,7 +345,7 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
                       type="number"
                       min={1}
                       value={cord.outlet}
-                      onChange={(e) => setCord({ ...cord, outlet: e.target.value })}
+                      onChange={(e) => { setCord({ ...cord, outlet: e.target.value }); }}
                       className="w-20"
                     />
                   </label>
@@ -355,7 +355,7 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
                       type="number"
                       min={1}
                       value={cord.psu}
-                      onChange={(e) => setCord({ ...cord, psu: e.target.value })}
+                      onChange={(e) => { setCord({ ...cord, psu: e.target.value }); }}
                       className="w-20"
                     />
                   </label>
@@ -366,7 +366,7 @@ export function PowerView({ racks }: { racks: readonly Rack[] }): ReactNode {
               ) : null}
               {failed !== undefined ? (
                 <p role="alert" className="text-om-xs text-om-state-down">
-                  {failed.error?.message ?? t('common.error')}
+                  {failed.error.message}
                 </p>
               ) : null}
             </Card>

@@ -25,7 +25,7 @@ import {
 } from '@openmap/contracts';
 import type { MessageKey } from '@openmap/i18n';
 import { Bar, Card, Kpi, SectionTitle, Tag, accents, cx } from '@openmap/ui';
-import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type SyntheticEvent, type ReactNode } from 'react';
 import {
   Button,
   Select,
@@ -432,7 +432,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
   const panel = data.patchPanels.find((p) => p.ci.id === panelId) ?? data.patchPanels[0] ?? null;
   const submit =
     (run: () => void) =>
-    (event: FormEvent): void => {
+    (event: SyntheticEvent<HTMLFormElement>): void => {
       event.preventDefault();
       run();
     };
@@ -465,7 +465,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
 
       {failed !== undefined ? (
         <p role="alert" className="text-om-xs text-om-state-down">
-          {failed.error?.message ?? t('common.error')}
+          {failed.error.message}
         </p>
       ) : null}
       {traceFrom !== null ? (
@@ -543,7 +543,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                           tone="danger"
                           disabled={removePanel.isPending}
                           aria-label={t('dcim.cabling.removePanel', { name: p.ci.name })}
-                          onClick={() => removePanel.mutate(p.ci.id)}
+                          onClick={() => { removePanel.mutate(p.ci.id); }}
                         >
                           {t('dcim.cabling.remove')}
                         </Button>
@@ -559,7 +559,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
         {operator ? (
           <form
             aria-label={t('dcim.cabling.panelForm')}
-            onSubmit={submit(() => savePanel.mutate())}
+            onSubmit={submit(() => { savePanel.mutate(); })}
             className="flex flex-wrap items-end gap-om-10"
           >
             <label className={labelClass}>
@@ -567,7 +567,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
               <Select
                 required
                 value={panelForm.rackId}
-                onChange={(e) => setPanelForm({ ...panelForm, rackId: e.target.value })}
+                onChange={(e) => { setPanelForm({ ...panelForm, rackId: e.target.value }); }}
               >
                 <option value="">{t('dcim.cabling.chooseRack')}</option>
                 {racks.map((r) => (
@@ -582,7 +582,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
               <TextInput
                 required
                 value={panelForm.name}
-                onChange={(e) => setPanelForm({ ...panelForm, name: e.target.value })}
+                onChange={(e) => { setPanelForm({ ...panelForm, name: e.target.value }); }}
               />
             </label>
             <label className={labelClass}>
@@ -593,7 +593,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 min={1}
                 max={CABLING.maxPanelPorts}
                 value={panelForm.ports}
-                onChange={(e) => setPanelForm({ ...panelForm, ports: e.target.value })}
+                onChange={(e) => { setPanelForm({ ...panelForm, ports: e.target.value }); }}
                 className="w-24"
               />
             </label>
@@ -601,7 +601,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
               {t('dcim.cabling.media')}
               <Select
                 value={panelForm.media}
-                onChange={(e) => setPanelForm({ ...panelForm, media: e.target.value as CableMedia })}
+                onChange={(e) => { setPanelForm({ ...panelForm, media: e.target.value as CableMedia }); }}
               >
                 {CABLE_MEDIA.map((m) => (
                   <option key={m} value={m}>
@@ -614,7 +614,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
               {t('dcim.cabling.connectorLabel')}
               <Select
                 value={panelForm.connector}
-                onChange={(e) => setPanelForm({ ...panelForm, connector: e.target.value as PanelConnector })}
+                onChange={(e) => { setPanelForm({ ...panelForm, connector: e.target.value as PanelConnector }); }}
               >
                 {PANEL_CONNECTORS.map((c) => (
                   <option key={c} value={c}>
@@ -629,7 +629,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 type="number"
                 min={1}
                 value={panelForm.uPosition}
-                onChange={(e) => setPanelForm({ ...panelForm, uPosition: e.target.value })}
+                onChange={(e) => { setPanelForm({ ...panelForm, uPosition: e.target.value }); }}
                 className="w-20"
               />
             </label>
@@ -686,7 +686,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                           tone="danger"
                           disabled={disconnect.isPending}
                           aria-label={t('dcim.cabling.disconnectCable', { label: c.label })}
-                          onClick={() => disconnect.mutate(c.ci.id)}
+                          onClick={() => { disconnect.mutate(c.ci.id); }}
                         >
                           {t('dcim.cabling.disconnect')}
                         </Button>
@@ -702,7 +702,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
           <form
             ref={cableFormRef}
             aria-label={t('dcim.cabling.cableForm')}
-            onSubmit={submit(() => connect.mutate())}
+            onSubmit={submit(() => { connect.mutate(); })}
             className="flex flex-col gap-om-10"
           >
             <div className="flex flex-wrap items-end gap-om-10">
@@ -711,14 +711,14 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 <TextInput
                   required
                   value={cableForm.label}
-                  onChange={(e) => setCableForm({ ...cableForm, label: e.target.value })}
+                  onChange={(e) => { setCableForm({ ...cableForm, label: e.target.value }); }}
                 />
               </label>
               <label className={labelClass}>
                 {t('dcim.cabling.kind')}
                 <Select
                   value={cableForm.kind}
-                  onChange={(e) => setCableForm({ ...cableForm, kind: e.target.value as CableKind })}
+                  onChange={(e) => { setCableForm({ ...cableForm, kind: e.target.value as CableKind }); }}
                 >
                   {CABLE_KINDS.map((k) => (
                     <option key={k} value={k}>
@@ -731,7 +731,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 {t('dcim.cabling.media')}
                 <Select
                   value={cableForm.media}
-                  onChange={(e) => setCableForm({ ...cableForm, media: e.target.value as CableMedia })}
+                  onChange={(e) => { setCableForm({ ...cableForm, media: e.target.value as CableMedia }); }}
                 >
                   {CABLE_MEDIA.map((m) => (
                     <option key={m} value={m}>
@@ -747,7 +747,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                   min={0}
                   step="any"
                   value={cableForm.lengthM}
-                  onChange={(e) => setCableForm({ ...cableForm, lengthM: e.target.value })}
+                  onChange={(e) => { setCableForm({ ...cableForm, lengthM: e.target.value }); }}
                   className="w-24"
                 />
               </label>
@@ -755,7 +755,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 {t('dcim.cabling.colour')}
                 <TextInput
                   value={cableForm.colour}
-                  onChange={(e) => setCableForm({ ...cableForm, colour: e.target.value })}
+                  onChange={(e) => { setCableForm({ ...cableForm, colour: e.target.value }); }}
                   className="w-28"
                 />
               </label>
@@ -763,14 +763,14 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
             <EndpointPicker
               legend={t('dcim.cabling.endA')}
               value={cableForm.a}
-              onChange={(a) => setCableForm({ ...cableForm, a })}
+              onChange={(a) => { setCableForm({ ...cableForm, a }); }}
               panels={data.patchPanels}
               known={known}
             />
             <EndpointPicker
               legend={t('dcim.cabling.endB')}
               value={cableForm.b}
-              onChange={(b) => setCableForm({ ...cableForm, b })}
+              onChange={(b) => { setCableForm({ ...cableForm, b }); }}
               panels={data.patchPanels}
               known={known}
             />
@@ -836,7 +836,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                           tone="danger"
                           disabled={dropCircuit.isPending}
                           aria-label={t('dcim.cabling.removeCircuit', { circuit: c.circuitId })}
-                          onClick={() => dropCircuit.mutate(c.ci.id)}
+                          onClick={() => { dropCircuit.mutate(c.ci.id); }}
                         >
                           {t('dcim.cabling.remove')}
                         </Button>
@@ -851,7 +851,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
         {operator ? (
           <form
             aria-label={t('dcim.cabling.circuitForm')}
-            onSubmit={submit(() => circuit.mutate())}
+            onSubmit={submit(() => { circuit.mutate(); })}
             className="flex flex-col gap-om-10"
           >
             <div className="flex flex-wrap items-end gap-om-10">
@@ -860,7 +860,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 <TextInput
                   required
                   value={circuitForm.provider}
-                  onChange={(e) => setCircuitForm({ ...circuitForm, provider: e.target.value })}
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, provider: e.target.value }); }}
                 />
               </label>
               <label className={labelClass}>
@@ -868,14 +868,14 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 <TextInput
                   required
                   value={circuitForm.circuitId}
-                  onChange={(e) => setCircuitForm({ ...circuitForm, circuitId: e.target.value })}
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, circuitId: e.target.value }); }}
                 />
               </label>
               <label className={labelClass}>
                 {t('dcim.cabling.kind')}
                 <Select
                   value={circuitForm.kind}
-                  onChange={(e) => setCircuitForm({ ...circuitForm, kind: e.target.value as CircuitKind })}
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, kind: e.target.value as CircuitKind }); }}
                 >
                   {CIRCUIT_KINDS.map((k) => (
                     <option key={k} value={k}>
@@ -888,8 +888,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 {t('dcim.cabling.status')}
                 <Select
                   value={circuitForm.status}
-                  onChange={(e) =>
-                    setCircuitForm({ ...circuitForm, status: e.target.value as CircuitStatus })
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, status: e.target.value as CircuitStatus }); }
                   }
                 >
                   {CIRCUIT_STATUSES.map((s) => (
@@ -905,7 +904,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                   type="number"
                   min={1}
                   value={circuitForm.bandwidthMbps}
-                  onChange={(e) => setCircuitForm({ ...circuitForm, bandwidthMbps: e.target.value })}
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, bandwidthMbps: e.target.value }); }}
                   className="w-28"
                 />
               </label>
@@ -913,14 +912,14 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
                 {t('dcim.cabling.zEndDescription')}
                 <TextInput
                   value={circuitForm.zEndDescription}
-                  onChange={(e) => setCircuitForm({ ...circuitForm, zEndDescription: e.target.value })}
+                  onChange={(e) => { setCircuitForm({ ...circuitForm, zEndDescription: e.target.value }); }}
                 />
               </label>
             </div>
             <EndpointPicker
               legend={t('dcim.cabling.endA')}
               value={circuitForm.aEnd}
-              onChange={(aEnd) => setCircuitForm({ ...circuitForm, aEnd })}
+              onChange={(aEnd) => { setCircuitForm({ ...circuitForm, aEnd }); }}
               panels={data.patchPanels}
             />
             <div>

@@ -68,7 +68,7 @@ export function EnvironmentView({ racks }: { racks: readonly Rack[] }): ReactNod
             <Pill
               key={r.id}
               variant={room.id === r.id ? 'primary' : 'default'}
-              onClick={() => setRoomId(r.id)}
+              onClick={() => { setRoomId(r.id); }}
             >
               {r.name}
             </Pill>
@@ -76,7 +76,7 @@ export function EnvironmentView({ racks }: { racks: readonly Rack[] }): ReactNod
         </div>
         <label className={labelClass}>
           {t('dcim.monitor.window')}
-          <Select value={String(hours)} onChange={(e) => setHours(Number(e.target.value))}>
+          <Select value={String(hours)} onChange={(e) => { setHours(Number(e.target.value)); }}>
             {UTILISATION.windowsHours.map((h) => (
               <option key={h} value={h}>
                 {t(('dcim.monitor.windows.' + String(h)) as MessageKey)}

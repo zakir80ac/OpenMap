@@ -62,7 +62,7 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn((_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { query: string; variables: unknown };
+      const body = JSON.parse(typeof init.body === 'string' ? init.body : '{}') as { query: string; variables: unknown };
       sent.push(body);
       const data = body.query.startsWith('mutation') ? { acceptClassificationSuggestion: { id: 's-ups', state: 'accepted' }, dismissClassificationSuggestion: { id: 's-cam', state: 'dismissed' } } : { classificationSuggestions: summary };
       return Promise.resolve(new Response(JSON.stringify({ data }), { status: 200, headers: { 'content-type': 'application/json' } }));
