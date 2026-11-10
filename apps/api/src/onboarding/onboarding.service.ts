@@ -7,7 +7,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IPV4, PKI, RECONCILIATION, SETUP_PATTERNS } from '@openmap/constants';
-import { CREDENTIAL_FIELDS, ONBOARDING_STEPS } from '@openmap/contracts';
+import { CONNECTIVITY_ATTRIBUTES, CREDENTIAL_FIELDS, ONBOARDING_STEPS } from '@openmap/contracts';
 import { CI_REPOSITORY, type CiRepository, type NewCi } from '../ci/ci.repository.js';
 import type { Actor } from '../ci/ci.service.js';
 import { checksumOf } from '../ci/checksum.js';
@@ -69,7 +69,21 @@ function siteAttributes(site: SiteView, timeZone: string): Record<string, unknow
 }
 
 function linkAttributes(link: SiteLinkView): Record<string, unknown> {
-  return { kind: link.kind, provider: link.provider, bandwidthMbps: link.bandwidthMbps, diversePaths: link.diversePaths, role: link.role, latencyMs: link.latencyMs, replication: link.replication, ...(link.probeTarget === null ? {} : { probeTarget: link.probeTarget }), status: 'planned' };
+  return {
+    kind: link.kind,
+    provider: link.provider,
+    bandwidthMbps: link.bandwidthMbps,
+    diversePaths: link.diversePaths,
+    role: link.role,
+    latencyMs: link.latencyMs,
+    replication: link.replication,
+    ...(link.probeTarget === null ? {} : { probeTarget: link.probeTarget }),
+    // ADR-069 (REQ-IPAM-007): the circuit register's fields, which the readiness rules read on the CI.
+    [CONNECTIVITY_ATTRIBUTES.carrierContractRef]: link.carrierContractRef,
+    [CONNECTIVITY_ATTRIBUTES.slaLatencyMs]: link.slaLatencyMs,
+    [CONNECTIVITY_ATTRIBUTES.pathRef]: link.pathRef,
+    status: 'planned',
+  };
 }
 
 function linkName(from: SiteView, to: SiteView, link: SiteLinkView): string {

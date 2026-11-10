@@ -41,6 +41,8 @@ export const CLOUD_RECOMMENDATION_METRIC = 'openmap_cloud_recommendations_total'
 export const DNS_CHANGE_METRIC = 'openmap_dns_changes_total';
 /** REQ-DCIM-001 (ADR-056): patch panels saved, cables connected and disconnected, circuits saved. */
 export const CABLING_CHANGE_METRIC = 'openmap_cabling_changes_total';
+/** REQ-IPAM-007 (ADR-069): circuit register saves on inter-site links, and carrier circuits attached and detached. */
+export const LINK_CIRCUIT_METRIC = 'openmap_link_circuit_changes_total';
 /** REQ-DCIM-008 */
 export const CABLING_VERIFICATION_METRIC = 'openmap_cabling_verifications_total';
 /** REQ-IPAM-004 */
@@ -106,6 +108,8 @@ export class MetricsService {
   readonly cloudRecommendations: Counter<'kind'>;
   readonly dnsChanges: Counter<'op'>;
   readonly cablingChanges: Counter<'kind' | 'op'>;
+  /** REQ-IPAM-007 — circuit register saves (op saved) and carrier circuits attached or detached. */
+  readonly linkCircuitChanges: Counter<'op'>;
   /** REQ-DCIM-008 — cable verification reads (recorded cables against observed adjacencies). */
   readonly cablingVerifications: Counter;
   /** REQ-IPAM-004 — switch port reads by query (ports, history, mac). */
@@ -287,6 +291,12 @@ export class MetricsService {
     this.cablingVerifications = new Counter({
       name: CABLING_VERIFICATION_METRIC,
       help: 'Cable verification reads: recorded cables judged against observed adjacencies',
+      registers: [this.registry],
+    });
+    this.linkCircuitChanges = new Counter({
+      name: LINK_CIRCUIT_METRIC,
+      help: 'Network circuit register changes on inter-site links, by op (saved, attached, detached)',
+      labelNames: ['op'],
       registers: [this.registry],
     });
     this.cablingChanges = new Counter({

@@ -1,7 +1,12 @@
 // REQ-BSM-007 REQ-UI-026 (ADR-025) — sites and connectivity: the metric names the link_probe collector samples on a
 // site_link CI, the traffic and facility measurements the Sites screen reads, the site and link attributes the
 // readiness rules and the facility cards read, the link redundancy states, and the shape of a readiness finding.
+// REQ-IPAM-007 (ADR-069): the network circuit register on a site_link CI (carrier, contract, committed bandwidth and
+// latency, physical route, role, diverse paths, the carrier circuits it rides on), the shared risks that make two
+// links between the same sites less diverse than they claim, and the two readiness rules that follow from them.
+import { LINK_CIRCUITS } from '@openmap/constants';
 import { z } from 'zod';
+import { LINK_KINDS } from './organization.js';
 
 /** Samples a link probe takes, on the link CI (by id): reachable 1/0, median connect round trip, failed share. */
 export const LINK_METRICS = {
@@ -67,10 +72,74 @@ export const CONNECTIVITY_ATTRIBUTES = {
   /** On a site_link CI: the two ends' site codes (its identity). */
   fromSiteRef: 'fromSiteRef',
   toSiteRef: 'toSiteRef',
+  /** REQ-IPAM-007 — on a site_link CI: LINK_KINDS, the carrier, and LINK_ROLES. */
+  kind: 'kind',
+  provider: 'provider',
+  role: 'role',
+  /** REQ-IPAM-007 — on a site_link CI: the carrier contract an outage is raised under. */
+  carrierContractRef: 'carrierContractRef',
+  /**
+   * REQ-IPAM-007 — on a site_link CI: the physical route the link takes (a duct, a conduit, a cable system, a
+   * right of way). Two links on the same route are cut by the same backhoe.
+   */
+  pathRef: 'pathRef',
+  /** REQ-IPAM-007 — on a site_link CI: the carrier circuit CIs it rides on, as the register last saved them. */
+  circuitCiIds: 'circuitCiIds',
 } as const;
 
-/** The readiness rules, each evaluated per subject (a site or a link). */
-export const READINESS_RULES = ['diverse_paths', 'dr_reachable', 'replication_healthy'] as const;
+/** REQ-IPAM-007 — a link's part: carries traffic, stands by for it, or is a tunnel riding another link. */
+export const LINK_ROLES = ['primary', 'backup', 'overlay'] as const;
+export const linkRoleSchema = z.enum(LINK_ROLES);
+export type LinkRole = z.infer<typeof linkRoleSchema>;
+/**
+ * REQ-IPAM-007 — an overlay rides another link by definition, so it is never held to be diverse from it; it still
+ * counts as a path for redundancy.
+ */
+export const OVERLAY_ROLE: LinkRole = 'overlay';
+
+/**
+ * REQ-IPAM-007 — the relationship from a site_link CI to each carrier `circuit` CI (ADR-056) it rides on. The impact
+ * walk follows it upstream, so a circuit's outage reaches the link and whatever depends on the link.
+ */
+export const LINK_CIRCUIT_RELATIONSHIP = 'depends_on' as const;
+
+/** REQ-IPAM-007 — what two links joining the same two sites can share that defeats their diversity. */
+export const LINK_SHARED_RISK_KINDS = ['provider', 'path', 'circuit'] as const;
+export const linkSharedRiskKindSchema = z.enum(LINK_SHARED_RISK_KINDS);
+export type LinkSharedRiskKind = z.infer<typeof linkSharedRiskKindSchema>;
+
+const REF = z.string().trim().min(1).max(LINK_CIRCUITS.maxRefChars);
+
+/** REQ-IPAM-007 — the circuit register's edit of one site_link CI. The link's circuit id and ends are its identity. */
+export const linkCircuitInputSchema = z.object({
+  kind: z.enum(LINK_KINDS),
+  provider: REF.nullable(),
+  carrierContractRef: REF.nullable(),
+  bandwidthMbps: z.number().int().positive(),
+  slaLatencyMs: z.number().int().positive().nullable(),
+  diversePaths: z.number().int().positive().max(LINK_CIRCUITS.maxDiversePaths),
+  role: linkRoleSchema,
+  pathRef: REF.nullable(),
+  circuitCiIds: z
+    .array(z.uuid())
+    .max(LINK_CIRCUITS.maxCircuitsPerLink)
+    .refine((ids) => new Set(ids).size === ids.length, { message: 'a carrier circuit is listed once' }),
+});
+export type LinkCircuitInput = z.infer<typeof linkCircuitInputSchema>;
+
+/** REQ-IPAM-007 — the key two references are compared by: case and surrounding space do not make a carrier different. */
+export function riskKey(value: string | null): string | null {
+  if (value === null) return null;
+  const key = value.trim().toLowerCase();
+  return key === '' ? null : key;
+}
+
+/**
+ * The readiness rules, each evaluated per subject (a site or a link). REQ-IPAM-007 adds `path_diversity` (a link
+ * shares a provider, a route or a carrier circuit with another link between the same sites) and `redundancy_lost` (a
+ * link is down between two sites that had more than one path).
+ */
+export const READINESS_RULES = ['diverse_paths', 'dr_reachable', 'replication_healthy', 'path_diversity', 'redundancy_lost'] as const;
 export const readinessRuleSchema = z.enum(READINESS_RULES);
 export type ReadinessRule = z.infer<typeof readinessRuleSchema>;
 

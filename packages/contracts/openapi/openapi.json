@@ -5290,7 +5290,9 @@
                             "enum": [
                               "diverse_paths",
                               "dr_reachable",
-                              "replication_healthy"
+                              "replication_healthy",
+                              "path_diversity",
+                              "redundancy_lost"
                             ]
                           },
                           "subjectCiId": {

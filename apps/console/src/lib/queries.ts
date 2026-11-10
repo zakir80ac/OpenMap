@@ -10,7 +10,7 @@ import {
   type Locale,
   type SlaWindow,
 } from '@openmap/constants';
-import type { CiLayer, LinkRedundancy } from '@openmap/contracts';
+import type { CiLayer, LinkRedundancy, LinkSharedRiskKind, ReadinessRule } from '@openmap/contracts';
 import { gql } from './graphql';
 
 export type HealthState = (typeof BSM.healthOrder)[number];
@@ -861,11 +861,31 @@ export interface ConnectivityLink {
   throughputMbps: number | null;
   utilisationPercent: number | null;
   redundancy: LinkRedundancy;
+  /** REQ-IPAM-007 (ADR-069): the circuit register and the risks shared with links between the same sites. */
+  carrierContractRef: string | null;
+  pathRef: string | null;
+  circuits: LinkCircuit[];
+  sharedRisks: LinkSharedRisk[];
+}
+
+/** REQ-IPAM-007 — a carrier circuit CI a link rides on. */
+export interface LinkCircuit {
+  ci: CiSummary;
+  provider: string | null;
+  circuitId: string | null;
+  status: string | null;
+}
+
+/** REQ-IPAM-007 — a provider, route or carrier circuit shared with another link between the same sites. */
+export interface LinkSharedRisk {
+  kind: LinkSharedRiskKind;
+  value: string;
+  other: CiSummary | null;
 }
 
 export interface ReadinessFinding {
   id: string;
-  rule: 'diverse_paths' | 'dr_reachable' | 'replication_healthy';
+  rule: ReadinessRule;
   subject: CiSummary | null;
   detail: string;
   state: 'open' | 'cleared';
@@ -881,22 +901,48 @@ export interface Connectivity {
   probeIntervalSeconds: number;
 }
 
+const CONNECTIVITY_LINK_FIELDS =
+  'ci { ' + CI_SUMMARY_FIELDS + ' } fromSite toSite kind provider role replication diversePaths probeTarget reachable latencyMs lossPercent probedAt slaLatencyMs capacityMbps throughputMbps utilisationPercent redundancy' +
+  ' carrierContractRef pathRef circuits { ci { ' + CI_SUMMARY_FIELDS + ' } provider circuitId status } sharedRisks { kind value other { ' + CI_SUMMARY_FIELDS + ' } }';
+
 const CONNECTIVITY_QUERY = [
   'query Connectivity { connectivity {',
   '  sites { ci { ' + CI_SUMMARY_FIELDS + ' } code drRole criticality healthyPaths kind tier powerCapacityKw designPue pue pueAt racks openAlerts }',
-  '  links { ci { ' + CI_SUMMARY_FIELDS + ' } fromSite toSite kind provider role replication diversePaths probeTarget reachable latencyMs lossPercent probedAt slaLatencyMs capacityMbps throughputMbps utilisationPercent redundancy }',
+  '  links { ' + CONNECTIVITY_LINK_FIELDS + ' }',
   '  findings { id rule detail state openedAt clearedAt subject { ' + CI_SUMMARY_FIELDS + ' } incident { id title state severity } }',
   '  probeIntervalSeconds',
   '} }',
 ].join(' ');
 
+export const connectivityKey = ['connectivity'] as const;
+
 export function connectivityQuery(refetchMs: number) {
   return queryOptions({
-    queryKey: ['connectivity'] as const,
+    queryKey: connectivityKey,
     queryFn: ({ signal }) => gql<{ connectivity: Connectivity }>(CONNECTIVITY_QUERY, undefined, signal),
     select: (data) => data.connectivity,
     refetchInterval: refetchMs,
   });
+}
+
+/** REQ-IPAM-007 (ADR-069) — the network circuit register's edit of one inter-site link CI. */
+export interface LinkCircuitInput {
+  kind: string;
+  provider: string | null;
+  carrierContractRef: string | null;
+  bandwidthMbps: number;
+  slaLatencyMs: number | null;
+  diversePaths: number;
+  role: string;
+  pathRef: string | null;
+  circuitCiIds: string[];
+}
+
+const SAVE_LINK_CIRCUIT =
+  'mutation SaveLinkCircuit($linkId: UUID!, $input: LinkCircuitInput!) { saveLinkCircuit(linkId: $linkId, input: $input) { ' + CONNECTIVITY_LINK_FIELDS + ' } }';
+
+export function saveLinkCircuit(linkId: string, input: LinkCircuitInput): Promise<ConnectivityLink> {
+  return gql<{ saveLinkCircuit: ConnectivityLink }>(SAVE_LINK_CIRCUIT, { linkId, input }).then((d) => d.saveLinkCircuit);
 }
 
 // REQ-BSM-004 (ADR-047) — prediction accuracy: resolved incidents compared with a simulation of their root cause, and

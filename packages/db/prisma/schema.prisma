@@ -657,6 +657,10 @@ model SiteLink {
   /// ADR-025: true when the link carries storage or database replication; what a Node at the A end probes.
   replication    Boolean  @default(false)
   probeTarget    String?
+  /// ADR-069 (REQ-IPAM-007): the carrier contract, the committed latency and the physical route the link takes.
+  carrierContractRef String?
+  slaLatencyMs       Int?
+  pathRef            String?
   ciId           String?  @db.Uuid
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)

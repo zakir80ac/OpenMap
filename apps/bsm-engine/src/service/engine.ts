@@ -155,6 +155,14 @@ function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 }
 
+/**
+ * An inter-site link whose health the readiness evaluation owns: one with a probe target (ADR-025), or one the circuit
+ * register says rides carrier circuits (REQ-IPAM-007, ADR-069).
+ */
+export function healthFromReadiness(attributes: Readonly<Record<string, unknown>>): boolean {
+  return typeof attributes[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string' || strings(attributes[CONNECTIVITY_ATTRIBUTES.circuitCiIds]).length > 0;
+}
+
 export function envelope(
   tenantId: string,
   type: EventType,
@@ -227,12 +235,9 @@ export function createEngine(deps: EngineDeps) {
         list.map((c) => c.id),
       );
       for (const ci of list) {
-        // A probed inter-site link takes its health from its probes (ADR-025, readiness.ts), never from attributes.
-        if (
-          ci.type === 'site_link' &&
-          typeof (ci.attributes as Record<string, unknown>)[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string'
-        )
-          continue;
+        // A probed inter-site link takes its health from its probes (ADR-025, readiness.ts), and one riding carrier
+        // circuits from them (REQ-IPAM-007, ADR-069), never from attributes.
+        if (ci.type === 'site_link' && healthFromReadiness(ci.attributes)) continue;
         const verdict = deriveHealth(ci, now);
         if (current.get(ci.id) === verdict.health) continue;
         await graph.setHealth(tenantId, ci.id, verdict.health);

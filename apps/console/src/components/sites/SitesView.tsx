@@ -5,35 +5,49 @@
 // loss, when last probed) and health. Refreshes on the probe interval.
 // REQ-UI-026: each site as a facility card (kind, tier, power capacity, racks, PUE measured and design, open alerts),
 // and each link with its carrier, traffic against the committed bandwidth and the redundancy state between its sites.
+// REQ-IPAM-007 (ADR-069): each link's circuit register (carrier contract, physical route, the carrier circuits it rides
+// on with their health), the risks it shares with other links between the same sites, the path_diversity and
+// redundancy_lost rules, and, for operators, the register's edit of a link.
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { IPAM, READINESS } from '@openmap/constants';
-import type { LinkRedundancy } from '@openmap/contracts';
+import { IPAM, READINESS, ROLES } from '@openmap/constants';
+import { READINESS_RULES, type LinkRedundancy, type LinkSharedRiskKind } from '@openmap/contracts';
 import type { Locale } from '@openmap/i18n';
 import { Bar, Card, Dot, SectionTitle, Tag, accents, type HexColor } from '@openmap/ui';
-import type { ReactNode } from 'react';
-import { tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
+import { useState, type ReactNode } from 'react';
+import { Button, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
 import { QueryState } from '@/components/common/QueryState';
+import { useCan } from '@/lib/auth';
 import { healthKey } from '@/lib/keys';
 import { localizedHref } from '@/lib/locale-path';
 import { connectivityQuery, type CiSummary, type Connectivity, type ReadinessFinding } from '@/lib/queries';
 import { useFormatters, useT } from '@/providers';
+import { LinkCircuitForm } from './LinkCircuitForm';
 
 export interface SitesViewProps {
   locale: Locale;
 }
 
-const RULES = ['diverse_paths', 'dr_reachable', 'replication_healthy'] as const;
+const RULES = READINESS_RULES;
 const ruleKey = {
   diverse_paths: 'sites.rule.diverse_paths',
   dr_reachable: 'sites.rule.dr_reachable',
   replication_healthy: 'sites.rule.replication_healthy',
+  path_diversity: 'sites.rule.path_diversity',
+  redundancy_lost: 'sites.rule.redundancy_lost',
 } as const satisfies Record<ReadinessFinding['rule'], string>;
 const ruleHint = {
   diverse_paths: 'sites.rule.diverse_paths.hint',
   dr_reachable: 'sites.rule.dr_reachable.hint',
   replication_healthy: 'sites.rule.replication_healthy.hint',
+  path_diversity: 'sites.rule.path_diversity.hint',
+  redundancy_lost: 'sites.rule.redundancy_lost.hint',
 } as const satisfies Record<ReadinessFinding['rule'], string>;
+const sharedRiskKey = {
+  provider: 'sites.circuit.shares.provider',
+  path: 'sites.circuit.shares.path',
+  circuit: 'sites.circuit.shares.circuit',
+} as const satisfies Record<LinkSharedRiskKind, string>;
 const LINK_ROLE_KEY = { primary: 'setup.links.role.primary', backup: 'setup.links.role.backup', overlay: 'setup.links.role.overlay' } as const;
 const SITE_KIND_KEY = {
   datacenter: 'setup.sites.kind.datacenter',
@@ -123,6 +137,10 @@ function Body({
   t: ReturnType<typeof useT>;
   format: ReturnType<typeof useFormatters>;
 }): ReactNode {
+  const can = useCan();
+  const operator = can(ROLES.operator);
+  const [editing, setEditing] = useState<string | null>(null);
+  const editLink = editing === null ? undefined : data.links.find((l) => l.ci.id === editing);
   const open = data.findings.filter((f) => f.state === 'open');
   const healthyLinks = data.links.filter((l) => uiHealth(l.ci) === 'healthy').length;
   const ms = (value: number): string => t('sites.ms', { value: format.number(value) });
@@ -360,6 +378,16 @@ function Body({
                           {l.replication ? <Tag>{t('sites.replication')}</Tag> : null}
                           {l.role !== null ? <Tag>{l.role in LINK_ROLE_KEY ? t(LINK_ROLE_KEY[l.role as keyof typeof LINK_ROLE_KEY]) : l.role}</Tag> : null}
                         </span>
+                        {operator ? (
+                          <Button
+                            tone="quiet"
+                            className="mt-om-4"
+                            aria-label={t('sites.circuit.edit', { link: l.ci.displayName })}
+                            onClick={() => { setEditing(l.ci.id); }}
+                          >
+                            {t('sites.circuit.editShort')}
+                          </Button>
+                        ) : null}
                       </td>
                       <td className={tdClass}>
                         <span className="font-om-mono">
@@ -369,7 +397,31 @@ function Body({
                           {l.probeTarget ?? t('sites.notProbed')}
                         </span>
                       </td>
-                      <td className={tdClass}>{l.provider ?? t('sites.none')}</td>
+                      <td className={tdClass}>
+                        <span className="flex flex-col gap-om-2">
+                          <span>{l.provider ?? t('sites.none')}</span>
+                          {l.carrierContractRef !== null ? (
+                            <span className="text-om-2xs text-om-muted">{t('sites.circuit.contract', { ref: l.carrierContractRef })}</span>
+                          ) : null}
+                          {l.pathRef !== null ? (
+                            <span className="text-om-2xs text-om-muted">{t('sites.circuit.route', { ref: l.pathRef })}</span>
+                          ) : null}
+                          {l.circuits.length > 0 ? (
+                            <span className="flex flex-wrap gap-om-4" aria-label={t('sites.circuit.carriers')}>
+                              {l.circuits.map((c) => (
+                                <Tag key={c.ci.id} variant="state" state={uiHealth(c.ci)}>
+                                  {c.ci.displayName}
+                                </Tag>
+                              ))}
+                            </span>
+                          ) : null}
+                          {l.sharedRisks.map((r) => (
+                            <span key={r.kind + r.value + (r.other?.id ?? '')} className="text-om-2xs text-om-state-degraded">
+                              {t(sharedRiskKey[r.kind], { value: r.value, link: r.other?.displayName ?? t('sites.none') })}
+                            </span>
+                          ))}
+                        </span>
+                      </td>
                       <td className={tdClass}>
                         {l.throughputMbps === null ? (
                           l.capacityMbps === null ? (
@@ -440,6 +492,11 @@ function Body({
           )}
         </Card>
       </section>
+      {operator && editLink !== undefined ? (
+        <section aria-label={t('sites.circuit.title', { link: editLink.ci.displayName })}>
+          <LinkCircuitForm key={editLink.ci.id} link={editLink} onDone={() => { setEditing(null); }} />
+        </section>
+      ) : null}
     </>
   );
 }

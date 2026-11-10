@@ -6,11 +6,15 @@
 // - the readiness findings with their incidents.
 // REQ-UI-026: each site's facility card (kind, tier, power capacity, design and measured PUE, racks in its facility
 // tree, open alerts) and each link's traffic against its committed bandwidth and its redundancy state.
+// REQ-IPAM-007 (ADR-069): each link's circuit register (carrier contract, physical route, the carrier circuits it rides
+// on) and the risks it shares with the other links between the same sites, judged by the BSM engine's sharedRisks.
 import { Inject, Injectable } from '@nestjs/common';
-import { linkHealth, linkRedundancy, type LinkSnapshot } from '@openmap/bsm-engine';
+import { linkHealth, linkRedundancy, sharedRisks, type LinkSnapshot } from '@openmap/bsm-engine';
 import { BSM, READINESS, TIME } from '@openmap/constants';
 import {
+  CABLING_ATTRIBUTES,
   CONNECTIVITY_ATTRIBUTES,
+  LINK_CIRCUIT_RELATIONSHIP,
   LINK_METRICS,
   LINK_METRIC_NAMES,
   LINK_TRAFFIC_METRICS,
@@ -19,6 +23,7 @@ import {
   SITE_FACILITY_CI_TYPES,
   SITE_FACILITY_METRICS,
   type LinkRedundancy,
+  type LinkSharedRiskKind,
 } from '@openmap/contracts';
 import { Prisma } from '@openmap/db';
 import { CI_REPOSITORY, type CiRepository } from '../ci/ci.repository.js';
@@ -69,6 +74,27 @@ export interface ConnectivityLinkView {
   /** Traffic as a share of the committed bandwidth; null without both. */
   utilisationPercent: number | null;
   redundancy: LinkRedundancy;
+  /** REQ-IPAM-007 — the circuit register. */
+  carrierContractRef: string | null;
+  pathRef: string | null;
+  circuits: LinkCircuitView[];
+  sharedRisks: LinkSharedRiskView[];
+}
+
+/** REQ-IPAM-007 — a carrier circuit CI (ADR-056) a link rides on. */
+export interface LinkCircuitView {
+  ci: CiRecord;
+  provider: string | null;
+  circuitId: string | null;
+  status: string | null;
+}
+
+/** REQ-IPAM-007 — a provider, route or carrier circuit this link shares with another link between the same sites. */
+export interface LinkSharedRiskView {
+  kind: LinkSharedRiskKind;
+  /** The provider or route, or the shared circuit's name. */
+  value: string;
+  otherCiId: string;
 }
 
 export interface ReadinessFindingView {
@@ -145,7 +171,7 @@ export class ConnectivityService {
     const sitesCi = cis.filter((c) => c.type === 'site');
     const intervalMs = this.env.LINK_PROBE_INTERVAL_MS === 0 ? READINESS.evaluateMs : this.env.LINK_PROBE_INTERVAL_MS;
     const now = Date.now();
-    const [latest, racks, incidentSites, findings] = await Promise.all([
+    const [latest, racks, incidentSites, findings, ridden] = await Promise.all([
       this.latest(tenantId, cis.map((c) => c.id)),
       this.racksBySite(tenantId),
       this.unresolvedIncidentSites(tenantId),
@@ -154,6 +180,7 @@ export class ConnectivityService {
         orderBy: [{ state: 'desc' }, { openedAt: 'desc' }],
         take: READINESS.findingsListLimit,
       }),
+      this.circuitsOf(tenantId, linksCi.map((c) => c.id)),
     ]);
     const healthy = new Set<string>();
     const linkRows = linksCi.map((ci) => {
@@ -178,6 +205,21 @@ export class ConnectivityService {
     const redundancy = linkRedundancy(
       linkRows.map((l) => ({ ciId: l.ci.id, fromSite: l.snapshot.fromSite, toSite: l.snapshot.toSite, role: text(attr(l.ci, 'role')), diversePaths: l.snapshot.diversePaths, health: l.health })),
     );
+    const risks = sharedRisks(
+      linkRows.map((l) => ({
+        ciId: l.ci.id,
+        name: l.ci.displayName,
+        fromSite: l.snapshot.fromSite,
+        toSite: l.snapshot.toSite,
+        role: text(attr(l.ci, CONNECTIVITY_ATTRIBUTES.role)),
+        provider: text(attr(l.ci, CONNECTIVITY_ATTRIBUTES.provider)),
+        pathRef: text(attr(l.ci, CONNECTIVITY_ATTRIBUTES.pathRef)),
+        circuitCiIds: (ridden.get(l.ci.id) ?? []).map((c) => c.ci.id),
+        diversePaths: l.snapshot.diversePaths,
+        health: l.health,
+      })),
+    );
+    const circuitName = new Map([...ridden.values()].flat().map((c) => [c.ci.id, c.ci.displayName]));
     const links: ConnectivityLinkView[] = linkRows.map(({ ci, snapshot, traffic }) => {
       const capacityMbps = int(attr(ci, CONNECTIVITY_ATTRIBUTES.bandwidthMbps));
       const throughputMbps = traffic === null ? null : traffic.value * READINESS.megabitsPerGigabit;
@@ -200,6 +242,10 @@ export class ConnectivityService {
         throughputMbps,
         utilisationPercent: throughputMbps === null || capacityMbps === null || capacityMbps <= 0 ? null : (throughputMbps / capacityMbps) * BSM.percentScale,
         redundancy: redundancy.get(ci.id) ?? 'single_path',
+        carrierContractRef: text(attr(ci, CONNECTIVITY_ATTRIBUTES.carrierContractRef)),
+        pathRef: text(attr(ci, CONNECTIVITY_ATTRIBUTES.pathRef)),
+        circuits: ridden.get(ci.id) ?? [],
+        sharedRisks: (risks.get(ci.id) ?? []).map((r) => ({ kind: r.kind, value: r.kind === 'circuit' ? (circuitName.get(r.value) ?? r.value) : r.value, otherCiId: r.otherCiId })),
       };
     });
     const openFindingSubjects = findings.filter((f) => f.state === 'open').map((f) => f.subjectCiId);
@@ -233,6 +279,26 @@ export class ConnectivityService {
       findings: findings.map((f) => ({ id: f.id, rule: f.rule, subjectCiId: f.subjectCiId, detail: f.detail, state: f.state, openedAt: isoOf(f.openedAt), clearedAt: toIso(f.clearedAt), incidentId: f.incidentId })),
       probeIntervalSeconds: Math.round(this.env.LINK_PROBE_INTERVAL_MS / TIME.msPerSecond),
     };
+  }
+
+  /** REQ-IPAM-007 — the carrier circuit CIs each link rides on (LINK_CIRCUIT_RELATIONSHIP), by link CI id. */
+  private async circuitsOf(tenantId: string, linkIds: readonly string[]): Promise<Map<string, LinkCircuitView[]>> {
+    const out = new Map<string, LinkCircuitView[]>();
+    if (linkIds.length === 0) return out;
+    const rels = await this.cis.relationshipsOfMany(tenantId, linkIds, [LINK_CIRCUIT_RELATIONSHIP], 'downstream');
+    const targets = new Map((await this.cis.findByIds(tenantId, [...new Set(rels.map((r) => r.toCiId))])).map((c) => [c.id, c]));
+    for (const rel of rels) {
+      const ci = targets.get(rel.toCiId);
+      if (ci === undefined || ci.type !== 'circuit' || ci.validTo !== null) continue;
+      const view: LinkCircuitView = {
+        ci,
+        provider: text(attr(ci, CABLING_ATTRIBUTES.provider, 'identity')),
+        circuitId: text(attr(ci, CABLING_ATTRIBUTES.circuitId, 'identity')),
+        status: text(attr(ci, CABLING_ATTRIBUTES.status)),
+      };
+      out.set(rel.fromCiId, [...(out.get(rel.fromCiId) ?? []), view].sort((a, b) => a.ci.displayName.localeCompare(b.ci.displayName)));
+    }
+    return out;
   }
 
   /** Racks per site CI: the site's facility tree (SITE_FACILITY_CI_TYPES) walked down its located_in edges. */
