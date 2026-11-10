@@ -5,6 +5,7 @@
 // manual entry for unmanaged equipment; and infrastructure plans with their bill of materials (ADR-005: plans, not
 // purchase orders). Operators edit details, change stages and create plans; everyone else reads.
 // REQ-CMDB-020 — each line of an approved or building plan is received into stock from its card (ADR-034).
+// REQ-SEC-012 — a second tab shows the compliance posture per framework (ADR-070); the tab lives in the URL.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ASSETS, ROLES, TIME } from '@openmap/constants';
 import { CI_LAYERS, PLAN_KINDS, canReceive, isSubscriptionCiType, type CiLayer } from '@openmap/contracts';
@@ -53,6 +54,7 @@ import { useLayerVisibility } from '@/hooks/useLayerVisibility';
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 import { AssetDetailsPanel } from './AssetDetailsPanel';
+import { CompliancePosture } from './CompliancePosture';
 import { ManualAssetForm } from './ManualAssetForm';
 import { PlanReceipts, ReceiveLineForm } from './PlanReceiving';
 import { UnknownDevices } from './UnknownDevices';
@@ -165,6 +167,15 @@ function CoverCell({
 }
 
 const PAGE_PARAM = 'page';
+const TAB_PARAM = 'tab';
+/** The screen's tabs: the register (the default, no parameter) and the compliance posture. */
+export const ASSET_TABS = ['register', 'posture'] as const;
+export type AssetTab = (typeof ASSET_TABS)[number];
+
+/** The tab from the URL; anything else is the register. */
+export function tabOf(raw: string | null): AssetTab {
+  return raw === 'posture' ? 'posture' : 'register';
+}
 
 /** The 1-based page from the URL; anything missing or malformed is the first page. */
 export function pageOf(raw: string | null): number {
@@ -195,6 +206,15 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
   const router = useRouter();
   const pathname = usePathname();
   const page = pageOf(params.get(PAGE_PARAM));
+  const tab = tabOf(params.get(TAB_PARAM));
+  const onRegister = tab === 'register';
+  const setTab = (next: AssetTab): void => {
+    const query = new URLSearchParams(params.toString());
+    if (next === 'register') query.delete(TAB_PARAM);
+    else query.set(TAB_PARAM, next);
+    const search = query.toString();
+    router.replace(search === '' ? pathname : pathname + '?' + search, { scroll: false });
+  };
   const setPage = (next: number): void => {
     const query = new URLSearchParams(params.toString());
     if (next <= 1) query.delete(PAGE_PARAM);
@@ -214,10 +234,10 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
     }),
     [stage, layer, visibility, source, data, text, lowStock],
   );
-  const assets = useQuery(assetPageQuery(filter, page));
-  const summary = useQuery(assetSummaryQuery());
-  const expiring = useQuery(assetsQuery({ warrantyExpiringWithinDays: horizon }));
-  const plans = useQuery(plansQuery());
+  const assets = useQuery({ ...assetPageQuery(filter, page), enabled: onRegister });
+  const summary = useQuery({ ...assetSummaryQuery(), enabled: onRegister });
+  const expiring = useQuery({ ...assetsQuery({ warrantyExpiringWithinDays: horizon }), enabled: onRegister });
+  const plans = useQuery({ ...plansQuery(), enabled: onRegister });
   const stageMutation = useMutation({
     mutationFn: ({ assetId, next }: { assetId: string; next: AssetStage }) => setAssetStage(assetId, next),
     onSuccess: async () => {
@@ -266,11 +286,47 @@ export function AssetsView({ locale }: AssetsViewProps): ReactNode {
 
   const ciHref = (id: string): string => localizedHref(locale, '/cmdb/' + encodeURIComponent(id));
 
-  return (
-    <div className="flex flex-col gap-om-24">
+  const header = (
+    <>
       <SectionTitle as="h1" size="lg" eyebrow={t('app.name')} description={t('assets.subtitle')}>
         {t('assets.title')}
       </SectionTitle>
+      <div role="tablist" aria-label={t('assets.tabs')} className="flex gap-om-4 border-b border-om-border-glass">
+        {ASSET_TABS.map((candidate) => (
+          <button
+            key={candidate}
+            type="button"
+            role="tab"
+            aria-selected={tab === candidate}
+            data-testid={'asset-tab-' + candidate}
+            onClick={() => {
+              setTab(candidate);
+            }}
+            className={
+              'border-b-2 px-om-14 py-om-10 text-om-sm font-medium ' +
+              (tab === candidate
+                ? 'border-om-cyan text-om-primary'
+                : 'border-transparent text-om-secondary hover:text-om-primary')
+            }
+          >
+            {t(('assets.tab.' + candidate) as MessageKey)}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
+  if (!onRegister)
+    return (
+      <div className="flex flex-col gap-om-24">
+        {header}
+        <CompliancePosture locale={locale} />
+      </div>
+    );
+
+  return (
+    <div className="flex flex-col gap-om-24">
+      {header}
 
       <div className="grid grid-cols-2 gap-om-12 md:grid-cols-5">
         <Kpi label={t('assets.kpi.owned')} value={format.integer(totals.owned)} />

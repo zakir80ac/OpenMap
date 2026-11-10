@@ -486,6 +486,47 @@ export const CERTIFICATES = {
   expiryHorizonsDays: [7, 30, 60, 90] as const,
 } as const;
 
+/**
+ * REQ-SEC-012 (ADR-070) — compliance posture: the thresholds the automated control checks apply to the facts OpenMap
+ * already holds, and how much of an evaluation is kept and returned. The control catalogue itself is data in
+ * packages/contracts/src/compliance.ts.
+ */
+export const COMPLIANCE = {
+  /** CVE severities that make a CI high risk (CVSS v3 qualitative ratings High 7.0–8.9 and Critical 9.0–10.0). */
+  highRiskSeverities: ['high', 'critical'] as const,
+  /** A CVE without a severity label is high risk from this CVSS base score (the lower bound of CVSS v3 High). */
+  highRiskCvss: 7,
+  /** TLS protocol versions oldest first, as the certificate collector reports them; anything unlisted is unknown. */
+  tlsVersions: ['SSL 3.0', 'TLS 1.0', 'TLS 1.1', 'TLS 1.2', 'TLS 1.3'] as const,
+  /** The oldest acceptable protocol (TLS 1.0 and 1.1 are deprecated by RFC 8996; PCI DSS 4.0 requires strong crypto). */
+  minTlsVersion: 'TLS 1.2',
+  /** Values of an object store's `encryption` attribute that mean no server-side encryption. */
+  unencryptedValues: ['none', 'disabled', 'off', 'false', ''] as const,
+  /** The NAS collector's option for an SMB share that requires SMB 3 encryption. */
+  smbEncryptOption: 'encrypt',
+  /** NFS export options that give privacy on the wire (Kerberos v5 with encryption). */
+  nfsPrivacyOptions: ['sec=krb5p'] as const,
+  /** A database whose last backup is older than this fails the backup check: a daily schedule with two hours of slack. */
+  databaseBackupMaxAgeHours: 26,
+  /** Results written per INSERT when an evaluation is stored. */
+  insertBatch: 5_000,
+  /** The transaction that stores an evaluation and its results (a 100k-CI estate writes a few hundred thousand rows). */
+  persistTimeoutMs: 300_000,
+  /** Evaluations kept per tenant; older ones and their results are removed when a new one is stored. */
+  keepRuns: 10,
+  /** Findings returned for one control by default, and the most a client may ask for. */
+  findingsPageSize: 50,
+  maxFindings: 500,
+  /** The longest control identifier a client may ask for (catalogue ids are a few characters, such as `A.8.24`). */
+  controlIdMaxLength: 32,
+  /** Pass rates are 0..1; the console shows them as a percentage with this many decimals. */
+  percentScale: 100,
+  percentDecimals: 1,
+  /** A framework at or above this pass rate is shown healthy; below `passRateAtRisk` it is shown down, between at risk. */
+  passRateHealthy: 0.95,
+  passRateAtRisk: 0.8,
+} as const;
+
 /** REQ-CMDB-014 (ADR-037) — the parts register: page sizes and how many model rows it summarises. */
 export const COMPONENTS = {
   /** Parts per page of the estate-wide register (GraphQL default of `components(first)`). */
@@ -2043,8 +2084,12 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.39.0 (REQ-INT-019, ADR-066): `BackupState`, `BackupSet`, `Backups`, query `backups`.
    * 1.40.0 (REQ-SEC-011, ADR-067 steps 4-5): `CustomFieldDefinition.sensitive`, `CustomFieldDefinitionInput.sensitive`,
    * `BackupSet.encrypted`.
+   * 1.42.0 (REQ-SEC-012, ADR-070): `ComplianceFramework`, `ComplianceCheck`, `ComplianceResult`, `ComplianceFact`,
+   * `ComplianceTally`, `ComplianceControlPosture`, `ComplianceFrameworkPosture`, `ComplianceCveRisk`, `ComplianceRun`,
+   * `CompliancePosture`, `ComplianceFinding`, `ComplianceControlDetail`; queries `compliancePosture`,
+   * `complianceControl`; mutation `evaluateCompliance`.
    */
-  graphql: '1.40.0',
+  graphql: '1.42.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
