@@ -31,5 +31,6 @@ export * from './notification.js';
 export * from './backup.js';
 export * from './custom-field.js';
 export * from './import.js';
+export * from './identity-source.js';
 export { CONTRACT_VERSIONS, CONTRACT_NAMES } from '@openmap/constants';
 export type { ContractName } from '@openmap/constants';

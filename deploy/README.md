@@ -255,6 +255,16 @@ REST API, see `docs/STATE.md`).
   realm roles from the directory's groups. Set the provider as the realm's default with _Browser flow → Identity
   Provider Redirector_ so users never see the Keycloak form. Nothing in the console or API changes: tokens still
   come from this realm.
+- **Identity sources from OpenMap (REQ-INT-016, ADR-074).** Administrators add Active Directory / LDAP directories
+  and Entra ID, Okta or other OpenID Connect providers on _Settings → Identity sources_; the API applies each one to
+  the realm (`IDENTITY_FEDERATION_REALM`, default `KEYCLOAK_REALM`) with the tenant attribute and group-to-role
+  mappings above already in place. Store the bind password (`password`) or client secret (`clientSecret`, e.g. a
+  Setup `oauth_client` credential set) in OpenBao and give its path; register the redirect URI the card shows with the
+  provider. The API signs in to Keycloak's admin API with `KEYCLOAK_ADMIN_CLIENT_ID` / `KEYCLOAK_ADMIN_CLIENT_SECRET`
+  in `KEYCLOAK_ADMIN_REALM` (production: a service-account client with the realm-management roles `manage-realm`,
+  `manage-users`, `view-realm`), or with the bootstrap administrator `KEYCLOAK_ADMIN` when no secret is set. Entra ID
+  authorities other than the public cloud go in `IDENTITY_ENTRA_AUTHORITY_URL`. The airgap profile refuses Entra ID
+  and Okta (internet services); directories and self-hosted providers work there.
 - **MFA.** The realm pins the TOTP policy (6 digits, 30 s, one window of drift, no code reuse) and enables the
   _Configure OTP_ required action; the default browser flow enforces the second factor for every user who has
   enrolled. To make it mandatory, set _Configure OTP_ as a default action for new users or require it for the

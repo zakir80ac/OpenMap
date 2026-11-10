@@ -63,6 +63,9 @@ export const ENVIRONMENT_METRIC = 'openmap_environment_reads_total';
 /** REQ-CORE-019 (ADR-049): REST v1 calls by route and status, and their duration. */
 export const REST_REQUESTS_METRIC = 'openmap_rest_requests_total';
 export const REST_DURATION_METRIC = 'openmap_rest_request_duration_seconds';
+/** REQ-INT-016 (ADR-074): identity source operations (apply, test, sync, remove) by kind and outcome, and users synced. */
+export const IDENTITY_SOURCE_METRIC = 'openmap_identity_source_operations_total';
+export const IDENTITY_SYNC_USERS_METRIC = 'openmap_identity_sync_users_total';
 
 export type RequestStatus = 'ok' | 'error';
 
@@ -114,6 +117,9 @@ export class MetricsService {
   readonly firewallReads: Counter<'query'>;
   /** REQ-INT-009 — test notifications queued, by vendor. */
   readonly notificationTests: Counter<'vendor'>;
+  /** REQ-INT-016 — identity source operations applied to Keycloak, and the users a directory sync touched. */
+  readonly identitySourceOps: Counter<'op' | 'kind' | 'outcome'>;
+  readonly identitySyncUsers: Counter<'result'>;
   /** REQ-SEC-011 — personal-data values encrypted or decrypted through OpenBao Transit. */
   readonly fieldCipher: Counter<'op' | 'outcome'>;
   readonly rackMoves: Counter;
@@ -270,6 +276,18 @@ export class MetricsService {
       name: NOTIFICATION_TEST_METRIC,
       help: 'Test notifications queued for the BSM engine to send, by vendor',
       labelNames: ['vendor'],
+      registers: [this.registry],
+    });
+    this.identitySourceOps = new Counter({
+      name: IDENTITY_SOURCE_METRIC,
+      help: 'Identity source operations against Keycloak (apply, test, sync, remove), by source kind and outcome',
+      labelNames: ['op', 'kind', 'outcome'],
+      registers: [this.registry],
+    });
+    this.identitySyncUsers = new Counter({
+      name: IDENTITY_SYNC_USERS_METRIC,
+      help: 'Users a directory sync added, updated, removed or failed to import, by result',
+      labelNames: ['result'],
       registers: [this.registry],
     });
     this.fieldCipher = new Counter({

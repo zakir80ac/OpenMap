@@ -1111,6 +1111,100 @@ export const CLOUD_ADVICE = {
 } as const;
 
 /**
+ * REQ-INT-016 (ADR-074) — identity federation. Administrators register directories (Active Directory, other LDAP) and
+ * OpenID Connect providers (Entra ID, Okta, any other); the API applies each one to the Keycloak realm people sign in
+ * to, through Keycloak's admin REST API. Every Keycloak object OpenMap creates carries `objectPrefix`, so OpenMap never
+ * edits or removes one it did not create. An alias is the source name made URL-safe plus `aliasSuffixLength` characters
+ * of the source id (unique across tenants sharing a realm, and fixed once created because an OIDC provider's redirect
+ * URI contains it). The LDAP presets are Keycloak's own defaults per vendor (its admin console fills the same values);
+ * the OIDC presets are each vendor's documented scopes and group claim (Okta emits `groups` only when the scope asks).
+ */
+export const IDENTITY_FEDERATION = {
+  objectPrefix: 'openmap',
+  aliasSuffixLength: 8,
+  maxNameLength: 80,
+  maxDnLength: 512,
+  maxRoleMappings: 50,
+  maxGroupLength: 256,
+  /** Groups read per admin call when listing the groups below a source's group. */
+  keycloakPageSize: 1000,
+  /** Bounds of a directory's periodic full sync; no period means sync on request only. */
+  minSyncPeriodMinutes: 5,
+  maxSyncPeriodMinutes: 10_080,
+  /** Keycloak admin access tokens are renewed this long before they expire. */
+  adminTokenMarginMs: 10_000,
+  /** One admin REST call (create, read, update, test). */
+  requestTimeoutMs: 15_000,
+  /** A full directory sync imports every user in one call; a large directory needs minutes. */
+  syncTimeoutMs: 300_000,
+  /** How long Keycloak waits for the directory to answer a connection (its `connectionTimeout`). */
+  ldapConnectionTimeoutMs: 10_000,
+  /** Users per page Keycloak reads during a sync (its `batchSizeForSync`). */
+  ldapSyncBatchSize: 1000,
+  /** The user attribute carrying the tenant: the realm's `tenant` token mapper reads it (REQ-CORE-012). */
+  tenantAttribute: 'tenant',
+  /** Field of the OpenBao record (at the source's secretRef) holding the bind password or the client secret. */
+  secretFields: { ldap: 'password', oidc: 'clientSecret' },
+  ldap: {
+    active_directory: {
+      keycloakVendor: 'ad',
+      usernameAttribute: 'sAMAccountName',
+      rdnAttribute: 'cn',
+      uuidAttribute: 'objectGUID',
+      userObjectClasses: 'person, organizationalPerson, user',
+      groupObjectClasses: 'group',
+      groupNameAttribute: 'cn',
+      membershipAttribute: 'member',
+    },
+    ldap: {
+      keycloakVendor: 'other',
+      usernameAttribute: 'uid',
+      rdnAttribute: 'uid',
+      uuidAttribute: 'entryUUID',
+      userObjectClasses: 'inetOrgPerson, organizationalPerson',
+      groupObjectClasses: 'groupOfNames',
+      groupNameAttribute: 'cn',
+      membershipAttribute: 'member',
+    },
+  },
+  oidc: {
+    entra_id: { scopes: 'openid profile email', groupsClaim: 'groups' },
+    okta: { scopes: 'openid profile email groups', groupsClaim: 'groups' },
+    oidc: { scopes: 'openid profile email', groupsClaim: 'groups' },
+  },
+  /** OpenID Connect Discovery 1.0 §4: the provider configuration document below the issuer. */
+  discoveryPath: '/.well-known/openid-configuration',
+  /** Entra ID's v2.0 endpoints: issuer `<authority>/<directory tenant>/v2.0`. */
+  entraIssuerSuffix: 'v2.0',
+  /** Okta custom authorization servers: issuer `<domain>/oauth2/<server id>` over HTTPS; none means the org server. */
+  oktaServerPath: 'oauth2',
+  /** The Keycloak flow a first brokered sign-in runs (creates the local user, links it to the provider). */
+  firstBrokerLoginFlow: 'first broker login',
+} as const;
+
+/**
+ * REQ-INT-016 (ADR-074) — Keycloak's own identifiers for the objects identity federation creates: component types and
+ * provider ids of its LDAP user storage, LDAP mappers, OIDC brokering and identity-provider mappers. They are protocol
+ * names fixed by Keycloak (some carry the word Keycloak itself chose for a fixed-value mapper), not deployment settings.
+ */
+export const KEYCLOAK_PROVIDERS = {
+  userStorageType: 'org.keycloak.storage.UserStorageProvider',
+  ldapMapperType: 'org.keycloak.storage.ldap.mappers.LDAPStorageMapper',
+  ldapProvider: 'ldap',
+  groupMapperProvider: 'group-ldap-mapper',
+  /** The LDAP mapper that gives every user of the directory the same attribute value. */
+  attributeMapperProvider: 'hardcoded-attribute-mapper',
+  oidcProvider: 'oidc',
+  claimToRoleMapper: 'oidc-role-idp-mapper',
+  /** The identity-provider mapper that gives every brokered user the same attribute value. */
+  attributeIdpMapper: 'hardcoded-attribute-idp-mapper',
+  /** LDAP search scope "subtree" (javax.naming SearchControls.SUBTREE_SCOPE). */
+  subtreeScope: '2',
+  /** Keycloak's "no periodic sync" value for fullSyncPeriod / changedSyncPeriod. */
+  noPeriod: '-1',
+} as const;
+
+/**
  * REQ-IPAM-003 (ADR-055) — two-way DNS sync. Every DNS_SYNC_INTERVAL_MS (env) the scheduler looks at the zones kept in
  * sync: a zone with pending changes, or whose last pull is older than DNS_PULL_INTERVAL_MS (env), gets one `dns` job
  * carrying the changes (RFC 2136) and the transfer that confirms them. A zone whose job has not finished waits, unless
@@ -2043,8 +2137,12 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.39.0 (REQ-INT-019, ADR-066): `BackupState`, `BackupSet`, `Backups`, query `backups`.
    * 1.40.0 (REQ-SEC-011, ADR-067 steps 4-5): `CustomFieldDefinition.sensitive`, `CustomFieldDefinitionInput.sensitive`,
    * `BackupSet.encrypted`.
+   * 1.46.0 (REQ-INT-016, ADR-074): `IdentitySourceKind`, `IdentitySourceVendor`, `IdentitySourceState`,
+   * `IdentityMappedRole`, `IdentityRoleMapping`, `LdapSourceSettings`, `OidcSourceSettings`, `IdentitySourceTest`,
+   * `IdentitySourceSync`, `IdentitySource` and their inputs; query `identitySources`; mutations `upsertIdentitySource`,
+   * `testIdentitySource`, `syncIdentitySource`, `removeIdentitySource`.
    */
-  graphql: '1.40.0',
+  graphql: '1.46.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

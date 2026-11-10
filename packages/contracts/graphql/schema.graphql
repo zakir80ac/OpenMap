@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.40.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.46.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,90 @@ type Backups {
   staleAfterHours: Int!
   lastCompleteAt: DateTime
   sets: [BackupSet!]!
+}
+
+# REQ-INT-016 (ADR-074): identity sources: directories (Active Directory, other LDAP) and OpenID Connect providers
+# (Entra ID, Okta, other) people sign in through, applied to Keycloak. Secrets stay in OpenBao (`secretRef`).
+enum IdentitySourceKind { ldap oidc }
+enum IdentitySourceVendor { active_directory ldap entra_id okta oidc }
+"pending: saved, not yet in Keycloak; applied: Keycloak holds the current settings; error: the last apply failed (see lastError)."
+enum IdentitySourceState { pending applied error }
+"The OpenMap roles a directory or provider group can grant."
+enum IdentityMappedRole { admin operator analyst auditor }
+type IdentityRoleMapping { "A directory group name, or the value the provider puts in the groups claim (Entra ID: the group's object id)." group: String! role: IdentityMappedRole! }
+type LdapSourceSettings {
+  connectionUrl: String!
+  startTls: Boolean!
+  bindDn: String!
+  usersDn: String!
+  userFilter: String
+  groupsDn: String!
+  usernameAttribute: String!
+  "Minutes between full syncs; null: sync on request only."
+  syncPeriodMinutes: Int
+}
+type OidcSourceSettings {
+  "Derived for Entra ID and Okta from their settings; entered for any other provider."
+  issuer: String!
+  directoryTenantId: String
+  domain: String
+  authorizationServerId: String
+  clientId: String!
+  scopes: String!
+  groupsClaim: String!
+  "The redirect URI to register with the provider (Keycloak's broker endpoint for this source)."
+  redirectUri: String!
+}
+type IdentitySourceTest { ok: Boolean! message: String! at: DateTime! }
+type IdentitySourceSync { added: Int! updated: Int! removed: Int! failed: Int! "Directory groups imported or updated." groups: Int! message: String! at: DateTime! }
+type IdentitySource {
+  id: UUID!
+  kind: IdentitySourceKind!
+  vendor: IdentitySourceVendor!
+  name: String!
+  "Names the source's objects in Keycloak; fixed once created."
+  alias: String!
+  enabled: Boolean!
+  secretRef: String!
+  ldap: LdapSourceSettings
+  oidc: OidcSourceSettings
+  roleMappings: [IdentityRoleMapping!]!
+  state: IdentitySourceState!
+  lastError: String
+  lastTest: IdentitySourceTest
+  lastSync: IdentitySourceSync
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+input IdentityRoleMappingInput { group: String! role: IdentityMappedRole! }
+input LdapSourceInput {
+  connectionUrl: String!
+  startTls: Boolean
+  bindDn: String!
+  usersDn: String!
+  userFilter: String
+  groupsDn: String!
+  usernameAttribute: String
+  syncPeriodMinutes: Int
+}
+input OidcSourceInput {
+  issuer: String
+  directoryTenantId: String
+  domain: String
+  authorizationServerId: String
+  clientId: String!
+  scopes: String
+  groupsClaim: String
+}
+input IdentitySourceInput {
+  vendor: IdentitySourceVendor!
+  name: String!
+  enabled: Boolean
+  "The OpenBao record holding `password` (directories) or `clientSecret` (providers)."
+  secretRef: String!
+  roleMappings: [IdentityRoleMappingInput!]!
+  ldap: LdapSourceInput
+  oidc: OidcSourceInput
 }
 
 # REQ-IPAM-005 (ADR-064): firewall rules and policy objects, the rule analysis and the traffic check.
@@ -2818,6 +2902,8 @@ type Query {
   integrations(category: String): [Integration!]!
   "REQ-INT-019: the backup sets and whether the newest complete one is recent enough (administrators)."
   backups: Backups!
+  "REQ-INT-016: the tenant's identity sources (administrators)."
+  identitySources: [IdentitySource!]!
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
   analyticsEmbed: AnalyticsEmbed!
@@ -3226,6 +3312,14 @@ type Mutation {
   testIntegration(id: UUID!): Integration!
   "REQ-INT-009: queues a test message on a notification integration (webhook, Slack, Teams, email, PagerDuty); the outcome appears in its deliveries."
   sendTestNotification(id: UUID!): Boolean!
+  "REQ-INT-016: saves an identity source and applies it to Keycloak; a failed apply is kept with state error."
+  upsertIdentitySource(id: UUID, input: IdentitySourceInput!): IdentitySource!
+  "REQ-INT-016: Keycloak's LDAP connection and bind test, or its read of the provider's discovery document."
+  testIdentitySource(id: UUID!): IdentitySourceTest!
+  "REQ-INT-016: imports a directory's groups and users into Keycloak now."
+  syncIdentitySource(id: UUID!): IdentitySourceSync!
+  "REQ-INT-016: removes the source from Keycloak and OpenMap; its people can no longer sign in through it."
+  removeIdentitySource(id: UUID!): Boolean!
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!
   acknowledgeIncident(incidentId: UUID!): Incident!
   assignIncident(incidentId: UUID!, assignee: String!): Incident!
