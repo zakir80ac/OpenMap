@@ -1,8 +1,10 @@
-// REQ-CORE-008 — guard CLI: scans apps/ and packages/, runs tracker verify, checks perf budget results.
+// REQ-CORE-008 REQ-PERF-005 — guard CLI: scans apps/ and packages/, runs tracker verify, checks perf budget results.
+// Flags: --no-tracker skips tracker verify; --perf-only skips the source scan (a CI perf job after `verify` ran it);
+// --require-perf a,b fails when the named results were not written (the job's measurement did not run).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { PERF_BUDGETS } from '@openmap/constants';
+import { perfFindings, requiredFromArgs } from './perf.js';
 import { runRules, type Finding } from './rules.js';
 
 const repoRoot = resolve(process.cwd(), '..', '..');
@@ -33,136 +35,6 @@ function scan(): Finding[] {
   return findings;
 }
 
-interface LighthousePage {
-  label: string;
-  performance: number;
-  accessibility: number;
-  bestPractices: number;
-}
-
-interface PerfResult {
-  name: string;
-  p95Ms?: number;
-  fps?: number;
-  minutes?: number;
-  pages?: LighthousePage[];
-}
-
-function perfBudgets(): Finding[] {
-  if (!existsSync(PERF_RESULTS)) return [];
-  const out: Finding[] = [];
-  for (const file of readdirSync(PERF_RESULTS)) {
-    if (!file.endsWith('.json')) continue;
-    const r = JSON.parse(readFileSync(join(PERF_RESULTS, file), 'utf8')) as PerfResult;
-    const path = 'tools/perf/results/' + file;
-    if (
-      r.name === 'screen-interaction' &&
-      r.p95Ms !== undefined &&
-      r.p95Ms > PERF_BUDGETS.screenInteractionP95Ms
-    )
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message: 'screen p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.screenInteractionP95Ms),
-      });
-    if (r.name === 'impact-query' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.impactQuery100kP95Ms)
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message: 'impact p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.impactQuery100kP95Ms),
-      });
-    if (
-      r.name === 'availability-report' &&
-      r.p95Ms !== undefined &&
-      r.p95Ms > PERF_BUDGETS.availabilityReportP95Ms
-    )
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message:
-          'availability report p95 ' +
-          String(r.p95Ms) +
-          ' ms over ' +
-          String(PERF_BUDGETS.availabilityReportP95Ms),
-      });
-    // REQ-UI-027: the telemetry fleet table's GraphQL page under the screen interaction budget.
-    if (r.name === 'telemetry-fleet' && r.p95Ms !== undefined && r.p95Ms > PERF_BUDGETS.screenInteractionP95Ms)
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message: 'telemetry fleet p95 ' + String(r.p95Ms) + ' ms over ' + String(PERF_BUDGETS.screenInteractionP95Ms),
-      });
-    if (r.name === 'graph-render' && r.fps !== undefined && r.fps < PERF_BUDGETS.graphRenderFps)
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message: 'graph ' + String(r.fps) + ' fps under ' + String(PERF_BUDGETS.graphRenderFps),
-      });
-    if (
-      r.name === 'discovery-sweep' &&
-      r.minutes !== undefined &&
-      r.minutes > PERF_BUDGETS.discoverySweepMinutes
-    )
-      out.push({
-        rule: 'perf-budget',
-        file: path,
-        line: 1,
-        message: 'sweep ' + String(r.minutes) + ' min over ' + String(PERF_BUDGETS.discoverySweepMinutes),
-      });
-    if (r.name === 'lighthouse' && r.pages !== undefined) {
-      for (const page of r.pages) {
-        const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(
-          page.label,
-        )
-          ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin
-          : PERF_BUDGETS.lighthousePerformanceMin;
-        if (page.performance < performanceMin)
-          out.push({
-            rule: 'perf-budget',
-            file: path,
-            line: 1,
-            message:
-              page.label +
-              ' Lighthouse performance ' +
-              String(page.performance) +
-              ' under ' +
-              String(performanceMin),
-          });
-        if (page.accessibility < PERF_BUDGETS.lighthouseAccessibilityMin)
-          out.push({
-            rule: 'perf-budget',
-            file: path,
-            line: 1,
-            message:
-              page.label +
-              ' Lighthouse accessibility ' +
-              String(page.accessibility) +
-              ' under ' +
-              String(PERF_BUDGETS.lighthouseAccessibilityMin),
-          });
-        if (page.bestPractices < PERF_BUDGETS.lighthouseBestPracticesMin)
-          out.push({
-            rule: 'perf-budget',
-            file: path,
-            line: 1,
-            message:
-              page.label +
-              ' Lighthouse best practices ' +
-              String(page.bestPractices) +
-              ' under ' +
-              String(PERF_BUDGETS.lighthouseBestPracticesMin),
-          });
-      }
-    }
-  }
-  return out;
-}
-
 function trackerVerify(): boolean {
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
   const result = spawnSync(pnpm, ['tracker', 'verify'], {
@@ -174,10 +46,11 @@ function trackerVerify(): boolean {
 }
 
 function main(): void {
-  const findings = [...scan(), ...perfBudgets()];
+  const perfOnly = process.argv.includes('--perf-only');
+  const findings = [...(perfOnly ? [] : scan()), ...perfFindings(PERF_RESULTS, requiredFromArgs(process.argv))];
   for (const f of findings)
     console.error('guard: ' + f.file + ':' + String(f.line) + ' [' + f.rule + '] ' + f.message);
-  const trackerOk = process.argv.includes('--no-tracker') ? true : trackerVerify();
+  const trackerOk = process.argv.includes('--no-tracker') || perfOnly ? true : trackerVerify();
   if (findings.length > 0 || !trackerOk) {
     console.error(
       'guard: ' + String(findings.length) + ' finding(s)' + (trackerOk ? '' : ', tracker verify failed'),

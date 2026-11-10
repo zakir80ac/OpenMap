@@ -1,11 +1,12 @@
 // REQ-CORE-013 REQ-CORE-005 REQ-CORE-014 REQ-CORE-020 — reconciler service: BullMQ worker over collector results plus
 // RECONCILER_DISPATCHERS outbox dispatcher loops (leased claims, so they never share a row), each unit of work traced and
-// counted; /metrics, /healthz and /readyz on RECONCILER_PORT.
+// counted; /metrics, /healthz and /readyz on RECONCILER_PORT. REQ-PERF-005: /metrics also carries the platform gauges
+// (store probes, outbox backlog, queue depths) taken at scrape time.
 // Both loops stop cleanly on SIGINT/SIGTERM.
 import './instrumentation.js';
-import { Worker } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { RECONCILER, TIME } from '@openmap/constants';
+import { HTTP, PLATFORM_HEALTH, RECONCILER, TIME } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { collectorResultSchema } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
@@ -14,6 +15,7 @@ import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } fro
 import { AdmScheduler, runAdmPass, triggersAdm } from './worker/adm.js';
 import { createClickHouse, createDispatcherId, createEventStream, createMeilisearchSink, dispatchOnce } from './worker/dispatcher.js';
 import { processResult, retryPendingRelationships } from './worker/pipeline.js';
+import { registerPlatformGauges } from './worker/platform-gauges.js';
 
 const RESULTS_QUEUE = RECONCILER.resultsQueue;
 const TRACER = 'openmap-reconciler';
@@ -110,6 +112,27 @@ async function main(): Promise<void> {
     }
   };
   const loop = Promise.all(Array.from({ length: env.RECONCILER_DISPATCHERS }, () => dispatchLoop(createDispatcherId())));
+  // REQ-PERF-005 (ADR-071): queue handles for counting only (the worker and the event stream keep their own).
+  const countedQueues = [new Queue(RESULTS_QUEUE, { connection }), new Queue(RECONCILER.eventStreamQueue, { connection })];
+  const meiliHealth = new URL('health', env.MEILI_URL.endsWith('/') ? env.MEILI_URL : env.MEILI_URL + '/');
+  registerPlatformGauges(metrics.registry, {
+    prisma,
+    queues: countedQueues,
+    tracer: TRACER,
+    probes: {
+      postgres: () => prisma.$queryRaw`SELECT 1`,
+      memgraph: () => graph.readOnly('RETURN 1 AS ok', {}),
+      clickhouse: async () => {
+        const ping = await sinks.clickhouse.ping();
+        if (!ping.success) throw ping.error;
+      },
+      valkey: () => connection.ping(),
+      meilisearch: async () => {
+        const res = await fetch(meiliHealth, { signal: AbortSignal.timeout(PLATFORM_HEALTH.storeProbeTimeoutMs) });
+        if (res.status !== HTTP.status.ok) throw new Error('meilisearch health returned ' + String(res.status));
+      },
+    },
+  });
   const metricsServer = await createMetricsServer({
     registry: metrics.registry,
     port: env.RECONCILER_PORT,
@@ -124,6 +147,7 @@ async function main(): Promise<void> {
     running = false;
     await metricsServer.close();
     await worker.close();
+    await Promise.all(countedQueues.map((q) => q.close()));
     await adm.drain();
     await loop;
     await sinks.stream.close();

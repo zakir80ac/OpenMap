@@ -8,7 +8,9 @@ coverage/
 *.log
 .DS_Store
 Thumbs.db
-tools/perf/results/
+# REQ-PERF-005: the directory is kept (compose mounts it read-only into the API); the results in it are not committed.
+tools/perf/results/*
+!tools/perf/results/.gitkeep
 graphify-out/*.tmp
 
 tools/perf/bin/

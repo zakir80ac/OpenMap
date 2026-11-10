@@ -11,6 +11,25 @@ under `tools/perf/results/` (CI writes them; they are not committed).
 | Graph rendering | Playwright frame timing on the dependency map, same spec | 60 fps | `results/graph-render.json` |
 | Lighthouse | `pnpm --filter @openmap/perf lighthouse` user flow over the signed-in console | performance ≥ 0.90, accessibility ≥ 0.95, best practices ≥ 0.95 | `results/lighthouse.json` (+ `lighthouse-flow.html`) |
 | Discovery sweep | `pnpm --filter @openmap/perf discovery-sweep` (synth-estate replay through the reconciler, CI nightly) | 10k devices < 15 min | `results/discovery-sweep.json` |
+| Telemetry fleet table page (REQ-UI-027) | `pnpm --filter @openmap/perf telemetry-budget` (k6 `k6/telemetry-fleet.js`) | p95 < 100 ms | `results/telemetry-fleet.json` |
+
+## Budgets in CI and on the Platform health screen (REQ-PERF-005, ADR-071)
+
+One function judges a result file against `PERF_BUDGETS`: `perfBudgetChecks` in `packages/contracts/src/perf-results.ts`.
+`pnpm guard` uses it, and so does the API, which shows the results under `PERF_RESULTS_DIR` (compose mounts this
+`results/` directory read-only) on the console's Platform health screen with the time each was measured.
+
+Each CI job enforces the budgets of the measurements it runs, and fails when one of them was not written:
+
+| CI job | Measurements | Guard step |
+| --- | --- | --- |
+| `e2e` | the e2e suite's perf spec (screen interaction, graph frame rate), then Lighthouse | `pnpm guard --perf-only --require-perf screen-interaction,graph-render,lighthouse` |
+| `perf` | impact query and telemetry fleet table on a 110k-CI estate | `pnpm guard --perf-only --require-perf impact-query,telemetry-fleet` |
+| `sweep` (nightly) | discovery sweep of about 11,000 devices | `pnpm guard --perf-only --require-perf discovery-sweep` |
+
+`--perf-only` skips the source scan (the `verify` job runs it); `--require-perf` turns a measurement that silently did
+not run into a failure. In production the same objectives are live: the GraphQL p95 alert in
+`deploy/compose/prometheus/rules/openmap-slo.rules.yml` fires on the screen-interaction budget.
 
 ## Impact query
 

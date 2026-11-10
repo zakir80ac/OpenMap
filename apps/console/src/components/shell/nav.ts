@@ -67,7 +67,11 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    items: [{ key: 'nav.settings', href: '/settings', icon: 'settings' }],
+    items: [
+      // REQ-PERF-005: the platform's own health, beside Settings (administrators).
+      { key: 'nav.platform', href: '/platform', icon: 'eye' },
+      { key: 'nav.settings', href: '/settings', icon: 'settings' },
+    ],
   },
 ];
 
