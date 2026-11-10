@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.40.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.45.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -2676,6 +2676,59 @@ type EstateStats {
   trend: EstateTrend!
 }
 
+"REQ-INT-012 (ADR-073): whether a monitoring alert is still raised at its source."
+enum MonitoringAlertStatus {
+  firing
+  resolved
+}
+"What a monitoring alert named the affected thing by: kind is ci_id, fqdn, instance, ip or hostname."
+type MonitoringTarget {
+  kind: String!
+  value: String!
+}
+"""
+REQ-INT-012 (ADR-073): one alert from a monitoring integration (Alertmanager, Zabbix, Nagios / Icinga, Datadog,
+SolarWinds, Splunk), kept per source fingerprint. `ci` is the CI it resolved to (null: listed for mapping);
+`resolution` says how (ci_id, mapping, identity). While firing, `effect` (down, degraded or null) is what it does to
+that CI's health; `expiresAt` is when a point-in-time alert clears by itself.
+"""
+type MonitoringAlert {
+  id: UUID!
+  integrationId: UUID!
+  integrationName: String!
+  vendor: String!
+  fingerprint: String!
+  status: MonitoringAlertStatus!
+  severity: String!
+  effect: String
+  title: String!
+  description: String
+  sourceUrl: String
+  targets: [MonitoringTarget!]!
+  ci: Ci
+  resolution: String
+  startsAt: DateTime!
+  endsAt: DateTime
+  expiresAt: DateTime
+  firstReceivedAt: DateTime!
+  lastReceivedAt: DateTime!
+  receivedCount: Int!
+}
+"REQ-INT-012: an operator's mapping of an alert source (a normalised hostname, FQDN or address) to a CI."
+type MonitoringSourceMapping {
+  id: UUID!
+  sourceKey: String!
+  ci: Ci
+  createdBy: String!
+  createdAt: DateTime!
+}
+"REQ-INT-012: the tenant's monitoring alerts, firing first, with counts of firing and of firing-but-unresolved alerts."
+type MonitoringAlerts {
+  alerts: [MonitoringAlert!]!
+  firing: Int!
+  unresolved: Int!
+  mappings: [MonitoringSourceMapping!]!
+}
 type Query {
   dashboards: [Dashboard!]!
   """
@@ -2820,6 +2873,8 @@ type Query {
   backups: Backups!
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
+  "REQ-INT-012: alerts received from monitoring integrations; unresolvedOnly lists those no CI was found for."
+  monitoringAlerts(status: MonitoringAlertStatus, unresolvedOnly: Boolean, first: Int = 100): MonitoringAlerts!
   analyticsEmbed: AnalyticsEmbed!
   discoveryNodes: [DiscoveryNode!]!
   discoveryJobs(status: String, first: Int = 50): [DiscoveryJob!]!
@@ -3224,6 +3279,10 @@ type Mutation {
   createAsset(input: ManualAssetInput!): AssetRecord!
   upsertIntegration(id: UUID, input: IntegrationInput!): Integration!
   testIntegration(id: UUID!): Integration!
+  "REQ-INT-012: maps an alert source to a CI (operators); unresolved alerts naming it resolve now, later ones on arrival."
+  mapMonitoringSource(sourceKey: String!, ciId: UUID!): MonitoringSourceMapping!
+  "REQ-INT-012: resolves a monitoring alert by hand (operators), for a sender that will never resolve it."
+  clearMonitoringAlert(id: UUID!): MonitoringAlert!
   "REQ-INT-009: queues a test message on a notification integration (webhook, Slack, Teams, email, PagerDuty); the outcome appears in its deliveries."
   sendTestNotification(id: UUID!): Boolean!
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!

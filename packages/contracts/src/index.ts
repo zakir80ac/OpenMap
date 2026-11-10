@@ -28,6 +28,7 @@ export * from './cabling-verify.js';
 export * from './switch-ports.js';
 export * from './firewall.js';
 export * from './notification.js';
+export * from './monitoring.js';
 export * from './backup.js';
 export * from './custom-field.js';
 export * from './import.js';

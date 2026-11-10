@@ -2,11 +2,12 @@
 // publishes, applies CI health, recomputes services per tenant after a short debounce, and re-evaluates every known
 // tenant on a timer so stale CIs, expiring certificates, SLA budgets and missed response targets surface without new
 // events. Every recompute and SLA evaluation is traced and counted; /metrics, /healthz and /readyz on BSM_ENGINE_PORT.
+// REQ-INT-012 (ADR-073): firing monitoring alerts overlay CI health, re-read when an ingest wakes the engine.
 import './instrumentation.js';
 import { createClient } from '@clickhouse/client';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { BSM, CERTIFICATES, ENVIRONMENT, POWER, READINESS, RECONCILER } from '@openmap/constants';
+import { BSM, CERTIFICATES, ENVIRONMENT, MONITORING, POWER, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema, type EventEnvelope } from '@openmap/contracts';
 import { clickhouseOptions, createPrismaClient } from '@openmap/db';
@@ -20,6 +21,7 @@ import { createEngine } from './service/engine.js';
 import { createReadiness } from './service/readiness.js';
 import { createPowerAlerts } from './service/power.js';
 import { createEnvironmentAlerts } from './service/environment.js';
+import { createMonitoringHealth, wakesMonitoring } from './service/monitoring.js';
 
 const TRACER = 'openmap-bsm-engine';
 
@@ -91,6 +93,17 @@ export function createBsmMetrics() {
       labelNames: ['vendor', 'outcome'],
       registers: [registry],
     }),
+    monitoringSyncs: new Counter({
+      name: 'openmap_bsm_monitoring_syncs_total',
+      help: 'Passes over changed monitoring alerts (REQ-INT-012), by outcome',
+      labelNames: ['outcome'],
+      registers: [registry],
+    }),
+    monitoringHealthChanges: new Counter({
+      name: 'openmap_bsm_monitoring_health_changes_total',
+      help: 'CI health changes made by firing or cleared monitoring alerts (REQ-INT-012)',
+      registers: [registry],
+    }),
     slaDuration: new Histogram({
       name: 'openmap_bsm_sla_evaluation_duration_seconds',
       help: "Time to evaluate one tenant's SLAs and incident targets",
@@ -116,6 +129,13 @@ async function main(): Promise<void> {
     );
     return result.json();
   }, env.CLICKHOUSE_DB);
+  // REQ-INT-012 (ADR-073): the overlay reads CI health through the engine (called only once both exist).
+  const monitoring = createMonitoringHealth({
+    prisma,
+    graph,
+    healthMap: (tenantId, ids) => engine.healthMap(tenantId, ids),
+    now: () => new Date(),
+  });
   const engine = createEngine({
     prisma,
     graph,
@@ -128,6 +148,7 @@ async function main(): Promise<void> {
       sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
       now: () => new Date().toISOString(),
     },
+    alerts: monitoring.overlay,
   });
   // REQ-INT-009 (ADR-065): notifications to webhooks, Slack, Teams, email and PagerDuty for subscribed events.
   const notifier = createNotifier({
@@ -209,6 +230,23 @@ async function main(): Promise<void> {
       }, BSM.recomputeDebounceMs),
     );
   };
+  const monitoringSync = async (): Promise<void> => {
+    try {
+      const report = await withSpan(TRACER, 'bsm.monitoring_sync', {}, () => monitoring.sync());
+      metrics.monitoringSyncs.inc({ outcome: 'ok' });
+      metrics.monitoringHealthChanges.inc(report.healthChanged);
+      for (const tenantId of report.tenants) schedule(tenantId);
+      if (report.healthChanged + report.expired > 0) log({ msg: 'monitoring alerts applied', ...report });
+    } catch (err) {
+      metrics.monitoringSyncs.inc({ outcome: 'error' });
+      log({ msg: 'monitoring sync failed', error: err instanceof Error ? err.message : String(err) });
+    }
+  };
+  // The overlay is loaded before the first event is applied, so a restart never re-derives an alerted CI healthy.
+  await monitoringSync();
+  const monitoringTick = setInterval(() => {
+    void monitoringSync();
+  }, MONITORING.engineSyncMs);
   const connection = new Redis(env.VALKEY_URL, { maxRetriesPerRequest: null, enableReadyCheck: false });
   const worker = new Worker(
     RECONCILER.eventStreamQueue,
@@ -222,6 +260,7 @@ async function main(): Promise<void> {
       );
       metrics.events.inc();
       for (const tenantId of report.tenants) schedule(tenantId);
+      if (wakesMonitoring(e)) void monitoringSync();
       // Notifications go out in the background: health propagation never waits on a slow channel or its retries.
       void notify(e);
       return report;
@@ -384,6 +423,7 @@ async function main(): Promise<void> {
     clearInterval(readinessTick);
     clearInterval(powerTick);
     clearInterval(environmentTick);
+    clearInterval(monitoringTick);
     for (const t of pending.values()) clearTimeout(t);
     await worker.close();
     await clickhouse.close();

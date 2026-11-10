@@ -547,6 +547,8 @@ model Tenant {
   integrationConfigs      IntegrationConfig[]
   integrationDeliveries   IntegrationDelivery[]
   securityAlerts          SecurityAlert[]
+  monitoringAlerts        MonitoringAlert[]
+  monitoringMappings      MonitoringSourceMapping[]
   auditLogs               AuditLog[]
   userPreferences         UserPreference[]
   dashboards              Dashboard[]
@@ -1697,6 +1699,7 @@ model IntegrationConfig {
   deliveries     IntegrationDelivery[]
   incidentLinks  IncidentLink[]
   securityAlerts SecurityAlert[]
+  monitoringAlerts MonitoringAlert[]
 
   @@unique([tenantId, name])
   @@index([tenantId, category, enabled])
@@ -1770,6 +1773,72 @@ model SecurityAlert {
   @@unique([integrationId, remoteId])
   @@index([tenantId, severity, observedAt])
   @@map("security_alerts")
+}
+
+/// REQ-INT-012 (ADR-073) — one alert from a monitoring integration (Alertmanager, Zabbix, Nagios, Datadog, SolarWinds,
+/// Splunk), normalised (monitoringEventSchema) and kept per source fingerprint: a repeat updates it, a resolve closes
+/// it. `ciId` is the CI it was resolved to (null: listed for mapping); while firing, `effect` is what it does to that
+/// CI's health. The BSM engine reads rows by `updatedAt` and overlays the effects on observed health.
+model MonitoringAlert {
+  id              String        @id @default(uuid()) @db.Uuid
+  tenantId        String        @db.Uuid
+  integrationId   String        @db.Uuid
+  vendor          String
+  fingerprint     String
+  /// firing | resolved
+  status          String
+  severity        AlertSeverity
+  /// down | degraded while firing; null when the alert imposes no health (informational, or the integration's maxEffect).
+  effect          String?
+  title           String
+  description     String?
+  sourceUrl       String?
+  /// Array of { kind, value }: what the alert named the affected thing by.
+  targets         Json
+  /// Normalised target values (monitoringSourceKeys), probed when a source is mapped to a CI.
+  sourceKeys      String[]
+  labels          Json
+  ciId            String?       @db.Uuid
+  /// How ciId was found: ci_id (the alert named it), mapping (an operator's), identity (the CI lookup); null unresolved.
+  resolution      String?
+  startsAt        DateTime      @db.Timestamptz(3)
+  endsAt          DateTime?     @db.Timestamptz(3)
+  /// Point-in-time alerts (Splunk, or resolveAfterMinutes) clear at this instant.
+  expiresAt       DateTime?     @db.Timestamptz(3)
+  receivedCount   Int           @default(1)
+  firstReceivedAt DateTime      @db.Timestamptz(3)
+  lastReceivedAt  DateTime      @db.Timestamptz(3)
+  /// Outbox event of the delivery that last changed it; incidents correlate it (Incident.correlatedEventIds).
+  lastEventId     String?       @db.Uuid
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  integration IntegrationConfig @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@unique([integrationId, fingerprint])
+  @@index([tenantId, status, lastReceivedAt])
+  @@index([tenantId, ciId, status])
+  @@index([updatedAt])
+  @@index([sourceKeys], type: Gin)
+  @@map("monitoring_alerts")
+}
+
+/// REQ-INT-012 (ADR-073) — an operator's answer for an alert source the CI lookup could not place: alerts naming
+/// `sourceKey` (a normalised hostname, FQDN or address) resolve to `ciId`.
+model MonitoringSourceMapping {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  sourceKey String
+  ciId      String   @db.Uuid
+  createdBy String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, sourceKey])
+  @@map("monitoring_source_mappings")
 }
 
 // ---------------------------------------------------------------------------------------------

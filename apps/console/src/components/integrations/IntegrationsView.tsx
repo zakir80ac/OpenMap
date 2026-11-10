@@ -4,7 +4,9 @@
 // mappings and recent deliveries, a probe (testIntegration), a test message for notification integrations
 // (sendTestNotification) and an editor (upsertIntegration) with notification settings (minimum severity, language,
 // email sender and recipients). Administrators change things; operators read details and send tests; analysts see the list.
+// REQ-INT-012 (ADR-073): a link to the monitoring events the monitoring integrations deliver.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { NOTIFICATION, ROLES } from '@openmap/constants';
 import {
   DIRECTIONS,
@@ -46,7 +48,8 @@ import {
   type IntegrationHealth,
   type IntegrationInput,
 } from '@/lib/estate-queries';
-import { useFormatters, useT } from '@/providers';
+import { localizedHref } from '@/lib/locale-path';
+import { useFormatters, useLocale, useT } from '@/providers';
 
 export const HEALTH_STATE: Record<IntegrationHealth, UiState> = {
   healthy: 'healthy',
@@ -69,6 +72,7 @@ function directionKey(direction: string): MessageKey {
 
 export function IntegrationsView(): ReactNode {
   const t = useT();
+  const locale = useLocale();
   const format = useFormatters();
   const can = useCan();
   const queryClient = useQueryClient();
@@ -98,7 +102,17 @@ export function IntegrationsView(): ReactNode {
 
   return (
     <div className="flex flex-col gap-om-24">
-      <SectionTitle as="h1" size="lg" eyebrow={t('app.name')} description={t('integrations.subtitle')}>
+      <SectionTitle
+        as="h1"
+        size="lg"
+        eyebrow={t('app.name')}
+        description={t('integrations.subtitle')}
+        action={
+          <Link href={localizedHref(locale, '/integrations/monitoring')} className="text-om-xs font-semibold text-om-cyan hover:underline">
+            {t('integrations.monitoringEvents')}
+          </Link>
+        }
+      >
         {t('integrations.title')}
       </SectionTitle>
 
