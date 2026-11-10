@@ -11,7 +11,23 @@ services:
   postgres:
     <<: *restart
     image: percona/percona-distribution-postgresql:17.11.1-4
-    command: ["postgres", "-c", "shared_preload_libraries=pg_tde"]
+    # ADR-068: TLS required (pg_hba.conf), the certificate rendered by pgtde-agent, whose process namespace PostgreSQL
+    # joins so the agent can tell the postmaster to reload a renewed certificate.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_tde
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/run/pgtde/tls.pem
+      - -c
+      - ssl_key_file=/run/pgtde/tls.pem
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - hba_file=/etc/openmap/pg_hba.conf
+    pid: "service:pgtde-agent"
     # Parallel query workers share memory through /dev/shm; Docker's 64 MB default fails a full-scale reconciliation
     # lookup ("could not resize shared memory segment", REQ-CORE-013 scale-1 replay).
     shm_size: ${POSTGRES_SHM_SIZE:-1g}
@@ -29,8 +45,10 @@ services:
       - "pgtde-token:/run/pgtde:ro"
       - "./postgres/tde/00-pg-tde.sh:/docker-entrypoint-initdb.d/00-pg-tde.sh:ro"
       - "./postgres/init/01-schemas.sql:/docker-entrypoint-initdb.d/01-schemas.sql:ro"
+      - "./postgres/pg_hba.conf:/etc/openmap/pg_hba.conf:ro"
     depends_on:
-      pgtde-agent: { condition: service_healthy }
+      # restart: PostgreSQL shares the agent's process namespace, so it follows the agent when compose restarts it.
+      pgtde-agent: { condition: service_healthy, restart: true }
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openmap}"]
       interval: 5s
@@ -115,7 +133,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-openmap}
+      # ADR-068: TLS to PostgreSQL, verified against the internal services CA.
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-openmap}?ssl=true&sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt
       KC_DB_USERNAME: ${POSTGRES_USER:-openmap}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
       KC_DB_SCHEMA: keycloak
@@ -128,7 +147,7 @@ services:
       CONSOLE_PUBLIC_URL: ${PUBLIC_CONSOLE_URL:-http://localhost:3000}
       CONSOLE_ALIAS_URL: ${PUBLIC_CONSOLE_ALIAS_URL:-http://127.0.0.1:3000}
     ports: ["${KEYCLOAK_PORT:-8080}:8080"]
-    volumes: ["./keycloak/realm-openmap.json:/opt/keycloak/data/import/realm-openmap.json:ro"]
+    volumes: ["./keycloak/realm-openmap.json:/opt/keycloak/data/import/realm-openmap.json:ro", "service-ca:/run/openmap/ca:ro"]
     depends_on:
       postgres: { condition: service_healthy }
     healthcheck:
@@ -184,6 +203,8 @@ services:
       - "openbao-approle-backup:/openbao/approle-backup"
       - "openbao-approle-pgtde:/openbao/approle-pgtde"
       - "openbao-approle-clickhouse:/openbao/approle-clickhouse"
+      # ADR-068: the internal services CA certificate, for every client.
+      - "service-ca:/openbao/service-ca"
     depends_on:
       openbao: { condition: service_started }
 
@@ -215,12 +236,14 @@ services:
     command: ["agent", "-config=/openbao/config/agent-pgtde.hcl"]
     environment:
       BAO_ADDR: http://openbao:8200
+      # ADR-068: the name PostgreSQL's certificate is issued for (the compose service name clients connect to).
+      TLS_COMMON_NAME: postgres
     volumes: ["./openbao/agent-pgtde.hcl:/openbao/config/agent-pgtde.hcl:ro", "openbao-approle-pgtde:/openbao/approle-pgtde:ro", "pgtde-token:/run/pgtde"]
     depends_on:
       openbao: { condition: service_healthy }
       openbao-init: { condition: service_completed_successfully }
     healthcheck:
-      test: ["CMD-SHELL", "test -s /run/pgtde/token"]
+      test: ["CMD-SHELL", "test -s /run/pgtde/token && test -s /run/pgtde/tls.pem"]
       interval: 2s
       timeout: 2s
       retries: 30
@@ -240,7 +263,7 @@ services:
       ADMIN_USERNAME: ${SUPERSET_ADMIN_USER:-admin}
       ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:-admin}
     ports: ["${SUPERSET_PORT:-8088}:8088"]
-    volumes: ["./superset/superset_config.py:/app/pythonpath/superset_config.py:ro", "./superset/bootstrap.sh:/app/bootstrap.sh:ro"]
+    volumes: ["./superset/superset_config.py:/app/pythonpath/superset_config.py:ro", "./superset/bootstrap.sh:/app/bootstrap.sh:ro", "service-ca:/run/openmap/ca:ro"]
     entrypoint: ["/bin/bash", "/app/bootstrap.sh"]
     depends_on:
       postgres: { condition: service_healthy }
@@ -315,6 +338,8 @@ volumes:
   openbao-approle-pgtde:
   pgtde-token:
   openbao-approle-clickhouse:
+  # ADR-068: the internal services CA certificate (public), written by openbao-init.
+  service-ca:
   # The ClickHouse disk key, in memory only.
   clickhouse-key:
     driver_opts: { type: tmpfs, device: tmpfs, o: "uid=101,gid=101,mode=0750" }

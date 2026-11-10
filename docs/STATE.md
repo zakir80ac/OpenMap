@@ -34,8 +34,16 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 
 ### Open
 
-- **REQ-SEC-011 stays In progress** for encryption in transit: TLS from the services to Postgres, ClickHouse,
-  Memgraph, Valkey, Meilisearch and OpenBao, using the internal CA that signs Node mTLS. That is the next work.
+- **REQ-SEC-011 stays In progress** for encryption in transit (ADR-068).
+  - The internal services CA (OpenBao PKI) is in place, and **PostgreSQL TLS is done**: required, verified, renewed by
+    `pgtde-agent`. See `docs/evidence/sec-tls-postgres.md`.
+  - Next: ClickHouse (agent `clickhouse-keys` issues its certificate; HTTPS 8443 and secure native 9440 only; clients
+    including Superset's `clickhouse-connect`), then Valkey, Memgraph, Meilisearch, OpenBao.
+- **Host-side dev note:** Docker Desktop's port forwarding on this machine drops bursts of more than about 25 new
+  connections (TLS or not).
+  - Host-side integration suites: run them with `--no-file-parallelism`.
+  - The host `POSTGRES_URL` in `.env` is quoted, verified against `.local/services-ca.crt`, and uses a pool of 5.
+  - Docker Desktop was not restarted, because other projects' containers run on it.
 - **Old plaintext volumes** `openmap_postgres-data` and `openmap_clickhouse-data` are kept on the dev machine as
   the way back. Remove them once the stack has run on the new ones; they hold the data unencrypted.
 - The kind cluster `openmap-control-plane` is stopped.

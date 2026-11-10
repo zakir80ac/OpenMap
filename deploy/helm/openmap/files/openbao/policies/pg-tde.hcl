@@ -11,3 +11,8 @@ path "tde/metadata/*" {
 path "sys/mounts/tde" {
   capabilities = ["read"]
 }
+
+# ADR-068: the agent issues PostgreSQL's server certificate from the internal services CA.
+path "pki/issue/openmap-services" {
+  capabilities = ["update"]
+}

@@ -44,6 +44,27 @@ app.kubernetes.io/component: {{ .component }}
 {{- if .Values.openbao.external.enabled }}{{ .Values.openbao.external.address }}{{ else }}http://{{ include "openmap.fullname" . }}-openbao:8200{{ end }}
 {{- end }}
 
+{{/*
+REQ-SEC-011 (ADR-068): the internal services CA for clients. An init container fetches it from OpenBao's public
+pki/ca/pem (it exists once the OpenBao init job has run) into a memory volume every container of the pod mounts.
+*/}}
+{{- define "openmap.serviceCaInit" -}}
+- name: service-ca
+  image: {{ if .Values.image.registry }}{{ .Values.image.registry }}/{{ end }}{{ .Values.openbao.image }}
+  imagePullPolicy: {{ .Values.image.pullPolicy }}
+  command: ["sh", "-c", "until wget -qO /run/openmap/ca/services-ca.crt {{ include "openmap.vaultAddr" . }}/v1/pki/ca/pem && grep -q CERTIFICATE /run/openmap/ca/services-ca.crt; do sleep {{ .Values.migrate.pollSeconds }}; done"]
+  volumeMounts: [{ name: service-ca, mountPath: /run/openmap/ca }]
+{{- end -}}
+
+{{- define "openmap.caVolume" -}}
+- name: service-ca
+  emptyDir: { medium: Memory, sizeLimit: 1Mi }
+{{- end -}}
+
+{{- define "openmap.caMount" -}}
+- { name: service-ca, mountPath: /run/openmap/ca, readOnly: true }
+{{- end -}}
+
 {{/* REQ-SEC-011 (ADR-067): the services' AppRole ids, mounted where OPENBAO_ROLE_ID_FILE / OPENBAO_SECRET_ID_FILE point. */}}
 {{- define "openmap.vaultVolume" -}}
 {{- if not .Values.openbao.external.enabled }}

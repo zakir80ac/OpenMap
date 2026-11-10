@@ -55,6 +55,21 @@ printf '%s' "$mounts" | grep -q '"tde/"' || bao secrets enable -path=tde -versio
 bao kv get tde/clickhouse-disk > /dev/null 2>&1 || bao kv put tde/clickhouse-disk key="$(od -An -N32 -tx1 /dev/urandom | tr -d ' 
 ')" > /dev/null
 
+# ADR-068: the internal services CA. A root in the PKI engine (its key never leaves OpenBao), a role that issues
+# 30-day server certificates for the store names only, and the CA certificate on the public service-ca volume.
+SERVICE_TLS_NAMES="${SERVICE_TLS_NAMES:-postgres,clickhouse,memgraph,valkey,meilisearch,openbao,localhost}"
+if ! printf '%s' "$mounts" | grep -q '"pki/"'; then
+  bao secrets enable pki > /dev/null
+  bao secrets tune -max-lease-ttl=87600h pki > /dev/null
+fi
+bao read -field=certificate pki/cert/ca > /dev/null 2>&1 ||
+  bao write -field=certificate pki/root/generate/internal common_name="OpenMap Internal Services CA" ttl=87600h key_type=ec key_bits=256 > /dev/null
+bao write pki/roles/openmap-services allowed_domains="$SERVICE_TLS_NAMES" allow_bare_domains=true allow_subdomains=false   allow_localhost=true allow_ip_sans=true server_flag=true client_flag=false key_type=ec key_bits=256 ttl=720h max_ttl=720h > /dev/null
+if [ -d /openbao/service-ca ]; then
+  bao read -field=certificate pki/cert/ca > /openbao/service-ca/services-ca.crt
+  chmod 0444 /openbao/service-ca/services-ca.crt
+fi
+
 # The policy file names the default mount; it is written for the mount this deployment uses.
 sed "s#^path \"openmap/#path \"$MOUNT/#" /openbao/policies/openmap-services.hcl | bao policy write openmap-services - > /dev/null
 bao policy write openmap-backup /openbao/policies/openmap-backup.hcl > /dev/null

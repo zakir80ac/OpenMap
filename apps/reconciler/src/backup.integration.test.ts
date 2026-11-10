@@ -26,10 +26,12 @@ const tenantId = randomUUID();
 const organizationId = randomUUID();
 const hostUrl = new URL(env.POSTGRES_URL);
 hostUrl.pathname = '/' + scratch;
-// The same database as the backup container sees it on the compose network.
+// The same database as the backup container sees it on the compose network, in libpq's spelling of a verified TLS
+// connection (ADR-068: POSTGRES_URL is in Prisma's, where sslcert names the CA).
 const containerUrl = new URL(hostUrl.toString());
 containerUrl.hostname = 'postgres';
 containerUrl.port = '5432';
+containerUrl.search = '?sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt';
 const admin = createPrismaClient(env);
 const db = createPrismaClient({ ...env, POSTGRES_URL: hostUrl.toString() });
 const clickhouse = createClient({

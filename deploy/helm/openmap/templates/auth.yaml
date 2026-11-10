@@ -43,7 +43,7 @@ spec:
             - { name: KC_BOOTSTRAP_ADMIN_USERNAME, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" . }}-datastores, key: KEYCLOAK_ADMIN } } }
             - { name: KC_BOOTSTRAP_ADMIN_PASSWORD, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" . }}-datastores, key: KEYCLOAK_ADMIN_PASSWORD } } }
             - { name: KC_DB, value: postgres }
-            - { name: KC_DB_URL, value: "jdbc:postgresql://{{ include "openmap.fullname" . }}-postgres:5432/{{ .Values.postgres.database }}?currentSchema=keycloak" }
+            - { name: KC_DB_URL, value: "jdbc:postgresql://{{ include "openmap.fullname" . }}-postgres:5432/{{ .Values.postgres.database }}?currentSchema=keycloak&ssl=true&sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt" }
             - { name: KC_DB_USERNAME, value: {{ .Values.postgres.username | quote }} }
             - { name: KC_DB_PASSWORD, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" . }}-datastores, key: POSTGRES_PASSWORD } } }
             - { name: KC_HOSTNAME, value: {{ .Values.keycloak.publicUrl | quote }} }
@@ -53,11 +53,15 @@ spec:
           ports: [{ containerPort: 8080 }]
           volumeMounts:
             - { name: realm, mountPath: /opt/keycloak/data/import, readOnly: true }
+            {{- include "openmap.caMount" . | nindent 12 }}
           readinessProbe:
             httpGet: { path: /realms/{{ .Values.keycloak.realm }}, port: 8080 }
             periodSeconds: 10
             failureThreshold: 30
           resources: {{- toYaml .Values.keycloak.resources | nindent 12 }}
+      initContainers:
+        {{- include "openmap.serviceCaInit" . | nindent 8 }}
       volumes:
         - name: realm
           configMap: { name: {{ include "openmap.fullname" . }}-keycloak-realm }
+        {{- include "openmap.caVolume" . | nindent 8 }}

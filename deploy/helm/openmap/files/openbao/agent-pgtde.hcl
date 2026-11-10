@@ -20,3 +20,15 @@ auto_auth {
     }
   }
 }
+
+# ADR-068 — PostgreSQL's server certificate and key in one PEM (PostgreSQL reads the certificate and the key from it),
+# from the internal services CA, renewed before it expires; on each renewal the postmaster is told to reload (the agent
+# shares PostgreSQL's process namespace and user). TLS_COMMON_NAME is the name clients connect to.
+template {
+  destination = "/run/pgtde/tls.pem"
+  perms       = "0600"
+  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_COMMON_NAME\")) \"alt_names=localhost\" \"ttl=720h\" }}{{ .Cert }}{{ .Key }}{{ end }}"
+  exec {
+    command = ["sh", "-c", "pkill -HUP -o -x postgres || true"]
+  }
+}

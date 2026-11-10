@@ -124,6 +124,16 @@ PostgreSQL is Percona Server for PostgreSQL 17 with pg_tde:
   `openbao.external`, set `postgres.tde.externalApproleSecret` (a Secret with `role-id` and `secret-id` of an AppRole on
   the pg-tde policy; the vault needs a KV v2 mount `tde`).
 
+**Encryption in transit** (ADR-068). The internal services CA is OpenBao's PKI engine (`pki`, root "OpenMap
+Internal Services CA"). It issues 30-day server certificates for the store names only, and the agent beside each
+store renews them. Clients verify the server against `services-ca.crt` (compose: the `service-ca` volume; Helm: each
+pod fetches it from `pki/ca/pem`). Done so far:
+
+- **PostgreSQL:** TLS required (`hostnossl … reject`), TLS 1.2 minimum. The certificate is renewed by `pgtde-agent`,
+  which then reloads the postmaster.
+- **Host-side tools:** they need `.local/services-ca.crt`, the quoted `POSTGRES_URL` from `.env.example`, and, on Docker
+  Desktop, the small pool it sets. Bursts of new connections through its port forwarding are dropped.
+
 **Encrypted ClickHouse** (ADR-067 step 6):
 
 - **What is encrypted:** ClickHouse stores every data part, system logs included, on an `encrypted` disk (AES-256-CTR)

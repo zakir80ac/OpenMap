@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { loadEnv, type Env } from '@openmap/config';
 import { PACKAGE_ROOT } from './files.js';
+import { pgClientConfig } from './pg-config.js';
 
 export const MIGRATIONS_DIR = join(PACKAGE_ROOT, 'prisma', 'migrations');
 const MIGRATION_FILE = 'migration.sql';
@@ -70,7 +71,7 @@ export function listPostgresMigrations(dir: string = MIGRATIONS_DIR): PostgresMi
 }
 
 export async function migratePostgres(env: Env = loadEnv(), dir: string = MIGRATIONS_DIR): Promise<PostgresMigrationReport> {
-  const client = new pg.Client({ connectionString: env.POSTGRES_URL });
+  const client = new pg.Client(pgClientConfig(env.POSTGRES_URL));
   await client.connect();
   const report: PostgresMigrationReport = { applied: [], skipped: [], checksumMismatches: [], checksumsRepaired: [] };
   try {
@@ -111,7 +112,7 @@ export async function migratePostgres(env: Env = loadEnv(), dir: string = MIGRAT
 
 /** Connects and runs a trivial query; rejects while Postgres is not yet accepting connections. */
 export async function pingPostgres(env: Env = loadEnv()): Promise<void> {
-  const client = new pg.Client({ connectionString: env.POSTGRES_URL });
+  const client = new pg.Client(pgClientConfig(env.POSTGRES_URL));
   await client.connect();
   try {
     await client.query('SELECT 1');
@@ -125,7 +126,7 @@ export async function pingPostgres(env: Env = loadEnv()): Promise<void> {
  * current; a missing bookkeeping table means nothing has ever been applied, so every migration is pending.
  */
 export async function pendingPostgresMigrations(env: Env = loadEnv(), dir: string = MIGRATIONS_DIR): Promise<string[]> {
-  const client = new pg.Client({ connectionString: env.POSTGRES_URL });
+  const client = new pg.Client(pgClientConfig(env.POSTGRES_URL));
   await client.connect();
   try {
     const exists = await client.query<{ present: boolean }>('SELECT to_regclass($1) IS NOT NULL AS present', [BOOKKEEPING_TABLE]);

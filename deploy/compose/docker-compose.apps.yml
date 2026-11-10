@@ -10,7 +10,8 @@ x-restart: &restart
 
 x-app-env: &app-env
   NODE_ENV: production
-  POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}
+  # ADR-068: TLS to PostgreSQL, the server verified against the internal services CA (Prisma's spelling: sslcert is the CA).
+  POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}?sslmode=require&sslcert=/run/openmap/ca/services-ca.crt&sslaccept=strict
   MEMGRAPH_URL: bolt://memgraph:7687
   CLICKHOUSE_URL: http://clickhouse:8123
   CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
@@ -69,6 +70,7 @@ services:
       args: { APP: reconciler }
     environment: *app-env
     command: ["node", "node_modules/@openmap/db/dist/cli.js", "all"]
+    volumes: ["service-ca:/run/openmap/ca:ro"]
     depends_on:
       postgres: { condition: service_healthy }
       memgraph: { condition: service_healthy }
@@ -86,7 +88,7 @@ services:
       API_PORT: 4000
       # REQ-INT-019: the API lists backup sets (manifests only) from the backup volume, read-only.
       BACKUP_DIR: /var/lib/openmap/backups
-    volumes: ["backups:/var/lib/openmap/backups:ro", "openbao-approle:/run/openmap/openbao:ro"]
+    volumes: ["backups:/var/lib/openmap/backups:ro", "openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     ports: ["${API_PORT:-4000}:4000"]
     depends_on: *app-depends
     healthcheck:
@@ -105,7 +107,8 @@ services:
       dockerfile: deploy/docker/backup.Dockerfile
     profiles: [backup]
     environment:
-      POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}
+      # ADR-068: libpq's spelling of a verified TLS connection.
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}?sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt
       CLICKHOUSE_URL: http://clickhouse:8123
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
@@ -116,7 +119,7 @@ services:
       OPENBAO_ADDR: http://openbao:8200
       OPENBAO_ROLE_ID_FILE: /run/openmap/openbao-backup/role-id
       OPENBAO_SECRET_ID_FILE: /run/openmap/openbao-backup/secret-id
-    volumes: ["backups:/backups", "openbao-approle-backup:/run/openmap/openbao-backup:ro"]
+    volumes: ["backups:/backups", "openbao-approle-backup:/run/openmap/openbao-backup:ro", "service-ca:/run/openmap/ca:ro"]
     depends_on:
       postgres: { condition: service_healthy }
       clickhouse: { condition: service_healthy }
@@ -155,7 +158,7 @@ services:
     # pki:init is idempotent: it writes the CA and server certificate on first start and never overwrites them.
     command: ["sh", "-c", "node dist/pki-init.js && exec node dist/main.js"]
     ports: ["${SCHEDULER_PORT:-4200}:4200"]
-    volumes: [scheduler-pki:/etc/openmap/pki, evidence:/var/lib/openmap/evidence, "openbao-approle:/run/openmap/openbao:ro"]
+    volumes: [scheduler-pki:/etc/openmap/pki, evidence:/var/lib/openmap/evidence, "openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     depends_on: *app-depends
 
   reconciler:
@@ -167,7 +170,7 @@ services:
       args: { APP: reconciler }
     environment: *app-env
     # REQ-SEC-011 (ADR-067 step 4): `encrypt-fields` encrypts personal data written before field encryption.
-    volumes: ["openbao-approle:/run/openmap/openbao:ro"]
+    volumes: ["openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     depends_on: *app-depends
 
   bsm-engine:
@@ -178,7 +181,7 @@ services:
       dockerfile: deploy/docker/node-service.Dockerfile
       args: { APP: bsm-engine }
     environment: *app-env
-    volumes: ["openbao-approle:/run/openmap/openbao:ro"]
+    volumes: ["openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     depends_on: *app-depends
 
   node:

@@ -6,6 +6,9 @@ SQLALCHEMY_DATABASE_URI = (
     f"postgresql+psycopg2://{os.environ['DATABASE_USER']}:{os.environ['DATABASE_PASSWORD']}"
     f"@{os.environ['DATABASE_HOST']}:{os.environ['DATABASE_PORT']}/{os.environ['DATABASE_DB']}"
     "?options=-csearch_path%3Dsuperset"
+    # ADR-068: PostgreSQL takes TLS only; the server is verified against the internal services CA.
+    f"&sslmode={os.environ.get('DATABASE_SSLMODE', 'verify-full')}"
+    f"&sslrootcert={os.environ.get('DATABASE_SSLROOTCERT', '/run/openmap/ca/services-ca.crt')}"
 )
 
 # The API grants the embedded guest role its permissions through the security API at provisioning time.

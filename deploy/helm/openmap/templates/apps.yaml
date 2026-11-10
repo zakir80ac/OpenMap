@@ -19,17 +19,21 @@ spec:
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
       initContainers:
+        {{- include "openmap.serviceCaInit" . | nindent 8 }}
         - name: wait-for-postgres
           image: {{ include "openmap.image" (dict "root" . "app" "reconciler") }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js ping; do sleep {{ .Values.migrate.pollSeconds }}; done"]
           env: {{- include "openmap.appEnv" . | nindent 12 }}
+          volumeMounts: {{- include "openmap.caMount" . | nindent 12 }}
       containers:
         - name: migrate
           image: {{ include "openmap.image" (dict "root" . "app" "reconciler") }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["node", "node_modules/@openmap/db/dist/cli.js", "all"]
           env: {{- include "openmap.appEnv" . | nindent 12 }}
+          volumeMounts: {{- include "openmap.caMount" . | nindent 12 }}
+      volumes: {{- include "openmap.caVolume" . | nindent 8 }}
 {{- range $app := list
   (dict "component" "api" "replicas" .Values.api.replicas "port" .Values.api.port "resources" .Values.api.resources "extraEnv" (list (dict "name" "API_PORT" "value" (toString .Values.api.port))))
   (dict "component" "reconciler" "replicas" .Values.reconciler.replicas "port" .Values.reconciler.port "resources" .Values.reconciler.resources "extraEnv" list)
@@ -53,11 +57,13 @@ spec:
       {{- end }}
       securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
       initContainers:
+        {{- include "openmap.serviceCaInit" $root | nindent 8 }}
         - name: wait-for-migrations
           image: {{ include "openmap.image" (dict "root" $root "app" $app.component) }}
           imagePullPolicy: {{ $root.Values.image.pullPolicy }}
           command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js status; do sleep {{ $root.Values.migrate.pollSeconds }}; done"]
           env: {{- include "openmap.appEnv" $root | nindent 12 }}
+          volumeMounts: {{- include "openmap.caMount" $root | nindent 12 }}
       containers:
         - name: {{ $app.component }}
           image: {{ include "openmap.image" (dict "root" $root "app" $app.component) }}
@@ -77,12 +83,12 @@ spec:
             periodSeconds: 30
           {{- end }}
           resources: {{- toYaml $app.resources | nindent 12 }}
-          {{- if not $root.Values.openbao.external.enabled }}
-          volumeMounts: {{- include "openmap.vaultMount" $root | nindent 12 }}
-          {{- end }}
-      {{- if not $root.Values.openbao.external.enabled }}
-      volumes: {{- include "openmap.vaultVolume" $root | nindent 8 }}
-      {{- end }}
+          volumeMounts:
+            {{- include "openmap.caMount" $root | nindent 12 }}
+            {{- include "openmap.vaultMount" $root | nindent 12 }}
+      volumes:
+        {{- include "openmap.caVolume" $root | nindent 8 }}
+        {{- include "openmap.vaultVolume" $root | nindent 8 }}
 {{- if gt (int $app.port) 0 }}
 ---
 apiVersion: v1
@@ -171,11 +177,13 @@ spec:
       {{- end }}
       securityContext: { runAsNonRoot: true, runAsUser: 1000, fsGroup: 1000 }
       initContainers:
+        {{- include "openmap.serviceCaInit" . | nindent 8 }}
         - name: wait-for-migrations
           image: {{ include "openmap.image" (dict "root" . "app" "scheduler") }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh", "-c", "until node node_modules/@openmap/db/dist/cli.js status; do sleep {{ .Values.migrate.pollSeconds }}; done"]
           env: {{- include "openmap.appEnv" . | nindent 12 }}
+          volumeMounts: {{- include "openmap.caMount" . | nindent 12 }}
       containers:
         - name: scheduler
           image: {{ include "openmap.image" (dict "root" . "app" "scheduler") }}
@@ -199,11 +207,12 @@ spec:
           volumeMounts:
             - { name: pki, mountPath: /etc/openmap/pki }
             - { name: evidence, mountPath: /var/lib/openmap/evidence }
+            {{- include "openmap.caMount" . | nindent 12 }}
             {{- include "openmap.vaultMount" . | nindent 12 }}
           resources: {{- toYaml .Values.scheduler.resources | nindent 12 }}
-      {{- if not .Values.openbao.external.enabled }}
-      volumes: {{- include "openmap.vaultVolume" . | nindent 8 }}
-      {{- end }}
+      volumes:
+        {{- include "openmap.caVolume" . | nindent 8 }}
+        {{- include "openmap.vaultVolume" . | nindent 8 }}
   volumeClaimTemplates:
     - metadata: { name: pki }
       spec:

@@ -19,6 +19,9 @@ data:
   agent-pgtde.hcl: |
 {{ .Files.Get "files/openbao/agent-pgtde.hcl" | indent 4 }}
   {{- end }}
+  # ADR-068: network connections only over TLS.
+  pg_hba.conf: |
+{{ .Files.Get "files/postgres/pg_hba.conf" | indent 4 }}
 {{- if .Values.clickhouse.encryption.enabled }}
 ---
 # REQ-SEC-011 (ADR-067 step 6): the encrypted disk, the entrypoint wrapper that waits for its key, and the agent's config.
@@ -82,6 +85,10 @@ spec:
       {{- if eq $store.component "postgres" }}
       # The Percona image runs PostgreSQL as uid 26; the agent sidecar writes the token as that user.
       securityContext: { fsGroup: 26 }
+      {{- if $root.Values.postgres.tde.enabled }}
+      # ADR-068: the agent tells the postmaster to reload a renewed certificate.
+      shareProcessNamespace: true
+      {{- end }}
       {{- end }}
       {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
       # The agent sidecar writes the disk key as the ClickHouse image's user (uid 101).
@@ -119,6 +126,7 @@ spec:
             {{- if $root.Values.postgres.tde.enabled }}
             - { name: pgtde-token, mountPath: /run/pgtde, readOnly: true }
             {{- end }}
+            - { name: hba, mountPath: /etc/openmap/pg_hba.conf, subPath: pg_hba.conf, readOnly: true }
             {{- end }}
             {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
             - { name: clickhouse-encryption, mountPath: /etc/clickhouse-server/config.d/encrypted-disk.xml, subPath: encrypted-disk.xml, readOnly: true }
@@ -133,7 +141,8 @@ spec:
             - { name: PG_TDE_TOKEN_WAIT_SECONDS, value: {{ $root.Values.postgres.tde.tokenWaitSeconds | quote }} }
             {{- end }}
           {{- if $root.Values.postgres.tde.enabled }}
-          args: ["postgres", "-c", "shared_preload_libraries=pg_tde"]
+          # ADR-068: TLS required (pg_hba.conf), the certificate rendered by the agent sidecar.
+          args: ["postgres", "-c", "shared_preload_libraries=pg_tde", "-c", "ssl=on", "-c", "ssl_cert_file=/run/pgtde/tls.pem", "-c", "ssl_key_file=/run/pgtde/tls.pem", "-c", "ssl_min_protocol_version=TLSv1.2", "-c", "hba_file=/etc/openmap/pg_hba.conf"]
           {{- end }}
           envFrom:
             - secretRef: { name: {{ include "openmap.fullname" $root }}-datastores }
@@ -149,6 +158,7 @@ spec:
           securityContext: { runAsUser: 26, runAsGroup: 26 }
           env:
             - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+            - { name: TLS_COMMON_NAME, value: {{ include "openmap.svc" (dict "root" $root "component" "postgres") | quote }} }
           resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
           volumeMounts:
             - { name: pgtde-token, mountPath: /run/pgtde }
@@ -216,6 +226,8 @@ spec:
               {{- end }}
         - name: shm
           emptyDir: { medium: Memory, sizeLimit: {{ $root.Values.postgres.shmSize }} }
+        - name: hba
+          configMap: { name: {{ include "openmap.fullname" $root }}-postgres-init, items: [{ key: pg_hba.conf, path: pg_hba.conf }] }
         {{- if $root.Values.postgres.tde.enabled }}
         # The token never touches a disk.
         - name: pgtde-token
