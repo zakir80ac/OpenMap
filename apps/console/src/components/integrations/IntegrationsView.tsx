@@ -5,6 +5,7 @@
 // (sendTestNotification) and an editor (upsertIntegration) with notification settings (minimum severity, language,
 // email sender and recipients). Administrators change things; operators read details and send tests; analysts see the list.
 // REQ-INT-012 (ADR-073): a link to the monitoring events the monitoring integrations deliver.
+// REQ-INT-011: the configuration-management inventory endpoints (InventoryCard) close the screen.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { NOTIFICATION, ROLES } from '@openmap/constants';
@@ -34,6 +35,7 @@ import {
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { useCan } from '@/lib/auth';
+import { InventoryCard } from './InventoryCard';
 import {
   integrationDeliveriesQuery,
   integrationQuery,
@@ -269,6 +271,8 @@ export function IntegrationsView(): ReactNode {
           )}
         </div>
       </div>
+
+      <InventoryCard />
     </div>
   );
 }

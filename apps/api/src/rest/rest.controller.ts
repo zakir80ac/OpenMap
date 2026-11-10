@@ -3,11 +3,9 @@
 // writes need the operator role. Each call is counted and timed by route and status and runs in a rest.<route> span.
 // GET /api/v1/openapi.json is public: tools discover the API before they authenticate.
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, NotFoundException, Param, Patch, Post, Query, Req } from '@nestjs/common';
-import { CONTRACT_VERSIONS, TIME } from '@openmap/constants';
+import { Body, Controller, Delete, Get, HttpCode, NotFoundException, Param, Patch, Post, Query, Req } from '@nestjs/common';
+import { CONTRACT_VERSIONS } from '@openmap/constants';
 import { openApiDocument, REST_ROUTES, type RestRouteId } from '@openmap/contracts';
-import { withSpan } from '@openmap/telemetry';
-import type { z } from 'zod';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import type { Principal } from '../auth/principal.js';
 import { Public } from '../auth/public.decorator.js';
@@ -17,21 +15,10 @@ import { CiService, type Actor } from '../ci/ci.service.js';
 import type { CiRecord, Connection, RelationshipRecord, SearchHitRecord } from '../ci/ci.types.js';
 import { ConnectivityService } from '../connectivity/connectivity.service.js';
 import { GraphQueryService } from '../graph/graph.service.js';
-import { TRACER_NAME } from '../metrics/graphql-metrics.hook.js';
 import { MetricsService } from '../metrics/metrics.service.js';
 import { ServicesService } from '../services/services.service.js';
 import type { IncidentRecord } from '../services/services.types.js';
-
-type Route<K extends RestRouteId> = (typeof REST_ROUTES)[K];
-type QueryOf<K extends RestRouteId> = Route<K>['query'] extends z.ZodType ? z.output<Route<K>['query']> : never;
-type BodyOf<K extends RestRouteId> = Route<K>['body'] extends z.ZodType ? z.output<Route<K>['body']> : never;
-
-function parse<T extends z.ZodType>(schema: T | null, value: unknown, what: string): z.output<T> {
-  if (schema === null) throw new BadRequestException(what + ' is not accepted');
-  const parsed = schema.safeParse(value);
-  if (!parsed.success) throw new BadRequestException(what + ': ' + parsed.error.issues.map((i) => (i.path.length > 0 ? i.path.join('.') + ' ' : '') + i.message).join('; '));
-  return parsed.data;
-}
+import { parse, runRoute, type BodyOf, type QueryOf } from './rest-route.js';
 
 function page<T>(c: Connection<T>): { items: T[]; pageInfo: Connection<T>['pageInfo']; totalCount: number } {
   return { items: c.edges.map((e) => e.node), pageInfo: c.pageInfo, totalCount: c.totalCount };
@@ -47,21 +34,9 @@ export class RestController {
     private readonly metrics: MetricsService,
   ) {}
 
-  /** Runs one route in its span, counting and timing it by route id and outcome status. */
-  private async run<T>(route: RestRouteId, request: AuthenticatedRequest, work: (principal: Principal) => Promise<T>): Promise<T> {
-    const started = Date.now();
-    let status = REST_ROUTES[route].status;
-    try {
-      const principal = request.principal;
-      if (principal === undefined) throw new HttpException('a bearer token is required', HttpStatus.UNAUTHORIZED);
-      return await withSpan(TRACER_NAME, 'rest.' + route, { 'openmap.tenant': principal.tenantId, 'http.route': REST_ROUTES[route].path }, () => work(principal));
-    } catch (err) {
-      status = err instanceof HttpException ? err.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-      throw err;
-    } finally {
-      this.metrics.restRequests.inc({ route, status: String(status) });
-      this.metrics.restDuration.observe({ route }, (Date.now() - started) / TIME.msPerSecond);
-    }
+  /** Runs one route in its span, counting and timing it by route id and outcome status (rest-route.ts). */
+  private run<T>(route: RestRouteId, request: AuthenticatedRequest, work: (principal: Principal) => Promise<T>): Promise<T> {
+    return runRoute(this.metrics, route, request, work);
   }
 
   private actor(p: Principal, request: AuthenticatedRequest): Actor {

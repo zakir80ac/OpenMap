@@ -22,6 +22,9 @@ export const TOPOLOGY_DURATION_METRIC = 'openmap_topology_duration_seconds';
 /** REQ-CMDB-033 (ADR-032): rows imported (queued or rejected) and exported, by outcome and format. */
 export const IMPORT_ROWS_METRIC = 'openmap_import_rows_total';
 export const EXPORT_ROWS_METRIC = 'openmap_export_rows_total';
+/** REQ-INT-011 (ADR-072): inventory documents served to configuration-management tools, and the nodes in them, by tool. */
+export const INVENTORY_EXPORTS_METRIC = 'openmap_inventory_exports_total';
+export const INVENTORY_NODES_METRIC = 'openmap_inventory_nodes_total';
 /** REQ-DEP-004 (ADR-031): layered application map duration. */
 export const APPLICATION_MAP_DURATION_METRIC = 'openmap_application_map_duration_seconds';
 /** REQ-BSM-004 (ADR-047): incidents compared with a simulation, by outcome, and the accuracy each one scored. */
@@ -135,6 +138,8 @@ export class MetricsService {
   readonly restDuration: Histogram<'route'>;
   readonly importRows: Counter<'outcome'>;
   readonly exportRows: Counter<'format'>;
+  readonly inventoryExports: Counter<'tool'>;
+  readonly inventoryNodes: Counter<'tool'>;
 
   constructor() {
     collectDefaultMetrics({ register: this.registry });
@@ -198,6 +203,18 @@ export class MetricsService {
       name: EXPORT_ROWS_METRIC,
       help: 'CIs exported, by format',
       labelNames: ['format'],
+      registers: [this.registry],
+    });
+    this.inventoryExports = new Counter({
+      name: INVENTORY_EXPORTS_METRIC,
+      help: 'Inventory documents served to configuration-management tools, by tool (ansible, salt, puppet, chef)',
+      labelNames: ['tool'],
+      registers: [this.registry],
+    });
+    this.inventoryNodes = new Counter({
+      name: INVENTORY_NODES_METRIC,
+      help: 'Nodes in the inventory documents served, by tool',
+      labelNames: ['tool'],
       registers: [this.registry],
     });
     this.applicationMapDuration = new Histogram({

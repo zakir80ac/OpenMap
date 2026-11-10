@@ -126,4 +126,16 @@ export class OpenMapClient {
   connectivity(): Promise<RouteResponse<'getConnectivity'>> {
     return this.call('getConnectivity');
   }
+
+  /**
+   * REQ-INT-011 (ADR-072): configuration-management inventory. The roster and ENC routes answer YAML for the tools by
+   * default; the SDK asks for their JSON form.
+   */
+  readonly inventory = {
+    ansible: (query: RouteQuery<'ansibleInventory'> = {}) => this.call('ansibleInventory', { query }),
+    salt: (query: Omit<RouteQuery<'saltRoster'>, 'format'> = {}) => this.call('saltRoster', { query: { ...query, format: 'json' } }),
+    puppet: (query: Omit<RouteQuery<'puppetNodes'>, 'format'> = {}) => this.call('puppetNodes', { query: { ...query, format: 'json' } }),
+    puppetNode: (certname: string, query: Omit<RouteQuery<'puppetNode'>, 'format'> = {}) => this.call('puppetNode', { params: { certname }, query: { ...query, format: 'json' } }),
+    chef: (query: RouteQuery<'chefExport'> = {}) => this.call('chefExport', { query }),
+  };
 }

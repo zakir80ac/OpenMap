@@ -138,7 +138,11 @@ beforeEach(() => {
   process.env['NEXT_PUBLIC_API_URL'] = 'http://api.test';
   vi.stubGlobal(
     'fetch',
-    vi.fn((_url: string, init?: RequestInit) => {
+    vi.fn((url: string, init?: RequestInit) => {
+      // REQ-INT-011: the inventory card's preview is a REST GET, answered with an empty inventory.
+      if (url.includes('/api/v1/inventory/')) {
+        return Promise.resolve(new Response(JSON.stringify({ _meta: { hostvars: {} }, all: { children: ['ungrouped'] }, ungrouped: { hosts: [] } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+      }
       const raw = typeof init?.body === 'string' ? init.body : '{}';
       return Promise.resolve(
         new Response(

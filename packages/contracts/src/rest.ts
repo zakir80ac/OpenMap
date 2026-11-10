@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { ciLayerSchema, ciSchema, ciTypeSchema, healthStateSchema, lifecycleSchema, relationshipSchema, relationshipTypeSchema } from './ci.js';
 import { PREDICTED_STATES } from './impact.js';
 import { LINK_REDUNDANCY_STATES, READINESS_RULES, SITE_DR_ROLES } from './connectivity.js';
+import { ansibleInventorySchema, chefExportSchema, INVENTORY_MEDIA_TYPES, inventoryDocumentFormatSchema, inventoryFacetSchema, puppetNodeSchema, puppetNodesSchema, saltRosterSchema } from './inventory.js';
 
 export const REST_BASE_PATH = '/api/v1';
 /** Largest page a list route returns; the API clamps `first` to it, as GraphQL does. */
@@ -127,11 +128,31 @@ export interface RestRoute {
   response: z.ZodType;
   /** Status of a successful call. */
   status: number;
+  /**
+   * REST 1.2.0 (ADR-072): media types the response comes in, the default first; absent means JSON only. A route that
+   * answers several takes a `format` query parameter (`yaml` or `json`).
+   */
+  produces?: readonly string[];
 }
 
 function route<R extends RestRoute>(r: R): R {
   return r;
 }
+
+/** REQ-INT-011 (ADR-072): the CI filter every inventory route takes, and the attributes copied into the node's variables. */
+const inventoryFilter = {
+  types: list(ciTypeSchema),
+  layers: list(ciLayerSchema),
+  lifecycle: list(lifecycleSchema),
+  tags: list(z.string().min(1)),
+  sites: list(z.string().min(1)),
+  services: list(z.string().min(1)),
+  attributes: list(z.string().min(1)),
+};
+const documentFormat = { format: inventoryDocumentFormatSchema.optional() };
+const YAML_FIRST = [INVENTORY_MEDIA_TYPES.yaml, INVENTORY_MEDIA_TYPES.json] as const;
+/** The highest TCP port, the bound of a roster's `port`. */
+const MAX_PORT = 65_535;
 
 export const REST_ROUTES = {
   listCis: route({
@@ -222,6 +243,64 @@ export const REST_ROUTES = {
     status: 200,
   }),
   getConnectivity: route({ method: 'GET', path: '/connectivity', summary: 'Sites, inter-site links with their latest probes, and the HA / DR readiness findings.', write: false, params: null, query: null, body: null, response: restConnectivitySchema, status: 200 }),
+  ansibleInventory: route({
+    method: 'GET',
+    path: '/inventory/ansible',
+    summary: 'Ansible dynamic inventory (the JSON of --list): hosts with ansible_host and OpenMap hostvars under _meta, grouped by site, type, tag and business service.',
+    write: false,
+    params: null,
+    query: z.object({ ...inventoryFilter, groupBy: list(inventoryFacetSchema) }),
+    body: null,
+    response: ansibleInventorySchema,
+    status: 200,
+  }),
+  saltRoster: route({
+    method: 'GET',
+    path: '/inventory/salt',
+    summary: 'salt-ssh flat roster: each minion id with its host, optional user, port and sudo, and OpenMap facts as grains.',
+    write: false,
+    params: null,
+    query: z.object({ ...inventoryFilter, ...documentFormat, user: z.string().min(1).optional(), port: z.coerce.number().int().min(1).max(MAX_PORT).optional(), sudo: z.enum(['true', 'false']).optional() }),
+    body: null,
+    response: saltRosterSchema,
+    status: 200,
+    produces: YAML_FIRST,
+  }),
+  puppetNodes: route({
+    method: 'GET',
+    path: '/inventory/puppet',
+    summary: 'Puppet external node classifier documents (classes, parameters, environment) of every selected node, by certname.',
+    write: false,
+    params: null,
+    query: z.object({ ...inventoryFilter, ...documentFormat, environment: z.string().min(1).optional() }),
+    body: null,
+    response: puppetNodesSchema,
+    status: 200,
+    produces: YAML_FIRST,
+  }),
+  puppetNode: route({
+    method: 'GET',
+    path: '/inventory/puppet/nodes/{certname}',
+    summary: 'The Puppet ENC document of one node, looked up by certname (FQDN or name, case-insensitive); 404 when no CI has it.',
+    write: false,
+    params: z.object({ certname: z.string().min(1) }),
+    query: z.object({ ...documentFormat, environment: z.string().min(1).optional(), attributes: inventoryFilter.attributes }),
+    body: null,
+    response: puppetNodeSchema,
+    status: 200,
+    produces: YAML_FIRST,
+  }),
+  chefExport: route({
+    method: 'GET',
+    path: '/inventory/chef',
+    summary: 'Chef node and role JSON for knife node|role from file: one role per site and business service, OpenMap facts as normal attributes.',
+    write: false,
+    params: null,
+    query: z.object({ ...inventoryFilter, environment: z.string().min(1).optional() }),
+    body: null,
+    response: chefExportSchema,
+    status: 200,
+  }),
 } as const;
 
 export type RestRouteId = keyof typeof REST_ROUTES;
@@ -230,6 +309,8 @@ export type RestRouteId = keyof typeof REST_ROUTES;
 export function restPath(path: string, params: Readonly<Record<string, string>>): string {
   return path.replace(/\{(\w+)\}/g, (_, name: string) => encodeURIComponent(params[name] ?? ''));
 }
+
+const JSON_MEDIA_TYPE = 'application/json';
 
 function jsonSchema(schema: z.ZodType, io: 'input' | 'output'): Record<string, unknown> {
   const out = z.toJSONSchema(schema, { target: 'draft-2020-12', io, unrepresentable: 'any' }) as Record<string, unknown>;
@@ -255,7 +336,7 @@ export function openApiDocument(version: string): Record<string, unknown> {
       tags: [r.path.split('/')[1] ?? 'api'],
       parameters,
       responses: {
-        [String(r.status)]: { description: 'OK', content: { 'application/json': { schema: jsonSchema(r.response, 'output') } } },
+        [String(r.status)]: { description: 'OK', content: Object.fromEntries((r.produces ?? [JSON_MEDIA_TYPE]).map((type) => [type, { schema: jsonSchema(r.response, 'output') }])) },
         default: { description: 'Error', content: { 'application/json': { schema: jsonSchema(restErrorSchema, 'output') } } },
       },
       security: [{ bearer: [] }],

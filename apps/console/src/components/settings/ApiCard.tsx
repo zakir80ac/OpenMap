@@ -36,6 +36,11 @@ const ROUTE_KEY = {
   search: 'settings.api.op.search',
   listIncidents: 'settings.api.op.listIncidents',
   getConnectivity: 'settings.api.op.getConnectivity',
+  ansibleInventory: 'settings.api.op.ansibleInventory',
+  saltRoster: 'settings.api.op.saltRoster',
+  puppetNodes: 'settings.api.op.puppetNodes',
+  puppetNode: 'settings.api.op.puppetNode',
+  chefExport: 'settings.api.op.chefExport',
 } as const satisfies Record<RestRouteId, string>;
 
 /** The REST base of this deployment: the API origin GraphQL is served on, plus REST_BASE_PATH. */
