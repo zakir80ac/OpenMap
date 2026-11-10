@@ -37,6 +37,11 @@ export function workedExamples(): WorkedExample[] {
       cypher: "MATCH (h:Host {name: 'ledger-db'})<-[:" + IMPACT_EDGES + '*1..' + String(GRAPH.defaultImpactDepth) + ']-(x)-[:PART_OF_SERVICE]->(s:BusinessService) WHERE ' + SCOPE('h') + ' AND ' + SCOPE('x') + ' AND ' + SCOPE('s') + ' RETURN DISTINCT s.id AS id, s.name AS name ' + LIMIT,
     },
     {
+      // A Vm runs on a Hypervisor (which is HOSTED_ON a Host); the small model otherwise reaches for :Host.
+      question: 'Which hypervisor carries each VM?',
+      cypher: 'MATCH (vm:Vm)-[:RUNS_ON]->(hv:Hypervisor) WHERE ' + SCOPE('vm') + ' AND ' + SCOPE('hv') + ' RETURN vm.id AS id, vm.name AS vm, hv.name AS hypervisor ' + LIMIT,
+    },
+    {
       question: 'Which racks hold the most hosts?',
       cypher: 'MATCH (h:Host)-[:LOCATED_IN]->(r:Rack) WHERE ' + SCOPE('h') + ' AND ' + SCOPE('r') + ' RETURN r.id AS id, r.name AS rack, count(h) AS hosts ORDER BY hosts DESC ' + LIMIT,
     },

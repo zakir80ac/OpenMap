@@ -271,16 +271,26 @@ restore() {
   log "restore complete; rebuild Memgraph and Meilisearch with the reconciler's reproject" "$name"
 }
 
+# The set directories, newest first by the manifest's createdAt: a set may carry any name (`create pre-upgrade`), so the
+# directory name says nothing about its age.
+sets_newest_first() {
+  for m in "$BACKUP_DIR"/*/; do
+    [ -f "$m$MANIFEST" ] || continue
+    at=$(sed -n 's/.*"createdAt":"\([^"]*\)".*/\1/p' "$m$MANIFEST" | head -n 1)
+    printf '%s %s\n' "${at:-0}" "$m"
+  done | LC_ALL=C sort -r | cut -d' ' -f2-
+}
+
 list() {
-  for m in $(ls -1d "$BACKUP_DIR"/*/ 2>/dev/null | LC_ALL=C sort -r); do
-    [ -f "$m$MANIFEST" ] && cat "$m$MANIFEST"
+  for m in $(sets_newest_first); do
+    cat "$m$MANIFEST"
   done
   return 0
 }
 
 prune() {
   kept=0
-  for m in $(ls -1d "$BACKUP_DIR"/*/ 2>/dev/null | LC_ALL=C sort -r); do
+  for m in $(sets_newest_first); do
     if [ -f "$m$MANIFEST" ] && grep -q '"status":"complete"' "$m$MANIFEST"; then
       kept=$((kept + 1))
       if [ "$kept" -gt "$BACKUP_KEEP" ]; then
