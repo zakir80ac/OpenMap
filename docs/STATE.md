@@ -2,7 +2,32 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 41: REQ-IPAM-005 firewall rules and policy objects Done)
+## Last session · 2026-11-10 (checkpoint 42: REQ-INT-009 webhooks and notifications Done)
+
+**REQ-INT-009 Done** (ADR-065, event 0.12.0, GraphQL 1.38.0, T-562..T-566, commit f33d6e2).
+
+- **Engine** (`apps/bsm-engine/src/integrations/notify.ts`, `smtp.ts`): every event on the stream goes to the tenant's
+  enabled notification integrations subscribed to its type: signed webhook (`x-openmap-signature: v1=<HMAC-SHA256 of
+  "<timestamp>.<body>">`), Slack Block Kit, Teams Adaptive Card, PagerDuty Events v2 (not for incidents; the incident
+  adapter keeps those), email through the engine's own SMTP client. Minimum severity, 30 messages a minute per
+  integration, airgap / `FEATURE_OUTBOUND_INTEGRATIONS` / tenant switches; every attempt an IntegrationDelivery; sent in
+  the background so health propagation never waits.
+- **API**: `sendTestNotification` (operators) → outbox test event + audit; the engine sends it to that integration only.
+- **Console**: notification settings in the integration form, "Send a test notification" with delivery polling.
+- **Compose**: `FEATURE_OUTBOUND_INTEGRATIONS` passed through, default false, so the live e2e shows the refusal; real
+  delivery is proven by T-564 (stack Postgres and OpenBao, HTTP receiver verifying the signature, SMTP server).
+
+**Tracker (queued, Excel holds the workbook)**:
+
+```
+pnpm tracker set REQ-INT-009 --status Done --owner Claude --tests T-562,T-563,T-564,T-565,T-566 --evidence "commit f33d6e2; ADR-065; event 0.12.0; GraphQL 1.38.0; docs/evidence/int-notifications.md; docs/evidence/console/integrations-notify-{en,ar}.png"
+```
+
+**Waiting on Syed**: REQ-SEC-011 (question 18, Postgres at rest); REQ-UI-021/022/023 (question 0, native charts or
+Superset). **Next three**: REQ-INT-019 backup and restore, REQ-INT-017 backup/DR awareness, REQ-INT-011 configuration
+management inventory.
+
+## Previous session · 2026-11-10 (checkpoint 41: REQ-IPAM-005 firewall rules and policy objects Done)
 
 **REQ-IPAM-005 Done** (ADR-064, CI and collector 0.10.0, GraphQL 1.37.0, T-558..T-561, commit 2662750).
 
