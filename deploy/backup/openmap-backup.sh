@@ -5,10 +5,12 @@
 #                                       $BACKUP_DIR/NAME, with manifest.json (sizes, sha256, migration, CI count);
 #                                       then keeps the newest $BACKUP_KEEP complete sets.
 #   openmap-backup verify NAME          Checks the checksums and that pg_restore can read the archive.
-#   openmap-backup restore NAME [--postgres-url URL] [--clickhouse-db DB]
-#                                       Restores Postgres (pg_restore --clean) and ClickHouse (DROP + RESTORE) into the
-#                                       configured stores, or into the ones given. Rebuild Memgraph and Meilisearch
-#                                       afterwards with the reconciler's `reproject`.
+#   openmap-backup restore NAME [--postgres-url URL] [--clickhouse-db DB] [--postgres-only]
+#                                       Restores Postgres (pg_restore --clean, tables on the target's default access
+#                                       method) and ClickHouse (DROP + RESTORE) into the configured stores, or into
+#                                       the ones given; --postgres-only leaves ClickHouse alone (moving Postgres to a
+#                                       new server). Rebuild Memgraph and Meilisearch afterwards with the reconciler's
+#                                       `reproject` (not needed when only Postgres moved and its data is unchanged).
 #   openmap-backup list                 Prints every set's manifest, newest first.
 #   openmap-backup prune                Keeps the newest $BACKUP_KEEP complete sets.
 #
@@ -73,7 +75,9 @@ create() {
   log "backup started" "$name"
   trap 'write_manifest "$dir" "$name" failed "$started" "$(now)" null null "interrupted or failed; see the backup log"; log "backup failed" "$name"' EXIT
 
-  pg_dump --format=custom --no-owner --no-privileges --file="$dir/$PG_FILE" "$POSTGRES_URL"
+  # pg_tde is server configuration (its key provider and keys live with the server, not in the dump): left out, so the
+  # archive restores into stock or encrypted PostgreSQL alike (ADR-067).
+  pg_dump --format=custom --no-owner --no-privileges --exclude-extension=pg_tde --file="$dir/$PG_FILE" "$POSTGRES_URL"
   pg_bytes=$(stat -c %s "$dir/$PG_FILE")
   pg_sha=$(sha256sum "$dir/$PG_FILE" | cut -d' ' -f1)
   migration=$(psql "$POSTGRES_URL" -Atc "SELECT coalesce(max(migration_name), '') FROM _prisma_migrations WHERE finished_at IS NOT NULL")
@@ -130,10 +134,12 @@ restore() {
   shift
   target_url="$POSTGRES_URL"
   target_db="$CLICKHOUSE_DB"
+  postgres_only=false
   while [ $# -gt 0 ]; do
     case "$1" in
       --postgres-url) target_url="$2"; shift 2 ;;
       --clickhouse-db) target_db="$2"; shift 2 ;;
+      --postgres-only) postgres_only=true; shift ;;
       *) die "unknown option $1" "$name" ;;
     esac
   done
@@ -141,8 +147,16 @@ restore() {
   dir="$BACKUP_DIR/$name"
   source_db=$(sed -n 's/.*"clickhouse":{[^}]*"database":"\([^"]*\)".*/\1/p' "$dir/$MANIFEST")
   log "restore started" "$name"
-  pg_restore --clean --if-exists --no-owner --no-privileges --single-transaction --dbname="$target_url" "$dir/$PG_FILE"
+  # --no-table-access-method: tables take the target's default (tde_heap on an encrypted server, ADR-067).
+  pg_restore --clean --if-exists --no-owner --no-privileges --no-table-access-method --single-transaction \
+    --dbname="$target_url" "$dir/$PG_FILE"
+  # pg_restore carries no planner statistics; until autovacuum gathers them the first queries plan blind.
+  psql "$target_url" -qc 'ANALYZE' > /dev/null
   log "postgres restored" "$name"
+  if [ "$postgres_only" = true ]; then
+    log "restore complete (postgres only)" "$name"
+    return
+  fi
   ch "DROP DATABASE IF EXISTS $target_db SYNC" > /dev/null
   ch "RESTORE DATABASE $source_db AS $target_db FROM File('$name/$CH_DIR')" > /dev/null
   log "clickhouse restored" "$name"

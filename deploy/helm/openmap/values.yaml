@@ -69,8 +69,21 @@ ingress:
   tls: []
 
 postgres:
-  image: postgres:17
+  # REQ-SEC-011 (ADR-067): Percona Server for PostgreSQL with pg_tde; PGDATA is /data/db.
+  image: percona/percona-distribution-postgresql:17.11.1-4
   storage: 50Gi
+  tde:
+    # Every table tde_heap and the WAL encrypted, the principal key in OpenBao (mount `tde`) through an OpenBao Agent
+    # sidecar. Takes effect when the data directory is first initialised.
+    enabled: true
+    # How long first initialisation waits for the agent's token (the OpenBao init job runs after the pods start).
+    tokenWaitSeconds: 900
+    # With openbao.external: a Secret holding `role-id` and `secret-id` of an AppRole on the pg-tde policy
+    # (deploy/compose/openbao/policies/pg-tde.hcl) in the external vault, which must have a KV v2 mount `tde`.
+    externalApproleSecret: ""
+    agentResources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { cpu: 200m, memory: 128Mi }
   database: openmap
   username: openmap
   password: openmap

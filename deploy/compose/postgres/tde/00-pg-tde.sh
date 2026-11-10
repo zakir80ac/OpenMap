@@ -7,14 +7,18 @@
 set -eu
 : "${OPENBAO_ADDR:?OPENBAO_ADDR is required}"
 TOKEN_FILE="${PG_TDE_TOKEN_FILE:-/run/pgtde/token}"
-KEY="${PG_TDE_KEY_NAME:-openmap-principal-1}"
+# One principal key per server and initialisation: servers may share the `tde` mount, and a name is never reused.
+KEY="${PG_TDE_KEY_NAME:-openmap-principal-$(date -u +%Y%m%dT%H%M%SZ)}"
 PROVIDER="${PG_TDE_PROVIDER:-openbao}"
 MOUNT="${PG_TDE_MOUNT:-tde}"
 
+# On Kubernetes the agent can log in only once the OpenBao init job has registered its AppRole, which a Helm
+# post-install hook does after the pods start: the wait is long there (PG_TDE_TOKEN_WAIT_SECONDS).
+WAIT="${PG_TDE_TOKEN_WAIT_SECONDS:-120}"
 tries=0
 until [ -s "$TOKEN_FILE" ]; do
   tries=$((tries + 1))
-  [ "$tries" -gt 60 ] && { echo "pg_tde: no OpenBao token at $TOKEN_FILE" >&2; exit 1; }
+  [ "$tries" -gt "$WAIT" ] && { echo "pg_tde: no OpenBao token at $TOKEN_FILE after ${WAIT}s" >&2; exit 1; }
   sleep 1
 done
 

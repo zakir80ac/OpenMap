@@ -1,11 +1,8 @@
 # REQ-SEC-011 (ADR-067) — OpenBao Agent beside PostgreSQL: logs in with the pg-tde AppRole and keeps a valid token in
 # the file pg_tde's key provider reads (secret_token_path), renewing it before it expires and logging in again when it
 # cannot. PostgreSQL never holds a long-lived token.
+# OpenBao's address comes from BAO_ADDR (compose and Helm set it), so one file serves both.
 pid_file = "/tmp/agent.pid"
-
-vault {
-  address = "http://openbao:8200"
-}
 
 auto_auth {
   method "approle" {

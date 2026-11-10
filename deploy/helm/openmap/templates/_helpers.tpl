@@ -39,6 +39,11 @@ app.kubernetes.io/component: {{ .component }}
 {{ printf "%s-%s" (include "openmap.fullname" .root) .component }}
 {{- end -}}
 
+{{/* REQ-SEC-011 (ADR-067): OpenBao's address, the chart's own or the external vault. */}}
+{{- define "openmap.vaultAddr" -}}
+{{- if .Values.openbao.external.enabled }}{{ .Values.openbao.external.address }}{{ else }}http://{{ include "openmap.fullname" . }}-openbao:8200{{ end }}
+{{- end }}
+
 {{/* REQ-SEC-011 (ADR-067): the services' AppRole ids, mounted where OPENBAO_ROLE_ID_FILE / OPENBAO_SECRET_ID_FILE point. */}}
 {{- define "openmap.vaultVolume" -}}
 {{- if not .Values.openbao.external.enabled }}
@@ -83,7 +88,7 @@ app.kubernetes.io/component: {{ .component }}
 - name: KEYCLOAK_REALM
   value: {{ .Values.keycloak.realm | quote }}
 - name: OPENBAO_ADDR
-  value: {{ if .Values.openbao.external.enabled }}{{ .Values.openbao.external.address | quote }}{{ else }}http://{{ include "openmap.fullname" . }}-openbao:8200{{ end }}
+  value: {{ include "openmap.vaultAddr" . | quote }}
 - name: OPENBAO_MOUNT
   value: {{ .Values.openbao.mount | quote }}
 {{- if .Values.openbao.external.enabled }}

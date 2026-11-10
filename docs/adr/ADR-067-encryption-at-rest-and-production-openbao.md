@@ -49,6 +49,15 @@ Six steps, each its own commit and evidence, in this order:
   - Cost: writes −6.8 % TPS, bulk load +52 %, no read cost measurable.
   - Step 3 accepts on `impact-budget`, k6 and a scale replay against the TDE server.
 
+- **Step 3** (2026-11-10): done. `docs/evidence/sec-pgtde-migration.md`.
+  - Compose and Helm run Percona Server for PostgreSQL 17.11.1 with pg_tde. The OpenBao Agent is a compose service
+    and, on Helm, a sidecar.
+  - The dev stack moved through a backup set in 1.6 min: 192 of 192 tables encrypted, row counts identical, no real
+    value in plaintext in the data files or WAL.
+  - Budgets on the encrypted server: impact p95 83 ms, telemetry fleet 55 ms (138k CIs), discovery sweep 6.04 min per
+    10,000 devices.
+  - Backups leave the `pg_tde` extension out and restore onto the target's access method.
+
 ## Consequences
 
 - OpenBao becomes tier 0: if its keys are unavailable, PostgreSQL does not start; if they are lost, the data is lost.

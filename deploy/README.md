@@ -96,11 +96,50 @@ and the encryption keys the database will depend on, so treat it as tier 0.
 - **Monitoring.** Prometheus scrapes `/v1/sys/metrics`; a sealed OpenBao answers 503 there, so alert on
   `up{job="openbao"} == 0`.
 - **Host-side tests and operators** export `OPENBAO_TOKEN`; nothing in the services reads it.
-- **pg_tde lab** (`--profile tde-lab`, ADR-067 step 2): `postgres-tde` keeps its principal key in the `tde` mount.
-  `pgtde-agent` logs in with the `pg-tde` AppRole and keeps the token file pg_tde reads.
-  - After revoking that token, restart `pgtde-agent`: the agent notices a revocation only at its next renewal.
-  - Until then PostgreSQL keeps working on the keys it holds, but cannot create or rotate a key, and cannot start.
-  - pg_tde reads the file on every call, so PostgreSQL needs no restart afterwards.
+## Encrypted PostgreSQL (REQ-SEC-011, ADR-067)
+
+PostgreSQL is Percona Server for PostgreSQL 17 with pg_tde:
+
+- Every table is `tde_heap` (the catalogs are not; pg_tde leaves them alone), and the WAL is encrypted.
+- The principal key lives in OpenBao's `tde` mount, under a name made at first start
+  (`openmap-principal-<UTC time>`).
+- `pgtde-agent` (a sidecar on Helm) logs in with the `pg-tde` AppRole and keeps the token file pg_tde reads.
+- The data directory is `/data/db` on the `postgres-tde-data` volume.
+
+**Operating it:**
+
+- **Without OpenBao, PostgreSQL does not start.** It needs OpenBao unsealed and the agent's token to load its key.
+  Losing the `tde` mount (restore it from the OpenBao snapshot in every backup set) loses the database.
+- **After revoking the agent's token, restart `pgtde-agent`.** The agent notices a revocation only at its next
+  renewal. Until then PostgreSQL keeps working on the keys it holds, but cannot create or rotate a key, and cannot
+  start. pg_tde reads the file on every call, so PostgreSQL needs no restart afterwards.
+- **Rotating the principal key:**
+  ```sql
+  SELECT pg_tde_create_key_using_global_key_provider('<new name>', 'openbao');
+  SELECT pg_tde_set_default_key_using_global_key_provider('<new name>', 'openbao');
+  SELECT pg_tde_set_server_key_using_global_key_provider('<new name>', 'openbao');
+  ```
+  No restart is needed.
+- **Helm:** `postgres.tde.enabled` (default true) takes effect when the data directory is first initialised. With
+  `openbao.external`, set `postgres.tde.externalApproleSecret` (a Secret with `role-id` and `secret-id` of an AppRole on
+  the pg-tde policy; the vault needs a KV v2 mount `tde`).
+
+**Moving an install that ran stock PostgreSQL** (its data is in the `postgres-data` volume; measured on the dev stack:
+9.4 GB of PostgreSQL restored in 1.6 min):
+
+1. Stop the services that write: `docker compose ... stop api scheduler reconciler bsm-engine node console superset
+   keycloak`.
+2. Take a set from the running stock server, before compose sees the new definition:
+   `docker compose ... --profile backup run --rm --no-deps backup create pre-tde`.
+3. Remove the old container (`docker rm -f openmap-postgres-1`). The `postgres-data` volume stays, as the way back.
+4. Start the new one: `docker compose ... up -d postgres`. It starts `pgtde-agent` first and creates the key.
+5. Restore PostgreSQL only: `docker compose ... --profile backup run --rm --no-deps backup restore pre-tde
+   --postgres-only`. Tables take `tde_heap`, the target's default.
+6. Check: `SELECT count(*) FILTER (WHERE pg_tde_is_encrypted(c.oid)), count(*) FROM pg_class c JOIN pg_namespace n
+   ON n.oid = c.relnamespace WHERE c.relkind = 'r' AND n.nspname IN ('public', 'keycloak', 'superset')`. The two
+   counts are equal.
+7. `docker compose ... up -d`. Memgraph, ClickHouse and Meilisearch are untouched.
+8. Once the stack has run on it, remove `postgres-data`: it holds the data unencrypted.
 
 ## Backup and restore (REQ-INT-019, ADR-066)
 

@@ -12,10 +12,17 @@ data:
     -- OpenMap's own tables live in public (Prisma); Keycloak and Superset get their own schemas.
     CREATE SCHEMA IF NOT EXISTS keycloak;
     CREATE SCHEMA IF NOT EXISTS superset;
+  {{- if .Values.postgres.tde.enabled }}
+  # REQ-SEC-011 (ADR-067): pg_tde on first start, the same script as compose.
+  00-pg-tde.sh: |
+{{ .Files.Get "files/postgres/00-pg-tde.sh" | indent 4 }}
+  agent-pgtde.hcl: |
+{{ .Files.Get "files/openbao/agent-pgtde.hcl" | indent 4 }}
+  {{- end }}
 ---
 {{- $root := . }}
 {{- range $store := list
-  (dict "component" "postgres" "image" .Values.postgres.image "port" 5432 "storage" .Values.postgres.storage "mount" "/var/lib/postgresql/data" "resources" .Values.postgres.resources)
+  (dict "component" "postgres" "image" .Values.postgres.image "port" 5432 "storage" .Values.postgres.storage "mount" "/data/db" "resources" .Values.postgres.resources)
   (dict "component" "memgraph" "image" .Values.memgraph.image "port" 7687 "storage" .Values.memgraph.storage "mount" "/var/lib/memgraph" "resources" .Values.memgraph.resources)
   (dict "component" "clickhouse" "image" .Values.clickhouse.image "port" 8123 "storage" .Values.clickhouse.storage "mount" "/var/lib/clickhouse" "resources" .Values.clickhouse.resources)
   (dict "component" "valkey" "image" .Values.valkey.image "port" 6379 "storage" .Values.valkey.storage "mount" "/data" "resources" .Values.valkey.resources)
@@ -56,6 +63,10 @@ spec:
       {{- with $root.Values.image.pullSecrets }}
       imagePullSecrets: {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if eq $store.component "postgres" }}
+      # The Percona image runs PostgreSQL as uid 26; the agent sidecar writes the token as that user.
+      securityContext: { fsGroup: 26 }
+      {{- end }}
       {{- if eq $store.component "memgraph" }}
       # Memgraph crashes on start when its data directory is not owned by its own user (a fresh PersistentVolume is
       # root-owned), so the volume is handed over before the database starts; the same image, as root, does it.
@@ -85,13 +96,37 @@ spec:
               readOnly: true
             - name: shm
               mountPath: /dev/shm
+            {{- if $root.Values.postgres.tde.enabled }}
+            - { name: pgtde-token, mountPath: /run/pgtde, readOnly: true }
+            {{- end }}
             {{- end }}
           {{- if eq $store.component "postgres" }}
+          {{- if $root.Values.postgres.tde.enabled }}
+          args: ["postgres", "-c", "shared_preload_libraries=pg_tde"]
+          env:
+            - { name: OPENBAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+            - { name: PG_TDE_TOKEN_WAIT_SECONDS, value: {{ $root.Values.postgres.tde.tokenWaitSeconds | quote }} }
+          {{- end }}
           envFrom:
             - secretRef: { name: {{ include "openmap.fullname" $root }}-datastores }
           readinessProbe:
             exec: { command: ["pg_isready", "-U", {{ $root.Values.postgres.username | quote }}] }
             periodSeconds: 5
+        {{- if $root.Values.postgres.tde.enabled }}
+        # REQ-SEC-011 (ADR-067): logs in with the pg-tde AppRole and keeps the token pg_tde reads fresh.
+        - name: pgtde-agent
+          image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $root.Values.openbao.image }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          args: ["agent", "-config=/openbao/config/agent-pgtde.hcl"]
+          securityContext: { runAsUser: 26, runAsGroup: 26 }
+          env:
+            - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+          resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
+          volumeMounts:
+            - { name: pgtde-token, mountPath: /run/pgtde }
+            - { name: pgtde-approle, mountPath: /openbao/approle-pgtde, readOnly: true }
+            - { name: pgtde-config, mountPath: /openbao/config, readOnly: true }
+        {{- end }}
           {{- else if eq $store.component "memgraph" }}
           args: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60"]
           readinessProbe:
@@ -123,9 +158,34 @@ spec:
       {{- if eq $store.component "postgres" }}
       volumes:
         - name: init
-          configMap: { name: {{ include "openmap.fullname" $root }}-postgres-init }
+          # Executable, so the entrypoint runs the pg_tde script rather than sourcing it.
+          configMap:
+            name: {{ include "openmap.fullname" $root }}-postgres-init
+            defaultMode: 0555
+            items:
+              - { key: 01-schemas.sql, path: 01-schemas.sql }
+              {{- if $root.Values.postgres.tde.enabled }}
+              - { key: 00-pg-tde.sh, path: 00-pg-tde.sh }
+              {{- end }}
         - name: shm
           emptyDir: { medium: Memory, sizeLimit: {{ $root.Values.postgres.shmSize }} }
+        {{- if $root.Values.postgres.tde.enabled }}
+        # The token never touches a disk.
+        - name: pgtde-token
+          emptyDir: { medium: Memory, sizeLimit: 1Mi }
+        - name: pgtde-config
+          configMap: { name: {{ include "openmap.fullname" $root }}-postgres-init, items: [{ key: agent-pgtde.hcl, path: agent-pgtde.hcl }] }
+        - name: pgtde-approle
+          secret:
+            {{- if $root.Values.openbao.external.enabled }}
+            secretName: {{ required "postgres.tde.externalApproleSecret is required with openbao.external and postgres.tde" $root.Values.postgres.tde.externalApproleSecret }}
+            items: [{ key: role-id, path: role-id }, { key: secret-id, path: secret-id }]
+            {{- else }}
+            secretName: {{ include "openmap.fullname" $root }}-openbao-approle
+            items: [{ key: pgtde-role-id, path: role-id }, { key: pgtde-secret-id, path: secret-id }]
+            {{- end }}
+            defaultMode: 0440
+        {{- end }}
       {{- end }}
   volumeClaimTemplates:
     - metadata:

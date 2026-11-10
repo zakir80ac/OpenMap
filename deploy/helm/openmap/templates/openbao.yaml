@@ -2,7 +2,8 @@
 REQ-SEC-011 (ADR-067) — OpenBao in server mode unless openbao.external points at an existing vault: Raft storage on a
 persistent volume, auto-unseal (the static key seal with a key the chart generates once and keeps, or the seal block in
 openbao.seal.config for PKCS#11 or KMIP), and a post-install/upgrade job that initialises it, writes the policies and
-registers the AppRole ids the chart generated (kept across upgrades) for the services and the backup job.
+registers the AppRole ids the chart generated (kept across upgrades) for the services, the backup job and the OpenBao
+Agent beside PostgreSQL (pg_tde's principal key).
 */ -}}
 {{- if not .Values.openbao.external.enabled }}
 {{- $fullname := include "openmap.fullname" . }}
@@ -32,8 +33,9 @@ metadata:
   annotations: { "helm.sh/resource-policy": keep }
 type: Opaque
 data:
-  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" }}
-  {{ $key }}: {{ if $existingApprole }}{{ index $existingApprole.data $key }}{{ else }}{{ uuidv4 | b64enc }}{{ end }}
+  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" "pgtde-role-id" "pgtde-secret-id" }}
+  {{- /* An id is kept once generated; one added by a later chart version is generated on that upgrade. */}}
+  {{ $key }}: {{ if and $existingApprole (hasKey $existingApprole.data $key) }}{{ index $existingApprole.data $key }}{{ else }}{{ uuidv4 | b64enc }}{{ end }}
   {{- end }}
 ---
 apiVersion: v1
@@ -174,6 +176,8 @@ spec:
             - { name: SERVICES_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: secret-id } } }
             - { name: BACKUP_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: backup-role-id } } }
             - { name: BACKUP_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: backup-secret-id } } }
+            - { name: PGTDE_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: pgtde-role-id } } }
+            - { name: PGTDE_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: pgtde-secret-id } } }
           volumeMounts:
             - { name: init, mountPath: /openbao/init }
             - { name: scripts, mountPath: /openbao/scripts }
