@@ -1896,7 +1896,8 @@
                               "spare_for",
                               "zoned_with",
                               "presented_to",
-                              "replicates_to"
+                              "replicates_to",
+                              "references"
                             ]
                           },
                           "fromCiId": {
@@ -3767,7 +3768,8 @@
                         "spare_for",
                         "zoned_with",
                         "presented_to",
-                        "replicates_to"
+                        "replicates_to",
+                        "references"
                       ]
                     },
                     "fromCiId": {
@@ -3957,7 +3959,8 @@
                       "spare_for",
                       "zoned_with",
                       "presented_to",
-                      "replicates_to"
+                      "replicates_to",
+                      "references"
                     ]
                   },
                   "fromCiId": {
@@ -4062,7 +4065,8 @@
                         "spare_for",
                         "zoned_with",
                         "presented_to",
-                        "replicates_to"
+                        "replicates_to",
+                        "references"
                       ]
                     },
                     "fromCiId": {

@@ -29,6 +29,7 @@
     "@openmap/i18n": "workspace:*",
     "@openmap/scheduler": "workspace:*",
     "@openmap/telemetry": "workspace:*",
+    "@openmap/vault": "workspace:*",
     "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/auto-instrumentations-node": "^0.82.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.300.0",

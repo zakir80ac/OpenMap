@@ -58,7 +58,7 @@ type fixtureExpect struct {
 	// Per-capture host disk facts where they differ from the first five captures' shared host state.
 	diskPercent float64
 	disksBytes  map[string]float64
-	// REQ-IPAM-005: firewall rules (with base chain policies), sets, and rule-to-set depends_on links.
+	// REQ-IPAM-005: firewall rules (with base chain policies), sets, and rule-to-set references links.
 	firewallRules, firewallObjects, firewallLinks int
 }
 
@@ -306,7 +306,7 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 			if len(byType[typeFwRule]) != want.firewallRules || len(byType[typeFwObject]) != want.firewallObjects {
 				t.Errorf("firewall CIs: %d rules, %d objects", len(byType[typeFwRule]), len(byType[typeFwObject]))
 			}
-			wantRels := map[string]int{relRunsOn: len(want.services), relContains: 1 + want.firewallRules + want.firewallObjects, relUsesIP: 1, relInstalled: 1 + len(want.software), relDependsOn: want.firewallLinks}
+			wantRels := map[string]int{relRunsOn: len(want.services), relContains: 1 + want.firewallRules + want.firewallObjects, relUsesIP: 1, relInstalled: 1 + len(want.software), relReferences: want.firewallLinks}
 			for k, v := range wantRels {
 				if rels[k] != v {
 					t.Errorf("relationship %s: %d want %d", k, rels[k], v)

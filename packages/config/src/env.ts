@@ -53,7 +53,15 @@ export const envSchema = z.object({
   KEYCLOAK_API_CLIENT_ID: z.string().default('openmap-api'),
   /** OpenBao: secrets for collector credentials. */
   OPENBAO_ADDR: url.default('http://localhost:8200'),
-  OPENBAO_TOKEN: z.string().default('openmap-dev-root'),
+  /**
+   * REQ-SEC-011 (ADR-067): services log in with AppRole (role id and secret id read from these files, written by the
+   * openbao-init job) and renew by logging in again. OPENBAO_TOKEN is for an operator or a host-side test, or an
+   * external vault that issues a token; unset in the services.
+   */
+  OPENBAO_TOKEN: z.string().min(1).optional(),
+  OPENBAO_ROLE_ID_FILE: z.string().min(1).optional(),
+  OPENBAO_SECRET_ID_FILE: z.string().min(1).optional(),
+  OPENBAO_APPROLE_MOUNT: z.string().default('approle'),
   OPENBAO_MOUNT: z.string().default('openmap'),
   /** Superset: embedded analytics. */
   SUPERSET_URL: url.default('http://localhost:8088'),

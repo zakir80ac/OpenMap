@@ -35,6 +35,11 @@ export const backupManifestSchema = z.object({
       sha256: z.string().regex(SHA256),
     })
     .nullable(),
+  /** REQ-SEC-011 (ADR-067): OpenBao's Raft snapshot, when the backup service has its AppRole; absent in older sets. */
+  openbao: z
+    .object({ file: z.string().min(1), bytes: z.number().int().min(0), sha256: z.string().regex(SHA256) })
+    .nullable()
+    .default(null),
   /** Stores rebuilt from Postgres after a restore instead of being backed up. */
   derived: z.array(z.string()),
   error: z.string().nullable(),

@@ -752,6 +752,17 @@ export const SWITCH_PORTS = {
 } as const;
 
 /**
+ * REQ-SEC-011 (ADR-067) — OpenBao access. A service logs in with AppRole and logs in again once `renewAtFraction` of
+ * its token's lease has passed (a token never lapses mid-request), or straight away after a 403; a token without a
+ * lease (an operator's) is used as given.
+ */
+export const VAULT = {
+  tokenHeader: 'X-Vault-Token',
+  renewAtFraction: 0.75,
+  loginTimeoutMs: 5_000,
+} as const;
+
+/**
  * REQ-INT-019 (ADR-066) — backup and restore. A backup set is a directory under BACKUP_DIR holding the Postgres custom
  * archive, the ClickHouse native backup and a manifest; Memgraph and Meilisearch are derived from Postgres and rebuilt by
  * `reproject` after a restore rather than backed up. The script keeps the newest `keepDefault` complete sets; a
@@ -1931,7 +1942,8 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.10.0 (REQ-IPAM-005, ADR-064): the `firewall_object` CI type (identity deviceRef + objectId) and `firewall.ts`:
    * rule and object attributes, address and service matching, rule evaluation, shadowed and unused rules.
    */
-  ci: '0.10.0',
+  // 0.11.0 (REQ-IPAM-005, ADR-064 consequences): the `references` relationship type (not an impact edge).
+  ci: '0.11.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
@@ -1940,7 +1952,8 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.8.0 (REQ-BSM-007, ADR-025): the `link_probe` family.
    * 0.9.0 (REQ-DCIM-001, ADR-056): moves with the CI contract (the `circuit` CI type); no result field changed.
    * 0.10.0 (REQ-IPAM-005, ADR-064): moves with the CI contract (the `firewall_object` CI type); no result field changed. */
-  collector: '0.10.0',
+  // 0.11.0: moves with the CI contract (the `references` relationship type); no result field changed.
+  collector: '0.11.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.

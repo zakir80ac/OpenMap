@@ -405,6 +405,7 @@ export const relationshipFamily = {
   installed_on: 'dependency',
   contains: 'placement',
   member_of: 'placement',
+  references: 'placement',
   located_in: 'placement',
   connected_to: 'placement',
   cabled_to: 'placement',

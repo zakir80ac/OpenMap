@@ -446,7 +446,7 @@ function addFirewallRules(world: World, rng: Rng, device: DeviceRec): void {
     for (const value of [attributes['source'], attributes['destination'], attributes['service']]) {
       const objectIdx =
         typeof value === 'string' && value.startsWith('@') ? objects.get(value.slice(1)) : undefined;
-      if (objectIdx !== undefined) b.rel(device.slot, 'depends_on', idx, objectIdx);
+      if (objectIdx !== undefined) b.rel(device.slot, 'references', idx, objectIdx);
     }
   };
 

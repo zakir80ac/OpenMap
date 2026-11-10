@@ -147,6 +147,7 @@ enum RelationshipType {
   zoned_with
   presented_to
   replicates_to
+  references
 }
 
 /// LIFECYCLES (ci.ts)

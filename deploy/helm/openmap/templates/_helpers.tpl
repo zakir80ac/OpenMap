@@ -39,6 +39,23 @@ app.kubernetes.io/component: {{ .component }}
 {{ printf "%s-%s" (include "openmap.fullname" .root) .component }}
 {{- end -}}
 
+{{/* REQ-SEC-011 (ADR-067): the services' AppRole ids, mounted where OPENBAO_ROLE_ID_FILE / OPENBAO_SECRET_ID_FILE point. */}}
+{{- define "openmap.vaultVolume" -}}
+{{- if not .Values.openbao.external.enabled }}
+- name: openbao-approle
+  secret:
+    secretName: {{ include "openmap.fullname" . }}-openbao-approle
+    defaultMode: 0440
+    items: [{ key: role-id, path: role-id }, { key: secret-id, path: secret-id }]
+{{- end }}
+{{- end -}}
+
+{{- define "openmap.vaultMount" -}}
+{{- if not .Values.openbao.external.enabled }}
+- { name: openbao-approle, mountPath: /run/openmap/openbao, readOnly: true }
+{{- end }}
+{{- end -}}
+
 {{/* Environment shared by every Node service; secrets are referenced, never inlined. */}}
 {{- define "openmap.appEnv" -}}
 - name: NODE_ENV
@@ -69,8 +86,15 @@ app.kubernetes.io/component: {{ .component }}
   value: {{ if .Values.openbao.external.enabled }}{{ .Values.openbao.external.address | quote }}{{ else }}http://{{ include "openmap.fullname" . }}-openbao:8200{{ end }}
 - name: OPENBAO_MOUNT
   value: {{ .Values.openbao.mount | quote }}
+{{- if .Values.openbao.external.enabled }}
 - name: OPENBAO_TOKEN
   valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" . }}-datastores, key: OPENBAO_TOKEN } }
+{{- else }}
+- name: OPENBAO_ROLE_ID_FILE
+  value: /run/openmap/openbao/role-id
+- name: OPENBAO_SECRET_ID_FILE
+  value: /run/openmap/openbao/secret-id
+{{- end }}
 - name: PUBLIC_API_URL
   value: {{ .Values.api.publicUrl | quote }}
 - name: PUBLIC_CONSOLE_URL

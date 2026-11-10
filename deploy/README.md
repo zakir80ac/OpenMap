@@ -74,6 +74,34 @@ realm import takes the console's redirect URIs from `PUBLIC_CONSOLE_URL`, so sig
 without touching Keycloak. `docs/evidence/airgap/load-airgap.md` records a full load on a host whose new outbound
 connections are dropped by iptables.
 
+## Secrets: OpenBao in production (REQ-SEC-011, ADR-067)
+
+OpenBao runs in server mode with Raft storage and auto-unseal. It holds every integration and discovery credential,
+and the encryption keys the database will depend on, so treat it as tier 0.
+
+- **First start.** `openbao-keys` generates the static seal key once (`openbao-unseal` volume); `openbao-init`
+  initialises OpenBao, enables KV v2 at `OPENBAO_MOUNT` and Transit (`openmap-fields` key), writes the
+  `openmap-services` and `openmap-backup` policies and issues AppRole ids into the `openbao-approle` and
+  `openbao-approle-backup` volumes, which the services and the backup service mount read-only. Services log in with
+  AppRole and never hold a root token.
+- **Take offline now:** the seal key (`openbao-unseal/unseal.key`: without it the data cannot be unsealed) and
+  `openbao-init/init.json` (five recovery keys, threshold three, and the initial root token). Delete `init.json` from
+  the volume once both are stored apart; generate a root token from the recovery keys when one is needed
+  (`bao operator generate-root`). Keep the seal key and the recovery keys away from the data volume and its backups.
+- **HSM or KMS.** Replace the `seal "static"` block in `openbao/openbao.hcl` (Helm: `openbao.seal.config`) with a
+  `seal "pkcs11"` or `seal "kmip"` block; migrating seals needs both old and new seals available.
+- **Snapshots.** Every backup set includes a Raft snapshot (`openbao.snap`, the backup AppRole may take one and do
+  nothing else). Restore it with the same seal key: `bao operator raft snapshot restore openbao.snap` with an
+  operator token.
+- **Monitoring.** Prometheus scrapes `/v1/sys/metrics`; a sealed OpenBao answers 503 there, so alert on
+  `up{job="openbao"} == 0`.
+- **Host-side tests and operators** export `OPENBAO_TOKEN`; nothing in the services reads it.
+- **pg_tde lab** (`--profile tde-lab`, ADR-067 step 2): `postgres-tde` keeps its principal key in the `tde` mount.
+  `pgtde-agent` logs in with the `pg-tde` AppRole and keeps the token file pg_tde reads.
+  - After revoking that token, restart `pgtde-agent`: the agent notices a revocation only at its next renewal.
+  - Until then PostgreSQL keeps working on the keys it holds, but cannot create or rotate a key, and cannot start.
+  - pg_tde reads the file on every call, so PostgreSQL needs no restart afterwards.
+
 ## Backup and restore (REQ-INT-019, ADR-066)
 
 A backup set holds the stores of record: PostgreSQL (`pg_dump` custom archive: application, Keycloak and Superset

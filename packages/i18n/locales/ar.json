@@ -365,6 +365,7 @@
   "relationship.zoned_with": "في نطاق مع",
   "relationship.presented_to": "معروض إلى",
   "relationship.replicates_to": "ينسخ إلى",
+  "relationship.references": "يشير إلى",
   "relationship.other": "مرتبط بـ",
   "lifecycle.discovered": "مكتشَف",
   "lifecycle.managed": "مُدار",

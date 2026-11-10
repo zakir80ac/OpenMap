@@ -16,6 +16,9 @@
 #   POSTGRES_URL, CLICKHOUSE_URL, CLICKHOUSE_USER, CLICKHOUSE_PASSWORD, CLICKHOUSE_DB,
 #   BACKUP_DIR (this container's view of the backup volume, which the ClickHouse server mounts at its
 #   backups.allowed_path), BACKUP_KEEP, CLICKHOUSE_UID (the server's user, which writes the ClickHouse part).
+# REQ-SEC-011 (ADR-067): with OPENBAO_ADDR and the backup AppRole files (OPENBAO_ROLE_ID_FILE, OPENBAO_SECRET_ID_FILE)
+# set, the set also holds an OpenBao Raft snapshot. It is restored by an operator (`bao operator raft snapshot restore`)
+# and needs the same seal key; `restore` here leaves OpenBao alone.
 # Memgraph and Meilisearch are projections of Postgres; they are not in a backup set.
 set -eu
 
@@ -23,6 +26,7 @@ FORMAT="openmap-backup/1"
 MANIFEST="manifest.json"
 PG_FILE="postgres.dump"
 CH_DIR="clickhouse"
+BAO_FILE="openbao.snap"
 : "${BACKUP_DIR:?BACKUP_DIR is required}"
 : "${POSTGRES_URL:?POSTGRES_URL is required}"
 : "${CLICKHOUSE_URL:?CLICKHOUSE_URL is required}"
@@ -45,11 +49,11 @@ ch() {
 json_string() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
 
 write_manifest() {
-  # $1 dir, $2 name, $3 status, $4 createdAt, $5 completedAt|null, $6 postgres json|null, $7 clickhouse json|null, $8 error|null
+  # $1 dir, $2 name, $3 status, $4 createdAt, $5 completedAt|null, $6 postgres json|null, $7 clickhouse json|null, $8 error|null, $9 openbao json|null
   completed=null; [ "$5" = null ] || completed=$(json_string "$5")
   error=null; [ "$8" = null ] || error=$(json_string "$8")
-  printf '{"format":"%s","name":%s,"status":"%s","createdAt":"%s","completedAt":%s,"postgres":%s,"clickhouse":%s,"derived":["memgraph","meilisearch"],"error":%s}\n' \
-    "$FORMAT" "$(json_string "$2")" "$3" "$4" "$completed" "$6" "$7" "$error" > "$1/$MANIFEST.tmp"
+  printf '{"format":"%s","name":%s,"status":"%s","createdAt":"%s","completedAt":%s,"postgres":%s,"clickhouse":%s,"openbao":%s,"derived":["memgraph","meilisearch"],"error":%s}\n' \
+    "$FORMAT" "$(json_string "$2")" "$3" "$4" "$completed" "$6" "$7" "${9:-null}" "$error" > "$1/$MANIFEST.tmp"
   mv "$1/$MANIFEST.tmp" "$1/$MANIFEST"
 }
 
@@ -85,10 +89,21 @@ create() {
   ch_sha=$(dir_digest "$dir/$CH_DIR")
   log "clickhouse backed up" "$name"
 
+  bao_json=null
+  if [ -n "${OPENBAO_ADDR:-}" ] && [ -n "${OPENBAO_ROLE_ID_FILE:-}" ] && [ -n "${OPENBAO_SECRET_ID_FILE:-}" ]; then
+    login=$(curl -sS --fail-with-body -X POST -H 'content-type: application/json' \
+      --data "{\"role_id\":\"$(tr -d '\n' < "$OPENBAO_ROLE_ID_FILE")\",\"secret_id\":\"$(tr -d '\n' < "$OPENBAO_SECRET_ID_FILE")\"}" \
+      "$OPENBAO_ADDR/v1/auth/approle/login") || die "openbao: AppRole login refused" "$name"
+    token=$(printf '%s' "$login" | sed -n 's/.*"client_token":"\([^"]*\)".*/\1/p')
+    curl -sS --fail -H "X-Vault-Token: $token" -o "$dir/$BAO_FILE" "$OPENBAO_ADDR/v1/sys/storage/raft/snapshot" || die "openbao: snapshot refused" "$name"
+    bao_json=$(printf '{"file":"%s","bytes":%s,"sha256":"%s"}' "$BAO_FILE" "$(stat -c %s "$dir/$BAO_FILE")" "$(sha256sum "$dir/$BAO_FILE" | cut -d' ' -f1)")
+    log "openbao snapshot taken" "$name"
+  fi
+
   pg_json=$(printf '{"file":"%s","bytes":%s,"sha256":"%s","migration":%s,"cis":%s}' "$PG_FILE" "$pg_bytes" "$pg_sha" "$(json_string "$migration")" "$cis")
   ch_json=$(printf '{"directory":"%s","database":"%s","bytes":%s,"files":%s,"sha256":"%s"}' "$CH_DIR" "$CLICKHOUSE_DB" "$ch_bytes" "$ch_files" "$ch_sha")
   trap - EXIT
-  write_manifest "$dir" "$name" complete "$started" "$(now)" "$pg_json" "$ch_json" null
+  write_manifest "$dir" "$name" complete "$started" "$(now)" "$pg_json" "$ch_json" null "$bao_json"
   log "backup complete" "$name"
   prune
 }
@@ -103,6 +118,10 @@ verify() {
   [ "$(sha256sum "$dir/$PG_FILE" | cut -d' ' -f1)" = "$pg_sha" ] || die "postgres archive checksum differs" "$name"
   [ "$(dir_digest "$dir/$CH_DIR")" = "$ch_sha" ] || die "clickhouse backup checksum differs" "$name"
   pg_restore --list "$dir/$PG_FILE" > /dev/null || die "pg_restore cannot read the archive" "$name"
+  bao_sha=$(sed -n 's/.*"openbao":{[^}]*"sha256":"\([a-f0-9]*\)".*/\1/p' "$dir/$MANIFEST")
+  if [ -n "$bao_sha" ]; then
+    [ "$(sha256sum "$dir/$BAO_FILE" | cut -d' ' -f1)" = "$bao_sha" ] || die "openbao snapshot checksum differs" "$name"
+  fi
   log "backup verified" "$name"
 }
 

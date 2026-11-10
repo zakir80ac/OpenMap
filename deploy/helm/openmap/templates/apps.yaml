@@ -77,6 +77,12 @@ spec:
             periodSeconds: 30
           {{- end }}
           resources: {{- toYaml $app.resources | nindent 12 }}
+          {{- if not $root.Values.openbao.external.enabled }}
+          volumeMounts: {{- include "openmap.vaultMount" $root | nindent 12 }}
+          {{- end }}
+      {{- if not $root.Values.openbao.external.enabled }}
+      volumes: {{- include "openmap.vaultVolume" $root | nindent 8 }}
+      {{- end }}
 {{- if gt (int $app.port) 0 }}
 ---
 apiVersion: v1
@@ -193,7 +199,11 @@ spec:
           volumeMounts:
             - { name: pki, mountPath: /etc/openmap/pki }
             - { name: evidence, mountPath: /var/lib/openmap/evidence }
+            {{- include "openmap.vaultMount" . | nindent 12 }}
           resources: {{- toYaml .Values.scheduler.resources | nindent 12 }}
+      {{- if not .Values.openbao.external.enabled }}
+      volumes: {{- include "openmap.vaultVolume" . | nindent 8 }}
+      {{- end }}
   volumeClaimTemplates:
     - metadata: { name: pki }
       spec:

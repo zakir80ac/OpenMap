@@ -1,0 +1,90 @@
+#!/bin/sh
+# REQ-SEC-011 (ADR-067) — brings a production OpenBao to the state OpenMap needs, idempotently:
+#   1. initialise once (auto-unseal: recovery keys, not unseal keys) and keep the output in /openbao/init (mode 0600);
+#      move the recovery keys and the initial root token offline and delete the file once the deployment is settled;
+#   2. KV v2 at $OPENBAO_MOUNT, Transit with the openmap-fields key;
+#   3. the openmap-services and openmap-backup policies and their AppRoles;
+#   4. role id and secret id files for the services (/openbao/approle) and the backup service (/openbao/approle-backup),
+#      readable by the user the services run as ($SERVICE_UID); or, when SERVICES_ROLE_ID / SERVICES_SECRET_ID /
+#      BACKUP_ROLE_ID / BACKUP_SECRET_ID are given (Helm generates them into a Secret), those ids are registered;
+#   5. the pg-tde policy and AppRole for the OpenBao Agent beside a pg_tde PostgreSQL (its principal keys, `tde` mount).
+set -eu
+export BAO_ADDR="${BAO_ADDR:-http://openbao:8200}"
+MOUNT="${OPENBAO_MOUNT:-openmap}"
+SERVICE_UID="${SERVICE_UID:-1000}"
+INIT=/openbao/init/init.json
+
+log() { printf '{"msg":"%s"}\n' "$1"; }
+
+# bao status exits 0 unsealed, 2 sealed (or not initialised), 1 on error.
+tries=0
+until bao status > /dev/null 2>&1 || [ $? -eq 2 ]; do
+  tries=$((tries + 1))
+  [ "$tries" -gt 60 ] && { log "openbao did not answer"; exit 1; }
+  sleep 1
+done
+
+if bao status -format=json | grep -q '"initialized": false'; then
+  umask 077
+  bao operator init -recovery-shares=5 -recovery-threshold=3 -format=json > "$INIT"
+  log "initialised; move the recovery keys and the root token in /openbao/init/init.json offline"
+fi
+[ -s "$INIT" ] || { log "openbao is initialised but $INIT is missing: run this job with an operator token in BAO_TOKEN"; [ -n "${BAO_TOKEN:-}" ] || exit 1; }
+if [ -z "${BAO_TOKEN:-}" ]; then
+  BAO_TOKEN=$(sed -n 's/.*"root_token": *"\([^"]*\)".*/\1/p' "$INIT" | head -n 1)
+  export BAO_TOKEN
+fi
+
+tries=0
+until bao status -format=json | grep -q '"sealed": false'; do
+  tries=$((tries + 1))
+  [ "$tries" -gt 60 ] && { log "openbao stayed sealed: check the seal key"; exit 1; }
+  sleep 1
+done
+
+mounts=$(bao secrets list -format=json)
+printf '%s' "$mounts" | grep -q "\"$MOUNT/\"" || bao secrets enable -path="$MOUNT" -version=2 kv
+printf '%s' "$mounts" | grep -q '"transit/"' || bao secrets enable transit
+bao read transit/keys/openmap-fields > /dev/null 2>&1 || bao write -f transit/keys/openmap-fields type=aes256-gcm96 > /dev/null
+# pg_tde's principal keys live in their own KV v2 mount, apart from the credentials.
+printf '%s' "$mounts" | grep -q '"tde/"' || bao secrets enable -path=tde -version=2 kv
+
+# The policy file names the default mount; it is written for the mount this deployment uses.
+sed "s#^path \"openmap/#path \"$MOUNT/#" /openbao/policies/openmap-services.hcl | bao policy write openmap-services - > /dev/null
+bao policy write openmap-backup /openbao/policies/openmap-backup.hcl > /dev/null
+bao policy write pg-tde /openbao/policies/pg-tde.hcl > /dev/null
+bao auth list -format=json | grep -q '"approle/"' || bao auth enable approle
+bao write auth/approle/role/openmap-services token_policies=openmap-services token_ttl=1h token_max_ttl=4h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
+bao write auth/approle/role/openmap-backup token_policies=openmap-backup token_ttl=15m token_max_ttl=1h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
+bao write auth/approle/role/pg-tde token_policies=pg-tde token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
+
+register() {
+  # $1 role, $2 role id, $3 secret id: ids an orchestrator generated (Helm keeps them in a Secret the services mount).
+  bao write "auth/approle/role/$1/role-id" role_id="$2" > /dev/null
+  bao write "auth/approle/role/$1/secret-id/lookup" secret_id="$3" > /dev/null 2>&1 ||
+    bao write "auth/approle/role/$1/custom-secret-id" secret_id="$3" > /dev/null
+}
+
+issue() {
+  # $1 role, $2 directory, $3 owner uid (default SERVICE_UID): role id always (it is stable), a secret id only when
+  # none was issued yet.
+  mkdir -p "$2"
+  bao read -field=role_id "auth/approle/role/$1/role-id" > "$2/role-id"
+  [ -s "$2/secret-id" ] || bao write -f -field=secret_id "auth/approle/role/$1/secret-id" > "$2/secret-id"
+  chown "${3:-$SERVICE_UID}" "$2" "$2/role-id" "$2/secret-id"
+  chmod 0500 "$2"
+  chmod 0400 "$2/role-id" "$2/secret-id"
+}
+if [ -n "${SERVICES_ROLE_ID:-}" ]; then
+  register openmap-services "$SERVICES_ROLE_ID" "${SERVICES_SECRET_ID:?SERVICES_SECRET_ID is required with SERVICES_ROLE_ID}"
+  register openmap-backup "${BACKUP_ROLE_ID:?BACKUP_ROLE_ID is required}" "${BACKUP_SECRET_ID:?BACKUP_SECRET_ID is required}"
+  if [ -n "${PGTDE_ROLE_ID:-}" ]; then
+    register pg-tde "$PGTDE_ROLE_ID" "${PGTDE_SECRET_ID:?PGTDE_SECRET_ID is required with PGTDE_ROLE_ID}"
+  fi
+else
+  issue openmap-services /openbao/approle
+  issue openmap-backup /openbao/approle-backup
+  # The agent beside PostgreSQL reads these as its own user.
+  issue pg-tde /openbao/approle-pgtde "${PGTDE_AGENT_UID:-26}"
+fi
+log "openbao ready"

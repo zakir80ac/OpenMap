@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-09T20:40:41.265Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-10T10:02:59.918Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 23 |
-| In progress | 0 |
+| Not started | 17 |
+| In progress | 1 |
 | Blocked | 29 |
 | In review | 5 |
-| Done | 153 |
+| Done | 158 |
 | **Total** | **210** |
 
 ## By workstream
@@ -19,18 +19,19 @@ Generated 2026-11-09T20:40:41.265Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
-| IPAM | 7 | 4 | 0 | 0 | 57% |
-| DCIM | 9 | 8 | 0 | 0 | 89% |
+| IPAM | 7 | 6 | 0 | 0 | 86% |
+| DCIM | 9 | 9 | 0 | 0 | 100% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
-| INT | 19 | 8 | 0 | 0 | 42% |
+| INT | 19 | 10 | 0 | 0 | 53% |
 | QA | 5 | 3 | 0 | 1 | 60% |
 | PERF | 6 | 2 | 0 | 0 | 33% |
-| SEC | 13 | 9 | 0 | 0 | 69% |
+| SEC | 13 | 9 | 1 | 0 | 69% |
 
 ## In progress
 
+- REQ-SEC-011 · Encryption at rest and in transit
 
 ## Blocked
 
@@ -66,16 +67,16 @@ Generated 2026-11-09T20:40:41.265Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 
 ## Next up
 
-- REQ-DCIM-008 [P1] Cable management with labels and verification
-- REQ-INT-009 [P1] Webhooks and notifications (email, Slack, Teams, PagerDuty)
+- REQ-SEC-011 [P1] Encryption at rest and in transit
 - REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
 - REQ-INT-012 [P1] Monitoring: Zabbix, Nagios, Prometheus, Datadog, SolarWinds, Splunk
 - REQ-INT-014 [P1] Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM
 - REQ-INT-016 [P1] Identity: Active Directory, Entra ID, Okta
 - REQ-INT-017 [P1] Backup/DR awareness: Veeam, Commvault, Rubrik
 - REQ-INT-018 [P1] Appliance deployment (VM)
-- REQ-INT-019 [P1] Backup and restore
-- REQ-IPAM-004 [P1] Switch port management, MAC/ARP tables, port history
+- REQ-IPAM-007 [P1] Network circuits
+- REQ-PERF-005 [P1] Health and performance of the platform itself
+- REQ-SEC-012 [P1] Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate
 
 ## Open risks
 

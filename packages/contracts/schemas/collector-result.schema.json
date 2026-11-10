@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/collector-result/0.10.0",
+  "$id": "https://openmap.dev/contracts/collector-result/0.11.0",
   "title": "collector-result",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -322,7 +322,8 @@
               "spare_for",
               "zoned_with",
               "presented_to",
-              "replicates_to"
+              "replicates_to",
+              "references"
             ]
           },
           "from": {

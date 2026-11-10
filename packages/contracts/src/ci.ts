@@ -316,6 +316,9 @@ export const RELATIONSHIP_TYPES = [
   'zoned_with',
   'presented_to',
   'replicates_to',
+  // REQ-IPAM-005 (ADR-064 consequences): a configuration record names another (a firewall rule an address or
+  // service group). Not an impact edge: the named record cannot fail the one that names it.
+  'references',
 ] as const;
 export const relationshipTypeSchema = z.enum(RELATIONSHIP_TYPES);
 export type RelationshipType = z.infer<typeof relationshipTypeSchema>;

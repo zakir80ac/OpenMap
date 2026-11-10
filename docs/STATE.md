@@ -2,7 +2,68 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 43: REQ-INT-019 backup and restore Done)
+## Last session · 2026-11-10 (checkpoint 45: REQ-SEC-011 steps 1–2 committed; impact walk breadth first)
+
+### What happened
+
+- **The tracker queue ran.** Excel released the workbook. These closures are now written:
+  - REQ-DCIM-008, REQ-IPAM-004, REQ-IPAM-005, REQ-INT-009 and REQ-INT-019 are Done.
+  - ADR-062…067 are recorded.
+  - The contract versions are recorded: CI and collector 0.11.0, event 0.12.0, GraphQL 1.39.0.
+  - The session row is added and the report regenerated. `tracker verify` is ok.
+  - The "queued" blocks in checkpoints 39–44 below are history; none of them is still waiting.
+- **Impact walk on Memgraph is breadth first** (3feaa6b, REQ-PERF-002):
+  - The twin asks for both directions at six hops. The path walk hit 26.9 M paths and timed out.
+  - `impactQueryMemgraph` leaves the target unlabelled. A labelled `(x:Ci)` makes Memgraph run a point-to-point
+    search to all 750k CIs, which is why the 2026-11-08 BFS attempt was slow.
+  - Results match the old walk. The worst PDU went from 421 ms to 220 ms.
+  - Memgraph 3.4.0 crashes on `collect({..., path: [n IN nodes(p) | n.id]})`, so that form is avoided.
+  - See `docs/evidence/impact-query.md`.
+- **SaaS product names:** `SPE_E3` now shows "Microsoft 365 E3" (T-574).
+- **e2e locator fix:** the perf and walkthrough specs no longer take the CMDB import link for the first CI.
+- **Full e2e:** 107 passed, 1 skipped. The three failures were re-run after their fixes and passed.
+- **References relationship type** (CI and collector 0.11.0, ADR-064 consequences): firewall rule → object links
+  are no longer impact edges.
+- **REQ-SEC-011 step 2 done** (`docs/evidence/sec-pgtde-verification.md`):
+  - Percona 17.11.1 with pg_tde: tables and WAL are encrypted. The stock control shows the plaintext canary.
+  - Token revocation and key rotation were verified, with no Postgres restart needed.
+  - pgbench: writes −6.8 % TPS, bulk load +52 %, no read cost measurable.
+  - Fixed: the `PGTDE_AGENT_UID` ownership bug.
+
+### Next
+
+**Next (step 3)**: migrate the compose and Helm Postgres to Percona 17.11.1 with `tde_heap`.
+
+- Move the data through the REQ-INT-019 backup and restore (`pg_restore --no-table-access-method`, so the default
+  `tde_heap` applies).
+- Wire the agent sidecar beside the main Postgres.
+- Acceptance: `impact-budget`, the k6 suite and a scale replay on the TDE server.
+
+Then step 4 (Transit field encryption), step 5 (encrypted backups), step 6 (ClickHouse encrypted disk), and the
+in-transit TLS work.
+
+**Dev notes**:
+
+- Stop the kind cluster (`docker stop openmap-control-plane`) before e2e or perf runs.
+- `up -d <app>` re-runs openbao-init.
+
+## Previous session · 2026-11-10 (checkpoint 44: REQ-SEC-011 step 1 of 6, production OpenBao)
+
+Syed chose pg_tde + OpenBao Transit field encryption (question 18). ADR-067 sets six steps; **step 1 is done**:
+OpenBao 2.7.2 in server mode (Raft, static-key auto-unseal, init job, KV v2 + Transit, `openmap-services` and
+`openmap-backup` policies and AppRoles), the services on AppRole through the new `@openmap/vault` token provider
+(re-login at 75 % of the lease or after a 403), Raft snapshots in every backup set, Prometheus scraping OpenBao, Helm
+StatefulSet + init hook with chart-generated seal key and AppRole ids, deploy/README operations. Evidence
+`docs/evidence/sec-openbao-production.md`; tests T-572, T-573 (+ T-568 extended).
+
+**Next (step 2)**: verify pg_tde 2.x on a pinned Percona Distribution for PostgreSQL 17 image with the OpenBao KV v2
+key provider; its token file is kept fresh by an OpenBao Agent sidecar (pg-tde AppRole) — confirm pg_tde re-reads
+the file; enable WAL encryption; measure the replay and k6 budgets against stock PostgreSQL. REQ-SEC-011 stays In
+progress until step 6 and the in-transit TLS work are done.
+
+**Dev note**: host-side tests that touch OpenBao export `OPENBAO_TOKEN` from `.local/openbao-root-token`.
+
+## Previous session · 2026-11-10 (checkpoint 43: REQ-INT-019 backup and restore Done)
 
 **REQ-INT-019 Done** (ADR-066, GraphQL 1.39.0, T-567..T-571, commit d751d18).
 
@@ -1545,7 +1606,10 @@ Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`
     ADR-014 are additive contract bumps (0.5.0, 0.6.0) recorded for review.
 16. Confirm multi-tenancy is per business unit as drawn in onboarding.
 17. Close the tracker workbook in Excel while sessions run (or we switch the tracker to a copy-on-write flow).
-18. REQ-SEC-011 (asked 2026-11-10): in transit is decided (the internal CA that already signs Node mTLS issues a
+18. Answered on 2026-11-10: Percona `pg_tde` (all tables) plus OpenBao Transit for the few personal-data fields, in this
+    order: production OpenBao (persistent storage, unseal, snapshots, monitoring) → verify pg_tde's state and measure
+    → migrate to Percona PostgreSQL 17 with tde_heap → field encryption → encrypted backup files → ClickHouse encrypted
+    disk. Original question: in transit is decided (the internal CA that already signs Node mTLS issues a
     certificate per service; Postgres, ClickHouse, Valkey, Memgraph, Meilisearch, Keycloak and OpenBao serve TLS only;
     ClickHouse at rest uses its built-in encrypted disk with the key in OpenBao). PostgreSQL has no built-in encryption
     at rest, so one choice is yours: (a) Percona's `pg_tde` (replaces the Postgres distribution, an ADR and a data

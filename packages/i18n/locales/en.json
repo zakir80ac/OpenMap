@@ -365,6 +365,7 @@
   "relationship.zoned_with": "zoned with",
   "relationship.presented_to": "presented to",
   "relationship.replicates_to": "replicates to",
+  "relationship.references": "references",
   "relationship.other": "related to",
   "lifecycle.discovered": "Discovered",
   "lifecycle.managed": "Managed",

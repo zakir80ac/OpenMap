@@ -23,7 +23,9 @@ x-app-env: &app-env
   KEYCLOAK_REALM: ${KEYCLOAK_REALM:-openmap}
   KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-openmap-console}
   OPENBAO_ADDR: http://openbao:8200
-  OPENBAO_TOKEN: ${OPENBAO_TOKEN:-openmap-dev-root}
+  # REQ-SEC-011 (ADR-067): services log in with AppRole; openbao-init writes the ids into the openbao-approle volume.
+  OPENBAO_ROLE_ID_FILE: /run/openmap/openbao/role-id
+  OPENBAO_SECRET_ID_FILE: /run/openmap/openbao/secret-id
   SUPERSET_URL: http://superset:8088
   LLM_BASE_URL: ${LLM_BASE_URL:-http://llm-cpu:8000/v1}
   # ADR-028: the CPU fallback model rewords English reliably and Arabic poorly; Arabic answers stay deterministic here.
@@ -56,6 +58,7 @@ x-app-depends: &app-depends
   valkey: { condition: service_healthy }
   meilisearch: { condition: service_healthy }
   migrate: { condition: service_completed_successfully }
+  openbao-init: { condition: service_completed_successfully }
 
 services:
   migrate:
@@ -83,7 +86,7 @@ services:
       API_PORT: 4000
       # REQ-INT-019: the API lists backup sets (manifests only) from the backup volume, read-only.
       BACKUP_DIR: /var/lib/openmap/backups
-    volumes: ["backups:/var/lib/openmap/backups:ro"]
+    volumes: ["backups:/var/lib/openmap/backups:ro", "openbao-approle:/run/openmap/openbao:ro"]
     ports: ["${API_PORT:-4000}:4000"]
     depends_on: *app-depends
     healthcheck:
@@ -109,7 +112,11 @@ services:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
       BACKUP_DIR: /backups
       BACKUP_KEEP: ${BACKUP_KEEP:-7}
-    volumes: ["backups:/backups"]
+      # REQ-SEC-011 (ADR-067): the backup AppRole may take an OpenBao Raft snapshot and nothing else.
+      OPENBAO_ADDR: http://openbao:8200
+      OPENBAO_ROLE_ID_FILE: /run/openmap/openbao-backup/role-id
+      OPENBAO_SECRET_ID_FILE: /run/openmap/openbao-backup/secret-id
+    volumes: ["backups:/backups", "openbao-approle-backup:/run/openmap/openbao-backup:ro"]
     depends_on:
       postgres: { condition: service_healthy }
       clickhouse: { condition: service_healthy }
@@ -148,7 +155,7 @@ services:
     # pki:init is idempotent: it writes the CA and server certificate on first start and never overwrites them.
     command: ["sh", "-c", "node dist/pki-init.js && exec node dist/main.js"]
     ports: ["${SCHEDULER_PORT:-4200}:4200"]
-    volumes: [scheduler-pki:/etc/openmap/pki, evidence:/var/lib/openmap/evidence]
+    volumes: [scheduler-pki:/etc/openmap/pki, evidence:/var/lib/openmap/evidence, "openbao-approle:/run/openmap/openbao:ro"]
     depends_on: *app-depends
 
   reconciler:
@@ -169,6 +176,7 @@ services:
       dockerfile: deploy/docker/node-service.Dockerfile
       args: { APP: bsm-engine }
     environment: *app-env
+    volumes: ["openbao-approle:/run/openmap/openbao:ro"]
     depends_on: *app-depends
 
   node:

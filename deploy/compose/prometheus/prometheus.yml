@@ -13,5 +13,10 @@ scrape_configs:
   # ClickHouse serves Prometheus metrics on 9363 through deploy/compose/clickhouse/prometheus.xml (config.d).
   - job_name: clickhouse
     static_configs: [{ targets: ["clickhouse:9363"] }]
+  # REQ-SEC-011 (ADR-067): OpenBao's telemetry (the listener allows unauthenticated metrics). A sealed OpenBao answers 503 here, so up{job="openbao"} drops to 0; vault_core_active is 1 on the active node.
+  - job_name: openbao
+    metrics_path: /v1/sys/metrics
+    params: { format: [prometheus] }
+    static_configs: [{ targets: ["openbao:8200"] }]
   # Memgraph Community exposes no Prometheus endpoint (the HTTP metrics server is an Enterprise feature); the graph
   # store's health is observed through the API's readiness probe and the reconciler's outbox delivery counters.

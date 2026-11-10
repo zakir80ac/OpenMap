@@ -24,7 +24,7 @@ const (
 	typeInstall   = "software_instance"
 	typeFwRule    = "firewall_rule"
 	typeFwObject  = "firewall_object"
-	relDependsOn  = "depends_on"
+	relReferences = "references"
 	firewallNft   = "nftables"
 
 	relContains  = "contains"
@@ -206,7 +206,7 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 }
 
 // emitFirewall adds the host's firewall rules and sets (REQ-IPAM-005, ADR-064): each a CI the host contains, keyed by
-// the host and the rule or object id, and each rule depends_on the sets it names.
+// the host and the rule or object id, and each rule references the sets it names.
 func emitFirewall(obs *collector.Observation, fw Firewall, hostRef string, hostCiRef contract.CiRef, hostName string, at time.Time) {
 	objects := map[string]contract.CiRef{}
 	for _, o := range fw.Objects {
@@ -226,7 +226,7 @@ func emitFirewall(obs *collector.Observation, fw Firewall, hostRef string, hostC
 			key := r.Family + " " + r.Table + " " + name
 			if o, ok := objects[key]; ok && !linked[key] {
 				linked[key] = true
-				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relDependsOn, From: ref, To: o, Attributes: map[string]any{}, ObservedAt: at})
+				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relReferences, From: ref, To: o, Attributes: map[string]any{}, ObservedAt: at})
 			}
 		}
 	}

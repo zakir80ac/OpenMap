@@ -125,12 +125,12 @@ func TestREQIPAM005_T558_EmittedFirewallCis(t *testing.T) {
 	}
 	links := 0
 	for _, r := range obs.Relationships {
-		if r.Type == relDependsOn && r.From.Identity["ruleId"] == "inet/filter/input/13" && r.To.Identity["objectId"] == "inet/filter/admin_nets" {
+		if r.Type == relReferences && r.From.Identity["ruleId"] == "inet/filter/input/13" && r.To.Identity["objectId"] == "inet/filter/admin_nets" {
 			links++
 		}
 	}
 	if links != 1 {
-		t.Errorf("ssh rule depends_on admin_nets: %d links", links)
+		t.Errorf("ssh rule references admin_nets: %d links", links)
 	}
 }
 

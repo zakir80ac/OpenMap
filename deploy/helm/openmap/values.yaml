@@ -125,13 +125,23 @@ keycloak:
     limits: { cpu: "2", memory: 4Gi }
 
 openbao:
-  image: openbao/openbao:2.3
+  # REQ-SEC-011 (ADR-067): server mode, Raft on a persistent volume, auto-unseal.
+  image: openbao/openbao:2.7.2
   mount: openmap
-  # Dev-mode root token; production installs supply an existing OpenBao via openbao.external.
-  token: openmap-dev-root
+  storage: 10Gi
+  seal:
+    # Empty: the static key seal with a key the chart generates once (Secret <release>-openbao-seal; keep a copy
+    # offline). Set to a full seal block (seal "pkcs11" { ... } or seal "kmip" { ... }) to use an HSM or a KMS.
+    config: ""
+    keyId: chart-1
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 1Gi }
   external:
     enabled: false
     address: ""
+    # Token for the external vault (the services then skip AppRole).
+    token: ""
 
 llm:
   enabled: false

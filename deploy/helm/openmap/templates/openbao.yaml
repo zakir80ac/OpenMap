@@ -1,0 +1,188 @@
+{{- /*
+REQ-SEC-011 (ADR-067) — OpenBao in server mode unless openbao.external points at an existing vault: Raft storage on a
+persistent volume, auto-unseal (the static key seal with a key the chart generates once and keeps, or the seal block in
+openbao.seal.config for PKCS#11 or KMIP), and a post-install/upgrade job that initialises it, writes the policies and
+registers the AppRole ids the chart generated (kept across upgrades) for the services and the backup job.
+*/ -}}
+{{- if not .Values.openbao.external.enabled }}
+{{- $fullname := include "openmap.fullname" . }}
+{{- $sealName := printf "%s-openbao-seal" $fullname }}
+{{- $approleName := printf "%s-openbao-approle" $fullname }}
+{{- $existingSeal := lookup "v1" "Secret" .Release.Namespace $sealName }}
+{{- $existingApprole := lookup "v1" "Secret" .Release.Namespace $approleName }}
+{{- if not .Values.openbao.seal.config }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $sealName }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+  annotations: { "helm.sh/resource-policy": keep }
+type: Opaque
+data:
+  # 32 random bytes for AES-256-GCM, generated once; keep a copy offline: without it the data cannot be unsealed.
+  unseal.key: {{ if $existingSeal }}{{ index $existingSeal.data "unseal.key" }}{{ else }}{{ randBytes 32 }}{{ end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $approleName }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+  annotations: { "helm.sh/resource-policy": keep }
+type: Opaque
+data:
+  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" }}
+  {{ $key }}: {{ if $existingApprole }}{{ index $existingApprole.data $key }}{{ else }}{{ uuidv4 | b64enc }}{{ end }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullname }}-openbao
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+data:
+  openbao.hcl: |
+    ui            = false
+    disable_mlock = true
+    api_addr      = "http://{{ $fullname }}-openbao:8200"
+    cluster_addr  = "http://{{ $fullname }}-openbao:8201"
+    storage "raft" {
+      path    = "/openbao/data"
+      node_id = "openbao-0"
+    }
+    listener "tcp" {
+      address     = "0.0.0.0:8200"
+      tls_disable = true
+      telemetry { unauthenticated_metrics_access = true }
+    }
+    {{- if .Values.openbao.seal.config }}
+    {{- .Values.openbao.seal.config | nindent 4 }}
+    {{- else }}
+    seal "static" {
+      current_key_id = {{ .Values.openbao.seal.keyId | quote }}
+      current_key    = "file:///openbao/unseal/unseal.key"
+    }
+    {{- end }}
+    telemetry {
+      prometheus_retention_time = "24h"
+      disable_hostname          = true
+    }
+  init.sh: |
+{{ .Files.Get "files/openbao/init.sh" | indent 4 }}
+  openmap-services.hcl: |
+{{ .Files.Get "files/openbao/policies/openmap-services.hcl" | indent 4 }}
+  openmap-backup.hcl: |
+{{ .Files.Get "files/openbao/policies/openmap-backup.hcl" | indent 4 }}
+  pg-tde.hcl: |
+{{ .Files.Get "files/openbao/policies/pg-tde.hcl" | indent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "openbao") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+spec:
+  selector: {{- include "openmap.selector" (dict "root" . "component" "openbao") | nindent 4 }}
+  ports: [{ name: http, port: 8200, targetPort: 8200 }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "openmap.svc" (dict "root" . "component" "openbao") }}
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+spec:
+  serviceName: {{ include "openmap.svc" (dict "root" . "component" "openbao") }}
+  replicas: 1
+  selector:
+    matchLabels: {{- include "openmap.selector" (dict "root" . "component" "openbao") | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" . "component" "openbao") | nindent 8 }}
+    spec:
+      securityContext: { fsGroup: 1000 }
+      containers:
+        - name: openbao
+          image: {{ if .Values.image.registry }}{{ .Values.image.registry }}/{{ end }}{{ .Values.openbao.image }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["server", "-config=/openbao/config/openbao.hcl"]
+          ports: [{ containerPort: 8200 }]
+          readinessProbe:
+            httpGet: { path: /v1/sys/health, port: 8200 }
+            periodSeconds: 5
+          volumeMounts:
+            - { name: data, mountPath: /openbao/data }
+            - { name: config, mountPath: /openbao/config }
+            {{- if not .Values.openbao.seal.config }}
+            - { name: unseal, mountPath: /openbao/unseal, readOnly: true }
+            {{- end }}
+          resources: {{- toYaml .Values.openbao.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openbao.hcl, path: openbao.hcl }] }
+        {{- if not .Values.openbao.seal.config }}
+        - name: unseal
+          # Group-readable: the openbao user (gid 1000) reads it through the pod's fsGroup.
+          secret: { secretName: {{ $sealName }}, defaultMode: 0440 }
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with .Values.global.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources: { requests: { storage: {{ .Values.openbao.storage }} } }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $fullname }}-openbao-init
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+  annotations: { "helm.sh/resource-policy": keep }
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with .Values.global.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources: { requests: { storage: 64Mi } }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullname }}-openbao-init
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao-init") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels: {{- include "openmap.selector" (dict "root" . "component" "openbao-init") | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: {{ if .Values.image.registry }}{{ .Values.image.registry }}/{{ end }}{{ .Values.openbao.image }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "/openbao/scripts/init.sh"]
+          env:
+            - { name: BAO_ADDR, value: {{ printf "http://%s:8200" (include "openmap.svc" (dict "root" . "component" "openbao")) | quote }} }
+            - { name: OPENBAO_MOUNT, value: {{ .Values.openbao.mount | quote }} }
+            - { name: SERVICES_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: role-id } } }
+            - { name: SERVICES_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: secret-id } } }
+            - { name: BACKUP_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: backup-role-id } } }
+            - { name: BACKUP_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: backup-secret-id } } }
+          volumeMounts:
+            - { name: init, mountPath: /openbao/init }
+            - { name: scripts, mountPath: /openbao/scripts }
+            - { name: policies, mountPath: /openbao/policies }
+      volumes:
+        - name: init
+          persistentVolumeClaim: { claimName: {{ $fullname }}-openbao-init }
+        - name: scripts
+          configMap: { name: {{ $fullname }}-openbao, items: [{ key: init.sh, path: init.sh }] }
+        - name: policies
+          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openmap-services.hcl, path: openmap-services.hcl }, { key: openmap-backup.hcl, path: openmap-backup.hcl }, { key: pg-tde.hcl, path: pg-tde.hcl }] }
+{{- end }}

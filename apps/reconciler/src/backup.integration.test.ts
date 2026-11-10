@@ -195,6 +195,8 @@ describe('backup and restore (integration)', () => {
       derived: ['memgraph', 'meilisearch'],
     });
     expect(manifest.postgres?.migration).toMatch(/^\d{4}_/u);
+    // REQ-SEC-011 (ADR-067): the backup AppRole took OpenBao's Raft snapshot into the same set.
+    expect(manifest.openbao?.bytes).toBeGreaterThan(0);
 
     await db.relationship.deleteMany({ where: { tenantId } });
     await db.ci.deleteMany({ where: { tenantId } });

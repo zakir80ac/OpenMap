@@ -7,8 +7,14 @@ import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { loadEnv, type Env } from '@openmap/config';
 import { CONTRACT_VERSIONS, CREDENTIAL_REF_PATTERN, DISCOVERY } from '@openmap/constants';
-import { collectorJobSchema, credentialTypeSchema, targetSchema, type CollectorJob } from '@openmap/contracts';
+import {
+  collectorJobSchema,
+  credentialTypeSchema,
+  targetSchema,
+  type CollectorJob,
+} from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
+import { createVaultTokenProvider, vaultRequest } from '@openmap/vault';
 import { z } from 'zod';
 import { createJobStore } from './server/jobs.js';
 
@@ -19,7 +25,10 @@ const planEntrySchema = z.object({
   targets: z.array(targetSchema).min(1),
   options: z.record(z.string(), z.unknown()).default({}),
   credentialType: z.string().default('none'),
-  credential: z.object({ type: z.string().min(1), fields: z.record(z.string(), z.string()) }).nullable().default(null),
+  credential: z
+    .object({ type: z.string().min(1), fields: z.record(z.string(), z.string()) })
+    .nullable()
+    .default(null),
   provenance: z.string().optional(),
 });
 type PlanEntry = z.infer<typeof planEntrySchema>;
@@ -36,7 +45,14 @@ interface Args {
 const DEFAULT_PREFIX = 'simulated';
 
 function parseArgs(argv: string[]): Args {
-  const out: Args = { tenant: '', node: '', plan: '', prefix: DEFAULT_PREFIX, only: new Set(), dryRun: false };
+  const out: Args = {
+    tenant: '',
+    node: '',
+    plan: '',
+    prefix: DEFAULT_PREFIX,
+    only: new Set(),
+    dryRun: false,
+  };
   for (let i = 0; i < argv.length; i++) {
     const next = (): string => argv[++i] ?? '';
     switch (argv[i]) {
@@ -62,7 +78,10 @@ function parseArgs(argv: string[]): Args {
         break;
     }
   }
-  if (!out.tenant || !out.node || !out.plan) throw new Error('usage: plan-submit --tenant <uuid> --node <id> --plan <file> [--prefix p] [--only a,b] [--dry-run]');
+  if (!out.tenant || !out.node || !out.plan)
+    throw new Error(
+      'usage: plan-submit --tenant <uuid> --node <id> --plan <file> [--prefix p] [--only a,b] [--dry-run]',
+    );
   return out;
 }
 
@@ -74,21 +93,37 @@ export function credentialPath(prefix: string, entry: Pick<PlanEntry, 'simulator
       .replace(/\.\.+/gu, '.')
       .replace(/^[-.]+|[-.]+$/gu, '') || 'default';
   const path = [clean(prefix), clean(entry.simulator), clean(entry.run)].join('/');
-  if (!CREDENTIAL_REF_PATTERN.test(path)) throw new Error('credential path has unexpected characters: ' + path);
+  if (!CREDENTIAL_REF_PATTERN.test(path))
+    throw new Error('credential path has unexpected characters: ' + path);
   return path;
 }
 
-async function storeCredential(env: Env, path: string, credential: NonNullable<PlanEntry['credential']>): Promise<void> {
+async function storeCredential(
+  env: Env,
+  path: string,
+  credential: NonNullable<PlanEntry['credential']>,
+): Promise<void> {
   const base = env.OPENBAO_ADDR.endsWith('/') ? env.OPENBAO_ADDR : env.OPENBAO_ADDR + '/';
-  const res = await fetch(new URL('v1/' + env.OPENBAO_MOUNT + '/data/' + path, base), {
-    method: 'POST',
-    headers: { 'X-Vault-Token': env.OPENBAO_TOKEN, 'content-type': 'application/json' },
-    body: JSON.stringify({ data: { type: credential.type, ...credential.fields } }),
-  });
+  const res = await vaultRequest(
+    createVaultTokenProvider(env),
+    fetch,
+    new URL('v1/' + env.OPENBAO_MOUNT + '/data/' + path, base),
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ data: { type: credential.type, ...credential.fields } }),
+    },
+  );
   if (!res.ok) throw new Error('OpenBao returned ' + String(res.status) + ' writing ' + path);
 }
 
-export function jobFor(entry: PlanEntry, tenantId: string, nodeId: string, credentialRef: string | null, now: string): CollectorJob {
+export function jobFor(
+  entry: PlanEntry,
+  tenantId: string,
+  nodeId: string,
+  credentialRef: string | null,
+  now: string,
+): CollectorJob {
   return collectorJobSchema.parse({
     jobId: randomUUID(),
     tenantId,
@@ -98,7 +133,10 @@ export function jobFor(entry: PlanEntry, tenantId: string, nodeId: string, crede
     credentialRef,
     credentialType: credentialTypeSchema.parse(credentialRef === null ? 'none' : entry.credentialType),
     timeoutMs: DISCOVERY.defaultJobTimeoutMs,
-    rateLimit: { concurrency: DISCOVERY.defaultConcurrency, requestsPerSecond: DISCOVERY.defaultRequestsPerSecond },
+    rateLimit: {
+      concurrency: DISCOVERY.defaultConcurrency,
+      requestsPerSecond: DISCOVERY.defaultRequestsPerSecond,
+    },
     options: entry.options,
     scheduledAt: now,
     contractVersion: CONTRACT_VERSIONS.collector,
@@ -123,11 +161,21 @@ async function main(): Promise<void> {
   }
   const prisma = createPrismaClient(env);
   const scheduled = args.dryRun ? 0 : await createJobStore(prisma).schedule(jobs);
-  console.log(JSON.stringify({ msg: 'plan submitted', entries: chosen.length, scheduled, jobs: jobs.map((j) => ({ jobId: j.jobId, collectorId: j.collectorId, credentialRef: j.credentialRef })) }));
+  console.log(
+    JSON.stringify({
+      msg: 'plan submitted',
+      entries: chosen.length,
+      scheduled,
+      jobs: jobs.map((j) => ({ jobId: j.jobId, collectorId: j.collectorId, credentialRef: j.credentialRef })),
+    }),
+  );
   await prisma.$disconnect();
 }
 
-if (process.argv[1]?.endsWith('plan-submit.ts') === true || process.argv[1]?.endsWith('plan-submit.js') === true) {
+if (
+  process.argv[1]?.endsWith('plan-submit.ts') === true ||
+  process.argv[1]?.endsWith('plan-submit.js') === true
+) {
   main().catch((err: unknown) => {
     console.error(err instanceof Error ? err.message : err);
     process.exit(1);
