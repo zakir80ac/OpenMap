@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.47.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.48.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -1045,6 +1045,59 @@ input IdentitySourceInput {
   roleMappings: [IdentityRoleMappingInput!]!
   ldap: LdapSourceInput
   oidc: OidcSourceInput
+}
+# REQ-INT-017 (ADR-075): backup and DR awareness from Veeam, Commvault and Rubrik (backed_by edges to backup_policy CIs).
+enum ProtectionState { protected rpo_breached unprotected }
+"One backup policy covering a CI, from its backed_by edge."
+type BackupCover {
+  "The backup_policy CI: a Veeam job, a Commvault plan or storage policy, a Rubrik SLA domain."
+  policy: Ci!
+  vendor: String!
+  policyKind: String!
+  "The backup server the policy lives on, as the collector reached it."
+  server: String
+  lastGoodBackupAt: DateTime
+  lastResult: String
+  restorePoints: Int
+  rpoMinutes: Int
+  retentionDays: Int
+  "Commvault agents on the client (File System, SQL Server...)."
+  agents: [String!]!
+  "The compute CI the cover is inherited from (a database's host, through an application-aware agent); null when it covers the CI itself."
+  via: Ci
+}
+"A business service the CI supports, with the RPO it requires."
+type ProtectionService {
+  service: Ci!
+  tier: Int!
+  rpoMinutes: Int
+}
+type CiProtection {
+  ci: Ci!
+  state: ProtectionState!
+  lastGoodBackupAt: DateTime
+  "Strictest RPO of the covering policies."
+  policyRpoMinutes: Int
+  "The RPO the CI is judged against: the strictest of its policies and the business services it serves, else the default."
+  targetRpoMinutes: Int!
+  "Whole minutes since the last good backup; null when there is none."
+  ageMinutes: Int
+  covers: [BackupCover!]!
+  services: [ProtectionService!]!
+}
+"CIs that support critical business services, and the ones among them a backup does not protect within their RPO."
+type ProtectionGaps {
+  "Business services of this tier or more critical count as critical."
+  maxTier: Int!
+  criticalServices: Int!
+  criticalCis: Int!
+  protected: Int!
+  rpoBreached: Int!
+  unprotected: Int!
+  "True when more gaps exist than were returned."
+  truncated: Boolean!
+  "Unprotected first, then RPO breached; each by service tier, then name."
+  items: [CiProtection!]!
 }
 
 # REQ-IPAM-005 (ADR-064): firewall rules and policy objects, the rule analysis and the traffic check.
@@ -3136,6 +3189,10 @@ type Query {
   backups: Backups!
   "REQ-INT-016: the tenant's identity sources (administrators)."
   identitySources: [IdentitySource!]!
+  "REQ-INT-017 (ADR-075): whether backups protect the CI within its RPO, by which policies, for which services; null for a type no backup protects."
+  ciProtection(ciId: UUID!): CiProtection
+  "REQ-INT-017 (ADR-075): CIs supporting business services of tier maxTier or more critical that are unprotected or past their RPO."
+  protectionGaps(maxTier: Int, first: Int): ProtectionGaps!
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
   "REQ-INT-012: alerts received from monitoring integrations; unresolvedOnly lists those no CI was found for."

@@ -33,6 +33,7 @@ export * from './notification.js';
 export * from './monitoring.js';
 export * from './backup.js';
 export * from './perf-results.js';
+export * from './protection.js';
 export * from './custom-field.js';
 export * from './import.js';
 export * from './identity-source.js';

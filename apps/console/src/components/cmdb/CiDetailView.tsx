@@ -1,6 +1,6 @@
 'use client';
-// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 REQ-CMDB-014 REQ-CMDB-034 — CI detail: header (code, name, type, layer, health, headline
-// metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids), Relationships (grouped by type, each row a
+// REQ-UI-008 REQ-CMDB-013 REQ-CMDB-016 REQ-CMDB-037 REQ-CMDB-038 REQ-CMDB-012 REQ-CMDB-014 REQ-CMDB-034 REQ-INT-017 — CI detail: header (code, name, type, layer, health, headline
+// metric, lifecycle, source, observed), tabs Overview (identity, attributes, tags, external ids, backup protection for the types a backup protects), Relationships (grouped by type, each row a
 // link), Parts (the components inside it, ADR-037), Utilisation (CPU, memory, disk, power for types that report it), Impact (upstream and downstream counts linking into the dependency map) and History (time travel: `asOf`
 // re-fetches `ci(id, asOf)` and the attribute diff against now). Unknown-layer CIs get the "Label this CI" panel.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,6 +42,8 @@ import { CustomFieldsEditor } from './CustomFieldsEditor';
 import { LabelCiPanel } from './LabelCiPanel';
 import { CiPartsPanel } from '@/components/parts/CiPartsPanel';
 import { CiUtilisationPanel } from '@/components/utilisation/CiUtilisationPanel';
+import { ProtectionCard } from '@/components/protection/ProtectionCard';
+import { isProtectable } from '@/lib/protection-queries';
 import { UTILISATION_METRICS, type CiType } from '@openmap/contracts';
 
 export interface CiDetailViewProps {
@@ -508,6 +510,7 @@ export function CiDetailView({ locale, id }: CiDetailViewProps): ReactNode {
                 </ul>
               )}
             </Card>
+            {isProtectable(ci.type) ? <ProtectionCard locale={locale} ciId={ci.id} /> : null}
           </div>
         ) : null}
 

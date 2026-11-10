@@ -26,6 +26,7 @@
     "node:register": "tsx src/node-register.ts",
     "job:submit": "tsx src/job-submit.ts",
     "warranty:plan": "tsx src/warranty-plan.ts",
+    "backup:plan": "tsx src/backup-plan.ts",
     "plan:submit": "tsx src/plan-submit.ts",
     "agent:register": "tsx src/agent-register.ts"
   },

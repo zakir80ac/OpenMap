@@ -900,6 +900,43 @@ export const BACKUP = {
 } as const;
 
 /**
+ * REQ-INT-017 (ADR-075) — backup and DR awareness: the `backup` collector reads Veeam Backup & Replication, Commvault
+ * and Rubrik CDM and reports which CIs each backup policy (a Veeam job, a Commvault plan or storage policy, a Rubrik SLA
+ * domain) protects, as `backed_by` edges carrying the last good backup.
+ * - `defaultRpoMinutes`: the recovery point objective a CI is judged against when neither its policies nor the business
+ *   services it serves state one (a daily backup, the most common default schedule of all three products).
+ * - `criticalMaxTier`: business services of this tier or more critical (lower number) make their supporting CIs
+ *   critical, the ITSM "high" priority class and above.
+ * - The support walk goes from each critical service's members down `supportEdgeTypes` (`contains` only from logical
+ *   containers, as the impact walk) for at most `supportWalkDepth` hops, enough for application → component → VM →
+ *   hypervisor → host.
+ * - A database or database cluster without a cover of its own inherits the covers of the compute it is hosted on whose
+ *   agents include one of `databaseAgents` (an application-aware backup; an image of the VM alone is not one).
+ * - A policy lists at most `unmatchedNamesMax` vendor objects the collector could not match to the CMDB.
+ * - A planned job carries the CMDB inventory of `inventoryTypes`, so vendor objects (a vCenter moRef, a VM or client
+ *   name) are matched to the CI identity the CMDB stores; `requestsPerSecond` and `jobTimeoutMs` bound a job.
+ * - The gaps list returns `gapsDefaultFirst` rows unless asked for more, at most `gapsMaxFirst`.
+ */
+export const BACKUP_AWARENESS = {
+  collectorId: 'backup',
+  vendors: ['veeam', 'commvault', 'rubrik'],
+  defaultRpoMinutes: 1_440,
+  criticalMaxTier: 2,
+  supportEdgeTypes: ['contains', 'depends_on', 'runs_on', 'hosted_on'],
+  supportWalkDepth: 6,
+  databaseAgents: ['SQL Server', 'Oracle', 'Oracle RAC', 'PostgreSQL', 'MySQL', 'SAP HANA', 'DB2', 'Sybase'],
+  protectableTypes: ['vm', 'host', 'database', 'database_cluster'],
+  inventoryTypes: ['vm', 'host'],
+  unmatchedNamesMax: 20,
+  requestsPerSecond: 10,
+  jobTimeoutMs: 1_800_000,
+  gapsDefaultFirst: 100,
+  gapsMaxFirst: 1_000,
+  /** The console's gap table rows before "show all". */
+  gapRows: 50,
+} as const;
+
+/**
  * REQ-INT-009 (ADR-065) — notifications to webhooks, Slack, Teams, email and PagerDuty from the event stream. One
  * integration sends at most `maxPerWindow` messages per `windowMs`; the rest are counted as suppressed so a burst of CI
  * changes cannot flood a channel. A message carries at most `maxFacts` facts of at most `factMaxLength` characters.
@@ -2286,7 +2323,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
   // 0.11.0 (REQ-IPAM-005, ADR-064 consequences): the `references` relationship type (not an impact edge).
   // 0.12.0 (REQ-SEC-011, ADR-067 step 4): custom-field contract 0.2.0, `sensitive` text fields stored encrypted; a
   // text value may not start with the Transit ciphertext prefix.
-  ci: '0.12.0',
+  // 0.14.0 (REQ-INT-017, ADR-075): the `backup_policy` CI type (identity vendor + serverId + policyId) and `protection.ts`:
+  // policy and cover attributes, the backup job options and inventory, and the protection judgement.
+  ci: '0.14.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
@@ -2296,7 +2335,8 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.9.0 (REQ-DCIM-001, ADR-056): moves with the CI contract (the `circuit` CI type); no result field changed.
    * 0.10.0 (REQ-IPAM-005, ADR-064): moves with the CI contract (the `firewall_object` CI type); no result field changed. */
   // 0.11.0: moves with the CI contract (the `references` relationship type); no result field changed.
-  collector: '0.11.0',
+  // 0.14.0 (REQ-INT-017, ADR-075): the `backup` family; moves with the CI contract (the `backup_policy` CI type).
+  collector: '0.14.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -2392,8 +2432,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `IdentityMappedRole`, `IdentityRoleMapping`, `LdapSourceSettings`, `OidcSourceSettings`, `IdentitySourceTest`,
    * `IdentitySourceSync`, `IdentitySource` and their inputs; query `identitySources`; mutations `upsertIdentitySource`,
    * `testIdentitySource`, `syncIdentitySource`, `removeIdentitySource`.
+   * 1.48.0 (REQ-INT-017, ADR-075; allocated as 1.47.0, merged after REQ-INT-016): `ProtectionState`, `BackupCover`, `ProtectionService`, `CiProtection`,
+   * `ProtectionGaps`; queries `ciProtection`, `protectionGaps`.
    */
-  graphql: '1.47.0',
+  graphql: '1.48.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

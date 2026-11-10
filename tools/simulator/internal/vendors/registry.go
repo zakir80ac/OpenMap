@@ -8,6 +8,7 @@ import (
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/aws"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/azure"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/citrixadc"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/commvault"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/dhcpssh"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/directory"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/dnszone"
@@ -32,10 +33,12 @@ import (
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/portscan"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/purestorage"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/redfish"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/rubrik"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/saas"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/snmpnet"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/snmppower"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/ucs"
+	"github.com/openmap/openmap/tools/simulator/internal/vendors/veeam"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/vmware"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/vulnfeed"
 	"github.com/openmap/openmap/tools/simulator/internal/vendors/warranty"
@@ -86,5 +89,8 @@ func All() []sim.Vendor {
 		hyperv.Vendor{},
 		winsmb.Vendor{},
 		windhcp.Vendor{},
+		veeam.Vendor{},
+		commvault.Vendor{},
+		rubrik.Vendor{},
 	}
 }

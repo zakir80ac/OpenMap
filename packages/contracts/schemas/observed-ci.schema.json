@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/observed-ci/0.12.0",
+  "$id": "https://openmap.dev/contracts/observed-ci/0.14.0",
   "title": "observed-ci",
-  "version": "0.12.0",
+  "version": "0.14.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -45,6 +45,7 @@
         "fc_zone",
         "nas_share",
         "object_bucket",
+        "backup_policy",
         "database",
         "database_cluster",
         "certificate",

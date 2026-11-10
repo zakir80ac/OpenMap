@@ -139,6 +139,8 @@ function respond(body: { query: string; variables?: Record<string, unknown> }): 
         },
       },
     };
+  // REQ-INT-017: the Protection card (its own test is ProtectionCard.test.tsx); null hides it.
+  if (body.query.includes('query CiProtection(')) return { data: { ciProtection: null } };
   if (body.query.includes('mutation LabelCi('))
     return {
       data: {
