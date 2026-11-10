@@ -2,7 +2,35 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-09 (checkpoint 38: REQ-DCIM-007 capacity planning Done)
+## Last session · 2026-11-10 (checkpoint 39: REQ-DCIM-008 cable verification and labels Done)
+
+**REQ-DCIM-008 Done** (ADR-062, GraphQL 1.35.0, T-550..T-553, commit 632291d).
+
+- **Verdicts** (`packages/contracts/src/cabling-verify.ts`): each recorded cable (ADR-056) is traced from both ends
+  through the patch panels to the device ports it joins and judged against observed adjacencies: verified, mismatch
+  (names what was seen instead), unobserved, unverifiable (unpatched panel side, loop, end not a port). Observed links
+  are indexed by device; links no recorded path explains are undocumented, counted in full, the first
+  `CABLING.undocumentedLimit` (200) listed with the label a recorded cable would get.
+- **Observations** (`apps/api/src/cabling/cabling-verify.service.ts`): one SQL join over `connected_to` (interface to
+  interface, or interface to device with `remotePortId`) and `cabled_to` (host NIC to switch port), each interface's
+  device from its `contains` parent, cable and circuit end relationships excluded. 1.6–1.7 s for 88,854 adjacencies.
+  Queries `cablingVerification`, `cablingLabelsCsv`; metric `openmap_cabling_verifications_total`; span `cabling.verify`.
+- **Console**: verification card on the Cabling tab (five totals, verdicts mismatch-first, undocumented links with a
+  Record action that fills the cable form with the label and both device ports, labels CSV download). 27 i18n keys.
+- **Tests**: contracts 85, API cabling integration 3, console DCIM 25, e2e DCIM 3 of 3 (en, ar). Evidence
+  `docs/evidence/dcim-cable-verification.md`, `docs/evidence/console/dcim-cabling-verify-{en,ar}.png`.
+
+**Tracker (queued).** The workbook was open in Excel when this checkpoint was written, so the closure is queued:
+`pnpm tracker set REQ-DCIM-008 --status Done --tests T-550,T-551,T-552,T-553 --evidence "commit 632291d; ..."`, then
+`pnpm tracker session` and `pnpm tracker report`. The tracker wins over this file until that runs.
+
+**Lessons.** (1) The console image's build fetches Google Fonts (`next/font/google`); one build failed on a bad
+response and passed on retry. Vendoring the five typefaces with `next/font/local` removes the build's last outbound
+call (follow-up). (2) The first verification read copied each device's link list per link (quadratic on core switches)
+and sorted 89,000 labels with `localeCompare`; indexing in place and ordering by a plain key took it from seconds to
+well under two.
+
+## Previous session · 2026-11-09 (checkpoint 38: REQ-DCIM-007 capacity planning Done)
 
 **REQ-DCIM-007 Done** (ADR-061, GraphQL 1.34.0, T-546..T-549, commit cabfabd).
 
