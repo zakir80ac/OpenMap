@@ -67,6 +67,7 @@ enum CiType {
   dhcp_lease
   load_balancer
   firewall_rule
+  firewall_object
   site_link
   circuit
   storage_array

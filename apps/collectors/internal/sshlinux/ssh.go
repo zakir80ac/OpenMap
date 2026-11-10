@@ -23,7 +23,7 @@ func (Collector) Manifest() contract.Manifest {
 	return contract.Manifest{
 		ID: collectorID, Family: "ssh_agentless", Version: version, Language: "go",
 		Protocols: []string{"ssh"}, CredentialTypes: []string{"password", "ssh_key"},
-		TargetKinds: []string{"host"}, Emits: []string{typeHost, typeVM, typeOS, typeInterface, typeIP, typeListener, typeSoftware, typeInstall},
+		TargetKinds: []string{"host"}, Emits: []string{typeHost, typeVM, typeOS, typeInterface, typeIP, typeListener, typeSoftware, typeInstall, typeFwRule, typeFwObject},
 		ContractVersion: contract.Version,
 	}
 }

@@ -45,6 +45,8 @@ export const CABLING_CHANGE_METRIC = 'openmap_cabling_changes_total';
 export const CABLING_VERIFICATION_METRIC = 'openmap_cabling_verifications_total';
 /** REQ-IPAM-004 */
 export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
+/** REQ-IPAM-005 */
+export const FIREWALL_METRIC = 'openmap_firewall_reads_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
 /** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
@@ -104,6 +106,8 @@ export class MetricsService {
   readonly cablingVerifications: Counter;
   /** REQ-IPAM-004 — switch port reads by query (ports, history, mac). */
   readonly switchPortReads: Counter<'query'>;
+  /** REQ-IPAM-005 — firewall reads by query (devices, policy, check). */
+  readonly firewallReads: Counter<'query'>;
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
@@ -251,6 +255,12 @@ export class MetricsService {
     this.switchPortReads = new Counter({
       name: SWITCH_PORT_METRIC,
       help: "Switch port reads by query: a device's ports, a port's history, a MAC lookup",
+      labelNames: ['query'],
+      registers: [this.registry],
+    });
+    this.firewallReads = new Counter({
+      name: FIREWALL_METRIC,
+      help: "Firewall reads by query: devices with rules, a device's policy and analysis, a traffic check",
       labelNames: ['query'],
       registers: [this.registry],
     });

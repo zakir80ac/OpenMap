@@ -15,7 +15,7 @@ import {
 } from '../catalog.js';
 import type { Slot } from '../estate.js';
 import { cidr, ip4, linkPair, OCTET_MAX, RFC1918_TEN } from '../ip.js';
-import type { Rng } from '../rng.js';
+import { Rng } from '../rng.js';
 import { dateAt } from '../time.js';
 import {
   allocateIp,
@@ -366,39 +366,161 @@ export function allocateHostPort(
   return iface;
 }
 
+// REQ-IPAM-005 (ADR-064): a zone-based firewall's policy objects, as PAN-OS or FortiGate keep them: an address group
+// per zone, service groups, and one group left over from a retired segment that no rule names any more.
+const FIREWALL_ZONES = ['trust', 'untrust', 'dmz', 'mgmt', 'partner'] as const;
+const FIREWALL_SERVICE_GROUPS: Readonly<Record<string, readonly string[]>> = {
+  'svc-web': ['tcp/80', 'tcp/443', 'tcp/8443'],
+  'svc-db': ['tcp/1521', 'tcp/5432', 'tcp/1433'],
+  'svc-mgmt': ['tcp/22', 'tcp/443', 'udp/161'],
+};
+const FIREWALL_RETIRED_GROUP = 'net-legacy';
+/** Share of rules that name zone and service groups rather than literal prefixes and ports. */
+const FIREWALL_OBJECT_SHARE = 0.4;
+/** Share of rules nothing has hit since the counters were cleared. */
+const FIREWALL_UNUSED_SHARE = 0.15;
+/** Share of firewalls carrying a forgotten temporary any-any allow, and a narrower copy of an earlier rule. */
+const FIREWALL_TEMP_ANY_SHARE = 0.3;
+const FIREWALL_SHADOW_SHARE = 0.4;
+const FIREWALL_GROUP_PREFIXES = 2;
+const FIREWALL_RULE_ID_STEP = 10;
+const FIREWALL_HIT_MAX = 5_000_000;
+const SUBNET_PREFIX = 24;
+const HALF_SUBNET_PREFIX = 25;
+
 function addFirewallRules(world: World, rng: Rng, device: DeviceRec): void {
   const { b } = world;
-  const zones = ['trust', 'untrust', 'dmz', 'mgmt', 'partner'];
-  const services = ['tcp/443', 'tcp/8443', 'tcp/22', 'udp/53', 'tcp/1521', 'tcp/5432', 'tcp/1433', 'any'];
-  for (let i = 1; i <= FIREWALL_RULES_PER_DEVICE; i++) {
-    const from = rng.pick(zones);
-    const to = rng.pick(zones.filter((z) => z !== from));
-    const ruleId = String(i * 10);
-    const src = cidr(RFC1918_TEN, device.site.def.octetBase + rng.int(0, 15), rng.int(0, OCTET_MAX), 0, 24);
-    const dst = cidr(RFC1918_TEN, device.site.def.octetBase + rng.int(0, 15), rng.int(0, OCTET_MAX), 0, 24);
+  const deviceRef = networkDeviceRef(device.serial);
+  const site = device.site.def;
+  // Policy objects and the extra rules draw from their own stream, so the rest of the estate is unchanged.
+  const side = new Rng('firewall-policy:' + device.serial);
+  const objects = new Map<string, number>();
+  const addObject = (
+    name: string,
+    kind: 'address' | 'service',
+    elements: readonly string[],
+    comment: string | null,
+  ): void => {
+    const objectId = 'shared/' + name;
     const idx = b.ci(
       device.slot,
-      'firewall_rule',
-      { deviceRef: networkDeviceRef(device.serial), ruleId },
-      device.sysName + ' rule ' + ruleId + ' ' + from + '-to-' + to,
-      {
-        ruleId,
-        name: from + '-to-' + to + '-' + ruleId,
-        action: rng.chance(0.8) ? 'allow' : 'deny',
-        fromZone: from,
-        toZone: to,
-        source: src,
-        destination: dst,
-        service: rng.pick(services),
-        hitCount: rng.int(0, 5_000_000),
-        enabled: true,
-        logging: true,
-      },
-      device.site.def.code,
+      'firewall_object',
+      { deviceRef, objectId },
+      device.sysName + ' ' + name,
+      { objectId, name, kind, elements: [...elements], ...(comment === null ? {} : { comment }) },
+      site.code,
       { tags: ['security'] },
     );
     b.rel(device.slot, 'contains', device.idx, idx);
+    objects.set(name, idx);
+  };
+  const sitePrefix = (): string =>
+    cidr(RFC1918_TEN, site.octetBase + side.int(0, 15), side.int(0, OCTET_MAX), 0, SUBNET_PREFIX);
+  for (const zone of FIREWALL_ZONES)
+    addObject(
+      'net-' + zone,
+      'address',
+      Array.from({ length: FIREWALL_GROUP_PREFIXES }, sitePrefix),
+      'Networks in the ' + zone + ' zone',
+    );
+  for (const [name, members] of Object.entries(FIREWALL_SERVICE_GROUPS))
+    addObject(name, 'service', members, null);
+  addObject(FIREWALL_RETIRED_GROUP, 'address', [sitePrefix()], 'Retired segment');
+
+  let position = 0;
+  const addRule = (attributes: Record<string, string | number | boolean>, from: string, to: string): void => {
+    position += 1;
+    const ruleId = String(position * FIREWALL_RULE_ID_STEP);
+    const name =
+      typeof attributes['name'] === 'string' ? attributes['name'] : from + '-to-' + to + '-' + ruleId;
+    const idx = b.ci(
+      device.slot,
+      'firewall_rule',
+      { deviceRef, ruleId },
+      device.sysName + ' rule ' + ruleId + ' ' + from + '-to-' + to,
+      { ruleId, name, position, fromZone: from, toZone: to, enabled: true, logging: true, ...attributes },
+      site.code,
+      { tags: ['security'] },
+    );
+    b.rel(device.slot, 'contains', device.idx, idx);
+    for (const value of [attributes['source'], attributes['destination'], attributes['service']]) {
+      const objectIdx =
+        typeof value === 'string' && value.startsWith('@') ? objects.get(value.slice(1)) : undefined;
+      if (objectIdx !== undefined) b.rel(device.slot, 'depends_on', idx, objectIdx);
+    }
+  };
+
+  const services = ['tcp/443', 'tcp/8443', 'tcp/22', 'udp/53', 'tcp/1521', 'tcp/5432', 'tcp/1433', 'any'];
+  let shadowCandidate: {
+    from: string;
+    to: string;
+    source: string;
+    destination: string;
+    service: string;
+    action: string;
+  } | null = null;
+  for (let i = 1; i <= FIREWALL_RULES_PER_DEVICE; i++) {
+    const from = rng.pick(FIREWALL_ZONES);
+    const to = rng.pick(FIREWALL_ZONES.filter((z) => z !== from));
+    const src = cidr(RFC1918_TEN, site.octetBase + rng.int(0, 15), rng.int(0, OCTET_MAX), 0, SUBNET_PREFIX);
+    const dst = cidr(RFC1918_TEN, site.octetBase + rng.int(0, 15), rng.int(0, OCTET_MAX), 0, SUBNET_PREFIX);
+    const action = rng.chance(0.8) ? 'allow' : 'deny';
+    const literalService = rng.pick(services);
+    const hits = rng.int(0, FIREWALL_HIT_MAX);
+    const useGroups = side.chance(FIREWALL_OBJECT_SHARE);
+    const source = useGroups ? '@net-' + from : src;
+    const destination = useGroups ? '@net-' + to : dst;
+    const service = useGroups ? '@' + side.pick(Object.keys(FIREWALL_SERVICE_GROUPS)) : literalService;
+    addRule(
+      { action, source, destination, service, hitCount: side.chance(FIREWALL_UNUSED_SHARE) ? 0 : hits },
+      from,
+      to,
+    );
+    if (!useGroups && literalService !== 'any')
+      shadowCandidate = { from, to, source: src, destination: dst, service: literalService, action };
   }
+  // A narrower copy of an earlier rule (half its source prefix) that can never match: the earlier rule takes it all.
+  if (shadowCandidate !== null && side.chance(FIREWALL_SHADOW_SHARE)) {
+    const c = shadowCandidate;
+    addRule(
+      {
+        action: c.action,
+        source: c.source.replace('/' + String(SUBNET_PREFIX), '/' + String(HALF_SUBNET_PREFIX)),
+        destination: c.destination,
+        service: c.service,
+        hitCount: 0,
+        name: c.from + '-to-' + c.to + '-narrow',
+      },
+      c.from,
+      c.to,
+    );
+  }
+  if (side.chance(FIREWALL_TEMP_ANY_SHARE))
+    addRule(
+      {
+        action: 'allow',
+        source: 'any',
+        destination: 'any',
+        service: 'any',
+        hitCount: side.int(0, FIREWALL_HIT_MAX),
+        name: 'temp-any-allow',
+        logging: false,
+      },
+      'trust',
+      'dmz',
+    );
+  addRule(
+    {
+      action: 'deny',
+      source: 'any',
+      destination: 'any',
+      service: 'any',
+      hitCount: side.int(0, FIREWALL_HIT_MAX),
+      name: 'cleanup-deny',
+    },
+    'any',
+    'any',
+  );
 }
 
 interface NetworkPlacement {

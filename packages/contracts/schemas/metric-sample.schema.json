@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/metric-sample/0.9.0",
+  "$id": "https://openmap.dev/contracts/metric-sample/0.10.0",
   "title": "metric-sample",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
@@ -53,6 +53,7 @@
                 "dhcp_lease",
                 "load_balancer",
                 "firewall_rule",
+                "firewall_object",
                 "site_link",
                 "circuit",
                 "storage_array",

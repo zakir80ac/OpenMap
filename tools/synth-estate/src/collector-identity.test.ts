@@ -5,7 +5,16 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { collectorResultSchema, globalMatches, identityKeysOf, MapRefIndex, refKeyOf, refPairs, type CollectorResult, type ObservedCi } from '@openmap/contracts';
+import {
+  collectorResultSchema,
+  globalMatches,
+  identityKeysOf,
+  MapRefIndex,
+  refKeyOf,
+  refPairs,
+  type CollectorResult,
+  type ObservedCi,
+} from '@openmap/contracts';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildEstate } from './estate.js';
 import { emitEstate, NDJSON_SUFFIX } from './emit.js';
@@ -21,7 +30,15 @@ type Ref = { type: string; identity: Record<string, string> } | { id: string };
 /** Identity key of a CI or of a relationship end; ends by stored id do not occur in collector results. */
 function key(ref: Ref): string {
   if (!('identity' in ref)) return 'id|' + ref.id;
-  return ref.type + '|' + JSON.stringify(Object.keys(ref.identity).sort().map((k) => [k, ref.identity[k]]));
+  return (
+    ref.type +
+    '|' +
+    JSON.stringify(
+      Object.keys(ref.identity)
+        .sort()
+        .map((k) => [k, ref.identity[k]]),
+    )
+  );
 }
 
 describe('synth-estate identities follow the collectors', () => {
@@ -58,9 +75,20 @@ describe('synth-estate identities follow the collectors', () => {
   });
 
   it('points network-device children at the device as SNMP does (serial:<serial>)', () => {
-    const children = [...ofType('interface'), ...ofType('vlan'), ...ofType('vrf'), ...ofType('firewall_rule')];
+    const children = [
+      ...ofType('interface'),
+      ...ofType('vlan'),
+      ...ofType('vrf'),
+      ...ofType('firewall_rule'),
+      ...ofType('firewall_object'),
+    ];
+    expect(ofType('firewall_object').length).toBeGreaterThan(0);
     expect(children.length).toBeGreaterThan(0);
-    const serials = new Set([...ofType('network_device'), ...ofType('load_balancer')].map((d) => 'serial:' + (d.identity['serialNumber'] ?? '')));
+    const serials = new Set(
+      [...ofType('network_device'), ...ofType('load_balancer')].map(
+        (d) => 'serial:' + (d.identity['serialNumber'] ?? ''),
+      ),
+    );
     for (const c of children) expect(serials.has(c.identity['deviceRef'] ?? ''), c.name).toBe(true);
   });
 
@@ -68,11 +96,15 @@ describe('synth-estate identities follow the collectors', () => {
     const hostedOn = linked('hypervisor', 'hosted_on', 'host');
     expect(hostedOn.length).toBe(ofType('hypervisor').length);
     for (const [hv, host] of hostedOn) expect(hv.identity['hostRef']).toBe(host.identity['fqdn']);
-    for (const hv of ofType('hypervisor').filter((h) => h.identity['platform'] === 'vmware')) expect(hv.identity['moRef']).toMatch(/^vcenter-[a-z0-9-]+\.[a-z.]+:host-\d+$/);
+    for (const hv of ofType('hypervisor').filter((h) => h.identity['platform'] === 'vmware'))
+      expect(hv.identity['moRef']).toMatch(/^vcenter-[a-z0-9-]+\.[a-z.]+:host-\d+$/);
     for (const cl of ofType('vm_cluster')) {
       const platform = cl.identity['platform'];
       if (platform === 'vmware') expect(cl.identity['clusterId']).toMatch(/:domain-c\d+$/);
-      if (platform === 'nutanix_ahv' || platform === 'hyperv') expect(cl.identity['clusterId']).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      if (platform === 'nutanix_ahv' || platform === 'hyperv')
+        expect(cl.identity['clusterId']).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        );
     }
     const runsOn = linked('vm', 'runs_on', 'hypervisor');
     expect(runsOn.length).toBe(ofType('vm').filter((v) => v.identity['hypervisorRef'] !== undefined).length);
@@ -84,24 +116,35 @@ describe('synth-estate identities follow the collectors', () => {
   it('installs operating systems on hosts and versions Windows by its build (WMI)', () => {
     const os = ofType('operating_system');
     expect(linked('operating_system', 'installed_on', 'host').length).toBe(os.length);
-    for (const o of os.filter((x) => x.identity['family'] === 'windows')) expect(o.identity['version']).toMatch(/^\d+\.\d+\.\d+$/);
+    for (const o of os.filter((x) => x.identity['family'] === 'windows'))
+      expect(o.identity['version']).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('names installed software name@version and links it to its software (SSH, WMI, agent)', () => {
     const members = linked('software_instance', 'member_of', 'software');
     expect(members.length).toBe(ofType('software_instance').length);
-    for (const [inst, sw] of members) expect(inst.identity['softwareRef']).toBe(String(sw.identity['name']) + '@' + String(sw.identity['version']));
+    for (const [inst, sw] of members)
+      expect(inst.identity['softwareRef']).toBe(
+        String(sw.identity['name']) + '@' + String(sw.identity['version']),
+      );
   });
 
   it('writes CNAME targets absolute, LUN WWNs with the array OUI and ARNs in each service form', () => {
-    for (const r of ofType('dns_record').filter((x) => x.identity['recordType'] === 'CNAME')) expect(r.identity['value']).toMatch(/\.$/);
+    for (const r of ofType('dns_record').filter((x) => x.identity['recordType'] === 'CNAME'))
+      expect(r.identity['value']).toMatch(/\.$/);
     for (const l of ofType('lun')) expect(l.identity['wwn']).toMatch(/^naa\.6[0-9a-f]{31}$/);
     const aws = ofType('cloud_resource').filter((x) => x.identity['provider'] === 'aws');
     expect(aws.length).toBeGreaterThan(0);
     for (const r of aws) expect(r.identity['resourceId']).toMatch(/^arn:aws:[a-z0-9]+:[a-z0-9-]+:\d{12}:/);
-    expect(awsArn('AWS::RDS::DBInstance', 'me-south-1', '123456789012', 'orders')).toBe('arn:aws:rds:me-south-1:123456789012:db:orders');
-    expect(awsArn('AWS::Lambda::Function', 'me-south-1', '123456789012', 'fn')).toBe('arn:aws:lambda:me-south-1:123456789012:function:fn');
-    expect(awsArn('AWS::EC2::Instance', 'me-south-1', '123456789012', 'i-1')).toBe('arn:aws:ec2:me-south-1:123456789012:instance/i-1');
+    expect(awsArn('AWS::RDS::DBInstance', 'me-south-1', '123456789012', 'orders')).toBe(
+      'arn:aws:rds:me-south-1:123456789012:db:orders',
+    );
+    expect(awsArn('AWS::Lambda::Function', 'me-south-1', '123456789012', 'fn')).toBe(
+      'arn:aws:lambda:me-south-1:123456789012:function:fn',
+    );
+    expect(awsArn('AWS::EC2::Instance', 'me-south-1', '123456789012', 'i-1')).toBe(
+      'arn:aws:ec2:me-south-1:123456789012:instance/i-1',
+    );
   });
 
   it('names each fabric by its principal switch (Brocade fabricshow, MDS fcdomain)', () => {
@@ -111,7 +154,9 @@ describe('synth-estate identities follow the collectors', () => {
   });
 
   it('issues SaaS tenant ids in each vendor shape and names products as the vendor API reports them', () => {
-    const tenants = new Map(ofType('saas_tenant').map((t) => [t.identity['vendor'], t.identity['tenantId'] ?? '']));
+    const tenants = new Map(
+      ofType('saas_tenant').map((t) => [t.identity['vendor'], t.identity['tenantId'] ?? '']),
+    );
     expect(tenants.get('Microsoft')).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/);
     expect(tenants.get('Google')).toMatch(/^C0[a-z0-9]{7}$/);
     expect(tenants.get('Salesforce')).toMatch(/^00D[A-Za-z0-9]{15}$/);
@@ -138,7 +183,12 @@ describe('synth-estate identities follow the collectors', () => {
     });
     expect(merges.slice(0, 10)).toEqual([]);
     // The two estate tenants named horizonbank, at ServiceNow and at Workday, stay two CIs.
-    expect(ofType('saas_tenant').filter((t) => t.identity['tenantId'] === 'horizonbank').map((t) => t.identity['vendor']).sort()).toEqual(['ServiceNow', 'Workday']);
+    expect(
+      ofType('saas_tenant')
+        .filter((t) => t.identity['tenantId'] === 'horizonbank')
+        .map((t) => t.identity['vendor'])
+        .sort(),
+    ).toEqual(['ServiceNow', 'Workday']);
   });
 
   it('at full scale (the scale-1 replay), reports no CI twice in one result and gives no two CIs one global key', () => {

@@ -1,6 +1,17 @@
-// REQ-IPAM-001 REQ-IPAM-004 — IPAM bounded context: subnets and addresses, switch ports, MAC lookup.
+// REQ-IPAM-001 REQ-IPAM-004 REQ-IPAM-005 — IPAM bounded context: subnets and addresses, switch ports, MAC lookup,
+// firewall rules and policy objects.
 import { Module } from '@nestjs/common';
 import { CiModule } from '../ci/ci.module.js';
+import { MetricsModule } from '../metrics/metrics.module.js';
+import {
+  FirewallCheckResultResolver,
+  FirewallDeviceResolver,
+  FirewallObjectResolver,
+  FirewallPolicyResolver,
+  FirewallResolver,
+  FirewallRuleResolver,
+} from './firewall.resolver.js';
+import { FirewallService } from './firewall.service.js';
 import { IpamResolver, SubnetFieldsResolver } from './ipam.resolver.js';
 import { IpamService } from './ipam.service.js';
 import {
@@ -13,7 +24,6 @@ import {
   SwitchPortsResolver,
 } from './switch-ports.resolver.js';
 import { SwitchPortsService } from './switch-ports.service.js';
-import { MetricsModule } from '../metrics/metrics.module.js';
 
 @Module({
   imports: [CiModule, MetricsModule],
@@ -29,6 +39,13 @@ import { MetricsModule } from '../metrics/metrics.module.js';
     PortNeighbourResolver,
     LearnedMacResolver,
     MacSightingResolver,
+    FirewallService,
+    FirewallResolver,
+    FirewallDeviceResolver,
+    FirewallPolicyResolver,
+    FirewallRuleResolver,
+    FirewallObjectResolver,
+    FirewallCheckResultResolver,
   ],
   exports: [IpamService],
 })

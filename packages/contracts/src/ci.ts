@@ -55,6 +55,8 @@ export const CI_TYPES = [
   'dhcp_lease',
   'load_balancer',
   'firewall_rule',
+  // REQ-IPAM-005 (ADR-064): a named policy object a firewall's rules reference (address group, service group, set)
+  'firewall_object',
   'site_link',
   // REQ-DCIM-001 (ADR-056): a carrier circuit (internet, MPLS, wavelength…) with its A and Z terminations
   'circuit',
@@ -137,6 +139,7 @@ export const CI_TYPE_LAYER: Record<CiType, CiLayer> = {
   dhcp_lease: 'network_security',
   load_balancer: 'network_security',
   firewall_rule: 'network_security',
+  firewall_object: 'network_security',
   site_link: 'network_security',
   circuit: 'network_security',
   storage_array: 'storage',
@@ -215,7 +218,12 @@ export interface HeadlineMetricSpec {
 
 export const LAYER_HEADLINE_METRIC = {
   dc: { key: 'pue', label: 'PUE', unit: '', metric: 'dcim.site.pue' },
-  network_security: { key: 'throughputGbps', label: 'Traffic', unit: 'Gbps', metric: 'net.device.throughput_gbps' },
+  network_security: {
+    key: 'throughputGbps',
+    label: 'Traffic',
+    unit: 'Gbps',
+    metric: 'net.device.throughput_gbps',
+  },
   hardware: { key: 'cpuPercent', label: 'Host load', unit: '%', metric: 'host.cpu.utilisation_percent' },
   storage: { key: 'iops', label: 'IOPS', unit: '', metric: 'storage.array.iops' },
   virtualization: { key: 'cpuPercent', label: 'CPU', unit: '%', metric: 'vm.cpu.utilisation_percent' },
@@ -224,7 +232,12 @@ export const LAYER_HEADLINE_METRIC = {
   containers: { key: 'cpuPercent', label: 'CPU', unit: '%', metric: 'container.cpu.utilisation_percent' },
   databases: { key: 'iops', label: 'IOPS', unit: '', metric: 'db.instance.iops' },
   applications: { key: 'apdex', label: 'Apdex', unit: '', metric: 'app.apdex.score' },
-  saas: { key: 'seatUtilisationPercent', label: 'Seats used', unit: '%', metric: 'saas.seat.utilisation_percent' },
+  saas: {
+    key: 'seatUtilisationPercent',
+    label: 'Seats used',
+    unit: '%',
+    metric: 'saas.seat.utilisation_percent',
+  },
   unknown: { key: 'lastSeenDays', label: 'Last seen', unit: 'd', metric: 'discovery.last_seen.days' },
 } as const satisfies Record<CiLayer, HeadlineMetricSpec>;
 
@@ -232,7 +245,9 @@ export const LAYER_HEADLINE_METRIC = {
 export type HeadlineMetricKey = (typeof LAYER_HEADLINE_METRIC)[CiLayer]['key'];
 
 /** Metric names a headline reads, in layer order and without repeats; the API asks ClickHouse for exactly these. */
-export const HEADLINE_METRIC_NAMES: readonly string[] = [...new Set(CI_LAYERS.map((layer) => LAYER_HEADLINE_METRIC[layer].metric))];
+export const HEADLINE_METRIC_NAMES: readonly string[] = [
+  ...new Set(CI_LAYERS.map((layer) => LAYER_HEADLINE_METRIC[layer].metric)),
+];
 
 /** `<domain>.<object>.<measure>[_<unit>]`, the ClickHouse metric name convention. */
 export const METRIC_NAME_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z][a-z0-9_]*){2,}$/u;
@@ -426,13 +441,23 @@ export const IDENTITY_REF_TARGETS: Readonly<Record<string, readonly CiType[]>> =
  * scanner dialled). They rank below identity values: a ref that matches one CI by identity and another by attribute
  * names the first.
  */
-export const IDENTITY_REF_ALIAS_ATTRIBUTES: readonly string[] = ['fqdn', 'hostname', 'primaryIp', 'ipAddress', 'managementIp'];
+export const IDENTITY_REF_ALIAS_ATTRIBUTES: readonly string[] = [
+  'fqdn',
+  'hostname',
+  'primaryIp',
+  'ipAddress',
+  'managementIp',
+];
 
 /**
  * ADR-045: ref spellings collectors derive from identity values: SNMP's `serial:<serial>` for a device, and the
  * `name@version` that SSH, WMI and the agent write for installed software.
  */
-export const IDENTITY_REF_DERIVED: ReadonlyArray<{ readonly keys: readonly string[]; readonly prefix: string; readonly separator: string }> = [
+export const IDENTITY_REF_DERIVED: ReadonlyArray<{
+  readonly keys: readonly string[];
+  readonly prefix: string;
+  readonly separator: string;
+}> = [
   { keys: ['serialNumber'], prefix: 'serial:', separator: '' },
   { keys: ['name', 'version'], prefix: '', separator: '@' },
 ];
@@ -498,6 +523,7 @@ export const CI_IDENTITY_KEYS: Record<CiType, readonly string[]> = {
   dhcp_lease: ['scopeRef', 'address'],
   load_balancer: ['serialNumber', 'managementIp'],
   firewall_rule: ['deviceRef', 'ruleId'],
+  firewall_object: ['deviceRef', 'objectId'],
   site_link: ['circuitId', 'fromSiteRef', 'toSiteRef'],
   circuit: ['circuitId', 'provider'],
   storage_array: ['serialNumber'],

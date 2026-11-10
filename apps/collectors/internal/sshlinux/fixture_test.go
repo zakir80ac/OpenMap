@@ -53,43 +53,64 @@ type fixtureExpect struct {
 	cpuPercent float64 // busy share between the two recorded /proc/stat reads
 	memPercent float64 // (MemTotal - MemAvailable) / MemTotal
 	diskMount  string  // fullest filesystem in df
+	// Captures taken before a section joined Script() lack it; the parsers treat it as unknown.
+	predates []string
+	// Per-capture host disk facts where they differ from the first five captures' shared host state.
+	diskPercent float64
+	disksBytes  map[string]float64
+	// REQ-IPAM-005: firewall rules (with base chain policies), sets, and rule-to-set depends_on links.
+	firewallRules, firewallObjects, firewallLinks int
 }
 
+// Sections added to Script() after the first five captures (2026-11-06).
+var afterFirstCaptures = []string{"nft"}
+
 var fixtureExpectations = map[string]fixtureExpect{
+	// REQ-IPAM-005: a Debian 12 host with nftables, sudo allowed `nft -j list ruleset` (2026-11-10). Without
+	// systemd-detect-virt the container reports no virtualisation, so it is a host; WSL had re-ordered two virtual disks.
+	"debian-debian-12-nftables": {
+		hostname: "lab-fw-debian12", osID: "debian", osVersionID: "12", osPretty: "Debian GNU/Linux 12 (bookworm)", osName: "Debian GNU/Linux",
+		hostType: typeHost, virtual: "unknown", machineID: "", mac: "82:a8:e6:28:6d:c9", ip: "192.168.112.2", cidr: "192.168.112.2/20",
+		packages: 122, disks: 6, mounts: 1, listeners: 4, services: []string{"tcp/22"},
+		software:  []string{"libc6 2.36-9+deb12u14", "openssh-server 1:9.2p1-2+deb12u10", "sudo 1.9.13p3-1+deb12u4"},
+		diskParts: 6, cpuPercent: 61.5894, memPercent: 45.3034, diskMount: "/etc/hosts",
+		diskPercent: 27.4581, disksBytes: map[string]float64{"sda": 407490560, "sdb": 195080192, "sdc": 4294971392, "sdd": 147886080, "sde": 1099511627776, "sdf": 1099511627776},
+		firewallRules: 21, firewallObjects: 3, firewallLinks: 3,
+	},
 	"canonical-ubuntu-24.04.5": {
 		hostname: "lab-ubuntu2404", osID: "ubuntu", osVersionID: "24.04", osPretty: "Ubuntu 24.04.5 LTS", osName: "Ubuntu",
 		hostType: typeVM, virtual: "wsl", machineID: "921f16fc20de4b42831e333e08f4fd45", mac: "e6:44:02:c8:bd:2c", ip: "192.168.112.2", cidr: "192.168.112.2/20",
 		packages: 197, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
 		software:  []string{"libc6 2.39-0ubuntu8.9", "nginx 1.24.0-2ubuntu7.19", "openssh-server 1:9.6p1-3ubuntu13.20", "openssl 3.0.13-0ubuntu3.16", "python3 3.12.3-0ubuntu2.1", "systemd 255.4-1ubuntu8.18"},
-		diskParts: 6, cpuPercent: 14.6650, memPercent: 38.6656, diskMount: "/etc/hosts",
+		diskParts: 6, cpuPercent: 14.6650, memPercent: 38.6656, diskMount: "/etc/hosts", predates: afterFirstCaptures,
 	},
 	"debian-debian-12": {
 		hostname: "lab-debian12", osID: "debian", osVersionID: "12", osPretty: "Debian GNU/Linux 12 (bookworm)", osName: "Debian GNU/Linux",
 		hostType: typeVM, virtual: "wsl", machineID: "699a9e04c4c046178c55fb4190ee0f1d", mac: "e2:65:22:77:30:ca", ip: "192.168.112.3", cidr: "192.168.112.3/20",
 		packages: 157, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
 		software:  []string{"libc6 2.36-9+deb12u14", "nginx 1.22.1-9+deb12u10", "openssh-server 1:9.2p1-2+deb12u10", "openssl 3.0.22-1~deb12u2", "systemd 252.39-1~deb12u2"},
-		diskParts: 6, cpuPercent: 21.5013, memPercent: 38.2705, diskMount: "/etc/hosts",
+		diskParts: 6, cpuPercent: 21.5013, memPercent: 38.2705, diskMount: "/etc/hosts", predates: afterFirstCaptures,
 	},
 	"almalinux-almalinux-9.8": {
 		hostname: "lab-alma9", osID: "almalinux", osVersionID: "9.8", osPretty: "AlmaLinux 9.8 (Olive Jaguar)", osName: "AlmaLinux",
 		hostType: typeVM, virtual: "wsl", machineID: "", mac: "82:5a:ec:bc:dc:d5", ip: "192.168.112.4", cidr: "192.168.112.4/20",
 		packages: 171, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
 		software:  []string{"glibc 2.34-283.el9_8", "nginx 1.20.1-28.el9_8.6.alma.1", "openssh-server 9.9p1-13.el9_8.alma.1", "openssl 3.5.8-2.el9_8", "python3 3.9.25-7.el9_8.6", "systemd 252-67.el9_8.6.alma.1"},
-		diskParts: 6, cpuPercent: 15.9091, memPercent: 38.4133, diskMount: "/etc/hosts",
+		diskParts: 6, cpuPercent: 15.9091, memPercent: 38.4133, diskMount: "/etc/hosts", predates: afterFirstCaptures,
 	},
 	"alpine-alpine-3.20.10": {
 		hostname: "lab-alpine320", osID: "alpine", osVersionID: "3.20.10", osPretty: "Alpine Linux v3.20", osName: "Alpine Linux",
 		hostType: typeHost, virtual: "unknown", machineID: "", mac: "fe:16:52:e6:23:51", ip: "192.168.112.5", cidr: "192.168.112.5/20",
 		packages: 27, disks: 0, mounts: 14, listeners: 6, services: []string{"tcp/22", "tcp/80"},
 		software:  []string{"nginx 1.26.3-r0", "openssh-server 9.7_p1-r6", "openssl 3.3.7-r0"},
-		diskParts: 0, cpuPercent: 12.3426, memPercent: 38.6841, diskMount: "/",
+		diskParts: 0, cpuPercent: 12.3426, memPercent: 38.6841, diskMount: "/", predates: afterFirstCaptures,
 	},
 	"aws-amazonlinux-2023.12.20261102": {
 		hostname: "lab-al2023", osID: "amzn", osVersionID: "2023", osPretty: "Amazon Linux 2023.12.20261102", osName: "Amazon Linux",
 		hostType: typeVM, virtual: "wsl", machineID: "014034a2f64043d0b07247d6f678b526", mac: "da:ad:f8:bb:8d:6d", ip: "192.168.112.6", cidr: "192.168.112.6/20",
 		packages: 165, disks: 6, mounts: 1, listeners: 6, services: []string{"tcp/22", "tcp/80"},
 		software:  []string{"glibc 2.34-231.amzn2023.0.5", "nginx 1.30.6-1.amzn2023.0.1", "openssh-server 9.9p1-16.amzn2023.0.1", "openssl 3.5.8-1.amzn2023.0.3", "python3 3.9.25-1.amzn2023.0.11", "systemd 252.23-15.amzn2023"},
-		diskParts: 6, cpuPercent: 16.3546, memPercent: 39.5075, diskMount: "/etc/hosts",
+		diskParts: 6, cpuPercent: 16.3546, memPercent: 39.5075, diskMount: "/etc/hosts", predates: afterFirstCaptures,
 	},
 }
 
@@ -130,9 +151,13 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 			}
 			parts := Split(string(raw))
 			for _, c := range Commands {
-				if _, ok := parts[c.Key]; !ok {
+				if _, ok := parts[c.Key]; !ok && !containsString(want.predates, c.Key) {
 					t.Errorf("section %s missing from the transcript", c.Key)
 				}
+			}
+			diskPercent, disksBytes := fixtureDiskPercent, wslDiskBytes
+			if want.diskPercent > 0 {
+				diskPercent, disksBytes = want.diskPercent, want.disksBytes
 			}
 			f := Assemble(parts)
 			if f.Hostname != want.hostname || f.FQDN != want.hostname || f.MachineID != want.machineID {
@@ -177,7 +202,7 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 				t.Errorf("disk parts %d want %d: %+v", len(diskParts), want.diskParts, diskParts)
 			}
 			for _, d := range diskParts {
-				capacity, known := wslDiskBytes[d.Slot]
+				capacity, known := disksBytes[d.Slot]
 				if !known || d.CapacityBytes != capacity || d.Model != "Virtual Disk" || d.Manufacturer != "Msft" || d.Firmware != "1.0" || d.SerialNumber != "" || d.Details["media"] != "hdd" {
 					t.Errorf("disk part %+v", d)
 				}
@@ -188,7 +213,7 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 
 			// REQ-CMDB-034 — utilisation from the two /proc/stat reads, MemAvailable and the fullest df mount.
 			u := MeasureUtilisation(parts, f.Mounts)
-			if math.Abs(u.CPUPercent-want.cpuPercent) > utilisationTolerance || math.Abs(u.MemoryPercent-want.memPercent) > utilisationTolerance || math.Abs(u.DiskPercent-fixtureDiskPercent) > utilisationTolerance || u.DiskMount != want.diskMount {
+			if math.Abs(u.CPUPercent-want.cpuPercent) > utilisationTolerance || math.Abs(u.MemoryPercent-want.memPercent) > utilisationTolerance || math.Abs(u.DiskPercent-diskPercent) > utilisationTolerance || u.DiskMount != want.diskMount {
 				t.Errorf("utilisation %+v", u)
 			}
 
@@ -268,7 +293,7 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 			rels := map[string]int{}
 			for _, r := range obs.Relationships {
 				rels[r.Type]++
-				if r.Type == relContains && (r.From.Type != want.hostType || r.To.Type != typeInterface) {
+				if r.Type == relContains && (r.From.Type != want.hostType || (r.To.Type != typeInterface && r.To.Type != typeFwRule && r.To.Type != typeFwObject)) {
 					t.Errorf("contains %+v", r)
 				}
 				if r.Type == relInstalled && r.To.Type != want.hostType {
@@ -278,7 +303,10 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 					t.Errorf("operating system linked by %s, want installed_on", r.Type)
 				}
 			}
-			wantRels := map[string]int{relRunsOn: len(want.services), relContains: 1, relUsesIP: 1, relInstalled: 1 + len(want.software)}
+			if len(byType[typeFwRule]) != want.firewallRules || len(byType[typeFwObject]) != want.firewallObjects {
+				t.Errorf("firewall CIs: %d rules, %d objects", len(byType[typeFwRule]), len(byType[typeFwObject]))
+			}
+			wantRels := map[string]int{relRunsOn: len(want.services), relContains: 1 + want.firewallRules + want.firewallObjects, relUsesIP: 1, relInstalled: 1 + len(want.software), relDependsOn: want.firewallLinks}
 			for k, v := range wantRels {
 				if rels[k] != v {
 					t.Errorf("relationship %s: %d want %d", k, rels[k], v)
@@ -289,6 +317,15 @@ func TestREQDISC003_T300_RecordedVendorFixtures(t *testing.T) {
 	if seen == 0 {
 		t.Fatal("no recorded fixtures found")
 	}
+}
+
+func containsString(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
 
 func equalStrings(a, b []string) bool {

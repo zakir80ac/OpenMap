@@ -1,7 +1,7 @@
 'use client';
-// REQ-UI-010 REQ-IPAM-001 REQ-IPAM-004 — IPAM: the subnet tree by CIDR containment with utilisation, the selected
+// REQ-UI-010 REQ-IPAM-001 REQ-IPAM-004 REQ-IPAM-005 — IPAM: the subnet tree by CIDR containment with utilisation, the selected
 // subnet's addresses and next free address, DNS zones and records, DHCP scopes and leases, and switch ports with
-// their learned MACs and history. Everything comes from the CIs the collectors discovered; nothing is typed in here.
+// their learned MACs and history, and firewall rules with their analysis and a traffic check. Everything comes from the CIs the collectors discovered; nothing is typed in here.
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { IPAM } from '@openmap/constants';
 import type { Locale, MessageKey } from '@openmap/i18n';
@@ -29,14 +29,15 @@ import {
 import { localizedHref } from '@/lib/locale-path';
 import { useFormatters, useT } from '@/providers';
 import { DnsSyncPanel } from './DnsSyncPanel';
+import { FirewallView } from './FirewallView';
 import { SwitchPortsView } from './SwitchPortsView';
 
 export interface IpamViewProps {
   locale: Locale;
 }
 
-type Tab = 'subnets' | 'dns' | 'dhcp' | 'ports';
-const TABS: readonly Tab[] = ['subnets', 'dns', 'dhcp', 'ports'];
+type Tab = 'subnets' | 'dns' | 'dhcp' | 'ports' | 'firewall';
+const TABS: readonly Tab[] = ['subnets', 'dns', 'dhcp', 'ports', 'firewall'];
 
 /** Flattens the tree depth-first with the depth of each node. */
 export function flattenSubnets(
@@ -92,8 +93,10 @@ export function IpamView({ locale }: IpamViewProps): ReactNode {
         <DnsTab locale={locale} />
       ) : tab === 'dhcp' ? (
         <DhcpTab locale={locale} />
-      ) : (
+      ) : tab === 'ports' ? (
         <SwitchPortsView locale={locale} />
+      ) : (
+        <FirewallView locale={locale} />
       )}
     </div>
   );

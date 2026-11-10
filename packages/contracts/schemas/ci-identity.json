@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/ci-identity/0.9.0",
+  "$id": "https://openmap.dev/contracts/ci-identity/0.10.0",
   "title": "ci-identity",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "keys": {
     "host": [
       "serialNumber",
@@ -150,6 +150,10 @@
     "firewall_rule": [
       "deviceRef",
       "ruleId"
+    ],
+    "firewall_object": [
+      "deviceRef",
+      "objectId"
     ],
     "site_link": [
       "circuitId",

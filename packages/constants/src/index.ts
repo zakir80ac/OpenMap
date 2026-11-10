@@ -751,6 +751,31 @@ export const SWITCH_PORTS = {
   macTextMaxLength: 64,
 } as const;
 
+/**
+ * REQ-IPAM-005 (ADR-064) — firewall rules and policy objects. Evaluation follows jumps and gotos to `maxJumpDepth`
+ * chains (netfilter itself stops at 16) and group references to `maxObjectDepth` levels (vendors nest groups a few
+ * deep). The shadow analysis is quadratic per chain, so a device's first `analysisRuleLimit` rules are analysed and the
+ * rest reported as not analysed. A traffic check evaluates at most `checkDeviceLimit` devices; the API reads at most
+ * `maxRulesPerTenant` rules for one check, enough for a large estate's firewalls without an unbounded read. The device
+ * picker offers `deviceSearchLimit` devices; the rule table pages at `ruleRows` before "show all".
+ */
+export const FIREWALL = {
+  maxJumpDepth: 16,
+  maxObjectDepth: 8,
+  analysisRuleLimit: 5_000,
+  checkDeviceLimit: 50,
+  maxRulesPerTenant: 50_000,
+  maxRulesPerDevice: 20_000,
+  deviceSearchLimit: 12,
+  ruleRows: 100,
+  /** Longest address or service text a traffic check accepts (an IPv6 address with a prefix fits easily). */
+  checkTextMaxLength: 64,
+  /** Highest TCP/UDP port (16-bit port field). */
+  maxPort: 65_535,
+  /** Longest protocol word a traffic check accepts (icmpv6, udplite and protocol numbers fit). */
+  protocolMaxLength: 16,
+} as const;
+
 /** Vulnerabilities screen (REQ-UI-016, REQ-SEC-008): the blast-radius walk from affected hosts to business services. */
 export const VULNERABILITY = {
   /** Hosts walked per CVE; a CVE on more hosts reports a truncated blast radius rather than blowing the query budget. */
@@ -1835,16 +1860,19 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 0.8.0 (REQ-BSM-007, ADR-025): `connectivity.ts`, the link probe metric names, site DR roles and readiness rules.
    * 0.9.0 (REQ-DCIM-001, ADR-056): the `circuit` CI type (identity circuitId + provider) and `cabling.ts`: cable kinds,
    * media, panel connectors and sides, circuit kinds and statuses, endpoint validation and the cable trace.
+   * 0.10.0 (REQ-IPAM-005, ADR-064): the `firewall_object` CI type (identity deviceRef + objectId) and `firewall.ts`:
+   * rule and object attributes, address and service matching, rule evaluation, shadowed and unused rules.
    */
-  ci: '0.9.0',
+  ci: '0.10.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
    * 0.6.0 (REQ-CMDB-024, ADR-043): the `warranty` collector family.
    * 0.7.0 (REQ-CORE-013, ADR-045): moves with the CI contract's identity rules; no result field changed.
    * 0.8.0 (REQ-BSM-007, ADR-025): the `link_probe` family.
-   * 0.9.0 (REQ-DCIM-001, ADR-056): moves with the CI contract (the `circuit` CI type); no result field changed. */
-  collector: '0.9.0',
+   * 0.9.0 (REQ-DCIM-001, ADR-056): moves with the CI contract (the `circuit` CI type); no result field changed.
+   * 0.10.0 (REQ-IPAM-005, ADR-064): moves with the CI contract (the `firewall_object` CI type); no result field changed. */
+  collector: '0.10.0',
   /**
    * 1.1.0 (ADR-024): `Sla`, `AvailabilityPeriod`, `ServiceAvailability`, `Rca`, `IncidentEvent`, the SLA and
    * incident-response mutations; `ServiceHealth.sla`/`availability`, `Incident` severity, state, targets and RCA.
@@ -1915,8 +1943,12 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.36.0 (REQ-IPAM-004, ADR-063): `PortState`, `LearnedMac`, `PortNeighbour`, `SwitchPort`, `SwitchPortSummary`,
    * `SwitchPorts`, `PortChange`, `PortHistory`, `MacSightingKind`, `MacSighting`, `MacLookup`; queries `switchPorts`,
    * `portHistory`, `macLookup`.
+   * 1.37.0 (REQ-IPAM-005, ADR-064): `FirewallAction`, `FirewallVerdict`, `FirewallFindingKind`, `FirewallObjectKind`,
+   * `FirewallFinding`, `FirewallRule`, `FirewallObject`, `FirewallChain`, `FirewallSummary`, `FirewallPolicy`,
+   * `FirewallDevice`, `FirewallCheckInput`, `FirewallCheckResult`, `FirewallCheck`; queries `firewallDevices`,
+   * `firewallPolicy`, `firewallCheck`.
    */
-  graphql: '1.36.0',
+  graphql: '1.37.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

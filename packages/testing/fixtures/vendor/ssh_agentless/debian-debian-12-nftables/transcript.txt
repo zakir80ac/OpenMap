@@ -1,0 +1,448 @@
+
+@@OPENMAP:hostname@@
+lab-fw-debian12
+
+@@OPENMAP:fqdn@@
+lab-fw-debian12
+
+@@OPENMAP:machine_id@@
+
+@@OPENMAP:os_release@@
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+VERSION_ID="12"
+VERSION="12 (bookworm)"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+
+@@OPENMAP:kernel@@
+6.6.87.2-microsoft-standard-WSL2
+
+@@OPENMAP:arch@@
+x86_64
+
+@@OPENMAP:uptime@@
+49360.76 264219.20
+
+@@OPENMAP:cpuinfo@@
+processor	: 0
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 1
+cpu cores	: 4
+apicid		: 3
+initial apicid	: 3
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 4
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 4
+initial apicid	: 4
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 5
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 2
+cpu cores	: 4
+apicid		: 5
+initial apicid	: 5
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 6
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 6
+initial apicid	: 6
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 7
+vendor_id	: AuthenticAMD
+cpu family	: 26
+model		: 36
+model name	: AMD Ryzen AI 9 HX 370 w/ Radeon 890M
+stepping	: 0
+microcode	: 0xffffffff
+cpu MHz		: 1996.198
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 8
+core id		: 3
+cpu cores	: 4
+apicid		: 7
+initial apicid	: 7
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 13
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+bugs		: sysret_ss_attrs null_seg spectre_v1 spectre_v2 spec_store_bypass
+bogomips	: 3992.39
+TLB size	: 192 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+
+@@OPENMAP:meminfo@@
+MemTotal:       24611036 kB
+
+@@OPENMAP:dmi@@
+product_serial=
+product_uuid=
+sys_vendor=
+product_name=
+bios_version=
+virt=unknown
+
+@@OPENMAP:ip_addr@@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0@if486: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 82:a8:e6:28:6d:c9 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 192.168.112.2/20 brd 192.168.127.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+@@OPENMAP:ss@@
+udp UNCONN 0      0      127.0.0.11:43715 0.0.0.0:*
+tcp LISTEN 0      128       0.0.0.0:22    0.0.0.0:*
+tcp LISTEN 0      4096   127.0.0.11:43679 0.0.0.0:*
+tcp LISTEN 0      128          [::]:22       [::]:*
+
+@@OPENMAP:packages@@
+adduser	3.134	all
+apt	2.6.2	amd64
+base-files	12.4+deb12u15	amd64
+base-passwd	3.6.1	amd64
+bash	5.2.15-2+b13	amd64
+bsdutils	1:2.38.1-5+deb12u3	amd64
+coreutils	9.1-1	amd64
+dash	0.5.12-2	amd64
+debconf	1.5.82	all
+debian-archive-keyring	2023.3+deb12u2	all
+debianutils	5.7-0.5~deb12u1	amd64
+diffutils	1:3.8-4	amd64
+dpkg	1.21.23	amd64
+e2fsprogs	1.47.0-2+b2	amd64
+findutils	4.9.0-4	amd64
+gcc-12-base	12.2.0-14+deb12u1	amd64
+gpgv	2.2.40-1.1+deb12u2	amd64
+grep	3.8-5	amd64
+gzip	1.12-1	amd64
+hostname	3.23+nmu1	amd64
+init-system-helpers	1.65.2+deb12u1	all
+iproute2	6.1.0-3	amd64
+libacl1	2.3.1-3	amd64
+libapt-pkg6.0	2.6.2	amd64
+libattr1	1:2.5.1-4	amd64
+libaudit-common	1:3.0.9-1	all
+libaudit1	1:3.0.9-1	amd64
+libblkid1	2.38.1-5+deb12u3	amd64
+libbpf1	1:1.1.2-0+deb12u1	amd64
+libbsd0	0.11.7-2	amd64
+libbz2-1.0	1.0.8-5+b1	amd64
+libc-bin	2.36-9+deb12u14	amd64
+libc6	2.36-9+deb12u14	amd64
+libcap-ng0	0.8.3-1+b3	amd64
+libcap2	1:2.66-4+deb12u3+b1	amd64
+libcap2-bin	1:2.66-4+deb12u3+b1	amd64
+libcbor0.8	0.8.0-2+b1	amd64
+libcom-err2	1.47.0-2+b2	amd64
+libcrypt1	1:4.4.33-2	amd64
+libdb5.3	5.3.28+dfsg2-1	amd64
+libdebconfclient0	0.270	amd64
+libedit2	3.1-20221030-2	amd64
+libelf1	0.188-2.1	amd64
+libext2fs2	1.47.0-2+b2	amd64
+libffi8	3.4.4-1	amd64
+libfido2-1	1.12.0-2+b1	amd64
+libgcc-s1	12.2.0-14+deb12u1	amd64
+libgcrypt20	1.10.1-3+deb12u1	amd64
+libgmp10	2:6.2.1+dfsg1-1.1	amd64
+libgnutls30	3.7.9-2+deb12u7	amd64
+libgpg-error0	1.46-1	amd64
+libgssapi-krb5-2	1.20.1-2+deb12u5	amd64
+libhogweed6	3.8.1-2	amd64
+libidn2-0	2.3.3-1+b1	amd64
+libjansson4	2.14-2	amd64
+libk5crypto3	1.20.1-2+deb12u5	amd64
+libkeyutils1	1.6.3-2	amd64
+libkrb5-3	1.20.1-2+deb12u5	amd64
+libkrb5support0	1.20.1-2+deb12u5	amd64
+liblz4-1	1.9.4-1	amd64
+liblzma5	5.4.1-1+deb12u2	amd64
+libmd0	1.0.4-2	amd64
+libmnl0	1.0.4-3	amd64
+libmount1	2.38.1-5+deb12u3	amd64
+libncursesw6	6.4-4	amd64
+libnettle8	3.8.1-2	amd64
+libnftables1	1.0.6-2+deb12u2	amd64
+libnftnl11	1.2.4-2	amd64
+libnsl2	1.3.0-2	amd64
+libp11-kit0	0.24.1-2	amd64
+libpam-modules	1.5.2-6+deb12u2	amd64
+libpam-modules-bin	1.5.2-6+deb12u2	amd64
+libpam-runtime	1.5.2-6+deb12u2	all
+libpam0g	1.5.2-6+deb12u2	amd64
+libpcre2-8-0	10.42-1+deb12u2	amd64
+libproc2-0	2:4.0.2-3	amd64
+libseccomp2	2.5.4-1+deb12u1	amd64
+libselinux1	3.4-1+b6	amd64
+libsemanage-common	3.4-1	all
+libsemanage2	3.4-1+b5	amd64
+libsepol2	3.4-2.1	amd64
+libsmartcols1	2.38.1-5+deb12u3	amd64
+libss2	1.47.0-2+b2	amd64
+libssl3	3.0.22-1~deb12u2	amd64
+libstdc++6	12.2.0-14+deb12u1	amd64
+libsystemd0	252.39-1~deb12u2	amd64
+libtasn1-6	4.19.0-2+deb12u1	amd64
+libtinfo6	6.4-4	amd64
+libtirpc-common	1.3.3+ds-1	all
+libtirpc3	1.3.3+ds-1	amd64
+libudev1	252.39-1~deb12u2	amd64
+libunistring2	1.0-2	amd64
+libuuid1	2.38.1-5+deb12u3	amd64
+libwrap0	7.6.q-32	amd64
+libxtables12	1.8.9-2	amd64
+libxxhash0	0.8.1-1	amd64
+libzstd1	1.5.4+dfsg2-5	amd64
+login	1:4.13+dfsg1-1+deb12u2	amd64
+logsave	1.47.0-2+b2	amd64
+mawk	1.3.4.20200120-3.1	amd64
+mount	2.38.1-5+deb12u3	amd64
+ncurses-base	6.4-4	all
+ncurses-bin	6.4-4	amd64
+nftables	1.0.6-2+deb12u2	amd64
+openssh-client	1:9.2p1-2+deb12u10	amd64
+openssh-server	1:9.2p1-2+deb12u10	amd64
+openssh-sftp-server	1:9.2p1-2+deb12u10	amd64
+passwd	1:4.13+dfsg1-1+deb12u2	amd64
+perl-base	5.36.0-7+deb12u4	amd64
+procps	2:4.0.2-3	amd64
+runit-helper	2.15.2	all
+sed	4.9-1+deb12u1	amd64
+sensible-utils	0.0.17+nmu1	all
+sudo	1.9.13p3-1+deb12u4	amd64
+sysvinit-utils	3.06-4	amd64
+tar	1.34+dfsg-1.2+deb12u1	amd64
+tzdata	2026f-0+deb12u1	all
+ucf	3.0043+nmu1+deb12u1	all
+usr-is-merged	37~deb12u1	all
+util-linux	2.38.1-5+deb12u3	amd64
+util-linux-extra	2.38.1-5+deb12u3	amd64
+zlib1g	1:1.2.13.dfsg-1	amd64
+
+@@OPENMAP:lsblk@@
+loop0 754.6M loop 
+loop1   727M loop 
+sda   388.6M disk Virtual Disk    
+sdb     186M disk Virtual Disk    
+sdc       4G disk Virtual Disk    
+sdd     141M disk Virtual Disk    
+sde       1T disk Virtual Disk    
+sdf       1T disk Virtual Disk    
+
+@@OPENMAP:df@@
+Filesystem     1024-blocks      Used Available Capacity Mounted on
+/dev/sde        1055762868 289892824 712166572      29% /etc/hosts
+
+@@OPENMAP:nft@@
+{"nftables": [{"metainfo": {"version": "1.0.6", "release_name": "Lester Gooch #5", "json_schema_version": 1}}, {"table": {"family": "inet", "name": "filter", "handle": 2}}, {"set": {"family": "inet", "name": "admin_nets", "table": "filter", "type": "ipv4_addr", "handle": 5, "comment": "Jump hosts, the admin VPN and the lab network", "flags": ["interval"], "elem": [{"prefix": {"addr": "10.20.0.0", "len": 16}}, {"prefix": {"addr": "172.16.0.0", "len": 12}}, {"prefix": {"addr": "192.168.0.0", "len": 16}}]}}, {"set": {"family": "inet", "name": "web_ports", "table": "filter", "type": "inet_service", "handle": 6, "comment": "Published web listeners", "elem": [80, 443, 8443]}}, {"set": {"family": "inet", "name": "monitoring_hosts", "table": "filter", "type": "ipv4_addr", "handle": 7, "elem": ["10.30.1.10", "10.30.1.11"]}}, {"chain": {"family": "inet", "table": "filter", "name": "input", "handle": 1, "type": "filter", "hook": "input", "prio": 0, "policy": "drop"}}, {"chain": {"family": "inet", "table": "filter", "name": "forward", "handle": 2, "type": "filter", "hook": "forward", "prio": 0, "policy": "drop"}}, {"chain": {"family": "inet", "table": "filter", "name": "docker_user", "handle": 3}}, {"chain": {"family": "inet", "table": "filter", "name": "output", "handle": 4, "type": "filter", "hook": "output", "prio": 0, "policy": "accept"}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 8, "comment": "return traffic", "expr": [{"match": {"op": "in", "left": {"ct": {"key": "state"}}, "right": ["established", "related"]}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 9, "comment": "invalid state", "expr": [{"match": {"op": "in", "left": {"ct": {"key": "state"}}, "right": "invalid"}}, {"counter": {"packets": 0, "bytes": 0}}, {"drop": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 10, "comment": "loopback", "expr": [{"match": {"op": "==", "left": {"meta": {"key": "iifname"}}, "right": "lo"}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 12, "comment": "icmp", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "protocol"}}, "right": 1}}, {"match": {"op": "==", "left": {"payload": {"protocol": "icmp", "field": "type"}}, "right": {"set": ["destination-unreachable", "echo-request", "time-exceeded"]}}}, {"limit": {"rate": 10, "burst": 5, "per": "second"}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 13, "comment": "ssh from admin networks", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "saddr"}}, "right": "@admin_nets"}}, {"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 22}}, {"counter": {"packets": 1, "bytes": 60}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 14, "comment": "web", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": "@web_ports"}}, {"counter": {"packets": 0, "bytes": 0}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 15, "comment": "snmp from monitoring", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "saddr"}}, "right": "@monitoring_hosts"}}, {"match": {"op": "==", "left": {"payload": {"protocol": "udp", "field": "dport"}}, "right": 161}}, {"counter": {"packets": 0, "bytes": 0}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 17, "comment": "postgres from the app tier", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "saddr"}}, "right": {"prefix": {"addr": "10.40.0.0", "len": 16}}}}, {"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": {"set": [5432, 6432]}}}, {"counter": {"packets": 0, "bytes": 0}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 18, "comment": "mysql closed", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 3306}}, {"counter": {"packets": 0, "bytes": 0}}, {"reject": {"type": "tcp reset"}}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "input", "handle": 19, "expr": [{"counter": {"packets": 0, "bytes": 0}}, {"log": {"prefix": "input-drop: "}}, {"drop": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "forward", "handle": 20, "expr": [{"match": {"op": "in", "left": {"ct": {"key": "state"}}, "right": ["established", "related"]}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "forward", "handle": 21, "expr": [{"jump": {"target": "docker_user"}}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "docker_user", "handle": 22, "comment": "containers to the app tier", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "saddr"}}, "right": {"prefix": {"addr": "10.88.0.0", "len": 16}}}}, {"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "daddr"}}, "right": {"prefix": {"addr": "10.40.0.0", "len": 16}}}}, {"counter": {"packets": 0, "bytes": 0}}, {"accept": null}]}}, {"rule": {"family": "inet", "table": "filter", "chain": "docker_user", "handle": 23, "expr": [{"return": null}]}}, {"table": {"family": "ip", "name": "nat", "handle": 3}}, {"chain": {"family": "ip", "table": "nat", "name": "prerouting", "handle": 1, "type": "nat", "hook": "prerouting", "prio": -100, "policy": "accept"}}, {"chain": {"family": "ip", "table": "nat", "name": "postrouting", "handle": 2, "type": "nat", "hook": "postrouting", "prio": 100, "policy": "accept"}}, {"rule": {"family": "ip", "table": "nat", "chain": "prerouting", "handle": 3, "comment": "publish the app container", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "tcp", "field": "dport"}}, "right": 8080}}, {"counter": {"packets": 0, "bytes": 0}}, {"dnat": {"addr": "10.88.0.10", "port": 80}}]}}, {"rule": {"family": "ip", "table": "nat", "chain": "postrouting", "handle": 4, "comment": "container egress", "expr": [{"match": {"op": "==", "left": {"payload": {"protocol": "ip", "field": "saddr"}}, "right": {"prefix": {"addr": "10.88.0.0", "len": 16}}}}, {"match": {"op": "==", "left": {"meta": {"key": "oifname"}}, "right": "eth0"}}, {"counter": {"packets": 0, "bytes": 0}}, {"masquerade": null}]}}]}
+
+@@OPENMAP:lsblk_pairs@@
+NAME="loop0" SIZE="791226368" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="loop1" SIZE="762304512" TYPE="loop" MODEL="" SERIAL="" VENDOR="" ROTA="1" TRAN="" REV=""
+NAME="sda" SIZE="407490560" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdb" SIZE="195080192" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdc" SIZE="4294971392" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdd" SIZE="147886080" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sde" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+NAME="sdf" SIZE="1099511627776" TYPE="disk" MODEL="Virtual Disk    " SERIAL="" VENDOR="Msft    " ROTA="1" TRAN="" REV="1.0 "
+
+@@OPENMAP:nics@@
+
+@@OPENMAP:fc_hosts@@
+
+@@OPENMAP:dmi_memory@@
+
+@@OPENMAP:cpu_stat@@
+cpu  8190832 794 2728537 26421936 1055300 0 774150 0 0 0
+cpu  8191158 794 2728664 26422212 1055314 0 774162 0 0 0
+
+@@OPENMAP:mem_available@@
+MemTotal:       24611036 kB
+MemAvailable:   13461408 kB

@@ -59,6 +59,41 @@ test('IPAM: a subnet lists its addresses and the next free address', async ({ pa
       .or(ports.getByText(translate(locale, 'ipam.ports.mac.none', { mac: '00:50:56:00:00:01' }))),
   ).toBeVisible();
   await page.screenshot({ path: screenshotsDir + 'ipam-switch-ports-' + locale + '.png', fullPage: true });
+
+  // REQ-IPAM-005 (T-561): a firewall's rules in order with their findings and policy objects; a connection checked
+  // across every firewall answers per device with the deciding rule.
+  await page.getByRole('button', { name: translate(locale, 'ipam.tab.firewall') }).click();
+  const fw = page.getByTestId('firewall');
+  const fwDevice = fw.getByRole('combobox', { name: translate(locale, 'ipam.fw.device'), exact: true });
+  await expect(fwDevice.locator('option').nth(1)).toBeAttached();
+  await fwDevice.selectOption((await fwDevice.locator('option').nth(1).getAttribute('value')) ?? '');
+  await expect(
+    fw.getByRole('group', { name: new RegExp(translate(locale, 'ipam.fw.summary', { device: '' }).trim()) }),
+  ).toBeVisible();
+  const rules = fw.getByRole('table', {
+    name: new RegExp(translate(locale, 'ipam.fw.rules.title', { device: '' }).trim()),
+  });
+  await expect(rules.getByRole('row').nth(1)).toBeVisible();
+  await expect(
+    fw
+      .getByRole('table', { name: translate(locale, 'ipam.fw.objects.title') })
+      .getByRole('row')
+      .nth(1),
+  ).toBeVisible();
+  const fwCheck = fw.getByRole('form', { name: translate(locale, 'ipam.fw.check.title') });
+  await fwCheck.getByLabel(translate(locale, 'ipam.fw.check.source')).fill('10.1.0.5');
+  await fwCheck.getByLabel(translate(locale, 'ipam.fw.check.destination')).fill('10.2.0.5');
+  await fwCheck.getByLabel(translate(locale, 'ipam.fw.check.port')).fill('443');
+  await fwCheck.getByLabel(translate(locale, 'ipam.fw.check.fromZone')).fill('trust');
+  await fwCheck.getByLabel(translate(locale, 'ipam.fw.check.toZone')).fill('dmz');
+  await fwCheck.getByRole('button', { name: translate(locale, 'ipam.fw.check.run') }).click();
+  await expect(
+    fw
+      .getByRole('list', { name: translate(locale, 'ipam.fw.check.results') })
+      .getByRole('listitem')
+      .first(),
+  ).toBeVisible();
+  await page.screenshot({ path: screenshotsDir + 'ipam-firewall-' + locale + '.png', fullPage: true });
 });
 
 test('DCIM: a rack tile opens its elevation, devices and power feeds', async ({ page }, testInfo) => {

@@ -38,6 +38,8 @@ type Facts struct {
 	Components []contract.Component
 	// Utilisation measured during the visit (REQ-CMDB-034).
 	Utilisation Utilisation
+	// The host firewall's rules and sets (REQ-IPAM-005); Readable is false when the listing was not permitted.
+	Firewall Firewall
 }
 
 type OSRelease struct {

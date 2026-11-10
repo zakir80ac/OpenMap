@@ -26,6 +26,7 @@ export * from './assistant.js';
 export * from './capacity.js';
 export * from './cabling-verify.js';
 export * from './switch-ports.js';
+export * from './firewall.js';
 export * from './custom-field.js';
 export * from './import.js';
 export { CONTRACT_VERSIONS, CONTRACT_NAMES } from '@openmap/constants';

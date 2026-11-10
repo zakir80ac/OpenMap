@@ -1,0 +1,18 @@
+{
+  "family": "ssh_agentless",
+  "vendor": "Debian",
+  "model": "Debian GNU/Linux (container userland) with nftables",
+  "firmware": "12 (bookworm), nftables 1.0.6",
+  "capturedAt": "2026-11-10T11:12:00Z",
+  "capturedBy": "OpenMap engineering (container lab)",
+  "req": "REQ-DISC-003",
+  "requirements": ["REQ-DISC-003", "REQ-IPAM-005"],
+  "collector": "internal/sshlinux",
+  "capture": {
+    "image": "debian:12",
+    "digest": "sha256:268fb24c39bca92d326dd83ea3abebe4a3f7751c804ffef23bb6d857dd343ff8",
+    "command": "Container on a dedicated Docker network (WSL2 kernel host) with CAP_NET_ADMIN and distro packages openssh-server nftables sudo iproute2 procps util-linux installed by apt; unprivileged login user 'openmap' (password auth) with one sudoers entry, 'openmap ALL=(root) NOPASSWD: /usr/sbin/nft -j list ruleset'. A typical server rule set was loaded with nft -f: an inet filter table with three named sets (admin networks, web ports, monitoring hosts), a default-drop input chain (established, invalid, loopback, ICMP with a rate limit, SSH from the admin set, web ports, SNMP from monitoring hosts, PostgreSQL from the app tier, MySQL rejected, a counted and logged final drop), a default-drop forward chain jumping to a user chain that returns, an accepting output chain, and an ip nat table with a DNAT and a masquerade rule. Private addresses only. The real ssh_agentless collector binary (apps/collectors/cmd/ssh_agentless) ran one invocation against 127.0.0.1:<published sshd port> with trustOnFirstUse; sshexec.Run executed sshlinux.Script() under `sh -c` in one SSH session and the collector stored the raw stdout as cli_output evidence, copied here byte-for-byte (sha256 9368a55decb40c5043e10032ab33a0a00437f6f07e630632648de189759c01bb)."
+  },
+  "files": [{ "name": "transcript.txt", "description": "Raw stdout of sshlinux.Script() over SSH (delimited @@OPENMAP:<key>@@ sections), including the nft JSON rule set" }],
+  "redactions": []
+}

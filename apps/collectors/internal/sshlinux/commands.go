@@ -25,6 +25,10 @@ var Commands = []command{
 	{"packages", "if command -v dpkg-query >/dev/null 2>&1; then dpkg-query -W -f='${Package}\\t${Version}\\t${Architecture}\\n'; elif command -v rpm >/dev/null 2>&1; then rpm -qa --qf '%{NAME}\\t%{VERSION}-%{RELEASE}\\t%{ARCH}\\n'; elif command -v apk >/dev/null 2>&1; then apk info -v | sed 's/-\\([0-9]\\)/\\t\\1/'; fi 2>/dev/null || true"},
 	{"lsblk", "lsblk -dn -o NAME,SIZE,TYPE,MODEL 2>/dev/null || true"},
 	{"df", "df -kP -x tmpfs -x devtmpfs -x squashfs -x overlay 2>/dev/null || df -kP"},
+	// REQ-IPAM-005 (ADR-064): the host firewall as nftables JSON (iptables-nft rules included). Listing the rule set
+	// needs CAP_NET_ADMIN, so sudo is tried non-interactively (a sudoers entry for exactly this command) and the
+	// collector carries on without it; empty output means the rule set was not readable, not that it is empty.
+	{"nft", "sudo -n nft -j list ruleset 2>/dev/null || nft -j list ruleset 2>/dev/null || true"},
 }
 
 // Script joins the commands into one shell session with delimiters so a single exec round-trip

@@ -22,6 +22,10 @@ const (
 	typeListener  = "listening_service"
 	typeSoftware  = "software"
 	typeInstall   = "software_instance"
+	typeFwRule    = "firewall_rule"
+	typeFwObject  = "firewall_object"
+	relDependsOn  = "depends_on"
+	firewallNft   = "nftables"
 
 	relContains  = "contains"
 	relUsesIP    = "uses_ip"
@@ -63,6 +67,7 @@ func Assemble(parts map[string]string) Facts {
 	f.Mounts = ParseDF(parts["df"])
 	f.Components = Components(parts)
 	f.Utilisation = MeasureUtilisation(parts, f.Mounts)
+	f.Firewall = ParseFirewall(parts["nft"])
 	return f
 }
 
@@ -127,6 +132,11 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		"kernel": f.Kernel, "arch": f.Arch, "cpuCount": f.CPUCount, "cpuModel": f.CPUModel, "memoryGb": f.MemoryKB / 1024 / 1024,
 		"uptimeSeconds": int64(f.Uptime), "diskCount": len(f.Disks), "packageCount": len(f.Packages), "packages": pkgNames,
 	}
+	if f.Firewall.Readable {
+		attrs["firewall"] = firewallNft
+		attrs["firewallVersion"] = f.Firewall.Version
+		attrs["firewallRuleCount"] = len(f.Firewall.Rules)
+	}
 	if len(f.Disks) > 0 {
 		disks := make([]string, 0, len(f.Disks))
 		for _, d := range f.Disks {
@@ -178,6 +188,8 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relRunsOn, From: contract.CiRef{Type: typeListener, Identity: lsIdentity}, To: hostCiRef, Attributes: map[string]any{}, ObservedAt: at})
 	}
 
+	emitFirewall(&obs, f.Firewall, hostRef, hostCiRef, name, at)
+
 	vendor := firstNonEmpty(f.OS.Name, "linux")
 	for _, p := range f.Packages {
 		if !interestingPackages[p.Name] {
@@ -191,6 +203,33 @@ func Emit(f Facts, target contract.Target, raw []byte, at time.Time) collector.O
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relMemberOf, From: contract.CiRef{Type: typeInstall, Identity: instIdentity}, To: contract.CiRef{Type: typeSoftware, Identity: swIdentity}, Attributes: map[string]any{}, ObservedAt: at})
 	}
 	return obs
+}
+
+// emitFirewall adds the host's firewall rules and sets (REQ-IPAM-005, ADR-064): each a CI the host contains, keyed by
+// the host and the rule or object id, and each rule depends_on the sets it names.
+func emitFirewall(obs *collector.Observation, fw Firewall, hostRef string, hostCiRef contract.CiRef, hostName string, at time.Time) {
+	objects := map[string]contract.CiRef{}
+	for _, o := range fw.Objects {
+		identity := map[string]string{"deviceRef": hostRef, "objectId": o.ObjectID}
+		ref := contract.CiRef{Type: typeFwObject, Identity: identity}
+		objects[o.Family+" "+o.Table+" "+o.Name] = ref
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeFwObject, Identity: identity, Name: hostName + " " + o.Name, Attributes: o.Attributes(), Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: hostCiRef, To: ref, Attributes: map[string]any{}, ObservedAt: at})
+	}
+	for _, r := range fw.Rules {
+		identity := map[string]string{"deviceRef": hostRef, "ruleId": r.RuleID}
+		ref := contract.CiRef{Type: typeFwRule, Identity: identity}
+		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeFwRule, Identity: identity, Name: hostName + " " + r.DisplayName(), Attributes: r.Attributes(), Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
+		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: hostCiRef, To: ref, Attributes: map[string]any{}, ObservedAt: at})
+		linked := map[string]bool{}
+		for _, name := range r.ObjectRefs {
+			key := r.Family + " " + r.Table + " " + name
+			if o, ok := objects[key]; ok && !linked[key] {
+				linked[key] = true
+				obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relDependsOn, From: ref, To: o, Attributes: map[string]any{}, ObservedAt: at})
+			}
+		}
+	}
 }
 
 // bsdFamilies are the os-release IDs of non-Linux systems that ship /etc/os-release.

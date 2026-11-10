@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.36.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.37.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -798,6 +798,50 @@ type PortHistory { port: Ci! days: Int! versions: Int! changes: [PortChange!]! }
 enum MacSightingKind { learned_on_port arp owner }
 type MacSighting { kind: MacSightingKind! ci: Ci! port: String ip: String seenAt: DateTime! }
 type MacLookup { mac: String! sightings: [MacSighting!]! }
+
+# REQ-IPAM-005 (ADR-064): firewall rules and policy objects, the rule analysis and the traffic check.
+enum FirewallAction { allow deny reject nat jump goto return continue }
+enum FirewallVerdict { allow deny reject no_match }
+enum FirewallFindingKind { shadowed unused permissive }
+enum FirewallObjectKind { address service interface other }
+"A finding on a rule; `by` names the earlier rule that shadows it, `sameAction` whether that rule does the same."
+type FirewallFinding { kind: FirewallFindingKind! byRuleId: String byName: String sameAction: Boolean }
+type FirewallRule {
+  rule: Ci!
+  ruleId: String!
+  name: String!
+  "The chain the rule sits in; empty when the device keeps one ordered list."
+  chain: String!
+  hook: String
+  chainType: String
+  table: String
+  position: Int!
+  action: FirewallAction!
+  target: String
+  sources: [String!]!
+  destinations: [String!]!
+  services: [String!]!
+  fromZone: String
+  toZone: String
+  inInterface: String
+  outInterface: String
+  conditions: [String!]!
+  "Packets the rule matched, when the device counts them (may exceed 32 bits)."
+  hitCount: Float
+  logging: Boolean!
+  enabled: Boolean!
+  comment: String
+  isPolicy: Boolean!
+  findings: [FirewallFinding!]!
+}
+type FirewallObject { object: Ci! objectId: String! name: String! kind: FirewallObjectKind! elements: [String!]! comment: String ruleCount: Int! unused: Boolean! }
+type FirewallChain { name: String! hook: String chainType: String rules: Int! policy: FirewallAction }
+type FirewallSummary { rules: Int! allow: Int! deny: Int! nat: Int! objects: Int! shadowed: Int! unused: Int! permissive: Int! unusedObjects: Int! }
+type FirewallPolicy { device: Ci! summary: FirewallSummary! chains: [FirewallChain!]! rules: [FirewallRule!]! objects: [FirewallObject!]! truncated: Boolean! }
+type FirewallDevice { device: Ci! rules: Int! objects: Int! }
+input FirewallCheckInput { source: String! destination: String! protocol: String! port: Int deviceId: UUID fromZone: String toZone: String inInterface: String outInterface: String }
+type FirewallCheckResult { device: Ci! chain: String! verdict: FirewallVerdict! rule: FirewallRule path: [String!]! uncertain: [FirewallRule!]! }
+type FirewallCheck { evaluated: Int! truncated: Boolean! results: [FirewallCheckResult!]! }
 
 type Subnet {
   ci: Ci!
@@ -2688,6 +2732,12 @@ type Query {
   portHistory(portId: UUID!, days: Int): PortHistory!
   "REQ-IPAM-004: where a MAC address has been seen: learned on a switch port, in an ARP table, or as a CI's own address."
   macLookup(mac: String!): MacLookup!
+  "REQ-IPAM-005: devices with firewall rules whose name matches the text (all of them when it is empty)."
+  firewallDevices(text: String): [FirewallDevice!]!
+  "REQ-IPAM-005: a device's firewall rules in evaluation order with their findings, its chains and policy objects."
+  firewallPolicy(deviceId: UUID!): FirewallPolicy!
+  "REQ-IPAM-005: what each firewall (or one) does with a new connection, and the rule that decides."
+  firewallCheck(input: FirewallCheckInput!): FirewallCheck!
   racks(roomId: UUID): [Rack!]!
   "REQ-DCIM-006: a room's rack temperatures, airflow, humidity and cooling units over the window (hours)."
   roomEnvironment(roomId: UUID!, hours: Int!): RoomEnvironment!
