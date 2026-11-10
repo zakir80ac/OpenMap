@@ -17,11 +17,13 @@ for app in api scheduler reconciler bsm-engine; do
 done
 docker build -f "$repo/deploy/docker/console.Dockerfile" -t "openmap/console:${version}" "$repo"
 docker build -f "$repo/deploy/docker/node.Dockerfile" -t "openmap/node:${version}" "$repo"
+# REQ-INT-019: the backup service (PostgreSQL 17 client tools and the backup script).
+docker build -f "$repo/deploy/docker/backup.Dockerfile" -t "openmap/backup:${version}" "$repo"
 
 echo "collecting infrastructure images from the compose files"
 infra="$(OPENMAP_VERSION="$version" docker compose -f "$compose/docker-compose.yml" -f "$compose/docker-compose.apps.yml" --profile cpu --profile node config --images | sort -u)"
 images="$infra"
-for app in api scheduler reconciler bsm-engine console node; do
+for app in api scheduler reconciler bsm-engine console node backup; do
   images="$images
 openmap/${app}:${version}"
 done
@@ -38,7 +40,7 @@ echo "saving images"
 docker save $(printf '%s ' $images) | gzip -1 > "$out/openmap-images-${version}.tar.gz"
 
 cp "$compose/docker-compose.yml" "$compose/docker-compose.apps.yml" "$compose/docker-compose.airgap.yml" "$compose/.env.example" "$out/"
-cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$out/"
+cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$compose/clickhouse" "$out/"
 cp "$here/load-bundle.sh" "$out/"
 # The CPU LLM profile needs its weights offline: ship the GGUF named in .env (or .env.example) when it is present.
 models_dir="$compose/models"

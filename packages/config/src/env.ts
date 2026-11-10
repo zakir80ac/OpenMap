@@ -130,6 +130,8 @@ export const envSchema = z.object({
   NODE_CERT_VALIDITY_DAYS: z.coerce.number().int().positive().default(90),
   /** Where the scheduler keeps raw evidence uploaded by Nodes (content-addressed). */
   EVIDENCE_DIR: z.string().default('/var/lib/openmap/evidence'),
+  /** REQ-INT-019 (ADR-066): where backup sets are (the API reads their manifests); unset when this deployment keeps none. */
+  BACKUP_DIR: z.string().min(1).optional(),
 
   /** Feature switches. */
   FEATURE_OUTBOUND_INTEGRATIONS: bool.default(false),

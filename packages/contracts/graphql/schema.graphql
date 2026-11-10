@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.38.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.39.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -798,6 +798,19 @@ type PortHistory { port: Ci! days: Int! versions: Int! changes: [PortChange!]! }
 enum MacSightingKind { learned_on_port arp owner }
 type MacSighting { kind: MacSightingKind! ci: Ci! port: String ip: String seenAt: DateTime! }
 type MacLookup { mac: String! sightings: [MacSighting!]! }
+
+# REQ-INT-019 (ADR-066): backup sets of the stores of record, from their manifests.
+enum BackupState { running complete failed }
+type BackupSet { name: String! status: BackupState! createdAt: DateTime! completedAt: DateTime postgresBytes: Float clickhouseBytes: Float migration: String cis: Int error: String }
+type Backups {
+  "False when this deployment keeps no backup directory (BACKUP_DIR unset)."
+  configured: Boolean!
+  "True when there is no complete set, or the newest is older than staleAfterHours."
+  stale: Boolean!
+  staleAfterHours: Int!
+  lastCompleteAt: DateTime
+  sets: [BackupSet!]!
+}
 
 # REQ-IPAM-005 (ADR-064): firewall rules and policy objects, the rule analysis and the traffic check.
 enum FirewallAction { allow deny reject nat jump goto return continue }
@@ -2797,6 +2810,8 @@ type Query {
   vulnerability(cveId: String!): VulnerabilityDetail
   software(text: String, licensedOnly: Boolean, first: Int = 50): [SoftwareProduct!]!
   integrations(category: String): [Integration!]!
+  "REQ-INT-019: the backup sets and whether the newest complete one is recent enough (administrators)."
+  backups: Backups!
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
   analyticsEmbed: AnalyticsEmbed!

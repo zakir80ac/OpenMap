@@ -752,6 +752,26 @@ export const SWITCH_PORTS = {
 } as const;
 
 /**
+ * REQ-INT-019 (ADR-066) — backup and restore. A backup set is a directory under BACKUP_DIR holding the Postgres custom
+ * archive, the ClickHouse native backup and a manifest; Memgraph and Meilisearch are derived from Postgres and rebuilt by
+ * `reproject` after a restore rather than backed up. The script keeps the newest `keepDefault` complete sets; a
+ * deployment whose newest complete set is older than `staleHours` (a daily schedule plus slack) is reported stale.
+ * `reproject` writes `reprojectBatch` CIs or relationships per graph transaction and search request.
+ */
+export const BACKUP = {
+  formatVersion: 'openmap-backup/1',
+  manifestFile: 'manifest.json',
+  postgresFile: 'postgres.dump',
+  clickhouseDir: 'clickhouse',
+  keepDefault: 7,
+  staleHours: 26,
+  reprojectBatch: 2_000,
+  listLimit: 50,
+  /** The console prints set sizes in mebibytes. */
+  bytesPerMegabyte: 1_048_576,
+} as const;
+
+/**
  * REQ-INT-009 (ADR-065) — notifications to webhooks, Slack, Teams, email and PagerDuty from the event stream. One
  * integration sends at most `maxPerWindow` messages per `windowMs`; the rest are counted as suppressed so a burst of CI
  * changes cannot flood a channel. A message carries at most `maxFacts` facts of at most `factMaxLength` characters.
@@ -1996,8 +2016,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `FirewallDevice`, `FirewallCheckInput`, `FirewallCheckResult`, `FirewallCheck`; queries `firewallDevices`,
    * `firewallPolicy`, `firewallCheck`.
    * 1.38.0 (REQ-INT-009, ADR-065): mutation `sendTestNotification`.
+   * 1.39.0 (REQ-INT-019, ADR-066): `BackupState`, `BackupSet`, `Backups`, query `backups`.
    */
-  graphql: '1.38.0',
+  graphql: '1.39.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

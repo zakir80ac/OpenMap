@@ -1,0 +1,6 @@
+<!-- REQ-INT-019 (ADR-066): BACKUP ... TO File('<set>/clickhouse') writes under the backup volume the backup service shares. -->
+<clickhouse>
+    <backups>
+        <allowed_path>/backups/</allowed_path>
+    </backups>
+</clickhouse>

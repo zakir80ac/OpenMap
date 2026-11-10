@@ -3,11 +3,11 @@
 Three profiles ship in this directory. Every value they set mirrors a documented default in
 `packages/config/src/env.ts`; nothing in application code carries a host, port or path.
 
-| Profile | Where | Use |
-| --- | --- | --- |
-| Single node (compose) | `compose/docker-compose.yml` + `compose/docker-compose.apps.yml` | evaluation, labs, small estates (REQ-INT-001) |
-| Air-gapped (compose) | the two files above + `compose/docker-compose.airgap.yml` and the offline bundle | sovereign sites with no egress (REQ-INT-002, REQ-INT-008) |
-| Kubernetes (Helm) | `helm/openmap` | production clusters, OpenShift included (REQ-INT-003) |
+| Profile               | Where                                                                            | Use                                                       |
+| --------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Single node (compose) | `compose/docker-compose.yml` + `compose/docker-compose.apps.yml`                 | evaluation, labs, small estates (REQ-INT-001)             |
+| Air-gapped (compose)  | the two files above + `compose/docker-compose.airgap.yml` and the offline bundle | sovereign sites with no egress (REQ-INT-002, REQ-INT-008) |
+| Kubernetes (Helm)     | `helm/openmap`                                                                   | production clusters, OpenShift included (REQ-INT-003)     |
 
 ## Images
 
@@ -74,6 +74,34 @@ realm import takes the console's redirect URIs from `PUBLIC_CONSOLE_URL`, so sig
 without touching Keycloak. `docs/evidence/airgap/load-airgap.md` records a full load on a host whose new outbound
 connections are dropped by iptables.
 
+## Backup and restore (REQ-INT-019, ADR-066)
+
+A backup set holds the stores of record: PostgreSQL (`pg_dump` custom archive: application, Keycloak and Superset
+schemas) and ClickHouse (native `BACKUP`), with a manifest of sizes, checksums, the schema migration and the CI count.
+Memgraph and Meilisearch are rebuilt from PostgreSQL after a restore. Sets live on the `backups` volume; put it on
+separate, encrypted storage.
+
+Take a backup (on demand, or from the host's cron / systemd timer once a day; the newest `BACKUP_KEEP` sets are kept):
+
+```
+docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile backup run --rm backup create
+docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile backup run --rm backup list
+docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile backup run --rm backup verify <set>
+```
+
+Restore a set:
+
+1. Stop the writers: `docker compose ... stop api scheduler reconciler bsm-engine`.
+2. `docker compose ... --profile backup run --rm backup restore <set>` (it verifies the set first).
+3. Rebuild the projections: `docker compose ... run --rm migrate node dist/reproject.js`.
+4. Start the writers again; the BSM engine recomputes service health on its next tick.
+
+A restore drill into other databases leaves the live ones untouched:
+`backup restore <set> --postgres-url postgresql://…/openmap_drill --clickhouse-db openmap_drill` (create the drill
+PostgreSQL database first). The Settings screen shows administrators whether the newest complete set is younger than
+26 hours, and Prometheus reads `openmap_backup_last_complete_timestamp_seconds`. On Kubernetes, run the
+`openmap/backup` image as a CronJob with the same environment.
+
 ## Kubernetes
 
 The chart has no subchart dependencies, so it installs from a mirrored registry without network
@@ -104,23 +132,23 @@ REST API, see `docs/STATE.md`).
   verifies the issuer against `PUBLIC_KEYCLOAK_URL` and the audience against `KEYCLOAK_CLIENT_ID` / `KEYCLOAK_API_CLIENT_ID`.
 - **Roles** are realm roles (`openmap-admin ⊇ operator ⊇ analyst`, `auditor ⊇ analyst`); the `tenant` user attribute
   scopes every request. Map both from your directory when brokering.
-- **Enterprise SSO (SAML or OIDC brokering).** Add the corporate identity provider under *Identity Providers* (SAML
-  2.0 or OpenID Connect) and give it two mappers: an *Attribute Importer* that writes the assertion's tenant
-  attribute into the user attribute `tenant`, and a *Role Mapper* (or *Advanced Attribute to Role*) that grants the
-  realm roles from the directory's groups. Set the provider as the realm's default with *Browser flow → Identity
-  Provider Redirector* so users never see the Keycloak form. Nothing in the console or API changes: tokens still
+- **Enterprise SSO (SAML or OIDC brokering).** Add the corporate identity provider under _Identity Providers_ (SAML
+  2.0 or OpenID Connect) and give it two mappers: an _Attribute Importer_ that writes the assertion's tenant
+  attribute into the user attribute `tenant`, and a _Role Mapper_ (or _Advanced Attribute to Role_) that grants the
+  realm roles from the directory's groups. Set the provider as the realm's default with _Browser flow → Identity
+  Provider Redirector_ so users never see the Keycloak form. Nothing in the console or API changes: tokens still
   come from this realm.
 - **MFA.** The realm pins the TOTP policy (6 digits, 30 s, one window of drift, no code reuse) and enables the
-  *Configure OTP* required action; the default browser flow enforces the second factor for every user who has
-  enrolled. To make it mandatory, set *Configure OTP* as a default action for new users or require it for the
+  _Configure OTP_ required action; the default browser flow enforces the second factor for every user who has
+  enrolled. To make it mandatory, set _Configure OTP_ as a default action for new users or require it for the
   `openmap-admin` role with a conditional OTP sub-flow in the browser flow.
 - **Brute force.** Progressive lockout is on: 10 failures, waits growing by 60 s up to 15 minutes, failures
   forgotten after 12 hours.
 - **API tokens.** Automation uses the confidential `openmap-automation` client (client-credentials grant, service
   account with `openmap-operator`, `aud: openmap-api`). The `tenant` claim comes from the service-account user's
-  `tenant` attribute (*Clients → openmap-automation → Service account roles → user*, attribute `tenant`), exactly like
-  an interactive user, so one client serves one tenant. Read the secret once from *Clients → openmap-automation →
-  Credentials* and store it in OpenBao; create one such client per tenant. The flow and a request example are in
+  `tenant` attribute (_Clients → openmap-automation → Service account roles → user_, attribute `tenant`), exactly like
+  an interactive user, so one client serves one tenant. Read the secret once from _Clients → openmap-automation →
+  Credentials_ and store it in OpenBao; create one such client per tenant. The flow and a request example are in
   `apps/api/README.md`.
 
 ## Analytics and the assistant (REQ-UI-017, REQ-UI-018, REQ-INT-004)
@@ -157,7 +185,7 @@ the scheduler.
 2. Register the agent and get its one-time token:
    `pnpm --filter @openmap/scheduler agent:register -- --node <nodeId> --agent <host fqdn>`.
 3. On the host: `OPENMAP_AGENT_NODE_URL=https://<node>:4300 OPENMAP_AGENT_ID=<host fqdn> OPENMAP_ENROL_TOKEN=<token>
-   OPENMAP_BOOTSTRAP_CA_PATH=<discovery ca.crt> openmap-agent enrol`. The certificate and key land under
+OPENMAP_BOOTSTRAP_CA_PATH=<discovery ca.crt> openmap-agent enrol`. The certificate and key land under
    `/etc/openmap/agent` (`%ProgramData%\OpenMap\agent` on Windows) or wherever `AGENT_MTLS_*_PATH` point.
 4. `openmap-agent run` reports every `OPENMAP_AGENT_INTERVAL_MS` (default 15 minutes); `openmap-agent report` sends
    once; `openmap-agent collect` prints the observation without sending it.
@@ -172,11 +200,11 @@ reads an environment file at start (`OPENMAP_NODE_ENV_FILE`, default `/etc/openm
 default `agent.env` next to the agent's PKI directory) so the units carry no site-specific values, and a binary started
 with no arguments under the Windows service control manager hosts itself as a service.
 
-| Platform | Node | Agent |
-| --- | --- | --- |
-| Linux (systemd) | `install-node.sh` + `openmap-node.service` | `install-agent.sh` + `openmap-agent.service` |
-| macOS (launchd) | run under compose or Kubernetes | `install-agent.sh` + `com.openmap.agent.plist` |
-| Windows | `install-node.ps1` (service `OpenMapNode`) | `install-agent.ps1` (service `OpenMapAgent`) |
+| Platform        | Node                                       | Agent                                          |
+| --------------- | ------------------------------------------ | ---------------------------------------------- |
+| Linux (systemd) | `install-node.sh` + `openmap-node.service` | `install-agent.sh` + `openmap-agent.service`   |
+| macOS (launchd) | run under compose or Kubernetes            | `install-agent.sh` + `com.openmap.agent.plist` |
+| Windows         | `install-node.ps1` (service `OpenMapNode`) | `install-agent.ps1` (service `OpenMapAgent`)   |
 
 `deploy/install/build-release.sh <version> [out] [os/arch …]` builds the release: one tarball per target (Linux
 amd64/arm64, Windows amd64, macOS arm64/amd64) holding `bin/openmap-node`, `bin/openmap-agent`, every collector under

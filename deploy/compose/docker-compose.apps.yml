@@ -81,6 +81,9 @@ services:
     environment:
       <<: *app-env
       API_PORT: 4000
+      # REQ-INT-019: the API lists backup sets (manifests only) from the backup volume, read-only.
+      BACKUP_DIR: /var/lib/openmap/backups
+    volumes: ["backups:/var/lib/openmap/backups:ro"]
     ports: ["${API_PORT:-4000}:4000"]
     depends_on: *app-depends
     healthcheck:
@@ -88,6 +91,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  # REQ-INT-019 (ADR-066) — backups of the stores of record, on demand or from the host's scheduler:
+  #   docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile backup run --rm backup [create|verify NAME|restore NAME|list|prune]
+  # After a restore, rebuild Memgraph and Meilisearch: ... run --rm migrate node dist/reproject.js
+  backup:
+    image: ${OPENMAP_IMAGE_PREFIX:-openmap}/backup:${OPENMAP_VERSION:-dev}
+    build:
+      context: ../..
+      dockerfile: deploy/docker/backup.Dockerfile
+    profiles: [backup]
+    environment:
+      POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
+      BACKUP_DIR: /backups
+      BACKUP_KEEP: ${BACKUP_KEEP:-7}
+    volumes: ["backups:/backups"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      clickhouse: { condition: service_healthy }
 
   console:
     image: ${OPENMAP_IMAGE_PREFIX:-openmap}/console:${OPENMAP_VERSION:-dev}
