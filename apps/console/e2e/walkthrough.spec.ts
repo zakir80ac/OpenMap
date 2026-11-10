@@ -35,7 +35,8 @@ test('every primary screen renders for a signed-in user and is captured in both 
 
   // CI detail: the first row link in the CMDB list. Every row carries its layer's headline metric (REQ-CMDB-038).
   await page.goto('/' + locale + '/cmdb');
-  const firstCi = page.locator('main a[href*="/cmdb/"]').first();
+  // A CI row's link: the header also links to /cmdb/import.
+  const firstCi = page.locator('main [role="row"] a[href*="/cmdb/"]').first();
   await expect(firstCi).toBeVisible();
   await expect(page.getByRole('columnheader', { name: translate(locale, 'cmdb.column.metric') })).toBeVisible();
   await expect(page.locator('main [role="row"] [data-metric]').first()).toBeVisible();

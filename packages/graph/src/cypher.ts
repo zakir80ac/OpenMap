@@ -77,6 +77,8 @@ const IMPACT_PROJECTION = '{ .id, .tenantId, .type, .tier }';
  * REQ-PERF-002: the repository runs the two halves (`parts`) as separate queries. Memgraph plans the UNION ALL of them
  * badly: on the 550k-CI scale estate the union took 2.7-3.2 s where its halves took 16-560 ms together, whatever the
  * closure size. `text` keeps the union for callers that want one statement.
+ *
+ * This path-enumerating form is the Neo4j adapter's; Memgraph runs `impactQueryMemgraph`.
  */
 export function impactQuery(tenantId: string, rootId: string, options: ImpactQueryOptions): Query & { parts: [Query, Query] } {
   const depth = clampDepth(options.maxDepth);
@@ -101,6 +103,56 @@ export function impactQuery(tenantId: string, rootId: string, options: ImpactQue
     'RETURN s ' + IMPACT_PROJECTION + ' AS ci, length(sp) AS depth, [n IN nodes(sp) | n.id] AS path';
   const params = { tenantId, rootId, asOf: options.asOf, containerTypes: [...GRAPH.impactContainerTypes] };
   return { text: closure + '\nUNION ALL\n' + services, params, parts: [{ text: closure, params }, { text: services, params }] };
+}
+
+/** The containment gate as a per-hop predicate on relationship `r`, for a BFS filter lambda. */
+function containmentHop(types: readonly RelationshipType[]): string {
+  const traversed = types.length ? types : GRAPH.impactEdgeTypes;
+  if (!traversed.includes(CONTAINS_EDGE)) return '';
+  return " AND (type(r) <> '" + relLabel(CONTAINS_EDGE) + "' OR startNode(r).type IN $containerTypes)";
+}
+
+/**
+ * Impact traversal on Memgraph: the same closure and service hop as `impactQuery`, walked breadth first. `impactQuery`
+ * enumerates every path before keeping the shortest; from a host behind a top-of-rack switch an undirected six-hop
+ * walk is tens of millions of paths (26.9 M at five hops on the scale estate, a transaction timeout at six, measured
+ * 2026-11-10), while BFS visits each node once (16k nodes at six hops in milliseconds). The edge filter runs inside
+ * the expansion, so a pruned hop (an expired edge, a physical container's `contains`) is never expanded at all.
+ *
+ * The target is left unlabelled in the pattern on purpose: with `(x:Ci)` Memgraph plans a scan of every CI and a
+ * point-to-point search to each (STShortestPath) instead of one single-source expansion (BFSExpand).
+ */
+export function impactQueryMemgraph(tenantId: string, rootId: string, options: ImpactQueryOptions): Query & { parts: Query[] } {
+  const depth = clampDepth(options.maxDepth);
+  const rels = edgeAlternatives(options.edgeTypes);
+  const arrow = (dir: ImpactDirection): [string, string] => (dir === 'upstream' ? ['<-', '-'] : dir === 'downstream' ? ['-', '->'] : ['-', '-']);
+  const [left, right] = arrow(options.direction);
+  const service = relLabel(SERVICE_EDGE);
+  const walk = '(root)' + left + '[:' + rels + ' *BFS ..' + String(depth) + ' (r, n | ' + temporal('r') + containmentHop(options.edgeTypes) + ')]' + right + '(x)';
+  const closure =
+    'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
+    'MATCH p = ' + walk + '\n' +
+    'WITH x, p WHERE x:Ci AND x.tenantId = $tenantId AND ' + temporal('x') + '\n' +
+    'RETURN x ' + IMPACT_PROJECTION + ' AS ci, length(p) AS depth, [n IN nodes(p) | n.id] AS path';
+  // The service hop from every node of the closure, and from the root itself as a third part: joined by UNION ALL the
+  // two hops took 47 ms where they take 2-3 ms apiece (measured 2026-11-10), the planning that REQ-PERF-002 split the
+  // halves for. Collected as paths, not as maps of path-derived lists: Memgraph 3.4.0 closes the connection on
+  // `collect({..., path: [n IN nodes(p) | n.id]})`.
+  const hop = ']->(s:Ci {tenantId: $tenantId})\nWHERE ' + temporal('s') + ' AND ' + temporal('ps') + '\n';
+  const services =
+    'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})\n' +
+    'MATCH p = ' + walk + '\n' +
+    'WITH x, p\n' +
+    'MATCH (x)-[ps:' + service + hop +
+    'WITH s, p ORDER BY length(p) ASC\n' +
+    'WITH s, head(collect(p)) AS sp\n' +
+    'RETURN s ' + IMPACT_PROJECTION + ' AS ci, length(sp) + 1 AS depth, [n IN nodes(sp) | n.id] + [s.id] AS path';
+  const rootServices =
+    'MATCH (root:Ci {id: $rootId, tenantId: $tenantId})-[ps:' + service + hop +
+    'RETURN s ' + IMPACT_PROJECTION + ' AS ci, 1 AS depth, [root.id, s.id] AS path';
+  const params = { tenantId, rootId, asOf: options.asOf, containerTypes: [...GRAPH.impactContainerTypes] };
+  const parts = [closure, services, rootServices];
+  return { text: parts.join('\nUNION ALL\n'), params, parts: parts.map((text) => ({ text, params })) };
 }
 
 export function shortestPathQuery(tenantId: string, fromId: string, toId: string, asOf: string | null): Query {

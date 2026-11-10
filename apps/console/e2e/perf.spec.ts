@@ -82,7 +82,8 @@ test('screen interactions stay under the p95 budget and the dependency map holds
   // Dependency map: the first application as focus (applications sit between services and infrastructure, so the
   // map always has both dependants and dependencies), both directions, default depth.
   await filters.getByRole('button', { name: translate(locale, 'layer.applications') }).click();
-  const firstCi = page.locator('main a[href*="/cmdb/"]').first();
+  // A CI row's link: the header also links to /cmdb/import.
+  const firstCi = page.locator('main [role="row"] a[href*="/cmdb/"]').first();
   await expect(firstCi).toBeVisible();
   const href = await firstCi.getAttribute('href');
   const ciId = href?.split('/cmdb/')[1] ?? '';

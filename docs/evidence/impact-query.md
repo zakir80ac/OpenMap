@@ -12,10 +12,10 @@ nodes { depth } }` over a random root.
 
 Single requests:
 
-| Root | Closure | Total | Graph |
-| --- | --- | --- | --- |
-| PDU | 31,355 nodes | 6.5 s | 3.3–3.6 s |
-| host | 446 nodes | 3.0 s | 2.9 s |
+| Root | Closure      | Total | Graph     |
+| ---- | ------------ | ----- | --------- |
+| PDU  | 31,355 nodes | 6.5 s | 3.3–3.6 s |
+| host | 446 nodes    | 3.0 s | 2.9 s     |
 
 Under 8 VUs the p95 was 2.0 s.
 
@@ -49,15 +49,49 @@ graph.
 
 Under 8 VUs, with 20 roots per run:
 
-| Roots | Validation sweep | p95 |
-| --- | --- | --- |
-| 2 worst PDUs (31,355 nodes each), 4 random PDUs, 8 database hosts, 6 hypervisors | off | 941 ms, 934 ms |
-| the same | on (default) | 975 ms |
-| `impact-budget --roots <the 2 worst PDUs>`: those plus 2 sampled widest, 4 random PDUs, 8 database hosts, 6 hypervisors | on | 874 ms |
-| `impact-budget` default (2 sampled widest of 100 network-feeding PDUs, 324 and 297 nodes, plus the rest) | on | 80 ms |
+| Roots                                                                                                                   | Validation sweep | p95            |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------- | -------------- |
+| 2 worst PDUs (31,355 nodes each), 4 random PDUs, 8 database hosts, 6 hypervisors                                        | off              | 941 ms, 934 ms |
+| the same                                                                                                                | on (default)     | 975 ms         |
+| `impact-budget --roots <the 2 worst PDUs>`: those plus 2 sampled widest, 4 random PDUs, 8 database hosts, 6 hypervisors | on               | 874 ms         |
+| `impact-budget` default (2 sampled widest of 100 network-feeding PDUs, 324 and 297 nodes, plus the rest)                | on               | 80 ms          |
 
 The 31k-node closures belong to the PDUs of one JED rack (`dh01-a-01`). Of 100 sampled PDUs that feed network gear,
 the widest closure was 324 nodes, so the default mix measures typical roots and `--roots` adds the known worst cases.
+
+## Breadth-first walk on Memgraph (2026-11-10)
+
+The digital twin asks for impact in **both** directions, six hops. From a host behind a top-of-rack switch, the
+path-enumerating walk grows quickly:
+
+| Hops | Paths                      | Distinct nodes |
+| ---- | -------------------------- | -------------- |
+| 4    | 3.7 M                      | 12,387         |
+| 5    | 26.9 M                     | 17,787         |
+| 6    | transaction timeout (60 s) | —              |
+
+The twin e2e failed on it.
+
+The BFS rewrite rejected above (finding 1) was slow because of its plan, not because of BFS. With a labelled target,
+`(x:Ci)`, Memgraph scans every CI and runs a point-to-point search to each one (`ScanAllByLabel` + `STShortestPath`). It
+does that even at three hops.
+
+`impactQueryMemgraph` leaves the target unlabelled and checks the label afterwards. That gives one single-source
+`BFSExpand`. The edge filter (temporal, plus the containment gate) runs inside the expansion as a filter lambda, so a
+pruned hop is never expanded. The Neo4j adapter keeps `impactQuery`.
+
+The service hop has two halves: from the closure, and from the root itself. They run as separate parts. Joined by
+`UNION ALL` they took 47 ms; on their own they take 2–3 ms each. Memgraph 3.4.0 drops the connection (and restarts) on
+`collect({..., path: [n IN nodes(p) | n.id]})`, so the paths are collected as paths.
+
+Same estate and host, three warm runs each. Node ids and depths were identical in every case the old walk finished:
+
+| Root                     | Direction | Nodes                 | Paths (old) | BFS        |
+| ------------------------ | --------- | --------------------- | ----------- | ---------- |
+| PDU JED-DH01-A-01 PDU-A  | upstream  | 31,355 (300 services) | 421 ms      | 218–235 ms |
+| PDU feeding network gear | upstream  | 310                   | 5 ms        | 4–5 ms     |
+| host srv-dmm-sas (twin)  | both      | 16,288 (15 services)  | timeout     | 146–220 ms |
+| PDU JED-DH01-A-01 PDU-A  | both      | 240,735               | —           | 2.2–2.4 s  |
 
 ## Running it
 

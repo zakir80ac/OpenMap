@@ -71,6 +71,15 @@ function str(a: Attrs, k: string): string | null {
 }
 
 /** The subscription's renewal state from its end date. */
+/**
+ * The subscription's name on screen. Vendors may report the part number as the product (Microsoft's skuPartNumber,
+ * `SPE_E3`), which already shows as the SKU: then the CI's display name, which names it for people, is used.
+ */
+export function productName(product: string | null, sku: string | null, displayName: string): string {
+  if (product === null) return displayName;
+  return product === sku && displayName !== '' ? displayName : product;
+}
+
 export function subscriptionState(end: string | null, status: string | null, now: Date, horizonDays: number): { state: SubscriptionState; days: number | null } {
   if (end === null) return { state: status === 'expired' ? 'lapsed' : 'unknown', days: null };
   const days = Math.floor((Date.parse(end) - now.getTime()) / TIME.msPerDay);
@@ -120,7 +129,7 @@ export class SaasService {
       const renewal = subscriptionState(end, status, now, SAAS.renewalHorizonDays);
       tenant.subscriptions.push({
         ciId: c.id,
-        product: str(a, 'product') ?? c.displayName,
+        product: productName(str(a, 'product'), str(a, 'sku'), c.displayName),
         sku: str(a, 'sku'),
         status,
         seatsTotal: total,

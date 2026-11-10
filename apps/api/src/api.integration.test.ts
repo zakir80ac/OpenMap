@@ -2135,6 +2135,7 @@ describe('OpenMap API (integration)', () => {
     expect(t?.subscriptions[0]).toMatchObject({ state: 'lapsed', unusedSeats: 10, utilisationPercent: 98, underused: false });
     expect(t?.subscriptions[1]).toMatchObject({ state: 'renewing', unusedSeats: 60, utilisationPercent: 40, underused: true, dataFlows: [{ application: { id: portal }, dataClass: 'customer', direction: 'outbound' }] });
     expect(t?.subscriptions[1]?.daysToRenewal).toBeGreaterThanOrEqual(29);
+    expect(t?.subscriptions.map((s) => s.product)).toEqual(['HR ' + stamp, 'CRM ' + stamp]);
   });
 
   it('moves a CI through its lifecycle, replaces its tags, lists tags and filters by both; viewers are refused', async () => {

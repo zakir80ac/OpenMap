@@ -21,6 +21,7 @@ import {
   assertReadOnly,
   getCiQuery,
   impactQuery,
+  impactQueryMemgraph,
   layerCountsQuery,
   neighboursQuery,
   relTypeFromLabel,
@@ -266,8 +267,8 @@ export class BoltGraphRepository implements GraphRepository {
 
   async impact(tenantId: string, rootId: string, options: ImpactQueryOptions): Promise<ImpactResult> {
     const started = Date.now();
-    // The closure and the service hop run as two queries, side by side (REQ-PERF-002: a UNION ALL of them is planned badly).
-    const q = impactQuery(tenantId, rootId, options);
+    // The closure and the service hops run as separate queries, side by side (REQ-PERF-002: a UNION ALL of them is planned badly).
+    const q = this.options.engine === 'neo4j' ? impactQuery(tenantId, rootId, options) : impactQueryMemgraph(tenantId, rootId, options);
     const toNode = (r: BoltRecord): ImpactNode => {
       const ci = r.get('ci') as { id: string; tenantId: string; type: ImpactCi['type']; tier: number | null | undefined };
       return {
@@ -281,13 +282,7 @@ export class BoltGraphRepository implements GraphRepository {
         path: r.get('path') as string[],
       };
     };
-    const [closure, serviceHop] = q.parts;
-    const rows = (
-      await Promise.all([
-        this.read(closure.text, closure.params, toNode),
-        this.read(serviceHop.text, serviceHop.params, toNode),
-      ])
-    ).flat();
+    const rows = (await Promise.all(q.parts.map((part) => this.read(part.text, part.params, toNode)))).flat();
     // A service may come back both as a closure node and via the service hop; keep the shortest.
     const byId = new Map<string, ImpactNode>();
     for (const n of rows) {
