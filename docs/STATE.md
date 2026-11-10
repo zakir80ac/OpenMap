@@ -91,8 +91,9 @@ The integration and e2e runs found faults, all fixed:
 - **REQ-PERF-002 and REQ-PERF-004** close on a CI run: "k6 threshold enforced in CI" and "sweep timed in CI nightly".
   The GitHub repository became private this session. The public API now answers 404 and this machine has no `gh`, so CI
   results cannot be read from here. Main is pushed (d0a814f).
-- **REQ-CORE-020**: the scale-1 replay measurement with concurrent workers. It resets tenant `570b1953`, so it runs
-  last.
+- **REQ-CORE-020 is Done.** The scale-1 replay with two dispatchers took 34.0 min, 7.55 min per 10k devices (budget
+  15). Dispatch took 646 s for 2,027,572 events, against 2,119 s with one, and the stores are consistent. The
+  assistant evaluation is 41 of 41 afterwards (`docs/evidence/reconciler-scale.md`).
 - **REQ-INT-014**: Blocked (vendor APIs; HPE and IBM have no open API). **REQ-INT-017**: Blocked on vendor access, as
   decided on 2026-11-07.
 - **REQ-INT-018** stays In review until one image build boots on a KVM host.
@@ -107,8 +108,7 @@ The integration and e2e runs found faults, all fixed:
 ### Next three
 
 1. Read the CI run of d0a814f once it can be seen, and close REQ-PERF-002 and REQ-PERF-004 on it.
-2. REQ-CORE-020: the scale-1 replay (`replay --reset --dispatchers N` on `.local/estate-s1b`, then `replay-history`
-   and the assistant evaluation), recorded in `docs/evidence/reconciler-scale.md`.
+2. REQ-INT-018: one appliance image build and boot on a KVM host.
 3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
 
 ### Questions for Syed

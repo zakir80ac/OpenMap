@@ -148,6 +148,44 @@ In the "after" run:
   - Meilisearch 8.9 s;
   - Postgres claim and close 61.3 s.
 
+## The scale-1 replay with concurrent dispatchers (REQ-CORE-020, 2026-11-11)
+
+The measurement REQ-CORE-020's acceptance names. The run used `.local/estate-s1b` (seed 43, scale 1, tenant
+`570b1953-…`), reset first, with `replay --reset --dispatchers 2`. It ran on the encrypted, TLS-only stack (ADR-067,
+ADR-068), with the compose reconciler stopped so that the dispatch was the replay's own.
+
+| Run | Code | Reconcile phase | Dispatch | Total (wall) | Per 10,000 devices | Budget |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| One dispatcher (above) | `b124678` | 1,056 s | 2,119 s | 3,175 s (52.9 min) | 11.75 min | met |
+| Two dispatchers, leased claims | `7002686` | 1,313 s | **646 s** | **2,041 s (34.0 min)** | **7.55 min** | **met** |
+
+**Reconcile phase:** 1,313 s, of which 409 s went to resolving pending relationships (400,514 resolved, none left).
+It is slower than the earlier run's 1,056 s for two reasons: TLS and pg_tde on every Postgres round trip, and the
+53.8 s dependency-mapping pass (153,324 `depends_on` edges from 151,798 flows) that now runs inside it.
+
+**Dispatch:** 646 s for 2,027,572 events, against 2,119 s before.
+- Leased `FOR UPDATE SKIP LOCKED` claims (0035) and the partial undelivered indexes (0036) keep two loops from taking
+  the same rows.
+- The graph batch is one pipelined transaction.
+
+| Target | Time |
+| --- | ---: |
+| Memgraph | 555 s |
+| ClickHouse | 225 s |
+| BSM | 178 s |
+| Meilisearch | 60 s |
+
+The targets overlap, because the two loops run concurrently.
+
+**Stores afterwards:**
+- Postgres and Memgraph both hold 550,746 CIs for the tenant.
+- The outbox has 0 undelivered rows, with 12,374 deferred relationship events delivered on later ticks.
+- ClickHouse holds 2,027,572 events and 2,027,572 distinct ids, so no row was delivered twice.
+
+**Afterwards:** `replay-history --reset` reloaded the tenant's health history: 300 services, 3,651 outages and 7,302
+events, in 16 s. The assistant evaluation on the tenant is 41 of 41 (`docs/evidence/assistant-eval.json`,
+2026-11-10T21:25Z).
+
 ## Still open
 
 - **ClickHouse under load.** It is now the slowest target at this size, and two of its inserts failed transiently
