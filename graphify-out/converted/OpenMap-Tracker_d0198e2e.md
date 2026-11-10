@@ -158,7 +158,7 @@
 | REQ-SEC-008 | SEC | Security, vulnerabilities, compliance | Internet-exposure and blast radius of a CVE | OpenMap: graph query from CVE to services (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-108, T-110 | internet exposure flag and blast radius of a CVE: hosts carrying the affected software and the business services they hold up with predicted state (Query.vulnerability); commit bb5e5b9 | 2026-10-22 | 2026-11-01 |  |
 | REQ-SEC-009 | SEC | Security, vulnerabilities, compliance | RBAC, SSO (SAML/OIDC), MFA, API tokens | OpenMap: Keycloak OIDC, roles and ABAC (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | In review |  |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-080, T-081, T-083, T-088, T-030 | SSO (OIDC + PKCE) in the console; RBAC via realm roles in API guard and console gating; API tokens via openmap-automation service account (client-credentials, aud openmap-api) accepted live and in the integration suite (commit e88560d); TOTP policy and progressive lockout pinned in the realm export; SAML/OIDC brokering documented in deploy/README.md | 2026-10-22 | 2026-10-22 | Mandatory MFA for openmap-admin (conditional OTP sub-flow) and a live SAML broker test need a corporate IdP; both documented as realm admin steps. |
 | REQ-SEC-010 | SEC | Security, vulnerabilities, compliance | Multi-tenancy / customers with scoped views | OpenMap: tenants, row-level security (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-032, T-083, T-104 | tenant id from the token scopes every repository, graph query and Superset guest token (RLS tenant_id); per-user visibility preferences; commit 46aeaae | 2026-10-22 | 2026-11-01 |  |
-| REQ-SEC-011 | SEC | Security, vulnerabilities, compliance | Encryption at rest and in transit | OpenMap: TLS everywhere, Postgres and ClickHouse encryption (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | In progress | Claude |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-572, T-573 | ADR-067 step 1 production OpenBao (docs/evidence/sec-openbao-production.md); step 2 pg_tde lab (docs/evidence/sec-pgtde-verification.md); commit pending; commit 80ead00 (ADR-067 steps 1-2: docs/evidence/sec-openbao-production.md, docs/evidence/sec-pgtde-verification.md); steps 3-6 and in-transit TLS open | 2026-10-22 | 2026-11-10 |  |
+| REQ-SEC-011 | SEC | Security, vulnerabilities, compliance | Encryption at rest and in transit | OpenMap: TLS everywhere, Postgres and ClickHouse encryption (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | In progress | Claude |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-572, T-573, T-574, T-575, T-576, T-577, T-578, T-579, T-580 | ADR-067 step 1 production OpenBao (docs/evidence/sec-openbao-production.md); step 2 pg_tde lab (docs/evidence/sec-pgtde-verification.md); commit pending; commit 80ead00 (ADR-067 steps 1-2: docs/evidence/sec-openbao-production.md, docs/evidence/sec-pgtde-verification.md); steps 3-6 and in-transit TLS open; ADR-067 steps 1-6 done (at rest): 80ead00, 433e444, commit pending; docs/evidence/sec-openbao-production.md, sec-pgtde-verification.md, sec-pgtde-migration.md, sec-field-encryption.md, sec-backup-encryption.md, sec-clickhouse-encryption.md; open: encryption in transit (service TLS) | 2026-10-22 | 2026-11-10 |  |
 | REQ-INT-008 | INT | Security, vulnerabilities, compliance | Air-gapped deployment | OpenMap: airgap compose profile, offline bundle (parity + vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Done |  |  | CAPABILITY-MAP.md §6. Security, vulnerabilities, compliance | T-104, T-106 | Same as REQ-INT-002 (docs/evidence/airgap); scope of REQ-INT-002 (bundle loaded on an egress-blocked Docker-in-Docker host, full e2e green, docs/evidence/airgap) plus the CPU LLM profile exercised offline (REQ-INT-004); commit 46aeaae | 2026-10-22 | 2026-11-01 | Duplicate of REQ-INT-002's scope; remaining: CPU LLM profile exercised offline (REQ-INT-004) |
 | REQ-UI-021 | UI | Analytics, reporting, AI | Standard reports and scheduled exports | OpenMap: Superset dashboards and schedules (parity = vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
 | REQ-UI-022 | UI | Analytics, reporting, AI | DOQL (SQL over the data) | OpenMap: Superset SQL Lab over ClickHouse views; GraphQL (parity ~ vs Device42) | Implemented end to end against the compose stack; unit, integration and e2e tests pass; en and ar strings present; OpenTelemetry span and Prometheus metric emitted; works in the airgap profile; guard passes. | P1 | Not started |  |  | CAPABILITY-MAP.md §7. Analytics, reporting, AI |  |  | 2026-10-22 | 2026-10-22 |  |
@@ -256,10 +256,10 @@
 ## Sheet: Contracts
 | Name | File | Version | Frozen on | Last ADR |
 | --- | --- | --- | --- | --- |
-| ci | packages/contracts/src/ci.ts | 0.11.0 |  | ADR-064 |
+| ci | packages/contracts/src/ci.ts | 0.12.0 |  | ADR-067 |
 | collector | packages/contracts/src/collector.ts | 0.11.0 |  | ADR-064 |
 | event | packages/contracts/src/event.ts | 0.12.0 |  | ADR-065 |
-| graphql | packages/contracts/graphql/schema.graphql | 1.39.0 |  | ADR-066 |
+| graphql | packages/contracts/graphql/schema.graphql | 1.40.0 |  | ADR-067 |
 | asset | packages/contracts/src/asset.ts | 0.1.0 |  | ADR-002 |
 | impact | packages/contracts/src/impact.ts | 1.2.0 |  | ADR-048 |
 | integration | packages/contracts/src/integration.ts | 0.1.0 |  | ADR-002 |
@@ -726,7 +726,13 @@
 | T-571 | unit | REQ-INT-019 | 2026-11-10 | Pass | 0 |
 | T-572 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
 | T-573 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
-| T-574 | unit | REQ-CMDB-022 | 2026-11-10 | Pass | 0 |
+| T-574 | unit | REQ-CMDB-022, REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-575 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-576 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-577 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-578 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-579 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
+| T-580 | unit | REQ-SEC-011 | 2026-11-10 | Pass | 0 |
 ## Sheet: Sessions
 | Date | Session summary | REQs touched | Commits | Blockers raised |
 | --- | --- | --- | --- | --- |
@@ -771,8 +777,9 @@
 | 2026-11-09 | REQ-CORE-021: relationship attributes updated on re-observation with openmap.relationship.updated (event 0.11.0); Syed's decisions recorded (BSM-007 criticality confirmed, vendor access deferred). Commit eb2f89d. |  |  |  |
 | 2026-11-09 | REQ-DCIM-007 capacity planning (ADR-061): roomCapacity query, Capacity tab with what-fits, trend; GraphQL 1.34.0. Commit cabfabd. |  |  |  |
 | 2026-11-10 | Checkpoints 39-45: REQ-DCIM-008, REQ-IPAM-004, REQ-IPAM-005, REQ-INT-009, REQ-INT-019 Done; REQ-SEC-011 steps 1-2 (production OpenBao, pg_tde verified); impact walk on Memgraph BFS (twin timeout fixed); references relationship type |  |  |  |
+| 2026-11-10 | REQ-SEC-011 encryption at rest complete: pg_tde PostgreSQL (compose+Helm), Transit field encryption, encrypted backup sets, ClickHouse encrypted disk; collation fix; budgets re-measured on the encrypted stack |  |  |  |
 ## Sheet: Dashboard
-| Generated | 2026-11-10T10:19:50.254Z |  |  |  |  |  |  |
+| Generated | 2026-11-10T13:56:25.059Z |  |  |  |  |  |  |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Totals by status | Not started | In progress | Blocked | In review | Done |  |  |
 | All | 17 | 1 | 29 | 5 | 158 |  |  |
