@@ -2,7 +2,39 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 40: REQ-IPAM-004 switch ports, MAC tables and port history Done)
+## Last session · 2026-11-10 (checkpoint 41: REQ-IPAM-005 firewall rules and policy objects Done)
+
+**REQ-IPAM-005 Done** (ADR-064, CI and collector 0.10.0, GraphQL 1.37.0, T-558..T-561, commit 2662750).
+
+- **Collector**: the agentless SSH collector runs `sudo -n nft -j list ruleset` (a sudoers entry for exactly that
+  command; without it the host reports no firewall). Rules keep chain order, matches (addresses, `@set`, `!`, services
+  `proto/port`, ICMP types, interfaces, other conditions), verdicts, jump/goto and NAT targets, counters, log flags;
+  base chain policies become last rules; named sets become `firewall_object` CIs that rules `depends_on`. Recorded
+  capture `fixtures/vendor/ssh_agentless/debian-debian-12-nftables` (real collector against a Debian 12 container);
+  the five earlier captures are marked as predating the `nft` section.
+- **Contract**: new CI type `firewall_object` (identity deviceRef + objectId), migration 0043, Memgraph 0003;
+  `packages/contracts/src/firewall.ts`: matching (IPv4/IPv6), evaluation, analysis (shadowed, unused, permissive rules;
+  unused objects). Constants `FIREWALL`.
+- **API**: `firewallDevices`, `firewallPolicy`, `firewallCheck`; metric `openmap_firewall_reads_total{query}`.
+- **Console**: IPAM **Firewall** tab (device choice, traffic check across firewalls or one, seven totals, chains, rules
+  with findings and a findings filter, policy objects); 96 i18n keys; specs isolated with `<bdi>` for Arabic.
+- **Synth estate**: edge firewalls carry zone and service groups (one retired), rules naming them, a forgotten
+  `temp-any-allow` on some, a shadowed narrow copy on some, a cleanup deny; drawn from a per-device stream so the
+  rest of the estate is unchanged. The dev tenant got `snmp.ndjson` replayed without reset (`.local/estate-005-fwonly`):
+  77 rules, 72 objects, and the REQ-IPAM-004 learned MACs on switch ports.
+- **Tests**: Go sshlinux (fixtures 6 captures, firewall 3), contracts 99, API firewall integration 3, console 377,
+  e2e IPAM 3 of 3 (en, ar). Evidence `docs/evidence/ipam-firewall.md`, `docs/evidence/console/ipam-firewall-{en,ar}.png`.
+
+**Tracker (queued, Excel still holds the workbook)**: add to the queue below
+
+```
+pnpm tracker set REQ-IPAM-005 --status Done --owner Claude --tests T-558,T-559,T-560,T-561 --evidence "commit 2662750; ADR-064; CI 0.10.0; GraphQL 1.37.0; docs/evidence/ipam-firewall.md; docs/evidence/console/ipam-firewall-{en,ar}.png"
+```
+
+**Next three**: REQ-SEC-011 encryption at rest and in transit, REQ-UI-021 standard reports and scheduled exports,
+REQ-UI-022 DOQL. Knowledge graph refresh for DCIM-008, IPAM-004 and IPAM-005 pending.
+
+## Previous session · 2026-11-10 (checkpoint 40: REQ-IPAM-004 switch ports, MAC tables and port history Done)
 
 **REQ-IPAM-004 Done** (ADR-063, GraphQL 1.36.0, T-554..T-557, commit 6bc0611).
 
