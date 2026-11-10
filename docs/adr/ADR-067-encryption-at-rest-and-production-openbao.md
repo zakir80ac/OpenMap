@@ -58,6 +58,29 @@ Six steps, each its own commit and evidence, in this order:
     10,000 devices.
   - Backups leave the `pg_tde` extension out and restore onto the target's access method.
 
+- **Step 4** (2026-11-10): done. `docs/evidence/sec-field-encryption.md`.
+  - Encrypted through Transit (`openmap-fields`): vendor contacts (name, email, phone), asset custodians and their
+    audit entries, and custom fields created as `sensitive` (text only, fixed at creation).
+  - The API decrypts on the way out, batched per request; writes fail without OpenBao rather than storing plaintext.
+  - These fields are not filterable or sortable in the database.
+  - `reconciler encrypt-fields` backfills what was written before.
+  - Contracts: CI 0.12.0, GraphQL 1.40.0.
+
+- **Step 5** (2026-11-10): done. `docs/evidence/sec-backup-encryption.md`.
+  - Each set is encrypted under a fresh Transit data key (`openmap-backup`); only the wrapped key is in the manifest.
+  - AES-256-CTR plus HMAC-SHA256 over the PostgreSQL archive and a tar of the ClickHouse backup.
+  - `verify` checks the MACs before anything reads the plaintext.
+  - The OpenBao snapshot stays sealed by OpenBao itself.
+  - On the dev stack a set takes 68 s (56 s plaintext).
+
+- **Step 6** (2026-11-10): done. `docs/evidence/sec-clickhouse-encryption.md`.
+  - The default storage policy is an encrypted disk (AES-256-CTR); its key is in OpenBao (`tde/clickhouse-disk`) and
+    rendered by an OpenBao Agent into a memory volume.
+  - The dev stack moved through an encrypted set: rows identical, 0 plaintext hits against 18 on the old volume.
+  - The sweep costs 38 % more (8.36 min per 10,000 devices against 15); read budgets are unchanged.
+
+What remains of REQ-SEC-011 is encryption in transit (TLS between the services and to the stores).
+
 ## Consequences
 
 - OpenBao becomes tier 0: if its keys are unavailable, PostgreSQL does not start; if they are lost, the data is lost.

@@ -23,7 +23,7 @@ process.env['ANOMALY_INTERVAL_MS'] = '0';
 const env = loadEnv();
 const KID = 'openmap-backup-key';
 const QUERY =
-  '{ backups { configured stale staleAfterHours lastCompleteAt sets { name status createdAt completedAt postgresBytes clickhouseBytes migration cis error } } }';
+  '{ backups { configured stale staleAfterHours lastCompleteAt sets { name status createdAt completedAt postgresBytes clickhouseBytes migration cis encrypted error } } }';
 let app: NestFastifyApplication;
 let privateKey: KeyLike;
 const sha = 'b'.repeat(64);
@@ -80,7 +80,9 @@ describe('backups (integration)', () => {
         migration: '0043_firewall_object_ci_type',
         cis: 32_765,
       },
-      clickhouse: { directory: 'clickhouse', database: 'openmap', bytes: 900_000, files: 120, sha256: sha },
+      clickhouse: { directory: 'clickhouse', archive: 'clickhouse.tar.enc', database: 'openmap', bytes: 900_000, files: 120, sha256: sha },
+      // REQ-SEC-011 (ADR-067 step 5): an encrypted set names its wrapped data key.
+      encryption: { cipher: 'aes-256-ctr+hmac-sha256', transitKey: 'openmap-backup', key: 'vault:v1:wrapped' },
       error: null,
     });
     set('openmap-20261110T070000Z', {
@@ -147,7 +149,9 @@ describe('backups (integration)', () => {
       clickhouseBytes: 900_000,
       migration: '0043_firewall_object_ci_type',
       cis: 32_765,
+      encrypted: true,
     });
+    expect(b.sets[1]).toMatchObject({ encrypted: false });
     expect(b.sets[1]?.['error']).toBe('interrupted or failed; see the backup log');
   });
 

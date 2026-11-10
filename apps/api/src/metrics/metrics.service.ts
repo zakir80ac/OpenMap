@@ -49,6 +49,8 @@ export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
 export const FIREWALL_METRIC = 'openmap_firewall_reads_total';
 /** REQ-INT-009 */
 export const NOTIFICATION_TEST_METRIC = 'openmap_notification_tests_total';
+/** REQ-SEC-011 (ADR-067 step 4): values sent through Transit, by op and outcome. */
+export const FIELD_CIPHER_METRIC = 'openmap_field_cipher_values_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
 /** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
@@ -112,6 +114,8 @@ export class MetricsService {
   readonly firewallReads: Counter<'query'>;
   /** REQ-INT-009 — test notifications queued, by vendor. */
   readonly notificationTests: Counter<'vendor'>;
+  /** REQ-SEC-011 — personal-data values encrypted or decrypted through OpenBao Transit. */
+  readonly fieldCipher: Counter<'op' | 'outcome'>;
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
@@ -266,6 +270,12 @@ export class MetricsService {
       name: NOTIFICATION_TEST_METRIC,
       help: 'Test notifications queued for the BSM engine to send, by vendor',
       labelNames: ['vendor'],
+      registers: [this.registry],
+    });
+    this.fieldCipher = new Counter({
+      name: FIELD_CIPHER_METRIC,
+      help: 'Personal-data values sent through OpenBao Transit, by op (encrypt, decrypt) and outcome (ok, error)',
+      labelNames: ['op', 'outcome'],
       registers: [this.registry],
     });
     this.firewallReads = new Counter({

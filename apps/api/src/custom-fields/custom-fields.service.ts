@@ -12,12 +12,14 @@ import {
   type CustomFieldDefinition,
   type CustomFieldDefinitionInput,
   type CustomFieldValues,
+  sensitiveKeys,
 } from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import { CI_INCLUDE, toCiRecord } from '../ci/ci.mapper.js';
 import type { Actor } from '../ci/ci.service.js';
 import type { CiRecord } from '../ci/ci.types.js';
 import { isoOf } from '../common/time.js';
+import { FieldCipherService } from '../db/field-cipher.service.js';
 import { PrismaService } from '../db/prisma.service.js';
 import { OutboxService } from '../outbox/outbox.service.js';
 
@@ -39,6 +41,7 @@ function toDefinition(row: Row): CustomFieldDefinition {
     options: row.options,
     appliesTo: row.appliesTo as CiType[],
     required: row.required,
+    sensitive: row.sensitive,
     createdAt: isoOf(row.createdAt),
     updatedAt: isoOf(row.updatedAt),
   };
@@ -57,6 +60,7 @@ export class CustomFieldsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly cipher: FieldCipherService,
   ) {}
 
   async definitions(tenantId: string, type: CiType | null): Promise<CustomFieldDefinitionView[]> {
@@ -83,6 +87,8 @@ export class CustomFieldsService {
     const existing = await db.customFieldDefinition.findFirst({ where: { id, tenantId } });
     if (existing === null) throw new NotFoundException('custom field ' + id + ' not found');
     if (existing.key !== input.key) throw new BadRequestException('the key of a custom field cannot change (' + existing.key + ')');
+    // Values already stored keep their form; turning encryption on or off later would leave both kinds side by side.
+    if (existing.sensitive !== input.sensitive) throw new BadRequestException('whether a custom field is sensitive is fixed once created (' + existing.key + ')');
     const row = await db.customFieldDefinition.update({ where: { id }, data: { ...input } });
     const [view] = (await this.definitions(tenantId, null)).filter((d) => d.id === row.id);
     return view ?? { ...toDefinition(row), usage: 0 };
@@ -107,7 +113,15 @@ export class CustomFieldsService {
       if (row === null) throw new NotFoundException('CI ' + ciId + ' not found');
       const applied = applyCustomFieldChange(defs, row.type as CiType, valuesOf(row.customFields), change);
       if (!applied.ok) throw new BadRequestException('custom fields: ' + applied.errors.join('; '));
-      const updated = await tx.ci.update({ where: { id: ciId }, data: { customFields: applied.values }, include: CI_INCLUDE });
+      // REQ-SEC-011: a sensitive field's new value is stored as Transit ciphertext (stored values are already).
+      const values = { ...applied.values };
+      const sealedKeys = [...sensitiveKeys(defs)].filter((k) => typeof values[k] === 'string');
+      const sealed = await this.cipher.encrypt(sealedKeys.map((k) => String(values[k])));
+      sealedKeys.forEach((k, i) => {
+        const v = sealed[i];
+        if (typeof v === 'string') values[k] = v;
+      });
+      const updated = await tx.ci.update({ where: { id: ciId }, data: { customFields: values }, include: CI_INCLUDE });
       const ci = toCiRecord(updated);
       await emit({ type: 'openmap.ci.updated', subject: ci.id, data: { ci, ciId: ci.id, changed: ['customFields'], keys: Object.keys(change), by: actor.username } });
       return ci;

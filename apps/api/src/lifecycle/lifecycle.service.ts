@@ -191,7 +191,12 @@ export class LifecycleService {
   async releases(tenantId: string, filter: ReleaseFilter, now: Date = new Date()): Promise<ReleasePageView> {
     const types = filter.kind === null ? [...OS_TYPES, ...PLATFORM_TYPES] : filter.kind === 'os' ? OS_TYPES : PLATFORM_TYPES;
     const [cis, entries] = await Promise.all([
-      this.prisma.client.ci.findMany({ where: { tenantId, validTo: null, type: { in: types as never } }, select: { id: true, type: true, displayName: true, attributes: true } }),
+      // Ordered, so a release lists its instances the same way every time (not in the order rows happen to be stored).
+      this.prisma.client.ci.findMany({
+        where: { tenantId, validTo: null, type: { in: types as never } },
+        select: { id: true, type: true, displayName: true, attributes: true },
+        orderBy: [{ displayName: 'asc' }, { id: 'asc' }],
+      }),
       this.entries(),
     ]);
     const groups = new Map<string, { kind: LifecycleKind; release: Release | null; label: string; ids: string[]; names: string[]; versions: Set<string>; patched: string[] }>();

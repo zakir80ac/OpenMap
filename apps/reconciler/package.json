@@ -22,7 +22,8 @@
     "replay": "tsx src/replay.ts",
     "replay-history": "tsx src/replay-history.ts",
     "adm": "tsx src/adm.ts",
-    "reproject": "tsx src/reproject.ts"
+    "reproject": "tsx src/reproject.ts",
+    "encrypt-fields": "tsx src/encrypt-fields.ts"
   },
   "dependencies": {
     "@clickhouse/client": "^1.24.0",
@@ -32,6 +33,7 @@
     "@openmap/db": "workspace:*",
     "@openmap/graph": "workspace:*",
     "@openmap/telemetry": "workspace:*",
+    "@openmap/vault": "workspace:*",
     "@opentelemetry/api": "^1.10.0",
     "@opentelemetry/instrumentation": "^0.300.0",
     "bullmq": "^5.56.0",

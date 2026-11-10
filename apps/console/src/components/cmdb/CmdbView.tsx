@@ -62,7 +62,9 @@ export function CmdbView({ text, initialLayer }: CmdbViewProps): ReactNode {
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [exportFailed, setExportFailed] = useState(false);
   // REQ-CMDB-015: a custom field and the value it must hold; the value is read with the field's own rules.
-  const fields = useQuery(customFieldDefinitionsQuery());
+  // Sensitive fields are stored encrypted (REQ-SEC-011): the database cannot compare them, so they are not offered.
+  const allFields = useQuery(customFieldDefinitionsQuery());
+  const fields = { data: allFields.data?.filter((d) => !d.sensitive) };
   const [fieldKey, setFieldKey] = useState('');
   const [fieldText, setFieldText] = useState('');
   const fieldDef = fields.data?.find((d) => d.key === fieldKey);

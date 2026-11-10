@@ -7,7 +7,8 @@
 #   4. role id and secret id files for the services (/openbao/approle) and the backup service (/openbao/approle-backup),
 #      readable by the user the services run as ($SERVICE_UID); or, when SERVICES_ROLE_ID / SERVICES_SECRET_ID /
 #      BACKUP_ROLE_ID / BACKUP_SECRET_ID are given (Helm generates them into a Secret), those ids are registered;
-#   5. the pg-tde policy and AppRole for the OpenBao Agent beside a pg_tde PostgreSQL (its principal keys, `tde` mount).
+#   5. the pg-tde policy and AppRole for the OpenBao Agent beside a pg_tde PostgreSQL (its principal keys, `tde` mount);
+#   6. ClickHouse's encrypted disk key (`tde/clickhouse-disk`), and the clickhouse-disk policy and AppRole that read it.
 set -eu
 export BAO_ADDR="${BAO_ADDR:-http://openbao:8200}"
 MOUNT="${OPENBAO_MOUNT:-openmap}"
@@ -46,17 +47,24 @@ mounts=$(bao secrets list -format=json)
 printf '%s' "$mounts" | grep -q "\"$MOUNT/\"" || bao secrets enable -path="$MOUNT" -version=2 kv
 printf '%s' "$mounts" | grep -q '"transit/"' || bao secrets enable transit
 bao read transit/keys/openmap-fields > /dev/null 2>&1 || bao write -f transit/keys/openmap-fields type=aes256-gcm96 > /dev/null
+# The key that wraps each backup set's data key (ADR-067 step 5).
+bao read transit/keys/openmap-backup > /dev/null 2>&1 || bao write -f transit/keys/openmap-backup type=aes256-gcm96 > /dev/null
 # pg_tde's principal keys live in their own KV v2 mount, apart from the credentials.
 printf '%s' "$mounts" | grep -q '"tde/"' || bao secrets enable -path=tde -version=2 kv
+# ClickHouse's encrypted disk key (ADR-067 step 6): 256 bits, generated once; never rotated by this job.
+bao kv get tde/clickhouse-disk > /dev/null 2>&1 || bao kv put tde/clickhouse-disk key="$(od -An -N32 -tx1 /dev/urandom | tr -d ' 
+')" > /dev/null
 
 # The policy file names the default mount; it is written for the mount this deployment uses.
 sed "s#^path \"openmap/#path \"$MOUNT/#" /openbao/policies/openmap-services.hcl | bao policy write openmap-services - > /dev/null
 bao policy write openmap-backup /openbao/policies/openmap-backup.hcl > /dev/null
 bao policy write pg-tde /openbao/policies/pg-tde.hcl > /dev/null
+bao policy write clickhouse-disk /openbao/policies/clickhouse-disk.hcl > /dev/null
 bao auth list -format=json | grep -q '"approle/"' || bao auth enable approle
 bao write auth/approle/role/openmap-services token_policies=openmap-services token_ttl=1h token_max_ttl=4h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 bao write auth/approle/role/openmap-backup token_policies=openmap-backup token_ttl=15m token_max_ttl=1h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 bao write auth/approle/role/pg-tde token_policies=pg-tde token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
+bao write auth/approle/role/clickhouse-disk token_policies=clickhouse-disk token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 
 register() {
   # $1 role, $2 role id, $3 secret id: ids an orchestrator generated (Helm keeps them in a Secret the services mount).
@@ -81,10 +89,15 @@ if [ -n "${SERVICES_ROLE_ID:-}" ]; then
   if [ -n "${PGTDE_ROLE_ID:-}" ]; then
     register pg-tde "$PGTDE_ROLE_ID" "${PGTDE_SECRET_ID:?PGTDE_SECRET_ID is required with PGTDE_ROLE_ID}"
   fi
+  if [ -n "${CLICKHOUSE_ROLE_ID:-}" ]; then
+    register clickhouse-disk "$CLICKHOUSE_ROLE_ID" "${CLICKHOUSE_SECRET_ID:?CLICKHOUSE_SECRET_ID is required with CLICKHOUSE_ROLE_ID}"
+  fi
 else
   issue openmap-services /openbao/approle
   issue openmap-backup /openbao/approle-backup
   # The agent beside PostgreSQL reads these as its own user.
   issue pg-tde /openbao/approle-pgtde "${PGTDE_AGENT_UID:-26}"
+  # The agent beside ClickHouse runs as the ClickHouse image's user (uid 101).
+  issue clickhouse-disk /openbao/approle-clickhouse "${CLICKHOUSE_AGENT_UID:-101}"
 fi
 log "openbao ready"

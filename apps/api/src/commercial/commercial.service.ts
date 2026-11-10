@@ -28,6 +28,7 @@ import type { CiRecord, RelationshipRecord } from '../ci/ci.types.js';
 import { toMoney, type Money } from '../common/money.js';
 import { nowIso } from '../common/time.js';
 import { booleanAttribute, isoAttribute, numberAttribute, stringAttribute } from '../common/validation.js';
+import { FieldCipherService } from '../db/field-cipher.service.js';
 import { PrismaService } from '../db/prisma.service.js';
 import { OutboxService, type OutboxDraft } from '../outbox/outbox.service.js';
 import type {
@@ -123,7 +124,25 @@ export class CommercialService {
     private readonly outbox: OutboxService,
     private readonly prisma: PrismaService,
     private readonly assets: AssetsService,
+    private readonly cipher: FieldCipherService,
   ) {}
+
+  /**
+   * REQ-SEC-011 (ADR-067 step 4) — a contact's name, email and phone are personal data, stored as Transit ciphertext.
+   * They are decrypted here, in one batch per list, and sorted after decryption (the database sees only ciphertext).
+   */
+  private async openContacts(rows: readonly VendorContactView[]): Promise<VendorContactView[]> {
+    // One batch: every name, then every email, then every phone.
+    const n = rows.length;
+    const plain = await this.cipher.decrypt([...rows.map((r) => r.name), ...rows.map((r) => r.email), ...rows.map((r) => r.phone)]);
+    const opened = rows.map((r, i) => ({
+      ...r,
+      name: plain[i] ?? '',
+      email: plain[n + i] ?? null,
+      phone: plain[n + n + i] ?? null,
+    }));
+    return opened.sort((a, b) => a.escalationLevel - b.escalationLevel || a.name.localeCompare(b.name));
+  }
 
   /** Vendor, cost centre and covered-asset count of every contract, from the current relationships. */
   private async links(tenantId: string, contractIds: ReadonlySet<string>): Promise<Links> {
@@ -224,11 +243,12 @@ export class CommercialService {
   }
 
   async vendorContacts(tenantId: string, vendorCiId: string): Promise<VendorContactView[]> {
-    return this.prisma.client.vendorContact.findMany({
-      where: { tenantId, vendorCiId },
-      orderBy: [{ escalationLevel: 'asc' }, { name: 'asc' }],
-      select: { id: true, vendorCiId: true, name: true, role: true, email: true, phone: true, portalUrl: true, availability: true, escalationLevel: true },
-    });
+    return this.openContacts(
+      await this.prisma.client.vendorContact.findMany({
+        where: { tenantId, vendorCiId },
+        select: { id: true, vendorCiId: true, name: true, role: true, email: true, phone: true, portalUrl: true, availability: true, escalationLevel: true },
+      }),
+    );
   }
 
   async costCentres(tenantId: string): Promise<CostCentreView[]> {
@@ -414,11 +434,12 @@ export class CommercialService {
 
   async upsertVendorContact(tenantId: string, input: VendorContactInput): Promise<VendorContactView> {
     await this.requireCi(tenantId, input.vendorId, 'vendor');
+    const [name, email, phone] = await this.cipher.encrypt([input.name, input.email ?? null, input.phone ?? null]);
     const data = {
-      name: input.name,
+      name: name ?? '',
       role: input.role,
-      email: input.email ?? null,
-      phone: input.phone ?? null,
+      email: email ?? null,
+      phone: phone ?? null,
       portalUrl: input.portalUrl ?? null,
       availability: input.availability ?? null,
       escalationLevel: input.escalationLevel,
@@ -429,9 +450,11 @@ export class CommercialService {
       const existing = await client.vendorContact.findFirst({ where: { id: input.id, tenantId }, select: { vendorCiId: true } });
       if (!existing) throw new NotFoundException('vendor contact ' + input.id + ' not found');
       if (existing.vendorCiId !== input.vendorId) throw new BadRequestException('a contact stays with its vendor');
-      return client.vendorContact.update({ where: { id: input.id }, data, select });
+      const updated = await client.vendorContact.update({ where: { id: input.id }, data, select });
+      return { ...updated, name: input.name, email: input.email ?? null, phone: input.phone ?? null };
     }
-    return client.vendorContact.create({ data: { ...data, tenantId, vendorCiId: input.vendorId }, select });
+    const created = await client.vendorContact.create({ data: { ...data, tenantId, vendorCiId: input.vendorId }, select });
+    return { ...created, name: input.name, email: input.email ?? null, phone: input.phone ?? null };
   }
 
   async deleteVendorContact(tenantId: string, id: string): Promise<boolean> {

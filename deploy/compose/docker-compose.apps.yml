@@ -166,6 +166,8 @@ services:
       dockerfile: deploy/docker/node-service.Dockerfile
       args: { APP: reconciler }
     environment: *app-env
+    # REQ-SEC-011 (ADR-067 step 4): `encrypt-fields` encrypts personal data written before field encryption.
+    volumes: ["openbao-approle:/run/openmap/openbao:ro"]
     depends_on: *app-depends
 
   bsm-engine:

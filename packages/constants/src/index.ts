@@ -760,6 +760,15 @@ export const VAULT = {
   tokenHeader: 'X-Vault-Token',
   renewAtFraction: 0.75,
   loginTimeoutMs: 5_000,
+  /**
+   * ADR-067 step 4 — field encryption through Transit. The openbao-init job creates the key (aes256-gcm96); every
+   * ciphertext starts with the prefix, which is how a stored value is told from one written before encryption.
+   */
+  transitMount: 'transit',
+  fieldKey: 'openmap-fields',
+  ciphertextPrefix: 'vault:v',
+  /** Values per Transit batch request: one request per page of contacts or assets, bounded for very large backfills. */
+  transitBatch: 500,
 } as const;
 
 /**
@@ -1943,7 +1952,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * rule and object attributes, address and service matching, rule evaluation, shadowed and unused rules.
    */
   // 0.11.0 (REQ-IPAM-005, ADR-064 consequences): the `references` relationship type (not an impact edge).
-  ci: '0.11.0',
+  // 0.12.0 (REQ-SEC-011, ADR-067 step 4): custom-field contract 0.2.0, `sensitive` text fields stored encrypted; a
+  // text value may not start with the Transit ciphertext prefix.
+  ci: '0.12.0',
   /** 0.2.0 (ADR-016): optional `samples` on a collector result. 0.3.0 (ADR-037): observed CIs may carry `components`.
    * 0.4.0 (REQ-CMDB-034): utilisation samples under the `utilisation.ts` metric names.
    * 0.5.0 (ADR-039): moves with the CI contract (observed CIs and results share its JSON Schema version).
@@ -2030,8 +2041,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `firewallPolicy`, `firewallCheck`.
    * 1.38.0 (REQ-INT-009, ADR-065): mutation `sendTestNotification`.
    * 1.39.0 (REQ-INT-019, ADR-066): `BackupState`, `BackupSet`, `Backups`, query `backups`.
+   * 1.40.0 (REQ-SEC-011, ADR-067 steps 4-5): `CustomFieldDefinition.sensitive`, `CustomFieldDefinitionInput.sensitive`,
+   * `BackupSet.encrypted`.
    */
-  graphql: '1.39.0',
+  graphql: '1.40.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

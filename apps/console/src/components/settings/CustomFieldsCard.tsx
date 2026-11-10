@@ -28,18 +28,19 @@ interface Draft {
   options: string;
   appliesTo: string[];
   required: boolean;
+  sensitive: boolean;
 }
 
-const EMPTY: Draft = { id: null, key: '', labelEn: '', labelAr: '', description: '', type: 'text', options: '', appliesTo: [], required: false };
+const EMPTY: Draft = { id: null, key: '', labelEn: '', labelAr: '', description: '', type: 'text', options: '', appliesTo: [], required: false, sensitive: false };
 
 function draftOf(def: CustomFieldDefinitionView): Draft {
-  return { id: def.id, key: def.key, labelEn: def.labelEn, labelAr: def.labelAr, description: def.description, type: def.type, options: def.options.join(', '), appliesTo: def.appliesTo, required: def.required };
+  return { id: def.id, key: def.key, labelEn: def.labelEn, labelAr: def.labelAr, description: def.description, type: def.type, options: def.options.join(', '), appliesTo: def.appliesTo, required: def.required, sensitive: def.sensitive };
 }
 
 /** The draft as the contract's input, or the first reason it is not one yet. */
 export function inputOf(draft: Draft): { input: ReturnType<typeof customFieldDefinitionInputSchema.parse> } | { error: string } {
   const options = draft.options.split(',').map((o) => o.trim()).filter((o) => o !== '');
-  const parsed = customFieldDefinitionInputSchema.safeParse({ key: draft.key.trim(), labelEn: draft.labelEn, labelAr: draft.labelAr, description: draft.description, type: draft.type, options: draft.type === 'select' ? options : [], appliesTo: draft.appliesTo, required: draft.required });
+  const parsed = customFieldDefinitionInputSchema.safeParse({ key: draft.key.trim(), labelEn: draft.labelEn, labelAr: draft.labelAr, description: draft.description, type: draft.type, options: draft.type === 'select' ? options : [], appliesTo: draft.appliesTo, required: draft.required, sensitive: draft.type === 'text' && draft.sensitive });
   return parsed.success ? { input: parsed.data } : { error: parsed.error.issues[0]?.path.join('.') ?? 'input' };
 }
 
@@ -119,6 +120,7 @@ export function CustomFieldsCard(): ReactNode {
                   <span className="block text-om-sm text-om-primary">{locale === 'ar' ? def.labelAr : def.labelEn}</span>
                   <span className="font-om-mono text-om-2xs text-om-muted">{def.key}</span>
                   {def.required ? <Tag>{t('customFields.required')}</Tag> : null}
+                  {def.sensitive ? <Tag>{t('customFields.sensitive')}</Tag> : null}
                 </td>
                 <td className={tdClass}>
                   {t(`customFields.type.${def.type}`)}
@@ -255,6 +257,21 @@ export function CustomFieldsCard(): ReactNode {
               }}
             />
             {t('customFields.field.required')}
+          </label>
+          {/* Encrypted values: fixed once created (the API refuses a change), and for text fields only. */}
+          <label className="flex items-center gap-om-8 text-om-sm text-om-secondary">
+            <input
+              type="checkbox"
+              checked={draft.type === 'text' && draft.sensitive}
+              disabled={draft.id !== null || draft.type !== 'text'}
+              onChange={(e) => {
+                setDraft({ ...draft, sensitive: e.target.checked });
+              }}
+            />
+            <span>
+              {t('customFields.field.sensitive')}
+              <span className="block text-om-2xs text-om-muted">{t('customFields.field.sensitiveHint')}</span>
+            </span>
           </label>
           <div className="flex flex-wrap items-center gap-om-8 md:col-span-2">
             <Button type="submit" disabled={checked === null || 'error' in checked || save.isPending}>

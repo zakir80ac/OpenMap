@@ -31,6 +31,7 @@ import type { CiRecord } from '../ci/ci.types.js';
 import { NO_CURRENCY, toMoney, type Money } from '../common/money.js';
 import { isoOf, nowIso, toIso } from '../common/time.js';
 import { asRecord, isoAttribute, stringAttribute } from '../common/validation.js';
+import { FieldCipherService } from '../db/field-cipher.service.js';
 import { PrismaService } from '../db/prisma.service.js';
 import type { AssetDetailsInput, ManualAssetInput, PlanInput, ReceiptInput } from './assets.schemas.js';
 import type {
@@ -176,6 +177,8 @@ const UNOWNED_STAGES: readonly AssetStage[] = ['disposed'];
 const MANUAL_SOURCE = 'manual' as const;
 /** Support level a contract that states none (a lease, a service agreement) is read with. */
 const NO_SUPPORT_LEVEL = 'none';
+/** REQ-SEC-011: the asset field (and audit field name) stored as Transit ciphertext. */
+const CUSTODIAN_FIELD = 'custodian';
 
 function parseWarranty(value: Prisma.JsonValue | null): Warranty | null {
   const parsed = warrantySchema.safeParse(value);
@@ -530,7 +533,44 @@ function gapWhere(gap: AssetDataGap): Prisma.AssetRecordWhereInput {
 
 @Injectable()
 export class PrismaAssetsRepository implements AssetsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cipher: FieldCipherService,
+  ) {}
+
+  /**
+   * REQ-SEC-011 (ADR-067 step 4) — the custodian (the person an asset is with) is stored as Transit ciphertext, and so
+   * is the custodian in its audit entries; rows are decrypted here, one batch per read, on the way to the view.
+   */
+  private async open(rows: readonly AssetRow[]): Promise<AssetRecordView[]> {
+    const plain = await this.cipher.decrypt(rows.map((r) => r.custodian));
+    return rows.map((r, i) => toAsset({ ...r, custodian: plain[i] ?? null }));
+  }
+
+  private async openOne(row: AssetRow): Promise<AssetRecordView> {
+    const [view] = await this.open([row]);
+    if (view === undefined) throw new Error('asset ' + row.id + ' could not be read');
+    return view;
+  }
+
+  /** A details change with the custodian compared in plaintext and written, column and audit, as ciphertext. */
+  private async sealedDetails(
+    input: AssetDetailsInput,
+    existing: AssetRow | null,
+    at: string,
+  ): Promise<{ data: DetailsData; changes: FieldChange[] }> {
+    const current = existing === null ? null : { ...existing, custodian: await this.cipher.decryptOne(existing.custodian) };
+    const { data, changes } = detailsData(input, current, at);
+    if (typeof data.custodian === 'string') data.custodian = await this.cipher.encryptOne(data.custodian);
+    const sealed = await Promise.all(
+      changes.map(async (c) => {
+        if (c.field !== CUSTODIAN_FIELD) return c;
+        const [from, to] = await this.cipher.encrypt([c.from, c.to]);
+        return { ...c, from: from ?? null, to: to ?? null };
+      }),
+    );
+    return { data, changes: sealed };
+  }
 
   /** The register's filter as a Prisma predicate; the cursor (afterId) is added by `assets`, the page by `assetPage`. */
   private whereFor(tenantId: string, q: AssetsQuery): Prisma.AssetRecordWhereInput[] {
@@ -567,7 +607,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       orderBy: { id: 'asc' },
       take: q.first,
     });
-    return rows.map(toAsset);
+    return this.open(rows);
   }
 
   /** REQ-CMDB-041 — one page by number with the total under the same filter (two statements, one round trip each). */
@@ -583,7 +623,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       this.prisma.client.assetRecord.count({ where }),
     ]);
     return {
-      items: rows.map(toAsset),
+      items: await this.open(rows),
       totalCount,
       page,
       pageSize,
@@ -593,7 +633,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
 
   async asset(tenantId: string, id: string): Promise<AssetRecordView | null> {
     const row = await this.prisma.client.assetRecord.findFirst({ where: { id, tenantId } });
-    return row ? toAsset(row) : null;
+    return row ? this.openOne(row) : null;
   }
 
   async assetsByCiIds(tenantId: string, ciIds: readonly string[]): Promise<AssetRecordView[]> {
@@ -602,7 +642,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       where: { tenantId, ciId: { in: [...ciIds] } },
       orderBy: { id: 'asc' },
     });
-    return rows.map(toAsset);
+    return this.open(rows);
   }
 
   async assetsByPlan(tenantId: string, planId: string): Promise<AssetRecordView[]> {
@@ -610,7 +650,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       where: { tenantId, planId },
       orderBy: { assetTag: 'asc' },
     });
-    return rows.map(toAsset);
+    return this.open(rows);
   }
 
   /** One grouped statement: rows per layer, rows with a gap, and cover already ended as of `now`. */
@@ -655,13 +695,17 @@ export class PrismaAssetsRepository implements AssetsRepository {
       where: { tenantId, assetId },
       orderBy: { at: 'desc' },
     });
-    return rows.map((r) => ({
+    // Custodian entries hold ciphertext; every other field is a plain value. One batch: the from values, then the to values.
+    const sealed = (pick: (r: (typeof rows)[number]) => string | null) => rows.map((r) => (r.field === CUSTODIAN_FIELD ? pick(r) : null));
+    const plain = await this.cipher.decrypt([...sealed((r) => r.fromValue), ...sealed((r) => r.toValue)]);
+    const n = rows.length;
+    return rows.map((r, i) => ({
       id: r.id,
       actor: r.actor,
       at: isoOf(r.at),
       field: r.field,
-      fromValue: r.fromValue,
-      toValue: r.toValue,
+      fromValue: r.field === CUSTODIAN_FIELD ? (plain[i] ?? null) : r.fromValue,
+      toValue: r.field === CUSTODIAN_FIELD ? (plain[n + i] ?? null) : r.toValue,
       note: r.note,
     }));
   }
@@ -797,7 +841,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       where: { tenantId, id: { in: [...ids] } },
       orderBy: { assetTag: 'asc' },
     });
-    return rows.map(toAsset);
+    return this.open(rows);
   }
 
   async receipts(tenantId: string, planId: string): Promise<PlanReceiptView[]> {
@@ -893,7 +937,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
       if (before.purchasedAt === null) audits.push(audit('purchasedAt', null, input.receivedOn));
       if (locationCiId !== before.locationCiId) audits.push(audit('locationCiId', before.locationCiId, locationCiId));
       await tx.assetAudit.createMany({ data: audits });
-      assets.push(toAsset(row));
+      assets.push(await this.openOne(row));
     }
     await tx.bomLine.update({ where: { id: line.id }, data: { received: { increment: assets.length } } });
     const status: PlanStatus = plan.status === 'approved' ? 'building' : plan.status;
@@ -946,7 +990,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
         note,
       },
     });
-    return toAsset(row);
+    return this.openOne(row);
   }
 
   async updateDetails(
@@ -960,8 +1004,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
     const existing = await tx.assetRecord.findFirst({ where: { id, tenantId } });
     if (!existing) throw new NotFoundException('asset ' + id + ' not found');
     await assertCostCentre(tx, tenantId, input.ownerCostCentreId);
-    const { data, changes } = detailsData(input, existing, at);
-    if (changes.length === 0) return { asset: toAsset(existing), changed: [] };
+    const { data, changes } = await this.sealedDetails(input, existing, at);
+    if (changes.length === 0) return { asset: await this.openOne(existing), changed: [] };
     const row = await tx.assetRecord.update({ where: { id }, data });
     await tx.assetAudit.createMany({
       data: changes.map((c) => ({
@@ -975,7 +1019,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
         note: input.note ?? null,
       })),
     });
-    return { asset: toAsset(row), changed: changes.map((c) => c.field) };
+    return { asset: await this.openOne(row), changed: changes.map((c) => c.field) };
   }
 
   async createManual(
@@ -987,7 +1031,7 @@ export class PrismaAssetsRepository implements AssetsRepository {
     at: string,
   ): Promise<AssetRecordView> {
     await assertCostCentre(tx, tenantId, input.details.ownerCostCentreId);
-    const { data, changes } = detailsData(input.details, null, at);
+    const { data, changes } = await this.sealedDetails(input.details, null, at);
     const when = new Date(at);
     const row = await tx.assetRecord.create({
       data: {
@@ -1033,10 +1077,10 @@ export class PrismaAssetsRepository implements AssetsRepository {
         })),
       ],
     });
-    return toAsset(row);
+    return this.openOne(row);
   }
 
-  ensureForCi(
+  async ensureForCi(
     tx: Prisma.TransactionClient,
     tenantId: string,
     actor: string,
@@ -1044,7 +1088,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
     layer: CiLayer,
     at: string,
   ): Promise<AssetRecordView> {
-    return ensureAssetForCi(tx, tenantId, actor, ci, layer, at);
+    const view = await ensureAssetForCi(tx, tenantId, actor, ci, layer, at);
+    return { ...view, custodian: await this.cipher.decryptOne(view.custodian) };
   }
 
   /**
@@ -1069,7 +1114,8 @@ export class PrismaAssetsRepository implements AssetsRepository {
         : ((await client.ci.findFirst({ where: { tenantId, type: 'vendor', name: vendorName, validTo: null }, select: { id: true } }))?.id ?? null));
     // SupportContract.vendor is non-null: a contract no vendor can be found for is not read as support cover.
     if (vendorCiId === null) return null;
-    const contact = await client.vendorContact.findFirst({ where: { tenantId, vendorCiId }, orderBy: [{ escalationLevel: 'asc' }, { name: 'asc' }], select: { id: true } });
+    // Names are ciphertext (REQ-SEC-011): the first contact at the lowest escalation level by when it was entered.
+    const contact = await client.vendorContact.findFirst({ where: { tenantId, vendorCiId }, orderBy: [{ escalationLevel: 'asc' }, { createdAt: 'asc' }], select: { id: true } });
     const endsAt = isoAttribute(attributes, CONTRACT_ATTRIBUTES.endsAt);
     return {
       id: contract.id,
@@ -1083,16 +1129,9 @@ export class PrismaAssetsRepository implements AssetsRepository {
 
   async vendorContact(tenantId: string, id: string): Promise<VendorContactView | null> {
     const row = await this.prisma.client.vendorContact.findFirst({ where: { id, tenantId } });
-    return row
-      ? {
-          id: row.id,
-          name: row.name,
-          role: row.role,
-          email: row.email,
-          phone: row.phone,
-          portalUrl: row.portalUrl,
-        }
-      : null;
+    if (!row) return null;
+    const [name, email, phone] = await this.cipher.decrypt([row.name, row.email, row.phone]);
+    return { id: row.id, name: name ?? '', role: row.role, email: email ?? null, phone: phone ?? null, portalUrl: row.portalUrl };
   }
 }
 

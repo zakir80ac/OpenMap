@@ -1,12 +1,15 @@
 // REQ-CMDB-001 REQ-CMDB-038 — CMDB resolvers for the frozen schema: Query.ci/cis/search/unknownCis/vulnerabilities,
 // the CI mutations, and the Ci / Relationship field resolvers (health, headline metric, relationships, history).
 // Every call is scoped by TenantContext.
+import { BadRequestException } from '@nestjs/common';
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { CI_EDIT, TIME } from '@openmap/constants';
 import { LAYER_HEADLINE_METRIC } from '@openmap/contracts';
+import { isCiphertext } from '@openmap/vault';
 import { parseInput } from '../common/validation.js';
 import { Roles } from '../auth/roles.decorator.js';
 import { ROLES } from '../auth/roles.js';
+import { PrismaService } from '../db/prisma.service.js';
 import { TenantContext } from '../tenant/tenant.context.js';
 import {
   ciFilterSchema,
@@ -44,6 +47,7 @@ export class CiResolver {
   constructor(
     private readonly service: CiService,
     private readonly tenant: TenantContext,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Query('ci')
@@ -52,14 +56,25 @@ export class CiResolver {
     return this.service.ci(this.tenant.tenantId, args.id, args.asOf ?? null);
   }
 
+  /** REQ-SEC-011: a sensitive field's values are ciphertext with a random nonce; they cannot be compared in the database. */
+  private async refuseSensitiveFilter(keys: readonly string[]): Promise<void> {
+    if (keys.length === 0) return;
+    const sensitive = await this.prisma.client.customFieldDefinition.findMany({
+      where: { tenantId: this.tenant.tenantId, key: { in: [...keys] }, sensitive: true },
+      select: { key: true },
+    });
+    if (sensitive.length > 0) throw new BadRequestException('sensitive custom fields cannot be filtered: ' + sensitive.map((s) => s.key).join(', '));
+  }
+
   @Query('cis')
-  cis(
+  async cis(
     @Args('filter') filter: unknown,
     @Args('first') first: unknown,
     @Args('after') after: unknown,
   ): Promise<Connection<CiRecord>> {
     const f = parseInput(ciFilterSchema.nullish(), filter, 'CiFilter') ?? {};
     const page = parseInput(pagingSchema, { first, after }, 'paging');
+    await this.refuseSensitiveFilter(Object.keys(f.customFields ?? {}));
     return this.service.cis(
       this.tenant.tenantId,
       this.tenant.userId,
@@ -190,6 +205,21 @@ export class CiFieldsResolver {
     private readonly service: CiService,
     private readonly tenant: TenantContext,
   ) {}
+
+  /**
+   * REQ-SEC-011 (ADR-067 step 4) — values of sensitive custom fields are stored as Transit ciphertext and decrypted
+   * here, batched across the request. A text value can never look like ciphertext (the contract refuses it), so only
+   * stored ciphertext is sent to OpenBao.
+   */
+  @ResolveField('customFields')
+  async customFields(@Parent() ci: CiRecord): Promise<CiRecord['customFields']> {
+    const entries = await Promise.all(
+      Object.entries(ci.customFields).map(async ([k, v]) =>
+        typeof v === 'string' && isCiphertext(v) ? ([k, (await this.tenant.loaders.plaintext.load(v)) ?? ''] as const) : ([k, v] as const),
+      ),
+    );
+    return Object.fromEntries(entries);
+  }
 
   @ResolveField('health')
   async health(@Parent() ci: CiRecord): Promise<HealthState> {

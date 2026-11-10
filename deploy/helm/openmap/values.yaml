@@ -71,6 +71,9 @@ ingress:
 postgres:
   # REQ-SEC-011 (ADR-067): Percona Server for PostgreSQL with pg_tde; PGDATA is /data/db.
   image: percona/percona-distribution-postgresql:17.11.1-4
+  # Collation and character type of the database, fixed when the data directory is first initialised (the image sets
+  # no LANG; without this initdb uses C).
+  locale: en_US.UTF-8
   storage: 50Gi
   tde:
     # Every table tde_heap and the WAL encrypted, the principal key in OpenBao (mount `tde`) through an OpenBao Agent
@@ -109,6 +112,13 @@ clickhouse:
   resources:
     requests: { cpu: "1", memory: 2Gi }
     limits: { cpu: "8", memory: 16Gi }
+  encryption:
+    # REQ-SEC-011 (ADR-067 step 6): data parts on an encrypted disk (AES-256-CTR), its key in OpenBao
+    # (tde/clickhouse-disk) through an OpenBao Agent sidecar. Takes effect on an empty data volume.
+    enabled: true
+    keyWaitSeconds: 900
+    # With openbao.external: a Secret holding `role-id` and `secret-id` of an AppRole on the clickhouse-disk policy.
+    externalApproleSecret: ""
 
 valkey:
   image: valkey/valkey:8

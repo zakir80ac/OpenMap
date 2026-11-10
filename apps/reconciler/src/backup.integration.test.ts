@@ -197,6 +197,17 @@ describe('backup and restore (integration)', () => {
     expect(manifest.postgres?.migration).toMatch(/^\d{4}_/u);
     // REQ-SEC-011 (ADR-067): the backup AppRole took OpenBao's Raft snapshot into the same set.
     expect(manifest.openbao?.bytes).toBeGreaterThan(0);
+    // ADR-067 step 5 (T-580): the files are encrypted under a data key Transit wrapped; no plaintext archive is left.
+    expect(manifest.encryption).toMatchObject({ cipher: 'aes-256-ctr+hmac-sha256', transitKey: 'openmap-backup' });
+    expect(manifest.postgres?.file).toBe('postgres.dump.enc');
+    expect(manifest.clickhouse?.archive).toBe('clickhouse.tar.enc');
+    // Each name marked, since the output also carries compose's own messages.
+    const files = backup('--entrypoint', 'sh', 'backup', '-c', 'ls /backups/' + setName + " | sed 's/^/file:/'");
+    const names = files.out.split('\n').filter((l) => l.startsWith('file:')).map((l) => l.slice('file:'.length).trim());
+    expect(names.sort()).toEqual(['clickhouse.tar.enc', 'manifest.json', 'openbao.snap', 'postgres.dump.enc']);
+    // The archive is not readable as a PostgreSQL archive without the key.
+    const raw = backup('--entrypoint', 'sh', 'backup', '-c', 'pg_restore --list /backups/' + setName + '/postgres.dump.enc');
+    expect(raw.status).not.toBe(0);
 
     await db.relationship.deleteMany({ where: { tenantId } });
     await db.ci.deleteMany({ where: { tenantId } });
@@ -215,16 +226,19 @@ describe('backup and restore (integration)', () => {
   });
 
   it('refuses a set whose archive was changed after it was written', () => {
+    // A changed byte with the checksum updated to match is still caught: the MAC needs the key.
     const tampered = backup(
       '--entrypoint',
       'sh',
       'backup',
       '-c',
-      'printf x >> /backups/' + setName + '/postgres.dump',
+      `f=/backups/${setName}/postgres.dump.enc; m=/backups/${setName}/manifest.json; printf x >> "$f"; ` +
+        `old=$(grep -o '"postgres":{[^}]*' "$m" | grep -o '"sha256":"[a-f0-9]*"' | cut -d'"' -f4); ` +
+        `new=$(sha256sum "$f" | cut -d' ' -f1); sed -i "s/$old/$new/" "$m"`,
     );
     expect(tampered.status, tampered.out).toBe(0);
     const verified = backup('backup', 'verify', setName);
     expect(verified.status).not.toBe(0);
-    expect(verified.out).toContain('postgres archive checksum differs');
+    expect(verified.out).toContain('postgres archive fails authentication');
   });
 });

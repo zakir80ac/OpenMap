@@ -3,9 +3,9 @@
 // a select's value one of its options); a change keeps values of applicable fields, clears with null, refuses a key
 // that does not apply to the CI's type and a required field left empty.
 import { describe, expect, it } from 'vitest';
-import { applyCustomFieldChange, customFieldDefinitionInputSchema, readCustomFieldValue, type CustomFieldDefinition } from './custom-field.js';
+import { applyCustomFieldChange, customFieldDefinitionInputSchema, readCustomFieldValue, sensitiveKeys, type CustomFieldDefinition } from './custom-field.js';
 
-const base = { tenantId: 't', description: '', createdAt: '', updatedAt: '', appliesTo: [], required: false, options: [] };
+const base = { tenantId: 't', description: '', createdAt: '', updatedAt: '', appliesTo: [], required: false, sensitive: false, options: [] };
 const owner: CustomFieldDefinition = { ...base, id: '1', key: 'owner', labelEn: 'Owner', labelAr: 'المالك', type: 'text' };
 const rackU: CustomFieldDefinition = { ...base, id: '2', key: 'rackU', labelEn: 'Rack units', labelAr: 'وحدات', type: 'number', appliesTo: ['host'] };
 const tier: CustomFieldDefinition = { ...base, id: '3', key: 'dataTier', labelEn: 'Data tier', labelAr: 'فئة البيانات', type: 'select', options: ['gold', 'silver'], required: true };
@@ -16,6 +16,15 @@ describe('custom field contract', () => {
     expect(customFieldDefinitionInputSchema.safeParse({ key: 'Bad Key', labelEn: 'x', labelAr: 'x', type: 'text' }).success).toBe(false);
     expect(customFieldDefinitionInputSchema.safeParse({ key: 'tier', labelEn: 'x', labelAr: 'x', type: 'select' }).success).toBe(false);
     expect(customFieldDefinitionInputSchema.safeParse({ key: 'tier', labelEn: 'x', labelAr: 'x', type: 'select', options: ['a', 'a'] }).success).toBe(false);
+  });
+
+  it('allows only a text field to be sensitive, and keeps ciphertext-like text out (T-576)', () => {
+    const parsed = customFieldDefinitionInputSchema.parse({ key: 'nationalId', labelEn: 'National ID', labelAr: 'رقم الهوية', type: 'text', sensitive: true });
+    expect(parsed.sensitive).toBe(true);
+    expect(customFieldDefinitionInputSchema.parse({ key: 'costCode', labelEn: 'Cost code', labelAr: 'رمز', type: 'text' }).sensitive).toBe(false);
+    expect(customFieldDefinitionInputSchema.safeParse({ key: 'rackU', labelEn: 'x', labelAr: 'x', type: 'number', sensitive: true }).success).toBe(false);
+    expect(readCustomFieldValue(owner, 'vault:v1:abc')).toEqual({ error: 'cannot start with vault:v' });
+    expect([...sensitiveKeys([owner, { ...owner, key: 'nationalId', sensitive: true }])]).toEqual(['nationalId']);
   });
 
   it('reads values per type', () => {

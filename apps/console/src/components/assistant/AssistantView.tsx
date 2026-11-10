@@ -385,7 +385,7 @@ export function AssistantView({ locale }: AssistantViewProps): ReactNode {
       return (
         <div className="flex flex-col gap-om-10">
           <p className="text-om-sm text-om-secondary">{t('assistant.empty')}</p>
-          <div className="flex flex-wrap gap-om-6">
+          <div className="flex flex-wrap gap-om-6" role="group" aria-label={t('assistant.examplesLabel')}>
             {EXAMPLE_KEYS.map((key) => (
               <Pill
                 key={key}

@@ -24,6 +24,8 @@ export interface BackupSetView {
   clickhouseBytes: number | null;
   migration: string | null;
   cis: number | null;
+  /** REQ-SEC-011 (ADR-067 step 5): the set's files are encrypted under a Transit-wrapped data key. */
+  encrypted: boolean;
   error: string | null;
 }
 
@@ -93,6 +95,7 @@ export class BackupsService {
           clickhouseBytes: m.clickhouse?.bytes ?? null,
           migration: m.postgres?.migration ?? null,
           cis: m.postgres?.cis ?? null,
+          encrypted: m.encryption !== null,
           error: m.error,
         }));
       return {

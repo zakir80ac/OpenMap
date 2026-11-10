@@ -22,6 +22,7 @@ const fresh: Backups = {
       clickhouseBytes: null,
       migration: null,
       cis: null,
+      encrypted: false,
       error: null,
     },
     {
@@ -33,6 +34,7 @@ const fresh: Backups = {
       clickhouseBytes: null,
       migration: null,
       cis: null,
+      encrypted: false,
       error: 'interrupted or failed; see the backup log',
     },
     {
@@ -44,6 +46,7 @@ const fresh: Backups = {
       clickhouseBytes: 943_718_400,
       migration: '0043_firewall_object_ci_type',
       cis: 32_765,
+      encrypted: true,
       error: null,
     },
   ],
@@ -99,6 +102,9 @@ describe.each(LOCALES)('BackupsCard (%s)', (locale) => {
     ).toBeTruthy();
     expect(within(rows[2] as HTMLElement).getByText('0043_firewall_object_ci_type')).toBeTruthy();
     expect(within(rows[2] as HTMLElement).getByText(t('settings.backups.status.complete'))).toBeTruthy();
+    // REQ-SEC-011 (ADR-067 step 5): an encrypted set says so; a plaintext one does not.
+    expect(within(rows[2] as HTMLElement).getByText(t('settings.backups.encrypted'))).toBeTruthy();
+    expect(within(rows[1] as HTMLElement).queryByText(t('settings.backups.encrypted'))).toBeNull();
   });
 
   it('warns when the newest complete set is too old, and says when the deployment keeps none', async () => {

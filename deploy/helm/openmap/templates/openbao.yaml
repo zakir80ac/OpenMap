@@ -33,7 +33,7 @@ metadata:
   annotations: { "helm.sh/resource-policy": keep }
 type: Opaque
 data:
-  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" "pgtde-role-id" "pgtde-secret-id" }}
+  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" "pgtde-role-id" "pgtde-secret-id" "clickhouse-role-id" "clickhouse-secret-id" }}
   {{- /* An id is kept once generated; one added by a later chart version is generated on that upgrade. */}}
   {{ $key }}: {{ if and $existingApprole (hasKey $existingApprole.data $key) }}{{ index $existingApprole.data $key }}{{ else }}{{ uuidv4 | b64enc }}{{ end }}
   {{- end }}
@@ -78,6 +78,8 @@ data:
 {{ .Files.Get "files/openbao/policies/openmap-backup.hcl" | indent 4 }}
   pg-tde.hcl: |
 {{ .Files.Get "files/openbao/policies/pg-tde.hcl" | indent 4 }}
+  clickhouse-disk.hcl: |
+{{ .Files.Get "files/openbao/policies/clickhouse-disk.hcl" | indent 4 }}
 ---
 apiVersion: v1
 kind: Service
@@ -178,6 +180,8 @@ spec:
             - { name: BACKUP_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: backup-secret-id } } }
             - { name: PGTDE_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: pgtde-role-id } } }
             - { name: PGTDE_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: pgtde-secret-id } } }
+            - { name: CLICKHOUSE_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: clickhouse-role-id } } }
+            - { name: CLICKHOUSE_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: clickhouse-secret-id } } }
           volumeMounts:
             - { name: init, mountPath: /openbao/init }
             - { name: scripts, mountPath: /openbao/scripts }
@@ -188,5 +192,5 @@ spec:
         - name: scripts
           configMap: { name: {{ $fullname }}-openbao, items: [{ key: init.sh, path: init.sh }] }
         - name: policies
-          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openmap-services.hcl, path: openmap-services.hcl }, { key: openmap-backup.hcl, path: openmap-backup.hcl }, { key: pg-tde.hcl, path: pg-tde.hcl }] }
+          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openmap-services.hcl, path: openmap-services.hcl }, { key: openmap-backup.hcl, path: openmap-backup.hcl }, { key: pg-tde.hcl, path: pg-tde.hcl }, { key: clickhouse-disk.hcl, path: clickhouse-disk.hcl }] }
 {{- end }}

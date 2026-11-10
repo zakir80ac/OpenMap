@@ -1,0 +1,33 @@
+<!--
+  REQ-SEC-011 (ADR-067 step 6) — every MergeTree part on an encrypted disk (AES-256-CTR) over the default disk, as the
+  default storage policy, so tables need no setting of their own. The key comes from OpenBao (tde/clickhouse-disk)
+  through the clickhouse-keys agent; the entrypoint wrapper puts it in CLICKHOUSE_DISK_KEY before the server starts.
+  Table metadata (DDL) stays in plaintext; data parts, including system logs, are encrypted.
+-->
+<clickhouse>
+  <storage_configuration>
+    <disks>
+      <!-- The disk under the encrypted one; it holds only ciphertext. It must be declared before the disk that wraps it. -->
+      <sealed>
+        <type>local</type>
+        <path>/var/lib/clickhouse/disks/sealed/</path>
+      </sealed>
+      <encrypted>
+        <type>encrypted</type>
+        <disk>sealed</disk>
+        <path>encrypted/</path>
+        <algorithm>AES_256_CTR</algorithm>
+        <key_hex from_env="CLICKHOUSE_DISK_KEY"/>
+      </encrypted>
+    </disks>
+    <policies>
+      <default>
+        <volumes>
+          <main>
+            <disk>encrypted</disk>
+          </main>
+        </volumes>
+      </default>
+    </policies>
+  </storage_configuration>
+</clickhouse>

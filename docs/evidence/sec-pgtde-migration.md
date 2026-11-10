@@ -69,3 +69,15 @@ How to read it:
   restored database without bloat. What it shows is that encryption takes no budget out of reach.
 
 **Found and fixed:** `pg_restore` brings no planner statistics. `restore` now runs `ANALYZE` before it reports done.
+
+**Found and fixed: the collation changed.**
+
+- The Percona image sets no `LANG`, so initdb created the database with collation `C`. The stock server used
+  `en_US.utf8`, which ignores punctuation at the first level.
+- Every name-ordered list sorted differently: `.NET Runtime 8.0.8 on …` moved ahead of `aml`.
+- Three e2e specs then picked a different first row; the dependency map, the twin and IPAM failed.
+- The database is now initialised with `--locale=${POSTGRES_LOCALE:-en_US.UTF-8}` (compose) and `postgres.locale`
+  (Helm).
+- The dev stack was moved again from an encrypted set (`pre-collation-20261110T155145`). The restore took 106 s with
+  decryption; row counts were identical, 192 of 192 tables encrypted, collation `en_US.UTF-8`, and the order is the
+  same as before.

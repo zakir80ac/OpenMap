@@ -125,3 +125,80 @@ export function createVaultTokenProvider(
     },
   };
 }
+
+/**
+ * REQ-SEC-011 (ADR-067 step 4) — field encryption through OpenBao Transit, for the personal data that must stay
+ * protected from anyone who can query the database and in `pg_dump` output: vendor contacts, asset custodians, custom
+ * fields marked sensitive. The key never leaves OpenBao; a stored value is the Transit ciphertext (`vault:v<n>:…`).
+ * A value without the prefix was written before encryption: `decrypt` returns it as it is, and `isCiphertext` lets a
+ * backfill find it. Such fields cannot be searched, filtered or sorted in the database.
+ */
+export interface FieldCipher {
+  encrypt(values: readonly (string | null)[]): Promise<(string | null)[]>;
+  decrypt(values: readonly (string | null)[]): Promise<(string | null)[]>;
+}
+
+export function isCiphertext(value: string): boolean {
+  return value.startsWith(VAULT.ciphertextPrefix);
+}
+
+const encryptSchema = z.object({ data: z.object({ batch_results: z.array(z.object({ ciphertext: z.string().min(1) })) }) });
+const decryptSchema = z.object({ data: z.object({ batch_results: z.array(z.object({ plaintext: z.string() })) }) });
+
+export function createFieldCipher(
+  env: Pick<Env, 'OPENBAO_ADDR'>,
+  provider: VaultTokenProvider,
+  fetchImpl: typeof fetch = fetch,
+): FieldCipher {
+  const url = (op: 'encrypt' | 'decrypt'): URL =>
+    new URL('v1/' + VAULT.transitMount + '/' + op + '/' + VAULT.fieldKey, base(env.OPENBAO_ADDR));
+
+  const call = async (op: 'encrypt' | 'decrypt', items: readonly { plaintext?: string; ciphertext?: string }[]): Promise<unknown> => {
+    let res: Response;
+    try {
+      res = await vaultRequest(provider, fetchImpl, url(op), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ batch_input: items }),
+      });
+    } catch (err) {
+      if (err instanceof VaultUnavailableError) throw err;
+      throw new VaultUnavailableError('OpenBao unreachable: ' + (err instanceof Error ? err.message : String(err)));
+    }
+    if (!res.ok) throw new VaultUnavailableError('OpenBao refused a Transit ' + op + ': HTTP ' + String(res.status));
+    return res.json();
+  };
+
+  /** Runs `work` over the indices that hold a value, in batches, and writes the results back in place. */
+  const each = async (
+    values: readonly (string | null)[],
+    pick: (v: string) => boolean,
+    work: (batch: string[]) => Promise<string[]>,
+  ): Promise<(string | null)[]> => {
+    const out = [...values];
+    const indices = values.flatMap((v, i) => (v !== null && pick(v) ? [i] : []));
+    for (let start = 0; start < indices.length; start += VAULT.transitBatch) {
+      const slice = indices.slice(start, start + VAULT.transitBatch);
+      const results = await work(slice.map((i) => values[i] as string));
+      slice.forEach((i, k) => {
+        out[i] = results[k] ?? null;
+      });
+    }
+    return out;
+  };
+
+  return {
+    encrypt: (values) =>
+      each(values, (v) => !isCiphertext(v), async (batch) => {
+        const parsed = encryptSchema.parse(await call('encrypt', batch.map((v) => ({ plaintext: Buffer.from(v, 'utf8').toString('base64') }))));
+        if (parsed.data.batch_results.length !== batch.length) throw new VaultUnavailableError('OpenBao Transit returned a short batch');
+        return parsed.data.batch_results.map((r) => r.ciphertext);
+      }),
+    decrypt: (values) =>
+      each(values, isCiphertext, async (batch) => {
+        const parsed = decryptSchema.parse(await call('decrypt', batch.map((v) => ({ ciphertext: v }))));
+        if (parsed.data.batch_results.length !== batch.length) throw new VaultUnavailableError('OpenBao Transit returned a short batch');
+        return parsed.data.batch_results.map((r) => Buffer.from(r.plaintext, 'base64').toString('utf8'));
+      }),
+  };
+}

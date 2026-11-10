@@ -14,10 +14,12 @@ export interface CustomFieldDefinitionView {
   options: string[];
   appliesTo: string[];
   required: boolean;
+  /** REQ-SEC-011: values stored encrypted; not offered as a filter. */
+  sensitive: boolean;
   usage: number;
 }
 
-const FIELDS = 'id key labelEn labelAr description type options appliesTo required usage';
+const FIELDS = 'id key labelEn labelAr description type options appliesTo required sensitive usage';
 const DEFINITIONS_QUERY = 'query CustomFieldDefinitions($type: String) { customFieldDefinitions(type: $type) { ' + FIELDS + ' } }';
 const UPSERT_MUTATION =
   'mutation UpsertCustomFieldDefinition($id: UUID, $input: CustomFieldDefinitionInput!) { upsertCustomFieldDefinition(id: $id, input: $input) { ' + FIELDS + ' } }';

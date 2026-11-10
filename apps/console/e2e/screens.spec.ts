@@ -219,7 +219,11 @@ test('Assistant: an example question is answered or explicitly refused', async (
   test.setTimeout(ASSISTANT_TIMEOUT_MS + 30_000);
   await page.goto('/' + locale + '/assistant');
   await signIn(page, locale);
-  await page.getByRole('button', { name: translate(locale, 'assistant.example.hosts') }).click();
+  // The example, not a past conversation that asked the same question (REQ-AI-008 lists them as buttons too).
+  await page
+    .getByRole('group', { name: translate(locale, 'assistant.examplesLabel') })
+    .getByRole('button', { name: translate(locale, 'assistant.example.hosts') })
+    .click();
   // REQ-AI-008: exact, because "Conversation" is also a substring of the "Past conversations" list beside the thread.
   const conversation = page.getByRole('list', {
     name: translate(locale, 'assistant.conversation'),

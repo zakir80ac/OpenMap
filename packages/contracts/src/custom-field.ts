@@ -1,10 +1,13 @@
-// REQ-CMDB-015 — the custom-field contract (0.1.0): a tenant defines fields (key, labels in both locales, type, options
+// REQ-CMDB-015 — the custom-field contract (0.2.0): a tenant defines fields (key, labels in both locales, type, options
 // for a select, the CI types they apply to, whether required) and every CI carries values for the fields that apply
 // to its type. One validator serves the API (which refuses a bad write) and the console (which says why before
 // sending), so both read a value the same way: text trimmed, numbers finite, dates as YYYY-MM-DD, a select's value one
 // of its options, null to clear.
+// 0.2.0 (REQ-SEC-011, ADR-067 step 4): a text field may be `sensitive`; its values are stored as OpenBao Transit
+// ciphertext and cannot be filtered or searched. A text value may not look like ciphertext (`vault:v…`), so a stored
+// value is always told apart from one that was encrypted.
 import { z } from 'zod';
-import { CUSTOM_FIELDS } from '@openmap/constants';
+import { CUSTOM_FIELDS, VAULT } from '@openmap/constants';
 import { ciTypeSchema, type CiType } from './ci.js';
 
 export const CUSTOM_FIELD_TYPES = ['text', 'number', 'date', 'boolean', 'select'] as const;
@@ -22,8 +25,10 @@ export const customFieldDefinitionInputSchema = z
     options: z.array(label).max(CUSTOM_FIELDS.maxOptions).default([]),
     appliesTo: z.array(ciTypeSchema).default([]),
     required: z.boolean().default(false),
+    sensitive: z.boolean().default(false),
   })
   .refine((d) => d.type !== 'select' || d.options.length > 0, { message: 'a select field needs at least one option', path: ['options'] })
+  .refine((d) => !d.sensitive || d.type === 'text', { message: 'only a text field can be sensitive', path: ['sensitive'] })
   .refine((d) => new Set(d.options).size === d.options.length, { message: 'options must be distinct', path: ['options'] });
 export type CustomFieldDefinitionInput = z.infer<typeof customFieldDefinitionInputSchema>;
 
@@ -39,6 +44,11 @@ export type CustomFieldValues = Record<string, CustomFieldValue>;
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** The keys whose values are stored encrypted. */
+export function sensitiveKeys(defs: readonly Pick<CustomFieldDefinition, 'key' | 'sensitive'>[]): Set<string> {
+  return new Set(defs.filter((d) => d.sensitive).map((d) => d.key));
+}
+
 /** Whether a definition applies to a CI type (an empty list applies to every type). */
 export function appliesToType(def: Pick<CustomFieldDefinition, 'appliesTo'>, type: CiType): boolean {
   return def.appliesTo.length === 0 || def.appliesTo.includes(type);
@@ -51,6 +61,7 @@ export function readCustomFieldValue(def: Pick<CustomFieldDefinition, 'type' | '
       if (typeof raw !== 'string') return { error: 'expects text' };
       const text = raw.trim();
       if (text === '') return { error: 'expects text' };
+      if (text.startsWith(VAULT.ciphertextPrefix)) return { error: 'cannot start with ' + VAULT.ciphertextPrefix };
       return text.length > CUSTOM_FIELDS.maxTextLength ? { error: 'is too long' } : { value: text };
     }
     case 'number': {

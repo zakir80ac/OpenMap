@@ -7,6 +7,10 @@ export const BACKUP_STATUSES = ['running', 'complete', 'failed'] as const;
 export type BackupStatus = (typeof BACKUP_STATUSES)[number];
 
 const SHA256 = /^[a-f0-9]{64}$/u;
+const HEX = /^[a-f0-9]+$/u;
+
+/** REQ-SEC-011 (ADR-067 step 5): an encrypted file's IV and its HMAC over the ciphertext; absent on plaintext sets. */
+const sealedFile = { iv: z.string().regex(HEX).optional(), mac: z.string().regex(SHA256).optional() };
 
 export const backupManifestSchema = z.object({
   format: z.literal(BACKUP.formatVersion),
@@ -23,6 +27,7 @@ export const backupManifestSchema = z.object({
       migration: z.string(),
       /** Current CIs at backup time, a quick check after a restore. */
       cis: z.number().int().min(0),
+      ...sealedFile,
     })
     .nullable(),
   clickhouse: z
@@ -33,11 +38,22 @@ export const backupManifestSchema = z.object({
       files: z.number().int().min(0),
       /** sha256 of the sorted per-file checksum list, so one value vouches for the whole directory. */
       sha256: z.string().regex(SHA256),
+      /** The encrypted tar of the directory, when the set is encrypted (its sha256 is then the archive's). */
+      archive: z.string().min(1).optional(),
+      ...sealedFile,
     })
     .nullable(),
   /** REQ-SEC-011 (ADR-067): OpenBao's Raft snapshot, when the backup service has its AppRole; absent in older sets. */
   openbao: z
     .object({ file: z.string().min(1), bytes: z.number().int().min(0), sha256: z.string().regex(SHA256) })
+    .nullable()
+    .default(null),
+  /**
+   * REQ-SEC-011 (ADR-067 step 5): the set's data key wrapped by Transit (`transitKey`), and the cipher; null on a plaintext
+   * set and absent in older ones. The OpenBao snapshot is never encrypted with it (OpenBao encrypts its own storage).
+   */
+  encryption: z
+    .object({ cipher: z.literal('aes-256-ctr+hmac-sha256'), transitKey: z.string().min(1), key: z.string().startsWith('vault:v') })
     .nullable()
     .default(null),
   /** Stores rebuilt from Postgres after a restore instead of being backed up. */

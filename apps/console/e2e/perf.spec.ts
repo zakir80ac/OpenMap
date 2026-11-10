@@ -20,6 +20,11 @@ const WHEEL_STEP = 120;
 const PAN_STEP_PX = 40;
 const PERCENTILE_95 = 0.95;
 
+// requestAnimationFrame is paced by the display's refresh, so on a 60 Hz display the frame count can only reach the
+// budget and one dropped frame in the window fails it. Without vsync and the frame-rate cap, the count is what the map
+// can render; the budget then checks headroom, not the monitor.
+test.use({ launchOptions: { args: ['--disable-gpu-vsync', '--disable-frame-rate-limit'] } });
+
 function p95(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * PERCENTILE_95) - 1);

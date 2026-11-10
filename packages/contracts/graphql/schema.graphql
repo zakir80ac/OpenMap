@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.39.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.40.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -801,7 +801,7 @@ type MacLookup { mac: String! sightings: [MacSighting!]! }
 
 # REQ-INT-019 (ADR-066): backup sets of the stores of record, from their manifests.
 enum BackupState { running complete failed }
-type BackupSet { name: String! status: BackupState! createdAt: DateTime! completedAt: DateTime postgresBytes: Float clickhouseBytes: Float migration: String cis: Int error: String }
+type BackupSet { name: String! status: BackupState! createdAt: DateTime! completedAt: DateTime postgresBytes: Float clickhouseBytes: Float migration: String cis: Int "REQ-SEC-011 (ADR-067): files encrypted under a Transit-wrapped data key." encrypted: Boolean! error: String }
 type Backups {
   "False when this deployment keeps no backup directory (BACKUP_DIR unset)."
   configured: Boolean!
@@ -2185,6 +2185,11 @@ type CustomFieldDefinition {
   appliesTo: [String!]!
   required: Boolean!
   """
+  REQ-SEC-011 (ADR-067): values are personal data, stored as OpenBao Transit ciphertext and returned decrypted; a
+  sensitive field cannot be used in a CI filter. Text fields only.
+  """
+  sensitive: Boolean!
+  """
   Current CIs carrying a value for the field.
   """
   usage: Int!
@@ -2200,6 +2205,7 @@ input CustomFieldDefinitionInput {
   options: [String!]
   appliesTo: [String!]
   required: Boolean
+  sensitive: Boolean
 }
 
 # REQ-CMDB-033 REQ-CMDB-036 (ADR-032) — importing a spreadsheet or another CMDB's export. The file travels as base64;

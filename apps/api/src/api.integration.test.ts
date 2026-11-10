@@ -2214,6 +2214,84 @@ describe('OpenMap API (integration)', () => {
     await gql('mutation D($id: UUID!) { deleteCustomFieldDefinition(id: $id) }', { id: owner.data?.upsertCustomFieldDefinition.id }, adminToken);
   });
 
+  it('stores personal data as OpenBao Transit ciphertext and returns it decrypted (REQ-SEC-011)', async () => {
+    // T-578 ADR-067 step 4: vendor contacts, an asset custodian and its audit, a sensitive custom field.
+    const adminToken = await mint([ROLES.admin], keys.privateKey);
+    const stamp = String(Date.now());
+    const sealed = (v: string | null | undefined): boolean => typeof v === 'string' && v.startsWith('vault:v');
+
+    const vendor = await gql<{ upsertVendor: { ci: { id: string } } }>('mutation V($input: VendorInput!) { upsertVendor(input: $input) { ci { id } } }', {
+      input: { name: 'Sealed vendor ' + stamp, category: 'hardware' },
+    });
+    const vendorId = vendor.data?.upsertVendor.ci.id ?? '';
+    const contact = 'mutation C($input: VendorContactInput!) { upsertVendorContact(input: $input) { id name email phone } }';
+    const zara = await gql<{ upsertVendorContact: { id: string; name: string; email: string } }>(contact, {
+      input: { vendorId, name: 'Zara Al-Harbi', role: 'Account manager', escalationLevel: 1, email: 'zara@vendor.example', phone: '+966 11 222 3333' },
+    });
+    expect(zara.data?.upsertVendorContact).toMatchObject({ name: 'Zara Al-Harbi', email: 'zara@vendor.example' });
+    await gql(contact, { input: { vendorId, name: 'Adel Saeed', role: 'Engineer', escalationLevel: 1, email: 'adel@vendor.example' } });
+    const rows = await prisma.vendorContact.findMany({ where: { tenantId, vendorCiId: vendorId } });
+    expect(rows).toHaveLength(2);
+    for (const r of rows) {
+      expect(sealed(r.name)).toBe(true);
+      expect(sealed(r.email)).toBe(true);
+    }
+    expect(rows.find((r) => r.id === zara.data?.upsertVendorContact.id)?.phone).toMatch(/^vault:v/);
+    // Read back decrypted and sorted by name within the escalation level, which the database can no longer do.
+    const detail = await gql<{ vendor: { contacts: Array<{ name: string; phone: string | null }> } }>('query V($id: UUID!) { vendor(id: $id) { contacts { name phone } } }', { id: vendorId });
+    expect(detail.data?.vendor.contacts).toEqual([{ name: 'Adel Saeed', phone: null }, { name: 'Zara Al-Harbi', phone: '+966 11 222 3333' }]);
+
+    const asset = await gql<{ createAsset: { id: string } }>('mutation A($input: ManualAssetInput!) { createAsset(input: $input) { id } }', {
+      input: { layer: 'hardware', type: 'host', name: 'Sealed host ' + stamp, details: { serialNumber: 'SEAL-' + stamp, custodian: 'Noura Al-Otaibi' } },
+    });
+    const assetId = asset.data?.createAsset.id ?? '';
+    const moved = await gql<{ updateAsset: { custodian: string; audits: Array<{ field: string; fromValue: string | null; toValue: string | null }> } }>(
+      'mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { custodian audits { field fromValue toValue } } }',
+      { id: assetId, input: { custodian: 'Faisal Qahtani' } },
+    );
+    expect(moved.errors).toBeUndefined();
+    expect(moved.data?.updateAsset.custodian).toBe('Faisal Qahtani');
+    expect(moved.data?.updateAsset.audits.filter((a) => a.field === 'custodian')).toEqual(
+      expect.arrayContaining([{ field: 'custodian', fromValue: 'Noura Al-Otaibi', toValue: 'Faisal Qahtani' }, { field: 'custodian', fromValue: null, toValue: 'Noura Al-Otaibi' }]),
+    );
+    // Setting the same custodian again is no change (compared in plaintext, not against the ciphertext).
+    const same = await gql<{ updateAsset: { audits: Array<{ field: string }> } }>('mutation U($id: UUID!, $input: AssetDetailsInput!) { updateAsset(assetId: $id, input: $input) { audits { field } } }', {
+      id: assetId,
+      input: { custodian: 'Faisal Qahtani' },
+    });
+    expect(same.data?.updateAsset.audits.filter((a) => a.field === 'custodian')).toHaveLength(2);
+    expect(sealed((await prisma.assetRecord.findUnique({ where: { id: assetId } }))?.custodian)).toBe(true);
+    for (const a of await prisma.assetAudit.findMany({ where: { assetId, field: 'custodian' } })) {
+      expect(a.fromValue === null || sealed(a.fromValue)).toBe(true);
+      expect(sealed(a.toValue)).toBe(true);
+    }
+
+    const upsert = 'mutation U($id: UUID, $input: CustomFieldDefinitionInput!) { upsertCustomFieldDefinition(id: $id, input: $input) { id sensitive } }';
+    const key = 'nationalId' + stamp.slice(-6);
+    const field = await gql<{ upsertCustomFieldDefinition: { id: string; sensitive: boolean } }>(upsert, { input: { key, labelEn: 'National ID', labelAr: 'رقم الهوية', type: 'text', sensitive: true } }, adminToken);
+    expect(field.data?.upsertCustomFieldDefinition.sensitive).toBe(true);
+    const numberField = await gql(upsert, { input: { key: 'n' + key, labelEn: 'x', labelAr: 'x', type: 'number', sensitive: true } }, adminToken);
+    expect(numberField.errors?.[0]?.message).toMatch(/CustomFieldDefinitionInput/);
+    const unflag = await gql(upsert, { id: field.data?.upsertCustomFieldDefinition.id, input: { key, labelEn: 'National ID', labelAr: 'رقم الهوية', type: 'text', sensitive: false } }, adminToken);
+    expect(unflag.errors?.[0]?.message).toMatch(/fixed once created/);
+    const set = await gql<{ setCiCustomFields: { customFields: Record<string, unknown> } }>('mutation S($ciId: UUID!, $values: JSON!) { setCiCustomFields(ciId: $ciId, values: $values) { customFields } }', {
+      ciId: ids.host,
+      values: { [key]: '1098765432' },
+    });
+    expect(set.data?.setCiCustomFields.customFields[key]).toBe('1098765432');
+    const stored = (await prisma.ci.findUnique({ where: { id: ids.host } }))?.customFields as Record<string, unknown>;
+    expect(sealed(String(stored[key]))).toBe(true);
+    // The change event carries the ciphertext, so ClickHouse and the event stream never see the value.
+    const event = await prisma.outboxEvent.findFirst({ where: { tenantId, type: 'openmap.ci.updated', subject: ids.host }, orderBy: { sequence: 'desc' } });
+    expect(JSON.stringify(event?.envelope)).toContain(key);
+    expect(JSON.stringify(event?.envelope)).not.toContain('1098765432');
+    const filtered = await gql('query F($filter: CiFilter) { cis(filter: $filter, first: 5) { edges { node { id } } } }', { filter: { customFields: { [key]: '1098765432' } } });
+    expect(filtered.errors?.[0]?.message).toMatch(/sensitive custom fields cannot be filtered/);
+    const lookalike = await gql('mutation S($ciId: UUID!, $values: JSON!) { setCiCustomFields(ciId: $ciId, values: $values) { id } }', { ciId: ids.host, values: { [key]: 'vault:v1:forged' } });
+    expect(lookalike.errors?.[0]?.message).toMatch(/cannot start with vault:v/);
+    await gql('mutation D($id: UUID!) { deleteCustomFieldDefinition(id: $id) }', { id: field.data?.upsertCustomFieldDefinition.id }, adminToken);
+  });
+
   it('lists discovery scopes from subnets and lets an operator set exclusions, credential set and rate limit', async () => {
     // T-112 REQ-DISC-029
     const scopes = await gql<{

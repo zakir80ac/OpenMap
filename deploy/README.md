@@ -124,6 +124,31 @@ PostgreSQL is Percona Server for PostgreSQL 17 with pg_tde:
   `openbao.external`, set `postgres.tde.externalApproleSecret` (a Secret with `role-id` and `secret-id` of an AppRole on
   the pg-tde policy; the vault needs a KV v2 mount `tde`).
 
+**Encrypted ClickHouse** (ADR-067 step 6):
+
+- **What is encrypted:** ClickHouse stores every data part, system logs included, on an `encrypted` disk (AES-256-CTR)
+  over `/var/lib/clickhouse/disks/sealed`; that is the default storage policy. Table metadata (the DDL) stays plain.
+- **The key:** generated once by `openbao-init` into `tde/clickhouse-disk`. `clickhouse-keys` (OpenBao Agent, AppRole
+  `clickhouse-disk`; a sidecar on Helm) renders it into a memory volume.
+- **Start-up:** `clickhouse/with-disk-key.sh` waits for the key and starts the server with it. Without it, ClickHouse
+  does not start.
+- **Volumes:** data is on `clickhouse-tde-data`. An install from before kept plain parts in `clickhouse-data`; move it
+  as PostgreSQL was moved (stop the writers, `backup create`, recreate ClickHouse, then
+  `backup restore <set> --clickhouse-only`).
+- **Helm:** `clickhouse.encryption.enabled` (default true) takes effect on an empty volume. With `openbao.external`,
+  set `clickhouse.encryption.externalApproleSecret`.
+
+**Field encryption** (ADR-067 step 4). Some personal data is also encrypted inside the database:
+
+- the fields: vendor contacts (name, email, phone), asset custodians and their audit entries, and custom fields
+  created as *sensitive*;
+- the key: Transit key `openmap-fields`; values are stored as `vault:v<n>:…` ciphertext and decrypted only by the API;
+- the protection: anyone who can query the database, and `pg_dump` output, see only ciphertext;
+- the cost: those fields cannot be searched, filtered or sorted in the database.
+
+Values written before field encryption stay readable. Encrypt them once with
+`docker compose ... run --rm reconciler node dist/encrypt-fields.js [--tenant <id>]`; it can be run again safely.
+
 **Moving an install that ran stock PostgreSQL** (its data is in the `postgres-data` volume; measured on the dev stack:
 9.4 GB of PostgreSQL restored in 1.6 min):
 
@@ -146,7 +171,22 @@ PostgreSQL is Percona Server for PostgreSQL 17 with pg_tde:
 A backup set holds the stores of record: PostgreSQL (`pg_dump` custom archive: application, Keycloak and Superset
 schemas) and ClickHouse (native `BACKUP`), with a manifest of sizes, checksums, the schema migration and the CI count.
 Memgraph and Meilisearch are rebuilt from PostgreSQL after a restore. Sets live on the `backups` volume; put it on
-separate, encrypted storage.
+separate storage.
+
+**Sets are encrypted** (REQ-SEC-011, ADR-067 step 5):
+
+- **How:** each set gets a fresh data key from OpenBao Transit (key `openmap-backup`), and only the wrapped key is
+  written to the manifest. The PostgreSQL archive and a tar of the ClickHouse backup are encrypted with AES-256-CTR and
+  authenticated with HMAC-SHA256 (`postgres.dump.enc`, `clickhouse.tar.enc`).
+- **What `verify` checks:** the MACs, before anything reads the plaintext.
+- **What `restore` does:** decrypts beside the set and removes the plaintext afterwards.
+- **Restoring needs OpenBao.** A set restores only where OpenBao holds `openmap-backup`: restore OpenBao from a
+  set's `openbao.snap` first.
+- **The OpenBao snapshot is left as OpenBao wrote it.** It is already encrypted by OpenBao with the seal key, so keep
+  the seal key and recovery keys apart from the sets.
+- **Without OpenBao,** `create` refuses to write a set. `BACKUP_ENCRYPTION=off` writes plaintext sets, for an install
+  without OpenBao only.
+- **Older plaintext sets** still verify and restore.
 
 Take a backup (on demand, or from the host's cron / systemd timer once a day; the newest `BACKUP_KEEP` sets are kept):
 

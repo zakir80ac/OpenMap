@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { loadEnv } from '@openmap/config';
+import { TOPOLOGY } from '@openmap/constants';
 import { createPrismaClient } from '@openmap/db';
 import { AppModule } from '../app.module.js';
 import { JWKS, realmUrl } from '../auth/jwks.provider.js';
@@ -52,8 +53,10 @@ async function topology(variables: Record<string, unknown>): Promise<Topology> {
 
 describe('network topology (integration)', () => {
   beforeAll(async () => {
-    const populated = await prisma.ci.groupBy({ by: ['tenantId'], where: { type: 'network_device', validTo: null }, _count: { _all: true }, orderBy: { _count: { tenantId: 'desc' } }, take: 1 });
-    tenantId = populated[0]?.tenantId ?? '';
+    // The most network devices that still fit the map (TOPOLOGY.maxNodes): past the cap, low-degree hosts are the
+    // first nodes left out, and the scale-1 estate (5,030 devices) is past it.
+    const populated = await prisma.ci.groupBy({ by: ['tenantId'], where: { type: 'network_device', validTo: null }, _count: { _all: true }, orderBy: { _count: { tenantId: 'desc' } } });
+    tenantId = populated.find((p) => p._count._all < TOPOLOGY.maxNodes)?.tenantId ?? '';
     expect(tenantId, 'a tenant with network devices').not.toBe('');
     const keys = await generateKeyPair(SIGNING_ALGORITHM);
     const jwk = { ...(await exportJWK(keys.publicKey)), kid: KID, alg: SIGNING_ALGORITHM, use: 'sig' };

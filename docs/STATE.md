@@ -2,7 +2,47 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 45: REQ-SEC-011 steps 1–2 committed; impact walk breadth first)
+## Last session · 2026-11-10 (checkpoint 46: REQ-SEC-011 encryption at rest complete, ADR-067 steps 3–6)
+
+### Encryption at rest is done end to end on compose and Helm
+
+| Step | What | Evidence |
+| --- | --- | --- |
+| 3 | PostgreSQL on Percona 17.11.1 with pg_tde. Every table is `tde_heap`, the WAL is encrypted, and the key is in OpenBao through an OpenBao Agent. The dev stack moved twice through backup sets, the second time for the collation fix. | `docs/evidence/sec-pgtde-migration.md` (433e444) |
+| 4 | Transit field encryption: vendor contacts, asset custodians and their audits, and sensitive custom fields. CI 0.12.0, GraphQL 1.40.0, migration 0045. Backfill with `reconciler encrypt-fields`. | `docs/evidence/sec-field-encryption.md` |
+| 5 | Encrypted backup sets: a per-set Transit data key, AES-256-CTR plus HMAC, and `BackupSet.encrypted`. | `docs/evidence/sec-backup-encryption.md` |
+| 6 | ClickHouse on an encrypted disk, its key from OpenBao through the `clickhouse-keys` agent. | `docs/evidence/sec-clickhouse-encryption.md` |
+
+### Budgets on the fully encrypted stack
+
+| Budget | Result | Limit |
+| --- | --- | --- |
+| Impact p95 | 76 ms | 1 s |
+| Telemetry p95 (138k CIs) | 60 ms | 100 ms |
+| Discovery sweep (+38 % from the ClickHouse encryption) | 8.36 min per 10k devices | 15 |
+| Encrypted backup | 67 s | — |
+
+### Found and fixed along the way
+
+- **The Percona image initialised the database with collation `C`.** Name ordering changed, and three e2e specs broke.
+  The database is now created with `--locale=en_US.UTF-8` (`POSTGRES_LOCALE`, Helm `postgres.locale`).
+- **The reconciler had no AppRole mount.**
+- **The perf frame rate was capped by the display.** vsync is now off for the perf spec: 540 fps against 60.
+- **The assistant example button was ambiguous** once past conversations were listed; the examples are now a
+  labelled group.
+- **The restore brought no planner statistics;** it now runs `ANALYZE`.
+
+### Open
+
+- **REQ-SEC-011 stays In progress** for encryption in transit: TLS from the services to Postgres, ClickHouse,
+  Memgraph, Valkey, Meilisearch and OpenBao, using the internal CA that signs Node mTLS. That is the next work.
+- **Old plaintext volumes** `openmap_postgres-data` and `openmap_clickhouse-data` are kept on the dev machine as
+  the way back. Remove them once the stack has run on the new ones; they hold the data unencrypted.
+- The kind cluster `openmap-control-plane` is stopped.
+
+**Tests added:** T-574 … T-580.
+
+## Previous session · 2026-11-10 (checkpoint 45: REQ-SEC-011 steps 1–2 committed; impact walk breadth first)
 
 ### What happened
 

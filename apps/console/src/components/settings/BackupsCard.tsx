@@ -21,6 +21,7 @@ export interface BackupSet {
   clickhouseBytes: number | null;
   migration: string | null;
   cis: number | null;
+  encrypted: boolean;
   error: string | null;
 }
 
@@ -33,7 +34,7 @@ export interface Backups {
 }
 
 const QUERY =
-  '{ backups { configured stale staleAfterHours lastCompleteAt sets { name status createdAt completedAt postgresBytes clickhouseBytes migration cis error } } }';
+  '{ backups { configured stale staleAfterHours lastCompleteAt sets { name status createdAt completedAt postgresBytes clickhouseBytes migration cis encrypted error } } }';
 
 export const backupsQuery = {
   queryKey: ['backups'] as const,
@@ -120,6 +121,7 @@ export function BackupsCard(): ReactNode {
                           <Tag variant="state" state={STATE[s.status]}>
                             {t(`settings.backups.status.${s.status}`)}
                           </Tag>
+                          {s.encrypted ? <Tag>{t('settings.backups.encrypted')}</Tag> : null}
                         </td>
                         <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>
                           {format.dateTime(s.completedAt ?? s.createdAt)}

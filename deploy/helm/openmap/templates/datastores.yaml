@@ -19,6 +19,22 @@ data:
   agent-pgtde.hcl: |
 {{ .Files.Get "files/openbao/agent-pgtde.hcl" | indent 4 }}
   {{- end }}
+{{- if .Values.clickhouse.encryption.enabled }}
+---
+# REQ-SEC-011 (ADR-067 step 6): the encrypted disk, the entrypoint wrapper that waits for its key, and the agent's config.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openmap.fullname" . }}-clickhouse-encryption
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "clickhouse") | nindent 4 }}
+data:
+  encrypted-disk.xml: |
+{{ .Files.Get "files/clickhouse/encrypted-disk.xml" | indent 4 }}
+  with-disk-key.sh: |
+{{ .Files.Get "files/clickhouse/with-disk-key.sh" | indent 4 }}
+  agent-clickhouse.hcl: |
+{{ .Files.Get "files/openbao/agent-clickhouse.hcl" | indent 4 }}
+{{- end }}
 ---
 {{- $root := . }}
 {{- range $store := list
@@ -67,6 +83,10 @@ spec:
       # The Percona image runs PostgreSQL as uid 26; the agent sidecar writes the token as that user.
       securityContext: { fsGroup: 26 }
       {{- end }}
+      {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
+      # The agent sidecar writes the disk key as the ClickHouse image's user (uid 101).
+      securityContext: { fsGroup: 101 }
+      {{- end }}
       {{- if eq $store.component "memgraph" }}
       # Memgraph crashes on start when its data directory is not owned by its own user (a fresh PersistentVolume is
       # root-owned), so the volume is handed over before the database starts; the same image, as root, does it.
@@ -100,12 +120,20 @@ spec:
             - { name: pgtde-token, mountPath: /run/pgtde, readOnly: true }
             {{- end }}
             {{- end }}
+            {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
+            - { name: clickhouse-encryption, mountPath: /etc/clickhouse-server/config.d/encrypted-disk.xml, subPath: encrypted-disk.xml, readOnly: true }
+            - { name: clickhouse-encryption, mountPath: /usr/local/bin/with-disk-key.sh, subPath: with-disk-key.sh, readOnly: true }
+            - { name: clickhouse-key, mountPath: /run/clickhouse-key, readOnly: true }
+            {{- end }}
           {{- if eq $store.component "postgres" }}
-          {{- if $root.Values.postgres.tde.enabled }}
-          args: ["postgres", "-c", "shared_preload_libraries=pg_tde"]
           env:
+            - { name: POSTGRES_INITDB_ARGS, value: {{ printf "--locale=%s" $root.Values.postgres.locale | quote }} }
+            {{- if $root.Values.postgres.tde.enabled }}
             - { name: OPENBAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
             - { name: PG_TDE_TOKEN_WAIT_SECONDS, value: {{ $root.Values.postgres.tde.tokenWaitSeconds | quote }} }
+            {{- end }}
+          {{- if $root.Values.postgres.tde.enabled }}
+          args: ["postgres", "-c", "shared_preload_libraries=pg_tde"]
           {{- end }}
           envFrom:
             - secretRef: { name: {{ include "openmap.fullname" $root }}-datastores }
@@ -133,7 +161,11 @@ spec:
             tcpSocket: { port: 7687 }
             periodSeconds: 5
           {{- else if eq $store.component "clickhouse" }}
+          {{- if $root.Values.clickhouse.encryption.enabled }}
+          command: ["sh", "/usr/local/bin/with-disk-key.sh"]
+          {{- end }}
           env:
+            - { name: CLICKHOUSE_DISK_KEY_WAIT_SECONDS, value: {{ $root.Values.clickhouse.encryption.keyWaitSeconds | quote }} }
             - { name: CLICKHOUSE_DB, value: {{ $root.Values.clickhouse.database | quote }} }
             - { name: CLICKHOUSE_USER, value: {{ $root.Values.clickhouse.username | quote }} }
             - { name: CLICKHOUSE_PASSWORD, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" $root }}-datastores, key: CLICKHOUSE_PASSWORD } } }
@@ -141,6 +173,21 @@ spec:
           readinessProbe:
             httpGet: { path: /ping, port: 8123 }
             periodSeconds: 5
+        {{- if $root.Values.clickhouse.encryption.enabled }}
+        # REQ-SEC-011 (ADR-067 step 6): renders the encrypted disk's key from OpenBao into a memory volume.
+        - name: clickhouse-keys
+          image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $root.Values.openbao.image }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          args: ["agent", "-config=/openbao/config/agent-clickhouse.hcl"]
+          securityContext: { runAsUser: 101, runAsGroup: 101 }
+          env:
+            - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+          resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
+          volumeMounts:
+            - { name: clickhouse-key, mountPath: /run/clickhouse-key }
+            - { name: clickhouse-approle, mountPath: /openbao/approle-clickhouse, readOnly: true }
+            - { name: clickhouse-encryption, mountPath: /openbao/config/agent-clickhouse.hcl, subPath: agent-clickhouse.hcl, readOnly: true }
+        {{- end }}
           {{- else if eq $store.component "valkey" }}
           args: ["--appendonly", "yes"]
           readinessProbe:
@@ -186,6 +233,24 @@ spec:
             {{- end }}
             defaultMode: 0440
         {{- end }}
+      {{- end }}
+      {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
+      volumes:
+        - name: clickhouse-encryption
+          configMap: { name: {{ include "openmap.fullname" $root }}-clickhouse-encryption, defaultMode: 0555 }
+        # The disk key never touches a disk.
+        - name: clickhouse-key
+          emptyDir: { medium: Memory, sizeLimit: 1Mi }
+        - name: clickhouse-approle
+          secret:
+            {{- if $root.Values.openbao.external.enabled }}
+            secretName: {{ required "clickhouse.encryption.externalApproleSecret is required with openbao.external and clickhouse.encryption" $root.Values.clickhouse.encryption.externalApproleSecret }}
+            items: [{ key: role-id, path: role-id }, { key: secret-id, path: secret-id }]
+            {{- else }}
+            secretName: {{ include "openmap.fullname" $root }}-openbao-approle
+            items: [{ key: clickhouse-role-id, path: role-id }, { key: clickhouse-secret-id, path: secret-id }]
+            {{- end }}
+            defaultMode: 0440
       {{- end }}
   volumeClaimTemplates:
     - metadata:

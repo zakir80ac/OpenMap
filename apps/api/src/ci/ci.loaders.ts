@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { HEADLINE_METRIC_NAMES } from '@openmap/contracts';
 import { BatchLoader } from '../common/batch-loader.js';
 import { ClickHouseService } from '../db/clickhouse.service.js';
+import { FieldCipherService } from '../db/field-cipher.service.js';
 import { GraphService } from '../db/graph.service.js';
 import { CI_REPOSITORY, type CiRepository } from './ci.repository.js';
 import type { CiRecord, HealthState, MetricPoint, RelationshipRecord } from './ci.types.js';
@@ -14,6 +15,8 @@ export interface CiLoaders {
   health: BatchLoader<string, HealthState>;
   /** Latest headline-metric samples of a CI, keyed by metric name; a CI with no sample resolves to null. */
   metrics: BatchLoader<string, Map<string, MetricPoint>>;
+  /** REQ-SEC-011: Transit ciphertext → plaintext, so a page of CIs with sensitive custom fields costs one decrypt. */
+  plaintext: BatchLoader<string, string>;
 }
 
 // UNWIND + MATCH by id hits the unique id index once per id; a parameterised `WHERE c.id IN $ids` is evaluated per
@@ -47,6 +50,7 @@ export class CiLoaderFactory {
     @Inject(CI_REPOSITORY) private readonly cis: CiRepository,
     private readonly graph: GraphService,
     private readonly clickhouse: ClickHouseService,
+    private readonly cipher: FieldCipherService,
   ) {}
 
   create(tenantId: string): CiLoaders {
@@ -66,6 +70,10 @@ export class CiLoaderFactory {
           byCi.set(row.ci_id, points);
         }
         return byCi;
+      }),
+      plaintext: new BatchLoader(async (sealed) => {
+        const plain = await this.cipher.decrypt(sealed);
+        return new Map(sealed.flatMap((s, i) => (plain[i] === null || plain[i] === undefined ? [] : [[s, plain[i]] as const])));
       }),
     };
   }

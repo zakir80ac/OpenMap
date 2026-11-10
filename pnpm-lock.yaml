@@ -366,6 +366,9 @@ importers:
       '@openmap/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
+      '@openmap/vault':
+        specifier: workspace:*
+        version: link:../../packages/vault
       '@opentelemetry/api':
         specifier: ^1.10.0
         version: 1.10.0

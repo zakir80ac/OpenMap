@@ -41,6 +41,22 @@ describe('backup manifests', () => {
     ).toBe(false);
   });
 
+  it('reads an encrypted set: the wrapped data key, and each file with its IV and MAC (T-580)', () => {
+    const encrypted = backupManifestSchema.parse({
+      ...manifest('enc', 'complete', '2026-11-10T01:00:00.000Z'),
+      postgres: { file: 'postgres.dump.enc', bytes: 10, sha256: sha, iv: 'ab'.repeat(16), mac: sha, migration: '0045_custom_field_sensitive', cis: 3 },
+      clickhouse: { directory: 'clickhouse', archive: 'clickhouse.tar.enc', database: 'openmap', bytes: 20, files: 4, sha256: sha, iv: 'cd'.repeat(16), mac: sha },
+      encryption: { cipher: 'aes-256-ctr+hmac-sha256', transitKey: 'openmap-backup', key: 'vault:v1:wrapped' },
+    });
+    expect(encrypted.encryption?.transitKey).toBe('openmap-backup');
+    expect(encrypted.clickhouse?.archive).toBe('clickhouse.tar.enc');
+    // Older and plaintext sets carry no encryption block.
+    expect(manifest('plain', 'complete', '2026-11-10T01:00:00.000Z').encryption).toBeNull();
+    expect(
+      backupManifestSchema.safeParse({ ...encrypted, encryption: { cipher: 'aes-256-ctr+hmac-sha256', transitKey: 'k', key: 'plain-key' } }).success,
+    ).toBe(false);
+  });
+
   it('takes the newest complete set and calls the backups stale past the window', () => {
     const sets = [
       manifest('old', 'complete', '2026-11-08T01:00:00.000Z'),

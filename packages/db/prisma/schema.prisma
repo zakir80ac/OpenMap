@@ -1919,6 +1919,8 @@ model CustomFieldDefinition {
   options     String[]
   appliesTo   CiType[]
   required    Boolean         @default(false)
+  /// REQ-SEC-011 (ADR-067 step 4): values stored as OpenBao Transit ciphertext; not filterable. Fixed once created.
+  sensitive   Boolean         @default(false)
   createdAt   DateTime        @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime        @updatedAt @db.Timestamptz(3)
 

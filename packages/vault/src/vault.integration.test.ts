@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { loadEnv } from '@openmap/config';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createVaultTokenProvider, vaultRequest } from './index.js';
+import { createFieldCipher, createVaultTokenProvider, isCiphertext, vaultRequest } from './index.js';
 
 const env = loadEnv();
 const operator = env.OPENBAO_TOKEN ?? '';
@@ -108,5 +108,22 @@ describe('production OpenBao (integration)', () => {
     expect((await asOperator('POST', 'auth/token/revoke', { token })).status).toBe(204);
     expect((await vaultRequest(vault, fetch, path)).status).toBe(200);
     expect(await vault.token()).not.toBe(token);
+  });
+
+  it('encrypts and decrypts fields in batches through the field cipher (T-575)', async () => {
+    const vault = createVaultTokenProvider({
+      ...env,
+      OPENBAO_TOKEN: undefined,
+      OPENBAO_ROLE_ID_FILE: join(dir, 'role-id'),
+      OPENBAO_SECRET_ID_FILE: join(dir, 'secret-id'),
+    });
+    const cipher = createFieldCipher(env, vault);
+    const values = ['Layla Haddad', null, 'layla@vendor.example', '+966 11 000 0000', 'نورة العتيبي'];
+    const stored = await cipher.encrypt(values);
+    expect(stored[1]).toBeNull();
+    for (const v of stored) if (v !== null) expect(isCiphertext(v)).toBe(true);
+    // The same plaintext encrypts differently each time (random nonce): equality cannot be tested in the database.
+    expect((await cipher.encrypt(['Layla Haddad']))[0]).not.toBe(stored[0]);
+    expect(await cipher.decrypt(stored)).toEqual(values);
   });
 });

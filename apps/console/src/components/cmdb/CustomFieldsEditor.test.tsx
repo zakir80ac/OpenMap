@@ -26,9 +26,9 @@ vi.mock('next/link', () => ({
 }));
 
 const defs = [
-  { id: 'd1', key: 'businessOwner', labelEn: 'Business owner', labelAr: 'مالك الأعمال', description: '', type: 'text', options: [], appliesTo: [], required: false, usage: 3 },
-  { id: 'd2', key: 'dataTier', labelEn: 'Data tier', labelAr: 'فئة البيانات', description: '', type: 'select', options: ['gold', 'silver'], appliesTo: ['host'], required: false, usage: 1 },
-  { id: 'd3', key: 'rackUnits', labelEn: 'Rack units', labelAr: 'وحدات الرف', description: '', type: 'number', options: [], appliesTo: ['host'], required: false, usage: 0 },
+  { id: 'd1', key: 'businessOwner', labelEn: 'Business owner', labelAr: 'مالك الأعمال', description: '', type: 'text', options: [], appliesTo: [], required: false, sensitive: false, usage: 3 },
+  { id: 'd2', key: 'dataTier', labelEn: 'Data tier', labelAr: 'فئة البيانات', description: '', type: 'select', options: ['gold', 'silver'], appliesTo: ['host'], required: false, sensitive: false, usage: 1 },
+  { id: 'd3', key: 'rackUnits', labelEn: 'Rack units', labelAr: 'وحدات الرف', description: '', type: 'number', options: [], appliesTo: ['host'], required: false, sensitive: false, usage: 0 },
 ] as const;
 
 const calls: Array<{ query: string; variables: Record<string, unknown> }> = [];
@@ -68,8 +68,11 @@ describe('custom field helpers', () => {
     const list = defs as unknown as Parameters<typeof changeOf>[0];
     expect(changeOf(list, { businessOwner: 'Treasury', dataTier: 'gold' }, { businessOwner: 'Treasury', dataTier: 'silver', rackUnits: '2' })).toEqual({ change: { dataTier: 'silver', rackUnits: 2 }, errors: [] });
     expect(changeOf(list, { businessOwner: 'Treasury' }, { businessOwner: '', dataTier: '', rackUnits: 'two' })).toEqual({ change: { businessOwner: null }, errors: ['rackUnits'] });
-    expect(inputOf({ id: null, key: 'costCode', labelEn: 'Cost code', labelAr: 'رمز التكلفة', description: '', type: 'select', options: 'a, b', appliesTo: [], required: false })).toMatchObject({ input: { key: 'costCode', options: ['a', 'b'] } });
-    expect(inputOf({ id: null, key: 'Bad', labelEn: 'x', labelAr: 'x', description: '', type: 'text', options: '', appliesTo: [], required: false })).toEqual({ error: 'key' });
+    expect(inputOf({ id: null, key: 'costCode', labelEn: 'Cost code', labelAr: 'رمز التكلفة', description: '', type: 'select', options: 'a, b', appliesTo: [], required: false, sensitive: false })).toMatchObject({ input: { key: 'costCode', options: ['a', 'b'] } });
+    expect(inputOf({ id: null, key: 'Bad', labelEn: 'x', labelAr: 'x', description: '', type: 'text', options: '', appliesTo: [], required: false, sensitive: false })).toEqual({ error: 'key' });
+    // REQ-SEC-011: only a text field is sent as sensitive (T-577).
+    expect(inputOf({ id: null, key: 'nationalId', labelEn: 'National ID', labelAr: 'رقم الهوية', description: '', type: 'text', options: '', appliesTo: [], required: false, sensitive: true })).toMatchObject({ input: { sensitive: true } });
+    expect(inputOf({ id: null, key: 'rackU', labelEn: 'Rack', labelAr: 'رف', description: '', type: 'number', options: '', appliesTo: [], required: false, sensitive: true })).toMatchObject({ input: { sensitive: false } });
   });
 });
 
@@ -123,7 +126,7 @@ describe.each(LOCALES)('custom fields (%s)', (locale) => {
     fireEvent.change(within(form).getByLabelText(translate(locale, 'customFields.field.options')), { target: { value: 'CC-100, CC-200' } });
     fireEvent.click(within(form).getByRole('button', { name: translate(locale, 'customFields.save') }));
     await waitFor(() => {
-      expect(calls.find((c) => c.query.includes('UpsertCustomFieldDefinition'))?.variables).toEqual({ id: null, input: { key: 'costCode', labelEn: 'Cost code', labelAr: 'رمز التكلفة', description: '', type: 'select', options: ['CC-100', 'CC-200'], appliesTo: [], required: false } });
+      expect(calls.find((c) => c.query.includes('UpsertCustomFieldDefinition'))?.variables).toEqual({ id: null, input: { key: 'costCode', labelEn: 'Cost code', labelAr: 'رمز التكلفة', description: '', type: 'select', options: ['CC-100', 'CC-200'], appliesTo: [], required: false, sensitive: false } });
     });
     fireEvent.click(screen.getByRole('button', { name: translate(locale, 'customFields.delete', { key: 'businessOwner' }) }));
     fireEvent.click(screen.getByRole('button', { name: translate(locale, 'customFields.confirmDelete', { count: '3' }) }));
