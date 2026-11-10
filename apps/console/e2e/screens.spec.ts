@@ -192,6 +192,15 @@ test('Integrations: an integration is created and probed', async ({ page }, test
       .or(page.getByRole('alert'))
       .first(),
   ).toBeVisible({ timeout: 20_000 });
+  // REQ-INT-009 (T-566): a test message is queued for the BSM engine, or the deployment's outbound policy refuses it.
+  await panel.getByRole('button', { name: translate(locale, 'integrations.notify.test') }).click();
+  await expect(
+    panel
+      .getByText(translate(locale, 'integrations.notify.sent'))
+      .or(panel.getByText(translate(locale, 'integrations.notify.failed')))
+      .first(),
+  ).toBeVisible({ timeout: 20_000 });
+  await page.screenshot({ path: screenshotsDir + 'integrations-notify-' + locale + '.png', fullPage: true });
 });
 
 test('Analytics: the tenant dashboard is embedded from Superset', async ({ page }, testInfo) => {

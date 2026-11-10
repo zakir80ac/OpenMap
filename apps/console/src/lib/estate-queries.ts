@@ -782,6 +782,14 @@ export function testIntegration(id: string): Promise<Integration> {
   );
 }
 
+/** REQ-INT-009 (ADR-065): queues a test message on a notification integration; the delivery appears in its list. */
+export function sendTestNotification(id: string): Promise<boolean> {
+  return gql<{ sendTestNotification: boolean }>(
+    'mutation SendTestNotification($id: UUID!) { sendTestNotification(id: $id) }',
+    { id },
+  ).then((d) => d.sendTestNotification);
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // Analytics and assistant — REQ-UI-017 REQ-UI-018
 // ---------------------------------------------------------------------------------------------------------------

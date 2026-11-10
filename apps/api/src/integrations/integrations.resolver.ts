@@ -1,4 +1,5 @@
-// REQ-INT-005 REQ-UI-014 — Query.integrations / integration / integrationDeliveries, Mutation.upsertIntegration and Mutation.testIntegration.
+// REQ-INT-005 REQ-UI-014 REQ-INT-009 — Query.integrations / integration / integrationDeliveries, Mutation.upsertIntegration,
+// Mutation.testIntegration and Mutation.sendTestNotification.
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { z } from 'zod';
 import { integrationCategorySchema } from '@openmap/contracts';
@@ -9,7 +10,11 @@ import { parseInput } from '../common/validation.js';
 import { TenantContext } from '../tenant/tenant.context.js';
 import { integrationInputSchema } from './integrations.schemas.js';
 import { IntegrationsService } from './integrations.service.js';
-import type { IntegrationDeliveryView, IntegrationDetailView, IntegrationView } from './integrations.types.js';
+import type {
+  IntegrationDeliveryView,
+  IntegrationDetailView,
+  IntegrationView,
+} from './integrations.types.js';
 
 const listArgs = z.object({ category: integrationCategorySchema.nullish() });
 const upsertArgs = z.object({ id: z.uuid().nullish(), input: integrationInputSchema });
@@ -37,7 +42,10 @@ export class IntegrationsResolver {
 
   @Query('integrationDeliveries')
   @Roles(ROLES.operator)
-  integrationDeliveries(@Args('integrationId') integrationId: unknown, @Args('first') first: unknown): Promise<IntegrationDeliveryView[]> {
+  integrationDeliveries(
+    @Args('integrationId') integrationId: unknown,
+    @Args('first') first: unknown,
+  ): Promise<IntegrationDeliveryView[]> {
     const a = parseInput(deliveriesArgs, { integrationId, first }, 'integrationDeliveries arguments');
     return this.service.deliveries(this.tenant.tenantId, a.integrationId, clampPageSize(a.first));
   }
@@ -53,5 +61,16 @@ export class IntegrationsResolver {
   @Roles(ROLES.admin)
   testIntegration(@Args('id') id: unknown): Promise<IntegrationView> {
     return this.service.test(this.tenant.tenantId, parseInput(idArg, id, 'integration id'));
+  }
+
+  /** REQ-INT-009 (ADR-065): queues a test message on a notification integration; the engine sends and records it. */
+  @Mutation('sendTestNotification')
+  @Roles(ROLES.operator)
+  sendTestNotification(@Args('id') id: unknown): Promise<boolean> {
+    return this.service.sendTestNotification(
+      this.tenant.tenantId,
+      this.tenant.username,
+      parseInput(idArg, id, 'integration id'),
+    );
   }
 }

@@ -37,12 +37,24 @@ export function digestOf(body: unknown): string {
 
 function extract(path: string | undefined, response: Record<string, unknown> | null): string | null {
   if (!path || !response) return null;
-  const v = path.split('.').reduce<unknown>((acc, k) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[k] : undefined), response);
+  const v = path
+    .split('.')
+    .reduce<unknown>(
+      (acc, k) => (acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[k] : undefined),
+      response,
+    );
   return v === undefined || v === null ? null : String(v);
 }
 
 export async function deliver(req: DeliveryRequest, deps: DeliveryDeps): Promise<DeliveryOutcome> {
-  const url = new URL(req.path, req.config.endpoint.endsWith('/') ? req.config.endpoint : req.config.endpoint + '/').toString();
+  // No path: the endpoint is the full address (a webhook URL), posted to exactly as configured.
+  const url =
+    req.path === ''
+      ? new URL(req.config.endpoint).toString()
+      : new URL(
+          req.path,
+          req.config.endpoint.endsWith('/') ? req.config.endpoint : req.config.endpoint + '/',
+        ).toString();
   const requestDigest = digestOf(req.body);
   const delivery: IntegrationDelivery = {
     id: randomUUID(),
@@ -64,14 +76,23 @@ export async function deliver(req: DeliveryRequest, deps: DeliveryDeps): Promise
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     delivery.attempts = attempt + 1;
     try {
-      const res = await deps.fetchImpl(url, { method: req.method, headers: { 'content-type': 'application/json', accept: 'application/json', ...req.headers }, body: JSON.stringify(req.body) });
+      const res = await deps.fetchImpl(url, {
+        method: req.method,
+        headers: { 'content-type': 'application/json', accept: 'application/json', ...req.headers },
+        body: JSON.stringify(req.body),
+      });
       delivery.responseCode = res.status;
       const text = await res.text();
       response = text.length ? (JSON.parse(text) as Record<string, unknown>) : null;
       if (res.ok) {
         delivery.state = 'delivered';
         delivery.completedAt = deps.now();
-        delivery.remoteId = extract(typeof req.config.settings['remoteIdPath'] === 'string' ? req.config.settings['remoteIdPath'] : undefined, response);
+        delivery.remoteId = extract(
+          typeof req.config.settings['remoteIdPath'] === 'string'
+            ? req.config.settings['remoteIdPath']
+            : undefined,
+          response,
+        );
         return { delivery, response, remoteId: delivery.remoteId };
       }
       delivery.error = 'HTTP ' + String(res.status);

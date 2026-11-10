@@ -47,6 +47,8 @@ export const CABLING_VERIFICATION_METRIC = 'openmap_cabling_verifications_total'
 export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
 /** REQ-IPAM-005 */
 export const FIREWALL_METRIC = 'openmap_firewall_reads_total';
+/** REQ-INT-009 */
+export const NOTIFICATION_TEST_METRIC = 'openmap_notification_tests_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
 /** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
@@ -108,6 +110,8 @@ export class MetricsService {
   readonly switchPortReads: Counter<'query'>;
   /** REQ-IPAM-005 — firewall reads by query (devices, policy, check). */
   readonly firewallReads: Counter<'query'>;
+  /** REQ-INT-009 — test notifications queued, by vendor. */
+  readonly notificationTests: Counter<'vendor'>;
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
@@ -256,6 +260,12 @@ export class MetricsService {
       name: SWITCH_PORT_METRIC,
       help: "Switch port reads by query: a device's ports, a port's history, a MAC lookup",
       labelNames: ['query'],
+      registers: [this.registry],
+    });
+    this.notificationTests = new Counter({
+      name: NOTIFICATION_TEST_METRIC,
+      help: 'Test notifications queued for the BSM engine to send, by vendor',
+      labelNames: ['vendor'],
       registers: [this.registry],
     });
     this.firewallReads = new Counter({

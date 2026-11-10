@@ -38,6 +38,9 @@ x-app-env: &app-env
   DNS_PULL_INTERVAL_MS: ${DNS_PULL_INTERVAL_MS:-900000}
   # REQ-CORE-020: concurrent outbox dispatch loops per reconciler (claims are leased, so loops never share a row).
   RECONCILER_DISPATCHERS: ${RECONCILER_DISPATCHERS:-1}
+  # REQ-INT-005 REQ-INT-009: outbound integrations and notifications stay off unless the deployment turns them on (the
+  # airgap profile keeps them off whatever this says); each tenant has its own switch on top.
+  FEATURE_OUTBOUND_INTEGRATIONS: ${FEATURE_OUTBOUND_INTEGRATIONS:-false}
   PUBLIC_SUPERSET_URL: ${PUBLIC_SUPERSET_URL:-http://localhost:8088}
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}

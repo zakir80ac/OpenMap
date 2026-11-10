@@ -1,7 +1,7 @@
 {
-  "$id": "https://openmap.dev/contracts/impact-validation/0.11.0",
+  "$id": "https://openmap.dev/contracts/impact-validation/0.12.0",
   "title": "impact-validation",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {

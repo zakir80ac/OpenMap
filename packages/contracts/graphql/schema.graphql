@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.37.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.38.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -3203,6 +3203,8 @@ type Mutation {
   createAsset(input: ManualAssetInput!): AssetRecord!
   upsertIntegration(id: UUID, input: IntegrationInput!): Integration!
   testIntegration(id: UUID!): Integration!
+  "REQ-INT-009: queues a test message on a notification integration (webhook, Slack, Teams, email, PagerDuty); the outcome appears in its deliveries."
+  sendTestNotification(id: UUID!): Boolean!
   reportIncident(incidentId: UUID!, integrationId: UUID!): IncidentLink!
   acknowledgeIncident(incidentId: UUID!): Incident!
   assignIncident(incidentId: UUID!, assignee: String!): Incident!

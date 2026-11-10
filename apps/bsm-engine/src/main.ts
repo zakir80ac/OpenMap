@@ -8,11 +8,12 @@ import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { BSM, CERTIFICATES, ENVIRONMENT, POWER, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
-import { eventEnvelopeSchema } from '@openmap/contracts';
+import { eventEnvelopeSchema, type EventEnvelope } from '@openmap/contracts';
 import { createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } from '@openmap/telemetry';
 import { createHistoryReader } from './core/history.js';
+import { createNotifier } from './integrations/notify.js';
 import { createOpenBaoReader } from './service/openbao.js';
 import { checkCertificates } from './service/certificates.js';
 import { createEngine } from './service/engine.js';
@@ -54,14 +55,40 @@ export function createBsmMetrics() {
       labelNames: ['outcome'],
       registers: [registry],
     }),
-    readiness: new Counter({ name: 'openmap_bsm_readiness_evaluations_total', help: 'HA / DR readiness evaluations of a tenant, by outcome', labelNames: ['outcome'], registers: [registry] }),
-    readinessBreaches: new Counter({ name: 'openmap_bsm_readiness_findings_total', help: 'Readiness findings opened and cleared', labelNames: ['change'], registers: [registry] }),
-    powerAlerts: new Counter({ name: 'openmap_bsm_power_alerts_total', help: 'Power threshold incidents opened and resolved (REQ-DCIM-005)', labelNames: ['change'], registers: [registry] }),
-    environmentAlerts: new Counter({ name: 'openmap_bsm_environment_alerts_total', help: 'Rack inlet temperature incidents opened and resolved (REQ-DCIM-006)', labelNames: ['change'], registers: [registry] }),
+    readiness: new Counter({
+      name: 'openmap_bsm_readiness_evaluations_total',
+      help: 'HA / DR readiness evaluations of a tenant, by outcome',
+      labelNames: ['outcome'],
+      registers: [registry],
+    }),
+    readinessBreaches: new Counter({
+      name: 'openmap_bsm_readiness_findings_total',
+      help: 'Readiness findings opened and cleared',
+      labelNames: ['change'],
+      registers: [registry],
+    }),
+    powerAlerts: new Counter({
+      name: 'openmap_bsm_power_alerts_total',
+      help: 'Power threshold incidents opened and resolved (REQ-DCIM-005)',
+      labelNames: ['change'],
+      registers: [registry],
+    }),
+    environmentAlerts: new Counter({
+      name: 'openmap_bsm_environment_alerts_total',
+      help: 'Rack inlet temperature incidents opened and resolved (REQ-DCIM-006)',
+      labelNames: ['change'],
+      registers: [registry],
+    }),
     certificateAlerts: new Counter({
       name: 'openmap_bsm_certificate_alerts_total',
       help: 'Certificate expiry alerts raised (REQ-CMDB-032), and failed checks',
       labelNames: ['outcome'],
+      registers: [registry],
+    }),
+    notifications: new Counter({
+      name: 'openmap_bsm_notifications_total',
+      help: 'Notifications to webhooks, Slack, Teams, email and PagerDuty by vendor and outcome (REQ-INT-009)',
+      labelNames: ['vendor', 'outcome'],
       registers: [registry],
     }),
     slaDuration: new Histogram({
@@ -107,6 +134,38 @@ async function main(): Promise<void> {
       now: () => new Date().toISOString(),
     },
   });
+  // REQ-INT-009 (ADR-065): notifications to webhooks, Slack, Teams, email and PagerDuty for subscribed events.
+  const notifier = createNotifier({
+    prisma,
+    secrets: createOpenBaoReader(env),
+    delivery: {
+      fetchImpl: fetch,
+      sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
+      now: () => new Date().toISOString(),
+    },
+    consoleUrl: env.PUBLIC_CONSOLE_URL,
+    outboundAllowed: env.DEPLOY_PROFILE !== 'airgap' && env.FEATURE_OUTBOUND_INTEGRATIONS,
+    log,
+    now: () => new Date(),
+  });
+  const notify = async (e: EventEnvelope): Promise<void> => {
+    try {
+      const report = await withSpan(
+        TRACER,
+        'bsm.notify',
+        { 'openmap.event_type': e.type, 'openmap.tenant_id': e.tenantid },
+        () => notifier.handle(e),
+      );
+      for (const o of report.outcomes) metrics.notifications.inc({ vendor: o.vendor, outcome: o.outcome });
+    } catch (err) {
+      metrics.notifications.inc({ vendor: 'unknown', outcome: 'error' });
+      log({
+        msg: 'notification failed',
+        eventType: e.type,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
   const pending = new Map<string, NodeJS.Timeout>();
   const known = new Set<string>((await prisma.tenant.findMany({ select: { id: true } })).map((t) => t.id));
   const recompute = async (tenantId: string): Promise<void> => {
@@ -168,6 +227,8 @@ async function main(): Promise<void> {
       );
       metrics.events.inc();
       for (const tenantId of report.tenants) schedule(tenantId);
+      // Notifications go out in the background: health propagation never waits on a slow channel or its retries.
+      void notify(e);
       return report;
     },
     { connection, concurrency: RECONCILER.resultsConcurrency },
@@ -180,8 +241,11 @@ async function main(): Promise<void> {
     prisma,
     graph,
     query: async (name, sql, params) => {
-      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
-        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      const result = await withSpan(
+        TRACER,
+        'clickhouse.' + name,
+        { 'db.system': 'clickhouse', 'db.operation': name },
+        () => clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
       );
       return result.json();
     },
@@ -193,15 +257,22 @@ async function main(): Promise<void> {
   const readinessCheck = async (): Promise<void> => {
     for (const tenantId of known) {
       try {
-        const report = await withSpan(TRACER, 'bsm.readiness', { 'openmap.tenant_id': tenantId }, () => readiness.evaluateTenant(tenantId));
+        const report = await withSpan(TRACER, 'bsm.readiness', { 'openmap.tenant_id': tenantId }, () =>
+          readiness.evaluateTenant(tenantId),
+        );
         metrics.readiness.inc({ outcome: 'ok' });
         metrics.readinessBreaches.inc({ change: 'opened' }, report.opened);
         metrics.readinessBreaches.inc({ change: 'cleared' }, report.cleared);
         if (report.linkHealthChanged > 0) schedule(tenantId);
-        if (report.opened + report.cleared + report.linkHealthChanged > 0) log({ msg: 'readiness evaluated', tenantId, ...report });
+        if (report.opened + report.cleared + report.linkHealthChanged > 0)
+          log({ msg: 'readiness evaluated', tenantId, ...report });
       } catch (err) {
         metrics.readiness.inc({ outcome: 'error' });
-        log({ msg: 'readiness evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+        log({
+          msg: 'readiness evaluation failed',
+          tenantId,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   };
@@ -212,8 +283,11 @@ async function main(): Promise<void> {
   const powerAlerts = createPowerAlerts({
     prisma,
     query: async (name, sql, params) => {
-      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
-        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      const result = await withSpan(
+        TRACER,
+        'clickhouse.' + name,
+        { 'db.system': 'clickhouse', 'db.operation': name },
+        () => clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
       );
       return result.json();
     },
@@ -223,12 +297,18 @@ async function main(): Promise<void> {
   const powerCheck = async (): Promise<void> => {
     for (const tenantId of known) {
       try {
-        const report = await withSpan(TRACER, 'bsm.power_alerts', { 'openmap.tenant_id': tenantId }, () => powerAlerts.evaluateTenant(tenantId));
+        const report = await withSpan(TRACER, 'bsm.power_alerts', { 'openmap.tenant_id': tenantId }, () =>
+          powerAlerts.evaluateTenant(tenantId),
+        );
         metrics.powerAlerts.inc({ change: 'opened' }, report.opened);
         metrics.powerAlerts.inc({ change: 'resolved' }, report.resolved);
         if (report.opened + report.resolved > 0) log({ msg: 'power alerts evaluated', tenantId, ...report });
       } catch (err) {
-        log({ msg: 'power alert evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+        log({
+          msg: 'power alert evaluation failed',
+          tenantId,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   };
@@ -239,8 +319,11 @@ async function main(): Promise<void> {
   const environmentAlerts = createEnvironmentAlerts({
     prisma,
     query: async (name, sql, params) => {
-      const result = await withSpan(TRACER, 'clickhouse.' + name, { 'db.system': 'clickhouse', 'db.operation': name }, () =>
-        clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
+      const result = await withSpan(
+        TRACER,
+        'clickhouse.' + name,
+        { 'db.system': 'clickhouse', 'db.operation': name },
+        () => clickhouse.query({ query: sql, query_params: params, format: 'JSONEachRow' }),
       );
       return result.json();
     },
@@ -250,12 +333,22 @@ async function main(): Promise<void> {
   const environmentCheck = async (): Promise<void> => {
     for (const tenantId of known) {
       try {
-        const report = await withSpan(TRACER, 'bsm.environment_alerts', { 'openmap.tenant_id': tenantId }, () => environmentAlerts.evaluateTenant(tenantId));
+        const report = await withSpan(
+          TRACER,
+          'bsm.environment_alerts',
+          { 'openmap.tenant_id': tenantId },
+          () => environmentAlerts.evaluateTenant(tenantId),
+        );
         metrics.environmentAlerts.inc({ change: 'opened' }, report.opened);
         metrics.environmentAlerts.inc({ change: 'resolved' }, report.resolved);
-        if (report.opened + report.resolved > 0) log({ msg: 'environment alerts evaluated', tenantId, ...report });
+        if (report.opened + report.resolved > 0)
+          log({ msg: 'environment alerts evaluated', tenantId, ...report });
       } catch (err) {
-        log({ msg: 'environment alert evaluation failed', tenantId, error: err instanceof Error ? err.message : String(err) });
+        log({
+          msg: 'environment alert evaluation failed',
+          tenantId,
+          error: err instanceof Error ? err.message : String(err),
+        });
       }
     }
   };
@@ -265,7 +358,9 @@ async function main(): Promise<void> {
   // REQ-CMDB-032 (ADR-036): certificates crossing an expiry threshold raise one alert each.
   const certificateCheck = async (): Promise<void> => {
     try {
-      const report = await withSpan(TRACER, 'bsm.check_certificates', {}, () => checkCertificates(prisma, new Date()));
+      const report = await withSpan(TRACER, 'bsm.check_certificates', {}, () =>
+        checkCertificates(prisma, new Date()),
+      );
       metrics.certificateAlerts.inc({ outcome: 'raised' }, report.raised);
       if (report.raised > 0) log({ msg: 'certificate alerts raised', ...report });
     } catch (err) {

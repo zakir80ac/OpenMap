@@ -1496,3 +1496,12 @@ Keycloak user whose `tenant` attribute is `ac9a6a65-1f19-4ecf-bf16-b3a90e42cc5c`
     ADR-014 are additive contract bumps (0.5.0, 0.6.0) recorded for review.
 16. Confirm multi-tenancy is per business unit as drawn in onboarding.
 17. Close the tracker workbook in Excel while sessions run (or we switch the tracker to a copy-on-write flow).
+18. REQ-SEC-011 (asked 2026-11-10): in transit is decided (the internal CA that already signs Node mTLS issues a
+    certificate per service; Postgres, ClickHouse, Valkey, Memgraph, Meilisearch, Keycloak and OpenBao serve TLS only;
+    ClickHouse at rest uses its built-in encrypted disk with the key in OpenBao). PostgreSQL has no built-in encryption
+    at rest, so one choice is yours: (a) Percona's `pg_tde` (replaces the Postgres distribution, an ADR and a data
+    migration), (b) volume encryption under the data directory (LUKS, BitLocker, a cloud KMS volume or an encrypted
+    storage class in Helm), which OpenMap documents and the installer checks, or (c) column encryption through
+    OpenBao Transit for sensitive fields only. Recommended: (b) for the whole store plus (c) for the few fields that
+    carry secrets-adjacent data. REQ-SEC-011 waits on this; REQ-UI-021/022/023 wait on question 0 (native charts or
+    Superset).

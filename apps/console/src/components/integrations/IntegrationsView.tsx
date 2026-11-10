@@ -1,22 +1,59 @@
 'use client';
-// REQ-UI-014 REQ-INT-005 — Integrations: health KPIs, the catalogue of categories as a filter, every configured
-// integration with its health and last-hour deliveries, a detail panel with configuration, field and class mappings
-// and recent deliveries, a probe (testIntegration) and an editor (upsertIntegration). Administrators change things;
-// operators read details; analysts see the list.
+// REQ-UI-014 REQ-INT-005 REQ-INT-009 — Integrations: health KPIs, the catalogue of categories as a filter, every
+// configured integration with its health and last-hour deliveries, a detail panel with configuration, field and class
+// mappings and recent deliveries, a probe (testIntegration), a test message for notification integrations
+// (sendTestNotification) and an editor (upsertIntegration) with notification settings (minimum severity, language,
+// email sender and recipients). Administrators change things; operators read details and send tests; analysts see the list.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ROLES } from '@openmap/constants';
-import { DIRECTIONS, EVENT_TYPES, INTEGRATION_CATEGORIES, INTEGRATION_VENDORS } from '@openmap/contracts';
-import type { MessageKey } from '@openmap/i18n';
+import { NOTIFICATION, ROLES } from '@openmap/constants';
+import {
+  DIRECTIONS,
+  EVENT_TYPES,
+  INTEGRATION_CATEGORIES,
+  INTEGRATION_VENDORS,
+  NOTIFICATION_SEVERITIES,
+  isNotificationVendor,
+  type NotificationSeverity,
+} from '@openmap/contracts';
+import { LOCALES, type MessageKey } from '@openmap/i18n';
 import { Card, Kpi, Pill, SectionTitle, StateBadge, Tag, type UiState } from '@openmap/ui';
 import { useId, useMemo, useState, type ReactNode, type SyntheticEvent } from 'react';
-import { Button, Field, Select, TextInput, rowClass, tableClass, tdClass, thClass, theadClass } from '@/components/common/controls';
+import {
+  Button,
+  Field,
+  Select,
+  TextInput,
+  rowClass,
+  tableClass,
+  tdClass,
+  thClass,
+  theadClass,
+} from '@/components/common/controls';
 import { QueryState } from '@/components/common/QueryState';
 import { Icon } from '@/components/icons';
 import { useCan } from '@/lib/auth';
-import { integrationDeliveriesQuery, integrationQuery, integrationsQuery, testIntegration, upsertIntegration, type ClassMapping, type FieldMapping, type Integration, type IntegrationDetail, type IntegrationHealth, type IntegrationInput } from '@/lib/estate-queries';
+import {
+  integrationDeliveriesQuery,
+  integrationQuery,
+  integrationsQuery,
+  sendTestNotification,
+  testIntegration,
+  upsertIntegration,
+  type ClassMapping,
+  type FieldMapping,
+  type Integration,
+  type IntegrationDetail,
+  type IntegrationHealth,
+  type IntegrationInput,
+} from '@/lib/estate-queries';
 import { useFormatters, useT } from '@/providers';
 
-export const HEALTH_STATE: Record<IntegrationHealth, UiState> = { healthy: 'healthy', warning: 'degraded', failing: 'down', disabled: 'unknown' };
+export const HEALTH_STATE: Record<IntegrationHealth, UiState> = {
+  healthy: 'healthy',
+  warning: 'degraded',
+  failing: 'down',
+  disabled: 'unknown',
+};
 
 function healthKey(health: IntegrationHealth): MessageKey {
   return ('integrations.health.' + health) as MessageKey;
@@ -135,11 +172,21 @@ export function IntegrationsView(): ReactNode {
               <table className={tableClass}>
                 <thead className={theadClass}>
                   <tr>
-                    <th scope="col" className={thClass}>{t('integrations.table.name')}</th>
-                    <th scope="col" className={thClass}>{t('integrations.table.vendor')}</th>
-                    <th scope="col" className={thClass}>{t('integrations.table.direction')}</th>
-                    <th scope="col" className={thClass}>{t('integrations.table.health')}</th>
-                    <th scope="col" className={thClass}>{t('integrations.table.lastHour')}</th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.name')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.vendor')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.direction')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.health')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.lastHour')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -165,7 +212,9 @@ export function IntegrationsView(): ReactNode {
                       <td className={tdClass}>
                         <StateBadge state={HEALTH_STATE[i.health]} label={t(healthKey(i.health))} />
                       </td>
-                      <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.integer(i.deliveredLastHour) + ' / ' + format.integer(i.failedLastHour)}</td>
+                      <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                        {format.integer(i.deliveredLastHour) + ' / ' + format.integer(i.failedLastHour)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -188,6 +237,7 @@ export function IntegrationsView(): ReactNode {
             <IntegrationDetailPanel
               id={selectedId}
               canAdmin={canAdmin}
+              canOperate={canOperate}
               onEdit={(detail) => {
                 setEditing(detail);
               }}
@@ -198,7 +248,9 @@ export function IntegrationsView(): ReactNode {
               <SectionTitle as="h2" size="sm">
                 {t('integrations.detail.title')}
               </SectionTitle>
-              <p className="text-om-sm text-om-secondary">{canOperate ? t('integrations.detail.pick') : t('integrations.detail.readOnly')}</p>
+              <p className="text-om-sm text-om-secondary">
+                {canOperate ? t('integrations.detail.pick') : t('integrations.detail.readOnly')}
+              </p>
             </Card>
           )}
         </div>
@@ -210,15 +262,28 @@ export function IntegrationsView(): ReactNode {
 interface DetailProps {
   id: string;
   canAdmin: boolean;
+  canOperate: boolean;
   onEdit: (detail: IntegrationDetail) => void;
   onChanged: () => void;
 }
 
-function IntegrationDetailPanel({ id, canAdmin, onEdit, onChanged }: DetailProps): ReactNode {
+function IntegrationDetailPanel({ id, canAdmin, canOperate, onEdit, onChanged }: DetailProps): ReactNode {
   const t = useT();
   const format = useFormatters();
   const detail = useQuery(integrationQuery(id));
-  const deliveries = useQuery(integrationDeliveriesQuery(id));
+  // After a test is queued the engine sends it in the background; the deliveries are re-read for a short while.
+  const [pollUntil, setPollUntil] = useState(0);
+  const deliveries = useQuery({
+    ...integrationDeliveriesQuery(id),
+    refetchInterval: () => (Date.now() < pollUntil ? NOTIFICATION.testPollMs : false),
+  });
+  const notify = useMutation({
+    mutationFn: sendTestNotification,
+    onSuccess: () => {
+      setPollUntil(Date.now() + NOTIFICATION.testPollForMs);
+      onChanged();
+    },
+  });
   const probe = useMutation({
     mutationFn: testIntegration,
     onSuccess: () => {
@@ -240,133 +305,200 @@ function IntegrationDetailPanel({ id, canAdmin, onEdit, onChanged }: DetailProps
   return (
     <section aria-label={d.name}>
       <Card padding="24" className="flex flex-col gap-om-16">
-      <SectionTitle
-        as="h2"
-        size="sm"
-        description={d.vendor + ' · ' + t(categoryKey(d.category))}
-        action={
-          canAdmin ? (
-            <span className="flex gap-om-6">
-              <Button
-                tone="quiet"
-                onClick={() => {
-                  onEdit(d);
-                }}
-              >
-                {t('integrations.edit')}
-              </Button>
-              <Button
-                disabled={probe.isPending}
-                onClick={() => {
-                  probe.mutate(d.id);
-                }}
-              >
-                {probe.isPending ? t('integrations.testing') : t('integrations.test')}
-              </Button>
+        <SectionTitle
+          as="h2"
+          size="sm"
+          description={d.vendor + ' · ' + t(categoryKey(d.category))}
+          action={
+            canAdmin || (canOperate && isNotificationVendor(d.vendor)) ? (
+              <span className="flex gap-om-6">
+                {canOperate && isNotificationVendor(d.vendor) && d.enabled ? (
+                  <Button
+                    tone="quiet"
+                    disabled={notify.isPending}
+                    onClick={() => {
+                      notify.mutate(d.id);
+                    }}
+                  >
+                    {t('integrations.notify.test')}
+                  </Button>
+                ) : null}
+                {canAdmin ? (
+                  <>
+                    <Button
+                      tone="quiet"
+                      onClick={() => {
+                        onEdit(d);
+                      }}
+                    >
+                      {t('integrations.edit')}
+                    </Button>
+                    <Button
+                      disabled={probe.isPending}
+                      onClick={() => {
+                        probe.mutate(d.id);
+                      }}
+                    >
+                      {probe.isPending ? t('integrations.testing') : t('integrations.test')}
+                    </Button>
+                  </>
+                ) : null}
+              </span>
+            ) : undefined
+          }
+        >
+          {d.name}
+        </SectionTitle>
+        <dl className="grid grid-cols-1 gap-om-10 text-om-xs md:grid-cols-2">
+          <div>
+            <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.table.health')}
+            </dt>
+            <dd>
+              <StateBadge state={HEALTH_STATE[d.health]} label={t(healthKey(d.health))} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.detail.lastSuccess')}
+            </dt>
+            <dd className="text-om-secondary">
+              {d.lastSuccessAt === null ? t('common.none') : format.dateTime(d.lastSuccessAt)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.form.endpoint')}
+            </dt>
+            <dd className="break-all font-om-mono text-om-secondary">{d.endpoint}</dd>
+          </div>
+          <div>
+            <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.form.credentialRef')}
+            </dt>
+            <dd className="font-om-mono text-om-secondary">{d.credentialRef}</dd>
+          </div>
+          {d.lastError !== null ? (
+            <div className="md:col-span-2">
+              <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+                {t('integrations.detail.lastError')}
+              </dt>
+              <dd className="font-om-mono text-om-rose">{d.lastError}</dd>
+            </div>
+          ) : null}
+        </dl>
+        <div className="flex flex-col gap-om-6">
+          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+            {t('integrations.form.events')}
+          </span>
+          <div className="flex flex-wrap gap-om-6">
+            {d.subscribedEvents.length === 0 ? (
+              <span className="text-om-xs text-om-muted">{t('common.none')}</span>
+            ) : (
+              d.subscribedEvents.map((e) => <Tag key={e}>{e}</Tag>)
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-om-12 md:grid-cols-2">
+          <div className="flex flex-col gap-om-6">
+            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.mappings.fields')}
             </span>
-          ) : undefined
-        }
-      >
-        {d.name}
-      </SectionTitle>
-      <dl className="grid grid-cols-1 gap-om-10 text-om-xs md:grid-cols-2">
-        <div>
-          <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.table.health')}</dt>
-          <dd>
-            <StateBadge state={HEALTH_STATE[d.health]} label={t(healthKey(d.health))} />
-          </dd>
-        </div>
-        <div>
-          <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.detail.lastSuccess')}</dt>
-          <dd className="text-om-secondary">{d.lastSuccessAt === null ? t('common.none') : format.dateTime(d.lastSuccessAt)}</dd>
-        </div>
-        <div>
-          <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.form.endpoint')}</dt>
-          <dd className="break-all font-om-mono text-om-secondary">{d.endpoint}</dd>
-        </div>
-        <div>
-          <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.form.credentialRef')}</dt>
-          <dd className="font-om-mono text-om-secondary">{d.credentialRef}</dd>
-        </div>
-        {d.lastError !== null ? (
-          <div className="md:col-span-2">
-            <dt className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.detail.lastError')}</dt>
-            <dd className="font-om-mono text-om-rose">{d.lastError}</dd>
-          </div>
-        ) : null}
-      </dl>
-      <div className="flex flex-col gap-om-6">
-        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.form.events')}</span>
-        <div className="flex flex-wrap gap-om-6">{d.subscribedEvents.length === 0 ? <span className="text-om-xs text-om-muted">{t('common.none')}</span> : d.subscribedEvents.map((e) => <Tag key={e}>{e}</Tag>)}</div>
-      </div>
-      <div className="grid grid-cols-1 gap-om-12 md:grid-cols-2">
-        <div className="flex flex-col gap-om-6">
-          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.mappings.fields')}</span>
-          {d.fieldMappings.length === 0 ? (
-            <span className="text-om-xs text-om-muted">{t('common.none')}</span>
-          ) : (
-            <ul className="flex flex-col gap-om-4 font-om-mono text-om-xs text-om-secondary">
-              {d.fieldMappings.map((m, i) => (
-                <li key={i}>{m.from + ' → ' + m.to + ' (' + m.direction + ')'}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="flex flex-col gap-om-6">
-          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.mappings.classes')}</span>
-          {d.classMappings.length === 0 ? (
-            <span className="text-om-xs text-om-muted">{t('common.none')}</span>
-          ) : (
-            <ul className="flex flex-col gap-om-4 font-om-mono text-om-xs text-om-secondary">
-              {d.classMappings.map((m, i) => (
-                <li key={i}>{m.ciType + ' → ' + m.remoteClass}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col gap-om-6">
-        <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.deliveries.title')}</span>
-        {deliveries.isPending ? (
-          <QueryState status="pending" />
-        ) : deliveries.isError ? (
-          <QueryState status="error" />
-        ) : deliveries.data.length === 0 ? (
-          <span className="text-om-xs text-om-muted">{t('integrations.deliveries.empty')}</span>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className={tableClass}>
-              <thead className={theadClass}>
-                <tr>
-                  <th scope="col" className={thClass}>{t('integrations.deliveries.when')}</th>
-                  <th scope="col" className={thClass}>{t('integrations.table.direction')}</th>
-                  <th scope="col" className={thClass}>{t('integrations.deliveries.state')}</th>
-                  <th scope="col" className={thClass}>{t('integrations.deliveries.attempts')}</th>
-                  <th scope="col" className={thClass}>{t('integrations.deliveries.response')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {deliveries.data.map((x) => (
-                  <tr key={x.id} className={rowClass}>
-                    <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>{format.dateTime(x.createdAt)}</td>
-                    <td className={tdClass}>
-                      <Tag>{x.direction}</Tag>
-                    </td>
-                    <td className={tdClass + ' font-om-mono text-om-primary'}>{x.state}</td>
-                    <td className={tdClass + ' font-om-mono text-om-secondary'}>{format.integer(x.attempts)}</td>
-                    <td className={tdClass + ' font-om-mono text-om-secondary'}>{x.responseCode === null ? (x.error ?? '') : String(x.responseCode)}</td>
-                  </tr>
+            {d.fieldMappings.length === 0 ? (
+              <span className="text-om-xs text-om-muted">{t('common.none')}</span>
+            ) : (
+              <ul className="flex flex-col gap-om-4 font-om-mono text-om-xs text-om-secondary">
+                {d.fieldMappings.map((m, i) => (
+                  <li key={i}>{m.from + ' → ' + m.to + ' (' + m.direction + ')'}</li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+            )}
           </div>
-        )}
-      </div>
-      {probe.isError ? (
-        <p role="alert" className="text-om-xs text-om-rose">
-          {t('integrations.testFailed')}
-        </p>
-      ) : null}
+          <div className="flex flex-col gap-om-6">
+            <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.mappings.classes')}
+            </span>
+            {d.classMappings.length === 0 ? (
+              <span className="text-om-xs text-om-muted">{t('common.none')}</span>
+            ) : (
+              <ul className="flex flex-col gap-om-4 font-om-mono text-om-xs text-om-secondary">
+                {d.classMappings.map((m, i) => (
+                  <li key={i}>{m.ciType + ' → ' + m.remoteClass}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-col gap-om-6">
+          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+            {t('integrations.deliveries.title')}
+          </span>
+          {deliveries.isPending ? (
+            <QueryState status="pending" />
+          ) : deliveries.isError ? (
+            <QueryState status="error" />
+          ) : deliveries.data.length === 0 ? (
+            <span className="text-om-xs text-om-muted">{t('integrations.deliveries.empty')}</span>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className={tableClass}>
+                <thead className={theadClass}>
+                  <tr>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.deliveries.when')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.table.direction')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.deliveries.state')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.deliveries.attempts')}
+                    </th>
+                    <th scope="col" className={thClass}>
+                      {t('integrations.deliveries.response')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deliveries.data.map((x) => (
+                    <tr key={x.id} className={rowClass}>
+                      <td className={tdClass + ' whitespace-nowrap text-om-secondary'}>
+                        {format.dateTime(x.createdAt)}
+                      </td>
+                      <td className={tdClass}>
+                        <Tag>{x.direction}</Tag>
+                      </td>
+                      <td className={tdClass + ' font-om-mono text-om-primary'}>{x.state}</td>
+                      <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                        {format.integer(x.attempts)}
+                      </td>
+                      <td className={tdClass + ' font-om-mono text-om-secondary'}>
+                        {x.responseCode === null ? (x.error ?? '') : String(x.responseCode)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        {notify.isSuccess ? (
+          <p role="status" className="text-om-xs text-om-secondary">
+            {t('integrations.notify.sent')}
+          </p>
+        ) : null}
+        {notify.isError ? (
+          <p role="alert" className="text-om-xs text-om-rose">
+            {t('integrations.notify.failed')}
+          </p>
+        ) : null}
+        {probe.isError ? (
+          <p role="alert" className="text-om-xs text-om-rose">
+            {t('integrations.testFailed')}
+          </p>
+        ) : null}
       </Card>
     </section>
   );
@@ -387,14 +519,86 @@ interface FormState {
   events: string[];
   fieldMappings: FieldMapping[];
   classMappings: ClassMapping[];
+  /** Settings the form does not edit, kept as they are. */
+  baseSettings: Record<string, unknown>;
+  /** REQ-INT-009: notification settings ('' locale means the tenant's language). */
+  minSeverity: NotificationSeverity;
+  locale: string;
+  mailFrom: string;
+  mailTo: string;
+  startTls: boolean;
 }
 
 const emptyFieldMapping = (): FieldMapping => ({ from: '', to: '', direction: 'out' });
 const emptyClassMapping = (): ClassMapping => ({ ciType: '', remoteClass: '' });
 
+function text(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
 function initialState(existing: IntegrationDetail | null): FormState {
-  if (existing === null) return { name: '', category: INTEGRATION_CATEGORIES[0], vendor: INTEGRATION_VENDORS[0], direction: DIRECTIONS[1], endpoint: '', credentialRef: '', events: [], fieldMappings: [], classMappings: [] };
-  return { name: existing.name, category: existing.category, vendor: existing.vendor, direction: existing.direction, endpoint: existing.endpoint, credentialRef: existing.credentialRef, events: existing.subscribedEvents, fieldMappings: existing.fieldMappings, classMappings: existing.classMappings };
+  const notify = {
+    minSeverity: 'info' as NotificationSeverity,
+    locale: '',
+    mailFrom: '',
+    mailTo: '',
+    startTls: true,
+  };
+  if (existing === null)
+    return {
+      name: '',
+      category: INTEGRATION_CATEGORIES[0],
+      vendor: INTEGRATION_VENDORS[0],
+      direction: DIRECTIONS[1],
+      endpoint: '',
+      credentialRef: '',
+      events: [],
+      fieldMappings: [],
+      classMappings: [],
+      baseSettings: {},
+      ...notify,
+    };
+  const s = existing.settings;
+  const severity = (NOTIFICATION_SEVERITIES as readonly string[]).includes(text(s['minSeverity']))
+    ? (text(s['minSeverity']) as NotificationSeverity)
+    : 'info';
+  const to = Array.isArray(s['to']) ? s['to'].filter((v): v is string => typeof v === 'string') : [];
+  return {
+    name: existing.name,
+    category: existing.category,
+    vendor: existing.vendor,
+    direction: existing.direction,
+    endpoint: existing.endpoint,
+    credentialRef: existing.credentialRef,
+    events: existing.subscribedEvents,
+    fieldMappings: existing.fieldMappings,
+    classMappings: existing.classMappings,
+    baseSettings: s,
+    minSeverity: severity,
+    locale: text(s['locale']),
+    mailFrom: text(s['from']),
+    mailTo: to.join(', '),
+    startTls: s['startTls'] !== false,
+  };
+}
+
+/** The settings keys the notification fields own. */
+const NOTIFY_KEYS: readonly string[] = ['locale', 'from', 'to', 'startTls', 'minSeverity'];
+
+/** A notification integration's settings from the form, over the settings the form does not edit. */
+export function notificationSettings(state: FormState): Record<string, unknown> {
+  const rest = Object.fromEntries(Object.entries(state.baseSettings).filter(([k]) => !NOTIFY_KEYS.includes(k)));
+  const settings: Record<string, unknown> = { ...rest, minSeverity: state.minSeverity };
+  if (state.locale !== '') settings['locale'] = state.locale;
+  if (state.vendor === 'email_smtp') {
+    if (state.mailFrom.trim() !== '') settings['from'] = state.mailFrom.trim();
+    settings['to'] = state.mailTo
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a) => a !== '');
+    settings['startTls'] = state.startTls;
+  }
+  return settings;
 }
 
 /** Form state → contract input; blank mapping rows are dropped. */
@@ -407,8 +611,13 @@ export function toIntegrationInput(state: FormState): IntegrationInput {
     credentialRef: state.credentialRef.trim(),
     direction: state.direction,
     subscribedEvents: state.events,
-    fieldMappings: state.fieldMappings.filter((m) => m.from.trim() !== '' && m.to.trim() !== '').map((m) => ({ from: m.from.trim(), to: m.to.trim(), direction: m.direction })),
-    classMappings: state.classMappings.filter((m) => m.ciType.trim() !== '' && m.remoteClass.trim() !== '').map((m) => ({ ciType: m.ciType.trim(), remoteClass: m.remoteClass.trim() })),
+    fieldMappings: state.fieldMappings
+      .filter((m) => m.from.trim() !== '' && m.to.trim() !== '')
+      .map((m) => ({ from: m.from.trim(), to: m.to.trim(), direction: m.direction })),
+    classMappings: state.classMappings
+      .filter((m) => m.ciType.trim() !== '' && m.remoteClass.trim() !== '')
+      .map((m) => ({ ciType: m.ciType.trim(), remoteClass: m.remoteClass.trim() })),
+    ...(isNotificationVendor(state.vendor) ? { settings: notificationSettings(state) } : {}),
   };
 }
 
@@ -435,8 +644,16 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
 
   return (
     <Card padding="24" className="flex flex-col gap-om-16">
-      <form onSubmit={onSubmit} aria-label={existing === null ? t('integrations.new') : t('integrations.edit')} className="flex flex-col gap-om-12">
-        <SectionTitle as="h2" size="sm" action={<Icon name="integrations" className="size-5 text-om-violet" />}>
+      <form
+        onSubmit={onSubmit}
+        aria-label={existing === null ? t('integrations.new') : t('integrations.edit')}
+        className="flex flex-col gap-om-12"
+      >
+        <SectionTitle
+          as="h2"
+          size="sm"
+          action={<Icon name="integrations" className="size-5 text-om-violet" />}
+        >
           {existing === null ? t('integrations.new') : t('integrations.editing', { name: existing.name })}
         </SectionTitle>
         <Field id={id + '-name'} label={t('integrations.table.name')}>
@@ -496,7 +713,11 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
             </Select>
           </Field>
         </div>
-        <Field id={id + '-endpoint'} label={t('integrations.form.endpoint')} hint={t('integrations.form.endpointHint')}>
+        <Field
+          id={id + '-endpoint'}
+          label={t('integrations.form.endpoint')}
+          hint={t('integrations.form.endpointHint')}
+        >
           <TextInput
             id={id + '-endpoint'}
             type="url"
@@ -507,7 +728,11 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
             }}
           />
         </Field>
-        <Field id={id + '-credential'} label={t('integrations.form.credentialRef')} hint={t('integrations.form.credentialHint')}>
+        <Field
+          id={id + '-credential'}
+          label={t('integrations.form.credentialRef')}
+          hint={t('integrations.form.credentialHint')}
+        >
           <TextInput
             id={id + '-credential'}
             value={state.credentialRef}
@@ -517,7 +742,11 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
             }}
           />
         </Field>
-        <Field id={id + '-events'} label={t('integrations.form.events')} hint={t('integrations.form.eventsHint')}>
+        <Field
+          id={id + '-events'}
+          label={t('integrations.form.events')}
+          hint={t('integrations.form.eventsHint')}
+        >
           <Select
             id={id + '-events'}
             multiple
@@ -534,29 +763,120 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
             ))}
           </Select>
         </Field>
+        {isNotificationVendor(state.vendor) ? (
+          <fieldset
+            className="flex flex-col gap-om-10 rounded-om-control border border-om-border-glass p-om-12"
+            aria-label={t('integrations.notify.settings')}
+          >
+            <legend className="px-om-4 text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+              {t('integrations.notify.settings')}
+            </legend>
+            <p className="text-om-2xs text-om-muted">{t('integrations.notify.hint')}</p>
+            <div className="grid grid-cols-1 gap-om-10 md:grid-cols-2">
+              <Field id={id + '-severity'} label={t('integrations.notify.minSeverity')}>
+                <Select
+                  id={id + '-severity'}
+                  value={state.minSeverity}
+                  onChange={(event) => {
+                    update({ minSeverity: event.target.value as NotificationSeverity });
+                  }}
+                >
+                  {NOTIFICATION_SEVERITIES.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`notify.severity.${s}`)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field id={id + '-locale'} label={t('integrations.notify.locale')}>
+                <Select
+                  id={id + '-locale'}
+                  value={state.locale}
+                  onChange={(event) => {
+                    update({ locale: event.target.value });
+                  }}
+                >
+                  <option value="">{t('integrations.notify.localeTenant')}</option>
+                  {LOCALES.map((l) => (
+                    <option key={l} value={l}>
+                      {t(`locale.${l}`)}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            {state.vendor === 'email_smtp' ? (
+              <div className="grid grid-cols-1 gap-om-10 md:grid-cols-2">
+                <Field id={id + '-from'} label={t('integrations.notify.from')}>
+                  <TextInput
+                    id={id + '-from'}
+                    type="email"
+                    value={state.mailFrom}
+                    onChange={(event) => {
+                      update({ mailFrom: event.target.value });
+                    }}
+                  />
+                </Field>
+                <Field id={id + '-to'} label={t('integrations.notify.to')}>
+                  <TextInput
+                    id={id + '-to'}
+                    value={state.mailTo}
+                    onChange={(event) => {
+                      update({ mailTo: event.target.value });
+                    }}
+                  />
+                </Field>
+                <label className="flex items-center gap-om-6 text-om-sm text-om-secondary">
+                  <input
+                    type="checkbox"
+                    checked={state.startTls}
+                    onChange={(event) => {
+                      update({ startTls: event.target.checked });
+                    }}
+                  />
+                  {t('integrations.notify.startTls')}
+                </label>
+              </div>
+            ) : null}
+          </fieldset>
+        ) : null}
         <div className="flex flex-col gap-om-6">
-          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.mappings.fields')}</span>
+          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+            {t('integrations.mappings.fields')}
+          </span>
           {state.fieldMappings.map((m, i) => (
             <div key={i} className="grid grid-cols-3 gap-om-6">
               <TextInput
                 aria-label={t('integrations.mappings.from')}
                 value={m.from}
                 onChange={(event) => {
-                  update({ fieldMappings: state.fieldMappings.map((x, j) => (j === i ? { ...x, from: event.target.value } : x)) });
+                  update({
+                    fieldMappings: state.fieldMappings.map((x, j) =>
+                      j === i ? { ...x, from: event.target.value } : x,
+                    ),
+                  });
                 }}
               />
               <TextInput
                 aria-label={t('integrations.mappings.to')}
                 value={m.to}
                 onChange={(event) => {
-                  update({ fieldMappings: state.fieldMappings.map((x, j) => (j === i ? { ...x, to: event.target.value } : x)) });
+                  update({
+                    fieldMappings: state.fieldMappings.map((x, j) =>
+                      j === i ? { ...x, to: event.target.value } : x,
+                    ),
+                  });
                 }}
               />
               <Select
                 aria-label={t('integrations.table.direction')}
                 value={m.direction}
                 onChange={(event) => {
-                  update({ fieldMappings: state.fieldMappings.map((x, j) => (j === i ? { ...x, direction: event.target.value } : x)) });
+                  update({
+                    fieldMappings: state.fieldMappings.map((x, j) =>
+                      j === i ? { ...x, direction: event.target.value } : x,
+                    ),
+                  });
                 }}
               >
                 <option value="out">{t('integrations.mappings.out')}</option>
@@ -575,21 +895,31 @@ export function IntegrationForm({ existing, onDone }: FormProps): ReactNode {
           </Button>
         </div>
         <div className="flex flex-col gap-om-6">
-          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">{t('integrations.mappings.classes')}</span>
+          <span className="text-om-2xs font-semibold uppercase tracking-[0.08em] text-om-muted">
+            {t('integrations.mappings.classes')}
+          </span>
           {state.classMappings.map((m, i) => (
             <div key={i} className="grid grid-cols-2 gap-om-6">
               <TextInput
                 aria-label={t('integrations.mappings.ciType')}
                 value={m.ciType}
                 onChange={(event) => {
-                  update({ classMappings: state.classMappings.map((x, j) => (j === i ? { ...x, ciType: event.target.value } : x)) });
+                  update({
+                    classMappings: state.classMappings.map((x, j) =>
+                      j === i ? { ...x, ciType: event.target.value } : x,
+                    ),
+                  });
                 }}
               />
               <TextInput
                 aria-label={t('integrations.mappings.remoteClass')}
                 value={m.remoteClass}
                 onChange={(event) => {
-                  update({ classMappings: state.classMappings.map((x, j) => (j === i ? { ...x, remoteClass: event.target.value } : x)) });
+                  update({
+                    classMappings: state.classMappings.map((x, j) =>
+                      j === i ? { ...x, remoteClass: event.target.value } : x,
+                    ),
+                  });
                 }}
               />
             </div>

@@ -752,6 +752,54 @@ export const SWITCH_PORTS = {
 } as const;
 
 /**
+ * REQ-INT-009 (ADR-065) — notifications to webhooks, Slack, Teams, email and PagerDuty from the event stream. One
+ * integration sends at most `maxPerWindow` messages per `windowMs`; the rest are counted as suppressed so a burst of CI
+ * changes cannot flood a channel. A message carries at most `maxFacts` facts of at most `factMaxLength` characters.
+ * Webhooks are signed with HMAC-SHA256 over `<timestamp>.<body>` and carry the headers below; receivers reject a
+ * timestamp older than their own tolerance. SMTP waits `smtpTimeoutMs` for each reply.
+ */
+export const NOTIFICATION = {
+  windowMs: 60_000,
+  maxPerWindow: 30,
+  maxFacts: 10,
+  factMaxLength: 200,
+  smtpTimeoutMs: 10_000,
+  /** SMTP reply codes: 220 greeting, 250 ok, 235 authenticated, 334 continue, 354 start data, 221 closing. */
+  smtpCodes: {
+    ready: 220,
+    ok: 250,
+    forwarded: 251,
+    authenticated: 235,
+    authContinue: 334,
+    startData: 354,
+    closing: 221,
+  },
+  /** Replies from this code up are permanent refusals (RFC 5321 5yz): not retried. */
+  smtpPermanentFrom: 500,
+  /** Digits of an SMTP reply code. */
+  smtpReplyCodeLength: 3,
+  /** Longest base64 line in a MIME body (RFC 2045). */
+  base64LineLength: 76,
+  /** Characters of an ISO timestamp kept in a message footer (YYYY-MM-DDTHH:MM). */
+  footerTimeLength: 16,
+  smtpDefaultPort: 25,
+  smtpsDefaultPort: 465,
+  signatureHeader: 'x-openmap-signature',
+  timestampHeader: 'x-openmap-timestamp',
+  eventHeader: 'x-openmap-event',
+  deliveryHeader: 'x-openmap-delivery',
+  signatureVersion: 'v1',
+  /** The Adaptive Card version Teams renders in incoming-webhook messages. */
+  adaptiveCardVersion: '1.4',
+  adaptiveCardContentType: 'application/vnd.microsoft.card.adaptive',
+  /** PagerDuty Events API v2 enqueue path on the integration's endpoint. */
+  pagerDutyEnqueuePath: 'v2/enqueue',
+  /** After a test is queued the console re-reads the deliveries every `testPollMs` for `testPollForMs` (the engine sends it in the background). */
+  testPollMs: 2_000,
+  testPollForMs: 30_000,
+} as const;
+
+/**
  * REQ-IPAM-005 (ADR-064) — firewall rules and policy objects. Evaluation follows jumps and gotos to `maxJumpDepth`
  * chains (netfilter itself stops at 16) and group references to `maxObjectDepth` levels (vendors nest groups a few
  * deep). The shadow analysis is quadratic per chain, so a device's first `analysisRuleLimit` rules are analysed and the
@@ -1947,16 +1995,18 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `FirewallFinding`, `FirewallRule`, `FirewallObject`, `FirewallChain`, `FirewallSummary`, `FirewallPolicy`,
    * `FirewallDevice`, `FirewallCheckInput`, `FirewallCheckResult`, `FirewallCheck`; queries `firewallDevices`,
    * `firewallPolicy`, `firewallCheck`.
+   * 1.38.0 (REQ-INT-009, ADR-065): mutation `sendTestNotification`.
    */
-  graphql: '1.37.0',
+  graphql: '1.38.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
    * 0.8.0 (REQ-CMDB-020, ADR-034): `openmap.plan.line.received`. 0.9.0 (REQ-CMDB-032, ADR-036): `openmap.certificate.expiring`.
    * 0.10.0 (REQ-CMDB-014, ADR-037): `openmap.component.changed`.
    * 0.11.0 (REQ-CORE-021, ADR-059 consequences): `openmap.relationship.updated`.
+   * 0.12.0 (REQ-INT-009, ADR-065): `openmap.integration.notification.test`.
    */
-  event: '0.11.0',
+  event: '0.12.0',
   /** 1.0.0 (REQ-CORE-019, ADR-049): REST v1 from the route table (packages/contracts/src/rest.ts) and its OpenAPI 3.1 document. */
   rest: '1.1.0',
 };

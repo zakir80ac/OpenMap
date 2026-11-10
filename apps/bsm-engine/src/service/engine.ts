@@ -9,10 +9,13 @@ import { TENANT_SETTINGS_DEFAULTS } from '@openmap/config';
 import {
   eventEnvelopeSchema,
   integrationConfigSchema,
+  NOTIFICATION_VENDORS,
   type Ci,
   type EventEnvelope,
   type EventType,
-  type IntegrationConfig, CONNECTIVITY_ATTRIBUTES } from '@openmap/contracts';
+  type IntegrationConfig,
+  CONNECTIVITY_ATTRIBUTES,
+} from '@openmap/contracts';
 import { Prisma, type PrismaClient } from '@openmap/db';
 import type { GraphRepository } from '@openmap/graph';
 import { z } from 'zod';
@@ -225,7 +228,11 @@ export function createEngine(deps: EngineDeps) {
       );
       for (const ci of list) {
         // A probed inter-site link takes its health from its probes (ADR-025, readiness.ts), never from attributes.
-        if (ci.type === 'site_link' && typeof (ci.attributes as Record<string, unknown>)[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string') continue;
+        if (
+          ci.type === 'site_link' &&
+          typeof (ci.attributes as Record<string, unknown>)[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string'
+        )
+          continue;
         const verdict = deriveHealth(ci, now);
         if (current.get(ci.id) === verdict.health) continue;
         await graph.setHealth(tenantId, ci.id, verdict.health);
@@ -350,6 +357,8 @@ export function createEngine(deps: EngineDeps) {
         enabled: true,
         subscribedEvents: { has: type },
         direction: { in: ['outbound', 'bidirectional'] },
+        // REQ-INT-009 (ADR-065): webhook, Slack, Teams and email receive incidents as notifications instead.
+        vendor: { notIn: NOTIFICATION_VENDORS.filter((v) => v !== 'pagerduty') },
       },
     });
     let delivered = 0;

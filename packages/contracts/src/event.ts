@@ -42,6 +42,8 @@ export const EVENT_TYPES = [
   'openmap.integration.delivery.succeeded',
   'openmap.integration.delivery.failed',
   'openmap.integration.credential.expiring',
+  /** REQ-INT-009 (ADR-065): an operator asked for a test message on one notification integration (data.integrationId). */
+  'openmap.integration.notification.test',
   'openmap.security.alert.received',
   'openmap.security.response.executed',
   'openmap.asset.stage.changed',
