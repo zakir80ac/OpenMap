@@ -1977,6 +1977,46 @@ model CertificateAlert {
   @@map("certificate_alerts")
 }
 
+/// REQ-SEC-012 (ADR-070): one compliance evaluation of a tenant; `summary` is the per-framework posture and CVE risk
+/// computed from its results (compliancePosture, cveRisk in packages/contracts/src/compliance.ts). The tenant foreign
+/// key is in migration 0047 (ON DELETE CASCADE).
+model ComplianceRun {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String   @db.Uuid
+  catalogueVersion String
+  startedAt        DateTime @db.Timestamptz(3)
+  finishedAt       DateTime @db.Timestamptz(3)
+  durationMs       Int
+  triggeredBy      String
+  summary          Json
+
+  results ComplianceResult[]
+
+  @@index([tenantId, startedAt])
+  @@map("compliance_runs")
+}
+
+/// REQ-SEC-012 (ADR-070): one check's decision on one subject in an evaluation, with the facts that decided it.
+/// `ciId` is null for a check of the deployment itself (its own backups); it is not a foreign key, so the evidence
+/// stays as it was when the CI is later removed.
+model ComplianceResult {
+  runId    String  @db.Uuid
+  tenantId String  @db.Uuid
+  check    String
+  ciId     String? @db.Uuid
+  result   String
+  reason   String
+  facts    Json
+  highRisk Boolean @default(false)
+  seq      Int
+
+  run ComplianceRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@id([runId, seq])
+  @@index([runId, check, result])
+  @@map("compliance_results")
+}
+
 /// REQ-CMDB-014 (ADR-037): parts and components of a CI, mirrored from its `components` attribute; kept after removal.
 model CiComponent {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

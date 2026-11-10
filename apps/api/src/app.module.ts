@@ -41,6 +41,7 @@ import { ConnectivityModule } from './connectivity/connectivity.module.js';
 import { RestModule } from './rest/rest.module.js';
 import { IntegrationsModule } from './integrations/integrations.module.js';
 import { BackupsModule } from './backups/backups.module.js';
+import { ComplianceModule } from './compliance/compliance.module.js';
 import { IpamModule } from './ipam/ipam.module.js';
 import { MetricsModule } from './metrics/metrics.module.js';
 import { OutboxModule } from './outbox/outbox.module.js';
@@ -83,6 +84,7 @@ import { TenantModule } from './tenant/tenant.module.js';
     SoftwareModule,
     CommercialModule,
     CertificatesModule,
+    ComplianceModule,
     ComponentsModule,
     UtilisationModule,
     TelemetryModule,

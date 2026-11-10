@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.40.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.42.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -810,6 +810,63 @@ type Backups {
   staleAfterHours: Int!
   lastCompleteAt: DateTime
   sets: [BackupSet!]!
+}
+
+# REQ-SEC-012 (ADR-070): compliance posture per framework, computed from the facts OpenMap stores.
+enum ComplianceFramework { soc2 iso27001 pci_dss sama_csf nca_ecc }
+enum ComplianceCheck { cve_high_critical cve_exploited release_supported os_patched hardware_supported certificate_valid certificate_strong tls_modern storage_encrypted share_encrypted bucket_public_blocked database_backup_recent platform_backup_recent firewall_no_permissive }
+enum ComplianceResult { pass fail not_applicable }
+"One fact that decided a check, as text (numbers and booleans printed, absent facts null)."
+type ComplianceFact { key: String! value: String }
+type ComplianceTally { passed: Int! failed: Int! notApplicable: Int! }
+type ComplianceControlPosture {
+  "The framework's own control identifier."
+  controlId: String!
+  checks: [ComplianceCheck!]!
+  "fail when any evaluation fails, pass when one passes and none fails, otherwise not_applicable."
+  result: ComplianceResult!
+  tally: ComplianceTally!
+}
+type ComplianceFrameworkPosture {
+  framework: ComplianceFramework!
+  edition: String!
+  "passed / (passed + failed) over the framework's evaluations, 0..1; null when nothing could be evaluated."
+  passRate: Float
+  evaluations: ComplianceTally!
+  controlsPassed: Int!
+  controlsFailed: Int!
+  controlsNotApplicable: Int!
+  controls: [ComplianceControlPosture!]!
+  "CIs failing any of the framework's controls that carry a high or critical CVE."
+  highRiskCis: Int!
+}
+type ComplianceCveRisk { critical: Int! high: Int! exploited: Int! exposedCis: Int! }
+type ComplianceRun { id: UUID! catalogueVersion: String! startedAt: DateTime! finishedAt: DateTime! durationMs: Int! triggeredBy: String! }
+type CompliancePosture {
+  "The latest evaluation; null before the first one."
+  run: ComplianceRun
+  frameworks: [ComplianceFrameworkPosture!]!
+  cveRisk: ComplianceCveRisk
+}
+type ComplianceFinding {
+  check: ComplianceCheck!
+  result: ComplianceResult!
+  "Why the check decided so (COMPLIANCE_REASONS in packages/contracts)."
+  reason: String!
+  "The CI evaluated; null for a check of the deployment itself."
+  ci: Ci
+  facts: [ComplianceFact!]!
+  "A failure on a CI (or the host of an OS) that carries a high or critical CVE."
+  highRisk: Boolean!
+}
+type ComplianceControlDetail {
+  framework: ComplianceFramework!
+  controlId: String!
+  checks: [ComplianceCheck!]!
+  result: ComplianceResult!
+  tally: ComplianceTally!
+  findings: [ComplianceFinding!]!
+  truncated: Boolean!
 }
 
 # REQ-IPAM-005 (ADR-064): firewall rules and policy objects, the rule analysis and the traffic check.
@@ -2794,6 +2851,10 @@ type Query {
   vendor(id: UUID!): VendorDetail
   costCentres: [CostCentre!]!
   certificates(filter: CertificateFilter): [Certificate!]!
+  "REQ-SEC-012: the latest compliance evaluation's posture per framework."
+  compliancePosture: CompliancePosture!
+  "REQ-SEC-012: one control of the latest evaluation with its decisions of one result, high-risk CIs first."
+  complianceControl(framework: ComplianceFramework!, controlId: String!, result: ComplianceResult = fail, first: Int = 50): ComplianceControlDetail!
   "REQ-CMDB-034: the latest utilisation of every CI that reports it, hottest first by the chosen measure."
   utilisation(filter: UtilisationFilter, sort: UtilisationSort = cpu, first: Int = 100, offset: Int = 0): UtilisationPage!
   "REQ-UI-027: the health and telemetry fleet, every CI with a latest CPU, memory, IOPS, throughput or Apdex sample."
@@ -3174,6 +3235,8 @@ type Mutation {
   dismissClassificationSuggestion(id: UUID!): ClassificationSuggestion!
   "REQ-AI-003: evaluates the anomaly rules now (they also run every ANOMALY_INTERVAL_MS)."
   detectAnomalies: AnomalyReport!
+  "REQ-SEC-012: evaluates every compliance check now and stores the results as evidence (operators and auditors)."
+  evaluateCompliance: CompliancePosture!
   "REQ-AI-003: the local model's explanation of a finding, from its facts only."
   explainAnomaly(id: UUID!, locale: String!): AnomalyFinding!
   "REQ-IPAM-003: keeps a zone in sync with its authoritative server."

@@ -27,6 +27,7 @@ export * from './capacity.js';
 export * from './cabling-verify.js';
 export * from './switch-ports.js';
 export * from './firewall.js';
+export * from './compliance.js';
 export * from './notification.js';
 export * from './backup.js';
 export * from './custom-field.js';
