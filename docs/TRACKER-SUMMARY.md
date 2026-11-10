@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-10T18:27:44.829Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-10T20:46:56.175Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
-| Not started | 16 |
-| In progress | 1 |
-| Blocked | 29 |
-| In review | 5 |
-| Done | 159 |
+| Not started | 7 |
+| In progress | 0 |
+| Blocked | 31 |
+| In review | 6 |
+| Done | 166 |
 | **Total** | **210** |
 
 ## By workstream
@@ -19,19 +19,18 @@ Generated 2026-11-10T18:27:44.829Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | DISC | 31 | 5 | 0 | 26 | 16% |
 | DEP | 5 | 5 | 0 | 0 | 100% |
 | CMDB | 42 | 40 | 0 | 2 | 95% |
-| IPAM | 7 | 6 | 0 | 0 | 86% |
+| IPAM | 7 | 7 | 0 | 0 | 100% |
 | DCIM | 9 | 9 | 0 | 0 | 100% |
 | BSM | 8 | 8 | 0 | 0 | 100% |
 | UI | 36 | 33 | 0 | 0 | 92% |
 | AI | 8 | 8 | 0 | 0 | 100% |
-| INT | 19 | 10 | 0 | 0 | 53% |
+| INT | 19 | 13 | 0 | 2 | 68% |
 | QA | 5 | 3 | 0 | 1 | 60% |
-| PERF | 6 | 2 | 0 | 0 | 33% |
-| SEC | 13 | 10 | 1 | 0 | 77% |
+| PERF | 6 | 3 | 0 | 0 | 50% |
+| SEC | 13 | 12 | 0 | 0 | 92% |
 
 ## In progress
 
-- REQ-SEC-011 · Encryption at rest and in transit
 
 ## Blocked
 
@@ -63,20 +62,19 @@ Generated 2026-11-10T18:27:44.829Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 - REQ-DISC-027 · Vulnerability feed ingestion (NVD, vendor advisories, Tenable/Qualys/Rapid7 imports) — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Three real NVD CVE API 2.0 responses parse (NVD score preferred, CISA KEV fields). Missing: Tenable, Qualys and Rapid7 import parsers need real exports from those products.
 - REQ-CMDB-022 · SaaS asset inventory (Microsoft 365, Salesforce, ServiceNow, Workday, Google Workspace): seats, SSO, renewals, data flows — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. SaaS collector (Graph, Google Admin SDK, Salesforce, ServiceNow, Workday; T-075) plus the SaaS inventory read model and screen (ADR-041, d435514, T-213..T-215). Done needs recorded API responses from real tenants (R-004): Microsoft 365 developer tenant, Salesforce Developer Edition, ServiceNow PDI, Google Workspace and Workday sandboxes.
 - REQ-CMDB-024 · Warranty tracking with vendor API lookups (Dell, HPE, Lenovo, Cisco, IBM) — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Vendor warranty and EoX lookups (Dell TechDirect, HPE, Lenovo, Cisco SN2INFO/EoX, IBM) need tenant API credentials and recorded responses before adapters can be written and tested without inventing response shapes (R-004). Integration vendors already registered (dell_techdirect, hpe_warranty, lenovo_warranty, cisco_sntc, ibm_support); lifecycle catalogue and asset endOfLife already consume their dates (ADR-039).
+- REQ-INT-014 · Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM — Blocked 2026-11-10 on vendor access, like REQ-CMDB-024 (parked by Syed 2026-11-07): Done needs recorded responses from Dell, Lenovo and Cisco API accounts. HPE and IBM publish no open warranty API; adapters need their partner/support API access and documentation, which an implementation must not guess.
+- REQ-INT-017 · Backup/DR awareness: Veeam, Commvault, Rubrik — Built and tested against simulators and the compose stack; Blocked on access to a real Veeam, Commvault or Rubrik server (Syed, 2026-11-07).
 - REQ-DISC-031 · Remote Collector install — PARKED 2026-11-07 (Syed): real vendor access, licences, tenants or the code-signing decision come later; meanwhile exercised in simulated mode (tools/simulator, ADR-042). Simulated runs never close this row. Bare-metal installers: systemd unit + install-node.sh, Windows service hosting + install-node.ps1, env file OPENMAP_NODE_ENV_FILE; node certs carry DNS SAN + serverAuth for the agent gateway
 
 ## Next up
 
-- REQ-SEC-011 [P1] Encryption at rest and in transit
-- REQ-INT-011 [P1] Configuration management: Ansible, Puppet, Chef, SaltStack dynamic inventory
-- REQ-INT-012 [P1] Monitoring: Zabbix, Nagios, Prometheus, Datadog, SolarWinds, Splunk
-- REQ-INT-014 [P1] Warranty/EoX APIs: Dell, HPE, Lenovo, Cisco, IBM
-- REQ-INT-016 [P1] Identity: Active Directory, Entra ID, Okta
-- REQ-INT-017 [P1] Backup/DR awareness: Veeam, Commvault, Rubrik
-- REQ-INT-018 [P1] Appliance deployment (VM)
-- REQ-IPAM-007 [P1] Network circuits
-- REQ-PERF-005 [P1] Health and performance of the platform itself
-- REQ-SEC-012 [P1] Compliance posture per framework (SOC 2, ISO 27001, PCI DSS, SAMA CSF, NCA ECC) with CVE risk and audit pass rate
+- REQ-UI-021 [P1] Standard reports and scheduled exports
+- REQ-UI-022 [P1] DOQL (SQL over the data)
+- REQ-UI-023 [P1] Insights+ BI
+- REQ-INT-010 [P2] ITSM: ServiceNow, Jira Service Management, Freshservice, Zendesk, BMC Remedy, Cherwell
+- REQ-INT-013 [P2] Infrastructure as code: Terraform provider, Pulumi
+- REQ-INT-015 [P2] Finance/procurement: SAP, Oracle, Coupa, QuickBooks
+- REQ-PERF-006 [P2] Telemetry fleet p95 under budget at the scale-1 estate (500k CIs)
 
 ## Open risks
 

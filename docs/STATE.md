@@ -2,7 +2,122 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 46: REQ-SEC-011 encryption at rest complete, ADR-067 steps 3–6)
+## Last session · 2026-11-10 (checkpoint 47: REQ-SEC-011 encryption in transit for all six stores; seven P1 rows merged)
+
+Syed: "finish SEC-011, closing PERF-002 and PERF-004, and the 11 P1 rows".
+
+### Encryption in transit is done for every store (ADR-068 "As built")
+
+| Store | Protocol | A renewed certificate is taken |
+| --- | --- | --- |
+| PostgreSQL | `hostssl` only | SIGHUP from `pgtde-agent` |
+| ClickHouse | HTTPS 8443, secure native 9440 | file reload |
+| Valkey | `rediss://`, plain port closed | `CONFIG SET` to a new file, no restart |
+| Meilisearch | HTTPS | restart (seconds) |
+| Memgraph | `bolt+s://` | restart (minutes); a one-year certificate |
+| OpenBao | HTTPS | compose: SIGHUP from `openbao-certs`; Helm: the chart renews its own pair |
+
+- **Client trust.** `loadEnv()` adds the bundle at `SERVICE_CA_PATH` to Node's default CA set, so fetch, ioredis and
+  neo4j-driver verify against it with no client options (T-585).
+- **OpenBao's first certificate.** On compose, `openbao-keys` makes it with `bao server -dev -dev-tls`. On Helm,
+  `genCA`/`genSignedCert` make it into `<release>-openbao-tls`.
+- **Tests.** T-586 reaches each store over TLS and is refused in plain text. Valkey loaded a renewed certificate live;
+  Meilisearch restarted on its own.
+- **Moves.**
+  - The dev stack moved, following deploy/README.md, "Moving a running install to TLS". pg_tde's provider record now
+    reads `https://openbao:8200` with the CA path.
+  - Helm was verified on kind: a fresh install had every store pod ready on internal-CA certificates.
+- **Evidence:** `docs/evidence/sec-tls-stores.md`. Commits e7bc16b, e4fd4af, d0a814f.
+
+### Found and fixed
+
+- **Helm could not have installed since OpenBao went to server mode.**
+  - OpenBao's readiness probe deadlocked the init job.
+  - `register()` never registered a secret id, because `secret-id/lookup` succeeds for unknown ids. The refused logins
+    then tripped OpenBao's AppRole lockout (`sys/locked-users`).
+  - The Percona volume was root-owned.
+  - Meilisearch's probe could never pass: it answers only clients that send SNI.
+- **Docker Desktop's `::1` port forward drops connections.**
+  - Through `localhost`, 3 of 40 new Prisma connections failed after 30 s each. Through `127.0.0.1`, 40 of 40 took
+    1.2 s.
+  - Host-side addresses now use `127.0.0.1`, and every store certificate names it. Prisma resolves `localhost` itself,
+    so `NODE_OPTIONS` does not help.
+- **The TLS move on the dev stack.**
+  - Superset and Keycloak still held connections, so the stop killed PostgreSQL, and the offline pg_tde change refused
+    the unclean directory.
+  - The way out was OpenBao on its plain configuration for a minute, recovery, then a clean stop. The README now stops
+    every client first.
+- **The CA bundle.** An existing bundle had no final newline, so the bootstrap CA was glued onto its last line;
+  `openbao-keys` now puts it on a line of its own.
+- **Scheduler integration tests** deleted their organisation before the discovery node that references its site.
+
+### Seven P1 rows merged from parallel work
+
+| Row | What | Contract | Evidence |
+| --- | --- | --- | --- |
+| REQ-IPAM-007 | Network circuits on inter-site links: register, path diversity, redundancy lost (ADR-069) | GraphQL 1.46.0 (allocated 1.41.0), migration 0046 | `docs/evidence/ipam-circuits.md` |
+| REQ-SEC-012 | Compliance posture per framework: 27 controls, 14 checks, five frameworks (ADR-070) | GraphQL 1.42.0, migration 0047 | `docs/evidence/sec-compliance-posture.md` |
+| REQ-PERF-005 | Platform health screen, SLO rules, budgets enforced in CI by guard (ADR-071) | GraphQL 1.43.0 | `docs/evidence/perf-platform-health.md` |
+| REQ-INT-011 | Ansible, Salt, Puppet and Chef dynamic inventory, read by the real tools (ADR-072) | REST 1.2.0 | `docs/evidence/int-config-management.md` |
+| REQ-INT-012 | Monitoring ingest from six vendors; Alertmanager end to end (ADR-073) | GraphQL 1.45.0, migration 0050 | `docs/evidence/int-monitoring-ingest.md` |
+| REQ-INT-016 | Identity federation: AD/LDAP and OIDC (Entra ID, Okta) through Keycloak (ADR-074) | GraphQL 1.47.0 (allocated 1.46.0), migration 0051 | `docs/evidence/int-identity-federation.md` |
+| REQ-INT-017 | Backup and DR awareness from Veeam, Commvault and Rubrik (ADR-075) | GraphQL 1.48.0 (allocated 1.47.0), CI and collector 0.14.0, migration 0052, Memgraph 0005 | `docs/evidence/int-backup-awareness.md`; stays Blocked on vendor access |
+
+The rows merged out of allocation order, so each later merge took the next GraphQL minor version; CONTRACTS.md records
+the allocated and released numbers.
+
+### Verified on the TLS stack after the merges
+
+| Check | Result |
+| --- | --- |
+| Workspace typecheck, lint and unit tests (turbo) | 56 of 56 tasks |
+| Integration suites, host on `127.0.0.1` | vault 3, graph 5, reconciler 32, bsm-engine 7, scheduler 4, assistant 12, api 140 (4 skipped), appliance 2 |
+| Assistant evaluation | 41 of 41 (`docs/evidence/assistant-eval.json`); golden set 12 of 12 |
+| Playwright e2e, full suite | en 61 of 61, ar 61 of 61; RTL screenshots for the new screens in `docs/evidence/console` |
+
+The integration and e2e runs found faults, all fixed:
+- **Retention.** Backups were kept and listed by name, not age, so a named set could prune the newest.
+- **Console.** It lacked the CA mount that `loadEnv` now needs.
+- **Assistant.** The 1.5B model chose `:Host` for VMs once the merged contract changed its prompt; a worked example
+  fixed that.
+- **Tests.** Several merged specs had substring locators. One counted the Next.js route announcer as an error. The
+  scheduler tests had a cleanup-order bug.
+- **Dev host.** `E2E_RESOLVE_LOCALHOST_TO=127.0.0.1` gets around Docker Desktop's hanging `::1` forward for the e2e
+  browser.
+
+
+### Open
+
+- **REQ-PERF-002 and REQ-PERF-004** close on a CI run: "k6 threshold enforced in CI" and "sweep timed in CI nightly".
+  The GitHub repository became private this session. The public API now answers 404 and this machine has no `gh`, so CI
+  results cannot be read from here. Main is pushed (d0a814f).
+- **REQ-CORE-020**: the scale-1 replay measurement with concurrent workers. It resets tenant `570b1953`, so it runs
+  last.
+- **REQ-INT-014**: Blocked (vendor APIs; HPE and IBM have no open API). **REQ-INT-017**: Blocked on vendor access, as
+  decided on 2026-11-07.
+- **REQ-INT-018** stays In review until one image build boots on a KVM host.
+- **Old plaintext volumes** `openmap_postgres-data` and `openmap_clickhouse-data` are still kept as a fallback.
+- **graphify.** The session's 62 changed docs were extracted and merged into the graph (21,000 nodes). Two things were
+  left for a full rebuild:
+  - The 28 new screenshots.
+  - The changed TypeScript files: this graphify build parsed none of 391, and merging would have replaced their
+    existing nodes with nothing, so their nodes are still the pre-session ones.
+- **The kind cluster** is stopped again. The old `openmap` release in it predates OpenBao's server mode.
+
+### Next three
+
+1. Read the CI run of d0a814f once it can be seen, and close REQ-PERF-002 and REQ-PERF-004 on it.
+2. REQ-CORE-020: the scale-1 replay (`replay --reset --dispatchers N` on `.local/estate-s1b`, then `replay-history`
+   and the assistant evaluation), recorded in `docs/evidence/reconciler-scale.md`.
+3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
+
+### Questions for Syed
+
+- **CI visibility.** The repository is private now. Make it public again, run `gh auth login` on this machine, or
+  read the Actions page yourself and tell me the result of d0a814f.
+- **May the old plaintext volumes be deleted?** The stack has run on the encrypted ones since checkpoint 46.
+
+## Previous session · 2026-11-10 (checkpoint 46: REQ-SEC-011 encryption at rest complete, ADR-067 steps 3–6)
 
 ### Encryption at rest is done end to end on compose and Helm
 
