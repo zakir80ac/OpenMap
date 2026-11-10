@@ -5,8 +5,35 @@ openbao.seal.config for PKCS#11 or KMIP), and a post-install/upgrade job that in
 registers the AppRole ids the chart generated (kept across upgrades) for the services, the backup job and the OpenBao
 Agent beside PostgreSQL (pg_tde's principal key).
 */ -}}
+{{- if and .Values.openbao.external.enabled .Values.openbao.external.caBundle }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openmap.fullname" . }}-openbao-external-ca
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+data:
+  ca.crt: |
+{{ .Values.openbao.external.caBundle | indent 4 }}
+{{- end }}
 {{- if not .Values.openbao.external.enabled }}
 {{- $fullname := include "openmap.fullname" . }}
+{{- $tls := include "openmap.openbaoTls" . | fromYaml }}
+---
+# ADR-068: OpenBao's listener certificate and the CA that signed it (its key is not kept, so it signs nothing else).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $fullname }}-openbao-tls
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
+  annotations:
+    "helm.sh/resource-policy": keep
+    openmap.io/not-after: {{ $tls.notAfter | quote }}
+type: Opaque
+data:
+  ca.crt: {{ index $tls "ca.crt" }}
+  tls.crt: {{ index $tls "tls.crt" }}
+  tls.key: {{ index $tls "tls.key" }}
 {{- $sealName := printf "%s-openbao-seal" $fullname }}
 {{- $approleName := printf "%s-openbao-approle" $fullname }}
 {{- $existingSeal := lookup "v1" "Secret" .Release.Namespace $sealName }}
@@ -33,7 +60,7 @@ metadata:
   annotations: { "helm.sh/resource-policy": keep }
 type: Opaque
 data:
-  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" "pgtde-role-id" "pgtde-secret-id" "clickhouse-role-id" "clickhouse-secret-id" }}
+  {{- range $key := list "role-id" "secret-id" "backup-role-id" "backup-secret-id" "pgtde-role-id" "pgtde-secret-id" "clickhouse-role-id" "clickhouse-secret-id" "stores-role-id" "stores-secret-id" }}
   {{- /* An id is kept once generated; one added by a later chart version is generated on that upgrade. */}}
   {{ $key }}: {{ if and $existingApprole (hasKey $existingApprole.data $key) }}{{ index $existingApprole.data $key }}{{ else }}{{ uuidv4 | b64enc }}{{ end }}
   {{- end }}
@@ -47,15 +74,17 @@ data:
   openbao.hcl: |
     ui            = false
     disable_mlock = true
-    api_addr      = "http://{{ $fullname }}-openbao:8200"
-    cluster_addr  = "http://{{ $fullname }}-openbao:8201"
+    api_addr      = "https://{{ $fullname }}-openbao:8200"
+    cluster_addr  = "https://{{ $fullname }}-openbao:8201"
     storage "raft" {
       path    = "/openbao/data"
       node_id = "openbao-0"
     }
     listener "tcp" {
-      address     = "0.0.0.0:8200"
-      tls_disable = true
+      address         = "0.0.0.0:8200"
+      tls_cert_file   = "/openbao/tls/tls.crt"
+      tls_key_file    = "/openbao/tls/tls.key"
+      tls_min_version = "tls12"
       telemetry { unauthenticated_metrics_access = true }
     }
     {{- if .Values.openbao.seal.config }}
@@ -80,6 +109,8 @@ data:
 {{ .Files.Get "files/openbao/policies/pg-tde.hcl" | indent 4 }}
   clickhouse-disk.hcl: |
 {{ .Files.Get "files/openbao/policies/clickhouse-disk.hcl" | indent 4 }}
+  store-tls.hcl: |
+{{ .Files.Get "files/openbao/policies/store-tls.hcl" | indent 4 }}
 ---
 apiVersion: v1
 kind: Service
@@ -88,7 +119,7 @@ metadata:
   labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao") | nindent 4 }}
 spec:
   selector: {{- include "openmap.selector" (dict "root" . "component" "openbao") | nindent 4 }}
-  ports: [{ name: http, port: 8200, targetPort: 8200 }]
+  ports: [{ name: https, port: 8200, targetPort: 8200 }]
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -103,6 +134,7 @@ spec:
   template:
     metadata:
       labels: {{- include "openmap.selector" (dict "root" . "component" "openbao") | nindent 8 }}
+      annotations: { {{ include "openmap.openbaoCaChecksum" . }} }
     spec:
       securityContext: { fsGroup: 1000 }
       containers:
@@ -112,11 +144,12 @@ spec:
           args: ["server", "-config=/openbao/config/openbao.hcl"]
           ports: [{ containerPort: 8200 }]
           readinessProbe:
-            httpGet: { path: /v1/sys/health, port: 8200 }
+            httpGet: { path: /v1/sys/health, port: 8200, scheme: HTTPS }
             periodSeconds: 5
           volumeMounts:
             - { name: data, mountPath: /openbao/data }
             - { name: config, mountPath: /openbao/config }
+            - { name: tls, mountPath: /openbao/tls, readOnly: true }
             {{- if not .Values.openbao.seal.config }}
             - { name: unseal, mountPath: /openbao/unseal, readOnly: true }
             {{- end }}
@@ -124,6 +157,9 @@ spec:
       volumes:
         - name: config
           configMap: { name: {{ $fullname }}-openbao, items: [{ key: openbao.hcl, path: openbao.hcl }] }
+        # Group-readable for the openbao user (gid 1000) through the pod's fsGroup.
+        - name: tls
+          secret: { secretName: {{ $fullname }}-openbao-tls, defaultMode: 0440, items: [{ key: tls.crt, path: tls.crt }, { key: tls.key, path: tls.key }] }
         {{- if not .Values.openbao.seal.config }}
         - name: unseal
           # Group-readable: the openbao user (gid 1000) reads it through the pod's fsGroup.
@@ -172,7 +208,8 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh", "/openbao/scripts/init.sh"]
           env:
-            - { name: BAO_ADDR, value: {{ printf "http://%s:8200" (include "openmap.svc" (dict "root" . "component" "openbao")) | quote }} }
+            - { name: BAO_ADDR, value: {{ printf "https://%s:8200" (include "openmap.svc" (dict "root" . "component" "openbao")) | quote }} }
+            - { name: BAO_CACERT, value: /openbao/tls-ca/ca.crt }
             - { name: OPENBAO_MOUNT, value: {{ .Values.openbao.mount | quote }} }
             # ADR-068: the names the internal services CA may issue server certificates for.
             {{- $f := include "openmap.fullname" . }}
@@ -185,15 +222,21 @@ spec:
             - { name: PGTDE_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: pgtde-secret-id } } }
             - { name: CLICKHOUSE_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: clickhouse-role-id } } }
             - { name: CLICKHOUSE_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: clickhouse-secret-id } } }
+            - { name: STORES_ROLE_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: stores-role-id } } }
+            - { name: STORES_SECRET_ID, valueFrom: { secretKeyRef: { name: {{ $approleName }}, key: stores-secret-id } } }
+            - { name: SERVICE_TLS_MAX_TTL, value: {{ .Values.storeTls.maxTtl | quote }} }
           volumeMounts:
             - { name: init, mountPath: /openbao/init }
             - { name: scripts, mountPath: /openbao/scripts }
             - { name: policies, mountPath: /openbao/policies }
+            - { name: tls-ca, mountPath: /openbao/tls-ca, readOnly: true }
       volumes:
         - name: init
           persistentVolumeClaim: { claimName: {{ $fullname }}-openbao-init }
         - name: scripts
           configMap: { name: {{ $fullname }}-openbao, items: [{ key: init.sh, path: init.sh }] }
+        - name: tls-ca
+          secret: { secretName: {{ $fullname }}-openbao-tls, items: [{ key: ca.crt, path: ca.crt }] }
         - name: policies
-          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openmap-services.hcl, path: openmap-services.hcl }, { key: openmap-backup.hcl, path: openmap-backup.hcl }, { key: pg-tde.hcl, path: pg-tde.hcl }, { key: clickhouse-disk.hcl, path: clickhouse-disk.hcl }] }
+          configMap: { name: {{ $fullname }}-openbao, items: [{ key: openmap-services.hcl, path: openmap-services.hcl }, { key: openmap-backup.hcl, path: openmap-backup.hcl }, { key: pg-tde.hcl, path: pg-tde.hcl }, { key: clickhouse-disk.hcl, path: clickhouse-disk.hcl }, { key: store-tls.hcl, path: store-tls.hcl }] }
 {{- end }}

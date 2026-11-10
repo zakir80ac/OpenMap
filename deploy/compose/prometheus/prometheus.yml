@@ -16,6 +16,9 @@ scrape_configs:
   # REQ-SEC-011 (ADR-067): OpenBao's telemetry (the listener allows unauthenticated metrics). A sealed OpenBao answers 503 here, so up{job="openbao"} drops to 0; vault_core_active is 1 on the active node.
   - job_name: openbao
     metrics_path: /v1/sys/metrics
+    # ADR-068: OpenBao serves TLS only, verified against the internal services CA bundle.
+    scheme: https
+    tls_config: { ca_file: /etc/prometheus/ca/services-ca.crt }
     params: { format: [prometheus] }
     static_configs: [{ targets: ["openbao:8200"] }]
   # Memgraph Community exposes no Prometheus endpoint (the HTTP metrics server is an Enterprise feature); the graph

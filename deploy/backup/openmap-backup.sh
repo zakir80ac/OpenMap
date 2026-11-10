@@ -18,6 +18,7 @@
 #   POSTGRES_URL, CLICKHOUSE_URL, CLICKHOUSE_USER, CLICKHOUSE_PASSWORD, CLICKHOUSE_DB,
 #   BACKUP_DIR (this container's view of the backup volume, which the ClickHouse server mounts at its
 #   backups.allowed_path), BACKUP_KEEP, CLICKHOUSE_UID (the server's user, which writes the ClickHouse part).
+# ADR-068: over https OpenBao is verified against OPENBAO_CA (the internal services CA bundle).
 # REQ-SEC-011 (ADR-067): with OPENBAO_ADDR and the backup AppRole files (OPENBAO_ROLE_ID_FILE, OPENBAO_SECRET_ID_FILE)
 # set, the set also holds an OpenBao Raft snapshot. It is restored by an operator (`bao operator raft snapshot restore`)
 # and needs the same seal key; `restore` here leaves OpenBao alone.
@@ -71,7 +72,7 @@ BACKUP_KEY="${BACKUP_TRANSIT_KEY:-openmap-backup}"
 
 bao_token() {
   [ -n "${OPENBAO_ADDR:-}" ] && [ -n "${OPENBAO_ROLE_ID_FILE:-}" ] && [ -n "${OPENBAO_SECRET_ID_FILE:-}" ] || return 1
-  login=$(curl -sS --fail-with-body -X POST -H 'content-type: application/json' \
+  login=$(curl -sS --fail-with-body ${OPENBAO_CA:+--cacert "$OPENBAO_CA"} -X POST -H 'content-type: application/json' \
     --data "{\"role_id\":\"$(tr -d '\n' < "$OPENBAO_ROLE_ID_FILE")\",\"secret_id\":\"$(tr -d '\n' < "$OPENBAO_SECRET_ID_FILE")\"}" \
     "$OPENBAO_ADDR/v1/auth/approle/login") || die "openbao: AppRole login refused" "${name:-}"
   printf '%s' "$login" | sed -n 's/.*"client_token":"\([^"]*\)".*/\1/p'
@@ -83,7 +84,7 @@ derive() { printf '%s' "$2" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:$1"
 
 # Sets DATA_KEY_HEX and WRAPPED_KEY from a new Transit data key.
 new_data_key() {
-  out=$(curl -sS --fail-with-body -X POST -H "X-Vault-Token: $1" "$OPENBAO_ADDR/v1/transit/datakey/plaintext/$BACKUP_KEY") ||
+  out=$(curl -sS --fail-with-body ${OPENBAO_CA:+--cacert "$OPENBAO_CA"} -X POST -H "X-Vault-Token: $1" "$OPENBAO_ADDR/v1/transit/datakey/plaintext/$BACKUP_KEY") ||
     die "openbao: data key refused" "${name:-}"
   WRAPPED_KEY=$(printf '%s' "$out" | json_field ciphertext)
   DATA_KEY_HEX=$(hex_of_b64 "$(printf '%s' "$out" | json_field plaintext)")
@@ -93,7 +94,7 @@ new_data_key() {
 # Sets DATA_KEY_HEX from the wrapped key in a manifest.
 unwrap_data_key() {
   token=$(bao_token) || die "the set is encrypted: OPENBAO_ADDR and the backup AppRole files are needed" "${name:-}"
-  out=$(curl -sS --fail-with-body -X POST -H "X-Vault-Token: $token" -H 'content-type: application/json' \
+  out=$(curl -sS --fail-with-body ${OPENBAO_CA:+--cacert "$OPENBAO_CA"} -X POST -H "X-Vault-Token: $token" -H 'content-type: application/json' \
     --data "{\"ciphertext\":\"$1\"}" "$OPENBAO_ADDR/v1/transit/decrypt/$BACKUP_KEY") || die "openbao: the set's key was refused" "${name:-}"
   DATA_KEY_HEX=$(hex_of_b64 "$(printf '%s' "$out" | json_field plaintext)")
 }
@@ -153,7 +154,7 @@ create() {
 
   bao_json=null
   if [ -n "$token" ]; then
-    curl -sS --fail -H "X-Vault-Token: $token" -o "$dir/$BAO_FILE" "$OPENBAO_ADDR/v1/sys/storage/raft/snapshot" || die "openbao: snapshot refused" "$name"
+    curl -sS --fail ${OPENBAO_CA:+--cacert "$OPENBAO_CA"} -H "X-Vault-Token: $token" -o "$dir/$BAO_FILE" "$OPENBAO_ADDR/v1/sys/storage/raft/snapshot" || die "openbao: snapshot refused" "$name"
     bao_json=$(printf '{"file":"%s","bytes":%s,"sha256":"%s"}' "$BAO_FILE" "$(stat -c %s "$dir/$BAO_FILE")" "$(sha256sum "$dir/$BAO_FILE" | cut -d' ' -f1)")
     log "openbao snapshot taken" "$name"
   fi

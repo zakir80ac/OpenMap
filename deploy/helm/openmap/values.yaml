@@ -120,6 +120,23 @@ clickhouse:
     # With openbao.external: a Secret holding `role-id` and `secret-id` of an AppRole on the clickhouse-disk policy.
     externalApproleSecret: ""
 
+# REQ-SEC-011 (ADR-068): Valkey, Memgraph and Meilisearch over TLS only, each with an OpenBao Agent sidecar that keeps its
+# server certificate from the internal services CA. Valkey takes a renewed certificate live; Meilisearch and Memgraph
+# restart their container (Memgraph reloads its snapshot, minutes: hence its year-long certificate).
+storeTls:
+  enabled: true
+  ttl: 720h
+  memgraphTtl: 8760h
+  # Up to how long the services CA issues a certificate (the longest ttl above).
+  maxTtl: 8760h
+  # How often the wrappers compare the rendered certificate (seconds).
+  checkSeconds: 60
+  # With openbao.external: a Secret holding `role-id` and `secret-id` of an AppRole on the store-tls policy.
+  externalApproleSecret: ""
+  agentResources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { cpu: 100m, memory: 64Mi }
+
 valkey:
   image: valkey/valkey:8
   storage: 5Gi
@@ -160,11 +177,19 @@ openbao:
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: "1", memory: 1Gi }
+  # ADR-068: OpenBao's listener serves TLS only, on a certificate the chart generates (OpenBao cannot issue its own
+  # before it runs) and keeps in Secret <release>-openbao-tls. The chart makes a new one, with a new CA, on the first
+  # `helm upgrade` within renewDays of its expiry; OpenBao and every pod that trusts the CA roll with it.
+  tls:
+    days: 730
+    renewDays: 60
   external:
     enabled: false
     address: ""
     # Token for the external vault (the services then skip AppRole).
     token: ""
+    # The CA bundle that verifies an external vault's https address; empty: the system CAs.
+    caBundle: ""
 
 llm:
   enabled: false

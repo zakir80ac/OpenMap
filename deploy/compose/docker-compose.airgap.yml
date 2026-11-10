@@ -14,6 +14,14 @@ services:
   meilisearch: { pull_policy: never, environment: { MEILI_NO_ANALYTICS: "true", MEILI_ENV: production } }
   keycloak: { pull_policy: never }
   openbao: { pull_policy: never }
+  openbao-keys: { pull_policy: never }
+  openbao-init: { pull_policy: never }
+  pgtde-agent: { pull_policy: never }
+  clickhouse-keys: { pull_policy: never }
+  valkey-certs: { pull_policy: never }
+  memgraph-certs: { pull_policy: never }
+  meili-certs: { pull_policy: never }
+  openbao-certs: { pull_policy: never }
   superset: { pull_policy: never }
   llm-cpu: { pull_policy: never }
   otel-collector: { pull_policy: never }

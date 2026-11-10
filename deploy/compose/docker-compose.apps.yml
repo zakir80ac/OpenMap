@@ -12,20 +12,21 @@ x-app-env: &app-env
   NODE_ENV: production
   # ADR-068: TLS to PostgreSQL, the server verified against the internal services CA (Prisma's spelling: sslcert is the CA).
   POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}?sslmode=require&sslcert=/run/openmap/ca/services-ca.crt&sslaccept=strict
-  MEMGRAPH_URL: bolt://memgraph:7687
+  # ADR-068: Bolt, Valkey and Meilisearch over TLS; the clients trust the internal services CA through SERVICE_CA_PATH.
+  MEMGRAPH_URL: bolt+s://memgraph:7687
   # ADR-068: HTTPS, verified against the internal services CA (SERVICE_CA_PATH, every TLS client).
   CLICKHOUSE_URL: https://clickhouse:8443
   SERVICE_CA_PATH: /run/openmap/ca/services-ca.crt
   CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
   CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
   CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
-  VALKEY_URL: redis://valkey:6379
-  MEILI_URL: http://meilisearch:7700
+  VALKEY_URL: rediss://valkey:6379
+  MEILI_URL: https://meilisearch:7700
   MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-openmap-dev-master-key}
   KEYCLOAK_URL: http://keycloak:8080
   KEYCLOAK_REALM: ${KEYCLOAK_REALM:-openmap}
   KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-openmap-console}
-  OPENBAO_ADDR: http://openbao:8200
+  OPENBAO_ADDR: https://openbao:8200
   # REQ-SEC-011 (ADR-067): services log in with AppRole; openbao-init writes the ids into the openbao-approle volume.
   OPENBAO_ROLE_ID_FILE: /run/openmap/openbao/role-id
   OPENBAO_SECRET_ID_FILE: /run/openmap/openbao/secret-id
@@ -119,7 +120,8 @@ services:
       BACKUP_DIR: /backups
       BACKUP_KEEP: ${BACKUP_KEEP:-7}
       # REQ-SEC-011 (ADR-067): the backup AppRole may take an OpenBao Raft snapshot and nothing else.
-      OPENBAO_ADDR: http://openbao:8200
+      OPENBAO_ADDR: https://openbao:8200
+      OPENBAO_CA: /run/openmap/ca/services-ca.crt
       OPENBAO_ROLE_ID_FILE: /run/openmap/openbao-backup/role-id
       OPENBAO_SECRET_ID_FILE: /run/openmap/openbao-backup/secret-id
     volumes: ["backups:/backups", "openbao-approle-backup:/run/openmap/openbao-backup:ro", "service-ca:/run/openmap/ca:ro"]

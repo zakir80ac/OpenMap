@@ -40,6 +40,22 @@ data:
   tls.xml: |
 {{ .Files.Get "files/clickhouse/tls.xml" | indent 4 }}
 {{- end }}
+{{- if .Values.storeTls.enabled }}
+---
+# REQ-SEC-011 (ADR-068): the store agents' configuration and the wrappers that take a renewed certificate.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openmap.fullname" . }}-store-tls
+  labels: {{- include "openmap.componentLabels" (dict "root" . "component" "store-tls") | nindent 4 }}
+data:
+  agent-store-tls.hcl: |
+{{ .Files.Get "files/openbao/agent-store-tls.hcl" | indent 4 }}
+  with-tls.sh: |
+{{ .Files.Get "files/valkey/with-tls.sh" | indent 4 }}
+  restart-on-renewal.sh: |
+{{ .Files.Get "files/tls/restart-on-renewal.sh" | indent 4 }}
+{{- end }}
 ---
 {{- $root := . }}
 {{- range $store := list
@@ -96,6 +112,13 @@ spec:
       # The agent sidecar writes the disk key as the ClickHouse image's user (uid 101).
       securityContext: { fsGroup: 101 }
       {{- end }}
+      {{- if and $root.Values.storeTls.enabled (eq $store.component "valkey") }}
+      # ADR-068: the agent sidecar writes the certificate as the Valkey image's user (uid 999).
+      securityContext: { fsGroup: 999, fsGroupChangePolicy: OnRootMismatch }
+      {{- end }}
+      {{- if and $root.Values.storeTls.enabled (eq $store.component "memgraph") }}
+      securityContext: { fsGroup: 103, fsGroupChangePolicy: OnRootMismatch }
+      {{- end }}
       {{- if eq $store.component "memgraph" }}
       # Memgraph crashes on start when its data directory is not owned by its own user (a fresh PersistentVolume is
       # root-owned), so the volume is handed over before the database starts; the same image, as root, does it.
@@ -108,6 +131,9 @@ spec:
           volumeMounts:
             - name: data
               mountPath: {{ $store.mount }}
+        {{- if $root.Values.storeTls.enabled }}
+        {{- include "openmap.serviceCaInit" $root | nindent 8 }}
+        {{- end }}
       {{- end }}
       containers:
         - name: {{ $store.component }}
@@ -127,6 +153,7 @@ spec:
               mountPath: /dev/shm
             {{- if $root.Values.postgres.tde.enabled }}
             - { name: pgtde-token, mountPath: /run/pgtde, readOnly: true }
+            {{- include "openmap.caMount" $root | nindent 12 }}
             {{- end }}
             - { name: hba, mountPath: /etc/openmap/pg_hba.conf, subPath: pg_hba.conf, readOnly: true }
             {{- end }}
@@ -137,11 +164,20 @@ spec:
             - { name: clickhouse-encryption, mountPath: /etc/clickhouse-server/config.d/tls.xml, subPath: tls.xml, readOnly: true }
             {{- include "openmap.caMount" $root | nindent 12 }}
             {{- end }}
+            {{- if and $root.Values.storeTls.enabled (has $store.component (list "memgraph" "valkey" "meilisearch")) }}
+            - { name: store-tls, mountPath: /run/store-tls, readOnly: true }
+            - { name: store-tls-files, mountPath: {{ if eq $store.component "valkey" }}/usr/local/bin/with-tls.sh{{ else }}/usr/local/bin/restart-on-renewal.sh{{ end }}, subPath: {{ if eq $store.component "valkey" }}with-tls.sh{{ else }}restart-on-renewal.sh{{ end }}, readOnly: true }
+            {{- end }}
+            {{- if and $root.Values.storeTls.enabled (eq $store.component "valkey") }}
+            {{- include "openmap.caMount" $root | nindent 12 }}
+            - { name: valkey-live, mountPath: /run/valkey-live }
+            {{- end }}
           {{- if eq $store.component "postgres" }}
           env:
             - { name: POSTGRES_INITDB_ARGS, value: {{ printf "--locale=%s" $root.Values.postgres.locale | quote }} }
             {{- if $root.Values.postgres.tde.enabled }}
             - { name: OPENBAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+            - { name: OPENBAO_CA, value: /run/openmap/ca/services-ca.crt }
             - { name: PG_TDE_TOKEN_WAIT_SECONDS, value: {{ $root.Values.postgres.tde.tokenWaitSeconds | quote }} }
             {{- end }}
           {{- if $root.Values.postgres.tde.enabled }}
@@ -163,17 +199,30 @@ spec:
           env:
             - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
             - { name: TLS_COMMON_NAME, value: {{ include "openmap.svc" (dict "root" $root "component" "postgres") | quote }} }
+            - { name: BAO_CACERT, value: /run/openmap/ca/services-ca.crt }
           resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
           volumeMounts:
             - { name: pgtde-token, mountPath: /run/pgtde }
             - { name: pgtde-approle, mountPath: /openbao/approle-pgtde, readOnly: true }
             - { name: pgtde-config, mountPath: /openbao/config, readOnly: true }
+            {{- include "openmap.caMount" $root | nindent 12 }}
         {{- end }}
           {{- else if eq $store.component "memgraph" }}
+          {{- if $root.Values.storeTls.enabled }}
+          # ADR-068: Bolt over TLS only; the wrapper restarts the container when the certificate is renewed.
+          command: ["sh", "/usr/local/bin/restart-on-renewal.sh", "/run/store-tls/tls.pem", "/usr/lib/memgraph/memgraph"]
+          args: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60", "--bolt-cert-file=/run/store-tls/tls.pem", "--bolt-key-file=/run/store-tls/tls.pem"]
+          env:
+            - { name: TLS_CHECK_SECONDS, value: {{ $root.Values.storeTls.checkSeconds | quote }} }
+          {{- else }}
           args: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60"]
+          {{- end }}
           readinessProbe:
             tcpSocket: { port: 7687 }
             periodSeconds: 5
+        {{- if $root.Values.storeTls.enabled }}
+        {{- include "openmap.storeTlsAgent" (dict "root" $root "component" "memgraph" "uid" 101 "gid" 103 "ttl" $root.Values.storeTls.memgraphTtl) | nindent 8 }}
+        {{- end }}
           {{- else if eq $store.component "clickhouse" }}
           {{- if $root.Values.clickhouse.encryption.enabled }}
           command: ["sh", "/usr/local/bin/with-disk-key.sh"]
@@ -197,28 +246,65 @@ spec:
           env:
             - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
             - { name: TLS_COMMON_NAME, value: {{ include "openmap.svc" (dict "root" $root "component" "clickhouse") | quote }} }
+            - { name: BAO_CACERT, value: /run/openmap/ca/services-ca.crt }
           resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
           volumeMounts:
             - { name: clickhouse-key, mountPath: /run/clickhouse-key }
             - { name: clickhouse-approle, mountPath: /openbao/approle-clickhouse, readOnly: true }
             - { name: clickhouse-encryption, mountPath: /openbao/config/agent-clickhouse.hcl, subPath: agent-clickhouse.hcl, readOnly: true }
+            {{- include "openmap.caMount" $root | nindent 12 }}
         {{- end }}
           {{- else if eq $store.component "valkey" }}
+          {{- if $root.Values.storeTls.enabled }}
+          # ADR-068: TLS only; the wrapper points Valkey at a renewed certificate without a restart.
+          command: ["tini", "--", "sh", "/usr/local/bin/with-tls.sh"]
+          args: ["--appendonly", "yes"]
+          env:
+            - { name: VALKEY_TLS_SOURCE, value: /run/store-tls/tls.pem }
+            - { name: VALKEY_TLS_CHECK_SECONDS, value: {{ $root.Values.storeTls.checkSeconds | quote }} }
+          readinessProbe:
+            exec: { command: ["valkey-cli", "--tls", "--cacert", "/run/openmap/ca/services-ca.crt", "-h", "localhost", "ping"] }
+            periodSeconds: 5
+          {{- else }}
           args: ["--appendonly", "yes"]
           readinessProbe:
             exec: { command: ["valkey-cli", "ping"] }
             periodSeconds: 5
+          {{- end }}
+        {{- if $root.Values.storeTls.enabled }}
+        {{- include "openmap.storeTlsAgent" (dict "root" $root "component" "valkey" "uid" 999 "gid" 999 "ttl" $root.Values.storeTls.ttl) | nindent 8 }}
+        {{- end }}
           {{- else if eq $store.component "meilisearch" }}
           env:
             - { name: MEILI_MASTER_KEY, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" $root }}-datastores, key: MEILI_MASTER_KEY } } }
             - { name: MEILI_NO_ANALYTICS, value: "true" }
             - { name: MEILI_ENV, value: production }
+            {{- if $root.Values.storeTls.enabled }}
+            - { name: MEILI_SSL_CERT_PATH, value: /run/store-tls/tls.pem }
+            - { name: MEILI_SSL_KEY_PATH, value: /run/store-tls/tls.pem }
+            - { name: TLS_CHECK_SECONDS, value: {{ $root.Values.storeTls.checkSeconds | quote }} }
+            {{- end }}
+          {{- if $root.Values.storeTls.enabled }}
+          # ADR-068: HTTPS only; the wrapper restarts the container (seconds) when the certificate is renewed.
+          command: ["tini", "--", "sh", "/usr/local/bin/restart-on-renewal.sh", "/run/store-tls/tls.pem", "/bin/meilisearch"]
+          args: []
+          {{- end }}
           readinessProbe:
-            httpGet: { path: /health, port: 7700 }
+            httpGet: { path: /health, port: 7700, scheme: {{ if $root.Values.storeTls.enabled }}HTTPS{{ else }}HTTP{{ end }} }
             periodSeconds: 5
+        {{- if $root.Values.storeTls.enabled }}
+        {{- include "openmap.storeTlsAgent" (dict "root" $root "component" "meilisearch" "uid" 100 "gid" 1000 "ttl" $root.Values.storeTls.ttl) | nindent 8 }}
+        {{- end }}
           {{- end }}
       {{- if eq $store.component "postgres" }}
+      {{- if $root.Values.postgres.tde.enabled }}
+      initContainers:
+        {{- include "openmap.serviceCaInit" $root | nindent 8 }}
+      {{- end }}
       volumes:
+        {{- if $root.Values.postgres.tde.enabled }}
+        {{- include "openmap.caVolume" $root | nindent 8 }}
+        {{- end }}
         - name: init
           # Executable, so the entrypoint runs the pg_tde script rather than sourcing it.
           configMap:
@@ -271,6 +357,19 @@ spec:
             items: [{ key: clickhouse-role-id, path: role-id }, { key: clickhouse-secret-id, path: secret-id }]
             {{- end }}
             defaultMode: 0440
+      {{- end }}
+      {{- if and $root.Values.storeTls.enabled (has $store.component (list "memgraph" "valkey" "meilisearch")) }}
+      {{- if ne $store.component "memgraph" }}
+      initContainers:
+        {{- include "openmap.serviceCaInit" $root | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- include "openmap.storeTlsVolumes" $root | nindent 8 }}
+        {{- include "openmap.caVolume" $root | nindent 8 }}
+        {{- if eq $store.component "valkey" }}
+        - name: valkey-live
+          emptyDir: { medium: Memory, sizeLimit: 1Mi }
+        {{- end }}
       {{- end }}
   volumeClaimTemplates:
     - metadata:

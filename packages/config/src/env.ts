@@ -3,6 +3,7 @@
 // that `docker compose up` in deploy/compose produces.
 import { z } from 'zod';
 import { LOCALES, RECONCILER } from '@openmap/constants';
+import { trustServiceCa } from './service-ca.js';
 
 const url = z.url();
 const port = z.coerce.number().int().min(1).max(65535);
@@ -183,10 +184,14 @@ export class ConfigError extends Error {
   }
 }
 
-/** Parse and validate the environment. Throws ConfigError on the first invalid variable. */
+/**
+ * Parse and validate the environment. Throws ConfigError on the first invalid variable. With SERVICE_CA_PATH set, the
+ * process's TLS clients trust the internal services CA from here on (ADR-068).
+ */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const parsed = envSchema.safeParse(source);
   if (!parsed.success) throw new ConfigError(parsed.error.issues);
+  trustServiceCa(parsed.data.SERVICE_CA_PATH);
   return parsed.data;
 }
 

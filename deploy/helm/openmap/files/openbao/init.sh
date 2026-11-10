@@ -8,9 +8,13 @@
 #      readable by the user the services run as ($SERVICE_UID); or, when SERVICES_ROLE_ID / SERVICES_SECRET_ID /
 #      BACKUP_ROLE_ID / BACKUP_SECRET_ID are given (Helm generates them into a Secret), those ids are registered;
 #   5. the pg-tde policy and AppRole for the OpenBao Agent beside a pg_tde PostgreSQL (its principal keys, `tde` mount);
-#   6. ClickHouse's encrypted disk key (`tde/clickhouse-disk`), and the clickhouse-disk policy and AppRole that read it.
+#   6. ClickHouse's encrypted disk key (`tde/clickhouse-disk`), and the clickhouse-disk policy and AppRole that read it;
+#   7. (ADR-068) the internal services CA, and the store-tls policy and AppRole of the agents that keep the server
+#      certificates of Valkey, Memgraph and Meilisearch.
 set -eu
-export BAO_ADDR="${BAO_ADDR:-http://openbao:8200}"
+export BAO_ADDR="${BAO_ADDR:-https://openbao:8200}"
+# ADR-068: OpenBao serves TLS only; the bundle on the service-ca volume (seeded by openbao-keys) verifies it.
+export BAO_CACERT="${BAO_CACERT:-/openbao/service-ca/services-ca.crt}"
 MOUNT="${OPENBAO_MOUNT:-openmap}"
 SERVICE_UID="${SERVICE_UID:-1000}"
 INIT=/openbao/init/init.json
@@ -56,7 +60,9 @@ bao kv get tde/clickhouse-disk > /dev/null 2>&1 || bao kv put tde/clickhouse-dis
 ')" > /dev/null
 
 # ADR-068: the internal services CA. A root in the PKI engine (its key never leaves OpenBao), a role that issues
-# 30-day server certificates for the store names only, and the CA certificate on the public service-ca volume.
+# server certificates for the store names only (30 days unless a template asks for longer, up to SERVICE_TLS_MAX_TTL:
+# Memgraph's lasts a year, because taking a new one restarts it), and the CA certificate on the public service-ca volume.
+SERVICE_TLS_MAX_TTL="${SERVICE_TLS_MAX_TTL:-8760h}"
 SERVICE_TLS_NAMES="${SERVICE_TLS_NAMES:-postgres,clickhouse,memgraph,valkey,meilisearch,openbao,localhost}"
 if ! printf '%s' "$mounts" | grep -q '"pki/"'; then
   bao secrets enable pki > /dev/null
@@ -64,10 +70,16 @@ if ! printf '%s' "$mounts" | grep -q '"pki/"'; then
 fi
 bao read -field=certificate pki/cert/ca > /dev/null 2>&1 ||
   bao write -field=certificate pki/root/generate/internal common_name="OpenMap Internal Services CA" ttl=87600h key_type=ec key_bits=256 > /dev/null
-bao write pki/roles/openmap-services allowed_domains="$SERVICE_TLS_NAMES" allow_bare_domains=true allow_subdomains=false   allow_localhost=true allow_ip_sans=true server_flag=true client_flag=false key_type=ec key_bits=256 ttl=720h max_ttl=720h > /dev/null
+bao write pki/roles/openmap-services allowed_domains="$SERVICE_TLS_NAMES" allow_bare_domains=true allow_subdomains=false   allow_localhost=true allow_ip_sans=true server_flag=true client_flag=false key_type=ec key_bits=256 ttl=720h max_ttl="$SERVICE_TLS_MAX_TTL" > /dev/null
+# The bundle every client trusts: the internal CA, and the CA of OpenBao's bootstrap certificate (openbao-keys), which
+# OpenBao serves until its agent first renews it. Written to a new file and renamed, so no client reads half of it.
 if [ -d /openbao/service-ca ]; then
-  bao read -field=certificate pki/cert/ca > /openbao/service-ca/services-ca.crt
-  chmod 0444 /openbao/service-ca/services-ca.crt
+  bundle=/openbao/service-ca/services-ca.crt
+  bao read -field=certificate pki/cert/ca > "$bundle.tmp"
+  echo >> "$bundle.tmp"
+  [ -s /openbao/service-ca/openbao-bootstrap-ca.crt ] && cat /openbao/service-ca/openbao-bootstrap-ca.crt >> "$bundle.tmp"
+  chmod 0444 "$bundle.tmp"
+  mv -f "$bundle.tmp" "$bundle"
 fi
 
 # The policy file names the default mount; it is written for the mount this deployment uses.
@@ -75,11 +87,13 @@ sed "s#^path \"openmap/#path \"$MOUNT/#" /openbao/policies/openmap-services.hcl 
 bao policy write openmap-backup /openbao/policies/openmap-backup.hcl > /dev/null
 bao policy write pg-tde /openbao/policies/pg-tde.hcl > /dev/null
 bao policy write clickhouse-disk /openbao/policies/clickhouse-disk.hcl > /dev/null
+bao policy write store-tls /openbao/policies/store-tls.hcl > /dev/null
 bao auth list -format=json | grep -q '"approle/"' || bao auth enable approle
 bao write auth/approle/role/openmap-services token_policies=openmap-services token_ttl=1h token_max_ttl=4h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 bao write auth/approle/role/openmap-backup token_policies=openmap-backup token_ttl=15m token_max_ttl=1h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 bao write auth/approle/role/pg-tde token_policies=pg-tde token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 bao write auth/approle/role/clickhouse-disk token_policies=clickhouse-disk token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
+bao write auth/approle/role/store-tls token_policies=store-tls token_ttl=1h token_max_ttl=24h secret_id_ttl=0 secret_id_num_uses=0 > /dev/null
 
 register() {
   # $1 role, $2 role id, $3 secret id: ids an orchestrator generated (Helm keeps them in a Secret the services mount).
@@ -107,6 +121,9 @@ if [ -n "${SERVICES_ROLE_ID:-}" ]; then
   if [ -n "${CLICKHOUSE_ROLE_ID:-}" ]; then
     register clickhouse-disk "$CLICKHOUSE_ROLE_ID" "${CLICKHOUSE_SECRET_ID:?CLICKHOUSE_SECRET_ID is required with CLICKHOUSE_ROLE_ID}"
   fi
+  if [ -n "${STORES_ROLE_ID:-}" ]; then
+    register store-tls "$STORES_ROLE_ID" "${STORES_SECRET_ID:?STORES_SECRET_ID is required with STORES_ROLE_ID}"
+  fi
 else
   issue openmap-services /openbao/approle
   issue openmap-backup /openbao/approle-backup
@@ -114,5 +131,11 @@ else
   issue pg-tde /openbao/approle-pgtde "${PGTDE_AGENT_UID:-26}"
   # The agent beside ClickHouse runs as the ClickHouse image's user (uid 101).
   issue clickhouse-disk /openbao/approle-clickhouse "${CLICKHOUSE_AGENT_UID:-101}"
+  # The agents beside Valkey, Memgraph and Meilisearch run as their stores' users; one secret id each.
+  issue store-tls /openbao/approle-valkey "${VALKEY_AGENT_UID:-999}"
+  issue store-tls /openbao/approle-memgraph "${MEMGRAPH_AGENT_UID:-101}"
+  issue store-tls /openbao/approle-meili "${MEILI_AGENT_UID:-100}"
+  # The agent that keeps OpenBao's own listener certificate runs as OpenBao's user.
+  issue store-tls /openbao/approle-openbao "${OPENBAO_AGENT_UID:-100}"
 fi
 log "openbao ready"

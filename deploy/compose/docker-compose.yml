@@ -5,6 +5,20 @@ name: openmap
 x-restart: &restart
   restart: unless-stopped
 
+# REQ-SEC-011 (ADR-068) — the OpenBao Agent beside a store whose image carries none (Valkey, Memgraph, Meilisearch):
+# renders the store's server certificate onto a memory volume shared with that store only (openbao/agent-store-tls.hcl).
+x-store-agent: &store-agent
+  image: openbao/openbao:2.7.2
+  command: ["agent", "-config=/openbao/config/agent-store-tls.hcl"]
+  depends_on:
+    openbao: { condition: service_healthy }
+    openbao-init: { condition: service_completed_successfully }
+  healthcheck:
+    test: ["CMD-SHELL", "test -s /run/store-tls/tls.pem"]
+    interval: 2s
+    timeout: 2s
+    retries: 30
+
 services:
   # REQ-SEC-011 step 3 (ADR-067) — Percona Server for PostgreSQL 17 with pg_tde: every table tde_heap, the WAL
   # encrypted, the principal key in OpenBao (mount `tde`) through pgtde-agent's token file. PGDATA is /data/db.
@@ -35,7 +49,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-openmap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openmap}
       POSTGRES_DB: ${POSTGRES_DB:-openmap}
-      OPENBAO_ADDR: http://openbao:8200
+      # ADR-068: OpenBao over TLS, verified against the services CA bundle (pg_tde's key provider).
+      OPENBAO_ADDR: https://openbao:8200
+      OPENBAO_CA: /run/openmap/ca/services-ca.crt
       # The Percona image sets no LANG, so initdb would pick the C collation and every name-ordered list would sort
       # differently (".NET" before "api"); the database is created with the collation stock PostgreSQL used.
       POSTGRES_INITDB_ARGS: "--locale=${POSTGRES_LOCALE:-en_US.UTF-8}"
@@ -46,6 +62,7 @@ services:
       - "./postgres/tde/00-pg-tde.sh:/docker-entrypoint-initdb.d/00-pg-tde.sh:ro"
       - "./postgres/init/01-schemas.sql:/docker-entrypoint-initdb.d/01-schemas.sql:ro"
       - "./postgres/pg_hba.conf:/etc/openmap/pg_hba.conf:ro"
+      - "service-ca:/run/openmap/ca:ro"
     depends_on:
       # restart: PostgreSQL shares the agent's process namespace, so it follows the agent when compose restarts it.
       pgtde-agent: { condition: service_healthy, restart: true }
@@ -55,14 +72,22 @@ services:
       timeout: 3s
       retries: 20
 
+  # ADR-068: Bolt over TLS only, on a certificate from the internal services CA (memgraph-certs). Memgraph reads it only at
+  # start; the wrapper stops Memgraph when the certificate is renewed (once a year) and the restart policy starts it again.
   memgraph:
     <<: *restart
     image: memgraph/memgraph-mage:3.4
-    command: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60"]
+    entrypoint: ["sh", "/usr/local/bin/restart-on-renewal.sh", "/run/memgraph-tls/tls.pem", "/usr/lib/memgraph/memgraph"]
+    command: ["--log-level=WARNING", "--storage-snapshot-interval-sec=300", "--query-execution-timeout-sec=60", "--bolt-cert-file=/run/memgraph-tls/tls.pem", "--bolt-key-file=/run/memgraph-tls/tls.pem"]
     ports: ["${MEMGRAPH_PORT:-7687}:7687"]
-    volumes: [memgraph-data:/var/lib/memgraph]
+    volumes:
+      - "memgraph-data:/var/lib/memgraph"
+      - "memgraph-tls:/run/memgraph-tls:ro"
+      - "./tls/restart-on-renewal.sh:/usr/local/bin/restart-on-renewal.sh:ro"
+    depends_on:
+      memgraph-certs: { condition: service_healthy }
     healthcheck:
-      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole --host 127.0.0.1 --port 7687 >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole --host 127.0.0.1 --port 7687 --use-ssl=true >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -101,31 +126,121 @@ services:
       timeout: 3s
       retries: 30
 
+  # ADR-068: TLS only (the plain port is closed); the wrapper takes a renewed certificate without a restart.
   valkey:
     <<: *restart
     image: valkey/valkey:8
-    command: ["valkey-server", "--save", "60", "1", "--appendonly", "yes"]
+    entrypoint: ["tini", "--", "sh", "/usr/local/bin/with-tls.sh"]
+    command: ["--save", "60", "1", "--appendonly", "yes"]
     ports: ["${VALKEY_PORT:-6379}:6379"]
-    volumes: [valkey-data:/data]
+    volumes:
+      - "valkey-data:/data"
+      - "valkey-tls:/run/valkey-tls:ro"
+      - "service-ca:/run/openmap/ca:ro"
+      - "./valkey/with-tls.sh:/usr/local/bin/with-tls.sh:ro"
+    tmpfs: ["/run/valkey-live"]
+    depends_on:
+      valkey-certs: { condition: service_healthy }
     healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
+      test: ["CMD", "valkey-cli", "--tls", "--cacert", "/run/openmap/ca/services-ca.crt", "-h", "localhost", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
 
+  # ADR-068: HTTPS only; the wrapper restarts Meilisearch (seconds) when its certificate is renewed.
   meilisearch:
     <<: *restart
     image: getmeili/meilisearch:v1.15
+    entrypoint: ["tini", "--", "sh", "/usr/local/bin/restart-on-renewal.sh", "/run/meili-tls/tls.pem", "/bin/meilisearch"]
+    command: []
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-openmap-dev-master-key}
       MEILI_NO_ANALYTICS: "true"
       MEILI_ENV: ${MEILI_ENV:-development}
+      MEILI_SSL_CERT_PATH: /run/meili-tls/tls.pem
+      MEILI_SSL_KEY_PATH: /run/meili-tls/tls.pem
     ports: ["${MEILI_PORT:-7700}:7700"]
-    volumes: [meili-data:/meili_data]
+    volumes:
+      - "meili-data:/meili_data"
+      - "meili-tls:/run/meili-tls:ro"
+      - "service-ca:/run/openmap/ca:ro"
+      - "./tls/restart-on-renewal.sh:/usr/local/bin/restart-on-renewal.sh:ro"
+    depends_on:
+      meili-certs: { condition: service_healthy }
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health | grep -q available"]
+      test: ["CMD-SHELL", "curl -fsS --cacert /run/openmap/ca/services-ca.crt https://localhost:7700/health | grep -q available"]
       interval: 5s
       timeout: 3s
+      retries: 30
+
+  valkey-certs:
+    <<: [*restart, *store-agent]
+    user: "999:999"
+    environment:
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
+      TLS_NAME: valkey
+      TLS_TTL: ${SERVICE_TLS_TTL:-720h}
+    volumes:
+      - "./openbao/agent-store-tls.hcl:/openbao/config/agent-store-tls.hcl:ro"
+      - "openbao-approle-valkey:/openbao/approle-store:ro"
+      - "valkey-tls:/run/store-tls"
+      - "service-ca:/run/openmap/ca:ro"
+
+  memgraph-certs:
+    <<: [*restart, *store-agent]
+    user: "101:103"
+    environment:
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
+      TLS_NAME: memgraph
+      TLS_TTL: ${MEMGRAPH_TLS_TTL:-8760h}
+    volumes:
+      - "./openbao/agent-store-tls.hcl:/openbao/config/agent-store-tls.hcl:ro"
+      - "openbao-approle-memgraph:/openbao/approle-store:ro"
+      - "memgraph-tls:/run/store-tls"
+      - "service-ca:/run/openmap/ca:ro"
+
+  meili-certs:
+    <<: [*restart, *store-agent]
+    user: "100:1000"
+    environment:
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
+      TLS_NAME: meilisearch
+      TLS_TTL: ${SERVICE_TLS_TTL:-720h}
+    volumes:
+      - "./openbao/agent-store-tls.hcl:/openbao/config/agent-store-tls.hcl:ro"
+      - "openbao-approle-meili:/openbao/approle-store:ro"
+      - "meili-tls:/run/store-tls"
+      - "service-ca:/run/openmap/ca:ro"
+
+  # REQ-SEC-011 (ADR-068) — keeps OpenBao's listener certificate from the internal services CA, replacing the bootstrap
+  # one (openbao/agent-openbao-tls.hcl). It shares OpenBao's process namespace to send it SIGHUP after each renewal.
+  openbao-certs:
+    <<: *restart
+    image: openbao/openbao:2.7.2
+    user: "100:1000"
+    command: ["agent", "-config=/openbao/config/agent-openbao-tls.hcl"]
+    pid: "service:openbao"
+    environment:
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
+      TLS_NAME: openbao
+      TLS_TTL: ${SERVICE_TLS_TTL:-720h}
+    volumes:
+      - "./openbao/agent-openbao-tls.hcl:/openbao/config/agent-openbao-tls.hcl:ro"
+      - "openbao-approle-openbao:/openbao/approle-store:ro"
+      - "openbao-tls:/openbao/tls"
+      - "service-ca:/run/openmap/ca:ro"
+    depends_on:
+      # restart: the agent lives in OpenBao's process namespace, so it follows OpenBao when compose restarts it.
+      openbao: { condition: service_healthy, restart: true }
+      openbao-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /openbao/tls/issued.pem"]
+      interval: 2s
+      timeout: 2s
       retries: 30
 
   keycloak:
@@ -164,25 +279,34 @@ services:
   openbao-keys:
     image: openbao/openbao:2.7.2
     user: root
-    entrypoint: ["sh", "-c"]
-    command:
-      - "[ -s /openbao/unseal/unseal.key ] || head -c 32 /dev/urandom > /openbao/unseal/unseal.key; chown -R openbao:openbao /openbao/unseal /openbao/data; chmod 0400 /openbao/unseal/unseal.key; chown 26:26 /run/pgtde; chmod 0750 /run/pgtde"
+    entrypoint: ["sh", "/openbao/keys.sh"]
+    # ADR-068: the bootstrap certificate of OpenBao's listener names this hostname (openbao/keys.sh).
+    hostname: openbao
+    environment:
+      OPENBAO_TLS_NAME: openbao
     # pgtde-token: the token file the OpenBao Agent writes for pg_tde, owned by PostgreSQL's user (uid 26).
-    volumes: [openbao-unseal:/openbao/unseal, openbao-data:/openbao/data, pgtde-token:/run/pgtde]
+    volumes:
+      - "./openbao/keys.sh:/openbao/keys.sh:ro"
+      - "openbao-unseal:/openbao/unseal"
+      - "openbao-data:/openbao/data"
+      - "pgtde-token:/run/pgtde"
+      - "openbao-tls:/openbao/tls"
+      - "service-ca:/openbao/service-ca"
 
   openbao:
     <<: *restart
     image: openbao/openbao:2.7.2
     command: ["server", "-config=/openbao/config/openbao.hcl"]
     environment:
-      BAO_ADDR: http://127.0.0.1:8200
-    volumes: ["./openbao/openbao.hcl:/openbao/config/openbao.hcl:ro", "openbao-data:/openbao/data", "openbao-unseal:/openbao/unseal:ro"]
+      BAO_ADDR: https://localhost:8200
+      BAO_CACERT: /openbao/service-ca/services-ca.crt
+    volumes: ["./openbao/openbao.hcl:/openbao/config/openbao.hcl:ro", "openbao-data:/openbao/data", "openbao-unseal:/openbao/unseal:ro", "openbao-tls:/openbao/tls", "service-ca:/openbao/service-ca:ro"]
     ports: ["${OPENBAO_PORT:-8200}:8200"]
     depends_on:
       openbao-keys: { condition: service_completed_successfully }
     healthcheck:
-      # 200 once initialised and unsealed (501 before initialisation, 503 sealed).
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8200/v1/sys/health > /dev/null"]
+      # Exit 0 once initialised and unsealed (2 sealed or before initialisation), over TLS.
+      test: ["CMD-SHELL", "bao status > /dev/null"]
       interval: 5s
       timeout: 3s
       retries: 60
@@ -192,7 +316,8 @@ services:
     user: root
     entrypoint: ["sh", "/openbao/init.sh"]
     environment:
-      BAO_ADDR: http://openbao:8200
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /openbao/service-ca/services-ca.crt
       OPENBAO_MOUNT: ${OPENBAO_MOUNT:-openmap}
       SERVICE_UID: "1000"
       # pgtde-agent runs as the Percona image's postgres user (uid 26); every run of this job re-owns the files to it.
@@ -206,6 +331,10 @@ services:
       - "openbao-approle-backup:/openbao/approle-backup"
       - "openbao-approle-pgtde:/openbao/approle-pgtde"
       - "openbao-approle-clickhouse:/openbao/approle-clickhouse"
+      - "openbao-approle-valkey:/openbao/approle-valkey"
+      - "openbao-approle-memgraph:/openbao/approle-memgraph"
+      - "openbao-approle-meili:/openbao/approle-meili"
+      - "openbao-approle-openbao:/openbao/approle-openbao"
       # ADR-068: the internal services CA certificate, for every client.
       - "service-ca:/openbao/service-ca"
     depends_on:
@@ -219,10 +348,11 @@ services:
     user: "101:101"
     command: ["agent", "-config=/openbao/config/agent-clickhouse.hcl"]
     environment:
-      BAO_ADDR: http://openbao:8200
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
       # ADR-068: the name ClickHouse's certificate is issued for.
       TLS_COMMON_NAME: clickhouse
-    volumes: ["./openbao/agent-clickhouse.hcl:/openbao/config/agent-clickhouse.hcl:ro", "openbao-approle-clickhouse:/openbao/approle-clickhouse:ro", "clickhouse-key:/run/clickhouse-key"]
+    volumes: ["./openbao/agent-clickhouse.hcl:/openbao/config/agent-clickhouse.hcl:ro", "openbao-approle-clickhouse:/openbao/approle-clickhouse:ro", "clickhouse-key:/run/clickhouse-key", "service-ca:/run/openmap/ca:ro"]
     depends_on:
       openbao: { condition: service_healthy }
       openbao-init: { condition: service_completed_successfully }
@@ -240,10 +370,11 @@ services:
     user: "26:26"
     command: ["agent", "-config=/openbao/config/agent-pgtde.hcl"]
     environment:
-      BAO_ADDR: http://openbao:8200
+      BAO_ADDR: https://openbao:8200
+      BAO_CACERT: /run/openmap/ca/services-ca.crt
       # ADR-068: the name PostgreSQL's certificate is issued for (the compose service name clients connect to).
       TLS_COMMON_NAME: postgres
-    volumes: ["./openbao/agent-pgtde.hcl:/openbao/config/agent-pgtde.hcl:ro", "openbao-approle-pgtde:/openbao/approle-pgtde:ro", "pgtde-token:/run/pgtde"]
+    volumes: ["./openbao/agent-pgtde.hcl:/openbao/config/agent-pgtde.hcl:ro", "openbao-approle-pgtde:/openbao/approle-pgtde:ro", "pgtde-token:/run/pgtde", "service-ca:/run/openmap/ca:ro"]
     depends_on:
       openbao: { condition: service_healthy }
       openbao-init: { condition: service_completed_successfully }
@@ -316,7 +447,7 @@ services:
   prometheus:
     <<: *restart
     image: prom/prometheus:v3.4.1
-    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro", prom-data:/prometheus]
+    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro", prom-data:/prometheus, "service-ca:/etc/prometheus/ca:ro"]
     ports: ["${PROMETHEUS_PORT:-9090}:9090"]
 
 volumes:
@@ -343,6 +474,19 @@ volumes:
   openbao-approle-pgtde:
   pgtde-token:
   openbao-approle-clickhouse:
+  openbao-approle-valkey:
+  openbao-approle-memgraph:
+  openbao-approle-meili:
+  openbao-approle-openbao:
+  # ADR-068: OpenBao's listener certificate (the bootstrap one, then the internal CA's), owned by OpenBao's user.
+  openbao-tls:
+  # ADR-068: the server certificates of Valkey, Memgraph and Meilisearch, in memory only, each owned by its agent's user.
+  valkey-tls:
+    driver_opts: { type: tmpfs, device: tmpfs, o: "uid=999,gid=999,mode=0750" }
+  memgraph-tls:
+    driver_opts: { type: tmpfs, device: tmpfs, o: "uid=101,gid=103,mode=0750" }
+  meili-tls:
+    driver_opts: { type: tmpfs, device: tmpfs, o: "uid=100,gid=1000,mode=0700" }
   # ADR-068: the internal services CA certificate (public), written by openbao-init.
   service-ca:
   # The ClickHouse disk key, in memory only.

@@ -11,6 +11,10 @@ TOKEN_FILE="${PG_TDE_TOKEN_FILE:-/run/pgtde/token}"
 KEY="${PG_TDE_KEY_NAME:-openmap-principal-$(date -u +%Y%m%dT%H%M%SZ)}"
 PROVIDER="${PG_TDE_PROVIDER:-openbao}"
 MOUNT="${PG_TDE_MOUNT:-tde}"
+# ADR-068: the CA bundle OpenBao's certificate is verified against (empty: the system CAs).
+CA="${OPENBAO_CA:-}"
+CA_ARG=NULL
+[ -n "$CA" ] && CA_ARG="'$CA'"
 
 # On Kubernetes the agent can log in only once the OpenBao init job has registered its AppRole, which a Helm
 # post-install hook does after the pods start: the wait is long there (PG_TDE_TOKEN_WAIT_SECONDS).
@@ -27,7 +31,7 @@ for db in template1 "$POSTGRES_DB"; do
   $psql --dbname "$db" -c 'CREATE EXTENSION IF NOT EXISTS pg_tde;'
 done
 $psql --dbname "$POSTGRES_DB" <<SQL
-SELECT pg_tde_add_global_key_provider_vault_v2('$PROVIDER', '$OPENBAO_ADDR', '$MOUNT', '$TOKEN_FILE', NULL);
+SELECT pg_tde_add_global_key_provider_vault_v2('$PROVIDER', '$OPENBAO_ADDR', '$MOUNT', '$TOKEN_FILE', $CA_ARG);
 SELECT pg_tde_create_key_using_global_key_provider('$KEY', '$PROVIDER');
 SELECT pg_tde_set_default_key_using_global_key_provider('$KEY', '$PROVIDER');
 SELECT pg_tde_set_server_key_using_global_key_provider('$KEY', '$PROVIDER');

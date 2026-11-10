@@ -126,13 +126,50 @@ PostgreSQL is Percona Server for PostgreSQL 17 with pg_tde:
 
 **Encryption in transit** (ADR-068). The internal services CA is OpenBao's PKI engine (`pki`, root "OpenMap
 Internal Services CA"). It issues 30-day server certificates for the store names only, and the agent beside each
-store renews them. Clients verify the server against `services-ca.crt` (compose: the `service-ca` volume; Helm: each
-pod fetches it from `pki/ca/pem`). Done so far:
+store renews them. Clients verify the server against `services-ca.crt`, a bundle of that CA and the CA of OpenBao's
+own listener certificate (compose: the `service-ca` volume; Helm: each pod builds it at start). In the Node services
+`loadEnv()` adds the bundle (`SERVICE_CA_PATH`) to the default trust, so fetch, ioredis and neo4j-driver verify against
+it. Every store refuses plain connections:
 
-- **PostgreSQL:** TLS required (`hostnossl … reject`), TLS 1.2 minimum. The certificate is renewed by `pgtde-agent`,
-  which then reloads the postmaster.
-- **Host-side tools:** they need `.local/services-ca.crt`, the quoted `POSTGRES_URL` from `.env.example`, and, on Docker
-  Desktop, the small pool it sets. Bursts of new connections through its port forwarding are dropped.
+| Store | Protocol | Certificate kept by | A renewed certificate is taken |
+| --- | --- | --- | --- |
+| PostgreSQL | `hostssl` only, TLS 1.2+ | `pgtde-agent` | SIGHUP to the postmaster |
+| ClickHouse | HTTPS 8443, secure native 9440 | `clickhouse-keys` | ClickHouse reloads the file |
+| Valkey | `rediss://`, plain port closed | `valkey-certs` | `CONFIG SET` to a new file, no restart (`valkey/with-tls.sh`) |
+| Meilisearch | HTTPS | `meili-certs` | restart, seconds (`tls/restart-on-renewal.sh`) |
+| Memgraph | `bolt+s://` | `memgraph-certs` | restart, minutes; so its certificate lasts `MEMGRAPH_TLS_TTL` (a year) |
+| OpenBao | HTTPS | compose: `openbao-certs`; Helm: the chart | compose: SIGHUP; Helm: the pod rolls when the chart renews it |
+
+- **OpenBao's first certificate.** OpenBao cannot issue its own before it runs. On compose, `openbao-keys` makes a
+  bootstrap pair once with `bao server -dev -dev-tls` (its CA key is never written), and `openbao-certs` replaces it with
+  one from the internal CA as soon as OpenBao is up. On Helm the chart generates the pair (`openbao.tls.days`, default
+  730) into the Secret `<release>-openbao-tls`, and makes a new one on the first upgrade within `openbao.tls.renewDays`.
+- **Agents and restarts.** An agent that restarts reuses the valid certificate it finds; only expiry, or a deleted
+  file, makes it issue a new one.
+- **Host-side tools:** they need `.local/services-ca.crt` (export the bundle again after this change: it now holds two
+  certificates), the TLS addresses and the quoted `POSTGRES_URL` from `.env.example`, and, on Docker Desktop, the small
+  pool it sets. Bursts of new connections through its port forwarding are dropped, and its `::1` forward can stop
+  answering: `NODE_OPTIONS=--dns-result-order=ipv4first`.
+
+**Moving a running install to TLS for Valkey, Memgraph, Meilisearch and OpenBao.** pg_tde keeps OpenBao's address in
+the database. With the old address, PostgreSQL does not start once OpenBao serves TLS only ("returned invalid response
+400"). Its online change checks the new address against OpenBao, which the old container cannot do (it has no CA
+mounted), so the address is changed with PostgreSQL stopped, and once more online so that the change is in the WAL
+(tried on a scratch stack: wrong address, refusal to start, recovery):
+
+1. Stop the services that write: `docker compose ... stop api scheduler reconciler bsm-engine node console`.
+2. Take a backup set: `docker compose ... --profile backup run --rm backup create pre-tls`.
+3. Stop PostgreSQL: `docker compose ... stop postgres`.
+4. Bring up OpenBao on TLS, its agent, and the stores: `docker compose ... up -d --no-deps openbao-keys openbao
+   openbao-init openbao-certs pgtde-agent clickhouse-keys clickhouse valkey-certs memgraph-certs meili-certs valkey
+   memgraph meilisearch`.
+5. Change pg_tde's provider offline: `docker compose ... run --rm --no-deps --entrypoint pg_tde_change_key_provider
+   postgres -D /data/db 1664 openbao vault-v2 https://openbao:8200 tde /run/pgtde/token
+   /run/openmap/ca/services-ca.crt` ("Key provider updated successfully!").
+6. Start everything: `docker compose ... up -d`.
+7. Record the change in the WAL: `SELECT pg_tde_change_global_key_provider_vault_v2('openbao', 'https://openbao:8200',
+   'tde', '/run/pgtde/token', '/run/openmap/ca/services-ca.crt');`
+8. Export the bundle for host-side tools again (`.local/services-ca.crt`) and set the TLS addresses in `.env`.
 
 **Encrypted ClickHouse** (ADR-067 step 6):
 
