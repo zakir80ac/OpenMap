@@ -56,6 +56,25 @@ test('DCIM: a rack tile opens its elevation, devices and power feeds', async ({ 
   await fit.getByLabel(translate(locale, 'dcim.capacity.fit.heightU')).fill('4');
   await expect(fit.getByRole('status')).toBeVisible();
   await page.screenshot({ path: screenshotsDir + 'dcim-capacity-' + locale + '.png', fullPage: true });
+  // REQ-DCIM-008: the Cabling tab judges recorded cables against observed adjacencies and lists the undocumented links.
+  await page
+    .getByRole('group', { name: translate(locale, 'dcim.views') })
+    .getByRole('button', { name: translate(locale, 'dcim.view.cabling') })
+    .click();
+  const verification = page.getByTestId('cable-verification');
+  await expect(
+    verification.getByRole('group', { name: translate(locale, 'dcim.cabling.verify.title') }),
+  ).toBeVisible({ timeout: ASSISTANT_TIMEOUT_MS });
+  await expect(
+    verification
+      .getByRole('table', { name: translate(locale, 'dcim.cabling.verify.undocumentedTitle') })
+      .getByRole('row')
+      .nth(1),
+  ).toBeVisible();
+  const download = page.waitForEvent('download');
+  await verification.getByRole('button', { name: translate(locale, 'dcim.cabling.verify.labels') }).click();
+  expect((await download).suggestedFilename()).toBe('openmap-cable-labels.csv');
+  await page.screenshot({ path: screenshotsDir + 'dcim-cabling-verify-' + locale + '.png', fullPage: true });
 });
 
 test('Assets: a new plan creates planned assets in the register', async ({ page }, testInfo) => {

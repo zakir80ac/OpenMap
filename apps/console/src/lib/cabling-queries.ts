@@ -1,9 +1,11 @@
-// REQ-DCIM-001 (ADR-056) — structured cabling as the DCIM Cabling tab reads and writes it: patch panels with their
+// REQ-DCIM-001 REQ-DCIM-008 (ADR-056, ADR-062) — structured cabling as the DCIM Cabling tab reads and writes it: patch panels with their
 // positions, cables, cross-connects and circuits, the trace from a port, and the operator's changes.
 import { queryOptions } from '@tanstack/react-query';
 import type {
   CableKind,
   CableMedia,
+  CableVerificationReason,
+  CableVerificationStatus,
   CircuitKind,
   CircuitStatus,
   PanelConnector,
@@ -213,4 +215,69 @@ export function removeCircuit(id: string): Promise<boolean> {
   return gql<{ removeCircuit: boolean }>('mutation RemoveCircuit($id: UUID!) { removeCircuit(id: $id) }', {
     id,
   }).then((d) => d.removeCircuit);
+}
+
+// REQ-DCIM-008 (ADR-062) — cable verification: each recorded cable judged against the adjacencies discovery observed,
+// the observed links no cable explains, and the printable labels.
+export interface ObservedPort {
+  ci: CablingCi;
+  port: string | null;
+}
+
+export interface ObservedLink {
+  a: ObservedPort;
+  b: ObservedPort;
+  protocol: string | null;
+  media: string | null;
+  speedMbps: number | null;
+  suggestedLabel: string;
+}
+
+export interface CableVerification {
+  cable: { ci: { id: string }; label: string };
+  status: CableVerificationStatus;
+  reason: CableVerificationReason;
+  observed: ObservedLink | null;
+}
+
+export interface CablingVerification {
+  summary: {
+    cables: number;
+    verified: number;
+    mismatch: number;
+    unobserved: number;
+    unverifiable: number;
+    undocumented: number;
+  };
+  cables: CableVerification[];
+  undocumented: ObservedLink[];
+}
+
+const OBSERVED_PORT = 'ci { id name type } port';
+const OBSERVED_LINK =
+  'a { ' + OBSERVED_PORT + ' } b { ' + OBSERVED_PORT + ' } protocol media speedMbps suggestedLabel';
+const VERIFICATION_QUERY =
+  'query CablingVerification { cablingVerification { summary { cables verified mismatch unobserved unverifiable undocumented } cables { cable { ci { id } label } status reason observed { ' +
+  OBSERVED_LINK +
+  ' } } undocumented { ' +
+  OBSERVED_LINK +
+  ' } } }';
+
+/** Under the cabling key, so every cabling change re-reads the verdicts with the cables. */
+export const cablingVerificationKey = [...cablingKey, 'verification'] as const;
+
+export function cablingVerificationQuery() {
+  return queryOptions({
+    queryKey: cablingVerificationKey,
+    queryFn: ({ signal }) =>
+      gql<{ cablingVerification: CablingVerification }>(VERIFICATION_QUERY, undefined, signal).then(
+        (d) => d.cablingVerification,
+      ),
+  });
+}
+
+export function fetchCablingLabelsCsv(): Promise<string> {
+  return gql<{ cablingLabelsCsv: string }>('query CablingLabelsCsv { cablingLabelsCsv }', undefined).then(
+    (d) => d.cablingLabelsCsv,
+  );
 }

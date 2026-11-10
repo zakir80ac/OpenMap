@@ -1010,6 +1010,15 @@ export const CABLING = {
   endpointSearchLimit: 8,
   /** The layers whose CIs can be a cable end: patch panels and PDUs (dc), switches and their ports, servers. */
   endpointLayers: ['dc', 'network_security', 'hardware'],
+  /** REQ-DCIM-008: a cable label's length, the contract's limit; a label suggested from two port names is cut to it. */
+  labelMaxChars: 64,
+  /** Observed links listed on the Cabling tab as undocumented before "show all". */
+  undocumentedRows: 20,
+  /**
+   * Undocumented links one verification read returns; the summary carries the full count. An estate that has recorded
+   * no cables yet has every adjacency undocumented, and a screen does not need eighty thousand rows to say so.
+   */
+  undocumentedLimit: 200,
 } as const;
 
 export const CLASSIFICATION = {
@@ -1881,8 +1890,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `RoomEnvironment`, query `roomEnvironment`.
    * 1.34.0 (REQ-DCIM-007, ADR-061): `CapacityState`, `SpaceCapacity`, `PowerCapacity`, `PortCapacity`,
    * `CoolingCapacity`, `CapacityTrend`, `RackCapacity`, `RoomCapacity`, query `roomCapacity`.
+   * 1.35.0 (REQ-DCIM-008, ADR-062): `CableVerificationStatus`, `CableVerificationReason`, `ObservedPort`,
+   * `ObservedLink`, `CableVerification`, `CablingVerificationSummary`, `CablingVerification`; queries
+   * `cablingVerification`, `cablingLabelsCsv`.
    */
-  graphql: '1.34.0',
+  graphql: '1.35.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

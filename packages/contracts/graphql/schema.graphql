@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.34.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.35.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -1152,6 +1152,18 @@ type CableHop {
   viaKind: String!
   to: CableEndpoint!
 }
+
+# REQ-DCIM-008 (ADR-062) — cable verification: every recorded cable traced to the device ports at its ends and judged
+# against the adjacencies discovery observed (LLDP and CDP between switch ports, a server NIC seen on a switch port),
+# plus the observed links no recorded cable explains, with the label a recorded cable would get.
+enum CableVerificationStatus { verified mismatch unobserved unverifiable }
+enum CableVerificationReason { observed far_end_differs no_observation path_incomplete end_not_a_port }
+type ObservedPort { ci: Ci! port: String }
+type ObservedLink { a: ObservedPort! b: ObservedPort! protocol: String media: String speedMbps: Int suggestedLabel: String! }
+type CableVerification { cable: Cable! status: CableVerificationStatus! reason: CableVerificationReason! observed: ObservedLink }
+type CablingVerificationSummary { cables: Int! verified: Int! mismatch: Int! unobserved: Int! unverifiable: Int! undocumented: Int! }
+"undocumented lists the first observed links no cable explains (the summary counts all of them)."
+type CablingVerification { summary: CablingVerificationSummary! cables: [CableVerification!]! undocumented: [ObservedLink!]! }
 
 type CableTrace {
   hops: [CableHop!]!
@@ -2671,6 +2683,10 @@ type Query {
   cabling: Cabling!
   "REQ-DCIM-001: the path from a port through patch panels to its far end."
   cableTrace(endpoint: CableEndpointInput!): CableTrace!
+  "REQ-DCIM-008: every recorded cable against the observed adjacencies, and the observed links no cable explains."
+  cablingVerification: CablingVerification!
+  "REQ-DCIM-008: the cable labels with both ends and the verification status, as CSV text for printing."
+  cablingLabelsCsv: String!
   assets(
     filter: AssetFilter
     stage: [AssetStage!]

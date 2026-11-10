@@ -1,5 +1,5 @@
 'use client';
-// REQ-DCIM-001 (ADR-056) — the DCIM Cabling tab:
+// REQ-DCIM-001 REQ-DCIM-008 (ADR-056, ADR-062) — the DCIM Cabling tab:
 // - totals (patch panels, positions in use, cables, cross-connects, circuits);
 // - patch panels with their rack, rack unit, media and use; the selected panel's positions as a grid, each showing the
 //   cable on its front and rear and a circuit terminated there;
@@ -25,7 +25,7 @@ import {
 } from '@openmap/contracts';
 import type { MessageKey } from '@openmap/i18n';
 import { Bar, Card, Kpi, SectionTitle, Tag, accents, cx } from '@openmap/ui';
-import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Button,
   Select,
@@ -51,11 +51,13 @@ import {
   type CableEnd,
   type CablingCi,
   type EndpointInput,
+  type ObservedLink,
   type PatchPanel,
 } from '@/lib/cabling-queries';
 import type { Rack } from '@/lib/estate-queries';
 import { searchQuery } from '@/lib/queries';
 import { useDebounced } from '@/lib/use-debounced';
+import { CableVerificationPanel } from './CableVerificationPanel';
 import { useFormatters, useT, type Translate } from '@/providers';
 
 const labelClass =
@@ -73,6 +75,7 @@ interface Draft {
   side: '' | PanelSide;
 }
 const NO_END: Draft = { ciId: '', port: '', side: '' };
+const NO_KNOWN: readonly CablingCi[] = [];
 
 function toEndpoint(d: Draft): EndpointInput | null {
   if (d.ciId === '') return null;
@@ -107,11 +110,14 @@ function EndpointPicker({
   value,
   onChange,
   panels,
+  known = NO_KNOWN,
 }: {
   legend: string;
   value: Draft;
   onChange: (d: Draft) => void;
   panels: readonly PatchPanel[];
+  /** CIs offered without a search: the ends of an observed link a cable is being recorded for (REQ-DCIM-008). */
+  known?: readonly CablingCi[];
 }): ReactNode {
   const t = useT();
   const [text, setText] = useState('');
@@ -122,11 +128,12 @@ function EndpointPicker({
   const options = useMemo(() => {
     const byId = new Map<string, CablingCi>();
     for (const p of panels) byId.set(p.ci.id, p.ci);
+    for (const k of known) byId.set(k.id, k);
     for (const h of hits.data ?? [])
       if (h.ci.type !== 'cable' && h.ci.type !== 'circuit')
         byId.set(h.ci.id, { id: h.ci.id, name: h.ci.name, type: h.ci.type });
     return [...byId.values()];
-  }, [panels, hits.data]);
+  }, [panels, known, hits.data]);
   const isPanel = panels.some((p) => p.ci.id === value.ciId);
   return (
     <fieldset className="flex flex-wrap items-end gap-om-10 rounded-om-control border border-om-border-glass p-om-10">
@@ -312,6 +319,21 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
   };
   const [panelId, setPanelId] = useState<string | null>(null);
   const [traceFrom, setTraceFrom] = useState<EndpointInput | null>(null);
+  const [known, setKnown] = useState<readonly CablingCi[]>(NO_KNOWN);
+  const cableFormRef = useRef<HTMLFormElement>(null);
+  /** REQ-DCIM-008: starts the cable form from an observed link nobody recorded: its label and both device ports. */
+  const recordLink = (link: ObservedLink): void => {
+    setKnown([link.a.ci, link.b.ci]);
+    setCableForm((f) => ({
+      ...f,
+      label: link.suggestedLabel,
+      a: { ciId: link.a.ci.id, port: link.a.port ?? '', side: '' },
+      b: { ciId: link.b.ci.id, port: link.b.port ?? '', side: '' },
+    }));
+    // The form sits below the tables; bring it into view where the browser can (not every test DOM implements it).
+    const form = cableFormRef.current;
+    if (form !== null && typeof form.scrollIntoView === 'function') form.scrollIntoView({ block: 'center' });
+  };
   const [panelForm, setPanelForm] = useState({
     rackId: '',
     name: '',
@@ -454,6 +476,8 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
           }}
         />
       ) : null}
+
+      <CableVerificationPanel operator={operator} onRecord={recordLink} />
 
       <Card padding="24" className="flex flex-col gap-om-12">
         <SectionTitle as="h2" size="sm" description={t('dcim.cabling.panels.subtitle')}>
@@ -676,6 +700,7 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
         )}
         {operator ? (
           <form
+            ref={cableFormRef}
             aria-label={t('dcim.cabling.cableForm')}
             onSubmit={submit(() => connect.mutate())}
             className="flex flex-col gap-om-10"
@@ -740,12 +765,14 @@ export function CablingView({ racks }: { racks: readonly Rack[] }): ReactNode {
               value={cableForm.a}
               onChange={(a) => setCableForm({ ...cableForm, a })}
               panels={data.patchPanels}
+              known={known}
             />
             <EndpointPicker
               legend={t('dcim.cabling.endB')}
               value={cableForm.b}
               onChange={(b) => setCableForm({ ...cableForm, b })}
               panels={data.patchPanels}
+              known={known}
             />
             <div>
               <Button type="submit" disabled={connect.isPending}>

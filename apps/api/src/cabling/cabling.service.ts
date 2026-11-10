@@ -4,7 +4,13 @@
 // disconnect cables and record circuits through the outbox, so the graph, search and history follow; a port (a panel
 // position's side, or a device port) takes one cable or circuit. The trace walks cable → panel → cable to the far end.
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RECONCILIATION } from '@openmap/constants';
 import {
   CABLE_KINDS,
@@ -38,7 +44,14 @@ import { numberAttribute, stringAttribute } from '../common/validation.js';
 import { TRACER_NAME } from '../metrics/graphql-metrics.hook.js';
 import { MetricsService } from '../metrics/metrics.service.js';
 import { OutboxService, type OutboxDraft } from '../outbox/outbox.service.js';
-import type { CableTraceView, CableView, CablingView, CircuitView, EndpointView, PatchPanelView } from './cabling.types.js';
+import type {
+  CableTraceView,
+  CableView,
+  CablingView,
+  CircuitView,
+  EndpointView,
+  PatchPanelView,
+} from './cabling.types.js';
 
 type Emit = (draft: OutboxDraft) => Promise<unknown>;
 type Tx = Prisma.TransactionClient;
@@ -65,14 +78,21 @@ function parsed<T>(schema: z.ZodType<T>, value: unknown): T | null {
 function endOfRel(rel: RelationshipRecord): { end: LinkEnd; endpoint: EndpointView } | null {
   const end = parsed(endOf, rel.attributes[A.end]);
   if (end === null) return null;
-  return { end, endpoint: { ciId: rel.toCiId, port: stringAttribute(rel.attributes, A.port), side: parsed(sideOf, rel.attributes[A.side]) } };
+  return {
+    end,
+    endpoint: {
+      ciId: rel.toCiId,
+      port: stringAttribute(rel.attributes, A.port),
+      side: parsed(sideOf, rel.attributes[A.side]),
+    },
+  };
 }
 
 function endAttributes(end: LinkEnd, e: CableEndpoint): Record<string, unknown> {
   return { [A.end]: end, [A.port]: e.port, [A.side]: e.side };
 }
 
-interface Loaded {
+export interface Loaded {
   panels: CiRecord[];
   cables: CableView[];
   circuits: CircuitView[];
@@ -87,9 +107,23 @@ export class CablingService {
     private readonly metrics: MetricsService,
   ) {}
 
+  /** REQ-DCIM-008: the tenant's panels, cables, circuits and trace links, for the verification service. */
+  loaded(tenantId: string): Promise<Loaded> {
+    return this.load(tenantId);
+  }
+
   private async load(tenantId: string): Promise<Loaded> {
-    const [panels, cableCis, circuitCis] = await Promise.all([this.cis.byType(tenantId, 'patch_panel'), this.cis.byType(tenantId, 'cable'), this.cis.byType(tenantId, 'circuit')]);
-    const ends = await this.cis.relationshipsOfMany(tenantId, [...cableCis, ...circuitCis].map((c) => c.id), [CONNECTED_TO], 'downstream');
+    const [panels, cableCis, circuitCis] = await Promise.all([
+      this.cis.byType(tenantId, 'patch_panel'),
+      this.cis.byType(tenantId, 'cable'),
+      this.cis.byType(tenantId, 'circuit'),
+    ]);
+    const ends = await this.cis.relationshipsOfMany(
+      tenantId,
+      [...cableCis, ...circuitCis].map((c) => c.id),
+      [CONNECTED_TO],
+      'downstream',
+    );
     const endsOf = new Map<string, Map<LinkEnd, EndpointView>>();
     for (const rel of ends) {
       const e = endOfRel(rel);
@@ -128,7 +162,11 @@ export class CablingService {
     }));
     const links: CableLink[] = [
       ...cables.map((c) => ({ id: c.ci.id, via: 'cable' as const, a: c.a, b: c.b })),
-      ...circuits.flatMap((c) => (c.aEnd !== null && c.zEnd !== null ? [{ id: c.ci.id, via: 'circuit' as const, a: c.aEnd, b: c.zEnd }] : [])),
+      ...circuits.flatMap((c) =>
+        c.aEnd !== null && c.zEnd !== null
+          ? [{ id: c.ci.id, via: 'circuit' as const, a: c.aEnd, b: c.zEnd }]
+          : [],
+      ),
     ];
     return { panels, cables, circuits, links };
   }
@@ -136,10 +174,21 @@ export class CablingService {
   async cabling(tenantId: string): Promise<CablingView> {
     return withSpan(TRACER_NAME, 'cabling.read', { 'openmap.tenant': tenantId }, async () => {
       const loaded = await this.load(tenantId);
-      const racks = await this.cis.relationshipsOfMany(tenantId, loaded.panels.map((p) => p.id), [LOCATED_IN], 'downstream');
-      const patchPanels = loaded.panels.map((p) => this.panelView(p, racks.find((r) => r.fromCiId === p.id) ?? null, loaded.cables, loaded.circuits)).sort((x, y) => x.ci.name.localeCompare(y.ci.name));
+      const racks = await this.cis.relationshipsOfMany(
+        tenantId,
+        loaded.panels.map((p) => p.id),
+        [LOCATED_IN],
+        'downstream',
+      );
+      const patchPanels = loaded.panels
+        .map((p) =>
+          this.panelView(p, racks.find((r) => r.fromCiId === p.id) ?? null, loaded.cables, loaded.circuits),
+        )
+        .sort((x, y) => x.ci.name.localeCompare(y.ci.name));
       const cables = [...loaded.cables].sort((x, y) => x.label.localeCompare(y.label));
-      const circuits = [...loaded.circuits].sort((x, y) => x.provider.localeCompare(y.provider) || x.circuitId.localeCompare(y.circuitId));
+      const circuits = [...loaded.circuits].sort(
+        (x, y) => x.provider.localeCompare(y.provider) || x.circuitId.localeCompare(y.circuitId),
+      );
       return {
         summary: {
           patchPanels: patchPanels.length,
@@ -156,12 +205,25 @@ export class CablingService {
     });
   }
 
-  private panelView(panel: CiRecord, rackRel: RelationshipRecord | null, cables: readonly CableView[], circuits: readonly CircuitView[]): PatchPanelView {
+  private panelView(
+    panel: CiRecord,
+    rackRel: RelationshipRecord | null,
+    cables: readonly CableView[],
+    circuits: readonly CircuitView[],
+  ): PatchPanelView {
     const ports = numberAttribute(panel.attributes, A.ports) ?? 0;
-    const here = (e: EndpointView | null, position: number): boolean => e !== null && e.ciId === panel.id && e.port === String(position);
-    const on = (position: number, side: 'front' | 'rear'): CableView | null => cables.find((c) => [c.a, c.b].some((e) => here(e, position) && e.side === side)) ?? null;
-    const circuitAt = (position: number): CircuitView | null => circuits.find((c) => here(c.aEnd, position) || here(c.zEnd, position)) ?? null;
-    const positions = Array.from({ length: ports }, (_, i) => ({ position: i + 1, front: on(i + 1, 'front'), rear: on(i + 1, 'rear'), circuit: circuitAt(i + 1) }));
+    const here = (e: EndpointView | null, position: number): boolean =>
+      e !== null && e.ciId === panel.id && e.port === String(position);
+    const on = (position: number, side: 'front' | 'rear'): CableView | null =>
+      cables.find((c) => [c.a, c.b].some((e) => here(e, position) && e.side === side)) ?? null;
+    const circuitAt = (position: number): CircuitView | null =>
+      circuits.find((c) => here(c.aEnd, position) || here(c.zEnd, position)) ?? null;
+    const positions = Array.from({ length: ports }, (_, i) => ({
+      position: i + 1,
+      front: on(i + 1, 'front'),
+      rear: on(i + 1, 'rear'),
+      circuit: circuitAt(i + 1),
+    }));
     return {
       ci: panel,
       rackCiId: rackRel?.toCiId ?? null,
@@ -169,7 +231,12 @@ export class CablingService {
       ports,
       media: parsed(mediaOf, panel.attributes[A.media]),
       connector: parsed(connectorOf, panel.attributes[A.connector]),
-      uPosition: rackRel === null ? null : (DCIM_ATTRIBUTES.position.map((k) => numberAttribute(rackRel.attributes, k)).find((v) => v !== null) ?? null),
+      uPosition:
+        rackRel === null
+          ? null
+          : (DCIM_ATTRIBUTES.position
+              .map((k) => numberAttribute(rackRel.attributes, k))
+              .find((v) => v !== null) ?? null),
       used: positions.filter((p) => p.front !== null || p.rear !== null || p.circuit !== null).length,
       positions,
     };
@@ -180,13 +247,18 @@ export class CablingService {
       const loaded = await this.load(tenantId);
       const panels = new Set(loaded.panels.map((p) => p.id));
       const t = traceCable(start, loaded.links, (id) => panels.has(id));
-      return { hops: t.hops.map((h) => ({ from: h.from, viaCiId: h.link.id, viaKind: h.link.via, to: h.to })), complete: t.complete, looped: t.looped };
+      return {
+        hops: t.hops.map((h) => ({ from: h.from, viaCiId: h.link.id, viaKind: h.link.via, to: h.to })),
+        complete: t.complete,
+        looped: t.looped,
+      };
     });
   }
 
   private async requireCi(tenantId: string, id: string, types: readonly CiType[] | null): Promise<CiRecord> {
     const ci = await this.cis.findById(tenantId, id, null);
-    if (!ci || ci.validTo !== null || (types !== null && !types.includes(ci.type))) throw new NotFoundException((types?.join(' or ') ?? 'CI') + ' ' + id + ' not found');
+    if (!ci || ci.validTo !== null || (types !== null && !types.includes(ci.type)))
+      throw new NotFoundException((types?.join(' or ') ?? 'CI') + ' ' + id + ' not found');
     return ci;
   }
 
@@ -196,21 +268,54 @@ export class CablingService {
    */
   private async checkEndpoint(tenantId: string, e: CableEndpoint, except: string | null): Promise<CiRecord> {
     const ci = await this.requireCi(tenantId, e.ciId, null);
-    if (LINK_TYPES.has(ci.type)) throw new BadRequestException('a cable ends on a port, not on another ' + ci.type);
-    const problem = endpointProblem(e, ci.type === 'patch_panel' ? (numberAttribute(ci.attributes, A.ports) ?? 0) : null);
+    if (LINK_TYPES.has(ci.type))
+      throw new BadRequestException('a cable ends on a port, not on another ' + ci.type);
+    const problem = endpointProblem(
+      e,
+      ci.type === 'patch_panel' ? (numberAttribute(ci.attributes, A.ports) ?? 0) : null,
+    );
     if (problem !== null) throw new BadRequestException(ci.name + ': ' + problem);
     const onIt = await this.cis.relationshipsOfMany(tenantId, [ci.id], [CONNECTED_TO], 'upstream');
-    const taken = onIt.find((rel) => rel.fromCiId !== except && endOfRel(rel) !== null && endpointKey({ ciId: rel.toCiId, port: stringAttribute(rel.attributes, A.port), side: parsed(sideOf, rel.attributes[A.side]) }) === endpointKey(e));
+    const taken = onIt.find(
+      (rel) =>
+        rel.fromCiId !== except &&
+        endOfRel(rel) !== null &&
+        endpointKey({
+          ciId: rel.toCiId,
+          port: stringAttribute(rel.attributes, A.port),
+          side: parsed(sideOf, rel.attributes[A.side]),
+        }) === endpointKey(e),
+    );
     if (taken !== undefined) {
       const [holder] = await this.cis.findByIds(tenantId, [taken.fromCiId]);
-      throw new ConflictException(ci.name + (e.port === null ? '' : ' ' + e.port) + (e.side === null ? '' : ' ' + e.side) + ' already has ' + (holder?.name ?? taken.fromCiId));
+      throw new ConflictException(
+        ci.name +
+          (e.port === null ? '' : ' ' + e.port) +
+          (e.side === null ? '' : ' ' + e.side) +
+          ' already has ' +
+          (holder?.name ?? taken.fromCiId),
+      );
     }
     return ci;
   }
 
-  private async createCi(tx: Tx, emit: Emit, tenantId: string, actor: string, draft: { type: CiType; identity: Record<string, string>; name: string; attributes: Record<string, unknown> }): Promise<CiRecord> {
+  private async createCi(
+    tx: Tx,
+    emit: Emit,
+    tenantId: string,
+    actor: string,
+    draft: {
+      type: CiType;
+      identity: Record<string, string>;
+      name: string;
+      attributes: Record<string, unknown>;
+    },
+  ): Promise<CiRecord> {
     const taken = await this.cis.findCurrentByIdentity(tenantId, draft.type, draft.identity);
-    if (taken) throw new ConflictException(draft.type + ' ' + Object.values(draft.identity).join(' / ') + ' already exists');
+    if (taken)
+      throw new ConflictException(
+        draft.type + ' ' + Object.values(draft.identity).join(' / ') + ' already exists',
+      );
     const ci = await this.cis.create(tx, tenantId, {
       type: draft.type,
       identity: draft.identity,
@@ -225,54 +330,147 @@ export class CablingService {
     return ci;
   }
 
-  private async updateCi(tx: Tx, emit: Emit, tenantId: string, actor: string, current: CiRecord, attributes: Record<string, unknown>): Promise<CiRecord> {
+  private async updateCi(
+    tx: Tx,
+    emit: Emit,
+    tenantId: string,
+    actor: string,
+    current: CiRecord,
+    attributes: Record<string, unknown>,
+  ): Promise<CiRecord> {
     const merged = { ...current.attributes, ...attributes };
-    const ci = await this.cis.updateAttributes(tx, tenantId, current.id, merged, checksumOf(current.type, current.identity, merged));
-    await emit({ type: 'openmap.ci.updated', subject: ci.id, data: { ci, ciId: ci.id, changed: Object.keys(attributes), attributes: ci.attributes, checksum: ci.checksum, by: actor } });
+    const ci = await this.cis.updateAttributes(
+      tx,
+      tenantId,
+      current.id,
+      merged,
+      checksumOf(current.type, current.identity, merged),
+    );
+    await emit({
+      type: 'openmap.ci.updated',
+      subject: ci.id,
+      data: {
+        ci,
+        ciId: ci.id,
+        changed: Object.keys(attributes),
+        attributes: ci.attributes,
+        checksum: ci.checksum,
+        by: actor,
+      },
+    });
     return ci;
   }
 
-  private async link(tx: Tx, emit: Emit, tenantId: string, actor: string, type: 'connected_to' | 'located_in', fromCiId: string, toCiId: string, attributes: Record<string, unknown>): Promise<void> {
-    const rel = await this.cis.createRelationship(tx, tenantId, { type, fromCiId, toCiId, attributes, runId: randomUUID(), confidence: RECONCILIATION.userLabelConfidence });
-    await emit({ type: 'openmap.relationship.created', subject: rel.id, data: { relationship: rel, by: actor } });
+  private async link(
+    tx: Tx,
+    emit: Emit,
+    tenantId: string,
+    actor: string,
+    type: 'connected_to' | 'located_in',
+    fromCiId: string,
+    toCiId: string,
+    attributes: Record<string, unknown>,
+  ): Promise<void> {
+    const rel = await this.cis.createRelationship(tx, tenantId, {
+      type,
+      fromCiId,
+      toCiId,
+      attributes,
+      runId: randomUUID(),
+      confidence: RECONCILIATION.userLabelConfidence,
+    });
+    await emit({
+      type: 'openmap.relationship.created',
+      subject: rel.id,
+      data: { relationship: rel, by: actor },
+    });
   }
 
-  private async unlink(tx: Tx, emit: Emit, tenantId: string, actor: string, rels: readonly RelationshipRecord[]): Promise<void> {
+  private async unlink(
+    tx: Tx,
+    emit: Emit,
+    tenantId: string,
+    actor: string,
+    rels: readonly RelationshipRecord[],
+  ): Promise<void> {
     const at = nowIso();
     for (const rel of rels) {
       const retired = await this.cis.retireRelationship(tx, tenantId, rel.id, at);
-      await emit({ type: 'openmap.relationship.retired', subject: retired.id, data: { relationshipId: retired.id, validTo: retired.validTo, by: actor } });
+      await emit({
+        type: 'openmap.relationship.retired',
+        subject: retired.id,
+        data: { relationshipId: retired.id, validTo: retired.validTo, by: actor },
+      });
     }
   }
 
-  private audit(emit: Emit, subject: string, action: string, actor: string, detail: Record<string, unknown>): Promise<unknown> {
+  private audit(
+    emit: Emit,
+    subject: string,
+    action: string,
+    actor: string,
+    detail: Record<string, unknown>,
+  ): Promise<unknown> {
     return emit({ type: 'openmap.audit.action', subject, data: { action, ...detail, by: actor } });
   }
 
-  async upsertPatchPanel(tenantId: string, actor: string, id: string | null, input: PatchPanelInput): Promise<PatchPanelView> {
+  async upsertPatchPanel(
+    tenantId: string,
+    actor: string,
+    id: string | null,
+    input: PatchPanelInput,
+  ): Promise<PatchPanelView> {
     const rack = await this.requireCi(tenantId, input.rackId, ['rack']);
     return withSpan(TRACER_NAME, 'cabling.panel.save', { 'openmap.tenant': tenantId }, async () => {
       const attributes = { [A.ports]: input.ports, [A.media]: input.media, [A.connector]: input.connector };
-      const placement = { [DCIM_ATTRIBUTES.position[0]]: input.uPosition, [DCIM_ATTRIBUTES.height[0]]: PANEL_HEIGHT_U };
+      const placement = {
+        [DCIM_ATTRIBUTES.position[0]]: input.uPosition,
+        [DCIM_ATTRIBUTES.height[0]]: PANEL_HEIGHT_U,
+      };
       const panelId = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
         if (id === null) {
-          const ci = await this.createCi(tx, emit, tenantId, actor, { type: 'patch_panel', identity: { rackRef: rack.name, name: input.name }, name: rack.name + ' ' + input.name, attributes });
+          const ci = await this.createCi(tx, emit, tenantId, actor, {
+            type: 'patch_panel',
+            identity: { rackRef: rack.name, name: input.name },
+            name: rack.name + ' ' + input.name,
+            attributes,
+          });
           await this.link(tx, emit, tenantId, actor, LOCATED_IN, ci.id, rack.id, placement);
-          await this.audit(emit, ci.id, 'cabling.panel.saved', actor, { rack: rack.name, name: input.name, ports: input.ports });
+          await this.audit(emit, ci.id, 'cabling.panel.saved', actor, {
+            rack: rack.name,
+            name: input.name,
+            ports: input.ports,
+          });
           return ci.id;
         }
         const current = await this.requireCi(tenantId, id, ['patch_panel']);
-        if (stringAttribute(current.identity, 'name') !== input.name || stringAttribute(current.identity, 'rackRef') !== rack.name)
+        if (
+          stringAttribute(current.identity, 'name') !== input.name ||
+          stringAttribute(current.identity, 'rackRef') !== rack.name
+        )
           throw new BadRequestException('the rack and name identify the patch panel and cannot change');
         const loaded = await this.load(tenantId);
-        const ends = [...loaded.cables.flatMap((c) => [c.a, c.b]), ...loaded.circuits.flatMap((c) => [c.aEnd, c.zEnd])];
-        const highest = Math.max(0, ...ends.filter((e) => e !== null && e.ciId === id).map((e) => Number(e?.port)));
-        if (input.ports < highest) throw new BadRequestException('position ' + String(highest) + ' is in use; the panel cannot have fewer ports');
+        const ends = [
+          ...loaded.cables.flatMap((c) => [c.a, c.b]),
+          ...loaded.circuits.flatMap((c) => [c.aEnd, c.zEnd]),
+        ];
+        const highest = Math.max(
+          0,
+          ...ends.filter((e) => e !== null && e.ciId === id).map((e) => Number(e?.port)),
+        );
+        if (input.ports < highest)
+          throw new BadRequestException(
+            'position ' + String(highest) + ' is in use; the panel cannot have fewer ports',
+          );
         await this.updateCi(tx, emit, tenantId, actor, current, attributes);
         const placed = await this.cis.relationshipsOfMany(tenantId, [id], [LOCATED_IN], 'downstream');
         await this.unlink(tx, emit, tenantId, actor, placed);
         await this.link(tx, emit, tenantId, actor, LOCATED_IN, id, rack.id, placement);
-        await this.audit(emit, id, 'cabling.panel.saved', actor, { rack: rack.name, name: input.name, ports: input.ports });
+        await this.audit(emit, id, 'cabling.panel.saved', actor, {
+          rack: rack.name,
+          name: input.name,
+          ports: input.ports,
+        });
         return id;
       });
       this.metrics.cablingChanges.inc({ kind: 'patch_panel', op: 'saved' });
@@ -283,40 +481,63 @@ export class CablingService {
   }
 
   async connectCable(tenantId: string, actor: string, input: CableInput): Promise<CableView> {
-    return withSpan(TRACER_NAME, 'cabling.cable.connect', { 'openmap.tenant': tenantId, 'cabling.kind': input.kind }, async () => {
-      const a = await this.checkEndpoint(tenantId, input.a, null);
-      const b = await this.checkEndpoint(tenantId, input.b, null);
-      const cableId = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
-        const ci = await this.createCi(tx, emit, tenantId, actor, {
-          type: 'cable',
-          identity: { label: input.label, endpointA: endpointKey(input.a), endpointB: endpointKey(input.b) },
-          name: input.label,
-          attributes: { [A.kind]: input.kind, [A.media]: input.media, [A.lengthM]: input.lengthM, [A.colour]: input.colour },
+    return withSpan(
+      TRACER_NAME,
+      'cabling.cable.connect',
+      { 'openmap.tenant': tenantId, 'cabling.kind': input.kind },
+      async () => {
+        const a = await this.checkEndpoint(tenantId, input.a, null);
+        const b = await this.checkEndpoint(tenantId, input.b, null);
+        const cableId = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+          const ci = await this.createCi(tx, emit, tenantId, actor, {
+            type: 'cable',
+            identity: {
+              label: input.label,
+              endpointA: endpointKey(input.a),
+              endpointB: endpointKey(input.b),
+            },
+            name: input.label,
+            attributes: {
+              [A.kind]: input.kind,
+              [A.media]: input.media,
+              [A.lengthM]: input.lengthM,
+              [A.colour]: input.colour,
+            },
+          });
+          await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, a.id, endAttributes('A', input.a));
+          await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, b.id, endAttributes('B', input.b));
+          await this.audit(emit, ci.id, 'cabling.cable.connected', actor, {
+            label: input.label,
+            kind: input.kind,
+            a: a.name,
+            b: b.name,
+          });
+          return ci.id;
         });
-        await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, a.id, endAttributes('A', input.a));
-        await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, b.id, endAttributes('B', input.b));
-        await this.audit(emit, ci.id, 'cabling.cable.connected', actor, { label: input.label, kind: input.kind, a: a.name, b: b.name });
-        return ci.id;
-      });
-      this.metrics.cablingChanges.inc({ kind: 'cable', op: 'connected' });
-      const view = (await this.load(tenantId)).cables.find((c) => c.ci.id === cableId);
-      if (!view) throw new NotFoundException('cable ' + cableId + ' not found');
-      return view;
-    });
+        this.metrics.cablingChanges.inc({ kind: 'cable', op: 'connected' });
+        const view = (await this.load(tenantId)).cables.find((c) => c.ci.id === cableId);
+        if (!view) throw new NotFoundException('cable ' + cableId + ' not found');
+        return view;
+      },
+    );
   }
 
   async disconnectCable(tenantId: string, actor: string, id: string): Promise<boolean> {
     const cable = await this.requireCi(tenantId, id, ['cable']);
-    await withSpan(TRACER_NAME, 'cabling.cable.disconnect', { 'openmap.tenant': tenantId }, () => this.retireCi(tenantId, actor, cable, 'cabling.cable.disconnected'));
+    await withSpan(TRACER_NAME, 'cabling.cable.disconnect', { 'openmap.tenant': tenantId }, () =>
+      this.retireCi(tenantId, actor, cable, 'cabling.cable.disconnected'),
+    );
     this.metrics.cablingChanges.inc({ kind: 'cable', op: 'disconnected' });
     return true;
   }
 
-
   /** Retires a CI with the outbox events of its relationships and an audit action. */
   private async retireCi(tenantId: string, actor: string, ci: CiRecord, action: string): Promise<void> {
     await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
-      const [down, up] = await Promise.all([this.cis.relationshipsOfMany(tenantId, [ci.id], [CONNECTED_TO, LOCATED_IN], 'downstream'), this.cis.relationshipsOfMany(tenantId, [ci.id], [CONNECTED_TO], 'upstream')]);
+      const [down, up] = await Promise.all([
+        this.cis.relationshipsOfMany(tenantId, [ci.id], [CONNECTED_TO, LOCATED_IN], 'downstream'),
+        this.cis.relationshipsOfMany(tenantId, [ci.id], [CONNECTED_TO], 'upstream'),
+      ]);
       await this.unlink(tx, emit, tenantId, actor, [...down, ...up]);
       const retired = await this.cis.retire(tx, tenantId, ci.id);
       await emit({ type: 'openmap.ci.retired', subject: retired.id, data: { ci: retired, by: actor } });
@@ -328,45 +549,108 @@ export class CablingService {
     const panel = await this.requireCi(tenantId, id, ['patch_panel']);
     const onIt = await this.cis.relationshipsOfMany(tenantId, [id], [CONNECTED_TO], 'upstream');
     const linked = onIt.filter((rel) => endOfRel(rel) !== null);
-    if (linked.length > 0) throw new ConflictException(panel.name + ' has ' + String(linked.length) + ' cable or circuit ends; disconnect them first');
-    await withSpan(TRACER_NAME, 'cabling.panel.remove', { 'openmap.tenant': tenantId }, () => this.retireCi(tenantId, actor, panel, 'cabling.panel.removed'));
+    if (linked.length > 0)
+      throw new ConflictException(
+        panel.name + ' has ' + String(linked.length) + ' cable or circuit ends; disconnect them first',
+      );
+    await withSpan(TRACER_NAME, 'cabling.panel.remove', { 'openmap.tenant': tenantId }, () =>
+      this.retireCi(tenantId, actor, panel, 'cabling.panel.removed'),
+    );
     this.metrics.cablingChanges.inc({ kind: 'patch_panel', op: 'removed' });
     return true;
   }
 
   async removeCircuit(tenantId: string, actor: string, id: string): Promise<boolean> {
     const circuit = await this.requireCi(tenantId, id, ['circuit']);
-    await withSpan(TRACER_NAME, 'cabling.circuit.remove', { 'openmap.tenant': tenantId }, () => this.retireCi(tenantId, actor, circuit, 'cabling.circuit.removed'));
+    await withSpan(TRACER_NAME, 'cabling.circuit.remove', { 'openmap.tenant': tenantId }, () =>
+      this.retireCi(tenantId, actor, circuit, 'cabling.circuit.removed'),
+    );
     this.metrics.cablingChanges.inc({ kind: 'circuit', op: 'removed' });
     return true;
   }
 
-  async upsertCircuit(tenantId: string, actor: string, id: string | null, input: CircuitInput): Promise<CircuitView> {
-    return withSpan(TRACER_NAME, 'cabling.circuit.save', { 'openmap.tenant': tenantId, 'cabling.kind': input.kind }, async () => {
-      const aEnd = input.aEnd === null ? null : await this.checkEndpoint(tenantId, input.aEnd, id);
-      const zEnd = input.zEnd === null ? null : await this.checkEndpoint(tenantId, input.zEnd, id);
-      if (input.aEnd !== null && input.zEnd !== null && endpointKey(input.aEnd) === endpointKey(input.zEnd)) throw new BadRequestException('a circuit joins two different ports');
-      const attributes = { [A.kind]: input.kind, [A.status]: input.status, [A.bandwidthMbps]: input.bandwidthMbps, [A.zEndDescription]: input.zEndDescription };
-      const circuitId = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
-        let ci: CiRecord;
-        if (id === null) {
-          ci = await this.createCi(tx, emit, tenantId, actor, { type: 'circuit', identity: { circuitId: input.circuitId, provider: input.provider }, name: input.provider + ' ' + input.circuitId, attributes });
-        } else {
-          const current = await this.requireCi(tenantId, id, ['circuit']);
-          if (stringAttribute(current.identity, A.circuitId) !== input.circuitId || stringAttribute(current.identity, A.provider) !== input.provider)
-            throw new BadRequestException('the provider and circuit id identify the circuit and cannot change');
-          ci = await this.updateCi(tx, emit, tenantId, actor, current, attributes);
-          await this.unlink(tx, emit, tenantId, actor, await this.cis.relationshipsOfMany(tenantId, [id], [CONNECTED_TO], 'downstream'));
-        }
-        if (aEnd !== null && input.aEnd !== null) await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, aEnd.id, endAttributes('A', input.aEnd));
-        if (zEnd !== null && input.zEnd !== null) await this.link(tx, emit, tenantId, actor, CONNECTED_TO, ci.id, zEnd.id, endAttributes('Z', input.zEnd));
-        await this.audit(emit, ci.id, 'cabling.circuit.saved', actor, { provider: input.provider, circuitId: input.circuitId, status: input.status });
-        return ci.id;
-      });
-      this.metrics.cablingChanges.inc({ kind: 'circuit', op: 'saved' });
-      const view = (await this.load(tenantId)).circuits.find((c) => c.ci.id === circuitId);
-      if (!view) throw new NotFoundException('circuit ' + circuitId + ' not found');
-      return view;
-    });
+  async upsertCircuit(
+    tenantId: string,
+    actor: string,
+    id: string | null,
+    input: CircuitInput,
+  ): Promise<CircuitView> {
+    return withSpan(
+      TRACER_NAME,
+      'cabling.circuit.save',
+      { 'openmap.tenant': tenantId, 'cabling.kind': input.kind },
+      async () => {
+        const aEnd = input.aEnd === null ? null : await this.checkEndpoint(tenantId, input.aEnd, id);
+        const zEnd = input.zEnd === null ? null : await this.checkEndpoint(tenantId, input.zEnd, id);
+        if (input.aEnd !== null && input.zEnd !== null && endpointKey(input.aEnd) === endpointKey(input.zEnd))
+          throw new BadRequestException('a circuit joins two different ports');
+        const attributes = {
+          [A.kind]: input.kind,
+          [A.status]: input.status,
+          [A.bandwidthMbps]: input.bandwidthMbps,
+          [A.zEndDescription]: input.zEndDescription,
+        };
+        const circuitId = await this.outbox.transaction(tenantId, async ({ tx, emit }) => {
+          let ci: CiRecord;
+          if (id === null) {
+            ci = await this.createCi(tx, emit, tenantId, actor, {
+              type: 'circuit',
+              identity: { circuitId: input.circuitId, provider: input.provider },
+              name: input.provider + ' ' + input.circuitId,
+              attributes,
+            });
+          } else {
+            const current = await this.requireCi(tenantId, id, ['circuit']);
+            if (
+              stringAttribute(current.identity, A.circuitId) !== input.circuitId ||
+              stringAttribute(current.identity, A.provider) !== input.provider
+            )
+              throw new BadRequestException(
+                'the provider and circuit id identify the circuit and cannot change',
+              );
+            ci = await this.updateCi(tx, emit, tenantId, actor, current, attributes);
+            await this.unlink(
+              tx,
+              emit,
+              tenantId,
+              actor,
+              await this.cis.relationshipsOfMany(tenantId, [id], [CONNECTED_TO], 'downstream'),
+            );
+          }
+          if (aEnd !== null && input.aEnd !== null)
+            await this.link(
+              tx,
+              emit,
+              tenantId,
+              actor,
+              CONNECTED_TO,
+              ci.id,
+              aEnd.id,
+              endAttributes('A', input.aEnd),
+            );
+          if (zEnd !== null && input.zEnd !== null)
+            await this.link(
+              tx,
+              emit,
+              tenantId,
+              actor,
+              CONNECTED_TO,
+              ci.id,
+              zEnd.id,
+              endAttributes('Z', input.zEnd),
+            );
+          await this.audit(emit, ci.id, 'cabling.circuit.saved', actor, {
+            provider: input.provider,
+            circuitId: input.circuitId,
+            status: input.status,
+          });
+          return ci.id;
+        });
+        this.metrics.cablingChanges.inc({ kind: 'circuit', op: 'saved' });
+        const view = (await this.load(tenantId)).circuits.find((c) => c.ci.id === circuitId);
+        if (!view) throw new NotFoundException('circuit ' + circuitId + ' not found');
+        return view;
+      },
+    );
   }
 }
