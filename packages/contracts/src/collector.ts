@@ -48,6 +48,8 @@ export const COLLECTOR_FAMILIES = [
   'warranty',
   /** Inter-site link probes (ADR-025): TCP connect reachability, latency and loss from the A end of a site link. */
   'link_probe',
+  /** REQ-INT-017 (ADR-075): backup products: Veeam Backup & Replication, Commvault, Rubrik CDM (0.14.0). */
+  'backup',
 ] as const;
 export const collectorFamilySchema = z.enum(COLLECTOR_FAMILIES);
 export type CollectorFamily = z.infer<typeof collectorFamilySchema>;

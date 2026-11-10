@@ -47,6 +47,8 @@ export const CABLING_VERIFICATION_METRIC = 'openmap_cabling_verifications_total'
 export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
 /** REQ-IPAM-005 */
 export const FIREWALL_METRIC = 'openmap_firewall_reads_total';
+/** REQ-INT-017 (ADR-075): backup protection reads by query (ci, gaps). */
+export const PROTECTION_METRIC = 'openmap_protection_reads_total';
 /** REQ-INT-009 */
 export const NOTIFICATION_TEST_METRIC = 'openmap_notification_tests_total';
 /** REQ-SEC-011 (ADR-067 step 4): values sent through Transit, by op and outcome. */
@@ -112,6 +114,8 @@ export class MetricsService {
   readonly switchPortReads: Counter<'query'>;
   /** REQ-IPAM-005 — firewall reads by query (devices, policy, check). */
   readonly firewallReads: Counter<'query'>;
+  /** REQ-INT-017 — backup protection reads by query (ci, gaps). */
+  readonly protectionReads: Counter<'query'>;
   /** REQ-INT-009 — test notifications queued, by vendor. */
   readonly notificationTests: Counter<'vendor'>;
   /** REQ-SEC-011 — personal-data values encrypted or decrypted through OpenBao Transit. */
@@ -276,6 +280,12 @@ export class MetricsService {
       name: FIELD_CIPHER_METRIC,
       help: 'Personal-data values sent through OpenBao Transit, by op (encrypt, decrypt) and outcome (ok, error)',
       labelNames: ['op', 'outcome'],
+      registers: [this.registry],
+    });
+    this.protectionReads = new Counter({
+      name: PROTECTION_METRIC,
+      help: "Backup protection reads by query: one CI's covers and RPO, the gaps among CIs of critical services",
+      labelNames: ['query'],
       registers: [this.registry],
     });
     this.firewallReads = new Counter({

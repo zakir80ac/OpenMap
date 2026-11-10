@@ -21,6 +21,7 @@ import { plantDatacenterDevice, generateEdge } from './gen/edge.js';
 import { generateCommercial } from './gen/commercial.js';
 import { generateFlows } from './gen/flows.js';
 import { generateSaas } from './gen/saas.js';
+import { generateBackup } from './gen/backup.js';
 
 export type EvidenceKind = 'snmp_walk' | 'cli_output' | 'api_response' | 'flow_sample' | 'scan_output' | 'agent_report';
 
@@ -222,6 +223,8 @@ export function buildEstate(seed: number, scale: number): Estate {
     flows: root.fork('flows'),
     // Appended last: earlier streams keep their seeds.
     saas: root.fork('saas'),
+    // REQ-INT-017: appended after saas, so every earlier stream keeps its seed.
+    backup: root.fork('backup'),
   };
 
   const org = generateSites(world, streams.sites);
@@ -240,6 +243,8 @@ export function buildEstate(seed: number, scale: number): Estate {
   generateSaas(world, streams.saas);
   // REQ-AI-003: last, so the address it takes shifts nothing else.
   plantDatacenterDevice(world);
+  // REQ-INT-017: after every CI it may protect exists, and after the planted device so nothing earlier shifts.
+  generateBackup(world, streams.backup);
 
   const sites = org.sites.map((site) => {
     const w = world.sites.find((s) => s.def.code === site.code);

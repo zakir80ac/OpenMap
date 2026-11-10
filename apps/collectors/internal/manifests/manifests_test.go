@@ -16,6 +16,7 @@ import (
 	"github.com/openmap/openmap/apps/collectors/internal/alibaba"
 	"github.com/openmap/openmap/apps/collectors/internal/aws"
 	"github.com/openmap/openmap/apps/collectors/internal/azure"
+	"github.com/openmap/openmap/apps/collectors/internal/backup"
 	"github.com/openmap/openmap/apps/collectors/internal/certificate"
 	"github.com/openmap/openmap/apps/collectors/internal/citrixadc"
 	"github.com/openmap/openmap/apps/collectors/internal/collector"
@@ -107,6 +108,7 @@ func TestManifestsMatchTheContract(t *testing.T) {
 		impl collector.Implementation
 	}{
 		{"a10_thunder", a10.Collector{}},
+		{"backup", backup.Collector{}},
 		{"certificate", certificate.Collector{}},
 		{"cisco_ucs", ucs.Collector{}},
 		{"citrix_adc", citrixadc.Collector{}},
