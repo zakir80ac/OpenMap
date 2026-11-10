@@ -47,11 +47,29 @@ export const envSchema = z.object({
   KEYCLOAK_REALM: z.string().default('openmap'),
   KEYCLOAK_CLIENT_ID: z.string().default('openmap-console'),
   /**
-   * Keycloak's bootstrap administrator (the compose .env names them KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD). Only
-   * dev and CI tooling uses them (tools/perf creates its load-test user); the services never do. Empty disables it.
+   * Keycloak's bootstrap administrator (the compose .env names them KEYCLOAK_ADMIN / KEYCLOAK_ADMIN_PASSWORD). Dev and
+   * CI tooling uses them (tools/perf creates its load-test user), and the API uses them to apply identity sources
+   * (REQ-INT-016, ADR-074) when no admin client secret is set. Empty disables it.
    */
   KEYCLOAK_ADMIN: z.string().default(''),
   KEYCLOAK_ADMIN_PASSWORD: z.string().default(''),
+  /**
+   * REQ-INT-016 (ADR-074): how the API signs in to Keycloak's admin REST API. With KEYCLOAK_ADMIN_CLIENT_SECRET set it
+   * uses the client-credentials grant of KEYCLOAK_ADMIN_CLIENT_ID (a service-account client holding the
+   * realm-management roles manage-realm, manage-users and view-realm: least privilege for production); otherwise the
+   * password grant of KEYCLOAK_ADMIN through the same client (`admin-cli` exists in every Keycloak). Both live in
+   * KEYCLOAK_ADMIN_REALM.
+   */
+  KEYCLOAK_ADMIN_REALM: z.string().default('master'),
+  KEYCLOAK_ADMIN_CLIENT_ID: z.string().default('admin-cli'),
+  KEYCLOAK_ADMIN_CLIENT_SECRET: z.string().default(''),
+  /** REQ-INT-016: the realm identity sources are applied to. Empty: KEYCLOAK_REALM, the realm people sign in to. */
+  IDENTITY_FEDERATION_REALM: z.string().default(''),
+  /**
+   * REQ-INT-016: Microsoft Entra ID's sign-in authority. Entra ID issuers are `<authority>/<directory>/v2.0`; national
+   * clouds use their own authority (login.microsoftonline.us, login.partner.microsoftonline.cn).
+   */
+  IDENTITY_ENTRA_AUTHORITY_URL: url.default('https://login.microsoftonline.com'),
   /**
    * The API's own (bearer-only) client in the realm. Tokens minted for automation through the client-credentials
    * grant (REQ-SEC-009) carry it in `aud`, so the API accepts them without being issued for the console client.

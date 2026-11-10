@@ -1,5 +1,5 @@
 'use client';
-// REQ-SEC-005 REQ-UI-003 REQ-UI-019 — Settings: the signed-in identity (user, tenant, roles), the tenant settings editor and the tenant's immutable audit
+// REQ-SEC-005 REQ-UI-003 REQ-UI-019 REQ-INT-016 — Settings: the signed-in identity (user, tenant, roles), the tenant settings editor and the tenant's immutable audit
 // log from `auditLog`, newest first, with an action filter and cursor paging. Auditors and administrators see the
 // log; other roles see their session only, because the API refuses the query for them.
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import { useFormatters, useT } from '@/providers';
 import { CustomFieldsCard } from './CustomFieldsCard';
 import { ApiCard } from './ApiCard';
 import { BackupsCard } from './BackupsCard';
+import { IdentitySourcesCard } from './IdentitySourcesCard';
 import { TenantSettingsCard } from './TenantSettingsCard';
 
 /** Actions a mutation can carry, offered as the filter list; the server owns the truth, this is the display order. */
@@ -31,6 +32,10 @@ export const AUDIT_ACTIONS = [
   'setAssetStage',
   'upsertIntegration',
   'testIntegration',
+  'upsertIdentitySource',
+  'testIdentitySource',
+  'syncIdentitySource',
+  'removeIdentitySource',
   'reportIncident',
   'acknowledgeIncident',
   'askAssistant',
@@ -109,6 +114,8 @@ export function SettingsView(): ReactNode {
       <CustomFieldsCard />
 
       <ApiCard />
+
+      {can(ROLES.admin) ? <IdentitySourcesCard /> : null}
 
       {can(ROLES.admin) ? <BackupsCard /> : null}
 

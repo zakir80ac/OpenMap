@@ -95,6 +95,14 @@ services:
       # tools/perf writes (mounted read-only from PERF_RESULTS_HOST_DIR; the repository keeps the directory, not its results).
       PROMETHEUS_URL: http://prometheus:9090
       PERF_RESULTS_DIR: /var/lib/openmap/perf-results
+      # REQ-INT-016 (ADR-074): the API applies identity sources through Keycloak's admin REST API. Production sets
+      # KEYCLOAK_ADMIN_CLIENT_ID / KEYCLOAK_ADMIN_CLIENT_SECRET (a service-account client with realm-management roles);
+      # the single-node stack signs in as Keycloak's bootstrap administrator. Only the API receives these.
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KEYCLOAK_ADMIN_REALM: ${KEYCLOAK_ADMIN_REALM:-master}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-admin-cli}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-}
     volumes: ["backups:/var/lib/openmap/backups:ro", "${PERF_RESULTS_HOST_DIR:-../../tools/perf/results}:/var/lib/openmap/perf-results:ro", "openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     ports: ["${API_PORT:-4000}:4000"]
     depends_on: *app-depends

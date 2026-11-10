@@ -559,6 +559,7 @@ model Tenant {
   certificateAlerts       CertificateAlert[]
   ciComponents            CiComponent[]
   ciCodeCounters          CiCodeCounter[]
+  identitySources         IdentitySource[]
 
   @@unique([organizationId, slug])
   @@map("tenants")
@@ -1678,6 +1679,40 @@ model IncidentLink {
 // ---------------------------------------------------------------------------------------------
 // Integrations and security
 // ---------------------------------------------------------------------------------------------
+
+/// REQ-INT-016 (ADR-074): a directory (Active Directory, other LDAP) or OpenID Connect provider (Entra ID, Okta, other)
+/// people sign in through, applied to the Keycloak realm by the API. `settings` holds the non-secret connection
+/// settings with vendor presets filled in; the bind password or client secret stays in OpenBao at `secretRef`.
+/// `alias` names the source's objects in Keycloak (unique across the tenants sharing a realm, fixed once created);
+/// `keycloakId` is the LDAP component id or the provider's internal id once applied.
+model IdentitySource {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @db.Uuid
+  kind            String
+  vendor          String
+  name            String
+  alias           String    @unique
+  enabled         Boolean   @default(true)
+  settings        Json
+  secretRef       String
+  roleMappings    Json      @default("[]")
+  state           String    @default("pending")
+  keycloakId      String?
+  lastError       String?
+  lastTestAt      DateTime? @db.Timestamptz(3)
+  lastTestOk      Boolean?
+  lastTestMessage String?
+  lastSyncAt      DateTime? @db.Timestamptz(3)
+  lastSync        Json?
+  updatedBy       String
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@map("identity_sources")
+}
 
 /// integrationConfigSchema. vendor is a string: adding a vendor is a tracker row, not a contract change.
 model IntegrationConfig {
