@@ -1,6 +1,7 @@
 // REQ-CORE-010 — applies clickhouse/*.sql in order through @clickhouse/client, recording each
 // version in <database>.schema_migrations so a file runs once.
 import { createClient } from '@clickhouse/client';
+import { clickhouseOptions } from './clickhouse-options.js';
 import { loadEnv, type Env } from '@openmap/config';
 import { CLICKHOUSE_DIR, listMigrationFiles, loadStatements } from './files.js';
 import { clickhouseParameters } from './parameters.js';
@@ -28,11 +29,9 @@ export async function migrateClickHouse(env: Env = loadEnv(), dir: string = CLIC
   assertIdentifier(env.CLICKHOUSE_DB, 'CLICKHOUSE_DB');
   const database = env.CLICKHOUSE_DB;
   const table = database + '.' + CLICKHOUSE_MIGRATIONS_TABLE;
-  const client = createClient({
-    url: env.CLICKHOUSE_URL,
-    username: env.CLICKHOUSE_USER,
-    password: env.CLICKHOUSE_PASSWORD,
-  });
+  // The database may not exist yet: the connection names none (TLS as every client, ADR-068).
+  const o = clickhouseOptions(env);
+  const client = createClient({ url: o.url, username: o.username, password: o.password, ...(o.tls === undefined ? {} : { tls: o.tls }) });
   const report: MigrationReport = { applied: [], skipped: [] };
   try {
     await client.command({ query: 'CREATE DATABASE IF NOT EXISTS ' + database });

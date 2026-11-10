@@ -19,3 +19,11 @@ template {
   perms       = "0440"
   contents    = "{{ with secret \"tde/data/clickhouse-disk\" }}{{ .Data.data.key }}{{ end }}"
 }
+
+# ADR-068 — ClickHouse's server certificate and key in one PEM, from the internal services CA, renewed before it expires;
+# ClickHouse reloads a changed certificate file. TLS_COMMON_NAME is the name clients connect to.
+template {
+  destination = "/run/clickhouse-key/tls.pem"
+  perms       = "0600"
+  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_COMMON_NAME\")) \"alt_names=localhost\" \"ttl=720h\" }}{{ .Cert }}{{ .Key }}{{ end }}"
+}

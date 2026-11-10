@@ -8,13 +8,13 @@ import { createClient } from '@clickhouse/client';
 import { loadEnv } from '@openmap/config';
 import { ENVIRONMENT } from '@openmap/constants';
 import { ENV_METRICS } from '@openmap/contracts';
-import { createPrismaClient } from '@openmap/db';
+import { clickhouseOptions, createPrismaClient } from '@openmap/db';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createEnvironmentAlerts } from './environment.js';
 
 const env = loadEnv();
 const prisma = createPrismaClient(env);
-const clickhouse = createClient({ url: env.CLICKHOUSE_URL, username: env.CLICKHOUSE_USER, password: env.CLICKHOUSE_PASSWORD, database: env.CLICKHOUSE_DB });
+const clickhouse = createClient(clickhouseOptions(env));
 const tenantId = randomUUID();
 const organizationId = randomUUID();
 const MINUTE_MS = 60_000;

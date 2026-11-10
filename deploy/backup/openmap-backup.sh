@@ -44,7 +44,8 @@ die() { log "$1" "${2:-}"; exit 1; }
 
 # Runs one ClickHouse statement over HTTP; the server's error text is printed and fails the script.
 ch() {
-  out=$(curl -sS --fail-with-body -u "$CLICKHOUSE_USER:$CLICKHOUSE_PASSWORD" --data-binary "$1" "$CLICKHOUSE_URL/") || die "clickhouse: $out"
+  # ADR-068: over https the server is verified against CLICKHOUSE_CA (the internal services CA).
+  out=$(curl -sS --fail-with-body ${CLICKHOUSE_CA:+--cacert "$CLICKHOUSE_CA"} -u "$CLICKHOUSE_USER:$CLICKHOUSE_PASSWORD" --data-binary "$1" "$CLICKHOUSE_URL/") || die "clickhouse: $out"
   printf '%s' "$out"
 }
 

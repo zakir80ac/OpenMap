@@ -26,6 +26,11 @@ export const envSchema = z.object({
   MEMGRAPH_URL: z.string().default('bolt://localhost:7687'),
   MEMGRAPH_USER: z.string().default(''),
   MEMGRAPH_PASSWORD: z.string().default(''),
+  /**
+   * REQ-SEC-011 (ADR-068): the internal services CA's certificate, which every TLS client (ClickHouse, Memgraph, Valkey,
+   * Meilisearch, OpenBao) verifies its server against. Unset: the system trust store.
+   */
+  SERVICE_CA_PATH: z.string().min(1).optional(),
   /** ClickHouse: time-series, time-travel snapshots, analytics source for Superset. */
   CLICKHOUSE_URL: url.default('http://localhost:8123'),
   CLICKHOUSE_DB: z.string().default('openmap'),

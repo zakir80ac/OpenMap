@@ -12,7 +12,7 @@ import { createClient } from '@clickhouse/client';
 import { loadEnv } from '@openmap/config';
 import { READINESS } from '@openmap/constants';
 import { LINK_METRICS } from '@openmap/contracts';
-import { createPrismaClient } from '@openmap/db';
+import { clickhouseOptions, createPrismaClient } from '@openmap/db';
 import type { GraphRepository } from '@openmap/graph';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Health } from '../core/propagate.js';
@@ -20,7 +20,7 @@ import { createReadiness } from './readiness.js';
 
 const env = loadEnv();
 const prisma = createPrismaClient(env);
-const clickhouse = createClient({ url: env.CLICKHOUSE_URL, username: env.CLICKHOUSE_USER, password: env.CLICKHOUSE_PASSWORD, database: env.CLICKHOUSE_DB });
+const clickhouse = createClient(clickhouseOptions(env));
 const tenantId = randomUUID();
 const organizationId = randomUUID();
 const PROBE_MS = 60_000;

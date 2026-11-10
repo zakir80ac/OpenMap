@@ -90,8 +90,11 @@ pki/ca/pem (it exists once the OpenBao init job has run) into a memory volume ev
   valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" . }}-datastores, key: POSTGRES_URL } }
 - name: MEMGRAPH_URL
   value: bolt://{{ include "openmap.fullname" . }}-memgraph:7687
+# ADR-068: HTTPS to ClickHouse, every TLS client verifying against the CA each pod fetches.
 - name: CLICKHOUSE_URL
-  value: http://{{ include "openmap.fullname" . }}-clickhouse:8123
+  value: https://{{ include "openmap.fullname" . }}-clickhouse:8443
+- name: SERVICE_CA_PATH
+  value: /run/openmap/ca/services-ca.crt
 - name: CLICKHOUSE_USER
   value: {{ .Values.clickhouse.username | quote }}
 - name: CLICKHOUSE_PASSWORD

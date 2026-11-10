@@ -9,7 +9,7 @@ import { Redis } from 'ioredis';
 import { BSM, CERTIFICATES, ENVIRONMENT, POWER, READINESS, RECONCILER } from '@openmap/constants';
 import { loadEnv } from '@openmap/config';
 import { eventEnvelopeSchema, type EventEnvelope } from '@openmap/contracts';
-import { createPrismaClient } from '@openmap/db';
+import { clickhouseOptions, createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { Counter, Histogram, createMetricsServer, createRegistry, withSpan } from '@openmap/telemetry';
 import { createHistoryReader } from './core/history.js';
@@ -106,12 +106,7 @@ async function main(): Promise<void> {
   await graph.ensureSchema();
   const log = (line: Record<string, unknown>): void => console.log(JSON.stringify(line));
   const metrics = createBsmMetrics();
-  const clickhouse = createClient({
-    url: env.CLICKHOUSE_URL,
-    username: env.CLICKHOUSE_USER,
-    password: env.CLICKHOUSE_PASSWORD,
-    database: env.CLICKHOUSE_DB,
-  });
+  const clickhouse = createClient(clickhouseOptions(env));
   const history = createHistoryReader(async (name, sql, params) => {
     const result = await withSpan(
       TRACER,

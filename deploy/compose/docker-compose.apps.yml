@@ -13,7 +13,9 @@ x-app-env: &app-env
   # ADR-068: TLS to PostgreSQL, the server verified against the internal services CA (Prisma's spelling: sslcert is the CA).
   POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}?sslmode=require&sslcert=/run/openmap/ca/services-ca.crt&sslaccept=strict
   MEMGRAPH_URL: bolt://memgraph:7687
-  CLICKHOUSE_URL: http://clickhouse:8123
+  # ADR-068: HTTPS, verified against the internal services CA (SERVICE_CA_PATH, every TLS client).
+  CLICKHOUSE_URL: https://clickhouse:8443
+  SERVICE_CA_PATH: /run/openmap/ca/services-ca.crt
   CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
   CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
   CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}
@@ -109,7 +111,8 @@ services:
     environment:
       # ADR-068: libpq's spelling of a verified TLS connection.
       POSTGRES_URL: postgresql://${POSTGRES_USER:-openmap}:${POSTGRES_PASSWORD:-openmap}@postgres:5432/${POSTGRES_DB:-openmap}?sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt
-      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_URL: https://clickhouse:8443
+      CLICKHOUSE_CA: /run/openmap/ca/services-ca.crt
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-openmap}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-openmap}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-openmap}

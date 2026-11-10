@@ -3,6 +3,7 @@
 // failing analytics tier shows up in the same place as the GraphQL operation it served.
 import { Inject, Injectable, type OnModuleDestroy } from '@nestjs/common';
 import { createClient, type ClickHouseClient } from '@clickhouse/client';
+import { clickhouseOptions } from '@openmap/db';
 import { withSpan } from '@openmap/telemetry';
 import { ENV, type Env } from '../config/env.module.js';
 import { TRACER_NAME } from '../metrics/graphql-metrics.hook.js';
@@ -26,7 +27,7 @@ export class ClickHouseService implements OnModuleDestroy {
     private readonly metrics: MetricsService,
   ) {
     this.database = env.CLICKHOUSE_DB;
-    this.client = createClient({ url: env.CLICKHOUSE_URL, username: env.CLICKHOUSE_USER, password: env.CLICKHOUSE_PASSWORD, database: env.CLICKHOUSE_DB });
+    this.client = createClient(clickhouseOptions(env));
   }
 
   /** Runs a named read query with bound parameters and returns its JSONEachRow result. */

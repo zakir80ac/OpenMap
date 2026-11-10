@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createClient } from '@clickhouse/client';
 import { loadEnv } from '@openmap/config';
 import { backupManifestSchema } from '@openmap/contracts';
-import { createPrismaClient } from '@openmap/db';
+import { clickhouseOptions, createPrismaClient } from '@openmap/db';
 import { createGraphRepository } from '@openmap/graph';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { reprojectTenant } from './reproject.js';
@@ -34,11 +34,9 @@ containerUrl.port = '5432';
 containerUrl.search = '?sslmode=verify-full&sslrootcert=/run/openmap/ca/services-ca.crt';
 const admin = createPrismaClient(env);
 const db = createPrismaClient({ ...env, POSTGRES_URL: hostUrl.toString() });
-const clickhouse = createClient({
-  url: env.CLICKHOUSE_URL,
-  username: env.CLICKHOUSE_USER,
-  password: env.CLICKHOUSE_PASSWORD,
-});
+// No database in the connection: the test creates its scratch one.
+const chOptions = clickhouseOptions(env);
+const clickhouse = createClient({ url: chOptions.url, username: chOptions.username, password: chOptions.password, ...(chOptions.tls === undefined ? {} : { tls: chOptions.tls }) });
 const graph = createGraphRepository(env);
 const search = createMeilisearchSink(env);
 

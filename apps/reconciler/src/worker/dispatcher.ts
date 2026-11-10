@@ -19,7 +19,7 @@ import {
   HEALTH_STATES,
 } from '@openmap/contracts';
 import { z } from 'zod';
-import { Prisma, type PrismaClient } from '@openmap/db';
+import { clickhouseOptions, Prisma, type PrismaClient } from '@openmap/db';
 import type {
   GraphCi,
   GraphCiRetirement,
@@ -397,15 +397,12 @@ export function createEventStream(env: Pick<Env, 'VALKEY_URL'>): EventStream {
 }
 
 export function createClickHouse(
-  env: Pick<Env, 'CLICKHOUSE_URL' | 'CLICKHOUSE_USER' | 'CLICKHOUSE_PASSWORD' | 'CLICKHOUSE_DB'>,
+  env: Pick<Env, 'CLICKHOUSE_URL' | 'CLICKHOUSE_USER' | 'CLICKHOUSE_PASSWORD' | 'CLICKHOUSE_DB' | 'SERVICE_CA_PATH'>,
 ): ClickHouseClient {
   // Async inserts let ClickHouse coalesce the dispatcher's small batches server-side; waiting keeps
   // the outbox acknowledgement truthful (a row is only marked delivered once it is durable).
   return createClient({
-    url: env.CLICKHOUSE_URL,
-    username: env.CLICKHOUSE_USER,
-    password: env.CLICKHOUSE_PASSWORD,
-    database: env.CLICKHOUSE_DB,
+    ...clickhouseOptions(env),
     clickhouse_settings: { async_insert: 1, wait_for_async_insert: 1 },
   });
 }

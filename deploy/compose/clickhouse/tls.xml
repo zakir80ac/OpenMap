@@ -1,0 +1,31 @@
+<!--
+  REQ-SEC-011 (ADR-068) — ClickHouse serves HTTPS (8443) and the secure native protocol (9440) only; the plain HTTP,
+  native, interserver, MySQL and PostgreSQL ports are off. The certificate (one PEM, certificate and key) is issued by
+  the internal services CA and renewed by clickhouse-keys; ClickHouse reloads it when the file changes. Prometheus'
+  metrics port (prometheus.xml) carries no data and stays on the internal network.
+-->
+<clickhouse>
+  <http_port remove="1"/>
+  <tcp_port remove="1"/>
+  <interserver_http_port remove="1"/>
+  <mysql_port remove="1"/>
+  <postgresql_port remove="1"/>
+  <https_port>8443</https_port>
+  <tcp_port_secure>9440</tcp_port_secure>
+  <openSSL>
+    <server>
+      <certificateFile>/run/clickhouse-key/tls.pem</certificateFile>
+      <privateKeyFile>/run/clickhouse-key/tls.pem</privateKeyFile>
+      <verificationMode>none</verificationMode>
+      <loadDefaultCAFile>false</loadDefaultCAFile>
+      <cacheSessions>true</cacheSessions>
+      <disableProtocols>sslv2,sslv3,tlsv1,tlsv1_1</disableProtocols>
+      <preferServerCiphers>true</preferServerCiphers>
+    </server>
+    <client>
+      <caConfig>/run/openmap/ca/services-ca.crt</caConfig>
+      <verificationMode>strict</verificationMode>
+      <disableProtocols>sslv2,sslv3,tlsv1,tlsv1_1</disableProtocols>
+    </client>
+  </openSSL>
+</clickhouse>

@@ -37,13 +37,15 @@ data:
 {{ .Files.Get "files/clickhouse/with-disk-key.sh" | indent 4 }}
   agent-clickhouse.hcl: |
 {{ .Files.Get "files/openbao/agent-clickhouse.hcl" | indent 4 }}
+  tls.xml: |
+{{ .Files.Get "files/clickhouse/tls.xml" | indent 4 }}
 {{- end }}
 ---
 {{- $root := . }}
 {{- range $store := list
   (dict "component" "postgres" "image" .Values.postgres.image "port" 5432 "storage" .Values.postgres.storage "mount" "/data/db" "resources" .Values.postgres.resources)
   (dict "component" "memgraph" "image" .Values.memgraph.image "port" 7687 "storage" .Values.memgraph.storage "mount" "/var/lib/memgraph" "resources" .Values.memgraph.resources)
-  (dict "component" "clickhouse" "image" .Values.clickhouse.image "port" 8123 "storage" .Values.clickhouse.storage "mount" "/var/lib/clickhouse" "resources" .Values.clickhouse.resources)
+  (dict "component" "clickhouse" "image" .Values.clickhouse.image "port" 8443 "storage" .Values.clickhouse.storage "mount" "/var/lib/clickhouse" "resources" .Values.clickhouse.resources)
   (dict "component" "valkey" "image" .Values.valkey.image "port" 6379 "storage" .Values.valkey.storage "mount" "/data" "resources" .Values.valkey.resources)
   (dict "component" "meilisearch" "image" .Values.meilisearch.image "port" 7700 "storage" .Values.meilisearch.storage "mount" "/meili_data" "resources" .Values.meilisearch.resources) }}
 ---
@@ -61,8 +63,8 @@ spec:
       targetPort: {{ $store.port }}
 {{- if eq $store.component "clickhouse" }}
     - name: native
-      port: 9000
-      targetPort: 9000
+      port: 9440
+      targetPort: 9440
 {{- end }}
 ---
 apiVersion: apps/v1
@@ -132,6 +134,8 @@ spec:
             - { name: clickhouse-encryption, mountPath: /etc/clickhouse-server/config.d/encrypted-disk.xml, subPath: encrypted-disk.xml, readOnly: true }
             - { name: clickhouse-encryption, mountPath: /usr/local/bin/with-disk-key.sh, subPath: with-disk-key.sh, readOnly: true }
             - { name: clickhouse-key, mountPath: /run/clickhouse-key, readOnly: true }
+            - { name: clickhouse-encryption, mountPath: /etc/clickhouse-server/config.d/tls.xml, subPath: tls.xml, readOnly: true }
+            {{- include "openmap.caMount" $root | nindent 12 }}
             {{- end }}
           {{- if eq $store.component "postgres" }}
           env:
@@ -181,7 +185,7 @@ spec:
             - { name: CLICKHOUSE_PASSWORD, valueFrom: { secretKeyRef: { name: {{ include "openmap.fullname" $root }}-datastores, key: CLICKHOUSE_PASSWORD } } }
             - { name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT, value: "1" }
           readinessProbe:
-            httpGet: { path: /ping, port: 8123 }
+            httpGet: { path: /ping, port: 8443, scheme: HTTPS }
             periodSeconds: 5
         {{- if $root.Values.clickhouse.encryption.enabled }}
         # REQ-SEC-011 (ADR-067 step 6): renders the encrypted disk's key from OpenBao into a memory volume.
@@ -192,6 +196,7 @@ spec:
           securityContext: { runAsUser: 101, runAsGroup: 101 }
           env:
             - { name: BAO_ADDR, value: {{ include "openmap.vaultAddr" $root | quote }} }
+            - { name: TLS_COMMON_NAME, value: {{ include "openmap.svc" (dict "root" $root "component" "clickhouse") | quote }} }
           resources: {{- toYaml $root.Values.postgres.tde.agentResources | nindent 12 }}
           volumeMounts:
             - { name: clickhouse-key, mountPath: /run/clickhouse-key }
@@ -247,7 +252,10 @@ spec:
         {{- end }}
       {{- end }}
       {{- if and (eq $store.component "clickhouse") $root.Values.clickhouse.encryption.enabled }}
+      initContainers:
+        {{- include "openmap.serviceCaInit" $root | nindent 8 }}
       volumes:
+        {{- include "openmap.caVolume" $root | nindent 8 }}
         - name: clickhouse-encryption
           configMap: { name: {{ include "openmap.fullname" $root }}-clickhouse-encryption, defaultMode: 0555 }
         # The disk key never touches a disk.

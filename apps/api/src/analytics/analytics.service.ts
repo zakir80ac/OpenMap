@@ -118,11 +118,16 @@ export function dashboardCss(): string {
   ].join('\n');
 }
 
-/** ClickHouse SQLAlchemy URI for Superset, from the API's own ClickHouse settings (same host the API reaches). */
-export function clickhouseUri(env: Pick<Env, 'CLICKHOUSE_URL' | 'CLICKHOUSE_USER' | 'CLICKHOUSE_PASSWORD' | 'CLICKHOUSE_DB'>): string {
+/**
+ * ClickHouse SQLAlchemy URI for Superset, from the API's own ClickHouse settings (same host the API reaches). Over https
+ * (ADR-068) clickhouse-connect verifies the server against the internal services CA, at the same path in Superset's
+ * container as in the API's.
+ */
+export function clickhouseUri(env: Pick<Env, 'CLICKHOUSE_URL' | 'CLICKHOUSE_USER' | 'CLICKHOUSE_PASSWORD' | 'CLICKHOUSE_DB' | 'SERVICE_CA_PATH'>): string {
   const url = new URL(env.CLICKHOUSE_URL);
   const secure = url.protocol === 'https:';
-  return 'clickhousedb://' + encodeURIComponent(env.CLICKHOUSE_USER) + ':' + encodeURIComponent(env.CLICKHOUSE_PASSWORD) + '@' + url.hostname + (url.port ? ':' + url.port : '') + '/' + env.CLICKHOUSE_DB + (secure ? '?protocol=https' : '');
+  const tls = secure ? '?secure=true&verify=true' + (env.SERVICE_CA_PATH === undefined ? '' : '&ca_cert=' + encodeURIComponent(env.SERVICE_CA_PATH)) : '';
+  return 'clickhousedb://' + encodeURIComponent(env.CLICKHOUSE_USER) + ':' + encodeURIComponent(env.CLICKHOUSE_PASSWORD) + '@' + url.hostname + (url.port ? ':' + url.port : '') + '/' + env.CLICKHOUSE_DB + tls;
 }
 
 function risonFilter(column: string, value: string): string {
@@ -217,7 +222,11 @@ export class AnalyticsService {
 
   private async ensureDatabase(session: Session): Promise<number> {
     const existing = await this.findOne(session, '/api/v1/database/', 'database_name', ANALYTICS.databaseName);
-    if (existing) return existing.id;
+    if (existing) {
+      // Kept in step with the API's settings, so a change of host, credentials or TLS reaches Superset too.
+      await this.call(session, 'PUT', '/api/v1/database/' + String(existing.id), { sqlalchemy_uri: clickhouseUri(this.env) });
+      return existing.id;
+    }
     const created = await this.call<{ id: number }>(session, 'POST', '/api/v1/database/', { database_name: ANALYTICS.databaseName, sqlalchemy_uri: clickhouseUri(this.env), expose_in_sqllab: false, allow_ctas: false, allow_cvas: false, allow_dml: false });
     return created.id;
   }

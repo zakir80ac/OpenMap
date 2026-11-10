@@ -7,6 +7,8 @@ export { PrismaClient, Prisma } from '@prisma/client';
 export { migrateClickHouse, CLICKHOUSE_MIGRATIONS_TABLE, type MigrationReport } from './migrate-clickhouse.js';
 export { migrateMemgraph, MEMGRAPH_MIGRATION_LABEL } from './migrate-memgraph.js';
 export { migratePostgres } from './migrate-postgres.js';
+export { pgClientConfig } from './pg-config.js';
+export { clickhouseOptions, type ClickHouseOptions } from './clickhouse-options.js';
 export { listMigrationFiles, splitStatements, substitute, CLICKHOUSE_DIR, MEMGRAPH_DIR, type MigrationFile } from './files.js';
 export { IMPACT_CLOSURE_DEPTH, clickhouseParameters, memgraphParameters } from './parameters.js';
 export { refreshCoveringContracts, type RawExecutor } from './asset-contracts.js';
