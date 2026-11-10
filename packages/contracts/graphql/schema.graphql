@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.42.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.43.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -798,6 +798,71 @@ type PortHistory { port: Ci! days: Int! versions: Int! changes: [PortChange!]! }
 enum MacSightingKind { learned_on_port arp owner }
 type MacSighting { kind: MacSightingKind! ci: Ci! port: String ip: String seenAt: DateTime! }
 type MacLookup { mac: String! sightings: [MacSighting!]! }
+
+# REQ-PERF-005 (ADR-071): the platform's own health: its Prometheus scrape targets with their request rate, latency,
+# errors and resources, the stores the reconciler probes, the outbox and queue backlogs, the SLO indicators against
+# their objectives (the same catalogue the alert rules use), the firing alerts, and the perf budget results.
+enum PlatformTargetHealth { up down unknown }
+enum PlatformSliId { targets_down stores_down openbao_sealed graphql_p95_seconds graphql_error_ratio http_error_ratio event_loop_lag_p99_seconds outbox_oldest_pending_seconds queue_waiting_jobs backup_age_seconds }
+enum PlatformSliUnit { count seconds ratio }
+enum PlatformSliStatus { ok breach no_data }
+enum PlatformAlertState { firing pending }
+enum PerfMeasure { p95Ms fps minutes performance accessibility bestPractices }
+enum PerfComparison { max min }
+type PrometheusStatus { reachable: Boolean! version: String error: String }
+type PlatformTarget {
+  "The compose service behind the scrape target (its host), e.g. api or clickhouse."
+  service: String!
+  job: String!
+  instance: String!
+  health: PlatformTargetHealth!
+  lastScrapeAt: DateTime
+  scrapeDurationMs: Float
+  lastError: String
+  "HTTP requests per second over the window (OpenTelemetry server metrics)."
+  requestRate: Float
+  p95Ms: Float
+  "Share of HTTP requests answered with a 5xx status."
+  errorRatio: Float
+  eventLoopP99Ms: Float
+  residentBytes: Float
+  "CPU cores in use, averaged over the window."
+  cpuCores: Float
+}
+type PlatformStoreHealth { store: String! "Null when nothing reported the store in the last scrape." up: Boolean probeMs: Float }
+type PlatformOutbox { pending: Int oldestAgeSeconds: Float deliveredPerSecond: Float failuresPerSecond: Float }
+type PlatformQueue { queue: String! waiting: Int! active: Int! delayed: Int! failed: Int! }
+type PlatformSli { id: PlatformSliId! unit: PlatformSliUnit! "Null when there was nothing to measure in the window." value: Float objective: Float! status: PlatformSliStatus! }
+type PlatformAlert {
+  name: String!
+  sli: PlatformSliId
+  severity: String!
+  state: PlatformAlertState!
+  "What the alert is about: the instance, store, queue or service its labels name."
+  subject: String
+  activeAt: DateTime
+  value: Float
+}
+type PerfBudgetCheck { result: String! measure: PerfMeasure! page: String value: Float! budget: Float! comparison: PerfComparison! withinBudget: Boolean! measuredAt: DateTime }
+type PerfBudgets {
+  "False when this deployment keeps no perf results directory (PERF_RESULTS_DIR unset)."
+  configured: Boolean!
+  checks: [PerfBudgetCheck!]!
+  "Result files that could not be read, each with the reason."
+  invalid: [String!]!
+}
+type PlatformHealth {
+  observedAt: DateTime!
+  windowMinutes: Int!
+  prometheus: PrometheusStatus!
+  targets: [PlatformTarget!]!
+  stores: [PlatformStoreHealth!]!
+  outbox: PlatformOutbox!
+  queues: [PlatformQueue!]!
+  slis: [PlatformSli!]!
+  alerts: [PlatformAlert!]!
+  budgets: PerfBudgets!
+}
 
 # REQ-INT-019 (ADR-066): backup sets of the stores of record, from their manifests.
 enum BackupState { running complete failed }
@@ -2882,6 +2947,8 @@ type Query {
   integration(id: UUID!): IntegrationDetail!
   integrationDeliveries(integrationId: UUID!, first: Int = 50): [IntegrationDelivery!]!
   analyticsEmbed: AnalyticsEmbed!
+  "REQ-PERF-005: the platform's own health over one of PLATFORM_HEALTH.windowsMinutes (administrators)."
+  platformHealth(windowMinutes: Int): PlatformHealth!
   discoveryNodes: [DiscoveryNode!]!
   discoveryJobs(status: String, first: Int = 50): [DiscoveryJob!]!
   currentSweep: Sweep

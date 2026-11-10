@@ -276,6 +276,24 @@ PostgreSQL database first). The Settings screen shows administrators whether the
 26 hours, and Prometheus reads `openmap_backup_last_complete_timestamp_seconds`. On Kubernetes, run the
 `openmap/backup` image as a CronJob with the same environment.
 
+## Platform health and SLO alerts (REQ-PERF-005, ADR-071)
+
+The stack watches itself with its own Prometheus; nothing leaves the deployment, so this works unchanged in the
+air-gapped profile.
+
+- **Alert rules.** `prometheus/rules/openmap-slo.rules.yml` is generated from `packages/telemetry/src/slo.ts`
+  (`pnpm --filter @openmap/telemetry build && pnpm --filter @openmap/telemetry slo:rules`) and loaded through
+  `rule_files` in `prometheus/prometheus.yml`. After changing either, restart Prometheus:
+  `docker compose -f docker-compose.yml restart prometheus`. Check the rules with
+  `docker compose exec prometheus promtool check rules /etc/prometheus/rules/openmap-slo.rules.yml`.
+- **Stores and backlogs.** The reconciler's `/metrics` probes PostgreSQL, Memgraph, ClickHouse, Valkey and Meilisearch
+  at every scrape (`openmap_store_up`), and reports the outbox backlog and the BullMQ queue depths.
+- **The screen.** Administrators open **Platform health** (beside Settings): the SLO indicators against their
+  objectives, firing alerts, every scrape target with its request rate, p95, 5xx share, event-loop delay, memory and
+  CPU, the stores, the backlogs and the perf budget results. The API reads Prometheus at `PROMETHEUS_URL` and the
+  results under `PERF_RESULTS_DIR`, mounted read-only from `PERF_RESULTS_HOST_DIR` (default `tools/perf/results`; the
+  air-gap bundle ships an empty `perf-results/` for them).
+
 ## Kubernetes
 
 The chart has no subchart dependencies, so it installs from a mirrored registry without network

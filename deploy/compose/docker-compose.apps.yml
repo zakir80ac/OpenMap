@@ -91,7 +91,11 @@ services:
       API_PORT: 4000
       # REQ-INT-019: the API lists backup sets (manifests only) from the backup volume, read-only.
       BACKUP_DIR: /var/lib/openmap/backups
-    volumes: ["backups:/var/lib/openmap/backups:ro", "openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
+      # REQ-PERF-005 (ADR-071): the Platform health screen reads the stack's own Prometheus and the perf budget results
+      # tools/perf writes (mounted read-only from PERF_RESULTS_HOST_DIR; the repository keeps the directory, not its results).
+      PROMETHEUS_URL: http://prometheus:9090
+      PERF_RESULTS_DIR: /var/lib/openmap/perf-results
+    volumes: ["backups:/var/lib/openmap/backups:ro", "${PERF_RESULTS_HOST_DIR:-../../tools/perf/results}:/var/lib/openmap/perf-results:ro", "openbao-approle:/run/openmap/openbao:ro", "service-ca:/run/openmap/ca:ro"]
     ports: ["${API_PORT:-4000}:4000"]
     depends_on: *app-depends
     healthcheck:

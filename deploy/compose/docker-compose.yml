@@ -447,7 +447,8 @@ services:
   prometheus:
     <<: *restart
     image: prom/prometheus:v3.4.1
-    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro", prom-data:/prometheus, "service-ca:/etc/prometheus/ca:ro"]
+    # REQ-PERF-005 (ADR-071): the SLO alert rules beside the scrape configuration; ADR-068: the CA bundle for OpenBao.
+    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro", "./prometheus/rules:/etc/prometheus/rules:ro", prom-data:/prometheus, "service-ca:/etc/prometheus/ca:ro"]
     ports: ["${PROMETHEUS_PORT:-9090}:9090"]
 
 volumes:

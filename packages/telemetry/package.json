@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "slo:rules": "node dist/slo-rules.js"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",

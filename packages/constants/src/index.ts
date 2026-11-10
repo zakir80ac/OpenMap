@@ -123,6 +123,73 @@ export const PERF_BUDGETS = {
 } as const;
 
 /**
+ * REQ-PERF-005 (ADR-071) — health and performance of the platform itself. The service level indicators the Platform
+ * health screen shows and the Prometheus alert rules fire on are one catalogue (packages/telemetry `slo.ts`); these are
+ * its objectives. The latency objective is the screen-interaction budget itself, so a live breach and a CI budget miss
+ * mean the same thing. Everything here is identical in every deployment; where Prometheus is comes from PROMETHEUS_URL.
+ */
+export const PLATFORM_HEALTH = {
+  /** Windows (minutes) the screen and `platformHealth(windowMinutes)` accept. The first is the default and the alert rules' rate window. */
+  windowsMinutes: [5, 60, 1440] as const,
+  /** The latency quantile every p95 indicator reads. */
+  quantile: 0.95,
+  /** Highest share of GraphQL operations, and of a service's HTTP requests, that may fail (1 %). */
+  errorRatioMax: 0.01,
+  /**
+   * Oldest undelivered outbox row. The dispatcher idles RECONCILER.outboxIdleMs between empty claims and delivers a
+   * batch in well under a second, so a minute means projections (graph, search, ClickHouse) are falling behind.
+   */
+  outboxAgeMaxSeconds: 60,
+  /**
+   * Jobs waiting in one BullMQ queue. A sweep queues results in bursts the reconciler clears within minutes; a queue
+   * this deep for the whole alert window means the reconciler (or the BSM engine on the event stream) is not keeping up.
+   */
+  queueWaitingMax: 5_000,
+  /** Event-loop delay (p99) of any Node service; past this every request on it waits. */
+  eventLoopLagP99MaxSeconds: 0.2,
+  /** How long a condition holds before its alert fires: a lost target or store quickly, a budget only when sustained. */
+  alertForMinutes: { availability: 2, budget: 10 },
+  /** One Prometheus HTTP API call from the API. */
+  prometheusTimeoutMs: 5_000,
+  /** A store probe at scrape time (reconciler): short, so a hung store marks itself down instead of stalling /metrics. */
+  storeProbeTimeoutMs: 2_000,
+  /** Scrape jobs in deploy/compose/prometheus/prometheus.yml. */
+  jobs: { services: 'openmap-services', clickhouse: 'clickhouse', openbao: 'openbao', collector: 'otel-collector' },
+  /** The OpenMap services the screen expects to find, as compose service names (the scrape target's host). */
+  services: ['api', 'reconciler', 'scheduler', 'bsm-engine'] as const,
+  /** OpenTelemetry service names are `openmap-<service>` (each app's instrumentation.ts). */
+  otelServicePrefix: 'openmap-',
+  /** Stores the reconciler probes at scrape time, plus OpenBao read from its own telemetry. */
+  probedStores: ['postgres', 'memgraph', 'clickhouse', 'valkey', 'meilisearch'] as const,
+  stores: ['postgres', 'memgraph', 'clickhouse', 'valkey', 'meilisearch', 'openbao'] as const,
+  /** BullMQ job states counted per queue. */
+  queueStates: ['waiting', 'active', 'delayed', 'failed'] as const,
+  /** Metric names the reconciler serves at scrape time. */
+  metrics: {
+    storeUp: 'openmap_store_up',
+    storeProbeSeconds: 'openmap_store_probe_seconds',
+    outboxPending: 'openmap_outbox_pending_events',
+    outboxOldest: 'openmap_outbox_oldest_pending_age_seconds',
+    queueJobs: 'openmap_queue_jobs',
+    reads: 'openmap_platform_health_reads_total',
+  },
+  /** Alert rule group name and the label every OpenMap SLO rule carries (the API keeps only alerts with it). */
+  ruleGroup: 'openmap-slo',
+  sliLabel: 'openmap_sli',
+  /** At most this many firing or pending alerts are returned. */
+  alertsLimit: 50,
+  /** The screen refreshes on Prometheus's scrape interval (deploy/compose/prometheus/prometheus.yml): sooner shows nothing new. */
+  refreshMs: 15_000,
+  /** Display scales: ratios as percentages, resident memory in mebibytes. */
+  percentScale: 100,
+  bytesPerMebibyte: 1_048_576,
+} as const;
+export type PlatformWindowMinutes = (typeof PLATFORM_HEALTH.windowsMinutes)[number];
+export type PlatformService = (typeof PLATFORM_HEALTH.services)[number];
+export type PlatformStore = (typeof PLATFORM_HEALTH.stores)[number];
+export type PlatformQueueState = (typeof PLATFORM_HEALTH.queueStates)[number];
+
+/**
  * Graph query limits. Depth 6 covers DC → hardware → hypervisor → VM → application → service with one
  * spare hop; 12 is the hard ceiling that keeps the 100k-node impact query inside its budget.
  */
@@ -2088,8 +2155,10 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `ComplianceTally`, `ComplianceControlPosture`, `ComplianceFrameworkPosture`, `ComplianceCveRisk`, `ComplianceRun`,
    * `CompliancePosture`, `ComplianceFinding`, `ComplianceControlDetail`; queries `compliancePosture`,
    * `complianceControl`; mutation `evaluateCompliance`.
+   * 1.43.0 (REQ-PERF-005, ADR-071): `PlatformHealth` and its parts (`PrometheusStatus`, `PlatformTarget`,
+   * `PlatformStoreHealth`, `PlatformQueue`, `PlatformSli`, `PlatformAlert`, `PerfBudgetCheck`), query `platformHealth`.
    */
-  graphql: '1.42.0',
+  graphql: '1.43.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

@@ -1,0 +1,85 @@
+# REQ-PERF-005 (ADR-071) — OpenMap SLO alert rules, generated from packages/telemetry/src/slo.ts by
+# `pnpm --filter @openmap/telemetry slo:rules`. Do not edit by hand: the unit test fails when this file and the catalogue differ.
+groups:
+  - name: "openmap-slo"
+    rules:
+      - alert: "OpenMapTargetDown"
+        expr: "up{job=~\"openmap-services|otel-collector|clickhouse\"} == 0"
+        for: "2m"
+        labels:
+          severity: "critical"
+          openmap_sli: "targets_down"
+        annotations:
+          summary: "An OpenMap service or store stopped answering its Prometheus scrape: {{ $labels.instance }}"
+      - alert: "OpenMapStoreDown"
+        expr: "max by (store) (openmap_store_up) == 0"
+        for: "2m"
+        labels:
+          severity: "critical"
+          openmap_sli: "stores_down"
+        annotations:
+          summary: "The reconciler cannot reach the {{ $labels.store }} store"
+      - alert: "OpenMapOpenBaoSealed"
+        expr: "((1 - min(vault_core_unsealed{job=\"openbao\"})) or (1 - max(up{job=\"openbao\"}))) > 0"
+        for: "2m"
+        labels:
+          severity: "critical"
+          openmap_sli: "openbao_sealed"
+        annotations:
+          summary: "OpenBao is sealed or not answering: secrets, field decryption and backups wait for an unseal"
+      - alert: "OpenMapGraphqlLatencyOverBudget"
+        expr: "(histogram_quantile(0.95, sum by (le) (rate(openmap_graphql_duration_seconds_bucket[5m])))) > 0.1"
+        for: "10m"
+        labels:
+          severity: "warning"
+          openmap_sli: "graphql_p95_seconds"
+        annotations:
+          summary: "GraphQL p95 is over the screen interaction budget"
+      - alert: "OpenMapGraphqlErrors"
+        expr: "((sum(rate(openmap_graphql_requests_total{status=\"error\"}[5m])) or vector(0)) / sum(rate(openmap_graphql_requests_total[5m]))) > 0.01"
+        for: "10m"
+        labels:
+          severity: "warning"
+          openmap_sli: "graphql_error_ratio"
+        annotations:
+          summary: "More GraphQL operations fail than the error objective allows"
+      - alert: "OpenMapHttpServerErrors"
+        expr: "(sum by (exported_job) (rate(openmap_http_server_request_duration_seconds_count{http_response_status_code=~\"5..\"}[5m])) / sum by (exported_job) (rate(openmap_http_server_request_duration_seconds_count[5m]))) > 0.01"
+        for: "10m"
+        labels:
+          severity: "warning"
+          openmap_sli: "http_error_ratio"
+        annotations:
+          summary: "{{ $labels.exported_job }} answers more 5xx responses than the error objective allows"
+      - alert: "OpenMapEventLoopLag"
+        expr: "max by (instance) (nodejs_eventloop_lag_p99_seconds{job=\"openmap-services\"}) > 0.2"
+        for: "10m"
+        labels:
+          severity: "warning"
+          openmap_sli: "event_loop_lag_p99_seconds"
+        annotations:
+          summary: "The event loop of {{ $labels.instance }} is blocked long enough to delay every request"
+      - alert: "OpenMapOutboxBacklog"
+        expr: "(max(openmap_outbox_oldest_pending_age_seconds)) > 60"
+        for: "2m"
+        labels:
+          severity: "warning"
+          openmap_sli: "outbox_oldest_pending_seconds"
+        annotations:
+          summary: "Outbox rows wait to reach the graph, search and analytics stores"
+      - alert: "OpenMapQueueBacklog"
+        expr: "max by (queue) (openmap_queue_jobs{state=\"waiting\"}) > 5000"
+        for: "10m"
+        labels:
+          severity: "warning"
+          openmap_sli: "queue_waiting_jobs"
+        annotations:
+          summary: "Jobs pile up in the {{ $labels.queue }} queue"
+      - alert: "OpenMapBackupStale"
+        expr: "(time() - max(openmap_backup_last_complete_timestamp_seconds)) > 93600"
+        for: "2m"
+        labels:
+          severity: "warning"
+          openmap_sli: "backup_age_seconds"
+        annotations:
+          summary: "No complete backup of the stores of record within the freshness window"

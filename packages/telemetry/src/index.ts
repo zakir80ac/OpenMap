@@ -12,6 +12,7 @@ import { HTTP } from '@openmap/constants';
 import { Registry, collectDefaultMetrics } from 'prom-client';
 
 export { Counter, Gauge, Histogram, Registry } from 'prom-client';
+export * from './slo.js';
 
 export function startTelemetry(serviceName: string, env: Pick<Env, 'OTEL_EXPORTER_OTLP_ENDPOINT'>): NodeSDK {
   const endpoint = env.OTEL_EXPORTER_OTLP_ENDPOINT;

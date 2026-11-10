@@ -75,9 +75,16 @@ jobs:
           exit 1
       - run: pnpm --filter @openmap/console exec playwright install --with-deps chromium
       - run: pnpm --filter @openmap/console e2e
+      # REQ-PERF-005 (ADR-071): the e2e run's perf spec writes the screen-interaction and graph-render results; Lighthouse
+      # audits the same production console; guard then holds all three to PERF_BUDGETS and fails if one was not written.
+      - run: pnpm --filter @openmap/perf lighthouse
+      - run: pnpm guard --perf-only --require-perf screen-interaction,graph-render,lighthouse
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: e2e-screenshots, path: "apps/console/e2e/screenshots" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: e2e-perf-results, path: "tools/perf/results" }
       - run: docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml down -v
         if: always()
   # REQ-PERF-002: the impact query budget (p95 < PERF_BUDGETS.impactQuery100kP95Ms) on a 110k-CI estate, enforced by guard.
@@ -110,7 +117,10 @@ jobs:
         run: for i in $(seq 1 60); do curl -sf http://localhost:4000/readyz >/dev/null && exit 0; sleep 5; done; exit 1
       - name: Impact budget
         run: pnpm --filter @openmap/perf impact-budget
-      - run: pnpm guard
+      # REQ-PERF-005: the telemetry fleet table's page budget on the same estate.
+      - name: Telemetry fleet budget
+        run: pnpm --filter @openmap/perf telemetry-budget
+      - run: pnpm guard --perf-only --require-perf impact-query,telemetry-fleet
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: perf-results, path: "tools/perf/results" }
@@ -135,7 +145,7 @@ jobs:
       - uses: ./.github/actions/stack-env
       - run: pnpm --filter @openmap/db migrate
       - run: pnpm --filter @openmap/perf discovery-sweep --seed 44 --scale 0.25 --out ${{ runner.temp }}/estate
-      - run: pnpm guard
+      - run: pnpm guard --perf-only --require-perf discovery-sweep
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: sweep-results, path: "tools/perf/results" }

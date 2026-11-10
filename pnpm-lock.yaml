@@ -717,6 +717,9 @@ importers:
       '@openmap/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@openmap/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
     devDependencies:
       tsx:
         specifier: ^4.20.0

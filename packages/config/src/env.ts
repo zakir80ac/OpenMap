@@ -146,6 +146,13 @@ export const envSchema = z.object({
   EVIDENCE_DIR: z.string().default('/var/lib/openmap/evidence'),
   /** REQ-INT-019 (ADR-066): where backup sets are (the API reads their manifests); unset when this deployment keeps none. */
   BACKUP_DIR: z.string().min(1).optional(),
+  /**
+   * REQ-PERF-005 (ADR-071): the deployment's own Prometheus (local; air-gapped installs keep it inside the stack). The API
+   * reads its HTTP API for the Platform health screen.
+   */
+  PROMETHEUS_URL: url.default('http://localhost:9090'),
+  /** REQ-PERF-005: where perf budget results are (tools/perf writes them); unset when this deployment keeps none. */
+  PERF_RESULTS_DIR: z.string().min(1).optional(),
 
   /** Feature switches. */
   FEATURE_OUTBOUND_INTEGRATIONS: bool.default(false),

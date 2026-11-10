@@ -8,6 +8,6 @@
     "test": "vitest run",
     "guard": "tsx src/cli.ts"
   },
-  "dependencies": { "@openmap/constants": "workspace:*" },
+  "dependencies": { "@openmap/constants": "workspace:*", "@openmap/contracts": "workspace:*" },
   "devDependencies": { "tsx": "^4.20.0", "typescript": "^5.9.0", "vitest": "^4.0.0" }
 }

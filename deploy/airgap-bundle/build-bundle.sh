@@ -42,6 +42,9 @@ docker save $(printf '%s ' $images) | gzip -1 > "$out/openmap-images-${version}.
 cp "$compose/docker-compose.yml" "$compose/docker-compose.apps.yml" "$compose/docker-compose.airgap.yml" "$compose/.env.example" "$out/"
 cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$compose/clickhouse" "$compose/openbao" "$compose/valkey" "$compose/tls" "$out/"
 cp "$here/load-bundle.sh" "$out/"
+# REQ-PERF-005: the API mounts perf budget results from here (copy tools/perf/results into it to show them).
+mkdir -p "$out/perf-results"
+sed -i 's#^PERF_RESULTS_HOST_DIR=.*#PERF_RESULTS_HOST_DIR=./perf-results#' "$out/.env.example"
 # The CPU LLM profile needs its weights offline: ship the GGUF named in .env (or .env.example) when it is present.
 models_dir="$compose/models"
 gguf="$( { [ -f "$compose/.env" ] && grep -E '^LLM_GGUF=' "$compose/.env"; } || grep -E '^LLM_GGUF=' "$compose/.env.example" || true)"
