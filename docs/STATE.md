@@ -2,7 +2,31 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 42: REQ-INT-009 webhooks and notifications Done)
+## Last session · 2026-11-10 (checkpoint 43: REQ-INT-019 backup and restore Done)
+
+**REQ-INT-019 Done** (ADR-066, GraphQL 1.39.0, T-567..T-571, commit d751d18).
+
+- **Backup**: `openmap/backup` (FROM postgres:17, curl) runs `deploy/backup/openmap-backup.sh create|verify|restore|list|prune`:
+  `pg_dump -Fc` of the whole database, ClickHouse native `BACKUP DATABASE … TO File('<set>/clickhouse')` on the shared
+  `backups` volume (`clickhouse/backups.xml`), manifest `openmap-backup/1` (sizes, sha256s, migration, CI count),
+  `BACKUP_KEEP` retention; `restore --postgres-url … --clickhouse-db …` for drills. Compose service `backup` (profile
+  `backup`); air-gap bundle ships the image and the clickhouse config dir (it was missing before).
+- **Projections**: `reconciler reproject [--tenant] [--keep]` rebuilds Memgraph and Meilisearch from Postgres.
+- **API / console**: `backups` (administrators) from manifests under `BACKUP_DIR` (read-only mount);
+  `openmap_backup_last_complete_timestamp_seconds` at scrape time; Settings → Backups card.
+- **Measured on the dev stack**: backup 56 s (698 MB archive of 9.4 GB Postgres, 1.39 GB ClickHouse), verify 18 s,
+  reproject 28k CIs + 74k relationships in 68 s from the host. One real set `openmap-20261110T081131Z` is on the volume.
+
+**Tracker (queued, Excel holds the workbook)**:
+
+```
+pnpm tracker set REQ-INT-019 --status Done --owner Claude --tests T-567,T-568,T-569,T-570,T-571 --evidence "commit d751d18; ADR-066; GraphQL 1.39.0; docs/evidence/int-backup-restore.md; docs/evidence/console/settings-backups-{en,ar}.png"
+```
+
+**Next three**: REQ-INT-017 backup/DR awareness (Veeam, Commvault, Rubrik `backed_by`), REQ-INT-011 configuration
+management inventory, REQ-INT-016 identity federation.
+
+## Previous session · 2026-11-10 (checkpoint 42: REQ-INT-009 webhooks and notifications Done)
 
 **REQ-INT-009 Done** (ADR-065, event 0.12.0, GraphQL 1.38.0, T-562..T-566, commit f33d6e2).
 
