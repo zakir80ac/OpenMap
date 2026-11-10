@@ -46,6 +46,8 @@ describe('dns sync round and settlement (integration)', () => {
   });
 
   afterAll(async () => {
+    // discovery_nodes.siteId is ON DELETE RESTRICT: the node goes before the organization's sites cascade.
+    await prisma.discoveryNode.deleteMany({ where: { tenantId } });
     await prisma.organization.delete({ where: { id: organizationId } });
     await prisma.$disconnect();
   });

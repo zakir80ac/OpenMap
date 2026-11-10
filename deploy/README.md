@@ -148,8 +148,10 @@ it. Every store refuses plain connections:
   file, makes it issue a new one.
 - **Host-side tools:** they need `.local/services-ca.crt` (export the bundle again after this change: it now holds two
   certificates), the TLS addresses and the quoted `POSTGRES_URL` from `.env.example`, and, on Docker Desktop, the small
-  pool it sets. Bursts of new connections through its port forwarding are dropped, and its `::1` forward can stop
-  answering: `NODE_OPTIONS=--dns-result-order=ipv4first`.
+  pool it sets. Bursts of new connections through its port forwarding are dropped, and its `::1` forward drops
+  connections outright (3 of 40 new Prisma connections to `localhost` failed after 30 s each; 40 of 40 to `127.0.0.1`
+  took 1.2 s). Host-side addresses therefore use `127.0.0.1`, which every store certificate names. Prisma resolves
+  `localhost` in its own engine, so `NODE_OPTIONS=--dns-result-order=ipv4first` does not help it.
 
 **Moving a running install to TLS for Valkey, Memgraph, Meilisearch and OpenBao.** pg_tde keeps OpenBao's address in
 the database. With the old address, PostgreSQL does not start once OpenBao serves TLS only ("returned invalid response

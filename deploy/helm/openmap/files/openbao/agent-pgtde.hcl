@@ -27,7 +27,7 @@ auto_auth {
 template {
   destination = "/run/pgtde/tls.pem"
   perms       = "0600"
-  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_COMMON_NAME\")) \"alt_names=localhost\" \"ttl=720h\" }}{{ .Cert }}{{ .Key }}{{ end }}"
+  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_COMMON_NAME\")) \"alt_names=localhost\" \"ip_sans=127.0.0.1\" \"ttl=720h\" }}{{ .Cert }}{{ .Key }}{{ end }}"
   exec {
     command = ["sh", "-c", "pkill -HUP -o -x postgres || true"]
   }

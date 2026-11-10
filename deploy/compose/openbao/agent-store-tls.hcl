@@ -25,5 +25,5 @@ auto_auth {
 template {
   destination = "/run/store-tls/tls.pem"
   perms       = "0600"
-  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_NAME\")) \"alt_names=localhost\" \"private_key_format=pkcs8\" (printf \"ttl=%s\" (env \"TLS_TTL\")) }}{{ .Cert }}{{ .Key }}{{ end }}"
+  contents    = "{{ with pkiCert \"pki/issue/openmap-services\" (printf \"common_name=%s\" (env \"TLS_NAME\")) \"alt_names=localhost\" \"ip_sans=127.0.0.1\" \"private_key_format=pkcs8\" (printf \"ttl=%s\" (env \"TLS_TTL\")) }}{{ .Cert }}{{ .Key }}{{ end }}"
 }
