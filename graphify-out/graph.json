@@ -1560,7 +1560,7 @@
       "label": "clickhouseUri()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L122",
+      "source_location": "L126",
       "_origin": "ast"
     },
     {
@@ -1568,7 +1568,7 @@
       "label": "risonFilter()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L128",
+      "source_location": "L133",
       "_origin": "ast"
     },
     {
@@ -1576,7 +1576,7 @@
       "label": "AnalyticsService",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L133",
+      "source_location": "L138",
       "_origin": "ast"
     },
     {
@@ -1600,7 +1600,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L136",
+      "source_location": "L141",
       "_origin": "ast"
     },
     {
@@ -1608,7 +1608,7 @@
       "label": ".embed()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L142",
+      "source_location": "L147",
       "_origin": "ast"
     },
     {
@@ -1616,7 +1616,7 @@
       "label": ".dashboardId()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L155",
+      "source_location": "L160",
       "_origin": "ast"
     },
     {
@@ -1624,7 +1624,7 @@
       "label": ".provision()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L165",
+      "source_location": "L170",
       "_origin": "ast"
     },
     {
@@ -1632,7 +1632,7 @@
       "label": ".login()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L182",
+      "source_location": "L187",
       "_origin": "ast"
     },
     {
@@ -1640,7 +1640,7 @@
       "label": ".call()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L200",
+      "source_location": "L205",
       "_origin": "ast"
     },
     {
@@ -1648,7 +1648,7 @@
       "label": ".findOne()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L213",
+      "source_location": "L218",
       "_origin": "ast"
     },
     {
@@ -1656,7 +1656,7 @@
       "label": ".ensureDatabase()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L218",
+      "source_location": "L223",
       "_origin": "ast"
     },
     {
@@ -1664,7 +1664,7 @@
       "label": ".ensureDataset()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L225",
+      "source_location": "L234",
       "_origin": "ast"
     },
     {
@@ -1672,7 +1672,7 @@
       "label": ".ensureDashboard()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L234",
+      "source_location": "L243",
       "_origin": "ast"
     },
     {
@@ -1680,7 +1680,7 @@
       "label": ".ensureChart()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L241",
+      "source_location": "L250",
       "_origin": "ast"
     },
     {
@@ -1688,7 +1688,7 @@
       "label": ".ensureGuestRole()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L253",
+      "source_location": "L262",
       "_origin": "ast"
     },
     {
@@ -1696,7 +1696,7 @@
       "label": ".ensureEmbedded()",
       "file_type": "code",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L263",
+      "source_location": "L272",
       "_origin": "ast"
     },
     {
@@ -1713,6 +1713,14 @@
       "file_type": "doc_ref",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
       "source_location": "L97",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_api_src_analytics_analytics_service_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "apps/api/src/analytics/analytics.service.ts",
+      "source_location": "L123",
       "_origin": "ast"
     },
     {
@@ -12944,7 +12952,7 @@
       "label": "QueryParams",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "_origin": "ast"
     },
     {
@@ -12952,7 +12960,7 @@
       "label": "clickhouseTime()",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -12960,7 +12968,7 @@
       "label": "ClickHouseService",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -12984,7 +12992,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast"
     },
     {
@@ -12992,7 +13000,7 @@
       "label": ".query()",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -13000,7 +13008,7 @@
       "label": ".insert()",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "_origin": "ast"
     },
     {
@@ -13008,7 +13016,7 @@
       "label": ".onModuleDestroy()",
       "file_type": "code",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "_origin": "ast"
     },
     {
@@ -33568,7 +33576,7 @@
       "label": "ADR-0065",
       "file_type": "doc_ref",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L137",
+      "source_location": "L132",
       "_origin": "ast"
     },
     {
@@ -33576,7 +33584,7 @@
       "label": "ADR-0025",
       "file_type": "doc_ref",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L239",
+      "source_location": "L234",
       "_origin": "ast"
     },
     {
@@ -33584,7 +33592,7 @@
       "label": "ADR-0059",
       "file_type": "doc_ref",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L282",
+      "source_location": "L277",
       "_origin": "ast"
     },
     {
@@ -33592,7 +33600,7 @@
       "label": "ADR-0060",
       "file_type": "doc_ref",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L318",
+      "source_location": "L313",
       "_origin": "ast"
     },
     {
@@ -33600,7 +33608,7 @@
       "label": "ADR-0036",
       "file_type": "doc_ref",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L358",
+      "source_location": "L353",
       "_origin": "ast"
     },
     {
@@ -76436,7 +76444,7 @@
       "label": "containerUrl",
       "file_type": "code",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast"
     },
     {
@@ -76444,7 +76452,7 @@
       "label": "admin",
       "file_type": "code",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L33",
+      "source_location": "L35",
       "_origin": "ast"
     },
     {
@@ -76452,7 +76460,15 @@
       "label": "db",
       "file_type": "code",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L34",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_reconciler_src_backup_integration_test_choptions",
+      "label": "chOptions",
+      "file_type": "code",
+      "source_file": "apps/reconciler/src/backup.integration.test.ts",
+      "source_location": "L38",
       "_origin": "ast"
     },
     {
@@ -76460,7 +76476,7 @@
       "label": "clickhouse",
       "file_type": "code",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L35",
+      "source_location": "L39",
       "_origin": "ast"
     },
     {
@@ -76509,6 +76525,14 @@
       "file_type": "doc_ref",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
       "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "apps_reconciler_src_backup_integration_test_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "apps/reconciler/src/backup.integration.test.ts",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -78676,7 +78700,7 @@
       "label": "DispatchReport",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L413",
+      "source_location": "L410",
       "_origin": "ast"
     },
     {
@@ -78684,7 +78708,7 @@
       "label": "DispatchOptions",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L425",
+      "source_location": "L422",
       "_origin": "ast"
     },
     {
@@ -78692,7 +78716,7 @@
       "label": "createDispatcherId()",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L435",
+      "source_location": "L432",
       "_origin": "ast"
     },
     {
@@ -78700,7 +78724,7 @@
       "label": "ALL_TARGETS",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L439",
+      "source_location": "L436",
       "_origin": "ast"
     },
     {
@@ -78708,7 +78732,7 @@
       "label": "ClaimedRow",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L442",
+      "source_location": "L439",
       "_origin": "ast"
     },
     {
@@ -78716,7 +78740,7 @@
       "label": "claim()",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L453",
+      "source_location": "L450",
       "_origin": "ast"
     },
     {
@@ -78724,7 +78748,7 @@
       "label": "processDispatcherId",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L472",
+      "source_location": "L469",
       "_origin": "ast"
     },
     {
@@ -78732,7 +78756,7 @@
       "label": "dispatchOnce()",
       "file_type": "code",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L475",
+      "source_location": "L472",
       "_origin": "ast"
     },
     {
@@ -81996,7 +82020,7 @@
       "label": "json_string()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L51",
+      "source_location": "L52",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82008,7 +82032,7 @@
       "label": "write_manifest()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L53",
+      "source_location": "L54",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82020,7 +82044,7 @@
       "label": "bao_token()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L71",
+      "source_location": "L72",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82032,7 +82056,7 @@
       "label": "json_field()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L79",
+      "source_location": "L80",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82044,7 +82068,7 @@
       "label": "hex_of_b64()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L80",
+      "source_location": "L81",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82056,7 +82080,7 @@
       "label": "derive()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L81",
+      "source_location": "L82",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82068,7 +82092,7 @@
       "label": "new_data_key()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L84",
+      "source_location": "L85",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82080,7 +82104,7 @@
       "label": "unwrap_data_key()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L93",
+      "source_location": "L94",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82092,7 +82116,7 @@
       "label": "seal()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L101",
+      "source_location": "L102",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82104,7 +82128,7 @@
       "label": "check_mac()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L108",
+      "source_location": "L109",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82116,7 +82140,7 @@
       "label": "open_file()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L113",
+      "source_location": "L114",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82128,7 +82152,7 @@
       "label": "manifest_value()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L116",
+      "source_location": "L117",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82140,7 +82164,7 @@
       "label": "dir_digest()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L118",
+      "source_location": "L119",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82152,7 +82176,7 @@
       "label": "create()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L123",
+      "source_location": "L124",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82164,7 +82188,7 @@
       "label": "verify()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L191",
+      "source_location": "L192",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82176,7 +82200,7 @@
       "label": "restore()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L219",
+      "source_location": "L220",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82188,7 +82212,7 @@
       "label": "list()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L272",
+      "source_location": "L273",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82200,7 +82224,7 @@
       "label": "prune()",
       "file_type": "code",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L279",
+      "source_location": "L280",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82308,7 +82332,7 @@
       "label": "register()",
       "file_type": "code",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L69",
+      "source_location": "L84",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82320,7 +82344,7 @@
       "label": "issue()",
       "file_type": "code",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L76",
+      "source_location": "L91",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82520,7 +82544,7 @@
       "label": "register()",
       "file_type": "code",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L69",
+      "source_location": "L84",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -82532,7 +82556,7 @@
       "label": "issue()",
       "file_type": "code",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L76",
+      "source_location": "L91",
       "metadata": {
         "language": "bash",
         "kind": "bash_function"
@@ -83232,7 +83256,7 @@
       "label": "Env",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L169",
+      "source_location": "L174",
       "_origin": "ast"
     },
     {
@@ -83240,7 +83264,7 @@
       "label": "ConfigError",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L171",
+      "source_location": "L176",
       "_origin": "ast"
     },
     {
@@ -83248,7 +83272,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L172",
+      "source_location": "L177",
       "_origin": "ast"
     },
     {
@@ -83256,7 +83280,7 @@
       "label": "loadEnv()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L182",
+      "source_location": "L187",
       "_origin": "ast"
     },
     {
@@ -83264,7 +83288,15 @@
       "label": "describeEnv()",
       "file_type": "code",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L189",
+      "source_location": "L194",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_config_src_env_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/config/src/env.ts",
+      "source_location": "L30",
       "_origin": "ast"
     },
     {
@@ -83272,7 +83304,7 @@
       "label": "ADR-0067",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L57",
+      "source_location": "L62",
       "_origin": "ast"
     },
     {
@@ -83280,7 +83312,7 @@
       "label": "ADR-0039",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L98",
+      "source_location": "L103",
       "_origin": "ast"
     },
     {
@@ -83288,7 +83320,7 @@
       "label": "ADR-0043",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L101",
+      "source_location": "L106",
       "_origin": "ast"
     },
     {
@@ -83296,7 +83328,7 @@
       "label": "ADR-0066",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L141",
+      "source_location": "L146",
       "_origin": "ast"
     },
     {
@@ -83304,7 +83336,7 @@
       "label": "ADR-0028",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L148",
+      "source_location": "L153",
       "_origin": "ast"
     },
     {
@@ -83312,7 +83344,7 @@
       "label": "ADR-0047",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L155",
+      "source_location": "L160",
       "_origin": "ast"
     },
     {
@@ -83320,7 +83352,7 @@
       "label": "ADR-0025",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L159",
+      "source_location": "L164",
       "_origin": "ast"
     },
     {
@@ -83328,7 +83360,7 @@
       "label": "ADR-0053",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L161",
+      "source_location": "L166",
       "_origin": "ast"
     },
     {
@@ -83336,7 +83368,7 @@
       "label": "ADR-0055",
       "file_type": "doc_ref",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L163",
+      "source_location": "L168",
       "_origin": "ast"
     },
     {
@@ -113996,6 +114028,62 @@
       "_origin": "ast"
     },
     {
+      "id": "packages_db_src_clickhouse_options_test",
+      "label": "clickhouse-options.test.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options_test_env",
+      "label": "env",
+      "file_type": "code",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L6",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options_test_read",
+      "label": "read()",
+      "file_type": "code",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options_test_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options",
+      "label": "clickhouse-options.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "label": "clickhouseOptions",
+      "file_type": "code",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_clickhouse_options_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
       "id": "packages_db_src_files_test",
       "label": "files.test.ts",
       "file_type": "code",
@@ -114112,7 +114200,7 @@
       "label": "logLevels()",
       "file_type": "code",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L16",
+      "source_location": "L18",
       "_origin": "ast"
     },
     {
@@ -114120,7 +114208,7 @@
       "label": "createPrismaClient()",
       "file_type": "code",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "_origin": "ast"
     },
     {
@@ -114256,7 +114344,7 @@
       "label": "MigrationReport",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "_origin": "ast"
     },
     {
@@ -114264,7 +114352,7 @@
       "label": "VersionRow",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "_origin": "ast"
     },
     {
@@ -114272,7 +114360,7 @@
       "label": "assertIdentifier()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "_origin": "ast"
     },
     {
@@ -114280,7 +114368,15 @@
       "label": "migrateClickHouse()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L27",
+      "source_location": "L28",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_migrate_clickhouse_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/db/src/migrate-clickhouse.ts",
+      "source_location": "L32",
       "_origin": "ast"
     },
     {
@@ -114336,7 +114432,7 @@
       "label": "MIGRATIONS_DIR",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "_origin": "ast"
     },
     {
@@ -114344,7 +114440,7 @@
       "label": "PostgresMigration",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "_origin": "ast"
     },
     {
@@ -114352,7 +114448,7 @@
       "label": "PostgresMigrationReport",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "_origin": "ast"
     },
     {
@@ -114360,7 +114456,7 @@
       "label": "sha256()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "_origin": "ast"
     },
     {
@@ -114368,7 +114464,7 @@
       "label": "lineEndingChecksums()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "_origin": "ast"
     },
     {
@@ -114376,7 +114472,7 @@
       "label": "compareChecksum()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L56",
+      "source_location": "L57",
       "_origin": "ast"
     },
     {
@@ -114384,7 +114480,7 @@
       "label": "listPostgresMigrations()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "_origin": "ast"
     },
     {
@@ -114392,7 +114488,7 @@
       "label": "migratePostgres()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L72",
+      "source_location": "L73",
       "_origin": "ast"
     },
     {
@@ -114400,7 +114496,7 @@
       "label": "pingPostgres()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L113",
+      "source_location": "L114",
       "_origin": "ast"
     },
     {
@@ -114408,7 +114504,7 @@
       "label": "pendingPostgresMigrations()",
       "file_type": "code",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L127",
+      "source_location": "L128",
       "_origin": "ast"
     },
     {
@@ -114497,6 +114593,70 @@
       "file_type": "code",
       "source_file": "packages/db/src/parameters.ts",
       "source_location": "L26",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_test",
+      "label": "pg-config.test.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_test_read",
+      "label": "read()",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_test_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config",
+      "label": "pg-config.ts",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_tls_params",
+      "label": "TLS_PARAMS",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L8",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_plaintext_modes",
+      "label": "PLAINTEXT_MODES",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_pgclientconfig",
+      "label": "pgClientConfig()",
+      "file_type": "code",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "packages_db_src_pg_config_ts_docref_adr_0068",
+      "label": "ADR-0068",
+      "file_type": "doc_ref",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L1",
       "_origin": "ast"
     },
     {
@@ -152230,6 +152390,46 @@
       "_origin": "ast"
     },
     {
+      "id": "docs_adr_adr_068_encryption_in_transit",
+      "label": "ADR-068-encryption-in-transit.md",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_068_encryption_in_transit_adr_068_encryption_in_transit_an_internal_services_ca_in_openbao_tls_to_every_store",
+      "label": "ADR-068 — Encryption in transit: an internal services CA in OpenBao, TLS to every store",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_068_encryption_in_transit_context",
+      "label": "Context",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_068_encryption_in_transit_decision",
+      "label": "Decision",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L11",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_adr_adr_068_encryption_in_transit_consequences",
+      "label": "Consequences",
+      "file_type": "document",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L42",
+      "_origin": "ast"
+    },
+    {
       "id": "docs_evidence_dcim_cable_verification",
       "label": "dcim-cable-verification.md",
       "file_type": "document",
@@ -152659,6 +152859,78 @@
       "file_type": "document",
       "source_file": "docs/evidence/sec-pgtde-verification.md",
       "source_location": "L63",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_clickhouse",
+      "label": "sec-tls-clickhouse.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_clickhouse_tls_to_clickhouse_req_sec_011_adr_068_store_2_of_6",
+      "label": "TLS to ClickHouse (REQ-SEC-011, ADR-068 store 2 of 6)",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_clickhouse_what_runs",
+      "label": "What runs",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_clickhouse_checks",
+      "label": "Checks",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_postgres",
+      "label": "sec-tls-postgres.md",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_postgres_tls_to_postgresql_req_sec_011_adr_068_store_1_of_6",
+      "label": "TLS to PostgreSQL (REQ-SEC-011, ADR-068 store 1 of 6)",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_postgres_what_runs",
+      "label": "What runs",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L5",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_postgres_checks",
+      "label": "Checks",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L27",
+      "_origin": "ast"
+    },
+    {
+      "id": "docs_evidence_sec_tls_postgres_tests",
+      "label": "Tests",
+      "file_type": "document",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L43",
       "_origin": "ast"
     },
     {
@@ -167727,9 +167999,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 198,
       "norm_label": "openmap capability map (device42 parity)",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "apps/api topology",
       "id": "docs_capability_map"
     },
     {
@@ -167741,9 +168013,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 198,
       "norm_label": "capability map section 1 discovery",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "apps/api topology",
       "id": "docs_capability_map_section_1_discovery"
     },
     {
@@ -167811,9 +168083,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 198,
       "norm_label": "capability map section 8 integrations",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "apps/api topology",
       "id": "docs_capability_map_section_8_integrations"
     },
     {
@@ -167825,9 +168097,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 198,
+      "community": 77,
       "norm_label": "adr-029 application dependency mapping",
-      "community_name": "apps/api topology",
+      "community_name": "packages/contracts event envelope.schema",
       "id": "docs_adr_adr_029_application_dependency_mapping"
     },
     {
@@ -167895,9 +168167,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "adr-034 receiving against plan lines",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_034_receiving_against_plans"
     },
     {
@@ -167951,9 +168223,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 179,
       "norm_label": "adr-038 resource utilisation",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "apps/collectors main",
       "id": "docs_adr_adr_038_resource_utilisation"
     },
     {
@@ -167965,9 +168237,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "adr-039 product lifecycle catalogue",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_039_product_lifecycle_catalogue"
     },
     {
@@ -168035,9 +168307,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 178,
       "norm_label": "adr-045 reconciliation resolves ref values and scopes issuer-bound keys",
-      "community_name": "packages/contracts identity",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_045_identity_refs_and_scoped_keys"
     },
     {
@@ -168063,9 +168335,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "bundled endoflife.date snapshot json",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "packages_db_lifecycle_endoflife_date"
     },
     {
@@ -168077,9 +168349,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 178,
       "norm_label": "schemas/ci-identity.json shared identity rules",
-      "community_name": "packages/contracts identity",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "schemas_ci_identity"
     },
     {
@@ -168119,9 +168391,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 198,
+      "community": 77,
       "norm_label": "derivation as a pure join in the reconciler",
-      "community_name": "apps/api topology",
+      "community_name": "packages/contracts event envelope.schema",
       "id": "docs_adr_adr_029_application_dependency_mapping_pure_join_derivation"
     },
     {
@@ -168133,9 +168405,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 198,
+      "community": 77,
       "norm_label": "derived edges are observations through the pipeline",
-      "community_name": "apps/api topology",
+      "community_name": "packages/contracts event envelope.schema",
       "id": "docs_adr_adr_029_application_dependency_mapping_derived_edges_are_observations"
     },
     {
@@ -168231,9 +168503,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "receipt against one bom line",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_034_receiving_against_plans_receipt_against_bom_line"
     },
     {
@@ -168245,9 +168517,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "discovery claims received units by serial",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_034_receiving_against_plans_discovery_claims_by_serial"
     },
     {
@@ -168315,9 +168587,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 179,
       "norm_label": "hot and idle as deployment thresholds",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "apps/collectors main",
       "id": "docs_adr_adr_038_resource_utilisation_hot_and_idle_thresholds"
     },
     {
@@ -168329,9 +168601,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "bundled catalogue snapshot so air-gapped installs need no outbound call",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_039_product_lifecycle_catalogue_bundled_snapshot"
     },
     {
@@ -168357,9 +168629,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "godror rejected because of cgo and oracle instant client runtime",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_040_oracle_driver_godror_rejected"
     },
     {
@@ -168483,9 +168755,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 178,
       "norm_label": "ref token and deterministic resolution rule",
-      "community_name": "packages/contracts identity",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_045_identity_refs_and_scoped_keys_ref_resolution"
     },
     {
@@ -168497,9 +168769,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 178,
       "norm_label": "issuer scope of a ref prevents cross-vendor name collisions",
-      "community_name": "packages/contracts identity",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_045_identity_refs_and_scoped_keys_issuer_scope"
     },
     {
@@ -168511,9 +168783,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 103,
+      "community": 178,
       "norm_label": "order-independent reconciliation with a ref pass",
-      "community_name": "packages/contracts identity",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_045_identity_refs_and_scoped_keys_order_independence"
     },
     {
@@ -168525,9 +168797,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 565,
+      "community": 178,
       "norm_label": "ci folding under a shared ref key keeps the oldest ci",
-      "community_name": "docs/adr ADR 033 depreciation and spare stock",
+      "community_name": "docs/adr ADR 042 simulated mode",
       "id": "docs_adr_adr_045_identity_refs_and_scoped_keys_ci_folding"
     },
     {
@@ -174056,9 +174328,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 195,
+      "community": 690,
       "norm_label": "ci job sweep",
-      "community_name": "deploy/compose docker compose.apps",
+      "community_name": "apps/console perf.spec",
       "id": "_github_workflows_ci_sweep"
     },
     {
@@ -178791,7 +179063,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L122",
+      "source_location": "L126",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178801,7 +179073,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L128",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178811,7 +179083,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L133",
+      "source_location": "L138",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178821,7 +179093,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L132",
+      "source_location": "L137",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -178832,7 +179104,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L137",
+      "source_location": "L142",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -178843,7 +179115,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L136",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178853,7 +179125,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L142",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178863,7 +179135,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L155",
+      "source_location": "L160",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178873,7 +179145,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L165",
+      "source_location": "L170",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178883,7 +179155,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L182",
+      "source_location": "L187",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178893,7 +179165,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L200",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178903,7 +179175,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L213",
+      "source_location": "L218",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178913,7 +179185,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L218",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178923,7 +179195,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L225",
+      "source_location": "L234",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178933,7 +179205,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L234",
+      "source_location": "L243",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178943,7 +179215,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L241",
+      "source_location": "L250",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178953,7 +179225,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L253",
+      "source_location": "L262",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178963,7 +179235,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L263",
+      "source_location": "L272",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -178996,7 +179268,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L143",
+      "source_location": "L148",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179007,7 +179279,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L144",
+      "source_location": "L149",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179018,7 +179290,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L157",
+      "source_location": "L162",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179029,7 +179301,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L166",
+      "source_location": "L171",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179040,7 +179312,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L167",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179051,7 +179323,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L169",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179062,7 +179334,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L169",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179073,7 +179345,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L170",
+      "source_location": "L175",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179084,7 +179356,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L172",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179095,7 +179367,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L175",
+      "source_location": "L180",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179106,7 +179378,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L177",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179117,7 +179389,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L177",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179128,7 +179400,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L177",
+      "source_location": "L182",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179139,7 +179411,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L178",
+      "source_location": "L183",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179150,7 +179422,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L179",
+      "source_location": "L184",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179161,7 +179433,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L214",
+      "source_location": "L219",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179172,7 +179444,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L219",
+      "source_location": "L224",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_analytics_analytics_service_analyticsservice_ensuredatabase",
+      "target": "apps_api_src_analytics_analytics_service_analyticsservice_call",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/analytics/analytics.service.ts",
+      "source_location": "L227",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179183,7 +179466,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L221",
+      "source_location": "L227",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179194,7 +179477,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L226",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179205,7 +179488,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L235",
+      "source_location": "L244",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179216,24 +179499,13 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L243",
+      "source_location": "L252",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "apps_api_src_analytics_analytics_service_analyticsservice_ensurechart",
       "target": "apps_api_src_analytics_analytics_service_analyticsservice_call",
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L245",
-      "weight": 1.0,
-      "_origin": "ast"
-    },
-    {
-      "source": "apps_api_src_analytics_analytics_service_analyticsservice_ensureguestrole",
-      "target": "apps_api_src_analytics_analytics_service_analyticsservice_findone",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -179244,12 +179516,23 @@
     },
     {
       "source": "apps_api_src_analytics_analytics_service_analyticsservice_ensureguestrole",
+      "target": "apps_api_src_analytics_analytics_service_analyticsservice_findone",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/analytics/analytics.service.ts",
+      "source_location": "L263",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_analytics_analytics_service_analyticsservice_ensureguestrole",
       "target": "apps_api_src_analytics_analytics_service_analyticsservice_call",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L260",
+      "source_location": "L269",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -179270,6 +179553,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
       "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_analytics_analytics_service",
+      "target": "apps_api_src_analytics_analytics_service_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/analytics/analytics.service.ts",
+      "source_location": "L123",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219278,12 +219571,34 @@
     },
     {
       "source": "apps_api_src_db_clickhouse_service",
-      "target": "e_openmap_packages_telemetry_dist_index_js",
+      "target": "e_openmap_packages_db_dist_index_js",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
       "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_db_clickhouse_service",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/db/clickhouse.service.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_api_src_db_clickhouse_service",
+      "target": "e_openmap_packages_telemetry_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/api/src/db/clickhouse.service.ts",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219294,7 +219609,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219305,7 +219620,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219316,7 +219631,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L7",
+      "source_location": "L8",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219327,7 +219642,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219338,7 +219653,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L8",
+      "source_location": "L9",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219349,7 +219664,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219360,7 +219675,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219371,7 +219686,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L9",
+      "source_location": "L10",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219381,7 +219696,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219391,7 +219706,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219401,7 +219716,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219411,7 +219726,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -219422,7 +219737,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast"
@@ -219433,7 +219748,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219443,7 +219758,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219453,7 +219768,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -219463,7 +219778,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -289101,6 +289416,17 @@
     },
     {
       "source": "apps_bsm_engine_src_main",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/bsm-engine/src/main.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_bsm_engine_src_main",
       "target": "e_openmap_packages_db_dist_index_createprismaclient",
       "relation": "imports",
       "context": "import",
@@ -289411,7 +289737,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L137",
+      "source_location": "L132",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -289421,7 +289747,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L239",
+      "source_location": "L234",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -289431,7 +289757,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L282",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -289441,7 +289767,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L318",
+      "source_location": "L313",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -289451,7 +289777,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L358",
+      "source_location": "L353",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -290859,6 +291185,17 @@
     },
     {
       "source": "apps_bsm_engine_src_service_environment_integration_test",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/bsm-engine/src/service/environment.integration.test.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_bsm_engine_src_service_environment_integration_test",
       "target": "e_openmap_packages_db_dist_index_createprismaclient",
       "relation": "imports",
       "context": "import",
@@ -292069,6 +292406,17 @@
     },
     {
       "source": "apps_bsm_engine_src_service_power_integration_test",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/bsm-engine/src/service/power.integration.test.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_bsm_engine_src_service_power_integration_test",
       "target": "e_openmap_packages_db_dist_index_createprismaclient",
       "relation": "imports",
       "context": "import",
@@ -292539,6 +292887,17 @@
       "source": "apps_bsm_engine_src_service_readiness_integration_test",
       "target": "e_openmap_packages_db_dist_index_js",
       "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/bsm-engine/src/service/readiness.integration.test.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_bsm_engine_src_service_readiness_integration_test",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/service/readiness.integration.test.ts",
@@ -447584,6 +447943,17 @@
     },
     {
       "source": "apps_reconciler_src_backup_integration_test",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/reconciler/src/backup.integration.test.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_reconciler_src_backup_integration_test",
       "target": "e_openmap_packages_db_dist_index_createprismaclient",
       "relation": "imports",
       "context": "import",
@@ -447746,7 +448116,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -447756,7 +448126,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -447766,7 +448136,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L34",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_reconciler_src_backup_integration_test",
+      "target": "apps_reconciler_src_backup_integration_test_choptions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/reconciler/src/backup.integration.test.ts",
+      "source_location": "L38",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -447776,7 +448156,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
-      "source_location": "L35",
+      "source_location": "L39",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -447837,6 +448217,16 @@
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/backup.integration.test.ts",
       "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_reconciler_src_backup_integration_test",
+      "target": "apps_reconciler_src_backup_integration_test_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/reconciler/src/backup.integration.test.ts",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455343,6 +455733,17 @@
     },
     {
       "source": "apps_reconciler_src_worker_dispatcher",
+      "target": "e_openmap_packages_db_dist_index_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/reconciler/src/worker/dispatcher.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "apps_reconciler_src_worker_dispatcher",
       "target": "e_openmap_packages_db_dist_index_prisma",
       "relation": "imports",
       "context": "import",
@@ -455715,7 +456116,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L413",
+      "source_location": "L410",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455725,7 +456126,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L425",
+      "source_location": "L422",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455735,7 +456136,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L435",
+      "source_location": "L432",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455745,7 +456146,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L439",
+      "source_location": "L436",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455755,7 +456156,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L442",
+      "source_location": "L439",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455765,7 +456166,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L453",
+      "source_location": "L450",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455775,7 +456176,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L472",
+      "source_location": "L469",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455785,7 +456186,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L475",
+      "source_location": "L472",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455939,7 +456340,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L482",
+      "source_location": "L479",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455950,7 +456351,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L514",
+      "source_location": "L511",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455961,7 +456362,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L522",
+      "source_location": "L519",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455972,7 +456373,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L524",
+      "source_location": "L521",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455983,7 +456384,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L527",
+      "source_location": "L524",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -455994,7 +456395,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L530",
+      "source_location": "L527",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466154,7 +466555,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L51",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466164,7 +466565,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466174,7 +466575,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L71",
+      "source_location": "L72",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466184,7 +466585,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L79",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466194,7 +466595,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466204,7 +466605,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L81",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466214,7 +466615,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L84",
+      "source_location": "L85",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466224,7 +466625,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L93",
+      "source_location": "L94",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466234,7 +466635,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L101",
+      "source_location": "L102",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466244,7 +466645,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L108",
+      "source_location": "L109",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466254,7 +466655,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L113",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466264,7 +466665,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466274,7 +466675,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L118",
+      "source_location": "L119",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466284,7 +466685,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466294,7 +466695,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L191",
+      "source_location": "L192",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466304,7 +466705,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L219",
+      "source_location": "L220",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466314,7 +466715,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L272",
+      "source_location": "L273",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466324,24 +466725,13 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L279",
+      "source_location": "L280",
       "weight": 1.0,
       "_origin": "ast"
     },
     {
       "source": "deploy_backup_openmap_backup_sh__entry",
       "target": "deploy_backup_openmap_backup_create",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L295",
-      "weight": 1.0,
-      "context": "call",
-      "_origin": "ast"
-    },
-    {
-      "source": "deploy_backup_openmap_backup_sh__entry",
-      "target": "deploy_backup_openmap_backup_verify",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
@@ -466352,7 +466742,7 @@
     },
     {
       "source": "deploy_backup_openmap_backup_sh__entry",
-      "target": "deploy_backup_openmap_backup_restore",
+      "target": "deploy_backup_openmap_backup_verify",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
@@ -466363,7 +466753,7 @@
     },
     {
       "source": "deploy_backup_openmap_backup_sh__entry",
-      "target": "deploy_backup_openmap_backup_list",
+      "target": "deploy_backup_openmap_backup_restore",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
@@ -466374,7 +466764,7 @@
     },
     {
       "source": "deploy_backup_openmap_backup_sh__entry",
-      "target": "deploy_backup_openmap_backup_prune",
+      "target": "deploy_backup_openmap_backup_list",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
@@ -466385,11 +466775,22 @@
     },
     {
       "source": "deploy_backup_openmap_backup_sh__entry",
-      "target": "deploy_backup_openmap_backup_die",
+      "target": "deploy_backup_openmap_backup_prune",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
       "source_location": "L300",
+      "weight": 1.0,
+      "context": "call",
+      "_origin": "ast"
+    },
+    {
+      "source": "deploy_backup_openmap_backup_sh__entry",
+      "target": "deploy_backup_openmap_backup_die",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "deploy/backup/openmap-backup.sh",
+      "source_location": "L301",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466411,7 +466812,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466422,7 +466823,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L75",
+      "source_location": "L76",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466433,7 +466834,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L86",
+      "source_location": "L87",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466444,7 +466845,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L94",
+      "source_location": "L95",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466455,7 +466856,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466466,7 +466867,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L134",
+      "source_location": "L135",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466477,7 +466878,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L135",
+      "source_location": "L136",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466488,7 +466889,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L147",
+      "source_location": "L148",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466499,7 +466900,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L162",
+      "source_location": "L163",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466510,7 +466911,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L188",
+      "source_location": "L189",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466521,7 +466922,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L194",
+      "source_location": "L195",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466532,7 +466933,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L204",
+      "source_location": "L205",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466543,7 +466944,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L205",
+      "source_location": "L206",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466554,7 +466955,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L207",
+      "source_location": "L208",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466565,7 +466966,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L216",
+      "source_location": "L217",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466576,7 +466977,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L232",
+      "source_location": "L233",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466587,7 +466988,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L235",
+      "source_location": "L236",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466598,7 +466999,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L240",
+      "source_location": "L241",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466609,7 +467010,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L248",
+      "source_location": "L249",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466620,7 +467021,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L266",
+      "source_location": "L267",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466631,7 +467032,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/backup/openmap-backup.sh",
-      "source_location": "L286",
+      "source_location": "L287",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466692,7 +467093,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L69",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466702,7 +467103,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L76",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466723,7 +467124,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L87",
+      "source_location": "L102",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466734,7 +467135,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/compose/openbao/init.sh",
-      "source_location": "L96",
+      "source_location": "L111",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466867,7 +467268,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L69",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466877,7 +467278,7 @@
       "relation": "defines",
       "confidence": "EXTRACTED",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L76",
+      "source_location": "L91",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -466898,7 +467299,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L87",
+      "source_location": "L102",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -466909,7 +467310,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "deploy/helm/openmap/files/openbao/init.sh",
-      "source_location": "L96",
+      "source_location": "L111",
       "weight": 1.0,
       "context": "call",
       "_origin": "ast"
@@ -467776,7 +468177,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L169",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467786,7 +468187,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L171",
+      "source_location": "L176",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467796,7 +468197,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L172",
+      "source_location": "L177",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467806,7 +468207,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L182",
+      "source_location": "L187",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467816,7 +468217,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L189",
+      "source_location": "L194",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_config_src_env",
+      "target": "packages_config_src_env_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/config/src/env.ts",
+      "source_location": "L30",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467826,7 +468237,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L57",
+      "source_location": "L62",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467836,7 +468247,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L98",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467846,7 +468257,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L101",
+      "source_location": "L106",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467856,7 +468267,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L141",
+      "source_location": "L146",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467866,7 +468277,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L148",
+      "source_location": "L153",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467876,7 +468287,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L155",
+      "source_location": "L160",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467886,7 +468297,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L159",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467896,7 +468307,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L161",
+      "source_location": "L166",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -467906,7 +468317,7 @@
       "relation": "cites",
       "confidence": "EXTRACTED",
       "source_file": "packages/config/src/env.ts",
-      "source_location": "L163",
+      "source_location": "L168",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -514551,6 +514962,122 @@
       "_origin": "ast"
     },
     {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "packages_db_src_clickhouse_options",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "packages_db_src_clickhouse_options_test_env",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "packages_db_src_clickhouse_options_test_read",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options_test",
+      "target": "packages_db_src_clickhouse_options_test_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options",
+      "target": "e_openmap_packages_config_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options",
+      "target": "e_openmap_packages_config_dist_index_env",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options",
+      "target": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_clickhouse_options",
+      "target": "packages_db_src_clickhouse_options_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/clickhouse-options.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "packages_db_src_files_test",
       "target": "ref_node_fs",
       "relation": "imports_from",
@@ -515058,12 +515585,56 @@
     },
     {
       "source": "packages_db_src_index",
-      "target": "packages_db_src_files",
+      "target": "packages_db_src_pg_config",
       "relation": "imports_from",
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
       "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "re_exports",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_clickhouse_options",
+      "relation": "imports_from",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "relation": "re_exports",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_files",
+      "relation": "imports_from",
+      "context": "re-export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515074,7 +515645,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515085,7 +515656,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515096,7 +515667,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515107,7 +515678,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515118,7 +515689,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515129,7 +515700,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515140,7 +515711,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L11",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515151,7 +515722,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L11",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515162,7 +515733,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L11",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515173,7 +515744,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L11",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515184,7 +515755,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515195,7 +515766,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515206,7 +515777,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515217,7 +515788,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515228,7 +515799,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515239,7 +515810,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515250,7 +515821,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515261,7 +515832,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515272,7 +515843,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515283,7 +515854,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515294,7 +515865,7 @@
       "context": "re-export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515304,7 +515875,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515314,7 +515885,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515325,7 +515896,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
-      "source_location": "L22",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515737,12 +516308,34 @@
     },
     {
       "source": "packages_db_src_migrate_clickhouse",
-      "target": "e_openmap_packages_config_dist_index_js",
+      "target": "packages_db_src_clickhouse_options",
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
       "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_clickhouse",
+      "target": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate-clickhouse.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_clickhouse",
+      "target": "e_openmap_packages_config_dist_index_js",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate-clickhouse.ts",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515753,7 +516346,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515764,7 +516357,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515775,7 +516368,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515786,7 +516379,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515797,7 +516390,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515808,7 +516401,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L5",
+      "source_location": "L6",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515819,7 +516412,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515830,7 +516423,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515840,7 +516433,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515850,7 +516443,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515860,7 +516453,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515870,7 +516463,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -515881,7 +516474,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L28",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_clickhouse",
+      "target": "packages_db_src_migrate_clickhouse_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate-clickhouse.ts",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516191,11 +516794,33 @@
     },
     {
       "source": "packages_db_src_migrate_postgres",
+      "target": "packages_db_src_pg_config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate-postgres.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_postgres",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/migrate-postgres.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_postgres",
       "target": "packages_db_src_migrate_postgres_migrations_dir",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516205,7 +516830,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L27",
+      "source_location": "L28",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516215,7 +516840,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L33",
+      "source_location": "L34",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516225,7 +516850,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516235,7 +516860,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L50",
+      "source_location": "L51",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516245,7 +516870,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516255,7 +516880,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516265,7 +516890,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516275,7 +516900,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L113",
+      "source_location": "L114",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516285,7 +516910,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L127",
+      "source_location": "L128",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516296,7 +516921,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516307,7 +516932,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516318,7 +516943,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516329,7 +516954,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L80",
+      "source_location": "L81",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516340,7 +516965,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L83",
+      "source_location": "L84",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516351,7 +516976,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/migrate-postgres.ts",
-      "source_location": "L132",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -516552,6 +517177,121 @@
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/parameters.ts",
       "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_test",
+      "target": "ref_vitest",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_test",
+      "target": "packages_db_src_pg_config",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_test",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_test",
+      "target": "packages_db_src_pg_config_test_read",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_test",
+      "target": "packages_db_src_pg_config_test_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.test.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "ref_pg",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "packages_db_src_pg_config_tls_params",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "packages_db_src_pg_config_plaintext_modes",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config",
+      "target": "packages_db_src_pg_config_ts_docref_adr_0068",
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L1",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -615356,6 +616096,46 @@
       "_origin": "ast"
     },
     {
+      "source": "docs_adr_adr_068_encryption_in_transit",
+      "target": "docs_adr_adr_068_encryption_in_transit_adr_068_encryption_in_transit_an_internal_services_ca_in_openbao_tls_to_every_store",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_068_encryption_in_transit_adr_068_encryption_in_transit_an_internal_services_ca_in_openbao_tls_to_every_store",
+      "target": "docs_adr_adr_068_encryption_in_transit_context",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_068_encryption_in_transit_adr_068_encryption_in_transit_an_internal_services_ca_in_openbao_tls_to_every_store",
+      "target": "docs_adr_adr_068_encryption_in_transit_decision",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_adr_adr_068_encryption_in_transit_adr_068_encryption_in_transit_an_internal_services_ca_in_openbao_tls_to_every_store",
+      "target": "docs_adr_adr_068_encryption_in_transit_consequences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/adr/ADR-068-encryption-in-transit.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
       "source": "docs_evidence_dcim_cable_verification",
       "target": "docs_evidence_dcim_cable_verification_cable_verification_and_labels_req_dcim_008_adr_062",
       "relation": "contains",
@@ -615782,6 +616562,76 @@
       "confidence": "EXTRACTED",
       "source_file": "docs/evidence/sec-pgtde-verification.md",
       "source_location": "L63",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_clickhouse",
+      "target": "docs_evidence_sec_tls_clickhouse_tls_to_clickhouse_req_sec_011_adr_068_store_2_of_6",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_clickhouse_tls_to_clickhouse_req_sec_011_adr_068_store_2_of_6",
+      "target": "docs_evidence_sec_tls_clickhouse_what_runs",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_clickhouse_tls_to_clickhouse_req_sec_011_adr_068_store_2_of_6",
+      "target": "docs_evidence_sec_tls_clickhouse_checks",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-clickhouse.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_postgres",
+      "target": "docs_evidence_sec_tls_postgres_tls_to_postgresql_req_sec_011_adr_068_store_1_of_6",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_postgres_tls_to_postgresql_req_sec_011_adr_068_store_1_of_6",
+      "target": "docs_evidence_sec_tls_postgres_what_runs",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_postgres_tls_to_postgresql_req_sec_011_adr_068_store_1_of_6",
+      "target": "docs_evidence_sec_tls_postgres_checks",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "docs_evidence_sec_tls_postgres_tls_to_postgresql_req_sec_011_adr_068_store_1_of_6",
+      "target": "docs_evidence_sec_tls_postgres_tests",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/evidence/sec-tls-postgres.md",
+      "source_location": "L43",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -617096,7 +617946,7 @@
     },
     {
       "source": "packages_db_src_index",
-      "target": "packages_db_src_files",
+      "target": "packages_db_src_pg_config",
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
@@ -617107,7 +617957,7 @@
     },
     {
       "source": "packages_db_src_index",
-      "target": "packages_db_src_parameters",
+      "target": "packages_db_src_clickhouse_options",
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
@@ -617118,7 +617968,7 @@
     },
     {
       "source": "packages_db_src_index",
-      "target": "packages_db_src_asset_contracts",
+      "target": "packages_db_src_files",
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
@@ -617129,12 +617979,34 @@
     },
     {
       "source": "packages_db_src_index",
-      "target": "packages_db_src_lifecycle",
+      "target": "packages_db_src_parameters",
       "relation": "re_exports",
       "context": "export",
       "confidence": "EXTRACTED",
       "source_file": "packages/db/src/index.ts",
       "source_location": "L13",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_asset_contracts",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_index",
+      "target": "packages_db_src_lifecycle",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/db/src/index.ts",
+      "source_location": "L15",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619048,7 +619920,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L115",
+      "source_location": "L110",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619059,7 +619931,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L124",
+      "source_location": "L119",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619070,7 +619942,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L127",
+      "source_location": "L122",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619081,7 +619953,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L138",
+      "source_location": "L133",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619092,7 +619964,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L240",
+      "source_location": "L235",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619103,7 +619975,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L283",
+      "source_location": "L278",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619114,7 +619986,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L319",
+      "source_location": "L314",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -619125,7 +619997,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L362",
+      "source_location": "L357",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -621347,7 +622219,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L136",
+      "source_location": "L141",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -627958,7 +628830,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "apps/api/src/db/clickhouse.service.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -639446,7 +640318,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/api/src/analytics/analytics.service.ts",
-      "source_location": "L169",
+      "source_location": "L174",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -650066,7 +650938,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/bsm-engine/src/main.ts",
-      "source_location": "L174",
+      "source_location": "L169",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -673958,7 +674830,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "apps/reconciler/src/worker/dispatcher.ts",
-      "source_location": "L527",
+      "source_location": "L524",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674708,13 +675580,25 @@
     },
     {
       "source": "packages_db_src_migrate_clickhouse_migrateclickhouse",
+      "target": "packages_db_src_clickhouse_options_clickhouseoptions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/db/src/migrate-clickhouse.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_clickhouse_migrateclickhouse",
       "target": "packages_db_src_parameters_clickhouseparameters",
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L47",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674726,7 +675610,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L48",
+      "source_location": "L47",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674738,7 +675622,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "packages/db/src/migrate-clickhouse.ts",
-      "source_location": "L53",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -674775,6 +675659,42 @@
       "confidence_score": 1.0,
       "source_file": "packages/db/src/migrate-memgraph.ts",
       "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_postgres_migratepostgres",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/db/src/migrate-postgres.ts",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_postgres_pingpostgres",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/db/src/migrate-postgres.ts",
+      "source_location": "L115",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_migrate_postgres_pendingpostgresmigrations",
+      "target": "packages_db_src_pg_config_pgclientconfig",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/db/src/migrate-postgres.ts",
+      "source_location": "L129",
       "weight": 1.0,
       "_origin": "ast"
     },
@@ -690555,6 +691475,18 @@
       "confidence_score": 1.0,
       "source_file": "packages/db/src/cli.ts",
       "source_location": "L67",
+      "weight": 1.0,
+      "_origin": "ast"
+    },
+    {
+      "source": "packages_db_src_pg_config_pgclientconfig",
+      "target": "packages_db_src_pg_config_plaintext_modes",
+      "relation": "references",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "packages/db/src/pg-config.ts",
+      "source_location": "L18",
       "weight": 1.0,
       "_origin": "ast"
     },

@@ -37,8 +37,17 @@ Read this first in every session (CLAUDE.md §2). If this file and the tracker d
 - **REQ-SEC-011 stays In progress** for encryption in transit (ADR-068).
   - The internal services CA (OpenBao PKI) is in place, and **PostgreSQL TLS is done**: required, verified, renewed by
     `pgtde-agent`. See `docs/evidence/sec-tls-postgres.md`.
-  - Next: ClickHouse (agent `clickhouse-keys` issues its certificate; HTTPS 8443 and secure native 9440 only; clients
-    including Superset's `clickhouse-connect`), then Valkey, Memgraph, Meilisearch, OpenBao.
+  - **ClickHouse TLS is done:** HTTPS 8443 and secure native 9440 only, clients through `clickhouseOptions`, Superset
+    verified. See `docs/evidence/sec-tls-clickhouse.md`, commit 7745d71.
+  - **Next: Valkey, Memgraph, Meilisearch, then OpenBao's own listener.** They differ from PostgreSQL and ClickHouse
+    in one way: none of them reloads a renewed certificate on its own.
+    - Valkey reloads on `CONFIG SET tls-cert-file`, so it needs a small reloader beside it that has `valkey-cli`.
+    - Memgraph and Meilisearch need a restart. Memgraph's restart reloads a 750k-node snapshot (minutes), so it should
+      use a certificate from a longer-lived role (for example one year), plus an expiry alert, rather than 30 days.
+    - OpenBao's listener needs a bootstrap certificate from `openbao-keys` (openssl, once), added to `service-ca`.
+    - Clients to change: ioredis and BullMQ (`rediss://` plus `tls.ca`), neo4j-driver (`bolt+s://` and a trusted CA),
+      the Meilisearch fetch (`https` plus the CA through an undici agent), and every OpenBao client (`https` plus the
+      CA).
 - **Host-side dev note:** Docker Desktop's port forwarding on this machine drops bursts of more than about 25 new
   connections (TLS or not).
   - Host-side integration suites: run them with `--no-file-parallelism`.

@@ -10,9 +10,9 @@
     "semantic_hash": "3dfe5fe0f6f6616c13ec43b841eb7882"
   },
   "deploy/compose/superset/superset_config.py": {
-    "mtime": 1793821313.0649753,
-    "ast_hash": "18fceb9b4c5362128cb12b1f48e1b26c",
-    "semantic_hash": "18fceb9b4c5362128cb12b1f48e1b26c"
+    "mtime": 1794319493.5443096,
+    "ast_hash": "439e5d93a17456303655a42783091e28",
+    "semantic_hash": ""
   },
   "eslint.config.js": {
     "mtime": 1793540464.909858,
@@ -35,8 +35,8 @@
     "semantic_hash": "36264f021a63e39dcbfe89749ba067d8"
   },
   "packages/config/src/env.ts": {
-    "mtime": 1794299027.9946895,
-    "ast_hash": "a42106854c8ae1e0260e1c5a54e8b874",
+    "mtime": 1794323651.3167498,
+    "ast_hash": "5091347d0bd12468de1859abbb84b3c2",
     "semantic_hash": ""
   },
   "packages/config/src/index.ts": {
@@ -340,8 +340,8 @@
     "semantic_hash": "edd67a50d88439e5ff26e395244d49a2"
   },
   "deploy/compose/docker-compose.yml": {
-    "mtime": 1794315866.2285428,
-    "ast_hash": "3afeb431e5746e10bb75ff4242e72ac8",
+    "mtime": 1794323776.7265246,
+    "ast_hash": "78cbae28fa2a51c04057315c271d156e",
     "semantic_hash": ""
   },
   "deploy/compose/otel/collector.yaml": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "docs/STATE.md": {
-    "mtime": 1794317935.6891544,
-    "ast_hash": "040a17ea3159512aa58de64e08b68c04",
+    "mtime": 1794325052.603137,
+    "ast_hash": "cfcefb4a2d6ba24e74551b10bcae84f4",
     "semantic_hash": ""
   },
   "docs/adr/ADR-001-monorepo-tooling.md": {
@@ -395,8 +395,8 @@
     "semantic_hash": "03302e16c34b747e0c05ce2fe7322a02"
   },
   "graphify-out/converted/OpenMap-Tracker_d0198e2e.md": {
-    "mtime": 1794319032.152186,
-    "ast_hash": "e54ef1d38ff15d9086d76fe7743522dc",
+    "mtime": 1794325069.508728,
+    "ast_hash": "0bd745bccdbc636292559b4096be4c7f",
     "semantic_hash": ""
   },
   "lefthook.yml": {
@@ -1445,9 +1445,9 @@
     "semantic_hash": "997f8d7da4f649284f5451dbf51f38b4"
   },
   "apps/reconciler/src/worker/dispatcher.ts": {
-    "mtime": 1794255310.774305,
-    "ast_hash": "a28689e53e4145c0c03e0cb345183a12",
-    "semantic_hash": "a28689e53e4145c0c03e0cb345183a12"
+    "mtime": 1794323692.5415933,
+    "ast_hash": "8afb43e393391505459f0a82ac7b5f93",
+    "semantic_hash": ""
   },
   "apps/reconciler/src/worker/lookup.ts": {
     "mtime": 1794081030.459611,
@@ -1625,14 +1625,14 @@
     "semantic_hash": "0b5e616425da81b68cf1152a4ec4b7a9"
   },
   "packages/db/src/index.ts": {
-    "mtime": 1794000616.0945776,
-    "ast_hash": "0514b55dfe3bf0b3717f4589f1110fdd",
-    "semantic_hash": "0514b55dfe3bf0b3717f4589f1110fdd"
+    "mtime": 1794323666.986549,
+    "ast_hash": "d6a7cc78a8ae9c6dcf352c5b77a5159f",
+    "semantic_hash": ""
   },
   "packages/db/src/migrate-clickhouse.ts": {
-    "mtime": 1792648957.466589,
-    "ast_hash": "f8d9fd771b32d1741d8d180749a9d16e",
-    "semantic_hash": "f8d9fd771b32d1741d8d180749a9d16e"
+    "mtime": 1794323683.3430915,
+    "ast_hash": "7a068644785214a16851c7024a7f5b8d",
+    "semantic_hash": ""
   },
   "packages/db/src/migrate-memgraph.ts": {
     "mtime": 1792648971.130809,
@@ -1640,9 +1640,9 @@
     "semantic_hash": "9c9e23c1367d010ae6ab49aedf8c803e"
   },
   "packages/db/src/migrate-postgres.ts": {
-    "mtime": 1794034432.361005,
-    "ast_hash": "0644cc50856a6fe469e9587065d4ff2f",
-    "semantic_hash": "0644cc50856a6fe469e9587065d4ff2f"
+    "mtime": 1794319811.316593,
+    "ast_hash": "3b06b3aa9181710782d0a78fbf438337",
+    "semantic_hash": ""
   },
   "packages/db/src/migration.test.ts": {
     "mtime": 1794034369.2227051,
@@ -2045,8 +2045,8 @@
     "semantic_hash": "6e9a52b478a6597295424e0f137808e2"
   },
   "docs/TRACKER-SUMMARY.md": {
-    "mtime": 1794318985.118721,
-    "ast_hash": "3249d931d1adb1afea324add42821216",
+    "mtime": 1794325066.5929568,
+    "ast_hash": "f6d1ace250f19008f5f5897d35249751",
     "semantic_hash": ""
   },
   "packages/db/clickhouse/README.md": {
@@ -2080,8 +2080,8 @@
     "semantic_hash": "a308e48936ed4ec3f7e908056905ddc1"
   },
   "apps/bsm-engine/src/main.ts": {
-    "mtime": 1794297050.119006,
-    "ast_hash": "ea2d19b0d66490fa9c87af4348617652",
+    "mtime": 1794323692.5577319,
+    "ast_hash": "b0453b7b7a7ba174de5e849d138010bc",
     "semantic_hash": ""
   },
   "apps/bsm-engine/src/service/engine.ts": {
@@ -2710,13 +2710,13 @@
     "semantic_hash": "76db4fef290a3bca858d08772858515d"
   },
   "deploy/README.md": {
-    "mtime": 1794317096.747078,
-    "ast_hash": "f7e7046aea3c5340bf95127aeb518b2a",
+    "mtime": 1794323280.8680606,
+    "ast_hash": "52143159313884eb9b7cbbdc4cb4889b",
     "semantic_hash": ""
   },
   "deploy/compose/docker-compose.apps.yml": {
-    "mtime": 1794314079.2953753,
-    "ast_hash": "74be33894e79d7fbf67db4cd0b844a95",
+    "mtime": 1794323787.1110694,
+    "ast_hash": "ec1442a6452b72c620ae8041d88eb0de",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/Chart.yaml": {
@@ -2725,18 +2725,18 @@
     "semantic_hash": "257a8c16ad39e62d473d56840ba02a43"
   },
   "deploy/helm/openmap/templates/apps.yaml": {
-    "mtime": 1794299626.8662107,
-    "ast_hash": "bbc7b2e4f6d60732ea68e562cc21889e",
+    "mtime": 1794321236.8632374,
+    "ast_hash": "182b93fe14e261865e685ff08388b049",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/templates/auth.yaml": {
-    "mtime": 1794299601.065649,
-    "ast_hash": "45640c2a95e1d960e0bdde9b136fb259",
+    "mtime": 1794321259.4490967,
+    "ast_hash": "631ec34c9e44e037b1f996289ea2f47a",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/templates/datastores.yaml": {
-    "mtime": 1794317077.0911214,
-    "ast_hash": "11467bf5c119f96030b3d31d4ea34b1e",
+    "mtime": 1794324366.7743318,
+    "ast_hash": "d65a85d9e94fedfaceccc06268232ccf",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/templates/ingress.yaml": {
@@ -3560,9 +3560,9 @@
     "semantic_hash": "9532b5ece17b079d2beb4bb316a1ac46"
   },
   "apps/api/src/analytics/analytics.service.ts": {
-    "mtime": 1793821552.212705,
-    "ast_hash": "0209dd53d9da7b7f3ebb5878dacc05fe",
-    "semantic_hash": "0209dd53d9da7b7f3ebb5878dacc05fe"
+    "mtime": 1794323762.7923872,
+    "ast_hash": "ee8e42350d8e19c175be23e8d1e51edd",
+    "semantic_hash": ""
   },
   "apps/console/e2e/screens.spec.ts": {
     "mtime": 1794315489.854889,
@@ -3905,9 +3905,9 @@
     "semantic_hash": "1ce55f6ae6d65c88edfeffd59e76f15a"
   },
   "apps/api/src/db/clickhouse.service.ts": {
-    "mtime": 1794252838.6059802,
-    "ast_hash": "a10e1c936c112ec5def314e3cc183b70",
-    "semantic_hash": "a10e1c936c112ec5def314e3cc183b70"
+    "mtime": 1794323697.3062625,
+    "ast_hash": "913ad82bda39c1ce9536b935afdf0d76",
+    "semantic_hash": ""
   },
   "apps/console/src/components/cmdb/CmdbView.test.tsx": {
     "mtime": 1793892023.429251,
@@ -4775,8 +4775,8 @@
     "semantic_hash": "f90d279877cbfadbce104e36ad8c2bac"
   },
   "docs/evidence/assistant-eval.json": {
-    "mtime": 1794318696.7167382,
-    "ast_hash": "f45c04fa5cc241047ee8bd496a8fe15c",
+    "mtime": 1794323113.5278325,
+    "ast_hash": "39e19c98bb07afe07fd39235d3521680",
     "semantic_hash": ""
   },
   "packages/contracts/src/assistant.ts": {
@@ -8130,9 +8130,9 @@
     "semantic_hash": "b96a188e064ff25622d6754a4f3b1b4c"
   },
   "apps/bsm-engine/src/service/readiness.integration.test.ts": {
-    "mtime": 1794090490.1361635,
-    "ast_hash": "326448bf40d36cffa2d2026818e58d99",
-    "semantic_hash": "326448bf40d36cffa2d2026818e58d99"
+    "mtime": 1794323692.6042554,
+    "ast_hash": "56223c013e063f95373ab6d178338049",
+    "semantic_hash": ""
   },
   "apps/bsm-engine/src/service/readiness.ts": {
     "mtime": 1794090481.8198087,
@@ -8965,9 +8965,9 @@
     "semantic_hash": "a8823946141b8ce77da6f2676856bdd2"
   },
   "apps/bsm-engine/src/service/power.integration.test.ts": {
-    "mtime": 1794253201.5756001,
-    "ast_hash": "fafb1fc06c38d369bd5d1b2b7350feaf",
-    "semantic_hash": "fafb1fc06c38d369bd5d1b2b7350feaf"
+    "mtime": 1794323692.5862575,
+    "ast_hash": "1be9749e26d28ba2b41a6a94c6197a18",
+    "semantic_hash": ""
   },
   "apps/bsm-engine/src/service/power.ts": {
     "mtime": 1794253156.831933,
@@ -9040,9 +9040,9 @@
     "semantic_hash": "bfdbdb75f380ef9035c035f349b0e043"
   },
   "apps/bsm-engine/src/service/environment.integration.test.ts": {
-    "mtime": 1794254131.5482376,
-    "ast_hash": "4fc46f6210de181f2dce67d439aa4ce1",
-    "semantic_hash": "4fc46f6210de181f2dce67d439aa4ce1"
+    "mtime": 1794323692.5738194,
+    "ast_hash": "a36b25e1aae1209bf64a1812bcdab0a7",
+    "semantic_hash": ""
   },
   "apps/bsm-engine/src/service/environment.ts": {
     "mtime": 1794254104.0042176,
@@ -9340,8 +9340,8 @@
     "semantic_hash": ""
   },
   "apps/reconciler/src/backup.integration.test.ts": {
-    "mtime": 1794314576.3935466,
-    "ast_hash": "ada330b769d7209b4905281066d05363",
+    "mtime": 1794323692.6063478,
+    "ast_hash": "92935a4d6e469689d399c0684e170fca",
     "semantic_hash": ""
   },
   "apps/reconciler/src/reproject.ts": {
@@ -9350,18 +9350,18 @@
     "semantic_hash": ""
   },
   "deploy/backup/openmap-backup.sh": {
-    "mtime": 1794315901.2951536,
-    "ast_hash": "a85f165194c0e37e210716887db8bd62",
+    "mtime": 1794323787.1110694,
+    "ast_hash": "4d1e22473f1d83a6aa67ddf8c31a85ce",
     "semantic_hash": ""
   },
   "deploy/compose/openbao/agent-pgtde.hcl": {
-    "mtime": 1794311758.3023643,
-    "ast_hash": "bd97df05e65c1d1b8af852c31e536cf7",
+    "mtime": 1794319415.4384859,
+    "ast_hash": "3de621a71e0e143c1c420d424a740078",
     "semantic_hash": ""
   },
   "deploy/compose/openbao/init.sh": {
-    "mtime": 1794315837.1528375,
-    "ast_hash": "ce4a008de6332dff1d5ffb89adc9e6e4",
+    "mtime": 1794319407.3123038,
+    "ast_hash": "066749a3d2054f724d7e016c4f99c158",
     "semantic_hash": ""
   },
   "deploy/compose/openbao/openbao.hcl": {
@@ -9380,8 +9380,8 @@
     "semantic_hash": ""
   },
   "deploy/compose/openbao/policies/pg-tde.hcl": {
-    "mtime": 1794300748.819788,
-    "ast_hash": "fb28f05992e1f1b941ae4714484f2385",
+    "mtime": 1794319415.4148278,
+    "ast_hash": "2660bed82b70bc046cadb30ce1723af1",
     "semantic_hash": ""
   },
   "deploy/compose/postgres/tde/00-pg-tde.sh": {
@@ -9390,23 +9390,23 @@
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/init.sh": {
-    "mtime": 1794317036.3285308,
-    "ast_hash": "ce4a008de6332dff1d5ffb89adc9e6e4",
+    "mtime": 1794324366.686118,
+    "ast_hash": "066749a3d2054f724d7e016c4f99c158",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/policies/openmap-backup.hcl": {
-    "mtime": 1794317036.3619864,
+    "mtime": 1794324366.6497307,
     "ast_hash": "fd6893fc5225b3e987e294f773a1aecc",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/policies/openmap-services.hcl": {
-    "mtime": 1794317036.3719437,
+    "mtime": 1794324366.650807,
     "ast_hash": "be02cb6d93620c702b70db027a3fcf46",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/policies/pg-tde.hcl": {
-    "mtime": 1794317036.3818188,
-    "ast_hash": "fb28f05992e1f1b941ae4714484f2385",
+    "mtime": 1794324366.6563604,
+    "ast_hash": "2660bed82b70bc046cadb30ce1723af1",
     "semantic_hash": ""
   },
   "packages/contracts/src/backup.test.ts": {
@@ -9510,8 +9510,8 @@
     "semantic_hash": ""
   },
   "deploy/helm/openmap/templates/openbao.yaml": {
-    "mtime": 1794317054.4574935,
-    "ast_hash": "b2088656e36afd9c7a10e2bdac5fbf72",
+    "mtime": 1794321259.4496243,
+    "ast_hash": "75216905f2781404ba51828c5e7862f7",
     "semantic_hash": ""
   },
   "docs/adr/ADR-062-cable-verification.md": {
@@ -9655,13 +9655,13 @@
     "semantic_hash": ""
   },
   "deploy/compose/openbao/agent-clickhouse.hcl": {
-    "mtime": 1794315812.1860774,
-    "ast_hash": "49363397bc471d7f435b48a4707ee862",
+    "mtime": 1794323730.7553098,
+    "ast_hash": "71993cb90c11ef8fa4d0450ec9d39bf7",
     "semantic_hash": ""
   },
   "deploy/compose/openbao/policies/clickhouse-disk.hcl": {
-    "mtime": 1794315808.9134026,
-    "ast_hash": "e4e0a568245eaeaf67981ed8cda59a22",
+    "mtime": 1794323730.739632,
+    "ast_hash": "12944366642d0efd3708af5db0caec08",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/clickhouse/with-disk-key.sh": {
@@ -9670,18 +9670,18 @@
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/agent-clickhouse.hcl": {
-    "mtime": 1794317036.4214363,
-    "ast_hash": "49363397bc471d7f435b48a4707ee862",
+    "mtime": 1794324366.6218257,
+    "ast_hash": "71993cb90c11ef8fa4d0450ec9d39bf7",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/agent-pgtde.hcl": {
-    "mtime": 1794311758.3023643,
-    "ast_hash": "bd97df05e65c1d1b8af852c31e536cf7",
+    "mtime": 1794321259.303974,
+    "ast_hash": "3de621a71e0e143c1c420d424a740078",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/openbao/policies/clickhouse-disk.hcl": {
-    "mtime": 1794317036.3577313,
-    "ast_hash": "e4e0a568245eaeaf67981ed8cda59a22",
+    "mtime": 1794324366.6481237,
+    "ast_hash": "12944366642d0efd3708af5db0caec08",
     "semantic_hash": ""
   },
   "deploy/helm/openmap/files/postgres/00-pg-tde.sh": {
@@ -9717,6 +9717,41 @@
   "docs/evidence/sec-pgtde-migration.md": {
     "mtime": 1794315776.6911817,
     "ast_hash": "97fd40b385b96155594d7d4cbaa3477b",
+    "semantic_hash": ""
+  },
+  "packages/db/src/clickhouse-options.test.ts": {
+    "mtime": 1794323722.4072366,
+    "ast_hash": "a4175fbc318661bb7186084751c6ad4c",
+    "semantic_hash": ""
+  },
+  "packages/db/src/clickhouse-options.ts": {
+    "mtime": 1794323655.73217,
+    "ast_hash": "f27058f5a627c03e2a5669e172f14dab",
+    "semantic_hash": ""
+  },
+  "packages/db/src/pg-config.test.ts": {
+    "mtime": 1794319831.1786819,
+    "ast_hash": "5ecd4126af5729b9b4e601e4a968ab6e",
+    "semantic_hash": ""
+  },
+  "packages/db/src/pg-config.ts": {
+    "mtime": 1794319808.5105276,
+    "ast_hash": "60f91b2eb2127b606c263f330fac40a2",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-068-encryption-in-transit.md": {
+    "mtime": 1794319371.5770428,
+    "ast_hash": "7ad55d31016c0a119569814e41536315",
+    "semantic_hash": ""
+  },
+  "docs/evidence/sec-tls-clickhouse.md": {
+    "mtime": 1794325001.8427968,
+    "ast_hash": "088ce8cbce0d0d4a50e04c519ee87766",
+    "semantic_hash": ""
+  },
+  "docs/evidence/sec-tls-postgres.md": {
+    "mtime": 1794323280.8196483,
+    "ast_hash": "20003f769e49501b0e6fe5e9ddd1e5bd",
     "semantic_hash": ""
   }
 }

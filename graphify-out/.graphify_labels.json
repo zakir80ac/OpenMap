@@ -1116,5 +1116,14 @@
   "1114": "github.com/openmap/openmap/apps/collectors",
   "1115": "github.com/openmap/openmap/apps/node",
   "1116": "github.com/openmap/openmap/tools/simulator",
-  "1117": "synth-estate/vitest.config.ts"
+  "1117": "synth-estate/vitest.config.ts",
+  "1118": "graph/vitest.config.ts",
+  "1119": "graph/vitest.integration.config.ts",
+  "1120": "ui/vitest.config.ts",
+  "1121": "vault/vitest.config.ts",
+  "1122": "vault/vitest.integration.config.ts",
+  "1123": "github.com/openmap/openmap/apps/collectors",
+  "1124": "github.com/openmap/openmap/apps/node",
+  "1125": "github.com/openmap/openmap/tools/simulator",
+  "1126": "synth-estate/vitest.config.ts"
 }
