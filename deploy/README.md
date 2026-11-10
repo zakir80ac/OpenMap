@@ -176,6 +176,26 @@ Values written before field encryption stay readable. Encrypt them once with
 7. `docker compose ... up -d`. Memgraph, ClickHouse and Meilisearch are untouched.
 8. Once the stack has run on it, remove `postgres-data`: it holds the data unencrypted.
 
+## VM appliance (REQ-INT-018)
+
+`deploy/appliance` builds an Ubuntu Server 24.04 VM image that runs OpenMap with no network access.
+
+**Building the image** (on a connected Linux machine with KVM):
+
+1. Build the air-gap bundle: `deploy/airgap-bundle/build-bundle.sh <version> <dir>`.
+2. Build the image:
+   `packer init deploy/appliance && packer build -var openmap_version=<version> -var bundle_dir=<dir> -var build_password=<random> deploy/appliance`.
+   This produces `openmap-<version>.qcow2`, plus `.vmdk` (VMware, for an OVA) and `.vhdx` (Hyper-V).
+
+The image carries Docker, every image already loaded, and two units:
+
+- **`openmap-firstboot.service`** runs once, before the first start. It gives this VM its own random passwords and keys
+  in `/opt/openmap/.env` (mode 0600) and sets the public URLs to the VM's address (or `OPENMAP_PUBLIC_HOST`). It writes
+  the generated administrator credentials to `/root/openmap-credentials.txt`: store them and delete the file.
+- **`openmap.service`** starts the air-gapped compose stack on every boot.
+
+The build user is locked before the image is sealed.
+
 ## Backup and restore (REQ-INT-019, ADR-066)
 
 A backup set holds the stores of record: PostgreSQL (`pg_dump` custom archive: application, Keycloak and Superset

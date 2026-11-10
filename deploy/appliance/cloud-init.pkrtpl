@@ -1,0 +1,9 @@
+#cloud-config
+# REQ-INT-018 — the build-time user Packer connects with; install.sh locks it before the image is sealed.
+ssh_pwauth: true
+users:
+  - name: ${user}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock_passwd: false
+    plain_text_passwd: ${password}

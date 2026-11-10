@@ -40,7 +40,7 @@ echo "saving images"
 docker save $(printf '%s ' $images) | gzip -1 > "$out/openmap-images-${version}.tar.gz"
 
 cp "$compose/docker-compose.yml" "$compose/docker-compose.apps.yml" "$compose/docker-compose.airgap.yml" "$compose/.env.example" "$out/"
-cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$compose/clickhouse" "$out/"
+cp -R "$compose/keycloak" "$compose/postgres" "$compose/superset" "$compose/otel" "$compose/prometheus" "$compose/clickhouse" "$compose/openbao" "$out/"
 cp "$here/load-bundle.sh" "$out/"
 # The CPU LLM profile needs its weights offline: ship the GGUF named in .env (or .env.example) when it is present.
 models_dir="$compose/models"

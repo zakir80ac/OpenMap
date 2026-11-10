@@ -1,0 +1,15 @@
+# REQ-INT-018 — generates the appliance's own secrets and public address once, before the stack's first start.
+[Unit]
+Description=OpenMap appliance first boot (secrets and public address)
+After=network-online.target
+Wants=network-online.target
+Before=openmap.service
+ConditionPathExists=!/var/lib/openmap/firstboot.done
+
+[Service]
+Type=oneshot
+ExecStart=/opt/openmap/openmap-firstboot.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

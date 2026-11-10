@@ -1,0 +1,18 @@
+# REQ-INT-018 — the OpenMap stack on the appliance: the air-gapped compose profile from the images baked into the
+# VM (pull_policy never), started after Docker and the first-boot secrets, stopped cleanly with the VM.
+[Unit]
+Description=OpenMap (air-gapped compose stack)
+Requires=docker.service
+After=docker.service openmap-firstboot.service network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/openmap
+EnvironmentFile=/opt/openmap/appliance.env
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.apps.yml -f docker-compose.airgap.yml stop
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target
