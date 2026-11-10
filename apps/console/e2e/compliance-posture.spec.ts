@@ -57,5 +57,6 @@ test('the posture tab evaluates the estate per framework and shows the evidence 
   await expect(first.getByRole('link')).toBeVisible();
   await page.screenshot({ path: screenshotsDir + 'compliance-findings-' + locale + '.png', fullPage: false });
 
-  await expect(page.getByRole('alert')).toHaveCount(0);
+  // Next.js's route announcer is an alert too (it reads the page title): only an error alert counts.
+  await expect(page.getByRole('alert').filter({ hasText: translate(locale, 'common.error') })).toHaveCount(0);
 });

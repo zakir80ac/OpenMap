@@ -74,12 +74,13 @@ test('Assistant: a conversation survives a reload and answers "and last month?" 
 
   // Deleting the open conversation leaves the list without it and the thread empty.
   const before = await list.locator(':scope > li').count();
-  await list
-    .locator(':scope > li')
-    .first()
-    .getByRole('button', { name: translate(locale, 'assistant.deleteConversation') })
-    .click();
+  const first = list.locator(':scope > li').first();
+  // Title, turn count and time: what tells this conversation apart from the tenant's older ones.
+  const entry = ((await first.locator('button').first().textContent()) ?? '').trim();
+  expect(entry).not.toBe('');
+  await first.getByRole('button', { name: translate(locale, 'assistant.deleteConversation') }).click();
   await expect(page).not.toHaveURL(/[?&]c=/);
   if (before === 1) await expect(page.getByText(translate(locale, 'assistant.noConversations'))).toBeVisible();
-  else await expect(list.locator(':scope > li')).toHaveCount(before - 1);
+  // The list is capped, so with more stored conversations than it shows it refills: the deleted entry is what must go.
+  else await expect(list.locator(':scope > li').filter({ hasText: entry })).toHaveCount(0);
 });

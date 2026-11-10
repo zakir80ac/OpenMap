@@ -65,6 +65,7 @@ test('an Alertmanager alert no CI matches is listed, mapped to a host and cleare
   const token = 'e2e-' + randomUUID();
   const integrationId = await integration(gql, token);
   const host = 'e2e-unmapped-' + randomUUID().slice(0, 8) + '.lab.test';
+  // The parser titles an Alertmanager alert `<alertname>: <summary annotation>`; the summary names the host.
   const title = 'E2EHostDown: ' + host;
   const posted = await page.request.post(loadEnv().PUBLIC_API_URL + '/' + MONITORING.ingestPath + '/' + integrationId, {
     headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json' },
@@ -76,7 +77,7 @@ test('an Alertmanager alert no CI matches is listed, mapped to a host and cleare
       commonLabels: {},
       commonAnnotations: {},
       externalURL: '',
-      alerts: [{ status: 'firing', labels: { alertname: 'E2EHostDown', instance: host + ':9100', severity: 'critical' }, annotations: {}, startsAt: new Date().toISOString(), endsAt: '0001-01-01T00:00:00Z', fingerprint: randomUUID() }],
+      alerts: [{ status: 'firing', labels: { alertname: 'E2EHostDown', instance: host + ':9100', severity: 'critical' }, annotations: { summary: host }, startsAt: new Date().toISOString(), endsAt: '0001-01-01T00:00:00Z', fingerprint: randomUUID() }],
     },
   });
   expect(posted.status()).toBe(202);

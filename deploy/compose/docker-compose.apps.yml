@@ -150,6 +150,8 @@ services:
       <<: *app-env
       CONSOLE_PORT: "3000"
     ports: ["${CONSOLE_PORT:-3000}:3000"]
+    # ADR-068: loadEnv in the console's server code trusts SERVICE_CA_PATH, which the app environment sets.
+    volumes: ["service-ca:/run/openmap/ca:ro"]
     depends_on:
       api: { condition: service_healthy }
     restart: unless-stopped

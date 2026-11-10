@@ -24,7 +24,7 @@ test('the inventory card reads the live inventory, lists every endpoint and down
   const inventory = (await res.json()) as { _meta: { hostvars: Record<string, unknown> } };
   const card = page.getByRole('region', { name: translate(locale, 'integrations.inventory.title') });
   await expect(card).toBeVisible({ timeout: LOAD_TIMEOUT_MS });
-  await expect(card.getByText(translate(locale, 'integrations.inventory.nodes'))).toBeVisible();
+  await expect(card.getByText(translate(locale, 'integrations.inventory.nodes'), { exact: true })).toBeVisible();
   expect(typeof inventory._meta.hostvars).toBe('object');
 
   const table = card.getByRole('table', { name: translate(locale, 'integrations.inventory.endpoints') });

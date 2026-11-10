@@ -146,7 +146,7 @@ test('patch panels, cables, a trace and a circuit are recorded and taken down fr
     await panelForm.getByRole('spinbutton', { name: t('dcim.cabling.ports') }).fill(PORTS);
     await panelForm.getByRole('button', { name: t('dcim.cabling.panelForm') }).click();
     await expect(
-      page.getByRole('table', { name: t('dcim.cabling.panels.title') }).getByText(name, { exact: true }),
+      page.getByRole('table', { exact: true, name: t('dcim.cabling.panels.title') }).getByText(name, { exact: true }),
     ).toBeVisible();
   }
 
@@ -180,7 +180,7 @@ test('patch panels, cables, a trace and a circuit are recorded and taken down fr
     await setEnd(page, locale, cableForm, t('dcim.cabling.endB'), c.b);
     await cableForm.getByRole('button', { name: t('dcim.cabling.cableForm') }).click();
     await expect(
-      page.getByRole('table', { name: t('dcim.cabling.cables.title') }).getByText(c.label, { exact: true }),
+      page.getByRole('table', { exact: true, name: t('dcim.cabling.cables.title') }).getByText(c.label, { exact: true }),
     ).toBeVisible();
   }
 
@@ -209,20 +209,20 @@ test('patch panels, cables, a trace and a circuit are recorded and taken down fr
   await setEnd(page, locale, circuitForm, t('dcim.cabling.endA'), { pick: panelB, port: '2', side: 'rear' });
   await circuitForm.getByRole('button', { name: t('dcim.cabling.circuitForm') }).click();
   await expect(
-    page.getByRole('table', { name: t('dcim.cabling.circuits.title') }).getByText(circuitId, { exact: true }),
+    page.getByRole('table', { exact: true, name: t('dcim.cabling.circuits.title') }).getByText(circuitId, { exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: screenshotsDir + 'cabling-' + locale + '.png', fullPage: true });
 
   // Take it all down again.
   await page.getByRole('button', { name: t('dcim.cabling.removeCircuit', { circuit: circuitId }) }).click();
   await expect(
-    page.getByRole('table', { name: t('dcim.cabling.circuits.title') }).getByText(circuitId, { exact: true }),
+    page.getByRole('table', { exact: true, name: t('dcim.cabling.circuits.title') }).getByText(circuitId, { exact: true }),
   ).toHaveCount(0);
   for (const c of cables) {
     await page.getByRole('button', { name: t('dcim.cabling.disconnectCable', { label: c.label }) }).click();
     await expect(page.getByText(c.label, { exact: true })).toHaveCount(0);
   }
-  const panels = page.getByRole('table', { name: t('dcim.cabling.panels.title') });
+  const panels = page.getByRole('table', { exact: true, name: t('dcim.cabling.panels.title') });
   for (const name of [panelA, panelB]) {
     const row = panels.getByRole('row').filter({ hasText: name });
     await row.getByRole('button', { name: new RegExp(t('dcim.cabling.remove')) }).click();
