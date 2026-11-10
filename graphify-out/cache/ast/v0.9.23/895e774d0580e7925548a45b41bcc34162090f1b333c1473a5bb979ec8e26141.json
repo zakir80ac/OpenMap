@@ -1,0 +1,1 @@
+{"nodes": [{"id": "e_openmap_apps_collectors_internal_snmp_oids_go", "label": "oids.go", "file_type": "code", "source_file": "apps/collectors/internal/snmp/oids.go", "source_location": "L1"}], "edges": [], "raw_calls": []}
