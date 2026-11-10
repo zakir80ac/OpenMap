@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { REPO_PATHS } from '@openmap/constants';
 import { describe, expect, it } from 'vitest';
-import { adrFile, contractRow, decisionRow, parseAdrHeader, upsertContract, upsertDecision } from './records.js';
+import { adrFile, componentRow, contractRow, decisionRow, parseAdrHeader, upsertComponent, upsertContract, upsertDecision } from './records.js';
 import type { ContractRow, Decision } from './model.js';
 
 const repoRoot = resolve(process.cwd(), '..', '..');
@@ -54,5 +54,20 @@ describe('tracker decisions and contracts', () => {
     expect(() => contractRow({ name: 'ci', version: '0.7' }, ci)).toThrow(/x\.y\.z/);
     expect(() => contractRow({ name: 'new' }, undefined)).toThrow(/version/);
     expect(() => contractRow({ name: 'ci', adr: 'adr45' }, ci)).toThrow(/ADR-045/);
+  });
+});
+
+describe('components (T-583)', () => {
+  const pg = { name: 'PostgreSQL', layer: 'System of record', versionPinned: '17', licence: 'PostgreSQL', runsAs: 'service' as const, airGapReady: 'Y' as const, replacedByOption: '' };
+  it('updates the given fields of an existing component and keeps the rest', () => {
+    const row = componentRow({ name: 'PostgreSQL', version: '17.11.1 (Percona, pg_tde)' }, pg);
+    expect(row).toEqual({ ...pg, versionPinned: '17.11.1 (Percona, pg_tde)' });
+    expect(upsertComponent([pg], row)).toEqual([row]);
+  });
+  it('needs every field for a new component, and checks runs-as and air-gap', () => {
+    expect(() => componentRow({ name: '@peculiar/x509', layer: 'Node PKI' }, undefined)).toThrow(/versionPinned/u);
+    expect(() => componentRow({ name: 'x', layer: 'l', version: '1', licence: 'MIT', runsAs: 'daemon', airGap: 'Y' }, undefined)).toThrow(/runsAs/u);
+    const lib = componentRow({ name: '@peculiar/x509', layer: 'Node PKI', version: '1.12.3', licence: 'MIT', runsAs: 'library', airGap: 'Y' }, undefined);
+    expect(upsertComponent([pg], lib).map((r) => r.name)).toEqual(['PostgreSQL', '@peculiar/x509']);
   });
 });

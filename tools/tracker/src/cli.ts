@@ -1,11 +1,12 @@
-// REQ-CORE-007 — tracker CLI (CLAUDE.md §3): init, add, set, status, next, report, verify, session, decision, contract.
+// REQ-CORE-007 — tracker CLI (CLAUDE.md §3): init, add, set, status, next, report, verify, session, decision, contract,
+// component.
 import { writeFileSync, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { PRIORITIES, REQ_STATUSES, REPO_PATHS, WORKSTREAMS, GUARD_HEADER_LINES, type ReqStatus, type Workstream } from '@openmap/constants';
 import { readWorkbook, writeWorkbook, workbookExists } from './workbook.js';
 import { loadSeeds, materialise, nextId, seedComponents, seedContracts, seedDecisions, seedRisks } from './seed.js';
 import { today, type Requirement, type TrackerData } from './model.js';
-import { adrFile, contractRow, decisionRow, readAdrHeader, upsertContract, upsertDecision } from './records.js';
+import { adrFile, componentRow, contractRow, decisionRow, readAdrHeader, upsertComponent, upsertContract, upsertDecision } from './records.js';
 
 const repoRoot = resolve(process.cwd(), '..', '..');
 const trackerPath = join(repoRoot, REPO_PATHS.tracker);
@@ -339,6 +340,23 @@ async function cmdContract(positional: string[], flags: Flags): Promise<void> {
   console.log('tracker: contract ' + row.name + ' ' + (existing ? existing.version + ' → ' : '') + row.version + (row.lastAdr ? ' (' + row.lastAdr + ')' : ''));
 }
 
+/**
+ * `tracker component <name> [--layer ..] [--version ..] [--licence ..] [--runs-as library|subprocess|service]
+ * [--airgap Y|N] [--replaced-by ..]`: records a component (CLAUDE.md §5: no dependency outside the table without an ADR).
+ */
+async function cmdComponent(positional: string[], flags: Flags): Promise<void> {
+  const name = positional[0];
+  if (!name) fail('usage: tracker component <name> [--layer ..] [--version ..] [--licence ..] [--runs-as ..] [--airgap Y|N] [--replaced-by ..]');
+  const data = await load();
+  const existing = data.components.find((c) => c.name === name);
+  const row = orFail(() =>
+    componentRow({ name, layer: str(flags, 'layer'), version: str(flags, 'version'), licence: str(flags, 'licence'), runsAs: str(flags, 'runs-as'), airGap: str(flags, 'airgap'), replacedBy: str(flags, 'replaced-by') }, existing),
+  );
+  data.components = upsertComponent(data.components, row);
+  await writeWorkbook(trackerPath, data);
+  console.log('tracker: component ' + row.name + ' ' + (existing ? existing.versionPinned + ' → ' : '') + row.versionPinned + ' (' + row.licence + ', ' + row.runsAs + ')');
+}
+
 async function main(): Promise<void> {
   const { positional, flags } = parseArgs(process.argv.slice(2));
   const [command, ...rest] = positional;
@@ -363,10 +381,12 @@ async function main(): Promise<void> {
       return cmdSession(flags);
     case 'decision':
       return cmdDecision(rest, flags);
+    case 'component':
+      return cmdComponent(rest, flags);
     case 'contract':
       return cmdContract(rest, flags);
     default:
-      fail('usage: tracker <init|add|set|status|next|list|report|verify|session|decision|contract>');
+      fail('usage: tracker <init|add|set|status|next|list|report|verify|session|decision|contract|component>');
   }
 }
 

@@ -3,7 +3,7 @@
 // by ADR number and contract name, so a later record replaces an earlier one instead of adding a second row.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { decisionSchema, contractRowSchema, type ContractRow, type Decision } from './model.js';
+import { componentSchema, decisionSchema, contractRowSchema, type Component, type ContractRow, type Decision } from './model.js';
 
 /** How many header lines of an ADR carry its title, status and date (a long status wraps onto the next line). */
 const ADR_HEADER_LINES = 6;
@@ -92,6 +92,36 @@ export function contractRow(input: ContractInput, existing: ContractRow | undefi
 
 /** Inserts or replaces a contract, keeping existing rows in place and appending a new one. */
 export function upsertContract(rows: ContractRow[], row: ContractRow): ContractRow[] {
+  return rows.some((r) => r.name === row.name) ? rows.map((r) => (r.name === row.name ? row : r)) : [...rows, row];
+}
+
+export interface ComponentInput {
+  name: string;
+  layer?: string | undefined;
+  version?: string | undefined;
+  licence?: string | undefined;
+  runsAs?: string | undefined;
+  airGap?: string | undefined;
+  replacedBy?: string | undefined;
+}
+
+/** The Components row: a new component needs every field; an existing one keeps what is not given. */
+export function componentRow(input: ComponentInput, existing: Component | undefined): Component {
+  const parsed = componentSchema.safeParse({
+    name: input.name,
+    layer: input.layer ?? existing?.layer,
+    versionPinned: input.version ?? existing?.versionPinned,
+    licence: input.licence ?? existing?.licence,
+    runsAs: input.runsAs ?? existing?.runsAs,
+    airGapReady: input.airGap ?? existing?.airGapReady,
+    replacedByOption: input.replacedBy ?? existing?.replacedByOption ?? '',
+  });
+  if (!parsed.success) throw new Error(input.name + ': ' + parsed.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; '));
+  return parsed.data;
+}
+
+/** Inserts or replaces a component by name, keeping the sheet's order. */
+export function upsertComponent(rows: Component[], row: Component): Component[] {
   return rows.some((r) => r.name === row.name) ? rows.map((r) => (r.name === row.name ? row : r)) : [...rows, row];
 }
 

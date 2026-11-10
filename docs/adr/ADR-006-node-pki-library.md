@@ -1,6 +1,6 @@
 # ADR-006 — `@peculiar/x509` for Node certificate issuance
 
-Status: Proposed (awaiting Syed) · Date: 2026-10-22 · Tracker: REQ-SEC-004, REQ-DISC-031
+Status: Accepted (Syed, 2026-11-10: "finish SEC-011, closing PERF-002 and PERF-004, and the 11 P1 rows", the rows including REQ-SEC-013, this ADR's acceptance) · Proposed 2026-10-22 · Tracker: REQ-SEC-004, REQ-DISC-031, REQ-SEC-013
 
 ## Context
 
@@ -18,3 +18,9 @@ Use `@peculiar/x509` (MIT, pure TypeScript over WebCrypto) in `apps/scheduler` f
 ## Consequences
 
 One new runtime dependency, not in SPEC.md's component table, hence this ADR. The library is sovereign (no network calls) and air-gap safe.
+
+## Note (2026-11-10)
+
+ADR-068 put a PKI engine in OpenBao for the service certificates of the stores. The Node CA stays in the scheduler
+under this ADR: Nodes enrol from the field with a one-time token, and the scheduler signs their client certificate.
+Moving that issuance to OpenBao's PKI engine remains the upgrade path named above; it is not part of this decision.
