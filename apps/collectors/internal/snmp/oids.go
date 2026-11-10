@@ -52,6 +52,14 @@ const (
 	oidDot1qVlanStaticName  = ".1.3.6.1.2.1.17.7.1.4.3.1.1"
 	oidDot1dBasePortIfIndex = ".1.3.6.1.2.1.17.1.4.1.2"
 	oidDot1qPvid            = ".1.3.6.1.2.1.17.7.1.4.5.1.1"
+
+	// REQ-IPAM-004: BRIDGE-MIB and Q-BRIDGE-MIB forwarding databases, the MAC addresses each bridge port has learned.
+	// dot1dTpFdb is indexed by the six MAC octets; dot1qTpFdb by the filtering database id (the VLAN on most switches)
+	// then the six octets. Status 3 is learned; self (4) and mgmt (5) entries are the switch's own addresses.
+	oidDot1dTpFdbPort   = ".1.3.6.1.2.1.17.4.3.1.2"
+	oidDot1dTpFdbStatus = ".1.3.6.1.2.1.17.4.3.1.3"
+	oidDot1qTpFdbPort   = ".1.3.6.1.2.1.17.7.1.2.2.1.2"
+	oidDot1qTpFdbStatus = ".1.3.6.1.2.1.17.7.1.2.2.1.3"
 )
 
 // entPhysicalClass values (ENTITY-MIB PhysicalClass).

@@ -1,17 +1,53 @@
 // REQ-QA-001 — physical hosts: Dell/HPE/Lenovo servers with serials, system UUIDs, BMCs on the
 // OOB network, operating systems, dual power feeds, ToR cabling and base software installs.
-import { HYPERVISOR_PREFIX, POOL, SOFTWARE, VENDORS, VLAN_ID, type OsDef, type SoftwareDef } from '../catalog.js';
+import {
+  HYPERVISOR_PREFIX,
+  POOL,
+  SOFTWARE,
+  VENDORS,
+  VLAN_ID,
+  type OsDef,
+  type SoftwareDef,
+} from '../catalog.js';
 import type { Attributes } from '@openmap/contracts';
 import type { Slot } from '../estate.js';
 import { cidr, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt, isoAt, MS_PER_DAY } from '../time.js';
-import { allocateIp, attachIp, ensureSoftware, fqdnOf, identityMac, installPath, pad, softwareRefOf, type HostRec, type SiteWorld, type World } from '../world.js';
+import {
+  allocateIp,
+  attachIp,
+  ensureSoftware,
+  fqdnOf,
+  identityMac,
+  installPath,
+  pad,
+  softwareRefOf,
+  type HostRec,
+  type SiteWorld,
+  type World,
+} from '../world.js';
 import { hostComponents } from './components.js';
-import { allocateHostPort } from './network.js';
+import { allocateHostPort, learnMac } from './network.js';
 
-const BARE_METAL_PURPOSES = ['oracle', 'sql', 'hadoop', 'backup', 'batch', 'file', 'sas', 'build', 'gpu', 'hsm'] as const;
-const CPU_MODELS = ['Intel Xeon Gold 6448Y', 'Intel Xeon Platinum 8468', 'AMD EPYC 9354', 'AMD EPYC 9454'] as const;
+const BARE_METAL_PURPOSES = [
+  'oracle',
+  'sql',
+  'hadoop',
+  'backup',
+  'batch',
+  'file',
+  'sas',
+  'build',
+  'gpu',
+  'hsm',
+] as const;
+const CPU_MODELS = [
+  'Intel Xeon Gold 6448Y',
+  'Intel Xeon Platinum 8468',
+  'AMD EPYC 9354',
+  'AMD EPYC 9454',
+] as const;
 const NICS = ['eno1', 'eno2'] as const;
 const WINDOWS_NICS = ['Ethernet', 'Ethernet 2'] as const;
 const WARRANTY_YEARS_OPTIONS = [3, 5] as const;
@@ -36,7 +72,13 @@ function reportedOsVersion(os: OsDef): string {
 }
 
 function osSubscription(os: OsDef): SoftwareDef | undefined {
-  const byName: Record<string, string> = { Ubuntu: 'Ubuntu Pro', 'Red Hat Enterprise Linux': 'Enterprise Linux Server Subscription', 'Windows Server': 'Windows Server Datacenter', 'VMware ESXi': 'vSphere Enterprise Plus', 'Nutanix AHV': 'AOS Ultimate' };
+  const byName: Record<string, string> = {
+    Ubuntu: 'Ubuntu Pro',
+    'Red Hat Enterprise Linux': 'Enterprise Linux Server Subscription',
+    'Windows Server': 'Windows Server Datacenter',
+    'VMware ESXi': 'vSphere Enterprise Plus',
+    'Nutanix AHV': 'AOS Ultimate',
+  };
   const wanted = byName[os.name];
   return SOFTWARE.find((s) => s.name === wanted);
 }
@@ -49,7 +91,11 @@ function hostSlot(world: World, site: SiteWorld, os: OsDef, ordinal: number): Sl
     collectorId: family === 'wmi' ? 'wmi' : 'ssh-agentless',
     nodeId,
     siteCode: site.def.code,
-    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase + POOL.servers, 0, 0, 16), label: site.def.code + ' server network' },
+    target: {
+      kind: 'cidr',
+      value: cidr(RFC1918_TEN, site.def.octetBase + POOL.servers, 0, 0, 16),
+      label: site.def.code + ' server network',
+    },
     evidenceKind: 'cli_output',
   });
 }
@@ -61,13 +107,26 @@ function bmcSlot(world: World, site: SiteWorld, ordinal: number): Slot {
     collectorId: 'ipmi-redfish',
     nodeId,
     siteCode: site.def.code,
-    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase + POOL.oob, 0, 0, 16), label: site.def.code + ' out-of-band network' },
+    target: {
+      kind: 'cidr',
+      value: cidr(RFC1918_TEN, site.def.octetBase + POOL.oob, 0, 0, 16),
+      label: site.def.code + ' out-of-band network',
+    },
     evidenceKind: 'api_response',
   });
 }
 
 /** Adds a software_instance on a host or VM CI and links it to the catalogue entry. */
-export function installSoftware(world: World, rng: Rng, slot: Slot, computeIdx: number, computeRef: string, def: SoftwareDef, family: OsDef['family'], siteCode: string): number {
+export function installSoftware(
+  world: World,
+  rng: Rng,
+  slot: Slot,
+  computeIdx: number,
+  computeRef: string,
+  def: SoftwareDef,
+  family: OsDef['family'],
+  siteCode: string,
+): number {
   const { b } = world;
   const softwareIdx = ensureSoftware(world, def);
   const path = installPath(def.path, family);
@@ -76,7 +135,15 @@ export function installSoftware(world: World, rng: Rng, slot: Slot, computeIdx: 
     'software_instance',
     { hostRef: computeRef, softwareRef: softwareRefOf(def), installPath: path },
     def.name + ' ' + def.version + ' on ' + b.get(computeIdx).name,
-    { vendor: def.vendor, name: def.name, version: def.version, installPath: path, installedAt: isoAt(-rng.int(10, 900) * MS_PER_DAY), category: def.category, running: true },
+    {
+      vendor: def.vendor,
+      name: def.name,
+      version: def.version,
+      installPath: path,
+      installedAt: isoAt(-rng.int(10, 900) * MS_PER_DAY),
+      category: def.category,
+      running: true,
+    },
     siteCode,
     { tags: ['software'] },
   );
@@ -87,7 +154,13 @@ export function installSoftware(world: World, rng: Rng, slot: Slot, computeIdx: 
 
 export function generateHosts(world: World, rng: Rng): void {
   const { b } = world;
-  const agents = SOFTWARE.filter((s) => s.category === 'agent' && s.name !== 'VMware Tools' && s.name !== 'Backup and Replication' && s.name !== 'Zabbix Server');
+  const agents = SOFTWARE.filter(
+    (s) =>
+      s.category === 'agent' &&
+      s.name !== 'VMware Tools' &&
+      s.name !== 'Backup and Replication' &&
+      s.name !== 'Zabbix Server',
+  );
   for (const site of world.sites) {
     if (site.def.hostShare <= 0) continue;
     const plans = world.hostPlans.filter((p) => p.site === site);
@@ -116,39 +189,44 @@ export function generateHosts(world: World, rng: Rng): void {
       const warrantyYears = rng.pick(WARRANTY_YEARS_OPTIONS);
       const warrantyEndOffset = -purchaseAge + warrantyYears * DAYS_PER_YEAR;
       const hostAttributes: Attributes = {
-          hostname,
-          fqdn,
-          manufacturer: plan.model.manufacturer,
-          model: plan.model.model,
-          partNumber: plan.model.partNumber,
-          serialNumber: serial,
-          systemUuid,
-          assetTag: 'SRV-' + rng.alnum(7),
-          cpuSockets: plan.model.cpuSockets,
-          cpuCores: plan.model.cpuSockets * plan.model.coresPerSocket,
-          cpuModel: rng.pick(CPU_MODELS),
-          memoryGb: plan.model.memoryGb,
-          primaryMac,
-          primaryIp: alloc.address,
-          rack: rack.name,
-          uPosition: plan.uPosition,
-          heightU: plan.model.heightU,
-          biosVersion: rng.pick(BIOS_VERSIONS),
-          powerState: 'on',
-          role: plan.platform === null ? 'bare_metal' : 'hypervisor',
-          platform: plan.platform,
-          osName: plan.os.name,
-          osVersion: plan.os.version,
-          purchaseDate: dateAt(-purchaseAge),
-          warrantyEnd: dateAt(warrantyEndOffset),
-          warrantyExpired: warrantyEndOffset < 0,
-          warrantyProvider: plan.model.manufacturer,
-          warrantyLevel: rng.chance(0.7) ? 'ProSupport Plus 4h' : 'Basic NBD',
-          uptimeSeconds: rng.int(3600, 300 * 24 * 3600),
-          site: site.def.code,
-        };
+        hostname,
+        fqdn,
+        manufacturer: plan.model.manufacturer,
+        model: plan.model.model,
+        partNumber: plan.model.partNumber,
+        serialNumber: serial,
+        systemUuid,
+        assetTag: 'SRV-' + rng.alnum(7),
+        cpuSockets: plan.model.cpuSockets,
+        cpuCores: plan.model.cpuSockets * plan.model.coresPerSocket,
+        cpuModel: rng.pick(CPU_MODELS),
+        memoryGb: plan.model.memoryGb,
+        primaryMac,
+        primaryIp: alloc.address,
+        rack: rack.name,
+        uPosition: plan.uPosition,
+        heightU: plan.model.heightU,
+        biosVersion: rng.pick(BIOS_VERSIONS),
+        powerState: 'on',
+        role: plan.platform === null ? 'bare_metal' : 'hypervisor',
+        platform: plan.platform,
+        osName: plan.os.name,
+        osVersion: plan.os.version,
+        purchaseDate: dateAt(-purchaseAge),
+        warrantyEnd: dateAt(warrantyEndOffset),
+        warrantyExpired: warrantyEndOffset < 0,
+        warrantyProvider: plan.model.manufacturer,
+        warrantyLevel: rng.chance(0.7) ? 'ProSupport Plus 4h' : 'Basic NBD',
+        uptimeSeconds: rng.int(3600, 300 * 24 * 3600),
+        site: site.def.code,
+      };
       // ADR-037: the parts the collectors report, on a stream of their own (no other value moves).
-      const components = hostComponents({ model: plan.model, cpuModel: String(hostAttributes['cpuModel']), serial, hypervisor: plan.platform !== null });
+      const components = hostComponents({
+        model: plan.model,
+        cpuModel: String(hostAttributes['cpuModel']),
+        serial,
+        hypervisor: plan.platform !== null,
+      });
       const hostIdx = b.ci(
         slot,
         'host',
@@ -156,20 +234,38 @@ export function generateHosts(world: World, rng: Rng): void {
         hostname,
         hostAttributes,
         site.def.code,
-        { tags: ['hardware', plan.platform === null ? 'bare-metal' : 'hypervisor'], primary: true, components },
+        {
+          tags: ['hardware', plan.platform === null ? 'bare-metal' : 'hypervisor'],
+          primary: true,
+          components,
+        },
       );
-      b.rel(slot, 'located_in', hostIdx, rack.idx, { uPosition: plan.uPosition, heightU: plan.model.heightU });
+      b.rel(slot, 'located_in', hostIdx, rack.idx, {
+        uPosition: plan.uPosition,
+        heightU: plan.model.heightU,
+      });
       b.rel(slot, 'powered_by', hostIdx, rack.pduA, { feed: 'A', psu: 1 });
       b.rel(slot, 'powered_by', hostIdx, rack.pduB, { feed: 'B', psu: 2 });
-      const ipIdx = attachIp(world, slot, hostIdx, alloc, site.def.code, { interface: plan.os.family === 'windows' ? 'Ethernet' : 'bond0', macAddress: primaryMac });
+      const ipIdx = attachIp(world, slot, hostIdx, alloc, site.def.code, {
+        interface: plan.os.family === 'windows' ? 'Ethernet' : 'bond0',
+        macAddress: primaryMac,
+      });
 
       const rowIndex = site.rooms.flatMap((r) => r.rows).indexOf(rack.row);
       const prodVlan = VLAN_ID.prodBase + Math.max(0, rowIndex);
       const nics = plan.os.family === 'windows' ? WINDOWS_NICS : NICS;
+      const torPorts: number[] = [];
       rack.tors.forEach((tor, n) => {
         const nic = nics[n] ?? nics[0];
         const port = allocateHostPort(world, rng, tor, hostname + ' ' + nic, prodVlan);
-        b.rel(slot, 'cabled_to', hostIdx, port.idx, { hostNic: nic, media: '10GBASE-T', speedMbps: tor.model.speedMbps });
+        b.rel(slot, 'cabled_to', hostIdx, port.idx, {
+          hostNic: nic,
+          media: '10GBASE-T',
+          speedMbps: tor.model.speedMbps,
+        });
+        // The bond's MAC is learned on both ToR ports (LACP presents one address on every member link).
+        learnMac(world, port.idx, primaryMac);
+        torPorts.push(port.idx);
       });
 
       const osIdx = b.ci(
@@ -177,7 +273,16 @@ export function generateHosts(world: World, rng: Rng): void {
         'operating_system',
         { hostRef: serial, family: plan.os.family, version: reportedOsVersion(plan.os) },
         plan.os.name + ' ' + plan.os.version + ' (' + hostname + ')',
-        { name: plan.os.name, version: plan.os.version, family: plan.os.family, kernel: plan.os.kernel, architecture: 'x86_64', lastPatchedAt: dateAt(-rng.int(1, PATCH_AGE_DAYS_MAX)), timeZone: 'Asia/Riyadh', hostname },
+        {
+          name: plan.os.name,
+          version: plan.os.version,
+          family: plan.os.family,
+          kernel: plan.os.kernel,
+          architecture: 'x86_64',
+          lastPatchedAt: dateAt(-rng.int(1, PATCH_AGE_DAYS_MAX)),
+          timeZone: 'Asia/Riyadh',
+          hostname,
+        },
         site.def.code,
         { tags: ['os'] },
       );
@@ -185,7 +290,8 @@ export function generateHosts(world: World, rng: Rng): void {
       b.rel(slot, 'installed_on', osIdx, hostIdx);
 
       const subscription = osSubscription(plan.os);
-      if (subscription) installSoftware(world, rng, slot, hostIdx, serial, subscription, plan.os.family, site.def.code);
+      if (subscription)
+        installSoftware(world, rng, slot, hostIdx, serial, subscription, plan.os.family, site.def.code);
       if ((plan.os.family === 'linux' || plan.os.family === 'windows') && rng.chance(AGENT_PROBABILITY)) {
         const agent = rng.pick(agents.filter((a) => a.on.includes(plan.os.family)));
         installSoftware(world, rng, slot, hostIdx, serial, agent, plan.os.family, site.def.code);
@@ -198,14 +304,42 @@ export function generateHosts(world: World, rng: Rng): void {
         'bmc',
         { managementIp: bmcAlloc.address, serialNumber: serial },
         hostname + '-bmc',
-        { product: plan.model.bmcProduct, firmware: plan.model.bmcFirmware, manufacturer: plan.model.manufacturer, macAddress: rng.mac(ouiFor(plan.model.manufacturer)), protocol: 'redfish', redfishVersion: '1.17.0', powerState: 'On', healthRollup: rng.chance(0.96) ? 'OK' : 'Warning', psuCount: 2, fanCount: plan.model.heightU === 2 ? 8 : 6, inletTempC: rng.int(19, 27), hostSerial: serial },
+        {
+          product: plan.model.bmcProduct,
+          firmware: plan.model.bmcFirmware,
+          manufacturer: plan.model.manufacturer,
+          macAddress: rng.mac(ouiFor(plan.model.manufacturer)),
+          protocol: 'redfish',
+          redfishVersion: '1.17.0',
+          powerState: 'On',
+          healthRollup: rng.chance(0.96) ? 'OK' : 'Warning',
+          psuCount: 2,
+          fanCount: plan.model.heightU === 2 ? 8 : 6,
+          inletTempC: rng.int(19, 27),
+          hostSerial: serial,
+        },
         site.def.code,
         { tags: ['hardware', 'oob'], primary: true },
       );
       b.rel(bslot, 'manages', bmcIdx, hostIdx);
       attachIp(world, bslot, bmcIdx, bmcAlloc, site.def.code, { interface: 'bmc0', role: 'oob' });
 
-      const rec: HostRec = { plan, idx: hostIdx, osIdx, hostname, fqdn, serial, ip: alloc.address, ipIdx, bmcIp: bmcAlloc.address, primaryMac, slot, hypervisor: null, role: null };
+      const rec: HostRec = {
+        plan,
+        idx: hostIdx,
+        osIdx,
+        hostname,
+        fqdn,
+        serial,
+        ip: alloc.address,
+        ipIdx,
+        bmcIp: bmcAlloc.address,
+        primaryMac,
+        slot,
+        hypervisor: null,
+        role: null,
+        torPorts,
+      };
       site.hosts.push(rec);
       rack.hosts.push(rec);
     });

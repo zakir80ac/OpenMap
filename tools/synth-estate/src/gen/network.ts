@@ -2,12 +2,35 @@
 // management switches, firewalls, load balancers, branch routers and switches, HQ campus access.
 // Interfaces, VLANs, VRFs, routed /31 links and management addresses are consistent with IPAM.
 import { SYNTH_ESTATE } from '@openmap/constants';
-import { DOMAIN, INTERFACES_EMITTED, NETWORK_MODELS, POOL, UPLINKS_PER_ACCESS, VENDORS, VLAN_ID, VRF, type NetworkModelDef } from '../catalog.js';
+import {
+  DOMAIN,
+  INTERFACES_EMITTED,
+  NETWORK_MODELS,
+  POOL,
+  UPLINKS_PER_ACCESS,
+  VENDORS,
+  VLAN_ID,
+  VRF,
+  type NetworkModelDef,
+} from '../catalog.js';
 import type { Slot } from '../estate.js';
 import { cidr, ip4, linkPair, OCTET_MAX, RFC1918_TEN } from '../ip.js';
 import type { Rng } from '../rng.js';
 import { dateAt } from '../time.js';
-import { allocateIp, attachIp, ensureSubnet, identityMac, pad, type DeviceRec, type InterfaceRec, type IpAlloc, type RackWorld, type RowWorld, type SiteWorld, type World } from '../world.js';
+import {
+  allocateIp,
+  attachIp,
+  ensureSubnet,
+  identityMac,
+  pad,
+  type DeviceRec,
+  type InterfaceRec,
+  type IpAlloc,
+  type RackWorld,
+  type RowWorld,
+  type SiteWorld,
+  type World,
+} from '../world.js';
 import { MGMT_SWITCH_U, newRack, TOR_A_U, TOR_B_U, HOST_TOP_U } from './facilities.js';
 
 const CORE_BASE: Record<string, number> = { RYD: 4, JED: 4, 'DMM-COLO': 2, HQ: 2 };
@@ -45,6 +68,9 @@ const DAYS_PER_YEAR = 365;
  */
 const DEVICE_REF_SERIAL = 'serial:';
 
+/** Learned MACs kept per port, the SNMP collector's cap (maxLearnedMacs in apps/collectors/internal/snmp). */
+const LEARNED_MACS_KEPT = 64;
+
 export function networkDeviceRef(serial: string): string {
   return DEVICE_REF_SERIAL + serial;
 }
@@ -66,7 +92,11 @@ function snmpSlot(world: World, site: SiteWorld): Slot {
     collectorId: 'snmp-v3',
     nodeId,
     siteCode: site.def.code,
-    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase + POOL.mgmt, 0, 0, 16), label: site.def.code + ' management network' },
+    target: {
+      kind: 'cidr',
+      value: cidr(RFC1918_TEN, site.def.octetBase + POOL.mgmt, 0, 0, 16),
+      label: site.def.code + ' management network',
+    },
     evidenceKind: 'snmp_walk',
   });
 }
@@ -83,7 +113,14 @@ interface DeviceOptions {
   interfaceCount: number;
 }
 
-export function addDevice(world: World, rng: Rng, site: SiteWorld, model: NetworkModelDef, sysName: string, options: DeviceOptions): DeviceRec {
+export function addDevice(
+  world: World,
+  rng: Rng,
+  site: SiteWorld,
+  model: NetworkModelDef,
+  sysName: string,
+  options: DeviceOptions,
+): DeviceRec {
   const { b } = world;
   const slot = snmpSlot(world, site);
   const serial = model.serialPrefix + rng.alnum(8);
@@ -110,12 +147,38 @@ export function addDevice(world: World, rng: Rng, site: SiteWorld, model: Networ
     purchaseDate: dateAt(-purchaseAge),
     warrantyEnd: dateAt(-purchaseAge + WARRANTY_YEARS * DAYS_PER_YEAR),
     snmpVersion: '3',
-    haRole: model.role === 'firewall' || model.role === 'load_balancer' ? (site.devices.filter((d) => d.model.role === model.role).length % 2 === 0 ? 'active' : 'standby') : null,
+    haRole:
+      model.role === 'firewall' || model.role === 'load_balancer'
+        ? site.devices.filter((d) => d.model.role === model.role).length % 2 === 0
+          ? 'active'
+          : 'standby'
+        : null,
   };
   const isLb = model.role === 'load_balancer';
   const idx = isLb
-    ? b.ci(slot, 'load_balancer', { serialNumber: serial, managementIp: alloc.address }, sysName, { ...attributes, virtualServers: rng.int(20, 180), poolMembers: rng.int(80, 900), throughputGbps: 40 }, site.def.code, { tags: ['network', model.role], primary: true })
-    : b.ci(slot, 'network_device', { serialNumber: serial, chassisId, sysName }, sysName, attributes, site.def.code, { tags: ['network', model.role], primary: true });
+    ? b.ci(
+        slot,
+        'load_balancer',
+        { serialNumber: serial, managementIp: alloc.address },
+        sysName,
+        {
+          ...attributes,
+          virtualServers: rng.int(20, 180),
+          poolMembers: rng.int(80, 900),
+          throughputGbps: 40,
+        },
+        site.def.code,
+        { tags: ['network', model.role], primary: true },
+      )
+    : b.ci(
+        slot,
+        'network_device',
+        { serialNumber: serial, chassisId, sysName },
+        sysName,
+        attributes,
+        site.def.code,
+        { tags: ['network', model.role], primary: true },
+      );
   b.rel(slot, 'located_in', idx, options.locatedIn);
   if (options.rack) {
     b.rel(slot, 'powered_by', idx, options.rack.pduA, { feed: 'A', psu: 1 });
@@ -123,17 +186,50 @@ export function addDevice(world: World, rng: Rng, site: SiteWorld, model: Networ
   }
   attachIp(world, slot, idx, alloc, site.def.code, { interface: 'mgmt0', role: 'management' });
 
-  const device: DeviceRec = { idx, site, model, sysName, mgmtIp: alloc.address, serial, rack: options.rack, interfaces: [], portCursor: 1, vlans: new Map(), slot };
+  const device: DeviceRec = {
+    idx,
+    site,
+    model,
+    sysName,
+    mgmtIp: alloc.address,
+    serial,
+    rack: options.rack,
+    interfaces: [],
+    portCursor: 1,
+    vlans: new Map(),
+    slot,
+  };
   for (let port = 1; port <= options.interfaceCount; port++) addInterface(world, rng, device, port, null);
   for (const vlanId of options.vlanIds) {
     const label = options.vlanNames?.[vlanId] ?? vlanLabel(vlanId);
-    const vlanIdx = b.ci(slot, 'vlan', { deviceRef: networkDeviceRef(serial), vlanId: String(vlanId) }, 'VLAN' + String(vlanId) + ' ' + label, { vlanId, name: label, status: 'active', device: sysName }, site.def.code, { tags: ['network'] });
+    const vlanIdx = b.ci(
+      slot,
+      'vlan',
+      { deviceRef: networkDeviceRef(serial), vlanId: String(vlanId) },
+      'VLAN' + String(vlanId) + ' ' + label,
+      { vlanId, name: label, status: 'active', device: sysName },
+      site.def.code,
+      { tags: ['network'] },
+    );
     b.rel(slot, 'contains', idx, vlanIdx);
     device.vlans.set(vlanId, vlanIdx);
   }
   for (const vrf of options.vrfs) {
     const rd = String(65000) + ':' + String(rngRd(vrf));
-    const vrfIdx = b.ci(slot, 'vrf', { deviceRef: networkDeviceRef(serial), name: vrf }, vrf + ' on ' + sysName, { routeDistinguisher: rd, routeTargets: ['65000:' + String(rngRd(vrf))], routeCount: rng.int(12, 2400), device: sysName }, site.def.code, { tags: ['network'] });
+    const vrfIdx = b.ci(
+      slot,
+      'vrf',
+      { deviceRef: networkDeviceRef(serial), name: vrf },
+      vrf + ' on ' + sysName,
+      {
+        routeDistinguisher: rd,
+        routeTargets: ['65000:' + String(rngRd(vrf))],
+        routeCount: rng.int(12, 2400),
+        device: sysName,
+      },
+      site.def.code,
+      { tags: ['network'] },
+    );
     b.rel(slot, 'contains', idx, vrfIdx);
   }
   if (model.role === 'firewall') addFirewallRules(world, rng, device);
@@ -153,13 +249,20 @@ function vlanLabel(vlanId: number): string {
   if (vlanId === VLAN_ID.vmotion) return 'VMOTION';
   if (vlanId === VLAN_ID.storage) return 'STORAGE';
   if (vlanId === VLAN_ID.dmz) return 'DMZ';
-  if (vlanId >= VLAN_ID.prodBase && vlanId < VLAN_ID.vmBase) return 'PROD-' + String(vlanId - VLAN_ID.prodBase);
+  if (vlanId >= VLAN_ID.prodBase && vlanId < VLAN_ID.vmBase)
+    return 'PROD-' + String(vlanId - VLAN_ID.prodBase);
   if (vlanId >= HQ_VOICE_VLAN_BASE) return 'VOICE-FL' + String(vlanId - HQ_VOICE_VLAN_BASE);
   if (vlanId >= HQ_DATA_VLAN_BASE) return 'DATA-FL' + String(vlanId - HQ_DATA_VLAN_BASE);
   return 'VLAN' + String(vlanId);
 }
 
-export function addInterface(world: World, rng: Rng, device: DeviceRec, port: number, description: string | null): InterfaceRec {
+export function addInterface(
+  world: World,
+  rng: Rng,
+  device: DeviceRec,
+  port: number,
+  description: string | null,
+): InterfaceRec {
   const { b } = world;
   const existing = device.interfaces.find((i) => i.ifIndex === port);
   if (existing) return existing;
@@ -177,7 +280,10 @@ export function addInterface(world: World, rng: Rng, device: DeviceRec, port: nu
       ifAdminStatus: 'up',
       ifOperStatus: description === null ? 'down' : 'up',
       ifPhysAddress: rng.mac(ouiFor(device.model.manufacturer)),
-      ifMtu: device.model.role === 'access' || device.model.role === 'distribution' || device.model.role === 'core' ? MTU_JUMBO : MTU_DEFAULT,
+      ifMtu:
+        device.model.role === 'access' || device.model.role === 'distribution' || device.model.role === 'core'
+          ? MTU_JUMBO
+          : MTU_DEFAULT,
       ifAlias: description ?? '',
       device: device.sysName,
     },
@@ -190,6 +296,24 @@ export function addInterface(world: World, rng: Rng, device: DeviceRec, port: nu
   return rec;
 }
 
+/**
+ * REQ-IPAM-004 — a MAC learned on a switch port, as the SNMP collector reports a bridge forwarding table: the sorted
+ * list (at most LEARNED_MACS_KEPT) and the full count on the interface CI.
+ */
+export function learnMac(world: World, ifaceIdx: number, mac: string): void {
+  const ci = world.b.get(ifaceIdx);
+  const current = Array.isArray(ci.attributes['learnedMacs'])
+    ? (ci.attributes['learnedMacs'] as string[])
+    : [];
+  if (current.includes(mac)) return;
+  const count =
+    (typeof ci.attributes['learnedMacCount'] === 'number'
+      ? ci.attributes['learnedMacCount']
+      : current.length) + 1;
+  ci.attributes['learnedMacs'] = [...current, mac].sort().slice(0, LEARNED_MACS_KEPT);
+  ci.attributes['learnedMacCount'] = count;
+}
+
 function describe(world: World, iface: InterfaceRec, text: string): void {
   const ci = world.b.get(iface.idx);
   ci.attributes['ifAlias'] = text;
@@ -197,10 +321,21 @@ function describe(world: World, iface: InterfaceRec, text: string): void {
 }
 
 /** Interface-level adjacency (LLDP/CDP neighbour), recorded from device A's walk. */
-export function connect(world: World, a: DeviceRec, ifA: InterfaceRec, z: DeviceRec, ifZ: InterfaceRec, media: string): void {
+export function connect(
+  world: World,
+  a: DeviceRec,
+  ifA: InterfaceRec,
+  z: DeviceRec,
+  ifZ: InterfaceRec,
+  media: string,
+): void {
   describe(world, ifA, 'to ' + z.sysName + ' ' + ifZ.name);
   describe(world, ifZ, 'to ' + a.sysName + ' ' + ifA.name);
-  world.b.rel(a.slot, 'connected_to', ifA.idx, ifZ.idx, { media, speedMbps: Math.min(a.model.speedMbps, z.model.speedMbps), protocol: 'lldp' });
+  world.b.rel(a.slot, 'connected_to', ifA.idx, ifZ.idx, {
+    media,
+    speedMbps: Math.min(a.model.speedMbps, z.model.speedMbps),
+    protocol: 'lldp',
+  });
 }
 
 /** Next downlink port on a pre-populated device (distribution, core); wraps when all are used. */
@@ -213,14 +348,21 @@ function nextPort(device: DeviceRec, maxPort: number): InterfaceRec {
 }
 
 /** Host-facing port on a ToR, created on demand, placed in the rack's production VLAN. */
-export function allocateHostPort(world: World, rng: Rng, tor: DeviceRec, description: string, prodVlanId: number): InterfaceRec {
+export function allocateHostPort(
+  world: World,
+  rng: Rng,
+  tor: DeviceRec,
+  description: string,
+  prodVlanId: number,
+): InterfaceRec {
   const port = ((tor.portCursor - 1) % ACCESS_HOST_PORTS) + 1;
   tor.portCursor++;
   const fresh = !tor.interfaces.some((i) => i.ifIndex === port);
   const iface = addInterface(world, rng, tor, port, description);
   describe(world, iface, description);
   const vlanIdx = tor.vlans.get(prodVlanId);
-  if (fresh && vlanIdx !== undefined) world.b.rel(tor.slot, 'in_vlan', iface.idx, vlanIdx, { mode: 'access' });
+  if (fresh && vlanIdx !== undefined)
+    world.b.rel(tor.slot, 'in_vlan', iface.idx, vlanIdx, { mode: 'access' });
   return iface;
 }
 
@@ -239,7 +381,19 @@ function addFirewallRules(world: World, rng: Rng, device: DeviceRec): void {
       'firewall_rule',
       { deviceRef: networkDeviceRef(device.serial), ruleId },
       device.sysName + ' rule ' + ruleId + ' ' + from + '-to-' + to,
-      { ruleId, name: from + '-to-' + to + '-' + ruleId, action: rng.chance(0.8) ? 'allow' : 'deny', fromZone: from, toZone: to, source: src, destination: dst, service: rng.pick(services), hitCount: rng.int(0, 5_000_000), enabled: true, logging: true },
+      {
+        ruleId,
+        name: from + '-to-' + to + '-' + ruleId,
+        action: rng.chance(0.8) ? 'allow' : 'deny',
+        fromZone: from,
+        toZone: to,
+        source: src,
+        destination: dst,
+        service: rng.pick(services),
+        hitCount: rng.int(0, 5_000_000),
+        enabled: true,
+        logging: true,
+      },
       device.site.def.code,
       { tags: ['security'] },
     );
@@ -284,7 +438,12 @@ export function generateNetwork(world: World, rng: Rng): void {
     const n = linkSeq.get(site) ?? 0;
     linkSeq.set(site, n + 1);
     const pair = linkPair(site.def.octetBase + POOL.links, n);
-    const subnetIdx = ensureSubnet(world, site, pair.cidr, VRF.default, { purpose: 'routed point-to-point link', prefixLength: 31, status: 'active', gateway: pair.a });
+    const subnetIdx = ensureSubnet(world, site, pair.cidr, VRF.default, {
+      purpose: 'routed point-to-point link',
+      prefixLength: 31,
+      status: 'active',
+      gateway: pair.a,
+    });
     return [
       { address: pair.a, subnetIdx, subnetCidr: pair.cidr, gateway: pair.a, vrf: VRF.default },
       { address: pair.z, subnetIdx, subnetCidr: pair.cidr, gateway: pair.a, vrf: VRF.default },
@@ -307,7 +466,14 @@ export function generateNetwork(world: World, rng: Rng): void {
     for (let i = 0; i < coreCount; i++) {
       const model = modelFor('core', rng);
       const p = placeInNetworkRack(world, rng, site, model.heightU);
-      const core = addDevice(world, rng, site, model, site.short + '-core-' + pad(i + 1, 2), { rack: p.rack, uPosition: p.u, locatedIn: p.rack.idx, vlanIds: [], vrfs: coreVrfs, interfaceCount: INTERFACES_EMITTED.core });
+      const core = addDevice(world, rng, site, model, site.short + '-core-' + pad(i + 1, 2), {
+        rack: p.rack,
+        uPosition: p.u,
+        locatedIn: p.rack.idx,
+        vlanIds: [],
+        vrfs: coreVrfs,
+        interfaceCount: INTERFACES_EMITTED.core,
+      });
       site.cores.push(core);
       created++;
     }
@@ -330,7 +496,21 @@ export function generateNetwork(world: World, rng: Rng): void {
     for (let i = 0; i < fwCount; i++) {
       const model = modelFor('firewall', rng);
       const p = placeInNetworkRack(world, rng, site, model.heightU);
-      const fw = addDevice(world, rng, site, model, site.short + '-fw-' + (i < 2 ? 'edge' : 'dc') + '-' + pad((i % 2) + 1, 2), { rack: p.rack, uPosition: p.u, locatedIn: p.rack.idx, vlanIds: [], vrfs: [VRF.default, VRF.dmz], interfaceCount: INTERFACES_EMITTED.firewall });
+      const fw = addDevice(
+        world,
+        rng,
+        site,
+        model,
+        site.short + '-fw-' + (i < 2 ? 'edge' : 'dc') + '-' + pad((i % 2) + 1, 2),
+        {
+          rack: p.rack,
+          uPosition: p.u,
+          locatedIn: p.rack.idx,
+          vlanIds: [],
+          vrfs: [VRF.default, VRF.dmz],
+          interfaceCount: INTERFACES_EMITTED.firewall,
+        },
+      );
       site.firewalls.push(fw);
       created++;
       for (let u = 0; u < 2; u++) {
@@ -339,11 +519,19 @@ export function generateNetwork(world: World, rng: Rng): void {
         if (ifFw) routedLink(fw, ifFw, core, nextPort(core, CORE_PEER_PORTS[0] - 1));
       }
     }
-    const lbCount = LB_BASE[site.def.code] === 0 ? 0 : Math.max(MIN_PAIR, b.count(LB_BASE[site.def.code] ?? 0));
+    const lbCount =
+      LB_BASE[site.def.code] === 0 ? 0 : Math.max(MIN_PAIR, b.count(LB_BASE[site.def.code] ?? 0));
     for (let i = 0; i < lbCount; i++) {
       const model = modelFor('load_balancer', rng);
       const p = placeInNetworkRack(world, rng, site, model.heightU);
-      const lb = addDevice(world, rng, site, model, site.short + '-lb-' + pad(i + 1, 2), { rack: p.rack, uPosition: p.u, locatedIn: p.rack.idx, vlanIds: [VLAN_ID.dmz], vrfs: [], interfaceCount: INTERFACES_EMITTED.load_balancer });
+      const lb = addDevice(world, rng, site, model, site.short + '-lb-' + pad(i + 1, 2), {
+        rack: p.rack,
+        uPosition: p.u,
+        locatedIn: p.rack.idx,
+        vlanIds: [VLAN_ID.dmz],
+        vrfs: [],
+        interfaceCount: INTERFACES_EMITTED.load_balancer,
+      });
       site.loadBalancers.push(lb);
       created++;
       for (let u = 0; u < 2; u++) {
@@ -359,14 +547,27 @@ export function generateNetwork(world: World, rng: Rng): void {
         for (let d = 0; d < DISTS_PER_ROW; d++) {
           const model = modelFor('distribution', rng);
           const p = placeInNetworkRack(world, rng, site, model.heightU);
-          const dist = addDevice(world, rng, site, model, site.short + '-' + room.name.toLowerCase() + '-' + row.name.toLowerCase() + '-dist-' + pad(d + 1, 2), {
-            rack: p.rack,
-            uPosition: p.u,
-            locatedIn: p.rack.idx,
-            vlanIds: [VLAN_ID.mgmt, VLAN_ID.oob, prodVlan, VLAN_ID.vmotion, VLAN_ID.storage, VLAN_ID.dmz],
-            vrfs: [VRF.default, VRF.mgmt, VRF.oob, VRF.prod, VRF.dmz],
-            interfaceCount: INTERFACES_EMITTED.distribution,
-          });
+          const dist = addDevice(
+            world,
+            rng,
+            site,
+            model,
+            site.short +
+              '-' +
+              room.name.toLowerCase() +
+              '-' +
+              row.name.toLowerCase() +
+              '-dist-' +
+              pad(d + 1, 2),
+            {
+              rack: p.rack,
+              uPosition: p.u,
+              locatedIn: p.rack.idx,
+              vlanIds: [VLAN_ID.mgmt, VLAN_ID.oob, prodVlan, VLAN_ID.vmotion, VLAN_ID.storage, VLAN_ID.dmz],
+              vrfs: [VRF.default, VRF.mgmt, VRF.oob, VRF.prod, VRF.dmz],
+              interfaceCount: INTERFACES_EMITTED.distribution,
+            },
+          );
           row.dists.push(dist);
           site.dists.push(dist);
           created++;
@@ -388,14 +589,46 @@ export function generateNetwork(world: World, rng: Rng): void {
       const second = branchSite.def.octetBase + (n >> 8);
       const third = n & OCTET_MAX;
       const lan = cidr(RFC1918_TEN, second, third, 0, 24);
-      const subnetIdx = ensureSubnet(world, branchSite, lan, VRF.default, { purpose: 'branch LAN', branch: n + 1, gateway: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST), prefixLength: 24, status: 'active' });
+      const subnetIdx = ensureSubnet(world, branchSite, lan, VRF.default, {
+        purpose: 'branch LAN',
+        branch: n + 1,
+        gateway: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST),
+        prefixLength: 24,
+        status: 'active',
+      });
       world.branchSubnets.push(subnetIdx);
       world.branchCidrs.push(lan);
       const code = 'br' + pad(n + 1, 3);
-      const routerAlloc: IpAlloc = { address: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST), subnetIdx, subnetCidr: lan, gateway: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST), vrf: VRF.default };
-      const switchAlloc: IpAlloc = { ...routerAlloc, address: ip4(RFC1918_TEN, second, third, BRANCH_SWITCH_HOST) };
-      const router = addDevice(world, rng, branchSite, modelFor('wan_router', rng), code + '-rtr-01', { rack: null, uPosition: null, locatedIn: branchSite.ciIdx, vlanIds: [], vrfs: [VRF.default], ipOverride: routerAlloc, interfaceCount: 0 });
-      const sw = addDevice(world, rng, branchSite, modelFor('branch_switch', rng), code + '-sw-01', { rack: null, uPosition: null, locatedIn: branchSite.ciIdx, vlanIds: BRANCH_VLANS, vlanNames: BRANCH_VLAN_NAMES, vrfs: [], ipOverride: switchAlloc, interfaceCount: INTERFACES_EMITTED.branch_switch });
+      const routerAlloc: IpAlloc = {
+        address: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST),
+        subnetIdx,
+        subnetCidr: lan,
+        gateway: ip4(RFC1918_TEN, second, third, BRANCH_ROUTER_HOST),
+        vrf: VRF.default,
+      };
+      const switchAlloc: IpAlloc = {
+        ...routerAlloc,
+        address: ip4(RFC1918_TEN, second, third, BRANCH_SWITCH_HOST),
+      };
+      const router = addDevice(world, rng, branchSite, modelFor('wan_router', rng), code + '-rtr-01', {
+        rack: null,
+        uPosition: null,
+        locatedIn: branchSite.ciIdx,
+        vlanIds: [],
+        vrfs: [VRF.default],
+        ipOverride: routerAlloc,
+        interfaceCount: 0,
+      });
+      const sw = addDevice(world, rng, branchSite, modelFor('branch_switch', rng), code + '-sw-01', {
+        rack: null,
+        uPosition: null,
+        locatedIn: branchSite.ciIdx,
+        vlanIds: BRANCH_VLANS,
+        vlanNames: BRANCH_VLAN_NAMES,
+        vrfs: [],
+        ipOverride: switchAlloc,
+        interfaceCount: INTERFACES_EMITTED.branch_switch,
+      });
       created += 2;
       const wan = addInterface(world, rng, router, BRANCH_ROUTER_WAN_PORT, 'SD-WAN underlay');
       describe(world, wan, 'SD-WAN underlay to RYD/JED');
@@ -414,7 +647,13 @@ export function generateNetwork(world: World, rng: Rng): void {
   const hqCampus = hq ? b.count(HQ_CAMPUS_ACCESS_BASE) : 0;
   const accessBudget = Math.max(allRacks.length, total - created - hqCampus);
   let accessCreated = 0;
-  const addTor = (site: SiteWorld, rack: RackWorld, u: number, suffix: string, role: 'access' | 'management'): void => {
+  const addTor = (
+    site: SiteWorld,
+    rack: RackWorld,
+    u: number,
+    suffix: string,
+    role: 'access' | 'management',
+  ): void => {
     const rows = rowIndexMap(site);
     const prodVlan = VLAN_ID.prodBase + (rows.get(rack.row) ?? 0);
     const model = modelFor(role, rng);
@@ -422,7 +661,10 @@ export function generateNetwork(world: World, rng: Rng): void {
       rack,
       uPosition: u,
       locatedIn: rack.idx,
-      vlanIds: role === 'access' ? [VLAN_ID.mgmt, VLAN_ID.oob, prodVlan, VLAN_ID.vmotion, VLAN_ID.storage] : [VLAN_ID.mgmt, VLAN_ID.oob],
+      vlanIds:
+        role === 'access'
+          ? [VLAN_ID.mgmt, VLAN_ID.oob, prodVlan, VLAN_ID.vmotion, VLAN_ID.storage]
+          : [VLAN_ID.mgmt, VLAN_ID.oob],
       vrfs: [],
       interfaceCount: role === 'access' ? 0 : INTERFACES_EMITTED.management,
     });
@@ -437,12 +679,23 @@ export function generateNetwork(world: World, rng: Rng): void {
     } else {
       const iface = device.interfaces[0];
       const tor = rack.tors[0];
-      if (iface && tor) connect(world, device, iface, tor, addInterface(world, rng, tor, ACCESS_UPLINK_PORT_BASE + UPLINKS_PER_ACCESS, 'mgmt switch'), '1000BASE-T');
+      if (iface && tor)
+        connect(
+          world,
+          device,
+          iface,
+          tor,
+          addInterface(world, rng, tor, ACCESS_UPLINK_PORT_BASE + UPLINKS_PER_ACCESS, 'mgmt switch'),
+          '1000BASE-T',
+        );
     }
   };
-  for (const { site, rack } of allRacks) if (accessCreated < accessBudget) addTor(site, rack, TOR_A_U, 'tor-a', 'access');
-  for (const { site, rack } of allRacks) if (accessCreated < accessBudget) addTor(site, rack, TOR_B_U, 'tor-b', 'access');
-  for (const { site, rack } of allRacks) if (accessCreated < accessBudget) addTor(site, rack, MGMT_SWITCH_U, 'mgmt-01', 'management');
+  for (const { site, rack } of allRacks)
+    if (accessCreated < accessBudget) addTor(site, rack, TOR_A_U, 'tor-a', 'access');
+  for (const { site, rack } of allRacks)
+    if (accessCreated < accessBudget) addTor(site, rack, TOR_B_U, 'tor-b', 'access');
+  for (const { site, rack } of allRacks)
+    if (accessCreated < accessBudget) addTor(site, rack, MGMT_SWITCH_U, 'mgmt-01', 'management');
   created += accessCreated;
 
   if (hq) {

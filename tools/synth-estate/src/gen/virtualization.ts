@@ -1,14 +1,42 @@
 // REQ-QA-001 — virtualization: vSphere, Hyper-V, Nutanix AHV and KVM clusters, hypervisor CIs on
 // their physical hosts, and VMs with guest OS, addresses and MAC prefixes of their platform.
 import { SYNTH_ESTATE } from '@openmap/constants';
-import { DOMAIN, GUEST_OS, GUEST_OS_WEIGHTS, HYPERVISOR_COLLECTOR, HYPERVISOR_PRODUCT, type HypervisorPlatform } from '../catalog.js';
+import {
+  DOMAIN,
+  GUEST_OS,
+  GUEST_OS_WEIGHTS,
+  HYPERVISOR_COLLECTOR,
+  HYPERVISOR_PRODUCT,
+  type HypervisorPlatform,
+} from '../catalog.js';
 import type { Slot } from '../estate.js';
+import { learnMac } from './network.js';
 import { stableUuid, type Rng } from '../rng.js';
 import { isoAt, MS_PER_DAY } from '../time.js';
-import { allocateIp, attachIp, fqdnOf, pad, type HostRec, type HypervisorRec, type SiteWorld, type VmRec, type World } from '../world.js';
+import {
+  allocateIp,
+  attachIp,
+  fqdnOf,
+  pad,
+  type HostRec,
+  type HypervisorRec,
+  type SiteWorld,
+  type VmRec,
+  type World,
+} from '../world.js';
 
-const VM_MAC_OUI: Record<HypervisorPlatform, readonly [number, number, number]> = { vmware: [0x00, 0x50, 0x56], hyperv: [0x00, 0x15, 0x5d], nutanix_ahv: [0x50, 0x6b, 0x8d], kvm_libvirt: [0x52, 0x54, 0x00] };
-const MANAGER_PREFIX: Record<HypervisorPlatform, string> = { vmware: 'vcenter', hyperv: 'scvmm', nutanix_ahv: 'prism', kvm_libvirt: 'libvirt' };
+const VM_MAC_OUI: Record<HypervisorPlatform, readonly [number, number, number]> = {
+  vmware: [0x00, 0x50, 0x56],
+  hyperv: [0x00, 0x15, 0x5d],
+  nutanix_ahv: [0x50, 0x6b, 0x8d],
+  kvm_libvirt: [0x52, 0x54, 0x00],
+};
+const MANAGER_PREFIX: Record<HypervisorPlatform, string> = {
+  vmware: 'vcenter',
+  hyperv: 'scvmm',
+  nutanix_ahv: 'prism',
+  kvm_libvirt: 'libvirt',
+};
 const VCPU_OPTIONS = [2, 4, 4, 8, 8, 16] as const;
 const MEMORY_GB_OPTIONS = [4, 8, 16, 16, 32, 64] as const;
 const DISK_GB_OPTIONS = [60, 100, 200, 500] as const;
@@ -17,20 +45,33 @@ const VM_AGE_DAYS_MAX = 1500;
 /** vCenter numbers clusters domain-c<n> and hosts host-<n> from per-type counters; the estate starts where a fresh vCenter does. */
 const VCENTER_CLUSTER_BASE = 7;
 const VCENTER_HOST_BASE = 1000;
-const HARDWARE_VERSION: Record<HypervisorPlatform, string> = { vmware: 'vmx-21', hyperv: '10.0', nutanix_ahv: 'ahv-10', kvm_libvirt: 'pc-q35-8.2' };
+const HARDWARE_VERSION: Record<HypervisorPlatform, string> = {
+  vmware: 'vmx-21',
+  hyperv: '10.0',
+  nutanix_ahv: 'ahv-10',
+  kvm_libvirt: 'pc-q35-8.2',
+};
 
 /** The manager a platform's collector is pointed at: the job target, and the anchor of vCenter's moRefs. */
 function managerOf(site: SiteWorld, platform: HypervisorPlatform, firstHost: HostRec): string {
-  return platform === 'kvm_libvirt' ? firstHost.fqdn : MANAGER_PREFIX[platform] + '-' + site.short + '-01.' + DOMAIN;
+  return platform === 'kvm_libvirt'
+    ? firstHost.fqdn
+    : MANAGER_PREFIX[platform] + '-' + site.short + '-01.' + DOMAIN;
 }
 
 /**
  * Cluster id as each platform's collector reports it: vCenter's moRef anchored to the vCenter it came from, Prism's
  * cluster UUID, Hyper-V's Get-Cluster Id (a GUID), and the cluster name where the platform has no id of its own.
  */
-function clusterIdOf(platform: HypervisorPlatform, manager: string, clusterName: string, vcenterSeq: number): string {
+function clusterIdOf(
+  platform: HypervisorPlatform,
+  manager: string,
+  clusterName: string,
+  vcenterSeq: number,
+): string {
   if (platform === 'vmware') return manager + ':domain-c' + String(vcenterSeq);
-  if (platform === 'nutanix_ahv' || platform === 'hyperv') return stableUuid(platform + '-cluster/' + clusterName);
+  if (platform === 'nutanix_ahv' || platform === 'hyperv')
+    return stableUuid(platform + '-cluster/' + clusterName);
   return clusterName;
 }
 
@@ -79,7 +120,21 @@ export function generateVirtualization(world: World, rng: Rng): void {
         'vm_cluster',
         { platform, clusterId },
         clusterName,
-        { name: clusterName, platform, product: HYPERVISOR_PRODUCT[platform], hostCount: members.length, totalCpuCores: members.reduce((a, h) => a + h.plan.model.cpuSockets * h.plan.model.coresPerSocket, 0), totalMemoryGb: members.reduce((a, h) => a + h.plan.model.memoryGb, 0), haEnabled: true, drsEnabled: platform === 'vmware', evcMode: platform === 'vmware' ? 'intel-sapphirerapids' : null, site: site.def.code },
+        {
+          name: clusterName,
+          platform,
+          product: HYPERVISOR_PRODUCT[platform],
+          hostCount: members.length,
+          totalCpuCores: members.reduce(
+            (a, h) => a + h.plan.model.cpuSockets * h.plan.model.coresPerSocket,
+            0,
+          ),
+          totalMemoryGb: members.reduce((a, h) => a + h.plan.model.memoryGb, 0),
+          haEnabled: true,
+          drsEnabled: platform === 'vmware',
+          evcMode: platform === 'vmware' ? 'intel-sapphirerapids' : null,
+          site: site.def.code,
+        },
         site.def.code,
         { tags: ['virtualization', platform] },
       );
@@ -90,7 +145,12 @@ export function generateVirtualization(world: World, rng: Rng): void {
         // FQDN, and the platform's own id for it, which is vCenter's moRef anchored to its vCenter, Prism's host UUID,
         // or the server's SMBIOS UUID (Hyper-V, libvirt).
         const systemUuid = (b.get(host.idx).identity['systemUuid'] ?? host.fqdn).toLowerCase();
-        const moRef = platform === 'vmware' ? manager + ':host-' + String(moRefSeq++) : platform === 'nutanix_ahv' ? rng.uuid() : systemUuid;
+        const moRef =
+          platform === 'vmware'
+            ? manager + ':host-' + String(moRefSeq++)
+            : platform === 'nutanix_ahv'
+              ? rng.uuid()
+              : systemUuid;
         const vmCount = perHypervisor + (remainder > 0 ? 1 : 0);
         if (remainder > 0) remainder--;
         const hypIdx = b.ci(
@@ -98,7 +158,20 @@ export function generateVirtualization(world: World, rng: Rng): void {
           'hypervisor',
           { platform, hostRef: host.fqdn, moRef },
           host.hostname,
-          { platform, product: HYPERVISOR_PRODUCT[platform], version: host.plan.os.version, build: host.plan.os.kernel, cluster: clusterName, cpuCores: host.plan.model.cpuSockets * host.plan.model.coresPerSocket, memoryGb: host.plan.model.memoryGb, vmCount, connectionState: 'connected', maintenanceMode: false, managementIp: host.ip, uptimeSeconds: rng.int(86_400, 200 * 86_400) },
+          {
+            platform,
+            product: HYPERVISOR_PRODUCT[platform],
+            version: host.plan.os.version,
+            build: host.plan.os.kernel,
+            cluster: clusterName,
+            cpuCores: host.plan.model.cpuSockets * host.plan.model.coresPerSocket,
+            memoryGb: host.plan.model.memoryGb,
+            vmCount,
+            connectionState: 'connected',
+            maintenanceMode: false,
+            managementIp: host.ip,
+            uptimeSeconds: rng.int(86_400, 200 * 86_400),
+          },
           site.def.code,
           { tags: ['virtualization', platform] },
         );
@@ -151,8 +224,25 @@ export function generateVirtualization(world: World, rng: Rng): void {
             { tags: ['virtualization', platform], primary: true },
           );
           b.rel(slot, 'runs_on', vmIdx, hypIdx);
-          const ipIdx = attachIp(world, slot, vmIdx, alloc, site.def.code, { interface: os.family === 'windows' ? 'Ethernet' : 'ens192', macAddress: mac });
-          const vm: VmRec = { idx: vmIdx, hypervisor: hyp, site, name, fqdn, os, ip: alloc.address, ipIdx, instanceUuid, slot, role: null };
+          const ipIdx = attachIp(world, slot, vmIdx, alloc, site.def.code, {
+            interface: os.family === 'windows' ? 'Ethernet' : 'ens192',
+            macAddress: mac,
+          });
+          // REQ-IPAM-004: a VM's MAC is learned on its host's ToR ports.
+          for (const port of host.torPorts) learnMac(world, port, mac);
+          const vm: VmRec = {
+            idx: vmIdx,
+            hypervisor: hyp,
+            site,
+            name,
+            fqdn,
+            os,
+            ip: alloc.address,
+            ipIdx,
+            instanceUuid,
+            slot,
+            role: null,
+          };
           hyp.vms.push(vm);
           site.vms.push(vm);
         }

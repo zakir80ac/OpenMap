@@ -31,6 +31,34 @@ test('IPAM: a subnet lists its addresses and the next free address', async ({ pa
   await expect(panel.getByText(/^10\.0\.0\.\d+$/).first()).toBeVisible();
   await page.getByRole('button', { name: translate(locale, 'ipam.tab.dns') }).click();
   await expect(page.getByText(translate(locale, 'ipam.dns.zones'), { exact: false }).first()).toBeVisible();
+
+  // REQ-IPAM-004 (T-557): a top-of-rack switch found by search lists its ports; a port opens its history; a MAC in Cisco
+  // notation is looked up in canonical form and answered (sightings, or that it has not been seen).
+  await page.getByRole('button', { name: translate(locale, 'ipam.tab.ports') }).click();
+  const ports = page.getByTestId('switch-ports');
+  await ports.getByRole('searchbox', { name: translate(locale, 'ipam.ports.search') }).fill('tor');
+  const device = ports.getByRole('combobox', { name: translate(locale, 'ipam.ports.device'), exact: true });
+  await expect(device.locator('option').nth(1)).toBeAttached();
+  const firstSwitch = await device.locator('option').nth(1).getAttribute('value');
+  await device.selectOption(firstSwitch ?? '');
+  const table = ports.getByRole('table');
+  await expect(table.getByRole('row').nth(1)).toBeVisible();
+  await expect(
+    ports.getByRole('group', {
+      name: new RegExp(translate(locale, 'ipam.ports.summary', { device: '' }).trim()),
+    }),
+  ).toBeVisible();
+  await table.getByRole('row').nth(1).getByRole('button').first().click();
+  await expect(ports.getByTestId('port-history')).toBeVisible();
+  const lookup = ports.getByRole('form', { name: translate(locale, 'ipam.ports.mac.title') });
+  await lookup.getByLabel(translate(locale, 'ipam.ports.mac.label')).fill('0050.5600.0001');
+  await lookup.getByRole('button', { name: translate(locale, 'ipam.ports.mac.find') }).click();
+  await expect(
+    ports
+      .getByRole('list', { name: translate(locale, 'ipam.ports.mac.results', { mac: '00:50:56:00:00:01' }) })
+      .or(ports.getByText(translate(locale, 'ipam.ports.mac.none', { mac: '00:50:56:00:00:01' }))),
+  ).toBeVisible();
+  await page.screenshot({ path: screenshotsDir + 'ipam-switch-ports-' + locale + '.png', fullPage: true });
 });
 
 test('DCIM: a rack tile opens its elevation, devices and power feeds', async ({ page }, testInfo) => {

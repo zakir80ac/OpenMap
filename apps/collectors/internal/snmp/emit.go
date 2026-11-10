@@ -141,6 +141,12 @@ func Emit(d Device, target contract.Target, raw []byte, at time.Time) collector.
 			"descr": it.Descr, "alias": it.Alias, "ifType": it.Type, "mtu": it.Mtu, "speedBps": it.SpeedBps, "mac": it.Mac,
 			"adminUp": it.AdminUp, "operUp": it.OperUp, "pvid": it.Pvid,
 		}
+		// REQ-IPAM-004: learned MACs only when the switch answered a forwarding table, so a device without one keeps
+		// what an earlier sweep reported rather than being emptied.
+		if d.FdbWalked {
+			ifAttrs["learnedMacs"] = it.LearnedMacs
+			ifAttrs["learnedMacCount"] = it.LearnedMacCount
+		}
 		obs.Cis = append(obs.Cis, contract.ObservedCi{Type: typeInterface, Identity: ifIdentity, Name: it.Name, Attributes: ifAttrs, Tags: []string{}, ExternalIDs: []contract.ExternalID{}, ObservedAt: at})
 		ifRef := contract.CiRef{Type: typeInterface, Identity: ifIdentity}
 		obs.Relationships = append(obs.Relationships, contract.ObservedRelationship{Type: relContains, From: devRef, To: ifRef, Attributes: map[string]any{}, ObservedAt: at})

@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.35.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.36.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -782,6 +782,22 @@ type IncidentLink {
   remoteState: String!
   syncedAt: DateTime!
 }
+
+# REQ-IPAM-004 (ADR-063) — switch port management: a device's ports with their state, speed, VLAN, the neighbour on
+# the far end (LLDP, CDP, a server NIC), the MAC addresses each port has learned resolved to IPs and the CIs that own
+# them, how long a down port has not been up (unused past SWITCH_PORTS.unusedDays), each port's history of changes, and
+# where a MAC address has been seen.
+enum PortState { up down admin_down unknown }
+type LearnedMac { mac: String! ip: String owner: Ci }
+type PortNeighbour { ci: Ci! port: String protocol: String }
+type SwitchPort { port: Ci! name: String! alias: String state: PortState! speedMbps: Int mtu: Int vlan: Int learnedMacs: [LearnedMac!]! learnedMacCount: Int! neighbour: PortNeighbour lastChange: DateTime daysNotUp: Int unused: Boolean! }
+type SwitchPortSummary { ports: Int! up: Int! down: Int! adminDown: Int! unknown: Int! unused: Int! learnedMacs: Int! }
+type SwitchPorts { device: Ci! summary: SwitchPortSummary! ports: [SwitchPort!]! }
+type PortChange { at: DateTime! key: String! from: String to: String }
+type PortHistory { port: Ci! days: Int! versions: Int! changes: [PortChange!]! }
+enum MacSightingKind { learned_on_port arp owner }
+type MacSighting { kind: MacSightingKind! ci: Ci! port: String ip: String seenAt: DateTime! }
+type MacLookup { mac: String! sightings: [MacSighting!]! }
 
 type Subnet {
   ci: Ci!
@@ -2666,6 +2682,12 @@ type Query {
   availabilityReportCsv(granularity: AvailabilityGranularity!, periods: Int): String!
   subnets(parentId: UUID): [Subnet!]!
   nextFreeIp(subnetId: UUID!): String
+  "REQ-IPAM-004: a device's ports with state, VLAN, neighbour, learned MACs and how long a down port has not been up."
+  switchPorts(deviceId: UUID!): SwitchPorts!
+  "REQ-IPAM-004: the changes between a port's recorded versions over the last days (default SWITCH_PORTS.historyDays)."
+  portHistory(portId: UUID!, days: Int): PortHistory!
+  "REQ-IPAM-004: where a MAC address has been seen: learned on a switch port, in an ARP table, or as a CI's own address."
+  macLookup(mac: String!): MacLookup!
   racks(roomId: UUID): [Rack!]!
   "REQ-DCIM-006: a room's rack temperatures, airflow, humidity and cooling units over the window (hours)."
   roomEnvironment(roomId: UUID!, hours: Int!): RoomEnvironment!

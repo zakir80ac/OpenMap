@@ -1,7 +1,18 @@
 // REQ-QA-001 — cross-generator records. Generators append to these so later stages (hosts need
 // racks and ToR ports, VMs need hypervisors, flows need listening services) can reference CIs by
 // index, and the IPAM helper keeps every address consistent with the subnet CIs it creates.
-import { DOMAIN, POOL, VRF, type DbEngine, type HostModelDef, type HypervisorPlatform, type NetworkModelDef, type OsDef, type SiteDef, type SoftwareDef } from './catalog.js';
+import {
+  DOMAIN,
+  POOL,
+  VRF,
+  type DbEngine,
+  type HostModelDef,
+  type HypervisorPlatform,
+  type NetworkModelDef,
+  type OsDef,
+  type SiteDef,
+  type SoftwareDef,
+} from './catalog.js';
 import type { EstateBuilder, Slot } from './estate.js';
 import { cidr, poolAddress, RFC1918_TEN } from './ip.js';
 import type { Rng } from './rng.js';
@@ -65,6 +76,8 @@ export interface HostRec {
   slot: Slot;
   /** Filled by the virtualization generator for hypervisor hosts. */
   hypervisor: HypervisorRec | null;
+  /** REQ-IPAM-004: the ToR interface CIs this host is cabled to; its VMs' MACs are learned on them too. */
+  torPorts: number[];
   /** Application role once claimed by the application generator. */
   role: string | null;
 }
@@ -258,7 +271,11 @@ export function ipamSlot(world: World, site: SiteWorld): Slot {
     collectorId: 'snmp-v3',
     nodeId: site.nodeId,
     siteCode: site.def.code,
-    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase, 0, 0, 12), label: site.def.code + ' routing table' },
+    target: {
+      kind: 'cidr',
+      value: cidr(RFC1918_TEN, site.def.octetBase, 0, 0, 12),
+      label: site.def.code + ' routing table',
+    },
     evidenceKind: 'snmp_walk',
   });
   site.ipamSlot = slot;
@@ -272,7 +289,11 @@ export function dcimSlot(world: World, site: SiteWorld): Slot {
     collectorId: 'pdu-dcim',
     nodeId: site.nodeId,
     siteCode: site.def.code,
-    target: { kind: 'cidr', value: cidr(RFC1918_TEN, site.def.octetBase + POOL.mgmt, 0, 0, 16), label: site.def.code + ' facilities' },
+    target: {
+      kind: 'cidr',
+      value: cidr(RFC1918_TEN, site.def.octetBase + POOL.mgmt, 0, 0, 16),
+      label: site.def.code + ' facilities',
+    },
     evidenceKind: 'snmp_walk',
   });
 }
@@ -320,8 +341,26 @@ export function ensureSoftware(world: World, def: SoftwareDef): number {
   return idx;
 }
 
-const POOL_VRF: Record<PoolName, string> = { mgmt: VRF.mgmt, oob: VRF.oob, servers: VRF.prod, vms: VRF.prod, storage: VRF.storage, k8s: VRF.prod, dmz: VRF.dmz, links: VRF.default };
-const POOL_PURPOSE: Record<PoolName, string> = { mgmt: 'network management', oob: 'out-of-band BMC', servers: 'bare-metal servers', vms: 'virtual machines', storage: 'storage and vMotion', k8s: 'kubernetes nodes', dmz: 'dmz', links: 'point-to-point links' };
+const POOL_VRF: Record<PoolName, string> = {
+  mgmt: VRF.mgmt,
+  oob: VRF.oob,
+  servers: VRF.prod,
+  vms: VRF.prod,
+  storage: VRF.storage,
+  k8s: VRF.prod,
+  dmz: VRF.dmz,
+  links: VRF.default,
+};
+const POOL_PURPOSE: Record<PoolName, string> = {
+  mgmt: 'network management',
+  oob: 'out-of-band BMC',
+  servers: 'bare-metal servers',
+  vms: 'virtual machines',
+  storage: 'storage and vMotion',
+  k8s: 'kubernetes nodes',
+  dmz: 'dmz',
+  links: 'point-to-point links',
+};
 
 /** Allocates the next address in a site pool, creating the /24 subnet CI on first use. */
 export function allocateIp(world: World, site: SiteWorld, pool: PoolName): IpAlloc {
@@ -329,25 +368,60 @@ export function allocateIp(world: World, site: SiteWorld, pool: PoolName): IpAll
   site.poolCursor.set(pool, cursor + 1);
   const placed = poolAddress(site.def.octetBase + POOL[pool], cursor);
   const vrf = POOL_VRF[pool];
-  const subnetIdx = ensureSubnet(world, site, placed.subnetCidr, vrf, { purpose: POOL_PURPOSE[pool], pool, gateway: placed.gateway, prefixLength: 24, status: 'active' });
+  const subnetIdx = ensureSubnet(world, site, placed.subnetCidr, vrf, {
+    purpose: POOL_PURPOSE[pool],
+    pool,
+    gateway: placed.gateway,
+    prefixLength: 24,
+    status: 'active',
+  });
   return { address: placed.address, subnetIdx, subnetCidr: placed.subnetCidr, gateway: placed.gateway, vrf };
 }
 
-export function ensureSubnet(world: World, site: SiteWorld, subnetCidr: string, vrf: string, attributes: Record<string, string | number | boolean>): number {
+export function ensureSubnet(
+  world: World,
+  site: SiteWorld,
+  subnetCidr: string,
+  vrf: string,
+  attributes: Record<string, string | number | boolean>,
+): number {
   const key = subnetCidr + '|' + vrf;
   const existing = site.subnets.get(key);
   if (existing !== undefined) return existing;
   const slot = ipamSlot(world, site);
-  const idx = world.b.ci(slot, 'subnet', { cidr: subnetCidr, vrfRef: vrf }, subnetCidr, { ...attributes, vrf, site: site.def.code }, site.def.code, { tags: ['ipam'] });
+  const idx = world.b.ci(
+    slot,
+    'subnet',
+    { cidr: subnetCidr, vrfRef: vrf },
+    subnetCidr,
+    { ...attributes, vrf, site: site.def.code },
+    site.def.code,
+    { tags: ['ipam'] },
+  );
   world.b.rel(slot, 'contains', site.supernetIdx, idx);
   site.subnets.set(key, idx);
   return idx;
 }
 
 /** Creates an ip_address CI in the caller's slot with its uses_ip and in_subnet relationships. */
-export function attachIp(world: World, slot: Slot, ownerIdx: number, alloc: IpAlloc, siteCode: string, extra: Record<string, string | number | boolean | null> = {}): number {
+export function attachIp(
+  world: World,
+  slot: Slot,
+  ownerIdx: number,
+  alloc: IpAlloc,
+  siteCode: string,
+  extra: Record<string, string | number | boolean | null> = {},
+): number {
   const { b } = world;
-  const idx = b.ci(slot, 'ip_address', { address: alloc.address, vrfRef: alloc.vrf }, alloc.address, { version: 4, vrf: alloc.vrf, subnet: alloc.subnetCidr, status: 'assigned', ...extra }, siteCode, { tags: ['ipam'] });
+  const idx = b.ci(
+    slot,
+    'ip_address',
+    { address: alloc.address, vrfRef: alloc.vrf },
+    alloc.address,
+    { version: 4, vrf: alloc.vrf, subnet: alloc.subnetCidr, status: 'assigned', ...extra },
+    siteCode,
+    { tags: ['ipam'] },
+  );
   b.rel(slot, 'uses_ip', ownerIdx, idx);
   b.rel(slot, 'in_subnet', idx, alloc.subnetIdx);
   return idx;

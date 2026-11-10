@@ -101,7 +101,9 @@ type Device struct {
 	Vlans        []Vlan
 	Neighbours   []Neighbour
 	ArpEntries   []ArpEntry
-	Addresses    []Address
+	// FdbWalked is true when the switch answered a bridge forwarding table (REQ-IPAM-004).
+	FdbWalked bool
+	Addresses []Address
 	// Power is set when the device answers UPS-MIB or a vendor PDU/UPS MIB.
 	Power   *PowerFacts
 	Cooling *CoolingFacts
@@ -119,6 +121,10 @@ type Interface struct {
 	AdminUp  bool
 	OperUp   bool
 	Pvid     int64
+	// LearnedMacs are the addresses the bridge learned on this port (REQ-IPAM-004), sorted, at most
+	// maxLearnedMacs; LearnedMacCount is the full count.
+	LearnedMacs     []string
+	LearnedMacCount int
 }
 
 type Vlan struct {
@@ -173,6 +179,7 @@ func Parse(w *Walk) Device {
 	d.parseVlans(w)
 	d.parseNeighbours(w)
 	d.parseArp(w)
+	d.parseFdb(w)
 	d.parseAddresses(w)
 	d.Power = parsePower(w)
 	d.Cooling = parseCooling(w, d.SysObjectID)
@@ -328,6 +335,92 @@ func (d *Device) parseNeighbours(w *Walk) {
 		}
 		return d.Neighbours[a].RemoteChassisID < d.Neighbours[b].RemoteChassisID
 	})
+}
+
+// fdbLearned is dot1dTpFdbStatus / dot1qTpFdbStatus learned(3).
+const fdbLearned = 3
+
+// maxLearnedMacs caps the addresses kept per port: an access port has one or a few, a trunk or a hypervisor uplink
+// can learn hundreds, and the count alone says enough about those.
+const maxLearnedMacs = 64
+
+// macFromIndex turns six dotted decimal OID octets into a MAC string.
+func macFromIndex(parts []string) string {
+	if len(parts) != 6 {
+		return ""
+	}
+	b := make([]byte, 6)
+	for i, p := range parts {
+		n, err := strconv.Atoi(p)
+		if err != nil || n < 0 || n > 255 {
+			return ""
+		}
+		b[i] = byte(n)
+	}
+	return net.HardwareAddr(b).String()
+}
+
+// parseFdb reads the bridge forwarding databases (Q-BRIDGE first, BRIDGE-MIB where the switch has no Q-BRIDGE table),
+// keeps learned entries only, maps each bridge port to its ifIndex through dot1dBasePortIfIndex and records the MACs
+// on the interface. FdbWalked says the switch answered either table, so an emptied port is reported as empty.
+func (d *Device) parseFdb(w *Walk) {
+	portIf := w.column(oidDot1dBasePortIfIndex)
+	learned := map[int64]map[string]bool{}
+	add := func(port any, mac string) {
+		if mac == "" {
+			return
+		}
+		p, ok := asInt(port)
+		if !ok {
+			return
+		}
+		ifi, ok := asInt(portIf[strconv.FormatInt(p, 10)])
+		if !ok {
+			return
+		}
+		if learned[ifi] == nil {
+			learned[ifi] = map[string]bool{}
+		}
+		learned[ifi][mac] = true
+	}
+	isLearned := func(status map[string]any, idx string) bool {
+		v, present := status[idx]
+		if !present {
+			return true
+		}
+		n, ok := asInt(v)
+		return ok && n == fdbLearned
+	}
+	qPort := w.column(oidDot1qTpFdbPort)
+	qStatus := w.column(oidDot1qTpFdbStatus)
+	for idx, port := range qPort {
+		parts := strings.Split(idx, ".")
+		if len(parts) == 7 && isLearned(qStatus, idx) {
+			add(port, macFromIndex(parts[1:]))
+		}
+	}
+	dPort := w.column(oidDot1dTpFdbPort)
+	dStatus := w.column(oidDot1dTpFdbStatus)
+	if len(qPort) == 0 {
+		for idx, port := range dPort {
+			if isLearned(dStatus, idx) {
+				add(port, macFromIndex(strings.Split(idx, ".")))
+			}
+		}
+	}
+	d.FdbWalked = len(qPort) > 0 || len(dPort) > 0
+	for i := range d.Interfaces {
+		macs := make([]string, 0, len(learned[d.Interfaces[i].IfIndex]))
+		for m := range learned[d.Interfaces[i].IfIndex] {
+			macs = append(macs, m)
+		}
+		sort.Strings(macs)
+		d.Interfaces[i].LearnedMacCount = len(macs)
+		if len(macs) > maxLearnedMacs {
+			macs = macs[:maxLearnedMacs]
+		}
+		d.Interfaces[i].LearnedMacs = macs
+	}
 }
 
 // parseArp reads ipNetToMediaPhysAddress, indexed by ifIndex.a.b.c.d.

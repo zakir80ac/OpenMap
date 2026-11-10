@@ -43,6 +43,8 @@ export const DNS_CHANGE_METRIC = 'openmap_dns_changes_total';
 export const CABLING_CHANGE_METRIC = 'openmap_cabling_changes_total';
 /** REQ-DCIM-008 */
 export const CABLING_VERIFICATION_METRIC = 'openmap_cabling_verifications_total';
+/** REQ-IPAM-004 */
+export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
 export const RACK_MOVE_METRIC = 'openmap_rack_moves_total';
 /** REQ-DCIM-004: device cords recorded on and removed from PDU outlets. */
@@ -100,6 +102,8 @@ export class MetricsService {
   readonly cablingChanges: Counter<'kind' | 'op'>;
   /** REQ-DCIM-008 — cable verification reads (recorded cables against observed adjacencies). */
   readonly cablingVerifications: Counter;
+  /** REQ-IPAM-004 — switch port reads by query (ports, history, mac). */
+  readonly switchPortReads: Counter<'query'>;
   readonly rackMoves: Counter;
   readonly powerConnections: Counter<'op'>;
   readonly powerMonitorReads: Counter;
@@ -242,6 +246,12 @@ export class MetricsService {
       name: DNS_CHANGE_METRIC,
       help: 'DNS record changes requested in OpenMap, by op (add, delete)',
       labelNames: ['op'],
+      registers: [this.registry],
+    });
+    this.switchPortReads = new Counter({
+      name: SWITCH_PORT_METRIC,
+      help: "Switch port reads by query: a device's ports, a port's history, a MAC lookup",
+      labelNames: ['query'],
       registers: [this.registry],
     });
     this.cablingVerifications = new Counter({

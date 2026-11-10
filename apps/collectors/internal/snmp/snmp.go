@@ -29,7 +29,8 @@ const (
 	maxRepeaters  = 25
 	optionPort    = "port"
 	optionNoArp   = "skipArp"
-	optionVersion = "snmpVersion" // "1" walks a community-based agent over SNMPv1 instead of v2c
+	optionNoFdb   = "skipMacTable" // REQ-IPAM-004: skip the bridge forwarding tables on very large switches
+	optionVersion = "snmpVersion"  // "1" walks a community-based agent over SNMPv1 instead of v2c
 	versionV1     = "1"
 	credCommunity = "community"
 	credUser      = "username"
@@ -197,7 +198,7 @@ func getScalars(c *g.GoSNMP, oids []string) (*g.SnmpPacket, error) {
 }
 
 // walkDevice performs the scalar GET and all table walks for one target.
-func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipArp bool) (*Walk, error) {
+func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipArp, skipFdb bool) (*Walk, error) {
 	if err := c.Connect(); err != nil {
 		return nil, collector.Errorf(contract.ErrUnreachable, true, "connect %s: %v", target.Value, err)
 	}
@@ -234,6 +235,9 @@ func walkDevice(ctx context.Context, c *g.GoSNMP, target contract.Target, skipAr
 	tables := tableOIDs
 	if !skipArp {
 		tables = append(append([]string{}, tables...), oidIpNetToMediaPhys)
+	}
+	if !skipFdb {
+		tables = append(append([]string{}, tables...), oidDot1qTpFdbPort, oidDot1qTpFdbStatus, oidDot1dTpFdbPort, oidDot1dTpFdbStatus)
 	}
 	if parsePower(w) != nil {
 		tables = append(append([]string{}, tables...), powerTableOIDs...)
@@ -290,7 +294,11 @@ func (Collector) Collect(ctx context.Context, target contract.Target, cred *cont
 	if v, ok := options[optionNoArp].(bool); ok {
 		skipArp = v
 	}
-	w, err := walkDevice(ctx, c, target, skipArp)
+	skipFdb := false
+	if v, ok := options[optionNoFdb].(bool); ok {
+		skipFdb = v
+	}
+	w, err := walkDevice(ctx, c, target, skipArp, skipFdb)
 	if err != nil {
 		return collector.Observation{}, err
 	}

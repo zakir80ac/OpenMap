@@ -732,6 +732,25 @@ export const CAPACITY = {
   trendDecimals: 2,
 } as const;
 
+/**
+ * REQ-IPAM-004 (ADR-063) — switch port management. A port down for `unusedDays` is reported free to reuse (thirty days
+ * spans a month-end batch window, so a port used once a month is not offered). History reads the port's versions over
+ * `historyDays`; a MAC lookup lists at most `macLookupLimit` sightings; `switchSearchLimit` switches are offered when
+ * choosing one; the port table pages at `portRows` before "show all".
+ */
+export const SWITCH_PORTS = {
+  unusedDays: 30,
+  historyDays: 90,
+  maxHistoryVersions: 500,
+  macLookupLimit: 50,
+  switchSearchLimit: 12,
+  portRows: 48,
+  /** Ports of one device the API reads, so a chassis with every line card full stays one bounded request. */
+  maxPortsPerDevice: 2_000,
+  /** Longest text a MAC lookup accepts (a MAC with separators and spaces fits easily). */
+  macTextMaxLength: 64,
+} as const;
+
 /** Vulnerabilities screen (REQ-UI-016, REQ-SEC-008): the blast-radius walk from affected hosts to business services. */
 export const VULNERABILITY = {
   /** Hosts walked per CVE; a CVE on more hosts reports a truncated blast radius rather than blowing the query budget. */
@@ -1893,8 +1912,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.35.0 (REQ-DCIM-008, ADR-062): `CableVerificationStatus`, `CableVerificationReason`, `ObservedPort`,
    * `ObservedLink`, `CableVerification`, `CablingVerificationSummary`, `CablingVerification`; queries
    * `cablingVerification`, `cablingLabelsCsv`.
+   * 1.36.0 (REQ-IPAM-004, ADR-063): `PortState`, `LearnedMac`, `PortNeighbour`, `SwitchPort`, `SwitchPortSummary`,
+   * `SwitchPorts`, `PortChange`, `PortHistory`, `MacSightingKind`, `MacSighting`, `MacLookup`; queries `switchPorts`,
+   * `portHistory`, `macLookup`.
    */
-  graphql: '1.35.0',
+  graphql: '1.36.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.
