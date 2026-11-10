@@ -1,9 +1,9 @@
 {
- "capturedAt": "2026-11-10T15:05:13.526Z",
+ "capturedAt": "2026-11-10T20:04:51.004Z",
  "tenantId": "570b1953-2893-4976-955e-7e6bb7e9e2cc",
  "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
  "prose": true,
- "passed": 38,
+ "passed": 41,
  "total": 41,
  "outcomes": [
   {
@@ -12,7 +12,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 1,
-   "text": "There are 40,000 hosts in the IT estate.",
+   "text": "There are 40,000 hosts.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -110,8 +110,8 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 2,
-   "text": "The average host CPU utilisation across 40,000 hosts is 48.64%, from the latest samples as of Oct 1, 2026.",
-   "grounded": false,
+   "text": "The average CPU utilisation of hosts across 40,000 hosts is 48.64%.",
+   "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:1"
    ],
@@ -124,7 +124,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 10,
-   "text": "The hosts with the highest CPU utilisation are srv-ryd-sql-5373, srv-ryd-file-18189, srv-ryd-gpu-6598, srv-ryd-file-3482, srv-ryd-hadoop-2654, srv-jed-oracle-0635, srv-jed-hadoop-1120, srv-jed-backup-5218, srv-jed-file-5145, and srv-jed-file-6207, with an average CPU utilisation of 94%.",
+   "text": "The hosts with the highest CPU utilisation are srv-ryd-sql-5373, srv-ryd-file-18189, srv-ryd-gpu-6598, srv-ryd-file-3482, srv-ryd-hadoop-2654, srv-jed-oracle-0635, srv-jed-hadoop-1120, srv-jed-file-6207, srv-jed-backup-5218, and srv-jed-file-5145, with an average CPU utilisation of 94%.",
    "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:10"
@@ -138,7 +138,7 @@
    "intent": "measurement",
    "skill": "metrics.latest",
    "figures": 10,
-   "text": "The RYD-DH01-H-10 PDU-B draws the most power with a power draw of 4,200 W.",
+   "text": "The RYD-DH01-H-10 PDU-B draws the most power with a total of 4,200 watts.",
    "grounded": true,
    "evidence": [
     "metrics.latest:clickhouse:10"
@@ -152,7 +152,7 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "300 business services were 99.93% available this month, with 2,760 minutes down in total and 26 below target. Lowest: Money Markets 98.71%, 179 min down, target 99.5% missed; Integration Services (Private) 98.79%, 168 min down, target 99.9% missed; Fraud Detection (Corporate) 98.82%, 163 min down, target 99.9% missed; Card Issuing (Retail) 98.85%, 159 min down, target 99.5% missed; Open Banking APIs (Private) 98.88%, 155 min down, target 99.5% missed; KYC Onboarding (Islamic) 98.93%, 148 min down, target 99.5% missed; Document Management (Retail) 98.94%, 147 min down, target 99.5% missed; Identity and Access (Islamic) 98.95%, 146 min down, target 99.9% missed; Open Banking APIs 98.99%, 140 min down, target 99.5% missed; POS Network (Islamic) 99.13%, 120 min down, target 99.5% missed.",
+   "text": "300 business services were 99.94% available this month, with 2,760 minutes down in total and 26 below target. Lowest: Money Markets 98.74%, 179 min down, target 99.5% missed; Integration Services (Private) 98.81%, 168 min down, target 99.9% missed; Fraud Detection (Corporate) 98.85%, 163 min down, target 99.9% missed; Card Issuing (Retail) 98.88%, 159 min down, target 99.5% missed; Open Banking APIs (Private) 98.91%, 155 min down, target 99.5% missed; KYC Onboarding (Islamic) 98.96%, 148 min down, target 99.5% missed; Document Management (Retail) 98.96%, 147 min down, target 99.5% missed; Identity and Access (Islamic) 98.97%, 146 min down, target 99.9% missed; Open Banking APIs 99.01%, 140 min down, target 99.5% missed; POS Network (Islamic) 99.15%, 120 min down, target 99.5% missed.",
    "grounded": false,
    "evidence": [
     "services.availability:clickhouse:300"
@@ -180,7 +180,7 @@
    "intent": "anomalies",
    "skill": "anomalies",
    "figures": 1,
-   "text": "There are 19 anomalies open in Riyadh Primary Data Centre.",
+   "text": "There are 19 anomalies open in the IT estate.",
    "grounded": true,
    "evidence": [
     "anomalies:postgres:19"
@@ -330,7 +330,7 @@
    "intent": "attribute_stats",
    "skill": "cmdb.attributes",
    "figures": 2,
-   "text": "الذاكرة المتوسطة للمضيفين هو 867.83 GB.",
+   "text": "المضيفين لديهم متوسطاً 867.83 GB من الذاكرة.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -344,7 +344,7 @@
    "intent": "count",
    "skill": "cmdb.attributes",
    "figures": 3,
-   "text": "في المتوسط، لكل مضيف، يُفتراض 12 من الأجهزة الافتراضية.",
+   "text": "في المتوسط، لكل مضيف، يتوفر 12 من الأجهزة الافتراضية.",
    "grounded": true,
    "evidence": [
     "cmdb.attributes:postgres:1"
@@ -358,34 +358,27 @@
    "intent": "measurement",
    "skill": "metrics.series",
    "figures": 0,
-   "text": "I could not retrieve that: metrics.series timed out after 20000 ms.",
+   "text": "No host CPU utilisation samples were recorded for ahv-dmm-c10-01 over the last 7 days.",
    "grounded": true,
    "evidence": [
-    "metrics.series:catalogue:0"
+    "metrics.series:clickhouse:0"
    ],
-   "ok": false,
-   "why": [
-    "no evidence query mentions host.cpu.utilisation_percent",
-    "no evidence query mentions \"hours\":168",
-    "a step failed: metrics.series timed out after 20000 ms"
-   ]
+   "ok": true,
+   "why": []
   },
   {
    "id": "ar-uptime",
    "question": "ما هو توافر خدمات الأعمال هذا الشهر؟",
    "intent": "availability",
    "skill": "services.availability",
-   "figures": 0,
-   "text": "لم أستطع جلب ذلك: services.availability timed out after 20000 ms.",
-   "grounded": true,
+   "figures": 4,
+   "text": "كانت 300 خدمة أعمال متاحة بنسبة 99.94% الشهر الحالي، بإجمالي 2,760 دقيقة تعطل و26 دون الهدف. الأدنى: Money Markets 98.74%، 179 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Integration Services (Private) 98.81%، 168 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Fraud Detection (Corporate) 98.85%، 163 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Card Issuing (Retail) 98.88%، 159 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Open Banking APIs (Private) 98.91%، 155 دقيقة تعطل، لم يتحقق هدف 99.5%؛ KYC Onboarding (Islamic) 98.96%، 148 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Document Management (Retail) 98.96%، 147 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Identity and Access (Islamic) 98.97%، 146 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Open Banking APIs 99.01%، 140 دقيقة تعطل، لم يتحقق هدف 99.5%؛ POS Network (Islamic) 99.15%، 120 دقيقة تعطل، لم يتحقق هدف 99.5%.",
+   "grounded": false,
    "evidence": [
-    "services.availability:catalogue:0"
+    "services.availability:clickhouse:300"
    ],
-   "ok": false,
-   "why": [
-    "no figure above zero",
-    "a step failed: services.availability timed out after 20000 ms"
-   ]
+   "ok": true,
+   "why": []
   },
   {
    "id": "ar-anomalies",
@@ -434,18 +427,14 @@
    "question": "متوسط استخدام المعالج للمضيفين",
    "intent": "measurement",
    "skill": "metrics.latest",
-   "figures": 0,
-   "text": "لم أستطع جلب ذلك: metrics.latest timed out after 20000 ms.",
-   "grounded": true,
+   "figures": 2,
+   "text": "متوسط استخدام معالج المضيف عبر 40,000 من المضيفين هو 48.64%، من أحدث العينات حتى 01‏/10‏/2026.",
+   "grounded": false,
    "evidence": [
-    "metrics.latest:catalogue:0"
+    "metrics.latest:clickhouse:1"
    ],
-   "ok": false,
-   "why": [
-    "no figure above zero",
-    "no evidence query mentions host.cpu.utilisation_percent",
-    "a step failed: metrics.latest timed out after 20000 ms"
-   ]
+   "ok": true,
+   "why": []
   },
   {
    "id": "ar-services-down",
@@ -481,7 +470,7 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "300 business services were 99.93% available this month, with 2,760 minutes down in total and 26 below target. Lowest: Money Markets 98.71%, 179 min down, target 99.5% missed; Integration Services (Private) 98.79%, 168 min down, target 99.9% missed; Fraud Detection (Corporate) 98.82%, 163 min down, target 99.9% missed; Card Issuing (Retail) 98.85%, 159 min down, target 99.5% missed; Open Banking APIs (Private) 98.88%, 155 min down, target 99.5% missed; KYC Onboarding (Islamic) 98.93%, 148 min down, target 99.5% missed; Document Management (Retail) 98.94%, 147 min down, target 99.5% missed; Identity and Access (Islamic) 98.95%, 146 min down, target 99.9% missed; Open Banking APIs 98.99%, 140 min down, target 99.5% missed; POS Network (Islamic) 99.13%, 120 min down, target 99.5% missed.",
+   "text": "300 business services were 99.94% available this month, with 2,760 minutes down in total and 26 below target. Lowest: Money Markets 98.74%, 179 min down, target 99.5% missed; Integration Services (Private) 98.81%, 168 min down, target 99.9% missed; Fraud Detection (Corporate) 98.85%, 163 min down, target 99.9% missed; Card Issuing (Retail) 98.88%, 159 min down, target 99.5% missed; Open Banking APIs (Private) 98.91%, 155 min down, target 99.5% missed; KYC Onboarding (Islamic) 98.96%, 148 min down, target 99.5% missed; Document Management (Retail) 98.96%, 147 min down, target 99.5% missed; Identity and Access (Islamic) 98.97%, 146 min down, target 99.9% missed; Open Banking APIs 99.01%, 140 min down, target 99.5% missed; POS Network (Islamic) 99.15%, 120 min down, target 99.5% missed.",
    "grounded": false,
    "evidence": [
     "services.availability:clickhouse:300"
@@ -537,7 +526,7 @@
    "intent": "availability",
    "skill": "services.availability",
    "figures": 4,
-   "text": "كانت 300 خدمة أعمال متاحة بنسبة 99.93% الشهر الحالي، بإجمالي 2,760 دقيقة تعطل و26 دون الهدف. الأدنى: Money Markets 98.71%، 179 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Integration Services (Private) 98.79%، 168 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Fraud Detection (Corporate) 98.82%، 163 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Card Issuing (Retail) 98.85%، 159 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Open Banking APIs (Private) 98.88%، 155 دقيقة تعطل، لم يتحقق هدف 99.5%؛ KYC Onboarding (Islamic) 98.93%، 148 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Document Management (Retail) 98.94%، 147 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Identity and Access (Islamic) 98.95%، 146 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Open Banking APIs 98.99%، 140 دقيقة تعطل، لم يتحقق هدف 99.5%؛ POS Network (Islamic) 99.13%، 120 دقيقة تعطل، لم يتحقق هدف 99.5%.",
+   "text": "كانت 300 خدمة أعمال متاحة بنسبة 99.94% الشهر الحالي، بإجمالي 2,760 دقيقة تعطل و26 دون الهدف. الأدنى: Money Markets 98.74%، 179 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Integration Services (Private) 98.81%، 168 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Fraud Detection (Corporate) 98.85%، 163 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Card Issuing (Retail) 98.88%، 159 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Open Banking APIs (Private) 98.91%، 155 دقيقة تعطل، لم يتحقق هدف 99.5%؛ KYC Onboarding (Islamic) 98.96%، 148 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Document Management (Retail) 98.96%، 147 دقيقة تعطل، لم يتحقق هدف 99.5%؛ Identity and Access (Islamic) 98.97%، 146 دقيقة تعطل، لم يتحقق هدف 99.9%؛ Open Banking APIs 99.01%، 140 دقيقة تعطل، لم يتحقق هدف 99.5%؛ POS Network (Islamic) 99.15%، 120 دقيقة تعطل، لم يتحقق هدف 99.5%.",
    "grounded": false,
    "evidence": [
     "services.availability:clickhouse:300"

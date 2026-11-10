@@ -31,7 +31,7 @@ test('an administrator sees the platform watching itself', async ({ page }, test
   await expect(page.getByTestId('platform-budgets')).toBeVisible();
 
   const responded = page.waitForResponse((r) => r.url().includes('/graphql') && (r.request().postData() ?? '').includes('"w":60'));
-  await page.getByRole('radio', { name: translate(locale, 'platform.window.60') }).click();
+  await page.getByRole('radio', { name: translate(locale, 'platform.window.60'), exact: true }).click();
   await responded;
   await expect(slis.locator('tbody tr')).toHaveCount(SLI_COUNT);
   await page.screenshot({ path: screenshotsDir + 'platform-health-' + locale + '.png', fullPage: true });
