@@ -1,5 +1,6 @@
 'use client';
 // REQ-UI-024 — step 3: inter-site links. Saving one creates a site_link CI connected to both site CIs.
+// REQ-IPAM-007 (ADR-069): the carrier contract, the committed latency and the physical route are recorded with it.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { LINK_KINDS } from '@openmap/contracts';
 import { Tag } from '@openmap/ui';
@@ -25,6 +26,9 @@ interface Draft {
   latencyMs: string;
   replication: boolean;
   probeTarget: string;
+  carrierContractRef: string;
+  slaLatencyMs: string;
+  pathRef: string;
 }
 
 export function toLinkInput(draft: Draft): SiteLinkInput {
@@ -40,6 +44,9 @@ export function toLinkInput(draft: Draft): SiteLinkInput {
     latencyMs: numberOrNull(draft.latencyMs),
     replication: draft.replication,
     probeTarget: draft.probeTarget.trim() === '' ? null : draft.probeTarget.trim(),
+    carrierContractRef: draft.carrierContractRef.trim() === '' ? null : draft.carrierContractRef.trim(),
+    slaLatencyMs: numberOrNull(draft.slaLatencyMs),
+    pathRef: draft.pathRef.trim() === '' ? null : draft.pathRef.trim(),
   };
 }
 
@@ -50,7 +57,7 @@ export function ConnectivityStep({ state, editable, onContinue, onBack, continui
   const queryClient = useQueryClient();
   const first = state.sites[0]?.id ?? '';
   const second = state.sites[1]?.id ?? first;
-  const empty: Draft = { fromSiteId: first, toSiteId: second, kind: LINK_KINDS[0], provider: '', circuitId: '', bandwidthMbps: '', diversePaths: '1', role: ROLES_OF_LINK[0], latencyMs: '', replication: false, probeTarget: '' };
+  const empty: Draft = { fromSiteId: first, toSiteId: second, kind: LINK_KINDS[0], provider: '', circuitId: '', bandwidthMbps: '', diversePaths: '1', role: ROLES_OF_LINK[0], latencyMs: '', replication: false, probeTarget: '', carrierContractRef: '', slaLatencyMs: '', pathRef: '' };
   const [draft, setDraft] = useState<Draft>(empty);
   const [open, setOpen] = useState(false);
   const save = useMutation({
@@ -152,6 +159,9 @@ export function ConnectivityStep({ state, editable, onContinue, onBack, continui
             </SelectInput>
             <TextInput id={id + '-latency'} label={t('setup.links.latency')} inputMode="decimal" value={draft.latencyMs} disabled={!editable} onChange={(e) => { update('latencyMs', e.target.value); }} />
             <TextInput id={id + '-probe'} label={t('setup.links.probeTarget')} value={draft.probeTarget} disabled={!editable} onChange={(e) => { update('probeTarget', e.target.value); }} />
+            <TextInput id={id + '-contract'} label={t('setup.links.contract')} value={draft.carrierContractRef} disabled={!editable} onChange={(e) => { update('carrierContractRef', e.target.value); }} />
+            <TextInput id={id + '-sla'} label={t('setup.links.slaLatency')} inputMode="numeric" value={draft.slaLatencyMs} disabled={!editable} onChange={(e) => { update('slaLatencyMs', e.target.value); }} />
+            <TextInput id={id + '-path'} label={t('setup.links.pathRef')} value={draft.pathRef} disabled={!editable} onChange={(e) => { update('pathRef', e.target.value); }} />
             <label htmlFor={id + '-replication'} className="flex items-center gap-om-6 text-om-xs text-om-secondary">
               <input id={id + '-replication'} type="checkbox" checked={draft.replication} disabled={!editable} onChange={(e) => { update('replication', e.target.checked); }} />
               {t('setup.links.replication')}

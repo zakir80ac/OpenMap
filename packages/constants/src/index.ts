@@ -1455,7 +1455,12 @@ export const READINESS = {
   /** Cleared findings stay listed this long after they cleared. */
   clearedListedMs: 604_800_000,
   findingsListLimit: 100,
-  severity: { diverse_paths: 'medium', dr_reachable: 'high', replication_healthy: 'medium' },
+  /**
+   * REQ-IPAM-007 (ADR-069): two links that claim to be diverse but share a provider, a physical route or a carrier
+   * circuit are a design risk with nothing down yet (low); a link down between two sites that had more than one path is
+   * lost redundancy with traffic still flowing on the rest (medium, as diverse_paths).
+   */
+  severity: { diverse_paths: 'medium', dr_reachable: 'high', replication_healthy: 'medium', path_diversity: 'low', redundancy_lost: 'medium' },
   /** REQ-UI-026 — incident states a site card counts as alerts: everything not yet resolved or closed. */
   alertIncidentStates: ['open', 'acknowledged', 'mitigated'],
   /**
@@ -1464,6 +1469,20 @@ export const READINESS = {
    */
   locationHops: 5,
   megabitsPerGigabit: 1_000,
+} as const;
+
+/**
+ * REQ-IPAM-007 (ADR-069) — the network circuit register on inter-site links.
+ */
+export const LINK_CIRCUITS = {
+  /** Carrier circuits one inter-site link rides on: a local loop at each end, a backbone and a spare is four; eight is ample. */
+  maxCircuitsPerLink: 8,
+  /** Diverse paths one link may claim; above this a figure is a typing error, not a circuit. */
+  maxDiversePaths: 16,
+  /** Longest provider, contract and route reference accepted, as the cabling circuit's provider and id (ADR-056). */
+  maxRefChars: 128,
+  /** CI types at a circuit's ends whose health is the circuit's hand-off: a down port takes the circuit down. */
+  handOffTypes: ['interface', 'port'],
 } as const;
 
 /**
@@ -2194,6 +2213,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.39.0 (REQ-INT-019, ADR-066): `BackupState`, `BackupSet`, `Backups`, query `backups`.
    * 1.40.0 (REQ-SEC-011, ADR-067 steps 4-5): `CustomFieldDefinition.sensitive`, `CustomFieldDefinitionInput.sensitive`,
    * `BackupSet.encrypted`.
+   * 1.41.0 (REQ-IPAM-007, ADR-069): `LinkSharedRiskKind`, `LinkSharedRisk`, `LinkCircuit`, `LinkCircuitInput`,
+   * `ConnectivityLink.carrierContractRef`/`pathRef`/`circuits`/`sharedRisks`, `SiteLink.carrierContractRef`/
+   * `slaLatencyMs`/`pathRef` and the same on `SiteLinkInput`, mutation `saveLinkCircuit`.
    * 1.42.0 (REQ-SEC-012, ADR-070): `ComplianceFramework`, `ComplianceCheck`, `ComplianceResult`, `ComplianceFact`,
    * `ComplianceTally`, `ComplianceControlPosture`, `ComplianceFrameworkPosture`, `ComplianceCveRisk`, `ComplianceRun`,
    * `CompliancePosture`, `ComplianceFinding`, `ComplianceControlDetail`; queries `compliancePosture`,
@@ -2203,8 +2225,9 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * 1.45.0 (REQ-INT-012, ADR-073): `MonitoringAlertStatus`, `MonitoringTarget`, `MonitoringAlert`,
    * `MonitoringSourceMapping`, `MonitoringAlerts`; query `monitoringAlerts`; mutations `mapMonitoringSource`,
    * `clearMonitoringAlert`.
+   * 1.46.0: the 1.41.0 additions of REQ-IPAM-007 (ADR-069), released after 1.45.0 because they merged later.
    */
-  graphql: '1.45.0',
+  graphql: '1.46.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

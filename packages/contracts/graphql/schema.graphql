@@ -1,4 +1,4 @@
-# REQ-CORE-006 — OpenMap GraphQL contract, version 1.45.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
+# REQ-CORE-006 — OpenMap GraphQL contract, version 1.46.0 (see docs/CONTRACTS.md). Checked by `pnpm contracts:check`.
 # Served by apps/api (Mercurius). Breaking changes require an ADR and a tracker row.
 
 scalar DateTime
@@ -708,10 +708,40 @@ type ConnectivityLink {
   "Traffic as a share of the committed bandwidth; null without both."
   utilisationPercent: Float
   redundancy: LinkRedundancy!
+  "REQ-IPAM-007 (ADR-069): the carrier contract an outage is raised under."
+  carrierContractRef: String
+  "REQ-IPAM-007: the physical route the link takes (duct, conduit, cable system)."
+  pathRef: String
+  "REQ-IPAM-007: the carrier circuits the link rides on (depends_on), by name."
+  circuits: [LinkCircuit!]!
+  "REQ-IPAM-007: providers, routes and carrier circuits shared with other links between the same two sites."
+  sharedRisks: [LinkSharedRisk!]!
+}
+"A carrier circuit CI (REQ-DCIM-001) an inter-site link rides on (REQ-IPAM-007, ADR-069)."
+type LinkCircuit {
+  "The circuit CI; its health is the circuit's own."
+  ci: Ci!
+  provider: String
+  circuitId: String
+  "planned, provisioning, active or decommissioned; null when the CI records none."
+  status: String
+}
+"What two links between the same sites share that defeats their diversity (REQ-IPAM-007)."
+enum LinkSharedRiskKind {
+  provider
+  path
+  circuit
+}
+type LinkSharedRisk {
+  kind: LinkSharedRiskKind!
+  "The shared provider or route, or the shared circuit's name."
+  value: String!
+  "The other link."
+  other: Ci
 }
 type ReadinessFinding {
   id: UUID!
-  "diverse_paths, dr_reachable or replication_healthy."
+  "diverse_paths, dr_reachable, replication_healthy, path_diversity or redundancy_lost (REQ-IPAM-007)."
   rule: String!
   subject: Ci
   detail: String!
@@ -2633,6 +2663,10 @@ type SiteLink {
   "ADR-025: the link carries replication; what a Node at the A end probes."
   replication: Boolean!
   probeTarget: String
+  "ADR-069 (REQ-IPAM-007): the carrier contract, the committed latency and the physical route."
+  carrierContractRef: String
+  slaLatencyMs: Int
+  pathRef: String
   ci: Ci
 }
 input SiteLinkInput {
@@ -2647,6 +2681,26 @@ input SiteLinkInput {
   latencyMs: Float
   replication: Boolean
   probeTarget: String
+  carrierContractRef: String
+  slaLatencyMs: Int
+  pathRef: String
+}
+"REQ-IPAM-007 (ADR-069): the network circuit register's edit of an inter-site link CI."
+input LinkCircuitInput {
+  "A LINK_KINDS value (dark_fibre, mpls, sd_wan, dia, ...)."
+  kind: String!
+  provider: String
+  carrierContractRef: String
+  bandwidthMbps: Int!
+  "Latency the carrier commits to; above it the link is degraded."
+  slaLatencyMs: Int
+  diversePaths: Int!
+  "primary, backup or overlay."
+  role: String!
+  "The physical route (duct, conduit, cable system); two links on one route share its risk."
+  pathRef: String
+  "The carrier circuit CIs the link rides on; replaces the ones recorded. Omitted is none."
+  circuitCiIds: [UUID!]
 }
 """
 Returned once by registerNode: the clear enrolment token is never stored, only its digest.
@@ -3444,6 +3498,8 @@ type Mutation {
   removeSite(id: UUID!): Boolean!
   upsertSiteLink(id: UUID, input: SiteLinkInput!): SiteLink!
   removeSiteLink(id: UUID!): Boolean!
+  "REQ-IPAM-007 (ADR-069): records an inter-site link's circuit details and the carrier circuits it rides on (operators)."
+  saveLinkCircuit(linkId: UUID!, input: LinkCircuitInput!): ConnectivityLink!
   """
   Registers (or re-registers) a Discovery Node for a site and returns its one-time enrolment token.
   """

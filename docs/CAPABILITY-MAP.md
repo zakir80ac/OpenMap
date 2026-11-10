@@ -153,7 +153,7 @@ Legend for **Parity**: `=` same capability, `+` OpenMap goes further, `~` same o
 | --- | --- | --- | --- |
 | Initial setup wizard | Six-step onboarding: organization and business units, sites (data centre, colocation, office, branch, cloud region, edge), inter-site connectivity, Discovery Nodes and credentials, integrations and seed imports, generate twin (`organizationSchema`, `siteSchema`, `onboardingSchema`) | + | UI |
 | Buildings and rooms | Sites with rooms and racks created at onboarding, kept live by discovery | = | DCIM |
-| Network circuits | Inter-site links as CIs with kind, provider, bandwidth, diverse paths and role; outages modelled like any component (`siteLinkSchema`, `site_link`) | + | IPAM |
+| Network circuits | Inter-site links as CIs with kind, provider, bandwidth, diverse paths and role; outages modelled like any component (`siteLinkSchema`, `site_link`; ADR-069: the circuit register `saveLinkCircuit`, carrier `circuit` CIs under links by `depends_on`, shared risks, `path_diversity` and `redundancy_lost`) | + | IPAM |
 | Remote Collector install | Per-site Discovery Node enrolment with one-time token over mTLS; cloud regions are cloud-managed; branches agent-only | + | DISC |
 | Seed from existing CMDB or spreadsheets | ServiceNow and CSV imports arrive as observations with their own confidence; never overwrite discovery | + | CMDB |
 

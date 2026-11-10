@@ -10,6 +10,6 @@ import { OnboardingService } from './onboarding.service.js';
 @Module({
   imports: [CiModule, DiscoveryModule, IntegrationsModule],
   providers: [OnboardingRepository, OnboardingService, OnboardingResolver, OnboardingStateFieldsResolver, SiteFieldsResolver, SiteLinkFieldsResolver],
-  exports: [OnboardingService],
+  exports: [OnboardingService, OnboardingRepository],
 })
 export class OnboardingModule {}

@@ -6,6 +6,7 @@
 //   without a target.
 // T-491 REQ-UI-026 — each site as a facility card (tier, power capacity, racks, measured and design PUE, open alerts),
 // and each link with its carrier, traffic against capacity with a usage bar, and its redundancy state.
+// REQ-IPAM-007: a viewer who is not an operator gets no circuit register edit (T-593 covers the operator's).
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
@@ -14,6 +15,10 @@ import { Providers } from '@/providers';
 import { SitesView } from './SitesView';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }), usePathname: () => '/en/sites' }));
+vi.mock('@/lib/auth', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useCan: () => () => false,
+}));
 vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { children: ReactNode }) => (
     <a href={href} {...rest}>
@@ -29,6 +34,9 @@ const fibre = ci('fibre', 'site_link', 'RYD to JED fibre', 'down');
 const mpls = ci('mpls', 'site_link', 'RYD to JED MPLS', 'healthy');
 const plain = ci('plain', 'site_link', 'HQ to RYD', 'unknown');
 
+/** REQ-IPAM-007 — no circuit register entries on these links. */
+const register = { carrierContractRef: null, pathRef: null, circuits: [], sharedRisks: [] };
+
 const connectivity = {
   probeIntervalSeconds: 60,
   sites: [
@@ -36,9 +44,9 @@ const connectivity = {
     { ci: jed, code: 'JED', drRole: 'dr', criticality: 2, healthyPaths: 1, kind: 'datacenter', tier: null, powerCapacityKw: null, designPue: 1.4, pue: null, pueAt: null, racks: 0, openAlerts: 0 },
   ],
   links: [
-    { ci: fibre, fromSite: 'RYD', toSite: 'JED', kind: 'dark_fibre', provider: 'stc', role: 'primary', replication: true, diversePaths: 1, probeTarget: '10.31.0.1:443', reachable: false, latencyMs: null, lossPercent: 100, probedAt: '2026-11-08T00:05:00.000Z', slaLatencyMs: 25, capacityMbps: 100000, throughputMbps: null, utilisationPercent: null, redundancy: 'degraded' },
-    { ci: mpls, fromSite: 'RYD', toSite: 'JED', kind: 'mpls', provider: 'Mobily', role: 'backup', replication: false, diversePaths: 1, probeTarget: '10.31.0.2:443', reachable: true, latencyMs: 18.5, lossPercent: 0, probedAt: '2026-11-08T00:05:00.000Z', slaLatencyMs: 38, capacityMbps: 10000, throughputMbps: 2500, utilisationPercent: 25, redundancy: 'degraded' },
-    { ci: plain, fromSite: 'HQ', toSite: 'RYD', kind: 'mpls', provider: 'stc', role: 'primary', replication: false, diversePaths: 2, probeTarget: null, reachable: null, latencyMs: null, lossPercent: null, probedAt: null, slaLatencyMs: null, capacityMbps: null, throughputMbps: null, utilisationPercent: null, redundancy: 'active_active' },
+    { ci: fibre, fromSite: 'RYD', toSite: 'JED', kind: 'dark_fibre', provider: 'stc', role: 'primary', replication: true, diversePaths: 1, probeTarget: '10.31.0.1:443', reachable: false, latencyMs: null, lossPercent: 100, probedAt: '2026-11-08T00:05:00.000Z', slaLatencyMs: 25, capacityMbps: 100000, throughputMbps: null, utilisationPercent: null, redundancy: 'degraded', ...register },
+    { ci: mpls, fromSite: 'RYD', toSite: 'JED', kind: 'mpls', provider: 'Mobily', role: 'backup', replication: false, diversePaths: 1, probeTarget: '10.31.0.2:443', reachable: true, latencyMs: 18.5, lossPercent: 0, probedAt: '2026-11-08T00:05:00.000Z', slaLatencyMs: 38, capacityMbps: 10000, throughputMbps: 2500, utilisationPercent: 25, redundancy: 'degraded', ...register },
+    { ci: plain, fromSite: 'HQ', toSite: 'RYD', kind: 'mpls', provider: 'stc', role: 'primary', replication: false, diversePaths: 2, probeTarget: null, reachable: null, latencyMs: null, lossPercent: null, probedAt: null, slaLatencyMs: null, capacityMbps: null, throughputMbps: null, utilisationPercent: null, redundancy: 'active_active', ...register },
   ],
   findings: [
     { id: 'f1', rule: 'replication_healthy', detail: 'Replication link RYD to JED fibre is down.', state: 'open', openedAt: '2026-11-08T00:05:00.000Z', clearedAt: null, subject: fibre, incident: { id: 'i1', title: 'Readiness: Replication link RYD to JED fibre is down.', state: 'open', severity: 'medium' } },
@@ -65,9 +73,9 @@ describe.each(LOCALES)('SitesView in %s', (locale) => {
       </Providers>,
     );
     const readiness = await screen.findByRole('region', { name: translate(locale, 'sites.readiness') });
-    // Two rules breached, the DR rule passing.
+    // Two rules breached; the DR rule and (REQ-IPAM-007) path diversity and redundancy passing.
     expect(within(readiness).getAllByText(translate(locale, 'sites.breached', { count: n(1) }))).toHaveLength(2);
-    expect(within(readiness).getByText(translate(locale, 'sites.passing'))).toBeTruthy();
+    expect(within(readiness).getAllByText(translate(locale, 'sites.passing'))).toHaveLength(3);
     const replication = within(readiness).getByRole('list', { name: translate(locale, 'sites.rule.replication_healthy') });
     expect(within(replication).getByRole('link', { name: 'RYD to JED fibre' })).toBeTruthy();
     expect(within(replication).getByText(translate(locale, 'sites.finding.incident', { title: 'Readiness: Replication link RYD to JED fibre is down.' }))).toBeTruthy();
@@ -107,5 +115,6 @@ describe.each(LOCALES)('SitesView in %s', (locale) => {
     expect(within(links).getByText(translate(locale, 'sites.replication'))).toBeTruthy();
     expect(within(links).getByText(translate(locale, 'sites.notProbed'))).toBeTruthy();
     expect(within(links).getAllByText(translate(locale, 'health.down')).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: translate(locale, 'sites.circuit.edit', { link: 'RYD to JED MPLS' }) })).toBeNull();
   });
 });

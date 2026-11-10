@@ -1,6 +1,6 @@
 // REQ-UI-024 — zod schemas of the setup mutations (ADR-017). They reuse the contract's site and link schemas where
 // the GraphQL input mirrors them, so nothing the organization contract would refuse is stored.
-import { CREDENTIAL_REF_PATTERN, LOCALES, SETUP_LIMITS, SETUP_PATTERNS } from '@openmap/constants';
+import { CREDENTIAL_REF_PATTERN, LINK_CIRCUITS, LOCALES, SETUP_LIMITS, SETUP_PATTERNS } from '@openmap/constants';
 import { CREDENTIAL_FIELDS, credentialTypeSchema, LINK_KINDS, ONBOARDING_STEPS, SITE_KINDS, siteDrRoleSchema } from '@openmap/contracts';
 import { z } from 'zod';
 
@@ -55,6 +55,10 @@ export const siteLinkInputSchema = z.object({
   /** ADR-025: the link carries replication; what a Node at the A end probes (host or host:port). */
   replication: z.boolean().nullish(),
   probeTarget: z.string().trim().min(1).nullish(),
+  /** ADR-069 (REQ-IPAM-007): the carrier contract, the committed latency and the physical route. */
+  carrierContractRef: z.string().trim().min(1).max(LINK_CIRCUITS.maxRefChars).nullish(),
+  slaLatencyMs: z.number().int().positive().nullish(),
+  pathRef: z.string().trim().min(1).max(LINK_CIRCUITS.maxRefChars).nullish(),
 });
 export type SiteLinkInput = z.infer<typeof siteLinkInputSchema>;
 

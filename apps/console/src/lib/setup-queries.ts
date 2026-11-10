@@ -97,6 +97,10 @@ export interface SiteLink {
   /** ADR-025: the link carries replication; what a Node at the A end probes. */
   replication: boolean;
   probeTarget: string | null;
+  /** ADR-069 (REQ-IPAM-007): the carrier contract, the committed latency and the physical route. */
+  carrierContractRef: string | null;
+  slaLatencyMs: number | null;
+  pathRef: string | null;
   ci: SiteCi | null;
 }
 
@@ -112,6 +116,9 @@ export interface SiteLinkInput {
   latencyMs: number | null;
   replication: boolean;
   probeTarget: string | null;
+  carrierContractRef: string | null;
+  slaLatencyMs: number | null;
+  pathRef: string | null;
 }
 
 export interface NodeRegistration {
@@ -168,7 +175,7 @@ const ORGANIZATION_FIELDS = 'id name industry timeZone defaultLocale regulatoryS
 const SITE_CI_FIELDS = 'ci { id code displayName layer }';
 const NODE_FIELDS = 'id status lastHeartbeat activeJobs certificateExpiresAt site { id displayName }';
 const SITE_FIELDS = 'id code name kind tier address city countryCode geo { lat lon } cloud { provider region } locationCount facility { powerCapacityKw rackCount designPue } drRole criticality ' + SITE_CI_FIELDS + ' nodes { ' + NODE_FIELDS + ' }';
-const LINK_FIELDS = 'id fromSite { id code name } toSite { id code name } kind provider circuitId bandwidthMbps diversePaths role latencyMs replication probeTarget ' + SITE_CI_FIELDS;
+const LINK_FIELDS = 'id fromSite { id code name } toSite { id code name } kind provider circuitId bandwidthMbps diversePaths role latencyMs replication probeTarget carrierContractRef slaLatencyMs pathRef ' + SITE_CI_FIELDS;
 const SWEEP_FIELDS = 'id startedAt finishedAt targetsTotal targetsDone devicesDiscovered budgetMinutes';
 const SCOPE_FIELDS = 'ci { id code displayName layer } cidr site { id code displayName layer } credentialRef credentialType';
 const INTEGRATION_FIELDS = 'id category vendor name enabled direction health lastSuccessAt lastError deliveredLastHour failedLastHour';

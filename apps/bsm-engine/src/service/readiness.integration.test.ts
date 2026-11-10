@@ -2,11 +2,12 @@
 // own: two sites (RYD primary and criticality 1, JED the DR site) joined by a replication circuit and a backup circuit,
 // both probed. Probe samples written to ClickHouse metrics drive each round:
 // 1. both reachable and fast: the links are healthy and nothing breaches;
-// 2. the replication circuit unreachable: it goes down, and `diverse_paths` (RYD keeps one path) and
-//    `replication_healthy` open findings with incidents (rooted at the site and the link), while `dr_reachable` holds
-//    over the backup circuit;
-// 3. reachable again: both findings clear and their incidents are resolved.
-// The graph is a recording stand-in (setHealth); the API and console read the same findings.
+// 2. the replication circuit unreachable: it goes down, and `diverse_paths` (RYD keeps one path),
+//    `replication_healthy` and (REQ-IPAM-007) `redundancy_lost` (RYD-JED is down to one of two paths) open findings with
+//    incidents (rooted at the site and the link), while `dr_reachable` holds over the backup circuit;
+// 3. reachable again: the findings clear and their incidents are resolved.
+// The graph is a recording stand-in (setHealth, and an impact walk that reaches no service); the API and console read
+// the same findings.
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@clickhouse/client';
 import { loadEnv } from '@openmap/config';
@@ -33,6 +34,7 @@ const graph = {
     graphHealth.set(id, health);
     return Promise.resolve();
   },
+  impact: (_tenant: string, rootId: string) => Promise.resolve({ rootId, nodes: [], services: [], durationMs: 0 }),
 } as unknown as GraphRepository;
 
 async function ci(type: 'site' | 'site_link', identity: Record<string, string>, name: string, attributes: Record<string, unknown>): Promise<string> {
@@ -108,16 +110,17 @@ describe('HA / DR readiness (integration)', () => {
     await probe(backup, true, 19);
     report = await readiness.evaluateTenant(tenantId);
     expect(graphHealth.get(replication)).toBe('down');
-    expect(report.opened).toBe(2);
+    expect(report.opened).toBe(3);
     const open = await prisma.readinessFinding.findMany({ where: { tenantId, state: 'open' }, orderBy: { rule: 'asc' } });
     expect(open.map((f) => [f.rule, f.subjectCiId])).toEqual([
       ['diverse_paths', ryd],
+      ['redundancy_lost', replication],
       ['replication_healthy', replication],
     ]);
     const incidents = await prisma.incident.findMany({ where: { tenantId, source: READINESS.incidentSource }, orderBy: { severity: 'asc' } });
-    expect(incidents).toHaveLength(2);
+    expect(incidents).toHaveLength(3);
     expect(incidents.every((i) => i.state === 'open' && i.affectedServiceCiIds.length === 0)).toBe(true);
-    expect(incidents.map((i) => i.rootCauseCiId).sort()).toEqual([ryd, replication].sort());
+    expect(incidents.map((i) => i.rootCauseCiId).sort()).toEqual([ryd, replication, replication].sort());
     expect(open.every((f) => f.incidentId !== null)).toBe(true);
     // The DR site is still reachable over the backup circuit; a second round opens nothing more.
     expect(open.some((f) => f.rule === 'dr_reachable' && f.subjectCiId === jed)).toBe(false);
@@ -128,7 +131,7 @@ describe('HA / DR readiness (integration)', () => {
     await probe(replication, true, 13);
     await probe(backup, true, 19);
     report = await readiness.evaluateTenant(tenantId);
-    expect(report.cleared).toBe(2);
+    expect(report.cleared).toBe(3);
     expect(graphHealth.get(replication)).toBe('healthy');
     expect(await prisma.readinessFinding.count({ where: { tenantId, state: 'open' } })).toBe(0);
     expect((await prisma.incident.findMany({ where: { tenantId, source: READINESS.incidentSource } })).every((i) => i.state === 'resolved' && i.resolvedAt !== null)).toBe(true);

@@ -56,6 +56,10 @@ export interface SiteLinkView {
   latencyMs: number | null;
   replication: boolean;
   probeTarget: string | null;
+  /** ADR-069 (REQ-IPAM-007). */
+  carrierContractRef: string | null;
+  slaLatencyMs: number | null;
+  pathRef: string | null;
   ciId: string | null;
 }
 

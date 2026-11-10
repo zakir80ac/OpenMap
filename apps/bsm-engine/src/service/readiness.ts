@@ -4,10 +4,19 @@
 // - evaluates the readiness rules;
 // - opens a finding and an incident for every new breach, and clears the finding and resolves the incident when the
 //   breach is gone.
-import { CONNECTIVITY_ATTRIBUTES, LINK_METRICS, LINK_METRIC_NAMES, SITE_DR_ROLES, type EventType, type SiteDrRole } from '@openmap/contracts';
-import { READINESS } from '@openmap/constants';
+// REQ-IPAM-007 (ADR-069): network circuits under the links:
+// - a link that is not probed takes its health from the carrier circuits it rides on (depends_on), each taken down by a
+//   down hand-off port at either end;
+// - `path_diversity` raises a link that shares a provider, a route or a carrier circuit with another link between the
+//   same sites;
+// - `redundancy_lost` raises a link down between two sites that had more than one path, and its incident names the
+//   business services the impact graph reaches from the link, like the outage of every other component.
+import { CONNECTIVITY_ATTRIBUTES, LINK_CIRCUIT_RELATIONSHIP, LINK_METRICS, LINK_METRIC_NAMES, SITE_DR_ROLES, type EventType, type ReadinessRule, type SiteDrRole } from '@openmap/contracts';
+import { GRAPH, LINK_CIRCUITS, READINESS } from '@openmap/constants';
 import type { PrismaClient } from '@openmap/db';
 import type { GraphRepository } from '@openmap/graph';
+import { withSpan } from '@openmap/telemetry';
+import { circuitHealth, linkHealthFromCircuits, pathDiversityBreaches, redundancyLostBreaches, type CircuitLink } from '../core/circuits.js';
 import { breachKey, evaluateReadiness, linkHealth, type Breach, type LatestSample, type LinkSnapshot, type SiteSnapshot } from '../core/readiness.js';
 import type { Health } from '../core/propagate.js';
 import { envelope, INCIDENT_OPENED, INCIDENT_RESOLVED } from './engine.js';
@@ -29,6 +38,20 @@ export interface ReadinessReport {
   linkHealthChanged: number;
   opened: number;
   cleared: number;
+  /** REQ-IPAM-007: findings opened and cleared, by rule, for the findings counter. */
+  openedByRule: Partial<Record<ReadinessRule, number>>;
+  clearedByRule: Partial<Record<ReadinessRule, number>>;
+}
+
+/** The tracer the BSM engine's spans are named under (main.ts). */
+const TRACER = 'openmap-bsm-engine';
+/** Rules whose incident names the business services the impact graph reaches from the link (REQ-IPAM-007). */
+const SERVICE_IMPACT_RULES: ReadonlySet<ReadinessRule> = new Set<ReadinessRule>(['redundancy_lost']);
+const CONNECTED_TO = 'connected_to';
+const CIRCUIT_TYPE = 'circuit';
+
+function bump(counts: Partial<Record<ReadinessRule, number>>, rule: ReadinessRule): void {
+  counts[rule] = (counts[rule] ?? 0) + 1;
 }
 
 interface LatestRow {
@@ -76,13 +99,53 @@ export function createReadiness(deps: ReadinessDeps) {
     return out;
   }
 
+  /**
+   * REQ-IPAM-007 — the carrier circuits each link rides on, and each circuit's health: its own on the graph, taken down
+   * by a down hand-off port (LINK_CIRCUITS.handOffTypes) at either of its ends.
+   */
+  async function circuitsOf(
+    tenantId: string,
+    linkIds: readonly string[],
+  ): Promise<{ byLink: Map<string, string[]>; health: Map<string, Health>; names: Map<string, string> }> {
+    const byLink = new Map<string, string[]>();
+    const health = new Map<string, Health>();
+    const names = new Map<string, string>();
+    if (linkIds.length === 0) return { byLink, health, names };
+    const rides = await prisma.relationship.findMany({
+      where: { tenantId, type: LINK_CIRCUIT_RELATIONSHIP, validTo: null, fromCiId: { in: [...linkIds] }, toCi: { type: CIRCUIT_TYPE, validTo: null } },
+      select: { fromCiId: true, toCiId: true, toCi: { select: { displayName: true } } },
+    });
+    for (const r of rides) {
+      byLink.set(r.fromCiId, [...(byLink.get(r.fromCiId) ?? []), r.toCiId]);
+      names.set(r.toCiId, r.toCi.displayName);
+    }
+    const circuitIds = [...names.keys()];
+    if (circuitIds.length === 0) return { byLink, health, names };
+    const handOffs = await prisma.relationship.findMany({
+      where: { tenantId, type: CONNECTED_TO, validTo: null, fromCiId: { in: circuitIds }, toCi: { type: { in: [...LINK_CIRCUITS.handOffTypes] }, validTo: null } },
+      select: { fromCiId: true, toCiId: true },
+    });
+    const known = await deps.healthMap(tenantId, [...circuitIds, ...handOffs.map((e) => e.toCiId)]);
+    for (const id of circuitIds) {
+      const atEnds = handOffs.filter((e) => e.fromCiId === id).map((e) => known.get(e.toCiId) ?? 'unknown');
+      health.set(id, circuitHealth(known.get(id) ?? 'unknown', atEnds));
+    }
+    return { byLink, health, names };
+  }
+
+  /** REQ-IPAM-007 — the business services the impact graph reaches upstream from a CI. */
+  async function servicesReached(tenantId: string, ciId: string): Promise<string[]> {
+    const result = await graph.impact(tenantId, ciId, { direction: 'upstream', maxDepth: GRAPH.defaultImpactDepth, asOf: null, edgeTypes: [] });
+    return [...new Set(result.services.map((s) => s.ci.id))];
+  }
+
   async function emit(tenantId: string, type: EventType, subject: string, data: Record<string, unknown>): Promise<void> {
     const e = envelope(tenantId, type, subject, data, deps.now());
     await prisma.outboxEvent.create({ data: { eventId: e.id, tenantId, type: e.type, subject: e.subject, envelope: e as never, pending: ['clickhouse', 'websocket'] } });
   }
 
   async function evaluateTenant(tenantId: string): Promise<ReadinessReport> {
-    const report: ReadinessReport = { links: 0, linkHealthChanged: 0, opened: 0, cleared: 0 };
+    const report: ReadinessReport = { links: 0, linkHealthChanged: 0, opened: 0, cleared: 0, openedByRule: {}, clearedByRule: {} };
     const [siteRows, linkRows] = await Promise.all([
       prisma.ci.findMany({ where: { tenantId, type: 'site', validTo: null }, select: { id: true, name: true, displayName: true, identity: true, attributes: true } }),
       prisma.ci.findMany({ where: { tenantId, type: 'site_link', validTo: null }, select: { id: true, name: true, displayName: true, identity: true, attributes: true } }),
@@ -116,16 +179,22 @@ export function createReadiness(deps: ReadinessDeps) {
       };
     });
 
-    // Link health from the probes; a link with no probe target keeps the health its attributes give it.
+    // Link health from the probes; a link with no probe target takes it from its carrier circuits (REQ-IPAM-007), and a
+    // link with neither keeps the health its attributes give it.
     const now = Date.parse(deps.now());
-    const current = await deps.healthMap(tenantId, links.map((l) => l.ciId));
+    const linkIds = links.map((l) => l.ciId);
+    const [current, circuits] = await Promise.all([
+      deps.healthMap(tenantId, linkIds),
+      withSpan(TRACER, 'bsm.readiness.circuits', { 'openmap.tenant_id': tenantId, 'openmap.links': links.length }, () => circuitsOf(tenantId, linkIds)),
+    ]);
     const health = new Map<string, Health>();
     for (const link of links) {
-      if (!link.probed) {
+      const fromCircuits = link.probed ? null : linkHealthFromCircuits((circuits.byLink.get(link.ciId) ?? []).map((id) => circuits.health.get(id) ?? 'unknown'));
+      if (!link.probed && fromCircuits === null) {
         health.set(link.ciId, current.get(link.ciId) ?? 'unknown');
         continue;
       }
-      const verdict = linkHealth(link, now, deps.probeIntervalMs);
+      const verdict = fromCircuits ?? linkHealth(link, now, deps.probeIntervalMs);
       health.set(link.ciId, verdict);
       if (current.get(link.ciId) !== verdict) {
         await graph.setHealth(tenantId, link.ciId, verdict);
@@ -133,13 +202,34 @@ export function createReadiness(deps: ReadinessDeps) {
       }
     }
 
-    const breaches = evaluateReadiness(sites, links, health);
+    const rowById = new Map(linkRows.map((l) => [l.id, l]));
+    const circuitLinks: CircuitLink[] = links.map((l) => {
+      const attributes = rowById.get(l.ciId)?.attributes;
+      return {
+        ciId: l.ciId,
+        name: l.name,
+        fromSite: l.fromSite,
+        toSite: l.toSite,
+        role: text(attr(attributes, CONNECTIVITY_ATTRIBUTES.role)),
+        provider: text(attr(attributes, CONNECTIVITY_ATTRIBUTES.provider)),
+        pathRef: text(attr(attributes, CONNECTIVITY_ATTRIBUTES.pathRef)),
+        circuitCiIds: circuits.byLink.get(l.ciId) ?? [],
+        diversePaths: l.diversePaths,
+        health: health.get(l.ciId) ?? 'unknown',
+      };
+    });
+    const breaches: Breach[] = [
+      ...evaluateReadiness(sites, links, health),
+      ...pathDiversityBreaches(circuitLinks, (id) => circuits.names.get(id) ?? id),
+      ...redundancyLostBreaches(circuitLinks),
+    ];
     const open = await prisma.readinessFinding.findMany({ where: { tenantId, state: 'open' } });
     const openKeys = new Map(open.map((f) => [breachKey({ rule: f.rule as Breach['rule'], subjectCiId: f.subjectCiId }), f]));
     const breachKeys = new Set(breaches.map(breachKey));
     const at = deps.now();
     for (const b of breaches) {
       if (openKeys.has(breachKey(b))) continue;
+      const affectedServiceCiIds = SERVICE_IMPACT_RULES.has(b.rule) ? await servicesReached(tenantId, b.subjectCiId) : [];
       const incident = await prisma.incident.create({
         data: {
           tenantId,
@@ -148,7 +238,7 @@ export function createReadiness(deps: ReadinessDeps) {
           severity: READINESS.severity[b.rule],
           state: 'open',
           source: READINESS.incidentSource,
-          affectedServiceCiIds: [],
+          affectedServiceCiIds,
           rootCauseCiId: b.subjectCiId,
           correlatedEventIds: [],
           openedAt: new Date(at),
@@ -157,6 +247,7 @@ export function createReadiness(deps: ReadinessDeps) {
       await prisma.readinessFinding.create({ data: { tenantId, rule: b.rule, subjectCiId: b.subjectCiId, state: 'open', detail: b.detail, openedAt: new Date(at), incidentId: incident.id } });
       await emit(tenantId, INCIDENT_OPENED, incident.id, { incidentId: incident.id, rule: b.rule, subjectCiId: b.subjectCiId, source: READINESS.incidentSource });
       report.opened += 1;
+      bump(report.openedByRule, b.rule);
     }
     for (const [key, finding] of openKeys) {
       if (breachKeys.has(key)) continue;
@@ -166,6 +257,7 @@ export function createReadiness(deps: ReadinessDeps) {
         await emit(tenantId, INCIDENT_RESOLVED, finding.incidentId, { incidentId: finding.incidentId, rule: finding.rule, subjectCiId: finding.subjectCiId });
       }
       report.cleared += 1;
+      bump(report.clearedByRule, finding.rule as ReadinessRule);
     }
     return report;
   }

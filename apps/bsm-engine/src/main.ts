@@ -65,8 +65,8 @@ export function createBsmMetrics() {
     }),
     readinessBreaches: new Counter({
       name: 'openmap_bsm_readiness_findings_total',
-      help: 'Readiness findings opened and cleared',
-      labelNames: ['change'],
+      help: 'Readiness findings opened and cleared, by rule (REQ-IPAM-007 adds path_diversity and redundancy_lost)',
+      labelNames: ['change', 'rule'],
       registers: [registry],
     }),
     powerAlerts: new Counter({
@@ -295,8 +295,8 @@ async function main(): Promise<void> {
           readiness.evaluateTenant(tenantId),
         );
         metrics.readiness.inc({ outcome: 'ok' });
-        metrics.readinessBreaches.inc({ change: 'opened' }, report.opened);
-        metrics.readinessBreaches.inc({ change: 'cleared' }, report.cleared);
+        for (const [rule, n] of Object.entries(report.openedByRule)) metrics.readinessBreaches.inc({ change: 'opened', rule }, n);
+        for (const [rule, n] of Object.entries(report.clearedByRule)) metrics.readinessBreaches.inc({ change: 'cleared', rule }, n);
         if (report.linkHealthChanged > 0) schedule(tenantId);
         if (report.opened + report.cleared + report.linkHealthChanged > 0)
           log({ msg: 'readiness evaluated', tenantId, ...report });

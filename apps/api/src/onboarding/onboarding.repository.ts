@@ -59,7 +59,30 @@ export function toLink(row: LinkRow): SiteLinkView {
     latencyMs: row.latencyMs,
     replication: row.replication,
     probeTarget: row.probeTarget,
+    carrierContractRef: row.carrierContractRef,
+    slaLatencyMs: row.slaLatencyMs,
+    pathRef: row.pathRef,
     ciId: row.ciId,
+  };
+}
+
+/** The setup record's columns from a link input (REQ-IPAM-007 adds the carrier contract, latency and route). */
+function linkData(input: SiteLinkInput) {
+  return {
+    fromSiteId: input.fromSiteId,
+    toSiteId: input.toSiteId,
+    kind: input.kind,
+    provider: input.provider ?? null,
+    circuitId: input.circuitId ?? null,
+    bandwidthMbps: input.bandwidthMbps,
+    diversePaths: input.diversePaths,
+    role: input.role,
+    latencyMs: input.latencyMs ?? null,
+    replication: input.replication ?? false,
+    probeTarget: input.probeTarget ?? null,
+    carrierContractRef: input.carrierContractRef ?? null,
+    slaLatencyMs: input.slaLatencyMs ?? null,
+    pathRef: input.pathRef ?? null,
   };
 }
 
@@ -203,7 +226,7 @@ export class OnboardingRepository {
 
   async createLink(tx: Tx, organizationId: string, input: SiteLinkInput): Promise<SiteLinkView> {
     const row = await tx.siteLink.create({
-      data: { organizationId, fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null, replication: input.replication ?? false, probeTarget: input.probeTarget ?? null },
+      data: { organizationId, ...linkData(input) },
     });
     return toLink(row);
   }
@@ -211,13 +234,28 @@ export class OnboardingRepository {
   async updateLink(tx: Tx, id: string, input: SiteLinkInput): Promise<SiteLinkView> {
     const row = await tx.siteLink.update({
       where: { id },
-      data: { fromSiteId: input.fromSiteId, toSiteId: input.toSiteId, kind: input.kind, provider: input.provider ?? null, circuitId: input.circuitId ?? null, bandwidthMbps: input.bandwidthMbps, diversePaths: input.diversePaths, role: input.role, latencyMs: input.latencyMs ?? null, replication: input.replication ?? false, probeTarget: input.probeTarget ?? null },
+      data: linkData(input),
     });
     return toLink(row);
   }
 
   async setLinkCi(tx: Tx, id: string, ciId: string): Promise<void> {
     await tx.siteLink.update({ where: { id }, data: { ciId } });
+  }
+
+  /** REQ-IPAM-007 — the setup record behind a site_link CI, when the link was set up (a discovered link has none). */
+  async linkByCi(organizationId: string, ciId: string): Promise<SiteLinkView | null> {
+    const row = await this.db.siteLink.findFirst({ where: { ciId, organizationId } });
+    return row ? toLink(row) : null;
+  }
+
+  /** REQ-IPAM-007 — the circuit register's edit, kept on the setup record so the wizard shows what the CI says. */
+  async updateLinkCircuit(
+    tx: Tx,
+    id: string,
+    data: { kind: SiteLinkInput['kind']; provider: string | null; carrierContractRef: string | null; bandwidthMbps: number; slaLatencyMs: number | null; diversePaths: number; role: SiteLinkInput['role']; pathRef: string | null },
+  ): Promise<void> {
+    await tx.siteLink.update({ where: { id }, data });
   }
 
   async deleteLink(tx: Tx, id: string): Promise<void> {
