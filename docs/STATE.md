@@ -2,7 +2,41 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 39: REQ-DCIM-008 cable verification and labels Done)
+## Last session · 2026-11-10 (checkpoint 40: REQ-IPAM-004 switch ports, MAC tables and port history Done)
+
+**REQ-IPAM-004 Done** (ADR-063, GraphQL 1.36.0, T-554..T-557, commit 6bc0611).
+
+- **Collector**: the SNMP collector walks Q-BRIDGE `dot1qTpFdbPort/Status`, else BRIDGE-MIB `dot1dTpFdbPort/Status`,
+  learned entries only, mapped through `dot1dBasePortIfIndex`; interfaces carry `learnedMacs` (canonical, at most 64,
+  MAC order) and `learnedMacCount`, emitted only when the table was walked. Job option `skipMacTable`.
+- **Read model** (`packages/contracts/src/switch-ports.ts`, `apps/api/src/ipam/switch-ports.service.ts`): port state,
+  speed, VLAN, neighbour (`connected_to` either way, or `cabled_to`), learned MACs resolved to owner CI and ARP IP,
+  unused after `SWITCH_PORTS.unusedDays` (30) not up; port history from ClickHouse `ci_history` (90 days plus the
+  baseline, newest first); `macLookup` in any spelling. Metric `openmap_switch_port_reads_total{query}`.
+- **Console**: IPAM **Switch ports** tab (switch search, MAC lookup, six totals, port table, port history), 57 i18n keys.
+- **Synth estate**: hosts' and VMs' MACs learned on their top-of-rack ports. The dev tenants predate this, so the live
+  screen shows no learned MACs until the estate is replayed.
+- **Tests**: Go FDB 4, contracts 90, API switch-ports integration 4, console 372 (switch ports 5), e2e IPAM 3 of 3 (en,
+  ar). Evidence `docs/evidence/ipam-switch-ports.md`, `docs/evidence/console/ipam-switch-ports-{en,ar}.png`.
+
+**Tracker (queued).** The workbook is still open in Excel (EBUSY), so both closures are queued; the tracker wins over
+this file until they run:
+
+```
+pnpm tracker set REQ-DCIM-008 --status Done --owner Claude --tests T-550,T-551,T-552,T-553 --evidence "commit 632291d; ADR-062; GraphQL 1.35.0; docs/evidence/dcim-cable-verification.md; docs/evidence/console/dcim-cabling-verify-{en,ar}.png"
+pnpm tracker set REQ-IPAM-004 --status Done --owner Claude --tests T-554,T-555,T-556,T-557 --evidence "commit 6bc0611; ADR-063; GraphQL 1.36.0; docs/evidence/ipam-switch-ports.md; docs/evidence/console/ipam-switch-ports-{en,ar}.png"
+pnpm tracker session --summary "REQ-DCIM-008 cable verification; REQ-IPAM-004 switch ports"
+pnpm tracker report
+```
+
+**Next three**: REQ-IPAM-005 firewall rules and policy objects, REQ-SEC-011 encryption at rest and in transit,
+REQ-UI-021 standard reports and scheduled exports. Knowledge graph refresh for DCIM-008 and IPAM-004 docs pending.
+
+**Lessons.** (1) The MAC results list carried `role="status"`, which hides list semantics from assistive tech; a live
+region belongs on `aria-live`. (2) Prettier reflows the generated JSON schemas; regenerate them with
+`tsx src/emit-json-schema.ts` instead of formatting them.
+
+## Previous session · 2026-11-10 (checkpoint 39: REQ-DCIM-008 cable verification and labels Done)
 
 **REQ-DCIM-008 Done** (ADR-062, GraphQL 1.35.0, T-550..T-553, commit 632291d).
 
