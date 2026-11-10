@@ -49,6 +49,8 @@ export const SWITCH_PORT_METRIC = 'openmap_switch_port_reads_total';
 export const FIREWALL_METRIC = 'openmap_firewall_reads_total';
 /** REQ-INT-009 */
 export const NOTIFICATION_TEST_METRIC = 'openmap_notification_tests_total';
+/** REQ-INT-012 (ADR-073): monitoring alerts ingested, by vendor and outcome (resolved, unresolved, ignored, refused). */
+export const MONITORING_EVENTS_METRIC = 'openmap_monitoring_events_total';
 /** REQ-SEC-011 (ADR-067 step 4): values sent through Transit, by op and outcome. */
 export const FIELD_CIPHER_METRIC = 'openmap_field_cipher_values_total';
 /** REQ-DCIM-003: racks moved on the floor plan. */
@@ -114,6 +116,8 @@ export class MetricsService {
   readonly firewallReads: Counter<'query'>;
   /** REQ-INT-009 — test notifications queued, by vendor. */
   readonly notificationTests: Counter<'vendor'>;
+  /** REQ-INT-012 — monitoring alerts ingested, by vendor and outcome. */
+  readonly monitoringEvents: Counter<'vendor' | 'outcome'>;
   /** REQ-SEC-011 — personal-data values encrypted or decrypted through OpenBao Transit. */
   readonly fieldCipher: Counter<'op' | 'outcome'>;
   readonly rackMoves: Counter;
@@ -270,6 +274,12 @@ export class MetricsService {
       name: NOTIFICATION_TEST_METRIC,
       help: 'Test notifications queued for the BSM engine to send, by vendor',
       labelNames: ['vendor'],
+      registers: [this.registry],
+    });
+    this.monitoringEvents = new Counter({
+      name: MONITORING_EVENTS_METRIC,
+      help: 'Monitoring alerts received from Alertmanager, Zabbix, Nagios, Datadog, SolarWinds and Splunk, by vendor and outcome',
+      labelNames: ['vendor', 'outcome'],
       registers: [this.registry],
     });
     this.fieldCipher = new Counter({

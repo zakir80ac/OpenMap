@@ -948,6 +948,49 @@ export const NOTIFICATION = {
 } as const;
 
 /**
+ * REQ-INT-012 (ADR-073) — monitoring event ingest: Prometheus Alertmanager, Zabbix, Nagios / Icinga, Datadog,
+ * SolarWinds Orion and Splunk post their alerts to `POST /<ingestPath>/<integrationId>`. A request authenticates with
+ * the integration's OpenBao credential (bearer token, basic credentials or an HMAC signature over
+ * `<timestamp>.<body>` in the notification headers, ADR-065); a sender that can only be given a URL (Splunk's webhook
+ * action) appends the token as one more path segment when the integration allows it. Credentials are cached for
+ * `secretCacheMs`, so a burst of alerts reads OpenBao once. Text is capped so one payload cannot fill a row.
+ */
+export const MONITORING = {
+  ingestPath: 'ingest/monitoring',
+  /** Severity of an alert whose payload names none OpenMap recognises. */
+  defaultSeverity: 'medium',
+  titleMaxLength: 300,
+  descriptionMaxLength: 2_000,
+  labelValueMaxLength: 500,
+  maxLabels: 64,
+  /** Alerts accepted in one request (Alertmanager groups many alerts per notification). */
+  maxAlertsPerRequest: 1_000,
+  /** Targets kept per alert: what it names the affected thing by (CI id, FQDN, hostname, address, instance). */
+  maxTargets: 12,
+  /** A signed request older (or newer) than this is a replay and is refused. */
+  signatureToleranceMs: 300_000,
+  secretCacheMs: 30_000,
+  /** Alerts from senders with no resolve message (Splunk) clear after this long unless the integration sets its own. */
+  pointInTimeTtlMinutes: 60,
+  /** The BSM engine re-reads changed alerts this often, besides being woken by each ingest event. */
+  engineSyncMs: 10_000,
+  /** Changed rows are re-read from this far before the newest change already seen: writers' clocks may differ. */
+  syncOverlapMs: 5_000,
+  /** Alerts the console lists by default, and at most. */
+  defaultPageSize: 100,
+  maxPageSize: 500,
+  screenRefreshMs: 10_000,
+  /** Alertmanager webhook payload version this adapter reads. */
+  alertmanagerWebhookVersion: '4',
+  /** Go's zero time, which Alertmanager sends as `endsAt` of a firing alert. */
+  zeroTimePrefix: '0001-',
+  /** Audit actions written by the console's mapping and clearing (the engine re-reads alerts when it sees them). */
+  auditActions: { mapped: 'monitoring.source.mapped', cleared: 'monitoring.alert.cleared' },
+  /** Delivery event data marker the engine reacts to (an inbound monitoring delivery). */
+  deliveryKind: 'monitoring',
+} as const;
+
+/**
  * REQ-IPAM-005 (ADR-064) — firewall rules and policy objects. Evaluation follows jumps and gotos to `maxJumpDepth`
  * chains (netfilter itself stops at 16) and group references to `maxObjectDepth` levels (vendors nest groups a few
  * deep). The shadow analysis is quadratic per chain, so a device's first `analysisRuleLimit` rules are analysed and the
@@ -2157,8 +2200,11 @@ export const CONTRACT_VERSIONS: Record<ContractName, string> = {
    * `complianceControl`; mutation `evaluateCompliance`.
    * 1.43.0 (REQ-PERF-005, ADR-071): `PlatformHealth` and its parts (`PrometheusStatus`, `PlatformTarget`,
    * `PlatformStoreHealth`, `PlatformQueue`, `PlatformSli`, `PlatformAlert`, `PerfBudgetCheck`), query `platformHealth`.
+   * 1.45.0 (REQ-INT-012, ADR-073): `MonitoringAlertStatus`, `MonitoringTarget`, `MonitoringAlert`,
+   * `MonitoringSourceMapping`, `MonitoringAlerts`; query `monitoringAlerts`; mutations `mapMonitoringSource`,
+   * `clearMonitoringAlert`.
    */
-  graphql: '1.43.0',
+  graphql: '1.45.0',
   /**
    * 0.4.0 (ADR-024): `openmap.bsm.sla.at_risk`. 0.5.0 (ADR-028): `openmap.assistant.query.failed`.
    * 0.6.0 (ADR-029): `openmap.dependency.derived`. 0.7.0 (REQ-CMDB-019, ADR-033): `openmap.asset.stock.low`.

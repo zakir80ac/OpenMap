@@ -29,6 +29,7 @@ export * from './switch-ports.js';
 export * from './firewall.js';
 export * from './compliance.js';
 export * from './notification.js';
+export * from './monitoring.js';
 export * from './backup.js';
 export * from './perf-results.js';
 export * from './custom-field.js';

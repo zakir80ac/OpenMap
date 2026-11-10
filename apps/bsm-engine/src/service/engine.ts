@@ -3,6 +3,7 @@
 // services, records health changes and SLA facts through the outbox, opens, updates and resolves incidents with
 // response and resolution deadlines, evaluates every assigned SLA over its window (breach incidents, at-risk alerts),
 // stamps missed targets, and delivers incidents to the ITSM, SIEM and on-call integrations that subscribed (ADR-024).
+// REQ-INT-012 (ADR-073): firing monitoring alerts overlay observed CI health, and their deliveries correlate into incidents.
 import { randomUUID } from 'node:crypto';
 import { CONTRACT_VERSIONS, ITSM, type SlaWindow } from '@openmap/constants';
 import { TENANT_SETTINGS_DEFAULTS } from '@openmap/config';
@@ -26,6 +27,7 @@ import { deliver, type DeliveryDeps } from '../integrations/delivery.js';
 import { authHeaders, incidentRequest, remoteUrlFor } from '../integrations/routes.js';
 import type { IncidentView } from '../integrations/payloads.js';
 import { deriveHealth } from './health-rules.js';
+import { withAlerts, type MonitoringOverlay } from './monitoring.js';
 import { incidentActions, type OpenIncident, type ServiceSummary } from './incidents.js';
 import {
   slaActions,
@@ -79,6 +81,8 @@ export interface EngineDeps {
   history: HealthHistoryReader;
   now: () => string;
   log: (line: Record<string, unknown>) => void;
+  /** REQ-INT-012 (ADR-073): firing monitoring alerts per CI; without it observed health stands alone. */
+  alerts?: MonitoringOverlay;
 }
 
 export interface SlaReport {
@@ -233,9 +237,9 @@ export function createEngine(deps: EngineDeps) {
           typeof (ci.attributes as Record<string, unknown>)[CONNECTIVITY_ATTRIBUTES.probeTarget] === 'string'
         )
           continue;
-        const verdict = deriveHealth(ci, now);
-        if (current.get(ci.id) === verdict.health) continue;
-        await graph.setHealth(tenantId, ci.id, verdict.health);
+        const health = withAlerts(deriveHealth(ci, now).health, deps.alerts?.effect(tenantId, ci.id) ?? null);
+        if (current.get(ci.id) === health) continue;
+        await graph.setHealth(tenantId, ci.id, health);
         changed++;
         tenants.add(tenantId);
       }
@@ -317,9 +321,10 @@ export function createEngine(deps: EngineDeps) {
         },
         now,
       );
-      if (verdict.health === 'unknown') continue;
-      await graph.setHealth(tenantId, row.id, verdict.health);
-      health.set(row.id, verdict.health);
+      const scored = withAlerts(verdict.health, deps.alerts?.effect(tenantId, row.id) ?? null);
+      if (scored === 'unknown') continue;
+      await graph.setHealth(tenantId, row.id, scored);
+      health.set(row.id, scored);
     }
   }
 
@@ -514,7 +519,7 @@ export function createEngine(deps: EngineDeps) {
             source: SOURCE_NAME,
             affectedServiceCiIds: [action.serviceCiId],
             rootCauseCiId: action.rootCauseCiIds[0] ?? null,
-            correlatedEventIds: [],
+            correlatedEventIds: deps.alerts?.eventIds(tenantId, action.rootCauseCiIds) ?? [],
             openedAt: new Date(now),
             slaId: sla?.id ?? null,
             respondBy: new Date(targets.respondBy),

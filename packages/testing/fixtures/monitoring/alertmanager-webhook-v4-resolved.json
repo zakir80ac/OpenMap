@@ -1,0 +1,39 @@
+{
+  "receiver": "openmap",
+  "status": "resolved",
+  "alerts": [
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "NodeExporterDown",
+        "instance": "db-01.lab.test:9100",
+        "job": "node",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "db-01 node exporter is not answering"
+      },
+      "startsAt": "2026-11-10T18:51:14.544Z",
+      "endsAt": "2026-11-10T18:51:16.118Z",
+      "generatorURL": "",
+      "fingerprint": "26e008cae0870642"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "NodeExporterDown",
+    "instance": "db-01.lab.test:9100"
+  },
+  "commonLabels": {
+    "alertname": "NodeExporterDown",
+    "instance": "db-01.lab.test:9100",
+    "job": "node",
+    "severity": "critical"
+  },
+  "commonAnnotations": {
+    "summary": "db-01 node exporter is not answering"
+  },
+  "externalURL": "http://d9cbbb686216:9093",
+  "version": "4",
+  "groupKey": "{}:{alertname=\"NodeExporterDown\", instance=\"db-01.lab.test:9100\"}",
+  "truncatedAlerts": 0
+}

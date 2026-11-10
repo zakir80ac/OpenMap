@@ -23,7 +23,8 @@ export function consoleOrigins(env: Pick<Env, 'PUBLIC_CONSOLE_URL' | 'PUBLIC_CON
 
 export async function createApp(env: Env = loadEnv()): Promise<NestFastifyApplication> {
   // REQ-CMDB-033: an import file travels as base64 in a GraphQL body, so the body limit is the import limit.
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter({ bodyLimit: IMPORTS.maxBodyBytes }), { logger: ['error', 'warn', 'log'] });
+  // REQ-INT-012 (ADR-073): the raw body is kept so a monitoring sender's HMAC signature is checked over its bytes.
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter({ bodyLimit: IMPORTS.maxBodyBytes }), { logger: ['error', 'warn', 'log'], rawBody: true });
   // REQ-CMDB-033: the export's file name travels in content-disposition, which a cross-origin fetch only sees when exposed.
   app.enableCors({ origin: consoleOrigins(env), credentials: true, exposedHeaders: [EXPOSED_HEADERS.contentDisposition] });
   app.enableShutdownHooks();
