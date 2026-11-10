@@ -98,7 +98,8 @@ bao write auth/approle/role/store-tls token_policies=store-tls token_ttl=1h toke
 register() {
   # $1 role, $2 role id, $3 secret id: ids an orchestrator generated (Helm keeps them in a Secret the services mount).
   bao write "auth/approle/role/$1/role-id" role_id="$2" > /dev/null
-  bao write "auth/approle/role/$1/secret-id/lookup" secret_id="$3" > /dev/null 2>&1 ||
+  # secret-id/lookup succeeds for an unknown id as well; only a registered one comes back with its accessor.
+  bao write -format=json "auth/approle/role/$1/secret-id/lookup" secret_id="$3" 2> /dev/null | grep -q secret_id_accessor ||
     bao write "auth/approle/role/$1/custom-secret-id" secret_id="$3" > /dev/null
 }
 

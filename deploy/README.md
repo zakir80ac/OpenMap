@@ -157,9 +157,12 @@ the database. With the old address, PostgreSQL does not start once OpenBao serve
 mounted), so the address is changed with PostgreSQL stopped, and once more online so that the change is in the WAL
 (tried on a scratch stack: wrong address, refusal to start, recovery):
 
-1. Stop the services that write: `docker compose ... stop api scheduler reconciler bsm-engine node console`.
-2. Take a backup set: `docker compose ... --profile backup run --rm backup create pre-tls`.
-3. Stop PostgreSQL: `docker compose ... stop postgres`.
+1. Stop every client of PostgreSQL: `docker compose ... stop api scheduler reconciler bsm-engine node console keycloak
+   superset`. A client left connected turns the stop into a kill, and the offline change then refuses the unclean
+   data directory ("cluster must be shut down").
+2. Take a backup set while OpenBao is still plain: `docker compose ... --profile backup run --rm --no-deps -e
+   OPENBAO_ADDR=http://openbao:8200 -e OPENBAO_CA= backup create pre-tls`.
+3. Stop PostgreSQL: `docker compose ... stop -t 120 postgres`.
 4. Bring up OpenBao on TLS, its agent, and the stores: `docker compose ... up -d --no-deps openbao-keys openbao
    openbao-init openbao-certs pgtde-agent clickhouse-keys clickhouse valkey-certs memgraph-certs meili-certs valkey
    memgraph meilisearch`.

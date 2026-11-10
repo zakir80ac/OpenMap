@@ -71,3 +71,42 @@ deploy/README.md, "Moving a running install to TLS", gives the procedure.
 | `helm lint`, `helm template` | clean |
 | Rendered pods | every mount has its volume; no plain OpenBao address left |
 | `sh -n` on the new and changed scripts | clean |
+
+## Helm on kind (fresh install, `values-local.yaml`)
+
+A fresh release went into a scratch namespace of the local kind cluster, with the images loaded from the local cache. It
+found four faults:
+
+| Fault | Effect | Fix |
+| --- | --- | --- |
+| OpenBao's readiness probe asked `sys/health`, which answers 501 until initialisation | the Service had no endpoint, so the init job could never reach OpenBao: install deadlock (predates ADR-068) | probe `sys/health?uninitcode=200&sealedcode=200&standbyok=true` |
+| `register()` in `init.sh` took `secret-id/lookup`'s success as "already registered" | it succeeds for an unknown id too: no Helm secret id was ever registered, and every agent and service was refused (predates ADR-068) | look for `secret_id_accessor` in the lookup's JSON |
+| The Percona image runs as uid 26 and cannot `chmod` a fresh root-owned volume | PostgreSQL crash loop | `own-data` init container, as Memgraph has |
+| Meilisearch answers only TLS clients that send a server name, and the kubelet's HTTPS probe connects by IP | Meilisearch never ready | `curl` to `localhost` as an exec probe |
+
+The refused logins tripped OpenBao's AppRole lockout. A locked role id gets 403 even with the right secret id for 15
+minutes (`sys/locked-users`). With `register()` fixed, a fresh install never presents an unknown id.
+
+After the fixes, every store pod was ready. From inside the cluster:
+
+| Service | Issuer |
+| --- | --- |
+| tls-openbao:8200 | OpenMap OpenBao Bootstrap CA (chart-made, `<release>-openbao-tls`) |
+| tls-valkey, tls-memgraph, tls-meilisearch, tls-clickhouse, tls-postgres | OpenMap Internal Services CA, each from its agent sidecar |
+
+The apps' init containers built their bundles: `pki/cert/ca` read over TLS, verified with the chart's CA.
+
+## The dev stack, moved
+
+The README procedure, with one lesson. Superset and Keycloak still held connections when compose stopped PostgreSQL,
+so the 10 s stop ended in a kill. `pg_tde_change_key_provider` then refused ("cluster must be shut down"), and
+PostgreSQL could not recover against TLS-only OpenBao. The way out:
+
+1. Start OpenBao for a minute on its previous, plain configuration.
+2. PostgreSQL recovered: 750,355 CIs intact.
+3. Stop Keycloak and Superset, then PostgreSQL cleanly.
+4. Return OpenBao to TLS and run the offline change.
+
+The README now says to stop every client first. The existing bundle ended without a newline, so `openbao-keys` glued the
+bootstrap CA onto its last line (fixed: it now goes on a line of its own). Afterwards every service started on the new
+images, and the provider record reads `https://openbao:8200` with the CA path.

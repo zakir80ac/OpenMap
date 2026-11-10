@@ -119,6 +119,10 @@ spec:
       {{- if and $root.Values.storeTls.enabled (eq $store.component "memgraph") }}
       securityContext: { fsGroup: 103, fsGroupChangePolicy: OnRootMismatch }
       {{- end }}
+      {{- if and $root.Values.storeTls.enabled (eq $store.component "meilisearch") }}
+      # The agent sidecar (OpenBao's user, gid 1000) reads its AppRole files through the pod's group.
+      securityContext: { fsGroup: 1000, fsGroupChangePolicy: OnRootMismatch }
+      {{- end }}
       {{- if eq $store.component "memgraph" }}
       # Memgraph crashes on start when its data directory is not owned by its own user (a fresh PersistentVolume is
       # root-owned), so the volume is handed over before the database starts; the same image, as root, does it.
@@ -168,8 +172,10 @@ spec:
             - { name: store-tls, mountPath: /run/store-tls, readOnly: true }
             - { name: store-tls-files, mountPath: {{ if eq $store.component "valkey" }}/usr/local/bin/with-tls.sh{{ else }}/usr/local/bin/restart-on-renewal.sh{{ end }}, subPath: {{ if eq $store.component "valkey" }}with-tls.sh{{ else }}restart-on-renewal.sh{{ end }}, readOnly: true }
             {{- end }}
-            {{- if and $root.Values.storeTls.enabled (eq $store.component "valkey") }}
+            {{- if and $root.Values.storeTls.enabled (has $store.component (list "valkey" "meilisearch")) }}
             {{- include "openmap.caMount" $root | nindent 12 }}
+            {{- end }}
+            {{- if and $root.Values.storeTls.enabled (eq $store.component "valkey") }}
             - { name: valkey-live, mountPath: /run/valkey-live }
             {{- end }}
           {{- if eq $store.component "postgres" }}
@@ -290,7 +296,13 @@ spec:
           args: []
           {{- end }}
           readinessProbe:
-            httpGet: { path: /health, port: 7700, scheme: {{ if $root.Values.storeTls.enabled }}HTTPS{{ else }}HTTP{{ end }} }
+            {{- if $root.Values.storeTls.enabled }}
+            # Meilisearch answers TLS clients that send a server name only, and the kubelet's HTTPS probe connects by
+            # IP without one; curl to localhost sends it (the certificate names localhost).
+            exec: { command: ["curl", "-fsS", "--cacert", "/run/openmap/ca/services-ca.crt", "https://localhost:7700/health"] }
+            {{- else }}
+            httpGet: { path: /health, port: 7700 }
+            {{- end }}
             periodSeconds: 5
         {{- if $root.Values.storeTls.enabled }}
         {{- include "openmap.storeTlsAgent" (dict "root" $root "component" "meilisearch" "uid" 100 "gid" 1000 "ttl" $root.Values.storeTls.ttl) | nindent 8 }}
@@ -299,6 +311,15 @@ spec:
       {{- if eq $store.component "postgres" }}
       {{- if $root.Values.postgres.tde.enabled }}
       initContainers:
+        # The Percona image runs PostgreSQL as uid 26, which can neither own nor chmod a fresh root-owned volume.
+        - name: own-data
+          image: {{ if $root.Values.image.registry }}{{ $root.Values.image.registry }}/{{ end }}{{ $store.image }}
+          imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+          command: ["sh", "-c", "chown 26:26 {{ $store.mount }} && chmod 0700 {{ $store.mount }}"]
+          securityContext: { runAsUser: 0 }
+          volumeMounts:
+            - name: data
+              mountPath: {{ $store.mount }}
         {{- include "openmap.serviceCaInit" $root | nindent 8 }}
       {{- end }}
       volumes:

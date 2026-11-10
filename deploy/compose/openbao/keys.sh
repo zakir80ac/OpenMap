@@ -60,6 +60,9 @@ if [ ! -s "$BUNDLE" ]; then
   cp "$BOOTSTRAP_CA" "$BUNDLE"
   chmod 0444 "$BUNDLE"
 elif ! grep -qxF "$(sed -n 2p "$BOOTSTRAP_CA")" "$BUNDLE"; then
-  # An install from before ADR-068's OpenBao step: the bundle holds the internal CA only.
-  cat "$BOOTSTRAP_CA" >> "$BUNDLE"
+  # An install from before ADR-068's OpenBao step: the bundle holds the internal CA only, written without a final
+  # newline, so the bootstrap CA goes on a line of its own.
+  { cat "$BUNDLE"; echo; cat "$BOOTSTRAP_CA"; } > "$BUNDLE.tmp"
+  chmod 0444 "$BUNDLE.tmp"
+  mv -f "$BUNDLE.tmp" "$BUNDLE"
 fi

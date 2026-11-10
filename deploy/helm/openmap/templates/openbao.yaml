@@ -143,8 +143,10 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["server", "-config=/openbao/config/openbao.hcl"]
           ports: [{ containerPort: 8200 }]
+          # Ready once the API answers, initialised or not: the init job reaches OpenBao through this Service to
+          # initialise it (sys/health answers 501 before that, 503 sealed). The clients retry while it is sealed.
           readinessProbe:
-            httpGet: { path: /v1/sys/health, port: 8200, scheme: HTTPS }
+            httpGet: { path: "/v1/sys/health?uninitcode=200&sealedcode=200&standbyok=true", port: 8200, scheme: HTTPS }
             periodSeconds: 5
           volumeMounts:
             - { name: data, mountPath: /openbao/data }
