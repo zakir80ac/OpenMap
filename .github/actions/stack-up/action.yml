@@ -1,7 +1,8 @@
 # REQ-SEC-011 (ADR-067, ADR-068) — starts compose services for a CI job and waits for the long-running ones to be
 # healthy. `docker compose up --wait` counts the one-shot jobs the stack depends on (openbao-keys, openbao-init,
-# migrate), which exit by design, so this waits on health instead. On failure it reports `docker compose ps` and the
-# tail of each service's log as workflow annotations, readable without access to the job log.
+# migrate), which exit by design, so this waits on health instead. When `up` fails or a service stays unhealthy it
+# reports the `up` output, `docker compose ps` and the tail of each service's log as workflow annotations, readable
+# without access to the job log (which needs a signed-in viewer).
 name: stack-up
 description: Start compose services and wait until they are healthy
 inputs:
@@ -21,7 +22,21 @@ runs:
       working-directory: deploy/compose
       run: |
         set -u
-        docker compose ${{ inputs.files }} up -d ${{ inputs.services }}
+        # One annotation per text: carriage returns would end the workflow command, % and newlines are escaped.
+        annotate() { echo "::error title=$1::$(tr -d '\r' | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"; }
+        report() {
+          tail -n 40 "$RUNNER_TEMP/stack-up.log" | annotate "compose up"
+          docker compose ${{ inputs.files }} ps -a --format '{{.Service}} {{.State}} {{.Status}}' | annotate "compose ps"
+          for svc in $(docker compose ${{ inputs.files }} ps -a --services); do
+            docker compose ${{ inputs.files }} logs --no-color --tail 15 "$svc" 2>&1 | annotate "log $svc"
+          done
+        }
+        if ! docker compose ${{ inputs.files }} up -d ${{ inputs.services }} > "$RUNNER_TEMP/stack-up.log" 2>&1; then
+          cat "$RUNNER_TEMP/stack-up.log"
+          echo "::error title=stack-up::docker compose up failed"
+          report
+          exit 1
+        fi
         deadline=$(( $(date +%s) + ${{ inputs.timeout-seconds }} ))
         while :; do
           pending=""
@@ -33,11 +48,7 @@ runs:
           [ -z "$pending" ] && { echo "healthy: ${{ inputs.services }}"; exit 0; }
           if [ "$(date +%s)" -gt "$deadline" ]; then
             echo "::error title=stack-up::not healthy:$pending"
-            docker compose ${{ inputs.files }} ps -a --format '{{.Service}} {{.State}} {{.Status}}' | while read -r line; do echo "::error title=compose ps::$line"; done
-            for svc in $(docker compose ${{ inputs.files }} ps -a --services); do
-              tail=$(docker compose ${{ inputs.files }} logs --no-color --tail 15 "$svc" 2>&1 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
-              echo "::error title=log $svc::$tail"
-            done
+            report
             exit 1
           fi
           sleep 5

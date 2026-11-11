@@ -14,6 +14,7 @@ runs:
       run: |
         for f in "$RUNNER_TEMP"/reported/*.log; do
           [ -f "$f" ] || continue
-          tail=$(sed 's/\x1b\[[0-9;]*m//g' "$f" | grep -v '^[[:space:]]*$' | tail -n ${{ inputs.lines }} | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          # Carriage returns end a workflow command line, so they go first.
+          tail=$(tr -d '\r' < "$f" | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^[[:space:]]*$' | tail -n ${{ inputs.lines }} | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
           echo "::error title=$(basename "$f" .log)::$tail"
         done
