@@ -68,7 +68,8 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: verify
-    timeout-minutes: 60
+    # The suite runs about 120 tests in two locales with one worker (about 50 minutes), after the stack build.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
