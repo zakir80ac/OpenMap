@@ -192,13 +192,14 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ $fullname }}-openbao-init
+  # A plain Job, one per release revision as the migrations job is, not a post-install hook: `helm install --wait`
+  # runs hooks only once every resource is ready, and every pod waits for an initialised OpenBao first (its CA init
+  # container reads pki/cert/ca), so a hook deadlocked the install. The job is idempotent; finished ones are removed.
+  name: {{ $fullname }}-openbao-init-{{ .Release.Revision }}
   labels: {{- include "openmap.componentLabels" (dict "root" . "component" "openbao-init") | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   backoffLimit: 6
+  ttlSecondsAfterFinished: {{ .Values.openbao.initJobTtlSeconds }}
   template:
     metadata:
       labels: {{- include "openmap.selector" (dict "root" . "component" "openbao-init") | nindent 8 }}

@@ -183,6 +183,8 @@ openbao:
   tls:
     days: 730
     renewDays: 60
+  # How long a finished OpenBao init job is kept (it runs once per release revision).
+  initJobTtlSeconds: 86400
   external:
     enabled: false
     address: ""
