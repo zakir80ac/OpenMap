@@ -64,6 +64,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/reported"
           pnpm --filter @openmap/synth-estate synth generate --seed 42 --scale 0.05 --out "$RUNNER_TEMP/estate" 2>&1 | tee "$RUNNER_TEMP/reported/replay.log"
           pnpm --filter @openmap/reconciler replay --dir "$RUNNER_TEMP/estate" 2>&1 | tee -a "$RUNNER_TEMP/reported/replay.log"
+          # Memgraph's after-commit triggers keep working through the replay's writes in background transactions, and a
+          # schema statement needs the storage to itself: wait (up to ten minutes) until only this query runs.
+          for i in $(seq 1 120); do
+            n=$(echo "SHOW TRANSACTIONS;" | docker compose -f deploy/compose/docker-compose.yml exec -T memgraph mgconsole --host 127.0.0.1 --port 7687 --use-ssl=true --output-format=csv | tail -n +2 | wc -l)
+            [ "$n" -le 1 ] && { echo "memgraph idle after ${i} checks"; break; }
+            sleep 5
+          done
       - name: Integration suites
         run: |
           set -o pipefail
