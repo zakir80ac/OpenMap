@@ -64,6 +64,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/reported"
           pnpm --filter @openmap/synth-estate synth generate --seed 42 --scale 0.05 --out "$RUNNER_TEMP/estate" 2>&1 | tee "$RUNNER_TEMP/reported/replay.log"
           pnpm --filter @openmap/reconciler replay --dir "$RUNNER_TEMP/estate" 2>&1 | tee -a "$RUNNER_TEMP/reported/replay.log"
+          # The impact accuracy suite (T-466) reads replayed incidents that name a root cause.
+          pnpm --filter @openmap/synth-estate synth health-history --dir "$RUNNER_TEMP/estate" --seed 42 --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" 2>&1 | tee -a "$RUNNER_TEMP/reported/replay.log"
+          pnpm --filter @openmap/reconciler replay-history --dir "$RUNNER_TEMP/estate" 2>&1 | tee -a "$RUNNER_TEMP/reported/replay.log"
           # Memgraph's after-commit triggers keep working through the replay's writes in background transactions, and a
           # schema statement needs the storage to itself: wait (up to ten minutes) until only this query runs.
           for i in $(seq 1 120); do
@@ -71,6 +74,13 @@ jobs:
             [ "$n" -le 1 ] && { echo "memgraph idle after ${i} checks"; break; }
             sleep 5
           done
+      # As on a dev stack: the circuit and import suites wait for the compose reconciler to write the outbox to
+      # Memgraph, and the SLO rule suite reads Prometheus. They start after the replay, which dispatches on its own.
+      - name: Build the reconciler and BSM engine images
+        working-directory: deploy/compose
+        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build reconciler bsm-engine
+      - uses: ./.github/actions/stack-up
+        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: reconciler bsm-engine prometheus }
       - name: Integration suites
         run: |
           set -o pipefail
@@ -78,7 +88,7 @@ jobs:
           pnpm -r --stream --workspace-concurrency=1 --filter './packages/*' --filter './apps/*' run --if-present test:integration 2>&1 | tee "$RUNNER_TEMP/reported/integration.log"
       - uses: ./.github/actions/report-failure
         if: failure()
-      - run: docker compose -f deploy/compose/docker-compose.yml down -v
+      - run: docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml down -v
         if: always()
   e2e:
     runs-on: ubuntu-latest
@@ -99,11 +109,13 @@ jobs:
           for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
           exit 1
       - run: cp deploy/compose/.env.example deploy/compose/.env
-      - name: Build and start the full stack
+      - name: Build the application images
         working-directory: deploy/compose
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.apps.yml build
-          docker compose -f docker-compose.yml -f docker-compose.apps.yml up -d
+        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build
+      # Every service (an empty list), reported through annotations if one fails; the API and the console are waited on
+      # below.
+      - uses: ./.github/actions/stack-up
+        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: "", wait-for: "postgres memgraph clickhouse valkey meilisearch openbao keycloak" }
       - uses: ./.github/actions/stack-env
       - name: Wait for the API and the console
         run: |

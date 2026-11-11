@@ -12,7 +12,7 @@
 //   which restores health and resolves the incident. The first payload is kept as the recorded fixture.
 import { execFileSync } from 'node:child_process';
 import { createHmac, randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -343,6 +343,10 @@ describe('monitoring event ingest (integration)', () => {
         '',
       ].join('\n');
       writeFileSync(join(configDir, 'alertmanager.yml'), config);
+      // mkdtemp makes the directory 0700, and the image runs Alertmanager as `nobody`: on Linux it could not read its
+      // configuration and exited (Docker Desktop does not enforce the mode).
+      chmodSync(configDir, 0o755);
+      chmodSync(join(configDir, 'alertmanager.yml'), 0o644);
       execFileSync('docker', ['run', '--rm', '-d', '--name', name, '--add-host', 'host.docker.internal:host-gateway', '-p', '127.0.0.1::9093', '-v', configDir + ':/etc/alertmanager:ro', ALERTMANAGER_IMAGE, '--config.file=/etc/alertmanager/alertmanager.yml', '--cluster.listen-address=']);
       const mapped = execFileSync('docker', ['port', name, '9093/tcp']).toString().trim().split('\n')[0] ?? '';
       amUrl = 'http://' + mapped;

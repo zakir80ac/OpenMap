@@ -12,6 +12,9 @@ inputs:
   services:
     description: Services to start and wait for
     required: true
+  wait-for:
+    description: Services to wait for (default the services started)
+    default: ""
   timeout-seconds:
     description: How long to wait for health
     default: "900"
@@ -45,12 +48,12 @@ runs:
         deadline=$(( $(date +%s) + ${{ inputs.timeout-seconds }} ))
         while :; do
           pending=""
-          for svc in ${{ inputs.services }}; do
+          for svc in ${{ inputs.wait-for || inputs.services }}; do
             id=$(docker compose ${{ inputs.files }} ps -q "$svc")
             state=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$id" 2>/dev/null || echo missing)
             case "$state" in healthy|running) ;; *) pending="$pending $svc=$state" ;; esac
           done
-          [ -z "$pending" ] && { echo "healthy: ${{ inputs.services }}"; exit 0; }
+          [ -z "$pending" ] && { echo "healthy: ${{ inputs.wait-for || inputs.services }}"; exit 0; }
           if [ "$(date +%s)" -gt "$deadline" ]; then
             echo "::error title=stack-up::not healthy:$pending"
             report
