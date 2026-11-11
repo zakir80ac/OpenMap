@@ -1,0 +1,19 @@
+# REQ-QA-004 — the job log needs a signed-in viewer, so a failing step's output is also reported as workflow annotations,
+# which the public API serves. Steps that want this write their output to $RUNNER_TEMP/reported/<name>.log (tee); this
+# action, run with `if: failure()`, turns the tail of each such log into one error annotation.
+name: report-failure
+description: Report the tail of each log in $RUNNER_TEMP/reported as an error annotation
+inputs:
+  lines:
+    description: How many trailing non-empty lines of each log to report
+    default: "60"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        for f in "$RUNNER_TEMP"/reported/*.log; do
+          [ -f "$f" ] || continue
+          tail=$(sed 's/\x1b\[[0-9;]*m//g' "$f" | grep -v '^[[:space:]]*$' | tail -n ${{ inputs.lines }} | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=$(basename "$f" .log)::$tail"
+        done
