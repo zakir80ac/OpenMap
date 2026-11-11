@@ -204,10 +204,10 @@ export const GRAPH = {
    * REQ-CORE-020 — attempts and the pause between them for a schema statement that meets a transient error. Memgraph
    * creates an index only with the storage to itself ("Cannot get unique access to the storage"), so a replay that
    * starts while the API or BSM engine is reading fails at its first statement; auto-commit statements get no driver
-   * retry.
+   * retry. A minute in all: on a CI runner, right after an estate replay, the storage stayed taken for over 10 s.
    */
-  schemaRetryAttempts: 20,
-  schemaRetryDelayMs: 500,
+  schemaRetryAttempts: 60,
+  schemaRetryDelayMs: 1_000,
   /**
    * Relationship types that carry failure from a dependency to its dependants (traversed upstream). `contains` is
    * traversed only from the containers in `impactContainerTypes`: an application is down when its component is, a
