@@ -273,6 +273,16 @@ jobs:
               done
             done
           } > "$RUNNER_TEMP/reported/kind.log" 2>&1 || true
+          # PostgreSQL passes its readiness probe through the local socket even when the applications cannot use it,
+          # so its own log (and the previous container's, after a restart) is reported whatever its state.
+          {
+            for c in postgres pgtde-agent; do
+              echo "-- $c"
+              kubectl logs statefulset/openmap-postgres -c "$c" --tail 40 2>&1 || true
+              echo "-- $c (previous)"
+              kubectl logs statefulset/openmap-postgres -c "$c" --previous --tail 25 2>&1 || true
+            done
+          } > "$RUNNER_TEMP/reported/kind-postgres.log" 2>&1 || true
       - uses: ./.github/actions/report-failure
         if: failure()
         with: { failure-lines: "60", tail-lines: "60" }
