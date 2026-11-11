@@ -50,7 +50,10 @@ jobs:
       - run: pnpm --filter @openmap/db migrate
       # Some suites (the dependency-mapping pass, T-150) read a replayed synthetic estate with flows.
       - name: Replay the small synthetic estate
-        run: pnpm --filter @openmap/reconciler replay --dir "$GITHUB_WORKSPACE/packages/testing/fixtures/synth-small" --reset
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/reported"
+          pnpm --filter @openmap/reconciler replay --dir "$GITHUB_WORKSPACE/packages/testing/fixtures/synth-small" 2>&1 | tee "$RUNNER_TEMP/reported/replay.log"
       - name: Integration suites
         run: |
           set -o pipefail
