@@ -9,7 +9,8 @@
     "impact-budget": "tsx src/impact-budget.ts",
     "telemetry-budget": "tsx src/telemetry-budget.ts",
     "discovery-sweep": "tsx src/discovery-sweep.ts",
-    "e2e-users": "tsx src/e2e-users.ts"
+    "e2e-users": "tsx src/e2e-users.ts",
+    "api-traffic": "tsx src/api-traffic.ts"
   },
   "dependencies": {
     "@openmap/config": "workspace:*",

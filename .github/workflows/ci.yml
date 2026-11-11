@@ -54,7 +54,13 @@ jobs:
       - uses: ./.github/actions/stack-up
         with: { services: postgres memgraph clickhouse valkey meilisearch openbao keycloak }
       - uses: ./.github/actions/stack-env
-      - run: pnpm build
+      # The console build fetches its fonts (next/font/google), which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
+          exit 1
       - run: pnpm --filter @openmap/db migrate
       # Some suites (the dependency-mapping pass, T-150) read a replayed synthetic estate with flows; the estate is
       # generated (the fixtures under packages/testing/fixtures/synth* are not committed).
@@ -76,11 +82,18 @@ jobs:
           done
       # As on a dev stack: the circuit and import suites wait for the compose reconciler to write the outbox to
       # Memgraph, and the SLO rule suite reads Prometheus. They start after the replay, which dispatches on its own.
-      - name: Build the reconciler and BSM engine images
+      # The platform health suite (T-615) reads every service as a scraped target, and the request rate and GraphQL
+      # latency a used API leaves in Prometheus: the API and the scheduler run too, and the API is given traffic.
+      - name: Build the service images
         working-directory: deploy/compose
-        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build reconciler bsm-engine
+        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine
       - uses: ./.github/actions/stack-up
-        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: reconciler bsm-engine prometheus }
+        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: api scheduler reconciler bsm-engine otel-collector prometheus }
+      - name: Use the API as a dev stack is used
+        run: |
+          set -o pipefail
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:4000/readyz >/dev/null && break; sleep 5; done
+          pnpm --filter @openmap/perf api-traffic 2>&1 | tee "$RUNNER_TEMP/reported/api-traffic.log"
       - name: Integration suites
         run: |
           set -o pipefail
@@ -108,14 +121,19 @@ jobs:
           mkdir -p "$RUNNER_TEMP/reported"
           for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
           exit 1
-      - run: cp deploy/compose/.env.example deploy/compose/.env
+      # The runner has no model (the llm-cpu profile is not started), so no locale is written by one: explanations and
+      # answers come from the catalogue's templates, as on an install without a model.
+      - run: |
+          cp deploy/compose/.env.example deploy/compose/.env
+          echo "ASSISTANT_PROSE_LOCALES=" >> deploy/compose/.env
+      # The node profile adds the Discovery Node, which runs the link probes the Sites screen shows (T-482).
       - name: Build the application images
         working-directory: deploy/compose
-        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build
+        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile node build
       # Every service (an empty list), reported through annotations if one fails; the API and the console are waited on
       # below.
       - uses: ./.github/actions/stack-up
-        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: "", wait-for: "postgres memgraph clickhouse valkey meilisearch openbao keycloak" }
+        with: { files: "-f docker-compose.yml -f docker-compose.apps.yml --profile node", services: "", wait-for: "postgres memgraph clickhouse valkey meilisearch openbao keycloak" }
       - uses: ./.github/actions/stack-env
       - name: Wait for the API and the console
         run: |
@@ -141,6 +159,8 @@ jobs:
               pnpm --filter @openmap/reconciler replay --dir "$RUNNER_TEMP/estate-$kind"
             done
             pnpm --filter @openmap/perf e2e-users --tenant "synth-$(sed -n 's/.*"tenantId": *"\([0-9a-f]*\)-.*/\1/p' "$estate/estate-summary.json" | head -n 1)"
+            # The Backups card lists the sets the backup service wrote (T-571).
+            docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml --profile backup run --rm backup
           } 2>&1 | tee "$RUNNER_TEMP/reported/seed.log"
       # apt mirrors on the runner fail now and then; the install is retried.
       - name: Install the e2e browser
@@ -149,7 +169,15 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/reported"
-          pnpm --filter @openmap/console e2e 2>&1 | tee "$RUNNER_TEMP/reported/e2e.log"
+          pnpm --filter @openmap/console e2e 2>&1 | tee "$RUNNER_TEMP/reported/e2e.log" || {
+            # Each failed test's page snapshot (Playwright's error context), its head, for the failure report.
+            for f in apps/console/test-results/*/error-context.md; do
+              [ -f "$f" ] || continue
+              echo "== $(basename "$(dirname "$f")")"
+              grep -v '^\s*$' "$f" | head -n 12
+            done > "$RUNNER_TEMP/reported/e2e-context.log"
+            exit 1
+          }
       # REQ-PERF-005 (ADR-071): the e2e run's perf spec writes the screen-interaction and graph-render results; Lighthouse
       # audits the same production console; guard then holds all three to PERF_BUDGETS and fails if one was not written.
       - run: pnpm --filter @openmap/perf lighthouse
@@ -178,7 +206,13 @@ jobs:
         with: { node-version: 24, cache: pnpm }
       - uses: grafana/setup-k6-action@v1
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      # The console build fetches its fonts (next/font/google), which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
+          exit 1
       - run: cp deploy/compose/.env.example deploy/compose/.env
       - name: Build the API image
         working-directory: deploy/compose
@@ -222,7 +256,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      # The console build fetches its fonts (next/font/google), which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
+          exit 1
       - run: cp deploy/compose/.env.example deploy/compose/.env
       - uses: ./.github/actions/stack-up
         with: { services: postgres memgraph clickhouse valkey meilisearch openbao }

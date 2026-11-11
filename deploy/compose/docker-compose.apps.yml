@@ -33,7 +33,8 @@ x-app-env: &app-env
   SUPERSET_URL: http://superset:8088
   LLM_BASE_URL: ${LLM_BASE_URL:-http://llm-cpu:8000/v1}
   # ADR-028: the CPU fallback model rewords English reliably and Arabic poorly; Arabic answers stay deterministic here.
-  ASSISTANT_PROSE_LOCALES: ${ASSISTANT_PROSE_LOCALES:-en}
+  # Set but empty (an install without a model): every locale is answered from the catalogue's templates.
+  ASSISTANT_PROSE_LOCALES: ${ASSISTANT_PROSE_LOCALES-en}
   # REQ-BSM-004 / REQ-BSM-007: the impact-validation sweep and the link-probe round (milliseconds; 0 turns either off).
   IMPACT_VALIDATION_INTERVAL_MS: ${IMPACT_VALIDATION_INTERVAL_MS:-60000}
   LINK_PROBE_INTERVAL_MS: ${LINK_PROBE_INTERVAL_MS:-60000}

@@ -175,7 +175,17 @@ async function startLdap(): Promise<void> {
     'dn: cn=bob,ou=users,' + LDAP_BASE, 'changetype: modify', 'add: mail', 'mail: bob@lab.test', '',
     'dn: cn=ops,ou=groups,' + LDAP_BASE, 'changetype: add', 'objectClass: groupOfNames', 'cn: ops', 'member: cn=alice,ou=users,' + LDAP_BASE, '',
   ].join('\n');
-  docker(['exec', '-i', LDAP_NAME, 'ldapmodify', '-x', '-H', 'ldap://localhost:' + String(LDAP_PORT), '-D', LDAP_ADMIN_DN, '-w', ldapAdminPassword], ldif);
+  // The image restarts slapd once its bootstrap is done, so the search above can answer just before that restart. A
+  // refused connection means the bind never happened and nothing was applied: only that is retried.
+  for (;;) {
+    try {
+      docker(['exec', '-i', LDAP_NAME, 'ldapmodify', '-x', '-H', 'ldap://localhost:' + String(LDAP_PORT), '-D', LDAP_ADMIN_DN, '-w', ldapAdminPassword], ldif);
+      return;
+    } catch (err) {
+      if (!(err instanceof Error && err.message.includes("Can't contact LDAP server")) || Date.now() > deadline) throw err;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
 }
 
 async function createRealms(): Promise<void> {
