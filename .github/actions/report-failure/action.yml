@@ -16,13 +16,14 @@ runs:
   steps:
     - shell: bash
       run: |
+        # Composite steps run with -e and pipefail: a grep that finds nothing must not end the report.
         # Carriage returns end a workflow command line, so they go first; colours are dropped, % and newlines escaped.
-        clean() { tr -d '\r' | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^[[:space:]]*$'; }
+        clean() { tr -d '\r' | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^[[:space:]]*$' || true; }
         encode() { sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g'; }
         for f in "$RUNNER_TEMP"/reported/*.log; do
           [ -f "$f" ] || continue
           name=$(basename "$f" .log)
-          failures=$(clean < "$f" | grep -E 'FAIL|✗|×|Error|error:|AssertionError|expected|Timeout|timed out|refused' | grep -vE 'Node\.js 20|deprecat' | head -n ${{ inputs.failure-lines }} | encode)
-          [ -n "$failures" ] && echo "::error title=$name failures::$failures"
+          failures=$(clean < "$f" | grep -E 'FAIL|✗|×|Error|error:|AssertionError|expected|Timeout|timed out|refused' | grep -vE 'Node\.js 20|deprecat' | head -n ${{ inputs.failure-lines }} | encode || true)
+          if [ -n "$failures" ]; then echo "::error title=$name failures::$failures"; fi
           echo "::error title=$name tail::$(clean < "$f" | tail -n ${{ inputs.tail-lines }} | encode)"
         done

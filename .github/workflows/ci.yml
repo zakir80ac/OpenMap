@@ -48,6 +48,9 @@ jobs:
       - uses: ./.github/actions/stack-env
       - run: pnpm build
       - run: pnpm --filter @openmap/db migrate
+      # Some suites (the dependency-mapping pass, T-150) read a replayed synthetic estate with flows.
+      - name: Replay the small synthetic estate
+        run: pnpm --filter @openmap/reconciler replay --dir "$GITHUB_WORKSPACE/packages/testing/fixtures/synth-small" --reset
       - name: Integration suites
         run: |
           set -o pipefail
@@ -86,7 +89,9 @@ jobs:
           docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml ps
           docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml logs --tail=100 api console migrate
           exit 1
-      - run: pnpm --filter @openmap/console exec playwright install --with-deps chromium
+      # apt mirrors on the runner fail now and then; the install is retried.
+      - name: Install the e2e browser
+        run: for attempt in 1 2 3; do pnpm --filter @openmap/console exec playwright install --with-deps chromium && exit 0; sleep 30; done; exit 1
       - name: Playwright e2e
         run: |
           set -o pipefail
