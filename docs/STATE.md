@@ -99,6 +99,20 @@ The integration and e2e runs found faults, all fixed:
     - the integration job had never run a suite (`--if-present` was handed to vitest). It now migrates, replays the
       small estate and starts Keycloak, and the model-backed suites run only when a model answers;
     - the e2e browser install is retried.
+- **CI integration, e2e and kind (2026-11-11, after the repository went public).** Faults read from the run
+  annotations and fixed:
+  - `ensureSchema` needed Memgraph's storage to itself on every start, which a running stack never gives up (the
+    replay into the e2e stack, the graph suite after a replay). It now reads `SHOW INDEX INFO` and
+    `SHOW CONSTRAINT INFO` first and runs only the missing statements (517078e). After the fix the graph suite runs in
+    8 s against the full dev stack.
+  - Helm: the Percona entrypoint's first-start server already runs with `ssl_cert_file`. On a fresh install with
+    OpenBao still sealed, that server failed after initdb, and the restart skipped initialisation, leaving no
+    `openmap` database and no pg_tde key. PostgreSQL now waits for the agent's certificate and token (65e1b8f).
+  - The helm install had deadlocked: OpenBao's init was a post-install hook, and `--wait` waited on pods that waited
+    on it. It is now a plain Job per revision (c6984ab).
+  - The integration job now runs the API suites the way a dev stack does: a health-history replay, then the compose
+    reconciler, BSM engine and Prometheus. Alertmanager's throwaway config directory is now readable by `nobody`, and
+    the e2e stack starts through `stack-up` so a failing service gets reported (1edfb0c).
 - **REQ-CORE-020 is Done.** The scale-1 replay with two dispatchers took 34.0 min, 7.55 min per 10k devices (budget
   15). Dispatch took 646 s for 2,027,572 events, against 2,119 s with one, and the stores are consistent. The
   assistant evaluation is 41 of 41 afterwards (`docs/evidence/reconciler-scale.md`).
@@ -115,7 +129,7 @@ The integration and e2e runs found faults, all fixed:
 
 ### Next three
 
-1. Get the CI integration and e2e jobs green (the fixes in 32b6ec5 are the latest), then the kind job.
+1. Get the CI integration, e2e and kind jobs green (1edfb0c is the latest push; verify, perf and sweep are green).
 2. REQ-INT-018: one appliance image build and boot on a KVM host.
 3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
 
