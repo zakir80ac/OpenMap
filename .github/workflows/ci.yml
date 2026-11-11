@@ -47,6 +47,7 @@ jobs:
         with: { services: postgres memgraph clickhouse valkey meilisearch openbao keycloak }
       - uses: ./.github/actions/stack-env
       - run: pnpm build
+      - run: pnpm --filter @openmap/db migrate
       - name: Integration suites
         run: |
           set -o pipefail

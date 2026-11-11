@@ -27,9 +27,14 @@ runs:
         report() {
           tail -n 40 "$RUNNER_TEMP/stack-up.log" | annotate "compose up"
           docker compose ${{ inputs.files }} ps -a --format '{{.Service}} {{.State}} {{.Status}}' | annotate "compose ps"
-          for svc in $(docker compose ${{ inputs.files }} ps -a --services); do
-            docker compose ${{ inputs.files }} logs --no-color --tail 15 "$svc" 2>&1 | annotate "log $svc"
-          done
+          # GitHub keeps ten error annotations per step: one annotation holds the logs of the services that failed
+          # (exited non-zero, unhealthy, or not running), the rest are left out.
+          failed=$(docker compose ${{ inputs.files }} ps -a --format '{{.Service}} {{.State}} {{.Status}}' |
+            awk '/Exited \([1-9]/ || /unhealthy/ || ($2 != "running" && $2 != "exited") {print $1}')
+          for svc in $failed; do
+            echo "== $svc"
+            docker compose ${{ inputs.files }} logs --no-color --tail 25 "$svc" 2>&1
+          done | annotate "failed services: $(echo $failed)"
         }
         if ! docker compose ${{ inputs.files }} up -d ${{ inputs.services }} > "$RUNNER_TEMP/stack-up.log" 2>&1; then
           cat "$RUNNER_TEMP/stack-up.log"
