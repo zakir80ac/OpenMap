@@ -187,6 +187,22 @@ spec:
             - { name: PG_TDE_TOKEN_WAIT_SECONDS, value: {{ $root.Values.postgres.tde.tokenWaitSeconds | quote }} }
             {{- end }}
           {{- if $root.Values.postgres.tde.enabled }}
+          # The entrypoint's first-start server already runs with these settings, so it fails without the agent's
+          # certificate; the failure would come after initdb, and the next start would skip initialisation (no
+          # application database, no pg_tde key). Nothing orders a sidecar before the main container, so PostgreSQL waits
+          # here, as long as 00-pg-tde.sh waits for the token, for both of the agent's files.
+          command:
+            - sh
+            - -c
+            - |
+              waited=0
+              until [ -s /run/pgtde/tls.pem ] && [ -s /run/pgtde/token ]; do
+                waited=$((waited + 1))
+                [ "$waited" -gt "$PG_TDE_TOKEN_WAIT_SECONDS" ] && { echo "postgres: no certificate and token from pgtde-agent after ${PG_TDE_TOKEN_WAIT_SECONDS}s" >&2; exit 1; }
+                sleep 1
+              done
+              exec /entrypoint.sh "$@"
+            - entrypoint
           # ADR-068: TLS required (pg_hba.conf), the certificate rendered by the agent sidecar.
           args: ["postgres", "-c", "shared_preload_libraries=pg_tde", "-c", "ssl=on", "-c", "ssl_cert_file=/run/pgtde/tls.pem", "-c", "ssl_key_file=/run/pgtde/tls.pem", "-c", "ssl_min_protocol_version=TLSv1.2", "-c", "hba_file=/etc/openmap/pg_hba.conf"]
           {{- end }}
