@@ -66,7 +66,12 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      # The console build fetches its fonts (next/font/google); its output is reported if it fails.
+      - name: Build
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/reported"
+          pnpm build 2>&1 | tee "$RUNNER_TEMP/reported/build.log"
       - run: cp deploy/compose/.env.example deploy/compose/.env
       - name: Build and start the full stack
         working-directory: deploy/compose

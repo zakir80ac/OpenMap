@@ -10,6 +10,45 @@ const USER = {
   passwordBytes: 18,
 } as const;
 
+// The realm's console client takes no password grant (browser sign-in only), so the load-test user signs in through a
+// public client of its own, created on first use with the console client's mappers (the tenant claim) and an audience
+// mapper for the API's client, which the API accepts.
+const PERF_CLIENT_ID = 'openmap-perf';
+
+interface ClientRepresentation {
+  protocolMappers?: Array<Record<string, unknown> & { id?: string }>;
+  defaultClientScopes?: string[];
+  optionalClientScopes?: string[];
+}
+
+async function ensurePerfClient(env: Env, api: string, headers: Record<string, string>): Promise<void> {
+  const existing = (await (await fetch(api + '/clients?clientId=' + PERF_CLIENT_ID, { headers })).json()) as unknown[];
+  if (existing.length > 0) return;
+  const [source] = (await (await fetch(api + '/clients?clientId=' + encodeURIComponent(env.KEYCLOAK_CLIENT_ID), { headers })).json()) as ClientRepresentation[];
+  const mappers = (source?.protocolMappers ?? []).map(({ id: _id, ...m }) => m);
+  mappers.push({
+    name: 'api audience',
+    protocol: 'openid-connect',
+    protocolMapper: 'oidc-audience-mapper',
+    config: { 'included.client.audience': env.KEYCLOAK_API_CLIENT_ID, 'access.token.claim': 'true', 'id.token.claim': 'false' },
+  });
+  const res = await fetch(api + '/clients', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      clientId: PERF_CLIENT_ID,
+      name: 'OpenMap load tests',
+      publicClient: true,
+      standardFlowEnabled: false,
+      directAccessGrantsEnabled: true,
+      protocolMappers: mappers,
+      defaultClientScopes: source?.defaultClientScopes ?? [],
+      optionalClientScopes: source?.optionalClientScopes ?? [],
+    }),
+  });
+  if (!res.ok) throw new Error('creating client ' + PERF_CLIENT_ID + ' answered ' + String(res.status) + ': ' + (await res.text()));
+}
+
 async function form(url: string, body: Record<string, string>): Promise<{ access_token: string }> {
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(body) });
   if (!res.ok) throw new Error(url + ' answered ' + String(res.status) + ': ' + (await res.text()));
@@ -37,5 +76,6 @@ export async function tokenFor(env: Env, tenantId: string): Promise<string> {
   const roles = (await (await fetch(api + '/roles', { headers })).json()) as Array<{ id: string; name: string }>;
   const analyst = roles.find((r) => r.name === ROLES.analyst);
   if (analyst !== undefined) await fetch(api + '/users/' + user.id + '/role-mappings/realm', { method: 'POST', headers, body: JSON.stringify([analyst]) });
-  return (await form(base + '/realms/' + env.KEYCLOAK_REALM + '/protocol/openid-connect/token', { grant_type: 'password', client_id: env.KEYCLOAK_CLIENT_ID, username, password, scope: 'openid' })).access_token;
+  await ensurePerfClient(env, api, headers);
+  return (await form(base + '/realms/' + env.KEYCLOAK_REALM + '/protocol/openid-connect/token', { grant_type: 'password', client_id: PERF_CLIENT_ID, username, password, scope: 'openid' })).access_token;
 }

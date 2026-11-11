@@ -23,6 +23,14 @@ import { ROLES } from '../auth/roles.js';
 import type { AssistantAnswerView, ConversationView, TurnView } from './assistant.types.js';
 
 const env = loadEnv();
+// The evaluation asks the real model about a seeded estate. A stack without a model (the CI integration job starts
+// none) skips it, says so, and leaves the committed evidence alone.
+const LLM_PROBE_MS = 5_000;
+const llmUp = await fetch(new URL('models', env.LLM_BASE_URL.endsWith('/') ? env.LLM_BASE_URL : env.LLM_BASE_URL + '/'), {
+  headers: { authorization: 'Bearer ' + env.LLM_API_KEY },
+  signal: AbortSignal.timeout(LLM_PROBE_MS),
+}).then((r) => r.ok, () => false);
+if (!llmUp) console.warn('assistant evaluation skipped: no model answers at ' + env.LLM_BASE_URL);
 const prisma = createPrismaClient(env);
 const KID = 'openmap-eval-key';
 const QUESTION_TIMEOUT_MS = 3 * TIME.secondsPerMinute * TIME.msPerSecond;
@@ -119,7 +127,7 @@ function check(q: EvalQuestion, answer: AssistantAnswerView): string[] {
   return why;
 }
 
-describe('assistant evaluation set (integration)', () => {
+describe.runIf(llmUp)('assistant evaluation set (integration)', () => {
   beforeAll(async () => {
     // The tenant with the most business services is the seeded synthetic estate, whatever id it was given.
     const populated = await prisma.ci.groupBy({
