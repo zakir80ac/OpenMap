@@ -1,14 +1,14 @@
 # OpenMap tracker summary
 
-Generated 2026-11-10T21:26:20.085Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-11T15:55:13.179Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |
 | Not started | 7 |
 | In progress | 0 |
 | Blocked | 31 |
-| In review | 5 |
-| Done | 167 |
+| In review | 3 |
+| Done | 169 |
 | **Total** | **210** |
 
 ## By workstream
@@ -26,7 +26,7 @@ Generated 2026-11-10T21:26:20.085Z from `tracker/OpenMap-Tracker.xlsx`. Do not e
 | AI | 8 | 8 | 0 | 0 | 100% |
 | INT | 19 | 13 | 0 | 2 | 68% |
 | QA | 5 | 3 | 0 | 1 | 60% |
-| PERF | 6 | 3 | 0 | 0 | 50% |
+| PERF | 6 | 5 | 0 | 0 | 83% |
 | SEC | 13 | 12 | 0 | 0 | 92% |
 
 ## In progress

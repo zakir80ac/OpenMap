@@ -88,9 +88,17 @@ The integration and e2e runs found faults, all fixed:
 
 ### Open
 
-- **REQ-PERF-002 and REQ-PERF-004** close on a CI run: "k6 threshold enforced in CI" and "sweep timed in CI nightly".
-  The GitHub repository became private this session. The public API now answers 404 and this machine has no `gh`, so CI
-  results cannot be read from here. Main is pushed (d0a814f).
+- **REQ-PERF-002 and REQ-PERF-004 are Done on CI** (the repository is public again, 2026-11-11).
+  - The perf job is green on run 43048151738 and the sweep job on run 43021005322.
+  - Getting there needed CI fixes, all read from new failure reports: each failing step's output now goes into
+    annotations, since job logs need a signed-in viewer. The fixes:
+    - the console's slow component tests got a one-minute timeout;
+    - perf signs in through its own Keycloak client, because the console client takes no password grant on a fresh
+      realm;
+    - ClickHouse starts on an empty volume (its entrypoint created the database over the plain port that TLS closes);
+    - the integration job had never run a suite (`--if-present` was handed to vitest). It now migrates, replays the
+      small estate and starts Keycloak, and the model-backed suites run only when a model answers;
+    - the e2e browser install is retried.
 - **REQ-CORE-020 is Done.** The scale-1 replay with two dispatchers took 34.0 min, 7.55 min per 10k devices (budget
   15). Dispatch took 646 s for 2,027,572 events, against 2,119 s with one, and the stores are consistent. The
   assistant evaluation is 41 of 41 afterwards (`docs/evidence/reconciler-scale.md`).
@@ -107,14 +115,12 @@ The integration and e2e runs found faults, all fixed:
 
 ### Next three
 
-1. Read the CI run of d0a814f once it can be seen, and close REQ-PERF-002 and REQ-PERF-004 on it.
+1. Get the CI integration and e2e jobs green (the fixes in 32b6ec5 are the latest), then the kind job.
 2. REQ-INT-018: one appliance image build and boot on a KVM host.
 3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
 
 ### Questions for Syed
 
-- **CI visibility.** The repository is private now. Make it public again, run `gh auth login` on this machine, or
-  read the Actions page yourself and tell me the result of d0a814f.
 - **May the old plaintext volumes be deleted?** The stack has run on the encrypted ones since checkpoint 46.
 
 ## Previous session · 2026-11-10 (checkpoint 46: REQ-SEC-011 encryption at rest complete, ADR-067 steps 3–6)
