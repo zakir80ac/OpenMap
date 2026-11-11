@@ -1,20 +1,28 @@
 # REQ-QA-004 — the job log needs a signed-in viewer, so a failing step's output is also reported as workflow annotations,
 # which the public API serves. Steps that want this write their output to $RUNNER_TEMP/reported/<name>.log (tee); this
-# action, run with `if: failure()`, turns the tail of each such log into one error annotation.
+# action, run with `if: failure()`, reports for each such log the lines that name a failure (an annotation's text is
+# cut at a few kilobytes, so they come first, in their own annotation) and then the log's last lines.
 name: report-failure
-description: Report the tail of each log in $RUNNER_TEMP/reported as an error annotation
+description: Report the failures and the tail of each log in $RUNNER_TEMP/reported as error annotations
 inputs:
-  lines:
+  failure-lines:
+    description: How many failure lines of each log to report
+    default: "40"
+  tail-lines:
     description: How many trailing non-empty lines of each log to report
-    default: "60"
+    default: "25"
 runs:
   using: composite
   steps:
     - shell: bash
       run: |
+        # Carriage returns end a workflow command line, so they go first; colours are dropped, % and newlines escaped.
+        clean() { tr -d '\r' | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^[[:space:]]*$'; }
+        encode() { sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g'; }
         for f in "$RUNNER_TEMP"/reported/*.log; do
           [ -f "$f" ] || continue
-          # Carriage returns end a workflow command line, so they go first.
-          tail=$(tr -d '\r' < "$f" | sed 's/\x1b\[[0-9;]*m//g' | grep -v '^[[:space:]]*$' | tail -n ${{ inputs.lines }} | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
-          echo "::error title=$(basename "$f" .log)::$tail"
+          name=$(basename "$f" .log)
+          failures=$(clean < "$f" | grep -E 'FAIL|✗|×|Error|error:|AssertionError|expected|Timeout|timed out|refused' | grep -vE 'Node\.js 20|deprecat' | head -n ${{ inputs.failure-lines }} | encode)
+          [ -n "$failures" ] && echo "::error title=$name failures::$failures"
+          echo "::error title=$name tail::$(clean < "$f" | tail -n ${{ inputs.tail-lines }} | encode)"
         done

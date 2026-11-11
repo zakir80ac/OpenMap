@@ -13,4 +13,8 @@ until [ -s "$KEY_FILE" ]; do
 done
 CLICKHOUSE_DISK_KEY=$(tr -d ' \n' < "$KEY_FILE")
 export CLICKHOUSE_DISK_KEY
+# ADR-068: on an empty data directory the image's entrypoint creates CLICKHOUSE_DB with clickhouse-client over the
+# plain native port, which tls.xml closes; init then fails and the container restarts unhealthy. The migrations create
+# the database (over TLS), so the entrypoint is not asked to; it still creates the user from its configuration.
+unset CLICKHOUSE_DB
 exec /entrypoint.sh "$@"
