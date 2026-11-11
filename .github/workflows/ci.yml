@@ -51,7 +51,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p "$RUNNER_TEMP/reported"
-          pnpm -r --workspace-concurrency=1 --filter './packages/*' --filter './apps/*' run test:integration --if-present 2>&1 | tee "$RUNNER_TEMP/reported/integration.log"
+          pnpm -r --stream --workspace-concurrency=1 --filter './packages/*' --filter './apps/*' run test:integration --if-present 2>&1 | tee "$RUNNER_TEMP/reported/integration.log"
       - uses: ./.github/actions/report-failure
         if: failure()
       - run: docker compose -f deploy/compose/docker-compose.yml down -v
