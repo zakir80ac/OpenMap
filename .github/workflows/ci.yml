@@ -144,7 +144,14 @@ jobs:
         with: { services: postgres memgraph clickhouse valkey meilisearch openbao }
       - uses: ./.github/actions/stack-env
       - run: pnpm --filter @openmap/db migrate
-      - run: pnpm --filter @openmap/perf discovery-sweep --seed 44 --scale 0.25 --out ${{ runner.temp }}/estate
+      - name: Discovery sweep
+        run: |
+          set -o pipefail
+          pnpm --filter @openmap/perf discovery-sweep --seed 44 --scale 0.25 --out ${{ runner.temp }}/estate 2>&1 | tee "$RUNNER_TEMP/sweep.log"
+      # The job log needs a signed-in viewer; the tail as an annotation is readable from the public API.
+      - name: Report the sweep's failure
+        if: failure()
+        run: echo "::error title=discovery sweep::$(tail -n 40 "$RUNNER_TEMP/sweep.log" | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
       - run: pnpm guard --perf-only --require-perf discovery-sweep
       - uses: actions/upload-artifact@v4
         if: always()
