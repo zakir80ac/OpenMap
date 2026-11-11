@@ -21,7 +21,13 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version: "1.23" }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      # The console build fetches its fonts (next/font/google), which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
+      - name: Build
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
+          exit 1
       - run: pnpm contracts:check -- --base origin/${{ github.base_ref || 'main' }}
       - run: pnpm i18n:check
       - run: pnpm typecheck
@@ -30,6 +36,8 @@ jobs:
       - run: pnpm guard
       - run: pnpm tracker verify
       - run: pnpm tracker report
+      - uses: ./.github/actions/report-failure
+        if: failure()
       - uses: actions/upload-artifact@v4
         with: { name: tracker, path: "tracker/OpenMap-Tracker.xlsx" }
   integration:
@@ -76,12 +84,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      # The console build fetches its fonts (next/font/google); its output is reported if it fails.
+      # The console build fetches its fonts (next/font/google), which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
       - name: Build
         run: |
-          set -o pipefail
           mkdir -p "$RUNNER_TEMP/reported"
-          pnpm build 2>&1 | tee "$RUNNER_TEMP/reported/build.log"
+          for attempt in 1 2 3; do pnpm build > "$RUNNER_TEMP/reported/build.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/build.log"; sleep 20; done
+          exit 1
       - run: cp deploy/compose/.env.example deploy/compose/.env
       - name: Build and start the full stack
         working-directory: deploy/compose
