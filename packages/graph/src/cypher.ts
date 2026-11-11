@@ -283,3 +283,15 @@ export function schemaStatementsNeo4j(ciTypes: readonly string[]): string[] {
   for (const t of ciTypes) out.push('CREATE INDEX ci_' + t + '_tenant IF NOT EXISTS FOR (c:' + typeLabel(t) + ') ON (c.tenantId)');
   return out;
 }
+
+const MEMGRAPH_INDEX = /^CREATE INDEX ON :(\w+)\((\w+)\)$/;
+const MEMGRAPH_UNIQUE = /^CREATE CONSTRAINT ON \(\w+:(\w+)\) ASSERT \w+\.(\w+) IS UNIQUE$/;
+
+/** The key existingMemgraphSchema lists for a schema statement, or null for one it does not recognise. */
+export function memgraphSchemaKey(statement: string): string | null {
+  const index = MEMGRAPH_INDEX.exec(statement);
+  if (index) return index[1] + '(' + index[2] + ')';
+  const unique = MEMGRAPH_UNIQUE.exec(statement);
+  if (unique) return 'unique:' + unique[1] + '(' + unique[2] + ')';
+  return null;
+}

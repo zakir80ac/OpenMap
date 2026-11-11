@@ -1,7 +1,7 @@
 // T-006 REQ-CORE-011
 import { describe, expect, it } from 'vitest';
 import { GRAPH } from '@openmap/constants';
-import { assertReadOnly, clampDepth, impactQuery, impactQueryMemgraph, relLabel, relTypeFromLabel, schemaStatementsMemgraph, shortestPathQuery, typeLabel, upsertRelationshipQuery } from './cypher.js';
+import { assertReadOnly, clampDepth, impactQuery, impactQueryMemgraph, relLabel, relTypeFromLabel, memgraphSchemaKey, schemaStatementsMemgraph, shortestPathQuery, typeLabel, upsertRelationshipQuery } from './cypher.js';
 
 const tenant = 't-1';
 
@@ -84,5 +84,14 @@ describe('cypher builders', () => {
     const statements = schemaStatementsMemgraph(['host', 'vm']);
     expect(statements).toContain('CREATE INDEX ON :Host(tenantId)');
     expect(statements).toContain('CREATE INDEX ON :Vm(tenantId)');
+  });
+});
+
+describe('memgraphSchemaKey (REQ-CORE-020)', () => {
+  it('keys every Memgraph schema statement the way SHOW INDEX INFO and SHOW CONSTRAINT INFO list them', () => {
+    expect(memgraphSchemaKey('CREATE INDEX ON :Ci(tenantId)')).toBe('Ci(tenantId)');
+    expect(memgraphSchemaKey('CREATE CONSTRAINT ON (c:Ci) ASSERT c.id IS UNIQUE')).toBe('unique:Ci(id)');
+    expect(memgraphSchemaKey('CREATE INDEX ON :Ci')).toBeNull();
+    for (const st of schemaStatementsMemgraph(['host'])) expect(memgraphSchemaKey(st)).not.toBeNull();
   });
 });

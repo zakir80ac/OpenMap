@@ -36,6 +36,7 @@ import {
   shortestPathQueryNeo4j,
   upsertCiQuery,
   upsertRelationshipQuery,
+  memgraphSchemaKey,
 } from './cypher.js';
 
 export type GraphEngine = 'memgraph' | 'neo4j';
@@ -134,12 +135,33 @@ export class BoltGraphRepository implements GraphRepository {
     }
   }
 
+  /**
+   * The schema Memgraph already has, as `Label(property)` for indexes and `unique:Label(property)` for uniqueness
+   * constraints. Read without the storage to itself, so a running stack (the API and the BSM engine read all the
+   * time) never blocks on a statement that would change nothing.
+   */
+  private async existingMemgraphSchema(s: Session): Promise<Set<string>> {
+    const out = new Set<string>();
+    const props = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : v === null || v === undefined ? [] : [String(v)]);
+    for (const r of (await s.run('SHOW INDEX INFO')).records) {
+      for (const prop of props(r.get('property'))) out.add(String(r.get('label')) + '(' + prop + ')');
+    }
+    for (const r of (await s.run('SHOW CONSTRAINT INFO')).records) {
+      if (String(r.get('constraint type')) !== 'unique') continue;
+      for (const prop of props(r.get('properties'))) out.add('unique:' + String(r.get('label')) + '(' + prop + ')');
+    }
+    return out;
+  }
+
   async ensureSchema(): Promise<void> {
     const statements =
       this.options.engine === 'neo4j' ? schemaStatementsNeo4j(CI_TYPES) : schemaStatementsMemgraph(CI_TYPES);
     const s = this.session('WRITE');
     try {
+      const existing = this.options.engine === 'neo4j' ? new Set<string>() : await this.existingMemgraphSchema(s);
       for (const st of statements) {
+        const key = memgraphSchemaKey(st);
+        if (key !== null && existing.has(key)) continue;
         for (let attempt = 1; ; attempt++) {
           try {
             await s.run(st);
