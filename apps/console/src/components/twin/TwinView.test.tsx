@@ -1,6 +1,9 @@
 // T-120 REQ-UI-029 — TwinView builds the facility from the racks query, lays a focus CI's impact graph on the layer
 // planes, hands the models to the scene, and shows the selected rack's devices and the selected node's CI, in en
 // and ar. The WebGL scene is replaced by a probe that reports what it received, since jsdom has no GPU.
+// T-661 REQ-UI-037 — the drill-down: a device picked from the open rack is selected in the scene and drilled into
+// (components, compute, OS, network, security with its CVEs, and the services the upstream walk reached), a neighbour
+// drills one level further, and the breadcrumb returns to the rack.
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { LOCALES, translate } from '@openmap/i18n';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
@@ -83,8 +86,35 @@ const impact = {
   services: [],
 };
 
+const host = ci('srv-1', 'srv-dmm-01', 'hardware', 'host');
+const hypervisor = ci('hv-1', 'esxi-01', 'virtualization', 'hypervisor');
+const vm = ci('vm-1', 'vm-ledger-01', 'virtualization', 'vm');
+const os = ci('os-1', 'RHEL 9', 'os', 'operating_system');
+const ip = ci('ip-1', '10.20.0.11', 'network_security', 'ip_address');
+const payments = ci('svc-1', 'Payments', 'applications', 'business_service');
+const edge = (id: string, type: string, from: ReturnType<typeof ci>, to: ReturnType<typeof ci>) => ({ node: { id, type, from, to } });
+const drills: Record<string, unknown> = {
+  'srv-1': {
+    ...host,
+    components: [{ id: 'cpu-0', kind: 'cpu', slot: 'CPU0', model: 'Xeon Gold 6338', manufacturer: 'Intel', capacityBytes: null }],
+    vulnerabilities: [{ cveId: 'CVE-2024-6387', cvss: 8.1, severity: 'high', exploited: true, internetFacing: false, fixedIn: '9.8p1' }],
+    relationships: { totalCount: 3, edges: [edge('r1', 'runs_on', hypervisor, host), edge('r2', 'installed_on', os, host), edge('r3', 'uses_ip', host, ip)] },
+  },
+  'hv-1': {
+    ...hypervisor,
+    components: [],
+    vulnerabilities: [],
+    relationships: { totalCount: 2, edges: [edge('r1', 'runs_on', hypervisor, host), edge('r4', 'runs_on', vm, hypervisor)] },
+  },
+};
+
 function respond(body: { query: string; variables?: Record<string, unknown> }): unknown {
   if (body.query.includes('query Racks(')) return { data: { racks } };
+  if (body.query.includes('query TwinDrill(')) return { data: { ci: drills[String(body.variables?.['id'])] ?? null } };
+  // The drill-down walks up from the drilled CI for the services it supports.
+  if (body.query.includes('query Impact(') && body.variables?.['direction'] === 'upstream') {
+    return { data: { impact: { root: host, durationMs: 3, nodes: [], services: [{ service: payments, tier: 1, predicted: 'down', path: ['srv-1', 'vm-1', 'app-1', 'svc-1'], usersAffected: null, slaBudgetRemainingMinutes: null, revenueAtRiskPerHour: null, recovery: null }] } } };
+  }
   if (body.query.includes('query Impact(')) return { data: { impact } };
   if (body.query.includes('query Search(')) return { data: { search: [] } };
   return { errors: [{ message: 'unexpected operation' }] };
@@ -126,7 +156,8 @@ describe.each(LOCALES)('TwinView in %s', (locale) => {
 
     fireEvent.click(screen.getByTestId('probe-rack-rack-1'));
     const panel = screen.getByRole('complementary');
-    expect(within(panel).getByText('DMM-DH01-A-01')).toBeTruthy();
+    // The rack's name heads the panel and starts the breadcrumb.
+    expect(within(panel).getAllByText('DMM-DH01-A-01').length).toBeGreaterThan(0);
     const devices = within(panel).getByRole('list', { name: translate(locale, 'twin.rack.devices') });
     const items = within(devices).getAllByRole('listitem');
     expect(items).toHaveLength(2);
@@ -134,6 +165,57 @@ describe.each(LOCALES)('TwinView in %s', (locale) => {
     expect(items[0]?.textContent).toContain('tor-dmm-01');
     expect(within(panel).getByText(translate(locale, 'twin.rack.load', { load: new Intl.NumberFormat(locale).format(38) }))).toBeTruthy();
     expect(within(panel).getByRole('link', { name: translate(locale, 'twin.panel.openCi') }).getAttribute('href')).toContain('/cmdb/rack-1');
+  });
+
+  it('drills from a rack to a device and on through its relationships, and back by the breadcrumb', async () => {
+    search = '';
+    render(
+      <Providers locale={locale}>
+        <TwinView locale={locale} />
+      </Providers>,
+    );
+    fireEvent.click(await screen.findByTestId('probe-rack-rack-1'));
+    const panel = screen.getByRole('complementary');
+    fireEvent.click(within(panel).getByRole('button', { name: translate(locale, 'twin.drill.into', { name: 'srv-dmm-01' }) }));
+    // The device is selected in the scene as well.
+    expect(sceneProps[sceneProps.length - 1]?.selected).toEqual({ kind: 'device', id: 'srv-1' });
+
+    const level = await within(panel).findByTestId('twin-drill-level');
+    for (const key of ['components', 'compute', 'os', 'network', 'services', 'security'] as const) {
+      expect(within(level).getByRole('region', { name: translate(locale, `twin.drill.section.${key}`) })).toBeTruthy();
+    }
+    expect(within(level).getByText('Xeon Gold 6338')).toBeTruthy();
+    expect(within(level).getByText('CVE-2024-6387')).toBeTruthy();
+    expect(within(level).getByText(translate(locale, 'twin.drill.exploited'))).toBeTruthy();
+    // The service is reached through the VM and its application: three hops up.
+    const services = within(level).getByRole('region', { name: translate(locale, 'twin.drill.section.services') });
+    expect(await within(services).findByText('Payments')).toBeTruthy();
+    expect(within(services).getByText(new RegExp(translate(locale, 'twin.drill.viaGraph', { hops: new Intl.NumberFormat(locale).format(3) })))).toBeTruthy();
+
+    // One level further: the hypervisor, with the VM it runs.
+    const compute = within(level).getByRole('region', { name: translate(locale, 'twin.drill.section.compute') });
+    fireEvent.click(within(compute).getByRole('button', { name: translate(locale, 'twin.drill.into', { name: 'esxi-01' }) }));
+    const trail = within(panel).getByRole('navigation', { name: translate(locale, 'twin.drill.trail') });
+    expect(within(trail).getAllByRole('listitem')).toHaveLength(3);
+    expect(await within(panel).findByRole('button', { name: translate(locale, 'twin.drill.into', { name: 'vm-ledger-01' }) })).toBeTruthy();
+
+    // Back to the rack.
+    fireEvent.click(within(trail).getByRole('button', { name: 'DMM-DH01-A-01' }));
+    expect(within(panel).getByRole('list', { name: translate(locale, 'twin.rack.devices') })).toBeTruthy();
+    expect(sceneProps[sceneProps.length - 1]?.selected).toEqual({ kind: 'rack', id: 'rack-1' });
+  });
+
+  it('opens a rack from the picker, without the scene', async () => {
+    search = '';
+    render(
+      <Providers locale={locale}>
+        <TwinView locale={locale} />
+      </Providers>,
+    );
+    await screen.findByTestId('scene-probe');
+    fireEvent.change(screen.getByLabelText(translate(locale, 'twin.drill.pickRack')), { target: { value: 'rack-1' } });
+    const panel = screen.getByRole('complementary');
+    expect(within(panel).getByRole('list', { name: translate(locale, 'twin.rack.devices') })).toBeTruthy();
   });
 
   it('lays the focus CI dependency graph on the layer planes and selects a node', async () => {

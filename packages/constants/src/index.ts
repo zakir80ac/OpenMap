@@ -1911,6 +1911,8 @@ export const GEOMETRY = {
  * as stacked planes in CI_LAYERS order; graph positions from the 2D layouts are scaled into metres on each plane.
  */
 export const TWIN = {
+  /** REQ-UI-037: camera radius (metres) when a rack is open: a 42U rack (about 1.9 m) with its neighbours in frame. */
+  rackFocusRadiusM: 3,
   rackWidthM: 0.6,
   rackDepthM: 1.2,
   unitHeightM: 0.04445,

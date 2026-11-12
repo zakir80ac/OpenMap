@@ -10,10 +10,19 @@ import { accents, ground, text, withAlpha } from '@openmap/ui';
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { BufferAttribute, BufferGeometry, Color, DoubleSide } from 'three';
 import { cameraStart, sceneLabel, sceneRadius, xyz, type FacilityModel, type GraphModel, type RackBox, type Vec3 } from '@/lib/twin-model';
+import { InstancedBoxes, type BoxInstance } from './InstancedBoxes';
 
 export interface TwinSelection {
-  kind: 'rack' | 'node';
+  /** REQ-UI-037: a device inside an open rack is selected on its own, to drill down from it. */
+  kind: 'rack' | 'device' | 'node';
   id: string;
+}
+
+/** The rack whose devices take clicks: the selected rack, or the rack of the selected device. */
+export function openRackId(facility: FacilityModel, selected: TwinSelection | null): string | null {
+  if (selected?.kind === 'rack') return selected.id;
+  if (selected?.kind === 'device') return facility.devices.find((d) => d.id === selected.id)?.rackId ?? null;
+  return null;
 }
 
 export interface TwinSceneProps {
@@ -46,47 +55,74 @@ function RoomSlabs({ facility }: { facility: FacilityModel }): ReactNode {
 }
 
 function RackInstances({ facility, selected, hovered, onHover, onSelect }: Pick<TwinSceneProps, 'facility' | 'selected' | 'hovered' | 'onHover' | 'onSelect'>): ReactNode {
+  const racks = useMemo(() => facility.racks.slice(0, TWIN.maxRacks), [facility]);
+  const boxes = useMemo<BoxInstance[]>(() => racks.map((rack) => ({ position: rack.center, size: rack.size, color: rack.color })), [racks]);
+  const openRack = openRackId(facility, selected);
+  const highlight = useMemo(() => {
+    const lit = new Map<number, string>();
+    racks.forEach((rack, i) => {
+      if ((selected?.kind === 'rack' && selected.id === rack.id) || (hovered?.kind === 'rack' && hovered.id === rack.id)) lit.set(i, text.primary);
+    });
+    return lit;
+  }, [racks, selected, hovered]);
   return (
-    <Instances limit={Math.min(facility.racks.length, TWIN.maxRacks)} range={Math.min(facility.racks.length, TWIN.maxRacks)}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial transparent opacity={TWIN.rackOpacity} emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />
-      {facility.racks.map((rack) => {
-        const lit = (selected?.kind === 'rack' && selected.id === rack.id) || (hovered?.kind === 'rack' && hovered.id === rack.id);
-        return (
-          <Instance
-            key={rack.id}
-            position={xyz(rack.center)}
-            scale={xyz(rack.size)}
-            color={lit ? text.primary : rack.color}
-            onPointerOver={(event) => {
-              event.stopPropagation();
-              onHover({ kind: 'rack', id: rack.id });
-            }}
-            onPointerOut={() => {
-              onHover(null);
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              onSelect(selected?.kind === 'rack' && selected.id === rack.id ? null : { kind: 'rack', id: rack.id });
-            }}
-          />
-        );
-      })}
-    </Instances>
+    <InstancedBoxes
+      boxes={boxes}
+      highlight={highlight}
+      material={<meshStandardMaterial transparent opacity={TWIN.rackOpacity} emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />}
+      // An open rack lets pointer events through its glass to the devices inside it (REQ-UI-037).
+      onHover={(i) => {
+        const rack = racks[i];
+        if (rack === undefined || rack.id === openRack) return false;
+        onHover({ kind: 'rack', id: rack.id });
+        return true;
+      }}
+      onLeave={() => {
+        if (hovered?.kind === 'rack') onHover(null);
+      }}
+      onPick={(i) => {
+        const rack = racks[i];
+        if (rack === undefined || rack.id === openRack) return false;
+        onSelect({ kind: 'rack', id: rack.id });
+        return true;
+      }}
+    />
   );
 }
 
-function DeviceInstances({ facility }: { facility: FacilityModel }): ReactNode {
-  const devices = facility.devices.slice(0, TWIN.maxDevices);
-  if (devices.length === 0) return null;
+/** Devices at their U positions; those of the open rack take clicks and light up when hovered or selected. */
+function DeviceInstances({ facility, selected, hovered, onHover, onSelect }: Pick<TwinSceneProps, 'facility' | 'selected' | 'hovered' | 'onHover' | 'onSelect'>): ReactNode {
+  const devices = useMemo(() => facility.devices.slice(0, TWIN.maxDevices), [facility]);
+  const boxes = useMemo<BoxInstance[]>(() => devices.map((device) => ({ position: device.position, size: device.size, color: device.color })), [devices]);
+  const openRack = openRackId(facility, selected);
+  const highlight = useMemo(() => {
+    const lit = new Map<number, string>();
+    devices.forEach((device, i) => {
+      if ((selected?.kind === 'device' && selected.id === device.id) || (hovered?.kind === 'device' && hovered.id === device.id)) lit.set(i, accents.cyan);
+    });
+    return lit;
+  }, [devices, selected, hovered]);
   return (
-    <Instances limit={devices.length} range={devices.length}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial emissiveIntensity={TWIN.softEmissiveShare} />
-      {devices.map((device) => (
-        <Instance key={device.id} position={xyz(device.position)} scale={xyz(device.size)} color={device.color} />
-      ))}
-    </Instances>
+    <InstancedBoxes
+      boxes={boxes}
+      highlight={highlight}
+      material={<meshStandardMaterial emissiveIntensity={TWIN.softEmissiveShare} />}
+      onHover={(i) => {
+        const device = devices[i];
+        if (device === undefined || device.rackId !== openRack) return false;
+        onHover({ kind: 'device', id: device.id });
+        return true;
+      }}
+      onLeave={() => {
+        if (hovered?.kind === 'device') onHover(null);
+      }}
+      onPick={(i) => {
+        const device = devices[i];
+        if (device === undefined || device.rackId !== openRack) return false;
+        onSelect({ kind: 'device', id: device.id });
+        return true;
+      }}
+    />
   );
 }
 
@@ -212,8 +248,12 @@ function Labels({ facility, graph, selected, hovered, rackCaption }: Pick<TwinSc
 }
 
 export function TwinScene({ facility, graph, selected, hovered, onHover, onSelect, label, rackCaption }: TwinSceneProps): ReactNode {
-  const radius = useMemo(() => sceneRadius(facility, graph), [facility, graph]);
-  const target = useMemo<Vec3>(() => (graph === null ? facility.center : graph.center), [facility, graph]);
+  // REQ-UI-037: an open rack (selected, or holding the selected device) draws the camera to it; keyed by the rack, so
+  // drilling within it keeps the operator's orbit.
+  const openId = openRackId(facility, selected);
+  const openRack = useMemo(() => (openId === null ? undefined : facility.racks.find((r) => r.id === openId)), [facility, openId]);
+  const radius = useMemo(() => (openRack === undefined ? sceneRadius(facility, graph) : TWIN.rackFocusRadiusM), [facility, graph, openRack]);
+  const target = useMemo<Vec3>(() => openRack?.center ?? (graph === null ? facility.center : graph.center), [facility, graph, openRack]);
   const start = useMemo(() => cameraStart(target, radius), [target, radius]);
   return (
     <Canvas
@@ -235,7 +275,7 @@ export function TwinScene({ facility, graph, selected, hovered, onHover, onSelec
       <Grid position={[facility.center[GEOMETRY.axisX], 0, facility.center[GEOMETRY.axisZ]]} args={[TWIN.gridFadeDistanceM, TWIN.gridFadeDistanceM]} cellSize={TWIN.gridCellM} sectionSize={TWIN.gridSectionM} cellColor={withAlpha(accents.cyan, TWIN.planeOpacity)} sectionColor={withAlpha(accents.cyan, TWIN.planeEdgeOpacity)} fadeDistance={TWIN.gridFadeDistanceM} infiniteGrid />
       <RoomSlabs facility={facility} />
       <RackInstances facility={facility} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} />
-      <DeviceInstances facility={facility} />
+      <DeviceInstances facility={facility} selected={selected} hovered={hovered} onHover={onHover} onSelect={onSelect} />
       {graph === null ? null : (
         <>
           <LayerPlanes graph={graph} />
