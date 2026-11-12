@@ -7,7 +7,25 @@ import { useQuery } from '@tanstack/react-query';
 import { CI_LAYERS, type CiLayer } from '@openmap/contracts';
 import { Card, Pill, SectionTitle, cx, layerColor } from '@openmap/ui';
 import Link from 'next/link';
-import * as icons from 'simple-icons';
+// REQ-PERF-001: the marks LAYER_MARKS names, imported one by one. The whole catalogue is a 5 MB chunk that every screen
+// paid for (the sidebar prefetches this route), so a slug used there must be added here as well.
+import {
+  siCisco,
+  siDell,
+  siDocker,
+  siFortinet,
+  siGooglecloud,
+  siHp,
+  siKubernetes,
+  siMongodb,
+  siNetapp,
+  siNutanix,
+  siPaloaltonetworks,
+  siPostgresql,
+  siRedhat,
+  siUbuntu,
+  siVmware,
+} from 'simple-icons';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/common/controls';
 import { Icon } from '@/components/icons';
@@ -59,9 +77,26 @@ interface IconEntry {
   path: string;
 }
 
-function iconFor(slug: string): IconEntry | null {
-  const key = 'si' + slug.charAt(0).toUpperCase() + slug.slice(1);
-  return (icons as unknown as Record<string, IconEntry | undefined>)[key] ?? null;
+const ICONS: Readonly<Record<string, IconEntry>> = {
+  cisco: siCisco,
+  dell: siDell,
+  docker: siDocker,
+  fortinet: siFortinet,
+  googlecloud: siGooglecloud,
+  hp: siHp,
+  kubernetes: siKubernetes,
+  mongodb: siMongodb,
+  netapp: siNetapp,
+  nutanix: siNutanix,
+  paloaltonetworks: siPaloaltonetworks,
+  postgresql: siPostgresql,
+  redhat: siRedhat,
+  ubuntu: siUbuntu,
+  vmware: siVmware,
+};
+
+export function iconFor(slug: string): IconEntry | null {
+  return ICONS[slug] ?? null;
 }
 
 /** The platforms a layer holds: the vendor's mark from the CC0 catalogue, or its name where no mark may be used. */

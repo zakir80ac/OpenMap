@@ -755,8 +755,15 @@ export function ImpactView({ locale }: ImpactViewProps): ReactNode {
           </Card>
         </div>
       </div>
-      <RunbooksPanel />
-      <ImpactAccuracyPanel locale={locale} />
+      {/* REQ-PERF-001: the runbook and accuracy panels close the screen and join it once the CI list and the saved
+          scenarios above have settled, so their rows arriving never push the panels down (a layout shift that took
+          the screen to its Lighthouse budget's edge). */}
+      {listPending || scenarios.isPending ? null : (
+        <>
+          <RunbooksPanel />
+          <ImpactAccuracyPanel locale={locale} />
+        </>
+      )}
     </div>
   );
 }

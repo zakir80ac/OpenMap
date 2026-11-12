@@ -2,6 +2,7 @@
 // version as a (:SchemaMigration) node so a file runs once.
 import neo4j, { type Driver, type Session } from 'neo4j-driver';
 import { loadEnv, type Env } from '@openmap/config';
+import { GRAPH } from '@openmap/constants';
 import { listMigrationFiles, loadStatements, MEMGRAPH_DIR } from './files.js';
 import type { MigrationReport } from './migrate-clickhouse.js';
 import { memgraphParameters } from './parameters.js';
@@ -17,8 +18,23 @@ function createDriver(env: Env): Driver {
   return neo4j.driver(env.MEMGRAPH_URL, neo4j.auth.basic(env.MEMGRAPH_USER, env.MEMGRAPH_PASSWORD));
 }
 
+/**
+ * Runs a step again while Memgraph answers with a transient error ("Cannot get read only access to the storage"
+ * while another schema statement or Memgraph's own start holds it), as the graph repository does for its schema.
+ */
+async function retrying<T>(step: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await step();
+    } catch (error) {
+      if (!neo4j.isRetriableError(error) || attempt >= GRAPH.schemaRetryAttempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, GRAPH.schemaRetryDelayMs));
+    }
+  }
+}
+
 async function appliedVersions(session: Session): Promise<Set<string>> {
-  const result = await session.run('MATCH (m:' + MEMGRAPH_MIGRATION_LABEL + ') RETURN m.version AS version');
+  const result = await retrying(() => session.run('MATCH (m:' + MEMGRAPH_MIGRATION_LABEL + ') RETURN m.version AS version'));
   const versions = new Set<string>();
   for (const record of result.records) {
     const value: unknown = record.get('version');
@@ -29,7 +45,7 @@ async function appliedVersions(session: Session): Promise<Set<string>> {
 
 async function runStatement(session: Session, statement: string): Promise<void> {
   try {
-    await session.run(statement);
+    await retrying(() => session.run(statement));
   } catch (error) {
     if (error instanceof Error && ALREADY_EXISTS.test(error.message)) return;
     throw error;
@@ -51,9 +67,11 @@ export async function migrateMemgraph(env: Env = loadEnv(), dir: string = MEMGRA
       for (const statement of loadStatements(file, CYPHER_COMMENT, params)) {
         await runStatement(session, statement);
       }
-      await session.run(
-        'MERGE (m:' + MEMGRAPH_MIGRATION_LABEL + ' {version: $version}) SET m.appliedAt = $appliedAt',
-        { version: file.version, appliedAt: new Date().toISOString() },
+      await retrying(() =>
+        session.run('MERGE (m:' + MEMGRAPH_MIGRATION_LABEL + ' {version: $version}) SET m.appliedAt = $appliedAt', {
+          version: file.version,
+          appliedAt: new Date().toISOString(),
+        }),
       );
       report.applied.push(file.version);
     }
