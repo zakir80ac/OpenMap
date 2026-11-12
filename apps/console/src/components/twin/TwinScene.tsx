@@ -7,7 +7,7 @@ import { Edges, Grid, Html, Instance, Instances, Line, OrbitControls } from '@re
 import { Canvas, useThree } from '@react-three/fiber';
 import { GEOMETRY, TWIN } from '@openmap/constants';
 import { accents, ground, text, withAlpha } from '@openmap/ui';
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { BufferAttribute, BufferGeometry, Color, DoubleSide } from 'three';
 import { cameraStart, sceneLabel, sceneRadius, xyz, type FacilityModel, type GraphModel, type RackBox, type Vec3 } from '@/lib/twin-model';
 import { InstancedBoxes, type BoxInstance } from './InstancedBoxes';
@@ -38,6 +38,9 @@ export interface TwinSceneProps {
   rackCaption: (rack: RackBox) => string;
 }
 
+// REQ-PERF-001: Lambert, not the physically based standard material: the boxes need diffuse light and an emissive
+// glow only, and the standard material's far larger shader took the first frame's synchronous compile to a long
+// main-thread task (hundreds of milliseconds where WebGL is software-rendered, as on a GPU-less runner).
 const LABEL_CLASS = 'pointer-events-none whitespace-nowrap rounded-om-control border border-om-border-strong bg-om-surface1/90 px-om-8 py-om-4 font-om-mono text-om-2xs text-om-primary shadow-om-card';
 
 function RoomSlabs({ facility }: { facility: FacilityModel }): ReactNode {
@@ -46,7 +49,7 @@ function RoomSlabs({ facility }: { facility: FacilityModel }): ReactNode {
       {facility.rooms.map((room) => (
         <mesh key={room.id} position={xyz(room.center)}>
           <boxGeometry args={xyz(room.size)} />
-          <meshStandardMaterial color={accents.violet} transparent opacity={TWIN.roomOpacity} emissive={accents.violet} emissiveIntensity={TWIN.softEmissiveShare} />
+          <meshLambertMaterial color={accents.violet} transparent opacity={TWIN.roomOpacity} emissive={accents.violet} emissiveIntensity={TWIN.softEmissiveShare} />
           <Edges color={withAlpha(accents.violet, TWIN.planeEdgeOpacity)} />
         </mesh>
       ))}
@@ -69,7 +72,7 @@ function RackInstances({ facility, selected, hovered, onHover, onSelect }: Pick<
     <InstancedBoxes
       boxes={boxes}
       highlight={highlight}
-      material={<meshStandardMaterial transparent opacity={TWIN.rackOpacity} emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />}
+      material={<meshLambertMaterial transparent opacity={TWIN.rackOpacity} emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />}
       // An open rack lets pointer events through its glass to the devices inside it (REQ-UI-037).
       onHover={(i) => {
         const rack = racks[i];
@@ -106,7 +109,7 @@ function DeviceInstances({ facility, selected, hovered, onHover, onSelect }: Pic
     <InstancedBoxes
       boxes={boxes}
       highlight={highlight}
-      material={<meshStandardMaterial emissiveIntensity={TWIN.softEmissiveShare} />}
+      material={<meshLambertMaterial emissiveIntensity={TWIN.softEmissiveShare} />}
       onHover={(i) => {
         const device = devices[i];
         if (device === undefined || device.rackId !== openRack) return false;
@@ -124,6 +127,28 @@ function DeviceInstances({ facility, selected, hovered, onHover, onSelect }: Pic
       }}
     />
   );
+}
+
+/**
+ * REQ-PERF-001: compiles the scene's shaders without blocking (three's compileAsync polls the GPU between frames where
+ * the browser offers parallel shader compilation) and only then lets the canvas draw. The first frame used to compile
+ * every program synchronously: the screen's longest main-thread task, worst where WebGL is software-rendered.
+ */
+function CompileFirst({ onReady }: { onReady: () => void }): ReactNode {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  useEffect(() => {
+    let live = true;
+    const done = (): void => {
+      if (live) onReady();
+    };
+    gl.compileAsync(scene, camera).then(done, done);
+    return () => {
+      live = false;
+    };
+  }, [gl, scene, camera, onReady]);
+  return null;
 }
 
 /** Moves the camera to the start position and the orbit target whenever the framed subject changes. */
@@ -188,7 +213,7 @@ function GraphNodes({ graph, selected, hovered, onHover, onSelect }: { graph: Gr
     <>
       <Instances limit={graph.nodes.length} range={graph.nodes.length}>
         <sphereGeometry args={[1, TWIN.sphereSegments, TWIN.sphereSegments]} />
-        <meshStandardMaterial emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />
+        <meshLambertMaterial emissive={accents.cyan} emissiveIntensity={TWIN.emissiveShare} />
         {graph.nodes.map((node) => {
           const lit = (selected?.kind === 'node' && selected.id === node.id) || (hovered?.kind === 'node' && hovered.id === node.id);
           return (
@@ -248,6 +273,9 @@ function Labels({ facility, graph, selected, hovered, rackCaption }: Pick<TwinSc
 }
 
 export function TwinScene({ facility, graph, selected, hovered, onHover, onSelect, label, rackCaption }: TwinSceneProps): ReactNode {
+  // Nothing is drawn until the shaders are compiled (CompileFirst); after that the canvas draws on demand.
+  const [compiled, setCompiled] = useState(false);
+  const markCompiled = useMemo(() => () => { setCompiled(true); }, []);
   // REQ-UI-037: an open rack (selected, or holding the selected device) draws the camera to it; keyed by the rack, so
   // drilling within it keeps the operator's orbit.
   const openId = openRackId(facility, selected);
@@ -260,7 +288,7 @@ export function TwinScene({ facility, graph, selected, hovered, onHover, onSelec
       aria-label={label}
       role="img"
       dpr={[1, TWIN.dprMax]}
-      frameloop="demand"
+      frameloop={compiled ? 'demand' : 'never'}
       camera={{ fov: TWIN.cameraFov, near: TWIN.cameraNearM, far: TWIN.cameraFarM, position: xyz(start) }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       onPointerMissed={() => {
@@ -268,6 +296,7 @@ export function TwinScene({ facility, graph, selected, hovered, onHover, onSelec
       }}
     >
       <color attach="background" args={[ground]} />
+      <CompileFirst onReady={markCompiled} />
       <CameraRig start={start} target={target} />
       <ambientLight intensity={TWIN.ambientIntensity} />
       <directionalLight position={xyz(TWIN.keyLightPosition)} intensity={TWIN.keyLightIntensity} />
