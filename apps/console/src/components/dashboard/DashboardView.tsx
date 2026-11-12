@@ -97,7 +97,9 @@ export function DashboardView(): ReactNode {
     </SectionTitle>
   );
 
-  if (dashboards.isPending) {
+  // REQ-PERF-001: the setup nudge sits above the wizard and the grid, so both wait for the onboarding answer too; the
+  // nudge arriving after them pushed the whole page down (a layout shift that took the screen under its budget).
+  if (dashboards.isPending || onboarding.isPending) {
     return (
       <div className="flex flex-col gap-om-24">
         {heading}
