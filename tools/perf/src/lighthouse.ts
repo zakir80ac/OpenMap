@@ -158,9 +158,28 @@ function mergeWithPrevious(measured: readonly PageScore[]): PageScore[] {
   return merged;
 }
 
-async function main(): Promise<void> {
-  const env = loadEnv();
-  const consoleUrl = env.PUBLIC_CONSOLE_URL.replace(/\/$/, '');
+/**
+ * `--runs N` measures the flow N times, each in a fresh browser profile, and keeps each screen's median pass by
+ * performance (Lighthouse CI's practice on a shared host, where one pass can lose a tenth to a neighbour's CPU).
+ */
+function parseRuns(argv: readonly string[]): number {
+  const at = argv.indexOf('--runs');
+  if (at < 0) return 1;
+  const n = Number(argv[at + 1]);
+  if (!Number.isInteger(n) || n < 1) throw new Error('--runs needs a positive whole number');
+  return n;
+}
+const runs = parseRuns(process.argv.slice(2));
+
+/** The pass whose performance score is the median of the passes (the lower middle one for an even count). */
+function medianPass(passes: readonly PageScore[]): PageScore {
+  const sorted = [...passes].sort((a, b) => a.performance - b.performance);
+  const middle = sorted[Math.floor((sorted.length - 1) / 2)];
+  if (middle === undefined) throw new Error('no pass to take a median of');
+  return middle;
+}
+
+async function measureOnce(consoleUrl: string): Promise<{ measured: PageScore[]; report: string }> {
   // Playwright launches the Chromium it installed (Puppeteer cannot spawn it on every host); Puppeteer, which
   // Lighthouse's flow API drives, attaches to that browser over the DevTools socket Chrome announces on disk.
   const userDataDir = mkdtempSync(join(tmpdir(), 'openmap-lighthouse-'));
@@ -199,12 +218,29 @@ async function main(): Promise<void> {
     runtimeError: step.lhr.runtimeError === undefined ? null : step.lhr.runtimeError.code + ': ' + step.lhr.runtimeError.message,
     warnings: step.lhr.runWarnings,
   }));
-  const pages = mergeWithPrevious(measured);
-  mkdirSync(resultsDir, { recursive: true });
-  writeFileSync(resultsDir + 'lighthouse.json', JSON.stringify({ name: 'lighthouse', formFactor: FORM_FACTOR, budgets: { performance: PERF_BUDGETS.lighthousePerformanceMin, accessibility: PERF_BUDGETS.lighthouseAccessibilityMin, bestPractices: PERF_BUDGETS.lighthouseBestPracticesMin }, pages, generatedAt: new Date().toISOString() }, null, 2) + '\n');
-  writeFileSync(resultsDir + (only === null ? 'lighthouse-flow.html' : 'lighthouse-flow-' + only.join('-') + '.html'), await flow.generateReport());
+  const report = await flow.generateReport();
   await browser.disconnect();
   await context.close();
+  return { measured, report };
+}
+
+async function main(): Promise<void> {
+  const env = loadEnv();
+  const consoleUrl = env.PUBLIC_CONSOLE_URL.replace(/\/$/, '');
+  const passes: PageScore[][] = [];
+  let report = '';
+  for (let i = 0; i < runs; i += 1) {
+    const pass = await measureOnce(consoleUrl);
+    passes.push(pass.measured);
+    report = pass.report;
+    if (runs > 1) console.log('lighthouse: pass ' + String(i + 1) + ' of ' + String(runs) + ' measured');
+  }
+  const labels = (passes[0] ?? []).map((p) => p.label);
+  const measured = labels.map((label) => medianPass(passes.map((pass) => pass.find((p) => p.label === label)).filter((p): p is PageScore => p !== undefined)));
+  const pages = mergeWithPrevious(measured);
+  mkdirSync(resultsDir, { recursive: true });
+  writeFileSync(resultsDir + 'lighthouse.json', JSON.stringify({ name: 'lighthouse', formFactor: FORM_FACTOR, runs, budgets: { performance: PERF_BUDGETS.lighthousePerformanceMin, accessibility: PERF_BUDGETS.lighthouseAccessibilityMin, bestPractices: PERF_BUDGETS.lighthouseBestPracticesMin }, pages, generatedAt: new Date().toISOString() }, null, 2) + '\n');
+  writeFileSync(resultsDir + (only === null ? 'lighthouse-flow.html' : 'lighthouse-flow-' + only.join('-') + '.html'), report);
 
   const under: string[] = [];
   for (const p of pages) {
