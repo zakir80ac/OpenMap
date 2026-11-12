@@ -88,6 +88,25 @@ interface PageScore {
   failing: FailingAudit[];
   /** Core metrics in milliseconds (CLS unitless), so a performance miss names its cause too. */
   metrics: Record<string, number>;
+  /** The longest main-thread tasks (script, milliseconds) and where main-thread time went, for a blocking-time miss. */
+  longTasks: Array<{ url: string; ms: number }>;
+  mainThread: Array<{ group: string; ms: number }>;
+}
+
+/** Long tasks and main-thread groups printed with a screen under budget. */
+const CAUSES_SHOWN = 6;
+
+interface ItemsAudit {
+  details?: { items?: Array<Record<string, unknown>> };
+}
+
+function causesOf(lhr: { audits: Record<string, ItemsAudit | undefined> }): Pick<PageScore, 'longTasks' | 'mainThread'> {
+  const items = (id: string): Array<Record<string, unknown>> => lhr.audits[id]?.details?.items ?? [];
+  const ms = (v: unknown): number => (typeof v === 'number' ? Math.round(v) : 0);
+  return {
+    longTasks: items('long-tasks').slice(0, CAUSES_SHOWN).map((t) => ({ url: String(t['url'] ?? ''), ms: ms(t['duration']) })),
+    mainThread: items('mainthread-work-breakdown').slice(0, CAUSES_SHOWN).map((g) => ({ group: String(g['groupLabel'] ?? g['group'] ?? ''), ms: ms(g['duration']) })),
+  };
 }
 
 /** Lighthouse audit ids whose numeric values explain a performance score. */
@@ -214,6 +233,7 @@ async function measureOnce(consoleUrl: string): Promise<{ measured: PageScore[];
     bestPractices: score(step.lhr.categories, 'best-practices'),
     failing: failingAudits(step.lhr as unknown as Parameters<typeof failingAudits>[0]),
     metrics: metricsOf(step.lhr as unknown as Parameters<typeof metricsOf>[0]),
+    ...causesOf(step.lhr as unknown as Parameters<typeof causesOf>[0]),
     // A step Lighthouse could not score says why here (NO_FCP, a navigation that never settled); printed when under budget.
     runtimeError: step.lhr.runtimeError === undefined ? null : step.lhr.runtimeError.code + ': ' + step.lhr.runtimeError.message,
     warnings: step.lhr.runWarnings,
@@ -247,11 +267,13 @@ async function main(): Promise<void> {
     // Same floors as tools/guard: screens that host a third-party application have their own performance floor.
     const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(p.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
     const ok = p.performance >= performanceMin && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
-    if (!ok) under.push(p.label + ' (performance ' + String(p.performance) + ', accessibility ' + String(p.accessibility) + ', best practices ' + String(p.bestPractices) + ', metrics ' + JSON.stringify(p.metrics) + ')');
+    if (!ok) under.push(p.label + ' (performance ' + String(p.performance) + ', accessibility ' + String(p.accessibility) + ', best practices ' + String(p.bestPractices) + ', metrics ' + JSON.stringify(p.metrics) + ', main thread ' + JSON.stringify(p.mainThread) + ', long tasks ' + JSON.stringify(p.longTasks) + ')');
     console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);
     if (!ok) {
       console.log('        metrics ' + JSON.stringify(p.metrics));
+      console.log('        main thread ' + p.mainThread.map((g) => g.group + ' ' + String(g.ms) + ' ms').join(', '));
+      for (const task of p.longTasks) console.log('        long task ' + String(task.ms) + ' ms ' + task.url);
       if (p.runtimeError !== null) console.log('        runtime error ' + p.runtimeError);
       for (const warning of p.warnings) console.log('        warning ' + warning);
     }
