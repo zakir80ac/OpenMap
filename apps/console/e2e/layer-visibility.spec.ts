@@ -9,10 +9,13 @@ import { signIn } from './auth';
 
 const screenshotsDir = fileURLToPath(new URL('./screenshots/', import.meta.url));
 const PAINT_TIMEOUT_MS = 30_000;
+const SCREENS_VISITED = 6;
 
 test('a layer hidden on this device is left out of every estate-wide list until shown again (REQ-CMDB-021)', async ({ page }, testInfo) => {
   const locale = testInfo.project.name;
   if (!isLocale(locale)) throw new Error('project name must be a locale: ' + locale);
+  // Layers, four estate-wide screens and the way back, each allowed PAINT_TIMEOUT_MS on a cold stack.
+  test.setTimeout(PAINT_TIMEOUT_MS * SCREENS_VISITED);
   const applications = translate(locale, 'layer.applications');
   await page.goto('/' + locale + '/layers');
   await signIn(page, locale);
