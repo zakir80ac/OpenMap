@@ -206,12 +206,12 @@ async function main(): Promise<void> {
   await browser.disconnect();
   await context.close();
 
-  let failed = false;
+  const under: string[] = [];
   for (const p of pages) {
     // Same floors as tools/guard: screens that host a third-party application have their own performance floor.
     const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(p.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
     const ok = p.performance >= performanceMin && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
-    if (!ok) failed = true;
+    if (!ok) under.push(p.label + ' (performance ' + String(p.performance) + ', accessibility ' + String(p.accessibility) + ', best practices ' + String(p.bestPractices) + ', metrics ' + JSON.stringify(p.metrics) + ')');
     console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);
     if (!ok) {
@@ -221,7 +221,11 @@ async function main(): Promise<void> {
     }
   }
   console.log('lighthouse: results/lighthouse.json and results/lighthouse-flow.html written');
-  if (failed) process.exit(1);
+  // The screens under budget, last: a CI report keeps only the tail of the output.
+  if (under.length > 0) {
+    console.error('lighthouse: UNDER budget: ' + under.join('; '));
+    process.exit(1);
+  }
 }
 
 main().catch((error: unknown) => {
