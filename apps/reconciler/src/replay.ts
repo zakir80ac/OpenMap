@@ -164,8 +164,11 @@ async function main(): Promise<void> {
     const dispatchers = args.dispatchers ?? env.RECONCILER_DISPATCHERS;
     // Each loop stops when the tenant's outbox is empty, or after RECONCILER.replayStallTicks ticks in a row that
     // deliver nothing: a failed target or a deferred relationship keeps its rows pending, and a later tick retries them.
+    // A replay into a running stack shares the outbox with the stack's own reconciler: rows it has leased are on their
+    // way, not claimable here. An empty claim with rows still undelivered waits while that count falls.
     const drain = async (dispatcherId: string): Promise<void> => {
       let stalled = 0;
+      let leftBefore = Number.POSITIVE_INFINITY;
       for (;;) {
         const r = await dispatchOnce(prisma, sinks, env.CLICKHOUSE_DB, { dispatcherId, tenantId });
         for (const [t, ms] of Object.entries(r.targetMs)) targetTotals[t] = (targetTotals[t] ?? 0) + ms;
@@ -173,7 +176,15 @@ async function main(): Promise<void> {
         if (r.failures.length) console.error(JSON.stringify({ msg: 'outbox failures', failures: r.failures }));
         delivered += r.delivered;
         deferred += r.deferred;
-        if (r.claimed === 0) return;
+        if (r.claimed === 0) {
+          const left = await prisma.outboxEvent.count({ where: { tenantId, deliveredAt: null } });
+          if (left === 0) return;
+          if (left < leftBefore) stalled = 0;
+          else if (++stalled >= RECONCILER.replayStallTicks) return;
+          leftBefore = left;
+          await new Promise((resolveTick) => setTimeout(resolveTick, RECONCILER.outboxIdleMs));
+          continue;
+        }
         if (r.delivered > 0) {
           stalled = 0;
           continue;
