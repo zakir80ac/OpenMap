@@ -272,7 +272,9 @@ export function IntegrationsView(): ReactNode {
         </div>
       </div>
 
-      <InventoryCard />
+      {/* REQ-PERF-001: the inventory closes the screen and joins it once the integration list above has settled, so the
+          list's rows arriving never push the card down, a layout shift that took the screen under its Lighthouse budget. */}
+      {integrations.isPending ? null : <InventoryCard />}
     </div>
   );
 }

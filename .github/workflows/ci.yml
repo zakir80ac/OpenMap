@@ -194,7 +194,10 @@ jobs:
           }
       # REQ-PERF-005 (ADR-071): the e2e run's perf spec writes the screen-interaction and graph-render results; Lighthouse
       # audits the same production console; guard then holds all three to PERF_BUDGETS and fails if one was not written.
-      - run: pnpm --filter @openmap/perf lighthouse
+      - name: Lighthouse
+        run: |
+          set -o pipefail
+          pnpm --filter @openmap/perf lighthouse 2>&1 | tee "$RUNNER_TEMP/reported/lighthouse.log"
       - run: pnpm guard --perf-only --require-perf screen-interaction,graph-render,lighthouse
       - uses: ./.github/actions/report-failure
         if: failure()

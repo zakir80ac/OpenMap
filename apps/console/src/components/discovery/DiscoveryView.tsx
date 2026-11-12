@@ -468,7 +468,9 @@ export function DiscoveryView({ locale }: DiscoveryViewProps): ReactNode {
         </Card>
       </div>
 
-      <ScopesCard locale={locale} allowed={allowed} />
+      {/* REQ-PERF-001: the scopes close the screen and join it once the node and job lists above have settled, so their
+          rows arriving never push the card down, a layout shift that took the screen under its Lighthouse budget. */}
+      {nodes.isPending || jobs.isPending ? null : <ScopesCard locale={locale} allowed={allowed} />}
     </div>
   );
 }
