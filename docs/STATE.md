@@ -2,7 +2,70 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-10 (checkpoint 47: REQ-SEC-011 encryption in transit for all six stores; seven P1 rows merged)
+## Last session · 2026-11-12 (checkpoint 48: CI green end to end; REQ-UI-037 digital twin drill-down Done)
+
+Syed: "is CI green now? CHECK AND MAKE SURE IT IS GREEN. ALSO FOR THE DIGITAL TWIN I WANT A DRILL DOWN FROM THE RACK TO
+EACH COMPONENT, HYPERVISOR, OS, APP, SERVICE, NETWORK AND SECURITY ETC, NOT JUST DCIM LEVEL"; "dont delete the
+unencrypted plain text volumes".
+
+### CI is green
+
+- Run 43215435213 (bca9c15) passed every job: verify, integration, perf, kind, and e2e. Sweep runs on the schedule
+  and was green there the same day.
+  - e2e: Playwright en and ar, 122 passed; Lighthouse is the median of three passes within budget.
+  - REQ-QA-004 is Done on that run.
+- **Twin and Analytics sit near their Lighthouse floors on the runner** (0.85 to 0.90 and 0.64 to 0.67 across runs),
+  so a run can still go red on them. A screen under budget now prints its long tasks and main-thread time; read those
+  first.
+  - Twin: the cost on the runner did not follow the dev host (changes that cut it by three quarters locally left CI
+    unchanged).
+  - Analytics: the cost is the embedded Superset bundle (ADR-026). The lever is what the generated tenant dashboard
+    makes Superset load, not the floor.
+- Fixed on the way, each from a run's annotations:
+  - **Product.**
+    - Discovery, Integrations and Impact each pushed their closing card down as the lists above them filled (layout
+      shift).
+    - The dashboard drew before the onboarding answer.
+    - The Layers screen shipped all of simple-icons, a 5.3 MB chunk the sidebar prefetched on every screen.
+    - `Card` dropped every ARIA attribute it was given.
+  - **Infrastructure.**
+    - The Memgraph migrations and the schema read now retry transient storage locks.
+    - A replay into a running stack waits for rows the stack's reconciler has leased.
+  - **CI.**
+    - The integration job runs the API suites against a dev-shaped stack (reconciler, BSM engine, API, scheduler,
+      Prometheus, api-traffic).
+    - The e2e job:
+      - enrols the compose Discovery Node;
+      - writes a backup set;
+      - runs with no prose locale, since the runner has no model;
+      - quiets the stack before Lighthouse.
+
+### REQ-UI-037 — digital twin drill-down (Done)
+
+- **Opening a rack.** In the scene, or from the "Open a rack" picker for keyboard users. The camera flies to the rack,
+  and its glass lets clicks through to the devices inside.
+- **Drilling into a device.** The panel shows:
+  - hardware components and the BMC;
+  - hypervisor, VMs and containers;
+  - the OS and databases;
+  - applications and software;
+  - the business services it supports, directly and through the upstream walk, with the hop count;
+  - network, storage and security (CVEs with CVSS, exploited and internet-facing; firewall rules; certificates);
+  - vendor and contracts, and power and location.
+- **Navigating.** Every neighbour drills one level further, and a breadcrumb returns to any level. No contract
+  change: it reads `ci { components vulnerabilities relationships }` and the upstream `impact`.
+- **Rendering.** Racks and devices are one InstancedMesh each. Shaders compile before the first frame, and the boxes
+  use the Lambert material.
+- Tests T-660, T-661 and T-662 (e2e, en and ar, green in CI). Evidence: `docs/evidence/twin-drill.md`.
+
+### Dev host now
+
+- The console dev server runs from `.claude/launch.json` (`console`: sources `deploy/compose/.env`, `pnpm dev` on
+  3000). The compose `console` container is **stopped** to free the port. Bring it back with:
+  `docker compose -f deploy/compose/docker-compose.yml -f deploy/compose/docker-compose.apps.yml up -d --no-deps console`
+- The plaintext volumes `openmap_postgres-data` and `openmap_clickhouse-data` stay (Syed, 2026-11-12).
+
+## Previous session · 2026-11-10 (checkpoint 47: REQ-SEC-011 encryption in transit for all six stores; seven P1 rows merged)
 
 Syed: "finish SEC-011, closing PERF-002 and PERF-004, and the 11 P1 rows".
 
@@ -148,9 +211,10 @@ The integration and e2e runs found faults, all fixed:
 
 ### Next three
 
-1. REQ-INT-018: one appliance image build and boot on a KVM host.
-2. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
-3. Keep CI green: read a red job from its annotations (`.github/actions/report-failure`) before guessing.
+1. Bring Twin and Analytics off their Lighthouse floors on the CI runner: read the long tasks a red run now prints.
+   For Analytics, trim what the generated Superset dashboard loads.
+2. REQ-INT-018: one appliance image build and boot on a KVM host.
+3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
 
 ### Questions for Syed
 

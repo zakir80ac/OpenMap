@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "console",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@openmap/console", "dev"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "set -a && . deploy/compose/.env && set +a && exec pnpm --filter @openmap/console dev"],
       "port": 3000
     },
     {
