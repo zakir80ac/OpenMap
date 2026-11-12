@@ -113,13 +113,32 @@ The integration and e2e runs found faults, all fixed:
   - The integration job now runs the API suites the way a dev stack does: a health-history replay, then the compose
     reconciler, BSM engine and Prometheus. Alertmanager's throwaway config directory is now readable by `nobody`, and
     the e2e stack starts through `stack-up` so a failing service gets reported (1edfb0c).
+  - 2026-11-12, the rest, each read from the run annotations:
+    - A replay into a running stack waits for rows the stack's own reconciler has leased; it used to count them as
+      undelivered (37202ad).
+    - The integration job runs the package and service suites before the compose services start, then the API suites
+      against them. `tools/perf api-traffic` gives the API the signed-in GraphQL use that the platform health suite
+      measures. The LDAP lab's modify is retried while slapd restarts. The reconciler's integration files run one at a
+      time, because the gauge test reads the whole outbox (a292047, b0e167f).
+    - e2e:
+      - the compose Discovery Node is registered and enrolled for the seeded tenant (the link probes);
+      - a backup set is written;
+      - `ASSISTANT_PROSE_LOCALES=` is set empty, since the runner has no model, so explanations come from the
+        templates. Compose now reads `${ASSISTANT_PROSE_LOCALES-en}`, so an empty value means none;
+      - the layer visibility spec makes the CTO/CIO dashboard it checks and deletes it again (d86e74e).
+    - Every `pnpm build` step is retried (the console's font fetch).
+  - Run b0e167f: verify, integration, perf and kind green; e2e 118 of 120, the two failures being that layer
+    visibility spec. Run d86e74e: that spec green; the perf spec's `networkidle` wait never ended (now
+    bounded by a settle time), and the perf job's migrate met a transient Memgraph error on the new schema read (now
+    retried like the statements).
 - **REQ-CORE-020 is Done.** The scale-1 replay with two dispatchers took 34.0 min, 7.55 min per 10k devices (budget
   15). Dispatch took 646 s for 2,027,572 events, against 2,119 s with one, and the stores are consistent. The
   assistant evaluation is 41 of 41 afterwards (`docs/evidence/reconciler-scale.md`).
 - **REQ-INT-014**: Blocked (vendor APIs; HPE and IBM have no open API). **REQ-INT-017**: Blocked on vendor access, as
   decided on 2026-11-07.
 - **REQ-INT-018** stays In review until one image build boots on a KVM host.
-- **Old plaintext volumes** `openmap_postgres-data` and `openmap_clickhouse-data` are still kept as a fallback.
+- **Old plaintext volumes** `openmap_postgres-data` and `openmap_clickhouse-data` stay: Syed decided on 2026-11-12
+  not to delete them. Do not remove them.
 - **graphify.** The session's 62 changed docs were extracted and merged into the graph (21,000 nodes). Two things were
   left for a full rebuild:
   - The 28 new screenshots.
@@ -129,13 +148,13 @@ The integration and e2e runs found faults, all fixed:
 
 ### Next three
 
-1. Get the CI integration, e2e and kind jobs green (1edfb0c is the latest push; verify, perf and sweep are green).
-2. REQ-INT-018: one appliance image build and boot on a KVM host.
-3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
+1. REQ-INT-018: one appliance image build and boot on a KVM host.
+2. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
+3. Keep CI green: read a red job from its annotations (`.github/actions/report-failure`) before guessing.
 
 ### Questions for Syed
 
-- **May the old plaintext volumes be deleted?** The stack has run on the encrypted ones since checkpoint 46.
+- None open. The plaintext volumes question is answered: keep them.
 
 ## Previous session · 2026-11-10 (checkpoint 46: REQ-SEC-011 encryption at rest complete, ADR-067 steps 3–6)
 

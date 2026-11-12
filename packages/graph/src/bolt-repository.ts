@@ -94,6 +94,22 @@ function toRel(row: RelRow): GraphRelationship {
   return { ...row, type: relTypeFromLabel(row.type) };
 }
 
+/**
+ * Runs a schema step again while Memgraph answers with a transient error. A schema statement needs the storage to
+ * itself, and even the SHOW INDEX/CONSTRAINT reads need read-only access, which another schema statement (another
+ * service starting, the migrations) holds for a moment.
+ */
+async function retrySchema<T>(step: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await step();
+    } catch (err) {
+      if (!neo4j.isRetriableError(err) || attempt >= GRAPH.schemaRetryAttempts) throw err;
+      await new Promise((r) => setTimeout(r, GRAPH.schemaRetryDelayMs));
+    }
+  }
+}
+
 export class BoltGraphRepository implements GraphRepository {
   private readonly driver: Driver;
 
@@ -158,7 +174,7 @@ export class BoltGraphRepository implements GraphRepository {
       this.options.engine === 'neo4j' ? schemaStatementsNeo4j(CI_TYPES) : schemaStatementsMemgraph(CI_TYPES);
     const s = this.session('WRITE');
     try {
-      const existing = this.options.engine === 'neo4j' ? new Set<string>() : await this.existingMemgraphSchema(s);
+      const existing = this.options.engine === 'neo4j' ? new Set<string>() : await retrySchema(() => this.existingMemgraphSchema(s));
       for (const st of statements) {
         const key = memgraphSchemaKey(st);
         if (key !== null && existing.has(key)) continue;

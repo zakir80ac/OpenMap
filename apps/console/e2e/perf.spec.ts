@@ -12,6 +12,8 @@ import { signIn } from './auth';
 
 const resultsDir = fileURLToPath(new URL('../../../tools/perf/results/', import.meta.url));
 const SHELL_TIMEOUT_MS = 30_000;
+/** The longest a screen is given to go network-idle before its controls are sampled. */
+const SETTLE_MS = 10_000;
 /** Interactions sampled per control; enough for a stable p95 without inflating the run. */
 const SAMPLES_PER_CONTROL = 8;
 /** Frame-rate sampling window for the dependency map. */
@@ -54,7 +56,9 @@ async function sampleControl(locator: Locator, samples: number[]): Promise<void>
 async function openShell(page: Page, locale: 'en' | 'ar', path: string): Promise<void> {
   await page.goto('/' + locale + path);
   await expect(page.getByRole('navigation', { name: translate(locale, 'nav.primary') })).toBeVisible({ timeout: SHELL_TIMEOUT_MS });
-  await page.waitForLoadState('networkidle');
+  // Let the screen's first queries settle before sampling, but no longer than SETTLE_MS: live widgets keep polling, so the
+  // network may never go fully idle (the controls themselves are awaited by each step).
+  await page.waitForLoadState('networkidle', { timeout: SETTLE_MS }).catch(() => undefined);
 }
 
 test('screen interactions stay under the p95 budget and the dependency map holds its frame rate', async ({ page }, testInfo) => {
