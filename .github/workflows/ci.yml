@@ -91,9 +91,14 @@ jobs:
           pnpm -r --stream --workspace-concurrency=1 --filter './packages/*' --filter './apps/*' --filter '!@openmap/api' run --if-present test:integration 2>&1 | tee "$RUNNER_TEMP/reported/integration.log"
       # The platform health suite (T-615) reads every service as a scraped target, and the request rate and GraphQL
       # latency a used API leaves in Prometheus: the API and the scheduler run too, and the API is given traffic.
+      # Image builds fetch packages and fonts from the network, which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
       - name: Build the service images
         working-directory: deploy/compose
-        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine > "$RUNNER_TEMP/reported/images.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/images.log"; sleep 20; done
+          exit 1
       - uses: ./.github/actions/stack-up
         with: { files: "-f docker-compose.yml -f docker-compose.apps.yml", services: api scheduler reconciler bsm-engine otel-collector prometheus }
       - name: Use the API as a dev stack is used
@@ -133,9 +138,14 @@ jobs:
           cp deploy/compose/.env.example deploy/compose/.env
           echo "ASSISTANT_PROSE_LOCALES=" >> deploy/compose/.env
       # The node profile adds the Discovery Node, which runs the link probes the Sites screen shows (T-482).
+      # Image builds fetch packages and fonts from the network, which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
       - name: Build the application images
         working-directory: deploy/compose
-        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile node build
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile node build > "$RUNNER_TEMP/reported/images.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/images.log"; sleep 20; done
+          exit 1
       # Every service (an empty list), reported through annotations if one fails; the API and the console are waited on
       # below.
       - uses: ./.github/actions/stack-up
@@ -311,9 +321,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: helm/kind-action@v1
         with: { cluster_name: openmap, config: deploy/kind/cluster.yaml }
+      # Image builds fetch packages and fonts from the network, which fails now and then on a runner: up to three
+      # attempts, the output reported if all fail.
       - name: Build the application images
         working-directory: deploy/compose
-        run: docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine node console
+        run: |
+          mkdir -p "$RUNNER_TEMP/reported"
+          for attempt in 1 2 3; do docker compose -f docker-compose.yml -f docker-compose.apps.yml build api scheduler reconciler bsm-engine node console > "$RUNNER_TEMP/reported/images.log" 2>&1 && exit 0; tail -n 30 "$RUNNER_TEMP/reported/images.log"; sleep 20; done
+          exit 1
       - name: Load the images into the cluster
         run: for img in api scheduler reconciler bsm-engine node console; do kind load docker-image "openmap/$img:dev" --name openmap; done
       - run: helm lint deploy/helm/openmap
