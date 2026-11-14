@@ -739,6 +739,9 @@ importers:
       '@openmap/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@openmap/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@openmap/db':
         specifier: workspace:*
         version: link:../../packages/db

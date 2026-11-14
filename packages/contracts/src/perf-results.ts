@@ -75,11 +75,13 @@ function check(
   ];
 }
 
-/** The Lighthouse performance floor for a page: screens embedding a third-party application have their own. */
-export function lighthousePerformanceMin(label: string): number {
-  return (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(label)
-    ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin
-    : PERF_BUDGETS.lighthousePerformanceMin;
+/**
+ * The Lighthouse performance floor for a page, or null for an embedded application's own pass (ADR-076): every
+ * console screen, an embedded screen's shell included, is held to the console floor; the pass with the third-party
+ * application loaded (`<screen>` + lighthouseEmbeddedSuffix) is reported and not judged on performance.
+ */
+export function lighthousePerformanceMin(label: string): number | null {
+  return label.endsWith(PERF_BUDGETS.lighthouseEmbeddedSuffix) ? null : PERF_BUDGETS.lighthousePerformanceMin;
 }
 
 /** Every budget check one result carries; a result with no budget (an unknown name) has none. */
@@ -98,11 +100,14 @@ export function perfBudgetChecks(r: PerfResult): PerfBudgetCheck[] {
     case 'discovery-sweep':
       return check(r, 'minutes', r.minutes, PERF_BUDGETS.discoverySweepMinutes, 'max');
     case 'lighthouse':
-      return (r.pages ?? []).flatMap((p) => [
-        ...check(r, 'performance', p.performance, lighthousePerformanceMin(p.label), 'min', p.label),
-        ...check(r, 'accessibility', p.accessibility, PERF_BUDGETS.lighthouseAccessibilityMin, 'min', p.label),
-        ...check(r, 'bestPractices', p.bestPractices, PERF_BUDGETS.lighthouseBestPracticesMin, 'min', p.label),
-      ]);
+      return (r.pages ?? []).flatMap((p) => {
+        const performanceMin = lighthousePerformanceMin(p.label);
+        return [
+          ...(performanceMin === null ? [] : check(r, 'performance', p.performance, performanceMin, 'min', p.label)),
+          ...check(r, 'accessibility', p.accessibility, PERF_BUDGETS.lighthouseAccessibilityMin, 'min', p.label),
+          ...check(r, 'bestPractices', p.bestPractices, PERF_BUDGETS.lighthouseBestPracticesMin, 'min', p.label),
+        ];
+      });
     default:
       return [];
   }

@@ -11,6 +11,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { chromium } from '@playwright/test';
 import { loadEnv } from '@openmap/config';
 import { PERF_BUDGETS } from '@openmap/constants';
+import { lighthousePerformanceMin } from '@openmap/contracts';
 import { translate, type Locale } from '@openmap/i18n';
 import { startFlow } from 'lighthouse';
 import puppeteer, { type Page } from 'puppeteer-core';
@@ -198,7 +199,7 @@ function medianPass(passes: readonly PageScore[]): PageScore {
   return middle;
 }
 
-async function measureOnce(consoleUrl: string): Promise<{ measured: PageScore[]; report: string }> {
+async function measureOnce(consoleUrl: string, embeddedOrigin: string): Promise<{ measured: PageScore[]; report: string }> {
   // Playwright launches the Chromium it installed (Puppeteer cannot spawn it on every host); Puppeteer, which
   // Lighthouse's flow API drives, attaches to that browser over the DevTools socket Chrome announces on disk.
   const userDataDir = mkdtempSync(join(tmpdir(), 'openmap-lighthouse-'));
@@ -221,7 +222,15 @@ async function measureOnce(consoleUrl: string): Promise<{ measured: PageScore[];
   await signIn(page, consoleUrl);
   // Warm: every signed-in screen as its own navigation (the session restores from the stored refresh token).
   for (const screen of screensToMeasure()) {
-    await flow.navigate(consoleUrl + '/' + LOCALE + '/' + screen, { name: screen });
+    const url = consoleUrl + '/' + LOCALE + '/' + screen;
+    if (!(PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(screen)) {
+      await flow.navigate(url, { name: screen });
+      continue;
+    }
+    // ADR-076: the shell with the embedded application's origin blocked (judged), then the application loaded
+    // (reported).
+    await flow.navigate(url, { name: screen, blockedUrlPatterns: [embeddedOrigin + '/*'] });
+    await flow.navigate(url, { name: screen + PERF_BUDGETS.lighthouseEmbeddedSuffix });
   }
 
   const result = await flow.createFlowResult();
@@ -250,7 +259,7 @@ async function main(): Promise<void> {
   const passes: PageScore[][] = [];
   let report = '';
   for (let i = 0; i < runs; i += 1) {
-    const pass = await measureOnce(consoleUrl);
+    const pass = await measureOnce(consoleUrl, new URL(env.PUBLIC_SUPERSET_URL).origin);
     passes.push(pass.measured);
     report = pass.report;
     if (runs > 1) console.log('lighthouse: pass ' + String(i + 1) + ' of ' + String(runs) + ' measured');
@@ -264,11 +273,11 @@ async function main(): Promise<void> {
 
   const under: string[] = [];
   for (const p of pages) {
-    // Same floors as tools/guard: screens that host a third-party application have their own performance floor.
-    const performanceMin = (PERF_BUDGETS.lighthouseEmbeddedScreens as readonly string[]).includes(p.label) ? PERF_BUDGETS.lighthouseEmbeddedPerformanceMin : PERF_BUDGETS.lighthousePerformanceMin;
-    const ok = p.performance >= performanceMin && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
+    // The judgement tools/guard applies (@openmap/contracts): an embedded application's own pass is reported only.
+    const performanceMin = lighthousePerformanceMin(p.label);
+    const ok = (performanceMin === null || p.performance >= performanceMin) && p.accessibility >= PERF_BUDGETS.lighthouseAccessibilityMin && p.bestPractices >= PERF_BUDGETS.lighthouseBestPracticesMin;
     if (!ok) under.push(p.label + ' (performance ' + String(p.performance) + ', accessibility ' + String(p.accessibility) + ', best practices ' + String(p.bestPractices) + ', metrics ' + JSON.stringify(p.metrics) + ', main thread ' + JSON.stringify(p.mainThread) + ', long tasks ' + JSON.stringify(p.longTasks) + ')');
-    console.log((ok ? 'ok   ' : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
+    console.log((ok ? (performanceMin === null ? 'note ' : 'ok   ') : 'UNDER') + ' ' + p.label.padEnd(14) + ' performance ' + String(p.performance) + ' · accessibility ' + String(p.accessibility) + ' · best practices ' + String(p.bestPractices));
     for (const audit of p.failing) console.log('        ' + audit.id + ' (' + String(audit.items) + '): ' + audit.title);
     if (!ok) {
       console.log('        metrics ' + JSON.stringify(p.metrics));

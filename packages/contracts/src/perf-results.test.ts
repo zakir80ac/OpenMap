@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PERF_BUDGETS } from '@openmap/constants';
 import { describe, expect, it } from 'vitest';
-import { missingPerfResults, parsePerfResult, perfBudgetChecks, perfResultSchema } from './perf-results.js';
+import { lighthousePerformanceMin, missingPerfResults, parsePerfResult, perfBudgetChecks, perfResultSchema } from './perf-results.js';
 
 const at = '2026-11-10T12:00:00.000Z';
 const evidence = (name: string): string =>
@@ -44,24 +44,28 @@ describe('perf budget checks', () => {
     });
   });
 
-  it('checks three Lighthouse categories per page, with the embedded floor for analytics', () => {
+  it('checks three Lighthouse categories per page; an embedded application pass is not judged on performance (ADR-076)', () => {
+    const embedded = 'analytics' + PERF_BUDGETS.lighthouseEmbeddedSuffix;
     const checks = perfBudgetChecks(
       perfResultSchema.parse({
         name: 'lighthouse',
         pages: [
           { label: 'dashboard', performance: 0.89, accessibility: 1, bestPractices: 1 },
-          { label: 'analytics', performance: 0.66, accessibility: 0.96, bestPractices: 0.94 },
+          { label: 'analytics', performance: 0.92, accessibility: 0.96, bestPractices: 0.94 },
+          { label: embedded, performance: 0.64, accessibility: 1, bestPractices: 1 },
         ],
       }),
     );
-    expect(checks).toHaveLength(6);
+    // Three per page, less the embedded pass's performance check.
+    expect(checks).toHaveLength(8);
     expect(checks.filter((c) => !c.withinBudget).map((c) => [c.page, c.measure])).toEqual([
       ['dashboard', 'performance'],
       ['analytics', 'bestPractices'],
     ]);
-    expect(checks.find((c) => c.page === 'analytics' && c.measure === 'performance')?.budget).toBe(
-      PERF_BUDGETS.lighthouseEmbeddedPerformanceMin,
-    );
+    // The embedded screen's shell is held to the console's own floor.
+    expect(checks.find((c) => c.page === 'analytics' && c.measure === 'performance')?.budget).toBe(PERF_BUDGETS.lighthousePerformanceMin);
+    expect(checks.some((c) => c.page === embedded && c.measure === 'performance')).toBe(false);
+    expect(lighthousePerformanceMin(embedded)).toBeNull();
   });
 
   it('reads the committed evidence results, and says why a file is not a result', () => {

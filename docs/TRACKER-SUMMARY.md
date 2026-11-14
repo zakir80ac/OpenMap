@@ -1,6 +1,6 @@
 # OpenMap tracker summary
 
-Generated 2026-11-12T12:57:30.201Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
+Generated 2026-11-14T14:51:31.735Z from `tracker/OpenMap-Tracker.xlsx`. Do not edit; run `pnpm tracker report`.
 
 | Status | Count |
 | --- | ---: |

@@ -1,6 +1,6 @@
 # ADR-026 — The embedded analytics performance floor states Superset's own cost
 
-Status: Accepted · Date: 2026-11-05 · Tracker: REQ-PERF-001, REQ-UI-017 · Amends: ADR-012
+Status: Superseded by ADR-076 (2026-11-14) · Date: 2026-11-05 · Tracker: REQ-PERF-001, REQ-UI-017 · Amends: ADR-012
 
 ## Context
 

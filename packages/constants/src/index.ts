@@ -104,19 +104,14 @@ export const PERF_BUDGETS = {
   lighthouseAccessibilityMin: 0.95,
   lighthouseBestPracticesMin: 0.95,
   /**
-   * Screens that host a third-party application inside the page (the embedded Superset dashboard). Their shell is
-   * held to the same accessibility and best-practice floors, but the performance floor is lower: the blocking time
-   * Lighthouse measures there is Superset's own bundle executing, which on a same-site dev stack shares the
-   * renderer with the console. REQ-UI-017 keeps the console's own paint under the budget (FCP and LCP well under
-   * a second); the embedded application's cost is reported, not hidden.
+   * ADR-076 (supersedes ADR-026's floor): screens that host a third-party application in a frame (the embedded
+   * Superset dashboard). The screen is audited with the application's origin blocked and held to the console's own
+   * floors above, so OpenMap's shell answers for its own cost; it is audited a second time with the application loaded,
+   * under the label `<screen>` + lighthouseEmbeddedSuffix, and that score (Superset's bundle executing in the same
+   * renderer) is reported on every run and judged on accessibility and best practices only.
    */
   lighthouseEmbeddedScreens: ['analytics'] as const,
-  /**
-   * ADR-026: a fully loaded embedded Superset dashboard costs about 1.5 s of script on Lighthouse's 4x-throttled CPU
-   * (2.7 MB over 64 requests, its own vendors and embedded bundles), which scores 0.67 however fast the console paints
-   * around it; the 0.70 set in ADR-012 was measured while the frame was still loading. The floor states that cost.
-   */
-  lighthouseEmbeddedPerformanceMin: 0.65,
+  lighthouseEmbeddedSuffix: '+embedded',
   /** REQ-BSM-008: p95 for the yearly availability roll-up of availabilityReportServices business services. */
   availabilityReportP95Ms: 1000,
   availabilityReportServices: 300,

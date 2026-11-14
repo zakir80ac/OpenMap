@@ -75,6 +75,8 @@ pnpm --filter @openmap/perf lighthouse
 
 The perf spec signs in as the realm's seeded administrator, samples click-to-paint latency on layer toggles, CMDB layer filters, the account menu and the dependency-map direction select, then zooms and pans the map for three seconds while counting frames. The Lighthouse runner drives the Chromium that Playwright installed (Puppeteer attaches over the DevTools socket, because Puppeteer cannot spawn that binary on every host), audits the sign-in screen cold and every primary screen as a navigation with the desktop preset, and lists the failing accessibility and best-practice audits per page so a budget miss names its cause. `pnpm guard` fails when any result file is over budget.
 
+A screen that embeds a third-party application (Analytics, the Superset dashboard) is audited twice (ADR-076): `analytics` with Superset's origin blocked, held to the console floors like every screen, and `analytics+embedded` with Superset loaded, printed as `note` and judged on accessibility and best practices only, so Superset's boot time is reported on every run without deciding the build.
+
 `--runs N` measures the whole flow N times, each pass in a fresh browser profile, and keeps each screen's median pass by performance. CI uses three passes on a quiet stack (the Discovery Node and the scheduler stopped): a shared two-core runner can move one pass's total blocking time by hundreds of milliseconds. `--only a,b` re-measures named screens and merges them into the last full sweep's results.
 
 ## Discovery sweep

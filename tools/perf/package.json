@@ -15,6 +15,7 @@
   "dependencies": {
     "@openmap/config": "workspace:*",
     "@openmap/constants": "workspace:*",
+    "@openmap/contracts": "workspace:*",
     "@openmap/db": "workspace:*",
     "@openmap/graph": "workspace:*",
     "@openmap/i18n": "workspace:*",
