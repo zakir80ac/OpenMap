@@ -197,7 +197,7 @@ A requirement moves to Done only when all of these are true and recorded in the 
 - Go 1.23+, `golangci-lint`, context on every call, structured logging (slog), no global state.
 - NestJS: one module per bounded context, DTOs validated with zod, repositories behind interfaces, outbox for every cross-store write.
 - Prisma migrations only; ClickHouse DDL and Memgraph triggers versioned under `packages/db`.
-- Next.js: server components by default, client components only for interaction; every list through TanStack Virtual; graph through Sigma.js in a Web Worker; no `useEffect` data fetching (TanStack Query).
+- Next.js: server components by default, client components only for interaction; every list through TanStack Virtual; graph through Sigma.js in a Web Worker; 3D scenes render in a Web Worker on an OffscreenCanvas (ADR-077, `components/twin/worker`); no `useEffect` data fetching (TanStack Query).
 - Design tokens only (`packages/ui/tokens`); no raw colours, spacing or font sizes in components.
 - Tests: Vitest (unit), Testcontainers-style compose harness (integration), Playwright (e2e, en and ar), k6 (perf), Go `testing` + testify.
 - Conventional commits with the REQ id: `feat(ipam): REQ-IPAM-004 subnet utilisation rollup`.
