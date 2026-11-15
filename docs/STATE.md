@@ -2,7 +2,38 @@
 
 Read this first in every session (CLAUDE.md §2). If this file and the tracker disagree, the tracker wins.
 
-## Last session · 2026-11-12 (checkpoint 48: CI green end to end; REQ-UI-037 digital twin drill-down Done)
+## Last session · 2026-11-15 (checkpoint 49: Lighthouse off the edge in CI; the twin renders in a worker)
+
+Syed chose to render the twin in a worker (2026-11-14). CI is green end to end on run 43731924138 (0b812f7): verify,
+integration, perf, kind and e2e, including Lighthouse on the runner.
+
+### What changed
+
+- **REQ-PERF-007 (Done, ADR-077): the digital twin renders in a Web Worker on an OffscreenCanvas.**
+  - **Cause.** On a host without a GPU (the CI runner, a VDI or NOC terminal) Chrome composites in software. Every
+    WebGL frame is rasterised on the CPU and read back on the main thread (`GLES2::ReadPixels` in the trace, with no
+    script calling it), so react-three-fiber's mount was the twin's longest task.
+  - **What did not help.** Antialias, the grid, a desynchronized context and fewer frames each moved it little.
+  - **The fix.** `components/twin/TwinScene.tsx` transfers the canvas to `worker/twin.worker.tsx`. The worker runs
+    `createRoot` on it, with element shims and an event manager fed from forwarded events. The protocol is in
+    `worker/protocol.ts`. Labels are DOM, projected by the scene. `TwinCanvasInPage` is the fallback.
+  - **Measured.** Dev host at 4x CPU slowdown: total blocking time 800 ms to 68 ms, performance 0.73 to 1.0.
+  - **Evaluated and not used.** `@react-three/offscreen` (pre-1.0). No new dependency.
+  - CLAUDE.md §9: 3D scenes render in a worker.
+- **ADR-076 supersedes ADR-026's floor.** Analytics is audited with Superset's origin blocked and held to 0.90 (1.0).
+  `analytics+embedded`, with Superset loaded, is reported on every run (0.64 to 0.75) and judged on accessibility
+  and best practices only. The `perf-results.ts` judgement changed (CONTRACTS.md), and the runner shares it with the
+  guard.
+  - The tenant dashboard's data is not the cost: five charts of at most 961 rows.
+- **CI.**
+  - Image builds retry and report their output (kind failed in one).
+  - A screen under its Lighthouse budget names its long tasks and main-thread time.
+  - The assistant unit suite allows a minute per test (verify failed at 5 s on the runner).
+- **Dev host.**
+  - The compose `console` container is running again; the dev server is not.
+  - The kind cluster `openmap-control-plane` is running. Stop it only for a Lighthouse sweep (it takes most of a core).
+
+## Previous session · 2026-11-12 (checkpoint 48: CI green end to end; REQ-UI-037 digital twin drill-down Done)
 
 Syed: "is CI green now? CHECK AND MAKE SURE IT IS GREEN. ALSO FOR THE DIGITAL TWIN I WANT A DRILL DOWN FROM THE RACK TO
 EACH COMPONENT, HYPERVISOR, OS, APP, SERVICE, NETWORK AND SECURITY ETC, NOT JUST DCIM LEVEL"; "dont delete the
@@ -211,10 +242,10 @@ The integration and e2e runs found faults, all fixed:
 
 ### Next three
 
-1. Bring Twin and Analytics off their Lighthouse floors on the CI runner: read the long tasks a red run now prints.
-   For Analytics, trim what the generated Superset dashboard loads.
-2. REQ-INT-018: one appliance image build and boot on a KVM host.
-3. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
+1. REQ-INT-018: one appliance image build and boot on a KVM host.
+2. The P2 rows: REQ-INT-013 (Terraform provider, Pulumi) and REQ-INT-015 (finance and procurement).
+3. Sovereignty check: the console build fetches Google Fonts (`next/font/google`). That is the intermittent build
+   failure, and an outbound call at build time the air-gap profile cannot make. Self-host the fonts.
 
 ### Questions for Syed
 
